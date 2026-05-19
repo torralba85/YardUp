@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "adu-advisor",
+    "name": "ADU Advisor",
     "slug": "adu-advisor",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -25,6 +25,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "firebase": {
+        "apiKey": "",
+        "authDomain": "",
+        "projectId": "",
+        "appId": ""
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite"
+    ]
   }
 }

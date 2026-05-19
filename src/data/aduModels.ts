@@ -1,0 +1,43 @@
+import type { AduModel } from "../domain/types";
+
+export const aduModels: AduModel[] = [
+  {
+    id: "studio-340",
+    name: "Garden Studio",
+    sqft: 340,
+    beds: 0,
+    baths: 1,
+    dimensions: "28 ft x 12 ft",
+    priceFrom: 278800,
+    monthlyEstimate: 1767,
+    fitScore: 94,
+    imageUrl: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=900&q=80",
+    tags: ["studio", "lowest cost", "fast permit"],
+  },
+  {
+    id: "one-500",
+    name: "One Bedroom Bar",
+    sqft: 500,
+    beds: 1,
+    baths: 1,
+    dimensions: "36 ft x 15 ft",
+    priceFrom: 326800,
+    monthlyEstimate: 2117,
+    fitScore: 91,
+    imageUrl: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=80",
+    tags: ["rental-ready", "efficient", "long lot"],
+  },
+  {
+    id: "two-610",
+    name: "Compact Two",
+    sqft: 610,
+    beds: 2,
+    baths: 1,
+    dimensions: "44 ft x 15 ft",
+    priceFrom: 342800,
+    monthlyEstimate: 2396,
+    fitScore: 86,
+    imageUrl: "https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?auto=format&fit=crop&w=900&q=80",
+    tags: ["family", "higher rent", "privacy"],
+  },
+];
