@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "YardUp",
-  description: "Find local yard services faster.",
+  description: "See ADU income potential and connect with builders.",
 };
 
 export default function RootLayout({
