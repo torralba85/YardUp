@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>YardUp · Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; font-family: "Hanken Grotesk", -apple-system, system-ui, sans-serif; color: #15231C; }
+  body { overflow: hidden; }
+  * { box-sizing: border-box; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel" src="yardup-min.jsx"></script>
+<script type="text/babel" src="onboarding-min.jsx"></script>
+<script type="text/babel" src="project-page.jsx"></script>
+<script type="text/babel" src="detail-screens.jsx"></script>
+
+<script type="text/babel">
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "paper",
+  "frame": "ios",
+  "accent": "revenue"
+}/*EDITMODE-END*/;
+
+function PhoneShell({ frame, children }) {
+  if (frame === 'android') {
+    return <AndroidDevice width={402} height={840}>{children}</AndroidDevice>;
+  }
+  return <IOSDevice width={402} height={840}>{children}</IOSDevice>;
+}
+
+function Screen({ theme, accent, frame, render }) {
+  const device = frame === 'android' ? 'android' : 'ios';
+  return (
+    <PhoneShell frame={frame}>
+      <YMProvider theme={theme} accent={accent} device={device}>
+        {render()}
+      </YMProvider>
+    </PhoneShell>
+  );
+}
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const ART_W = 410, ART_H = 850;
+
+  const make = (renderFn) => () => (
+    <Screen theme={t.theme} accent={t.accent} frame={t.frame} render={renderFn} />
+  );
+
+  return (
+    <>
+      <DesignCanvas
+        title="YardUp · Mobile app redesign"
+        subtitle="Calm-minimal reinvention. One long Project Page replaces six tabs. Onboarding is an AR yard scan. Drill into any section for a full-bleed detail. Every assumption stays visible — every number earns its place.">
+
+        <DCSection id="frame" title="The IA bet"
+          subtitle="Tabs make a homeowner shuffle between screens to assemble the same story. Instead: a single Project Page that is the story, top to bottom — Money → Cost → Fit → Permit → Build → Packet — with a quiet rail standing in for navigation.">
+          <DCArtboard id="diagram" label="ia · before / after" width={1180} height={520}>
+            <div style={{
+              width: '100%', height: '100%', background: '#F6F4EE', padding: 32,
+              fontFamily: '"Hanken Grotesk", system-ui, sans-serif', color: '#15231C',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, overflow: 'hidden',
+            }}>
+              {/* Before */}
+              <div style={{ padding: 28, background: '#FFFFFF', border: '1px solid #E5E3D9', borderRadius: 4, position: 'relative' }}>
+                <div style={{ fontFamily: '"IBM Plex Mono"', fontWeight: 700, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: '#566159' }}>Before</div>
+                <div style={{ fontFamily: '"Fraunces", serif', fontWeight: 600, fontSize: 32, lineHeight: 1.0, letterSpacing: -0.6, marginTop: 12 }}>
+                  Six tabs, six trips.
+                </div>
+                <div style={{ marginTop: 18, fontSize: 14, color: '#566159', lineHeight: 1.55, maxWidth: 460 }}>
+                  Home, Studio, Permit, Estimate, Build, Ideas. Each tab owns a slice. To answer a single question — <em style={{ color: '#15231C' }}>"can I make this work?"</em> — the homeowner has to assemble the answer themselves.
+                </div>
+                <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
+                  {['Home','Studio','Permit','Estimate','Build','Ideas'].map(x => (
+                    <div key={x} style={{ padding: '14px 6px', background: '#EFEEE7', border: '1px solid #E5E3D9', borderRadius: 4, textAlign: 'center', fontFamily: '"IBM Plex Mono"', fontWeight: 700, fontSize: 10, letterSpacing: 1, color: '#566159' }}>{x.toUpperCase()}</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* After */}
+              <div style={{ padding: 28, background: '#0F1614', color: '#EDE9DD', border: '1px solid #0F1614', borderRadius: 4, position: 'relative' }}>
+                <div style={{ fontFamily: '"IBM Plex Mono"', fontWeight: 700, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: '#1F9D63' }}>After</div>
+                <div style={{ fontFamily: '"Fraunces", serif', fontWeight: 600, fontSize: 32, lineHeight: 1.0, letterSpacing: -0.6, marginTop: 12 }}>
+                  One page, <span style={{ fontStyle: 'italic', color: '#1F9D63' }}>one story.</span>
+                </div>
+                <div style={{ marginTop: 18, fontSize: 14, color: 'rgba(237,233,221,0.7)', lineHeight: 1.55, maxWidth: 460 }}>
+                  The Project Page is the app. Money sits on top, Packet at the bottom, everything in-between is the supporting evidence. Detail screens open full-bleed when a decision needs the room.
+                </div>
+                <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {['MONEY · $2,450/mo','COST · $278–$334k','FIT · garden studio','PERMIT · clear with light setbacks','BUILD · 7 ready','PACKET · 6 of 6'].map((x, i) => (
+                    <div key={x} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: i === 0 ? '#1F9D63' : 'rgba(237,233,221,0.4)' }} />
+                      <span style={{ fontFamily: '"IBM Plex Mono"', fontWeight: 600, fontSize: 11.5, letterSpacing: 0.8, color: i === 0 ? '#EDE9DD' : 'rgba(237,233,221,0.6)' }}>{x}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="onboarding" title="01 · Onboarding"
+          subtitle="Three screens. Welcome sets posture (quiet, useful, no fluff). Lens is the only place we break to dark — the AR moment earns it. Result restates the four numbers that matter and lets the user open the project.">
+          <DCArtboard id="welcome" label="welcome" width={ART_W} height={ART_H}>
+            {make(() => <WelcomeScreen />)()}
+          </DCArtboard>
+          <DCArtboard id="lens" label="lens · scan" width={ART_W} height={ART_H}>
+            {make(() => <LensScanScreen />)()}
+          </DCArtboard>
+          <DCArtboard id="lensres" label="lens · result" width={ART_W} height={ART_H}>
+            {make(() => <LensResultScreen />)()}
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="project" title="02 · The Project Page"
+          subtitle="The single long-scroll home that replaces the 6-tab structure. Money is the hero. The progress rail on the right tracks where the user is in the narrative. Each section ends with a single quiet link into its detail screen.">
+          <DCArtboard id="project" label="full scroll · top → packet" width={ART_W} height={ART_H}>
+            {make(() => <ProjectPage activeSection={0} />)()}
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="details" title="03 · Detail screens"
+          subtitle="Four full-bleed details — one per section of the Project Page. Each one is calm, single-column, with sentence-shaped headlines. Every assumption is visible. No card-on-card.">
+          <DCArtboard id="estimate" label="estimate · underwriting" width={ART_W} height={ART_H}>
+            {make(() => <EstimateScreen />)()}
+          </DCArtboard>
+          <DCArtboard id="studio" label="studio · model fit" width={ART_W} height={ART_H}>
+            {make(() => <StudioScreen />)()}
+          </DCArtboard>
+          <DCArtboard id="permit" label="permit · conditions" width={ART_W} height={ART_H}>
+            {make(() => <PermitScreen />)()}
+          </DCArtboard>
+          <DCArtboard id="build" label="build · live bids" width={ART_W} height={ART_H}>
+            {make(() => <BuildScreen />)()}
+          </DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Theme">
+          <TweakRadio
+            value={t.theme}
+            onChange={(v) => setTweak('theme', v)}
+            options={[
+              { value: 'paper', label: 'Paper' },
+              { value: 'dusk', label: 'Dusk' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Device frame">
+          <TweakRadio
+            value={t.frame}
+            onChange={(v) => setTweak('frame', v)}
+            options={[
+              { value: 'ios', label: 'iOS' },
+              { value: 'android', label: 'Android' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Money accent">
+          <TweakRadio
+            value={t.accent}
+            onChange={(v) => setTweak('accent', v)}
+            options={[
+              { value: 'revenue', label: 'Green' },
+              { value: 'cash', label: 'Cash' },
+              { value: 'builder', label: 'Blue' },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ADU Mobile App Ideas · YardUp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; font-family: "Hanken Grotesk", -apple-system, system-ui, sans-serif; color: #15231C; }
+  body { overflow: hidden; }
+  * { box-sizing: border-box; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel" src="yardup.jsx"></script>
+<script type="text/babel" src="income.jsx"></script>
+<script type="text/babel" src="lens.jsx"></script>
+<script type="text/babel" src="time.jsx"></script>
+<script type="text/babel" src="radar.jsx"></script>
+<script type="text/babel" src="bids.jsx"></script>
+<script type="text/babel" src="council.jsx"></script>
+
+<script type="text/babel">
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "frame": "auto",
+  "showStatusBars": true,
+  "labelStyle": "editorial"
+}/*EDITMODE-END*/;
+
+// Per-concept default frames. "auto" follows these; explicit override forces all.
+const FRAME_BY_ID = {
+  income: 'ios', incomeDetail: 'ios',
+  lens: 'ios', lensResult: 'android',
+  time: 'ios',
+  radar: 'ios',
+  bids: 'android',
+  council: 'ios',
+};
+
+function PhoneShell({ id, render, frame }) {
+  const dev = frame === 'auto' ? (FRAME_BY_ID[id] || 'ios') : frame;
+  // Hint to YUScreen so it knows how much status-bar padding to apply.
+  window.__YU_DEVICE = dev;
+  if (dev === 'android') {
+    return (
+      <AndroidDevice width={402} height={840}>
+        {render()}
+      </AndroidDevice>
+    );
+  }
+  return (
+    <IOSDevice width={402} height={840}>
+      {render()}
+    </IOSDevice>
+  );
+}
+
+function ConceptHeader({ kicker, title, italic, body, points }) {
+  return (
+    <div style={{
+      maxWidth: 720, padding: '8px 8px 28px',
+    }}>
+      <div style={{
+        fontFamily: '"IBM Plex Mono", monospace', fontWeight: 700, fontSize: 11,
+        letterSpacing: 1.4, textTransform: 'uppercase', color: '#1F9D63',
+      }}>{kicker}</div>
+      <div style={{
+        fontFamily: '"Fraunces", Georgia, serif', fontWeight: 600, fontSize: 40, lineHeight: 1.05,
+        color: '#15231C', letterSpacing: -1, marginTop: 8,
+      }}>
+        {title} {italic && <span style={{ fontStyle: 'italic', color: '#1F9D63' }}>{italic}</span>}
+      </div>
+      <div style={{
+        fontFamily: '"Hanken Grotesk", system-ui, sans-serif', fontWeight: 500, fontSize: 15, lineHeight: 1.5,
+        color: '#566159', marginTop: 12, maxWidth: 580,
+      }}>{body}</div>
+      {points && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+          {points.map(p => (
+            <div key={p} style={{
+              padding: '5px 11px', borderRadius: 9999,
+              background: '#fff', border: '1px solid #E5E3D9',
+              fontFamily: '"Hanken Grotesk", system-ui, sans-serif', fontWeight: 700, fontSize: 11,
+              color: '#15231C', letterSpacing: 0.3,
+            }}>{p}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const frame = t.frame;
+
+  const ART_W = 410;
+  const ART_H = 850;
+
+  return (
+    <>
+      <DesignCanvas
+        title="ADU Mobile App Ideas"
+        subtitle="Six net-new product concepts in the YardUp visual system. Each one is a different center-of-gravity for the same underlying ADU problem."
+      >
+        <DCSection id="overview" title="The six bets" subtitle="Each concept stakes a different answer to: what is the moment a homeowner remembers? Open any artboard for fullscreen.">
+          <DCArtboard id="map" label="overview · grid" width={1180} height={520}>
+            <div style={{
+              width: '100%', height: '100%', background: '#F6F4EE', padding: 28,
+              fontFamily: '"Hanken Grotesk", system-ui, sans-serif', color: '#15231C',
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)',
+              gap: 16, overflow: 'hidden',
+            }}>
+              {[
+                { n: '01', t: 'Income', it: 'map', body: 'See every backyard\'s rent at a glance.', moment: 'the floating $/mo tag above your roof', accent: '#1F9D63', bg: '#fff' },
+                { n: '02', t: 'Lens', it: 'AR', body: 'Walk your yard. Drop 4 corners. Watch an ADU appear.', moment: 'the cost ticker counting up in real time', accent: '#CFF86D', bg: '#0E2C20', dark: true },
+                { n: '03', t: 'Time Machine', it: '', body: 'Scrub through 30 years and watch rent compound into a wealth tower.', moment: 'the moment payback line crosses', accent: '#1F9D63', bg: '#F6F4EE' },
+                { n: '04', t: 'Permit Radar', it: '', body: 'A weather report for your permit risk — forecast, conditions, sources.', moment: '"Clear with light setbacks."', accent: '#C1760D', bg: '#fff' },
+                { n: '05', t: 'Bids Live', it: '', body: 'Builders drop bids in a live feed. Lowest, fastest, best fit — labeled.', moment: 'the LIVE pulse + new bid landing', accent: '#0D5DB8', bg: '#fff' },
+                { n: '06', t: 'Council', it: '', body: 'Spouse, parent, lender, builder — all on one decision board.', moment: 'seeing your dad\'s cursor on the floor plan', accent: '#1F9D63', bg: '#fff' },
+              ].map((c) => (
+                <div key={c.n} style={{
+                  background: c.bg, color: c.dark ? '#EDF3EE' : '#15231C',
+                  borderRadius: 16, padding: 18, position: 'relative', overflow: 'hidden',
+                  border: c.dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid #E5E3D9',
+                  display: 'flex', flexDirection: 'column',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontWeight: 700, fontSize: 11, color: c.dark ? 'rgba(237,243,238,0.6)' : '#566159' }}>{c.n}</span>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.accent }} />
+                  </div>
+                  <div style={{
+                    fontFamily: '"Fraunces", Georgia, serif', fontWeight: 600, fontSize: 30, lineHeight: 1.0,
+                    letterSpacing: -0.6, marginTop: 14,
+                  }}>
+                    YardUp <span style={{ fontStyle: 'italic', color: c.accent }}>{c.t}</span>
+                  </div>
+                  <div style={{ fontSize: 13, lineHeight: 1.45, color: c.dark ? 'rgba(237,243,238,0.78)' : '#566159', marginTop: 10, flex: 1 }}>
+                    {c.body}
+                  </div>
+                  <div style={{
+                    marginTop: 12, paddingTop: 12,
+                    borderTop: c.dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid #E5E3D9',
+                    display: 'flex', gap: 6, alignItems: 'center',
+                  }}>
+                    <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontWeight: 700, fontSize: 10, color: c.dark ? c.accent : '#1F9D63', textTransform: 'uppercase', letterSpacing: 0.5 }}>moment</span>
+                    <span style={{ fontSize: 12, color: c.dark ? '#EDF3EE' : '#15231C', fontWeight: 600 }}>{c.moment}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="income" title="01 · Income"
+          subtitle="The money-first home screen. Open the app, see a 3/4-iso block view — every backyard tagged with its $/mo income potential. Yours is the bright one.">
+          <DCArtboard id="income" label="map view" width={ART_W} height={ART_H}>
+            <PhoneShell id="income" frame={frame} render={() => <IncomeMapScreen />} />
+          </DCArtboard>
+          <DCArtboard id="incomeDetail" label="tap a house" width={ART_W} height={ART_H}>
+            <PhoneShell id="incomeDetail" frame={frame} render={() => <IncomeDetailScreen />} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="lens" title="02 · Lens"
+          subtitle="Camera-first AR onboarding. Walk to the back of your yard, tap 4 corners, watch a wireframe ADU materialize with a live cost ticker. Then 'generate' renders it in place.">
+          <DCArtboard id="lens" label="capture · 4 corners" width={ART_W} height={ART_H}>
+            <PhoneShell id="lens" frame={frame} render={() => <LensCaptureScreen />} />
+          </DCArtboard>
+          <DCArtboard id="lensResult" label="rendered result" width={ART_W} height={ART_H}>
+            <PhoneShell id="lensResult" frame={frame} render={() => <LensResultScreen />} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="time" title="03 · Time Machine"
+          subtitle="A wealth scrubber. Years 0 → 30. Each year scrubbed adds bricks to your rent tower, with life events annotated along the way: built, payback cleared, parent moves in, mortgage paid.">
+          <DCArtboard id="time" label="year 7" width={ART_W} height={ART_H}>
+            <PhoneShell id="time" frame={frame} render={() => <TimeMachineScreen />} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="radar" title="04 · Permit Radar"
+          subtitle="A weather forecast for your permit. A risk dial, an outlook strip across plan-check phases, condition cards stacked like atmospheric readings, and tier-A verified sources. Reduces uncertainty without becoming the product.">
+          <DCArtboard id="radar" label="forecast" width={ART_W} height={ART_H}>
+            <PhoneShell id="radar" frame={frame} render={() => <PermitRadarScreen />} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="bids" title="05 · Bids Live"
+          subtitle="A live builder auction. Bids drop in with a pulse. Each bid card surfaces trust signals (CSLB, ADU count) and gets a ribbon: lowest, fastest, best fit. Three picked → packets sent.">
+          <DCArtboard id="bids" label="live feed" width={ART_W} height={ART_H}>
+            <PhoneShell id="bids" frame={frame} render={() => <BidsLiveScreen />} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="council" title="06 · Council"
+          subtitle="Multiplayer family decision room. Spouse, parent, lender — live cursors on the floor plan, sticky comments pinned to rooms, open votes with running tallies. The ADU as a household decision, not a solo one.">
+          <DCArtboard id="council" label="open vote · 2BR?" width={ART_W} height={ART_H}>
+            <PhoneShell id="council" frame={frame} render={() => <CouncilScreen />} />
+          </DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Device frame">
+          <TweakRadio
+            value={t.frame}
+            onChange={(v) => setTweak('frame', v)}
+            options={[
+              { value: 'auto', label: 'Mixed' },
+              { value: 'ios', label: 'iOS' },
+              { value: 'android', label: 'Android' },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
