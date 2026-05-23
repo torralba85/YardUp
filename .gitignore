@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+dist/
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# Env files
+.env*.local
+.env
+
+# OS
+.DS_Store
