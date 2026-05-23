@@ -2,28 +2,38 @@ export default function Home() {
   return (
     <main className="home">
       <section className="hero">
-        <div className="eyebrow">YardUp is getting ready</div>
+        <div className="eyebrow">YardUp ADU income advisor</div>
 
         <div className="intro">
-          <h1>Yard help, lined up faster.</h1>
+          <h1>Turn your yard into potential monthly income.</h1>
           <p>
-            YardUp connects homeowners with local help for mowing, cleanup,
-            hauling, and seasonal outdoor projects.
+            YardUp helps homeowners see what an accessory dwelling unit could
+            earn, then connects them with ADU builders who can turn that
+            opportunity into a real project.
           </p>
         </div>
 
         <div className="steps">
           <div className="card">
-            <h2>Post the job</h2>
-            <p>Share what your yard needs and where you are.</p>
+            <h2>Estimate income potential</h2>
+            <p>
+              Share your property basics and see how an ADU could support rental
+              income, family housing, or long-term property value.
+            </p>
           </div>
           <div className="card">
-            <h2>Compare local help</h2>
-            <p>Review nearby providers and simple estimates.</p>
+            <h2>Compare ADU options</h2>
+            <p>
+              Understand whether a detached unit, garage conversion, or backyard
+              cottage may fit your goals and available space.
+            </p>
           </div>
           <div className="card">
-            <h2>Get it done</h2>
-            <p>Book the work and keep your weekends open.</p>
+            <h2>Connect with builders</h2>
+            <p>
+              Get matched with ADU builders who can help with feasibility,
+              design, permitting, and construction.
+            </p>
           </div>
         </div>
       </section>
