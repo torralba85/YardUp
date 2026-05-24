@@ -1,6 +1,7 @@
-import type { ExpoConfig } from "expo/config";
+import type { ExpoConfig, ConfigContext } from "expo/config";
 
-const config: ExpoConfig = {
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
   name: "ADU Advisor",
   slug: "adu-advisor",
   scheme: "aduadvisor",
@@ -21,8 +22,10 @@ const config: ExpoConfig = {
     bundleIdentifier: "com.aduadvisor.app",
     buildNumber: "1",
     supportsTablet: true,
-    usesNonExemptEncryption: false,
-  } as any,
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
+  },
   android: {
     package: "com.aduadvisor.app",
     versionCode: 1,
@@ -58,6 +61,4 @@ const config: ExpoConfig = {
       },
     ],
   ],
-};
-
-export default config;
+});
