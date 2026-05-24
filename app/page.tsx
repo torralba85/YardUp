@@ -34,11 +34,11 @@ export default function Home() {
             turn that opportunity into a real project.
           </p>
           <div className="actions">
-            <a href="#estimate" className="primaryAction">
+            <a href="/estimate" className="primaryAction">
               Estimate income potential
             </a>
-            <a href="#builders" className="secondaryAction">
-              Connect with builders
+            <a href="/register" className="secondaryAction">
+              Create free account
             </a>
           </div>
         </div>
