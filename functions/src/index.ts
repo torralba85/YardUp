@@ -3,6 +3,7 @@ import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { buildDesignConcept } from "./lib/designConcept";
+import { saveFeedback } from "./lib/feedback";
 import { buildStarterPropertyHistory } from "./lib/propertyHistory";
 import { saveQuoteRequest } from "./lib/quoteRequests";
 import { enforceRateLimit } from "./lib/rateLimit";
@@ -13,6 +14,7 @@ import {
   getRegulationGuideInputSchema,
   searchPropertyHistoryInputSchema,
   submitQuoteRequestInputSchema,
+  submitFeedbackInputSchema,
 } from "./schemas";
 
 initializeApp();
@@ -77,6 +79,21 @@ export const submitQuoteRequest = onCall(callableOptions, async (request) => {
     service: "submitQuoteRequest",
     status: "ok",
     projectId: input.projectId,
+  });
+  return saved;
+});
+
+export const submitFeedback = onCall(callableOptions, async (request) => {
+  await enforceRateLimit("submitFeedback", request.auth?.uid, 20);
+  const input = parseOrThrow(submitFeedbackInputSchema, request.data);
+  const userId = request.auth?.uid ?? "anonymous";
+  const saved = await saveFeedback({
+    ...input,
+    userId,
+  });
+  await writeServiceLog({
+    service: "submitFeedback",
+    status: "ok",
   });
   return saved;
 });
