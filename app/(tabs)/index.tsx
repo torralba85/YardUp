@@ -1,47 +1,33 @@
 import { Feather } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 
 import { Button } from "../../src/components/Button";
 import { RevenueSnapshot } from "../../src/components/RevenueSnapshot";
+import { RiskIndicator } from "../../src/components/RiskIndicator";
 import { Screen } from "../../src/components/Screen";
 import { SectionHeader } from "../../src/components/SectionHeader";
 import { YardUpLogo } from "../../src/components/YardUpLogo";
 import { aduModels } from "../../src/data/aduModels";
-import { inferJurisdiction } from "../../src/data/regulations";
+import { inferJurisdiction, jurisdictionLabels } from "../../src/data/regulations";
 import { defaultEstimateInput, estimateAduValue, formatCurrencyCompact, formatPercent } from "../../src/domain/estimator";
-import { useActiveParcelSummary, useActiveProject, useAppStore } from "../../src/state/appStore";
+import { deriveRisk } from "../../src/domain/risk";
+import { useActiveGuide, useActiveParcelSummary, useActiveProject, useAppStore } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
-const backyardImage =
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=86";
-
-const workbenches = [
-  { icon: "move", label: "Studio", detail: "Place a real model on the lot", route: "/ideas" },
-  { icon: "map", label: "Permit", detail: "Read zoning and constraints", route: "/guide" },
-  { icon: "bar-chart-2", label: "Estimate", detail: "Model value, rent, and ROI", route: "/estimate" },
-  { icon: "send", label: "Build", detail: "Prepare a quote-ready packet", route: "/contractors" },
-  { icon: "image", label: "References", detail: "Save precedent ADUs", route: "/inspiration" },
-] as const;
-
-const nextActions = [
-  { icon: "tool", action: "Confirm side yard variance path", impact: "High", status: "Open" },
-  { icon: "map-pin", action: "Verify protected tree clearance", impact: "Medium", status: "Open" },
-  { icon: "truck", action: "Evaluate parking requirement options", impact: "Medium", status: "Review" },
-  { icon: "file-text", action: "Complete quote packet sections", impact: "High", status: "In progress" },
-] as const;
+const PACKET_TOTAL = 6;
 
 export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const project = useActiveProject();
   const parcel = useActiveParcelSummary();
+  const guide = useActiveGuide();
   const createProject = useAppStore((state) => state.createProject);
   const storageMode = useAppStore((state) => state.storageMode);
   const contractors = useAppStore((state) => state.contractorProfiles);
   const quoteRequests = useAppStore((state) => state.quoteRequests);
+  const concepts = useAppStore((state) => state.concepts);
   const [address, setAddress] = useState("");
   const [addressError, setAddressError] = useState("");
   const [isStarting, setIsStarting] = useState(false);
@@ -71,28 +57,38 @@ export default function HomeScreen() {
   const isWide = width >= 980;
   const narrow = width < 560;
   const status = project?.status.replace(/_/g, " ") ?? "not run";
-  const storageLabel = storageMode === "sqlite" ? (isWide ? "Saved locally" : "Local") : (isWide ? "Memory mode" : "Memory");
+  const storageLabel = storageMode === "sqlite" ? "Saved locally" : "Memory mode";
   const estimateInput = project?.lastEstimateInput ?? defaultEstimateInput;
   const estimate = project?.lastEstimate ?? estimateAduValue(estimateInput);
-  const sentQuotes = project ? quoteRequests.filter((request) => request.projectId === project.id).length : 0;
-  const quotePacketReady = project ? 4 + Number(Boolean(project.lastEstimate)) + Number(Boolean(project.selectedModelId)) : 2;
+  const hasEstimate = Boolean(project?.lastEstimate);
+  const projectQuotes = project ? quoteRequests.filter((request) => request.projectId === project.id) : [];
+  const projectConcepts = project ? concepts.filter((concept) => concept.projectId === project.id) : [];
+  const packetReady = useMemo(
+    () => derivePacketReady({ hasEstimate, hasConcept: projectConcepts.length > 0, hasParcel: Boolean(parcel), hasGuide: Boolean(guide), quotesSent: projectQuotes.length }),
+    [hasEstimate, projectConcepts.length, parcel, guide, projectQuotes.length],
+  );
+  const risk = useMemo(
+    () => deriveRisk({ guide, parcel }),
+    [guide, parcel],
+  );
+  const nextActions = useMemo(
+    () => deriveNextActions({ parcel, guide, hasEstimate, hasConcept: projectConcepts.length > 0, packetReady, hasProject: Boolean(project) }),
+    [parcel, guide, hasEstimate, projectConcepts.length, packetReady, project],
+  );
 
   return (
     <Screen scroll>
       <View style={styles.topbar}>
         <View style={styles.brandGroup}>
           <YardUpLogo size={32} />
-          <Text style={styles.brandLine}>ADU earning potential and builder connection</Text>
+          <Text style={styles.brandLine}>Earning potential and builder readiness for your backyard</Text>
         </View>
         {isWide ? (
           <View style={styles.topbarActions}>
             <View style={styles.savedBadge}>
-              <Feather name={storageMode === "sqlite" ? "check-circle" : "wifi-off"} size={16} color={colors.success} />
+              <Feather name={storageMode === "sqlite" ? "check-circle" : "cloud-off"} size={15} color={colors.accentDark} />
               <Text style={styles.savedText}>{storageLabel}</Text>
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel="Settings" onPress={() => router.push("/ideas")} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-              <Feather name="settings" size={18} color={colors.text} />
-            </Pressable>
           </View>
         ) : null}
       </View>
@@ -103,8 +99,8 @@ export default function HomeScreen() {
           estimate={estimate}
           estimateInput={estimateInput}
           projectName={project?.name}
-          quotePacketReady={quotePacketReady}
-          sentQuotes={sentQuotes}
+          quotePacketReady={packetReady}
+          sentQuotes={projectQuotes.length}
           wide={isWide}
           onAdjust={() => router.push("/estimate")}
         />
@@ -134,95 +130,86 @@ export default function HomeScreen() {
           </View>
           {addressError ? <Text style={styles.errorText}>{addressError}</Text> : null}
           <Button disabled={isStarting} icon="arrow-right" onPress={startProject}>
-            {isStarting ? "Starting..." : "Start study"}
+            {isStarting ? "Starting" : "Start study"}
           </Button>
 
           <View style={styles.studyDivider} />
           <View style={styles.projectMini}>
-            <View>
-              <Text style={styles.miniLabel}>Active project</Text>
+            <View style={styles.projectMiniText}>
+              <Text style={styles.miniLabel}>Active study</Text>
               <Text style={styles.miniTitle}>{project?.name ?? "No active study"}</Text>
             </View>
-            <Text style={styles.miniValue}>{parcel?.zoning ?? "R-1H"}</Text>
+            <Text style={styles.miniValue}>{parcel?.zoning ?? "—"}</Text>
           </View>
           <View style={styles.miniMetrics}>
-            <MiniMetric label="Lot" value={parcel ? `${Math.round(parcel.lotSqFt / 1000)}k sqft` : "5k sqft"} />
+            <MiniMetric label="Lot" value={parcel ? `${Math.round(parcel.lotSqFt / 1000)}k sqft` : "—"} />
             <MiniMetric label="Models" value={`${aduModels.length}`} />
-            <MiniMetric label="Packet" value={project ? "open" : "none"} />
+            <MiniMetric label="Packet" value={project ? `${packetReady}/${PACKET_TOTAL}` : "—"} />
           </View>
         </View>
       </View>
 
-      <SectionHeader title="Backyard fit" action="proof path" />
-      <View style={styles.visualPanel}>
-        <Image source={{ uri: backyardImage }} style={styles.visualImage} contentFit="cover" transition={250} />
-        <LinearGradient colors={["rgba(14,44,32,0.04)", "rgba(14,44,32,0.68)"]} style={styles.visualShade} />
-        <View style={styles.lotOutline}>
-          <View style={styles.aduFootprint}>
-            <Text style={styles.aduLabel}>ADU</Text>
-            <Text style={styles.aduMeta}>640 sq ft</Text>
-          </View>
-          <View style={[styles.measureBubble, styles.measureTop]}>
-            <Text style={styles.measureText}>setbacks</Text>
-          </View>
-          <View style={[styles.measureBubble, styles.measureBottom]}>
-            <Text style={styles.measureText}>3'-6"</Text>
-          </View>
-        </View>
-        <View style={styles.visualHeader}>
-          <View>
-            <Text style={styles.visualTitle}>Fit backs the rent</Text>
-            <Text style={styles.visualText}>{parcel ? `${parcel.buildableAreaSqFt.toLocaleString()} sqft starter buildable area` : "Start with an address to run parcel fit"}</Text>
-          </View>
-          <View style={styles.visualToggle}>
-            <Text style={styles.visualToggleActive}>3D</Text>
-            <Text style={styles.visualToggleText}>2D</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={[styles.statusGrid, isWide && styles.statusGridWide]}>
-        <StatusCard title="Permit risk" value="62/100" detail="Moderate review" tone="permit" />
-        <StatusCard title="ROI model" value={project?.lastEstimate ? formatPercent(project.lastEstimate.roi) : "18.4%"} detail="Saved assumptions" tone="success" />
-        <StatusCard title="Quote packet" value="4/6" detail="Sections complete" tone="parcel" />
-        <StatusCard title="Local-first" value={storageMode === "sqlite" ? "On" : "Memory"} detail="Data stays device-side" tone="accent" />
-      </View>
+      <SectionHeader title="Permit signal" action={parcel ? `verified ${parcel.verifiedAt}` : "needs a study"} />
+      <RiskIndicator
+        label={guide ? `${jurisdictionLabels[guide.jurisdiction]} review` : "Run a study to see permit risk"}
+        level={risk.level}
+        score={risk.score}
+        drivers={risk.drivers}
+        verifiedAt={parcel?.verifiedAt}
+        verifyLabel={guide ? "Open permit guide" : undefined}
+        onVerify={guide ? () => router.push("/guide") : undefined}
+      />
 
       <View style={[styles.boardGrid, isWide && styles.boardGridWide]}>
-        {project ? <ProjectSnapshot project={project} /> : <EmptySnapshot />}
-        <WorkflowPanel />
-      </View>
-
-      <SectionHeader title="Workbenches" action="open tools" />
-      <View style={[styles.workbenchGrid, isWide && styles.workbenchGridWide]}>
-        {workbenches.map((item) => (
-          <WorkbenchAction
-            key={item.label}
-            icon={item.icon}
-            label={item.label}
-            detail={item.detail}
-            onPress={() => router.push(item.route)}
+        {project ? (
+          <ProjectSnapshot
+            project={project}
+            estimate={hasEstimate ? estimate : null}
+            packetReady={packetReady}
+            sentQuotes={projectQuotes.length}
           />
-        ))}
+        ) : (
+          <EmptySnapshot />
+        )}
+        <WorkflowPanel
+          hasEstimate={hasEstimate}
+          hasConcept={projectConcepts.length > 0}
+          packetReady={packetReady}
+          sentQuotes={projectQuotes.length}
+        />
       </View>
 
-      <SectionHeader title="Next actions" action="local queue" />
-      <View style={styles.actionTable}>
-        {nextActions.map((item) => (
-          <View key={item.action} style={[styles.actionRow, narrow && styles.actionRowNarrow]}>
-            <View style={styles.actionMain}>
-              <View style={styles.actionIcon}>
-                <Feather name={item.icon} size={15} color={colors.parcel} />
+      {nextActions.length > 0 ? (
+        <>
+          <SectionHeader title="Next actions" action={`${nextActions.length} open`} />
+          <View style={styles.actionTable}>
+            {nextActions.map((item, index) => (
+              <View
+                key={item.label}
+                style={[
+                  styles.actionRow,
+                  narrow && styles.actionRowNarrow,
+                  index === nextActions.length - 1 && styles.actionRowLast,
+                ]}
+              >
+                <View style={styles.actionMain}>
+                  <View style={[styles.actionIcon, item.tone === "builder" && styles.actionIconBuilder, item.tone === "permit" && styles.actionIconPermit]}>
+                    <Feather name={item.icon} size={15} color={item.tone === "permit" ? colors.permit : item.tone === "builder" ? colors.parcel : colors.accentDark} />
+                  </View>
+                  <Text style={styles.actionName} numberOfLines={2}>{item.label}</Text>
+                </View>
+                <View style={[styles.actionMeta, narrow && styles.actionMetaNarrow]}>
+                  <Text style={styles.actionImpact}>{item.impact}</Text>
+                  <Pressable accessibilityRole="button" onPress={() => router.push(item.route)} style={({ pressed }) => [styles.actionLink, pressed && styles.actionLinkPressed]}>
+                    <Text style={styles.actionLinkText}>{item.cta}</Text>
+                    <Feather name="chevron-right" size={14} color={colors.accentDark} />
+                  </Pressable>
+                </View>
               </View>
-              <Text style={styles.actionName} numberOfLines={2}>{item.action}</Text>
-            </View>
-            <View style={[styles.actionMeta, narrow && styles.actionMetaNarrow]}>
-              <Text style={styles.actionImpact}>{item.impact}</Text>
-              <Text style={styles.actionStatus}>{item.status}</Text>
-            </View>
+            ))}
           </View>
-        ))}
-      </View>
+        </>
+      ) : null}
     </Screen>
   );
 }
@@ -233,53 +220,6 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
       <Text style={styles.miniMetricLabel}>{label}</Text>
       <Text style={styles.miniMetricValue}>{value}</Text>
     </View>
-  );
-}
-
-function StatusCard({
-  title,
-  value,
-  detail,
-  tone,
-}: {
-  title: string;
-  value: string;
-  detail: string;
-  tone: "accent" | "permit" | "parcel" | "success";
-}) {
-  const toneColor = tone === "permit" ? colors.permit : tone === "parcel" ? colors.parcel : tone === "success" ? colors.success : colors.accent;
-  return (
-    <View style={styles.statusCard}>
-      <View style={[styles.statusDot, { backgroundColor: toneColor }]} />
-      <Text style={styles.statusTitle}>{title}</Text>
-      <Text style={styles.statusValue}>{value}</Text>
-      <Text style={styles.statusDetail}>{detail}</Text>
-    </View>
-  );
-}
-
-function WorkbenchAction({
-  icon,
-  label,
-  detail,
-  onPress,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  label: string;
-  detail: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.workbench, pressed && styles.pressed]}>
-      <View style={styles.workbenchIcon}>
-        <Feather name={icon} size={18} color={colors.canvas} />
-      </View>
-      <View style={styles.workbenchText}>
-        <Text style={styles.workbenchTitle}>{label}</Text>
-        <Text style={styles.workbenchDetail}>{detail}</Text>
-      </View>
-      <Feather name="chevron-right" size={18} color={colors.muted} />
-    </Pressable>
   );
 }
 
@@ -300,7 +240,17 @@ function EmptySnapshot() {
   );
 }
 
-function ProjectSnapshot({ project }: { project: NonNullable<ReturnType<typeof useActiveProject>> }) {
+function ProjectSnapshot({
+  project,
+  estimate,
+  packetReady,
+  sentQuotes,
+}: {
+  project: NonNullable<ReturnType<typeof useActiveProject>>;
+  estimate: ReturnType<typeof estimateAduValue> | null;
+  packetReady: number;
+  sentQuotes: number;
+}) {
   return (
     <View style={styles.projectDeck}>
       <View style={styles.projectHeader}>
@@ -312,62 +262,187 @@ function ProjectSnapshot({ project }: { project: NonNullable<ReturnType<typeof u
         <Text style={styles.projectStatus}>{project.status.replace(/_/g, " ")}</Text>
       </View>
 
-      {project.lastEstimate ? (
-        <View style={styles.snapshotMetrics}>
-          <FieldMetric label="Value" value={`${formatCurrencyCompact(project.lastEstimate.lowValue)}-${formatCurrencyCompact(project.lastEstimate.highValue)}`} />
-          <FieldMetric label="ROI" value={formatPercent(project.lastEstimate.roi)} />
-          <FieldMetric label="Payback" value={`${project.lastEstimate.paybackYears.toFixed(1)} yr`} />
+      {estimate ? (
+        <View style={styles.snapshotStrip}>
+          <StripMetric label="Value" value={`${formatCurrencyCompact(estimate.lowValue)}–${formatCurrencyCompact(estimate.highValue)}`} />
+          <View style={styles.stripDivider} />
+          <StripMetric label="ROI" value={formatPercent(estimate.roi)} />
+          <View style={styles.stripDivider} />
+          <StripMetric label="Payback" value={`${estimate.paybackYears.toFixed(1)} yr`} />
         </View>
       ) : (
         <Text style={styles.projectHint}>The first estimate will pin value range, rent, cost, and payback to this property.</Text>
       )}
 
+      <View style={styles.snapshotStrip}>
+        <StripMetric label="Packet" value={`${packetReady}/${PACKET_TOTAL}`} />
+        <View style={styles.stripDivider} />
+        <StripMetric label="Quotes sent" value={`${sentQuotes}`} />
+      </View>
+
       <View style={styles.projectActions}>
-        <Button icon="move" style={styles.projectActionButton} onPress={() => router.push("/ideas")}>
-          Open Studio
+        <Button icon="send" style={styles.projectActionButton} onPress={() => router.push("/contractors")}>
+          Open Build
         </Button>
         <Button style={styles.projectActionButton} variant="secondary" onPress={() => router.push(`/project/${project.id}`)}>
-          View Packet
+          View packet
         </Button>
       </View>
     </View>
   );
 }
 
-function FieldMetric({ label, value }: { label: string; value: string }) {
+function StripMetric({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.fieldMetric}>
-      <Text style={styles.fieldMetricLabel}>{label}</Text>
-      <Text style={styles.fieldMetricValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
+    <View style={styles.stripItem}>
+      <Text style={styles.stripLabel}>{label}</Text>
+      <Text style={styles.stripValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
         {value}
       </Text>
     </View>
   );
 }
 
-function WorkflowPanel() {
-  const steps = ["Property study", "Studio", "Permit", "Estimate", "Build"];
+function WorkflowPanel({
+  hasEstimate,
+  hasConcept,
+  packetReady,
+  sentQuotes,
+}: {
+  hasEstimate: boolean;
+  hasConcept: boolean;
+  packetReady: number;
+  sentQuotes: number;
+}) {
+  const steps = [
+    { title: "Property study", done: true, meta: "Lot, zoning, parcel facts" },
+    { title: "Estimate", done: hasEstimate, meta: hasEstimate ? "Saved" : "Set size, rent, cost" },
+    { title: "Build", done: sentQuotes > 0, meta: sentQuotes > 0 ? `${sentQuotes} quote${sentQuotes === 1 ? "" : "s"} sent` : "Send packet to builders" },
+    { title: "Permit", done: packetReady >= PACKET_TOTAL, meta: "Verify with local jurisdiction" },
+    { title: "Studio", done: hasConcept, meta: hasConcept ? "Concept ready" : "Optional proof path" },
+  ];
+  const completed = steps.filter((step) => step.done).length;
+
   return (
     <View style={styles.workflowPanel}>
       <View style={styles.workflowHeader}>
-        <Text style={styles.workflowTitle}>Workflow</Text>
-        <Text style={styles.workflowMeta}>5 gates</Text>
+        <Text style={styles.workflowTitle}>Study path</Text>
+        <Text style={styles.workflowMeta}>{completed}/{steps.length} done</Text>
       </View>
-      {steps.map((step, index) => (
-        <View key={step} style={styles.workflowStep}>
-          <View style={[styles.workflowIndex, index === 0 && styles.workflowIndexActive]}>
-            <Text style={[styles.workflowIndexText, index === 0 && styles.workflowIndexTextActive]}>{index + 1}</Text>
+      {steps.map((step, index) => {
+        const isActive = !step.done && (index === 0 || steps[index - 1]?.done);
+        return (
+          <View key={step.title} style={styles.workflowStep}>
+            <View style={[styles.workflowIndex, step.done && styles.workflowIndexDone, isActive && styles.workflowIndexActive]}>
+              {step.done ? (
+                <Feather name="check" size={13} color={colors.canvas} />
+              ) : (
+                <Text style={[styles.workflowIndexText, isActive && styles.workflowIndexTextActive]}>{index + 1}</Text>
+              )}
+            </View>
+            <View style={styles.workflowCopy}>
+              <Text style={styles.workflowStepTitle}>{step.title}</Text>
+              <Text style={styles.workflowStepMeta}>{step.meta}</Text>
+            </View>
+            {step.done ? <Feather name="check-circle" size={15} color={colors.accent} /> : null}
           </View>
-          <View style={styles.workflowCopy}>
-            <Text style={styles.workflowStepTitle}>{step}</Text>
-            <Text style={styles.workflowStepMeta}>{index === 0 ? "Run zoning, lot, and site analysis" : index === 4 ? "Select builders and prepare packet" : "Not started"}</Text>
-          </View>
-          <Feather name="chevron-right" size={16} color={colors.muted} />
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
+
+function derivePacketReady({
+  hasEstimate,
+  hasConcept,
+  hasParcel,
+  hasGuide,
+  quotesSent,
+}: {
+  hasEstimate: boolean;
+  hasConcept: boolean;
+  hasParcel: boolean;
+  hasGuide: boolean;
+  quotesSent: number;
+}) {
+  const items = [
+    hasEstimate,
+    hasConcept,
+    hasParcel,
+    hasGuide,
+    quotesSent > 0,
+    hasEstimate && hasParcel, // ROI summary requires both
+  ];
+  return items.filter(Boolean).length;
+}
+
+function deriveNextActions({
+  parcel,
+  guide,
+  hasEstimate,
+  hasConcept,
+  packetReady,
+  hasProject,
+}: {
+  parcel: ReturnType<typeof useActiveParcelSummary>;
+  guide: ReturnType<typeof useActiveGuide>;
+  hasEstimate: boolean;
+  hasConcept: boolean;
+  packetReady: number;
+  hasProject: boolean;
+}): NextAction[] {
+  const actions: NextAction[] = [];
+
+  if (!hasProject) {
+    return actions;
+  }
+  if (!hasEstimate) {
+    actions.push({ label: "Set first estimate", icon: "bar-chart-2", impact: "High", cta: "Estimate", route: "/estimate", tone: "default" });
+  }
+  if (parcel && parcel.constraints.length > 0) {
+    actions.push({
+      label: `Verify ${parcel.constraints[0]}`,
+      icon: "alert-circle",
+      impact: "High",
+      cta: "Permit",
+      route: "/guide",
+      tone: "permit",
+    });
+  }
+  if (guide && guide.blockers.length > 0) {
+    actions.push({
+      label: guide.blockers[0],
+      icon: "shield",
+      impact: "Medium",
+      cta: "Review",
+      route: "/guide",
+      tone: "permit",
+    });
+  }
+  if (packetReady < PACKET_TOTAL) {
+    actions.push({
+      label: `Complete quote packet (${packetReady}/${PACKET_TOTAL})`,
+      icon: "file-text",
+      impact: packetReady < 4 ? "High" : "Medium",
+      cta: "Build",
+      route: "/contractors",
+      tone: "builder",
+    });
+  }
+  if (!hasConcept) {
+    actions.push({ label: "Generate first lot-specific concept", icon: "move", impact: "Optional", cta: "Studio", route: "/ideas", tone: "default" });
+  }
+  return actions.slice(0, 4);
+}
+
+type NextAction = {
+  label: string;
+  icon: keyof typeof Feather.glyphMap;
+  impact: "High" | "Medium" | "Optional";
+  cta: string;
+  route: "/estimate" | "/guide" | "/contractors" | "/ideas";
+  tone: "default" | "builder" | "permit";
+};
 
 const styles = StyleSheet.create({
   topbar: {
@@ -381,15 +456,6 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
     minWidth: 230,
-  },
-  brand: {
-    ...typography.h1,
-    color: colors.text,
-    fontSize: 26,
-    lineHeight: 31,
-  },
-  brandAccent: {
-    color: colors.accent,
   },
   brandLine: {
     ...typography.body,
@@ -418,133 +484,12 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.accentDark,
   },
-  iconButton: {
-    alignItems: "center",
-    backgroundColor: colors.canvas,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-    ...shadows.crisp,
-  },
   commandCenter: {
     gap: spacing.md,
   },
   commandCenterWide: {
     alignItems: "stretch",
     flexDirection: "row",
-  },
-  visualPanel: {
-    backgroundColor: colors.ink,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    minHeight: 360,
-    overflow: "hidden",
-    position: "relative",
-    ...shadows.medium,
-  },
-  visualImage: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  visualShade: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  lotOutline: {
-    borderColor: "rgba(255,255,255,0.86)",
-    borderRadius: radii.sm,
-    borderStyle: "dashed",
-    borderWidth: 2,
-    bottom: 132,
-    left: "12%",
-    position: "absolute",
-    right: "14%",
-    top: 86,
-    transform: [{ rotate: "-5deg" }],
-  },
-  aduFootprint: {
-    alignItems: "center",
-    backgroundColor: "rgba(6,20,27,0.88)",
-    borderColor: colors.highlighter,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    height: 94,
-    justifyContent: "center",
-    position: "absolute",
-    right: "20%",
-    top: "34%",
-    width: 124,
-  },
-  aduLabel: {
-    ...typography.label,
-    color: colors.canvas,
-  },
-  aduMeta: {
-    ...typography.mono,
-    color: colors.canvas,
-    fontSize: 12,
-  },
-  measureBubble: {
-    backgroundColor: "rgba(6,20,27,0.86)",
-    borderColor: "rgba(255,255,255,0.32)",
-    borderRadius: radii.xs,
-    borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    position: "absolute",
-  },
-  measureTop: {
-    right: 22,
-    top: 34,
-  },
-  measureBottom: {
-    bottom: 44,
-    left: "45%",
-  },
-  measureText: {
-    ...typography.label,
-    color: colors.canvas,
-    fontSize: 10,
-  },
-  visualHeader: {
-    alignItems: "flex-end",
-    bottom: spacing.lg,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    left: spacing.lg,
-    position: "absolute",
-    right: spacing.lg,
-  },
-  visualTitle: {
-    ...typography.title,
-    color: colors.canvas,
-  },
-  visualText: {
-    ...typography.body,
-    color: "rgba(255,255,255,0.78)",
-  },
-  visualToggle: {
-    backgroundColor: "rgba(6,20,27,0.78)",
-    borderColor: "rgba(255,255,255,0.18)",
-    borderRadius: radii.md,
-    borderWidth: 1,
-    flexDirection: "row",
-    overflow: "hidden",
-  },
-  visualToggleActive: {
-    ...typography.label,
-    backgroundColor: colors.canvas,
-    color: colors.ink,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  visualToggleText: {
-    ...typography.label,
-    color: colors.canvas,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
   },
   studyPanel: {
     alignSelf: "stretch",
@@ -607,6 +552,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     justifyContent: "space-between",
   },
+  projectMiniText: {
+    flex: 1,
+    gap: 2,
+  },
   miniLabel: {
     ...typography.label,
     color: colors.muted,
@@ -643,49 +592,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   miniMetricValue: {
-    ...typography.h2,
+    ...typography.mono,
     color: colors.text,
     fontSize: 15,
     lineHeight: 19,
-  },
-  statusGrid: {
-    gap: spacing.sm,
-  },
-  statusGridWide: {
-    flexDirection: "row",
-  },
-  statusCard: {
-    backgroundColor: colors.canvas,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    flex: 1,
-    gap: spacing.xs,
-    minWidth: 158,
-    padding: spacing.md,
-    ...shadows.crisp,
-  },
-  statusDot: {
-    borderRadius: radii.full,
-    height: 8,
-    width: 8,
-  },
-  statusTitle: {
-    ...typography.label,
-    color: colors.muted,
-  },
-  statusValue: {
-    ...typography.title,
-    color: colors.text,
-    fontFamily: typography.mono.fontFamily,
-    fontSize: 25,
-    lineHeight: 30,
-  },
-  statusDetail: {
-    ...typography.body,
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 17,
   },
   boardGrid: {
     gap: spacing.md,
@@ -757,32 +667,34 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     textTransform: "capitalize",
   },
-  snapshotMetrics: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  fieldMetric: {
+  snapshotStrip: {
+    alignItems: "stretch",
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
-    flex: 1,
-    minWidth: 96,
+    flexDirection: "row",
     padding: spacing.sm,
   },
-  fieldMetricLabel: {
+  stripItem: {
+    flex: 1,
+    gap: 2,
+    paddingHorizontal: spacing.sm,
+  },
+  stripDivider: {
+    backgroundColor: colors.border,
+    width: 1,
+  },
+  stripLabel: {
     ...typography.label,
     color: colors.muted,
     fontSize: 10,
   },
-  fieldMetricValue: {
-    ...typography.h2,
+  stripValue: {
+    ...typography.mono,
     color: colors.text,
-    fontFamily: typography.mono.fontFamily,
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 20,
-    marginTop: 2,
   },
   projectHint: {
     ...typography.body,
@@ -834,6 +746,7 @@ const styles = StyleSheet.create({
   },
   workflowIndex: {
     alignItems: "center",
+    backgroundColor: colors.canvas,
     borderColor: colors.border,
     borderRadius: radii.full,
     borderWidth: 1,
@@ -842,6 +755,10 @@ const styles = StyleSheet.create({
     width: 30,
   },
   workflowIndexActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  workflowIndexDone: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
@@ -869,55 +786,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
-  workbenchGrid: {
-    gap: spacing.sm,
-  },
-  workbenchGridWide: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  workbench: {
-    alignItems: "center",
-    backgroundColor: colors.canvas,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    flexBasis: 210,
-    flexDirection: "row",
-    flexGrow: 1,
-    gap: spacing.md,
-    minHeight: 82,
-    padding: spacing.md,
-    ...shadows.crisp,
-  },
-  pressed: {
-    opacity: 0.86,
-    transform: [{ translateY: 1 }],
-  },
-  workbenchIcon: {
-    alignItems: "center",
-    backgroundColor: colors.ink,
-    borderRadius: radii.md,
-    height: 42,
-    justifyContent: "center",
-    width: 42,
-  },
-  workbenchText: {
-    flex: 1,
-    gap: 2,
-  },
-  workbenchTitle: {
-    ...typography.h2,
-    color: colors.text,
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  workbenchDetail: {
-    ...typography.body,
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
   actionTable: {
     backgroundColor: colors.canvas,
     borderColor: colors.border,
@@ -935,6 +803,9 @@ const styles = StyleSheet.create({
     minHeight: 58,
     paddingHorizontal: spacing.md,
   },
+  actionRowLast: {
+    borderBottomWidth: 0,
+  },
   actionRowNarrow: {
     alignItems: "stretch",
     flexDirection: "column",
@@ -949,11 +820,17 @@ const styles = StyleSheet.create({
   },
   actionIcon: {
     alignItems: "center",
-    backgroundColor: colors.parcelSoft,
+    backgroundColor: colors.accentSoft,
     borderRadius: radii.sm,
     height: 32,
     justifyContent: "center",
     width: 32,
+  },
+  actionIconBuilder: {
+    backgroundColor: colors.parcelSoft,
+  },
+  actionIconPermit: {
+    backgroundColor: colors.permitSoft,
   },
   actionName: {
     ...typography.body,
@@ -976,10 +853,20 @@ const styles = StyleSheet.create({
     color: colors.muted,
     width: 64,
   },
-  actionStatus: {
+  actionLink: {
+    alignItems: "center",
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.sm,
+    flexDirection: "row",
+    gap: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  actionLinkPressed: {
+    opacity: 0.85,
+  },
+  actionLinkText: {
     ...typography.label,
     color: colors.accentDark,
-    textAlign: "right",
-    width: 82,
   },
 });

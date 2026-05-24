@@ -76,15 +76,15 @@ If a screen has limited space, money and builder action win over visual design c
 
 ### Type Scale
 
-- Display: 40px / 46px, Fraunces 650
-- Screen title: 30px / 36px, Instrument Sans 800
-- Section title: 20px / 26px, Instrument Sans 800
-- Card title: 16px / 21px, Instrument Sans 800
-- Body: 14px / 21px, Instrument Sans 400
-- Small body: 13px / 18px, Instrument Sans 400
-- Label: 11px / 16px, Instrument Sans 700
-- Data large: 28px / 34px, IBM Plex Mono 700
-- Data regular: 14px / 20px, IBM Plex Mono 600
+- Display: 40px / 46px, Fraunces 600
+- Screen title: 30px / 36px, Hanken Grotesk 800
+- Section title: 20px / 26px, Hanken Grotesk 800
+- Card title: 16px / 21px, Hanken Grotesk 700
+- Body: 14px / 21px, Hanken Grotesk 400
+- Small body: 13px / 18px, Hanken Grotesk 400
+- Label: 11px / 16px, Hanken Grotesk 700
+- Data large: 28px / 34px, IBM Plex Mono 600
+- Data regular: 14px / 20px, IBM Plex Mono 500
 
 Use letter spacing `0`. Do not compress tracking.
 
@@ -294,3 +294,4 @@ Do not animate decorative blobs, background gradients, or generic page entrances
 | 2026-05-21 | Removed California-only positioning from the design system | User clarified the app should not be restricted to California |
 | 2026-05-21 | Chose financial planning desk plus residential marketplace aesthetic | The memorable product moment is money unlocked by an ADU, not architectural browsing |
 | 2026-05-22 | Adopted YardUp Quiet Ascent as the app brand layer | The roof-arrow-ground mark and warm paper / evergreen / emerald palette make the product feel calmer and more ownable without hiding revenue or builder readiness |
+| 2026-05-23 | Resolved typography contradiction in favor of Hanken Grotesk | The earlier draft prose said Hanken Grotesk while the type scale listed Instrument Sans. Hanken Grotesk is warmer and more humanist, which fits the Quiet Ascent voice and the homeowner-readable brief; Fraunces remains the serif for revenue moments and display, IBM Plex Mono remains for tabular numbers |

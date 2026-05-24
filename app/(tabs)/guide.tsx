@@ -1,12 +1,15 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { GuideCard } from "../../src/components/GuideCard";
 import { MetricCard } from "../../src/components/MetricCard";
+import { RiskIndicator } from "../../src/components/RiskIndicator";
 import { Screen } from "../../src/components/Screen";
 import { SectionHeader } from "../../src/components/SectionHeader";
 import { jurisdictionLabels } from "../../src/data/regulations";
+import { deriveRisk } from "../../src/domain/risk";
 import { useActiveGuide, useActiveParcelSummary, useActiveProject } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
@@ -15,13 +18,18 @@ export default function GuideScreen() {
   const guide = useActiveGuide();
   const parcel = useActiveParcelSummary();
 
+  const risk = useMemo(() => deriveRisk({ guide, parcel }), [guide, parcel]);
+
   return (
-    <Screen title="Permit map" subtitle="A local-first checklist for jurisdiction, parcel constraints, and source-backed next steps.">
+    <Screen
+      title="Permit"
+      subtitle="Local-first risk read, parcel constraints, and source-backed steps. Verify with your jurisdiction before construction decisions."
+    >
       {project ? (
-        <LinearGradient colors={[colors.ink, "#20352E"]} style={styles.projectCard}>
+        <LinearGradient colors={[colors.forestDeep, colors.forest]} style={styles.projectCard}>
           <View style={styles.projectHeader}>
             <View style={styles.projectIcon}>
-              <Feather name="map-pin" size={18} color={colors.ink} />
+              <Feather name="map-pin" size={18} color={colors.canvas} />
             </View>
             <View style={styles.projectText}>
               <Text style={styles.projectLabel}>Permit field notes</Text>
@@ -33,9 +41,18 @@ export default function GuideScreen() {
         </LinearGradient>
       ) : null}
 
+      <SectionHeader title="Permit risk" action={parcel ? `verified ${parcel.verifiedAt}` : "needs a study"} />
+      <RiskIndicator
+        label={guide ? `${jurisdictionLabels[guide.jurisdiction]} review` : "Run a study to see permit risk"}
+        level={risk.level}
+        score={risk.score}
+        drivers={risk.drivers}
+        verifiedAt={parcel?.verifiedAt}
+      />
+
       {parcel ? (
         <>
-          <SectionHeader title="Parcel snapshot" action={parcel.verifiedAt} />
+          <SectionHeader title="Parcel snapshot" action={parcel.sourceLabel} />
           <View style={styles.metrics}>
             <MetricCard label="Zoning" value={parcel.zoning} detail={parcel.sourceLabel} />
             <MetricCard label="Lot" value={`${parcel.lotSqFt.toLocaleString()} sqft`} detail="Starter parcel" />
@@ -79,7 +96,7 @@ const styles = StyleSheet.create({
   },
   projectIcon: {
     alignItems: "center",
-    backgroundColor: colors.highlighter,
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderRadius: radii.sm,
     height: 42,
     justifyContent: "center",
@@ -121,8 +138,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   constraintCard: {
-    backgroundColor: colors.warningSoft,
-    borderColor: colors.permitSoft,
+    backgroundColor: colors.permitSoft,
+    borderColor: colors.permit,
+    borderLeftWidth: 3,
     borderWidth: 1,
     borderRadius: radii.md,
     gap: spacing.sm,

@@ -1,9 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import type { RiskLevel } from "../domain/risk";
 import { colors, radii, shadows, spacing, typography } from "../theme";
 
-export type RiskLevel = "low" | "moderate" | "high" | "unknown";
+export type { RiskLevel } from "../domain/risk";
 
 interface RiskIndicatorProps {
   label: string;

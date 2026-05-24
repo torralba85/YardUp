@@ -1,5 +1,20 @@
 import "react-native-gesture-handler";
 
+import {
+  Fraunces_600SemiBold,
+  useFonts as useFraunces,
+} from "@expo-google-fonts/fraunces";
+import {
+  HankenGrotesk_400Regular,
+  HankenGrotesk_700Bold,
+  HankenGrotesk_800ExtraBold,
+  useFonts as useHanken,
+} from "@expo-google-fonts/hanken-grotesk";
+import {
+  IBMPlexMono_500Medium,
+  IBMPlexMono_600SemiBold,
+  useFonts as useIBMPlex,
+} from "@expo-google-fonts/ibm-plex-mono";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -7,14 +22,30 @@ import { StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { FeedbackButton } from "../src/components/FeedbackButton";
+import { YardUpLogo } from "../src/components/YardUpLogo";
 import { useAppStore } from "../src/state/appStore";
 import { colors, spacing, typography } from "../src/theme";
-import { YardUpLogo } from "../src/components/YardUpLogo";
-import { FeedbackButton } from "../src/components/FeedbackButton";
 
 export default function RootLayout() {
   const initialized = useAppStore((state) => state.initialized);
   const initialize = useAppStore((state) => state.initialize);
+
+  const [hankenLoaded, hankenError] = useHanken({
+    HankenGrotesk_400Regular,
+    HankenGrotesk_700Bold,
+    HankenGrotesk_800ExtraBold,
+  });
+  const [fraunesLoaded, fraunesError] = useFraunces({ Fraunces_600SemiBold });
+  const [plexLoaded, plexError] = useIBMPlex({ IBMPlexMono_500Medium, IBMPlexMono_600SemiBold });
+
+  // Fonts are ready when loaded — or we move on if a load failed so the app
+  // never gets stuck on the splash. Native falls back to platform sans/serif.
+  const fontsReady =
+    (hankenLoaded || Boolean(hankenError)) &&
+    (fraunesLoaded || Boolean(fraunesError)) &&
+    (plexLoaded || Boolean(plexError));
+  const ready = initialized && fontsReady;
 
   useEffect(() => {
     void initialize();
@@ -28,11 +59,13 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="wizard" />
         </Stack>
-        {initialized ? <FeedbackButton /> : null}
-        {!initialized ? (
+        {ready ? <FeedbackButton /> : null}
+        {!ready ? (
           <View style={styles.loading} pointerEvents="auto">
             <YardUpLogo size={38} />
-            <Text style={styles.loadingText}>Preparing income and builder data</Text>
+            <Text style={styles.loadingText}>
+              {fontsReady ? "Preparing income and builder data" : "Loading typography"}
+            </Text>
           </View>
         ) : null}
       </SafeAreaProvider>

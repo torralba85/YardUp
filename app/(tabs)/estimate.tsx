@@ -24,13 +24,13 @@ export default function EstimateScreen() {
 
   return (
     <Screen
-      title="Feasibility sheet"
-      subtitle="A deterministic model for value, rent, cost, and payback that stays attached to the active lot."
+      title="Estimate"
+      subtitle="A deterministic feasibility sheet — value, rent, cost, and payback — pinned to the active lot."
     >
       {project ? (
-        <LinearGradient colors={[colors.ink, "#21342D"]} style={styles.projectCard}>
+        <LinearGradient colors={[colors.forestDeep, colors.forest]} style={styles.projectCard}>
           <View style={styles.projectIcon}>
-            <Feather name="activity" size={18} color={colors.ink} />
+            <Feather name="activity" size={18} color={colors.canvas} />
           </View>
           <View style={styles.projectBody}>
             <Text style={styles.projectLabel}>Numbers lab</Text>
@@ -46,7 +46,7 @@ export default function EstimateScreen() {
           <View style={styles.primaryMetrics}>
             <MetricCard
               label="Value range"
-              value={`${formatCurrencyCompact(estimate.lowValue)}-${formatCurrencyCompact(estimate.highValue)}`}
+              value={`${formatCurrencyCompact(estimate.lowValue)}–${formatCurrencyCompact(estimate.highValue)}`}
               detail="Income approach"
               tone="primary"
               width="full"
@@ -61,11 +61,11 @@ export default function EstimateScreen() {
           </View>
           <View style={styles.note}>
             <View style={styles.noteIcon}>
-              <Feather name="file-text" size={16} color={colors.permit} />
+              <Feather name="hard-drive" size={15} color={colors.accentDark} />
             </View>
             <View style={styles.noteBody}>
               <Text style={styles.noteLabel}>Saved locally</Text>
-              <Text style={styles.noteText}>These assumptions travel with permit checks, inspiration concepts, and quote packets.</Text>
+              <Text style={styles.noteText}>These assumptions travel with permit checks, design concepts, and quote packets.</Text>
             </View>
           </View>
         </>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   projectIcon: {
     alignItems: "center",
-    backgroundColor: colors.highlighter,
+    backgroundColor: "rgba(207,248,109,0.18)",
     borderRadius: radii.sm,
     height: 44,
     justifyContent: "center",
@@ -122,8 +122,9 @@ const styles = StyleSheet.create({
   },
   note: {
     alignItems: "flex-start",
-    backgroundColor: colors.warningSoft,
-    borderColor: colors.permitSoft,
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accent,
+    borderLeftWidth: 3,
     borderWidth: 1,
     borderRadius: radii.md,
     flexDirection: "row",
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
   },
   noteIcon: {
     alignItems: "center",
-    backgroundColor: colors.card,
+    backgroundColor: colors.canvas,
     borderRadius: radii.sm,
     height: 34,
     justifyContent: "center",
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
   },
   noteLabel: {
     ...typography.label,
-    color: colors.permit,
+    color: colors.accentDark,
   },
   noteText: {
     ...typography.body,

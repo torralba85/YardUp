@@ -1,47 +1,71 @@
 import { Platform, ViewStyle } from "react-native";
 
+/**
+ * YardUp Quiet Ascent palette. The sanctioned tokens are the ones DESIGN.md
+ * names explicitly; aliases keep older callsites compiling without
+ * fragmenting the visual system. New code should prefer the sanctioned names.
+ */
 export const colors = {
+  // Surfaces
   background: "#F6F4EE",
-  canvas: "#FFFFFF",
+  paper: "#F6F4EE",
   surface: "#F6F4EE",
   surfaceStrong: "#EFEEE7",
+  canvas: "#FFFFFF",
   card: "#FFFFFF",
+  inkSoft: "#EDF3EE",
+
+  // Brand
   text: "#15231C",
   muted: "#566159",
   faint: "#8C968D",
   border: "#E5E3D9",
+  line: "rgba(21,35,28,0.12)",
+  veil: "rgba(21,35,28,0.07)",
+
+  // Revenue green (sanctioned: the income / readiness color)
+  emerald: "#1F9D63",
+  emeraldPress: "#177A4D",
   accent: "#1F9D63",
   accentDark: "#0E2C20",
   accentSoft: "#EBF6EF",
-  mint: "#DCF1E5",
-  mintSoft: "#EBF6EF",
-  forestDeep: "#0E2C20",
-  forest: "#143D2B",
-  emerald: "#1F9D63",
-  emeraldPress: "#177A4D",
-  inkSoft: "#EDF3EE",
-  permit: "#C1760D",
-  permitSoft: "#FFF1D7",
-  parcel: "#0D5DB8",
-  parcelSoft: "#E4F0FF",
-  warning: "#D1583F",
-  warningSoft: "#FDE3DA",
   success: "#1F9D63",
   successSoft: "#DCF1E5",
-  black: "#10110F",
+  mint: "#DCF1E5",
+  mintSoft: "#EBF6EF",
+
+  // Forest structure
+  forestDeep: "#0E2C20",
+  forest: "#143D2B",
   ink: "#0E2C20",
   ink2: "#143D2B",
   rail: "#0E2C20",
-  clay: "#C9743F",
-  blueprint: "#075EBC",
-  brass: "#E0A33E",
-  paper: "#F6F4EE",
+  black: "#10110F",
+
+  // Cash highlight (rare emphasis — selected state, money opportunity)
   highlighter: "#CFF86D",
-  coral: "#F07052",
-  fog: "#EBF6EF",
+
+  // Permit amber (verification needed / unknown / mild risk)
+  permit: "#C1760D",
+  permitSoft: "#FFF1D7",
+
+  // Builder blue (builder match, quote packet movement, external action).
+  // `blueprint` and `parcel` are aliases for the single sanctioned Builder Blue.
+  parcel: "#0D5DB8",
+  parcelSoft: "#E4F0FF",
+  blueprint: "#0D5DB8",
+
+  // Error / blocked
+  warning: "#D1583F",
+  warningSoft: "#FDE3DA",
+  coral: "#D1583F",
+
+  // Warmth accent — used sparingly for "active project" warmth on card rails
+  // and the wizard's progress marker. Distinct from permit amber semantically.
+  clay: "#C9743F",
+
+  // Grid wash used behind sketches; kept as a single hint of the brand grid.
   grid: "rgba(31,157,99,0.1)",
-  veil: "rgba(21,35,28,0.07)",
-  line: "rgba(21,35,28,0.12)",
 };
 
 export const spacing = {
@@ -86,16 +110,68 @@ export const shadows = {
   } as ViewStyle,
 };
 
-const sansFamily = Platform.select({ ios: "Avenir Next", android: "sans-serif", default: "Hanken Grotesk, Aptos, Segoe UI, sans-serif" });
-const serifFamily = Platform.select({ ios: "Iowan Old Style", android: "serif", default: "Fraunces, Georgia, serif" });
-const monoFamily = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
+/**
+ * Font families. expo-google-fonts loads Hanken Grotesk, Fraunces, and IBM
+ * Plex Mono at app boot (see app/_layout.tsx). When the loader is still
+ * running, the fallback chain renders the platform default so the UI doesn't
+ * flash unstyled.
+ */
+// expo-google-fonts registers @font-face with the suffixed weight name on
+// every platform (e.g. "HankenGrotesk_400Regular"). Web fallback chains can
+// append system fonts after the loaded name so the page doesn't flash blank
+// if a face hasn't fetched yet.
+const sansFamily = Platform.select({
+  default: "HankenGrotesk_400Regular, Aptos, Segoe UI, sans-serif",
+  ios: "HankenGrotesk_400Regular",
+  android: "HankenGrotesk_400Regular",
+}) as string;
+
+const sansBold = Platform.select({
+  default: "HankenGrotesk_700Bold, Aptos, Segoe UI, sans-serif",
+  ios: "HankenGrotesk_700Bold",
+  android: "HankenGrotesk_700Bold",
+}) as string;
+
+const sansExtra = Platform.select({
+  default: "HankenGrotesk_800ExtraBold, Aptos, Segoe UI, sans-serif",
+  ios: "HankenGrotesk_800ExtraBold",
+  android: "HankenGrotesk_800ExtraBold",
+}) as string;
+
+const serifFamily = Platform.select({
+  default: "Fraunces_600SemiBold, Georgia, serif",
+  ios: "Fraunces_600SemiBold",
+  android: "Fraunces_600SemiBold",
+}) as string;
+
+const monoFamily = Platform.select({
+  default: "IBMPlexMono_500Medium, ui-monospace, Menlo, monospace",
+  ios: "IBMPlexMono_500Medium",
+  android: "IBMPlexMono_500Medium",
+}) as string;
+
+const monoBold = Platform.select({
+  default: "IBMPlexMono_600SemiBold, ui-monospace, Menlo, monospace",
+  ios: "IBMPlexMono_600SemiBold",
+  android: "IBMPlexMono_600SemiBold",
+}) as string;
+
+export const fonts = {
+  sansFamily,
+  sansBold,
+  sansExtra,
+  serifFamily,
+  monoFamily,
+  monoBold,
+};
 
 export const typography = {
-  title: {
-    fontFamily: sansFamily,
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: "800" as const,
+  // Display — Fraunces, for revenue heroes and editorial moments.
+  display: {
+    fontFamily: serifFamily,
+    fontSize: 40,
+    lineHeight: 46,
+    fontWeight: "600" as const,
     letterSpacing: 0,
   },
   editorial: {
@@ -105,20 +181,31 @@ export const typography = {
     fontWeight: "600" as const,
     letterSpacing: 0,
   },
+  // Screen title (DESIGN.md: 30/36, Hanken 800)
+  title: {
+    fontFamily: sansExtra,
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: "800" as const,
+    letterSpacing: 0,
+  },
+  // Section title (DESIGN.md: 20/26, Hanken 800)
   h1: {
-    fontFamily: sansFamily,
+    fontFamily: sansExtra,
     fontSize: 25,
     lineHeight: 31,
     fontWeight: "800" as const,
     letterSpacing: 0,
   },
+  // Card title (DESIGN.md: 16/21, Hanken 700)
   h2: {
-    fontFamily: sansFamily,
+    fontFamily: sansBold,
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "700" as const,
     letterSpacing: 0,
   },
+  // Body (DESIGN.md: 14/21, Hanken 400)
   body: {
     fontFamily: sansFamily,
     fontSize: 14,
@@ -126,19 +213,29 @@ export const typography = {
     fontWeight: "400" as const,
     letterSpacing: 0,
   },
+  // Label (DESIGN.md: 11/16, Hanken 700)
   label: {
-    fontFamily: sansFamily,
+    fontFamily: sansBold,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: "700" as const,
     letterSpacing: 0,
     textTransform: "none" as const,
   },
+  // Tabular numbers (DESIGN.md: 14/20, IBM Plex Mono 500)
   mono: {
     fontFamily: monoFamily,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "400" as const,
+    fontWeight: "500" as const,
     letterSpacing: 0,
-  }
+  },
+  // Large tabular numbers (DESIGN.md: 28/34, IBM Plex Mono 600)
+  monoLarge: {
+    fontFamily: monoBold,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "600" as const,
+    letterSpacing: 0,
+  },
 };

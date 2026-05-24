@@ -8,19 +8,19 @@ type IconName = keyof typeof Feather.glyphMap;
 
 const icons: Record<string, IconName> = {
   index: "trending-up",
-  ideas: "move",
-  guide: "map",
   estimate: "bar-chart-2",
   contractors: "send",
+  guide: "shield",
+  ideas: "move",
   inspiration: "image",
 };
 
 const labels: Record<string, string> = {
   index: "Home",
-  ideas: "Studio",
-  guide: "Permit",
   estimate: "Estimate",
   contractors: "Build",
+  guide: "Permit",
+  ideas: "Studio",
   inspiration: "Ideas",
 };
 
@@ -72,10 +72,10 @@ export default function TabsLayout() {
       })}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="ideas" options={{ title: "Studio" }} />
-      <Tabs.Screen name="guide" options={{ title: "Permit" }} />
       <Tabs.Screen name="estimate" options={{ title: "Estimate" }} />
       <Tabs.Screen name="contractors" options={{ title: "Build" }} />
+      <Tabs.Screen name="guide" options={{ title: "Permit" }} />
+      <Tabs.Screen name="ideas" options={{ title: "Studio" }} />
       <Tabs.Screen name="inspiration" options={{ href: null }} />
     </Tabs>
   );
