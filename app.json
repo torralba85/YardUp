@@ -2,7 +2,11 @@
   "expo": {
     "name": "ADU Advisor",
     "slug": "adu-advisor",
+    "scheme": "aduadvisor",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,9 +17,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.aduadvisor.app",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "usesNonExemptEncryption": false
     },
     "android": {
+      "package": "com.aduadvisor.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -28,15 +37,26 @@
     },
     "extra": {
       "firebase": {
-        "apiKey": "",
-        "authDomain": "",
-        "projectId": "",
-        "appId": ""
+        "apiKey": "AIzaSyD34VMPks8SLrHFRFoFqO8lunMRmiGSS2M",
+        "authDomain": "adu-advisor.firebaseapp.com",
+        "projectId": "adu-advisor",
+        "storageBucket": "adu-advisor.firebasestorage.app",
+        "messagingSenderId": "674234371665",
+        "appId": "1:674234371665:web:d1c9673d6f691b2217b270"
       }
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ADU Advisor lets you choose backyard photos to tailor ADU concepts to your property.",
+          "cameraPermission": "ADU Advisor lets you take backyard photos to tailor ADU concepts to your property.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font"
     ]
   }
 }
