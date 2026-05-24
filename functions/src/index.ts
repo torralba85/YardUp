@@ -5,6 +5,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { buildDesignConcept } from "./lib/designConcept";
 import { buildStarterPropertyHistory } from "./lib/propertyHistory";
 import { saveQuoteRequest } from "./lib/quoteRequests";
+import { enforceRateLimit } from "./lib/rateLimit";
 import { getSeededRegulationGuide } from "./lib/regulations";
 import { writeServiceLog } from "./lib/serviceLog";
 import {
@@ -23,6 +24,7 @@ const callableOptions = {
 };
 
 export const getRegulationGuide = onCall(callableOptions, async (request) => {
+  await enforceRateLimit("getRegulationGuide", request.auth?.uid, 120);
   const input = parseOrThrow(getRegulationGuideInputSchema, request.data);
   const guide = getSeededRegulationGuide(input.jurisdiction);
   await writeServiceLog({ service: "getRegulationGuide", status: "ok", jurisdiction: input.jurisdiction });
@@ -30,8 +32,9 @@ export const getRegulationGuide = onCall(callableOptions, async (request) => {
 });
 
 export const generateDesignConcept = onCall(callableOptions, async (request) => {
+  await enforceRateLimit("generateDesignConcept", request.auth?.uid, 20);
   const input = parseOrThrow(generateDesignConceptInputSchema, request.data);
-  const concept = await buildDesignConcept(input.project, input.inspiration);
+  const concept = await buildDesignConcept(input.project, input.inspiration, input.preferences);
   await writeServiceLog({
     service: "generateDesignConcept",
     status: process.env.OPENAI_API_KEY ? "ok" : "fallback",
@@ -43,6 +46,7 @@ export const generateDesignConcept = onCall(callableOptions, async (request) => 
 });
 
 export const searchPropertyHistory = onCall(callableOptions, async (request) => {
+  await enforceRateLimit("searchPropertyHistory", request.auth?.uid, 20);
   const input = parseOrThrow(searchPropertyHistoryInputSchema, request.data);
   const records = buildStarterPropertyHistory(input.address, input.projectId);
   await writeServiceLog({
@@ -59,10 +63,15 @@ export const searchPropertyHistory = onCall(callableOptions, async (request) => 
 });
 
 export const submitQuoteRequest = onCall(callableOptions, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Firebase authentication is required.");
+  }
+
+  await enforceRateLimit("submitQuoteRequest", request.auth.uid, 20);
   const input = parseOrThrow(submitQuoteRequestInputSchema, request.data);
   const saved = await saveQuoteRequest({
     ...input,
-    userId: request.auth?.uid,
+    userId: request.auth.uid,
   });
   await writeServiceLog({
     service: "submitQuoteRequest",

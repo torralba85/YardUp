@@ -23,11 +23,13 @@ export async function saveQuoteRequest(payload: QuoteRequestPayload) {
     updatedAt: now,
   };
 
-  if (payload.userId) {
-    await getFirestore()
-      .doc(`users/${payload.userId}/projects/${payload.projectId}/quoteRequests/${id}`)
-      .set(document, { merge: true });
+  if (!payload.userId) {
+    throw new Error("User ID is required to save a quote request.");
   }
+
+  await getFirestore()
+    .doc(`users/${payload.userId}/projects/${payload.projectId}/quoteRequests/${id}`)
+    .set(document, { merge: true });
 
   return {
     ...document,
