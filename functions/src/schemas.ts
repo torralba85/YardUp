@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 export const jurisdictionSchema = z.enum(["los-angeles", "san-diego", "san-jose", "oakland", "sacramento"]);
+export const designStyleIdSchema = z.enum([
+  "warm_modern",
+  "farmhouse",
+  "industrial",
+  "coastal_minimal",
+  "california_bungalow",
+  "clean_gable",
+]);
 
 export const estimateInputSchema = z.object({
   aduType: z.enum(["detached", "attached", "garage_conversion", "jadu"]),
@@ -24,6 +32,7 @@ export const projectSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   lastEstimateInput: estimateInputSchema.optional(),
+  sitePhotoUri: z.string().optional(),
 });
 
 export const inspirationSchema = z
@@ -47,6 +56,36 @@ export const getRegulationGuideInputSchema = z.object({
 export const generateDesignConceptInputSchema = z.object({
   project: projectSchema,
   inspiration: inspirationSchema,
+  preferences: z
+    .object({
+      styleId: designStyleIdSchema.optional(),
+      styleLabel: z.string().min(1).max(80).optional(),
+      modelId: z.string().min(1).max(120).optional(),
+      modelName: z.string().min(1).max(120).optional(),
+      constructionMethod: z.enum(["prefab", "modular", "site_built", "conversion"]).optional(),
+      targetSqFt: z.number().min(150).max(1200).optional(),
+      placement: z
+        .object({
+          xPercent: z.number().min(0).max(100),
+          yPercent: z.number().min(0).max(100),
+          rotation: z.number().min(-45).max(45),
+        })
+        .optional(),
+      fitSignals: z
+        .array(
+          z.object({
+            id: z.string().min(1).max(80),
+            label: z.string().min(1).max(80),
+            value: z.string().min(1).max(120),
+            detail: z.string().min(1).max(240),
+            status: z.enum(["good", "review", "blocked"]),
+          }),
+        )
+        .max(8)
+        .optional(),
+      hasSitePhoto: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 export const searchPropertyHistoryInputSchema = z.object({

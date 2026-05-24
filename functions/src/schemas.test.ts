@@ -26,9 +26,29 @@ describe("callable input schemas", () => {
         createdAt: "2026-05-18T00:00:00.000Z",
         updatedAt: "2026-05-18T00:00:00.000Z",
       },
+      preferences: {
+        styleId: "warm_modern",
+        styleLabel: "Warm Modern",
+        modelId: "studio-340",
+        modelName: "Garden Studio",
+        constructionMethod: "prefab",
+        targetSqFt: 340,
+        placement: { xPercent: 68, yPercent: 70, rotation: 0 },
+        fitSignals: [
+          {
+            id: "buildable-area",
+            label: "Buildable area",
+            value: "340/860 sqft",
+            detail: "Model fits the starter buildable-area allowance.",
+            status: "good",
+          },
+        ],
+        hasSitePhoto: true,
+      },
     });
 
     expect(parsed.project.jurisdiction).toBe("los-angeles");
+    expect(parsed.preferences?.modelName).toBe("Garden Studio");
   });
 
   it("bounds property history and quote request payloads", () => {

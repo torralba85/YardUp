@@ -1,3 +1,5 @@
+import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
 import { EstimateForm } from "../../src/components/EstimateForm";
@@ -22,15 +24,20 @@ export default function EstimateScreen() {
 
   return (
     <Screen
-      title="ROI Model"
-      subtitle="A deterministic feasibility sheet for value, rent, cost, and payback."
+      title="Feasibility sheet"
+      subtitle="A deterministic model for value, rent, cost, and payback that stays attached to the active lot."
     >
       {project ? (
-        <View style={styles.projectCard}>
-          <Text style={styles.projectLabel}>Active project</Text>
-          <Text style={styles.projectTitle}>{project.name}</Text>
-          <Text style={styles.projectText}>{project.address}</Text>
-        </View>
+        <LinearGradient colors={[colors.ink, "#21342D"]} style={styles.projectCard}>
+          <View style={styles.projectIcon}>
+            <Feather name="activity" size={18} color={colors.ink} />
+          </View>
+          <View style={styles.projectBody}>
+            <Text style={styles.projectLabel}>Numbers lab</Text>
+            <Text style={styles.projectTitle}>{project.name}</Text>
+            <Text style={styles.projectText}>{project.address}</Text>
+          </View>
+        </LinearGradient>
       ) : null}
 
       {estimate ? (
@@ -53,8 +60,13 @@ export default function EstimateScreen() {
             <MetricCard label="Total cost" value={formatCurrency(estimate.totalCost)} />
           </View>
           <View style={styles.note}>
-            <Text style={styles.noteLabel}>Builder packet</Text>
-            <Text style={styles.noteText}>These numbers travel with quote requests so pros can price the same scope.</Text>
+            <View style={styles.noteIcon}>
+              <Feather name="file-text" size={16} color={colors.permit} />
+            </View>
+            <View style={styles.noteBody}>
+              <Text style={styles.noteLabel}>Saved locally</Text>
+              <Text style={styles.noteText}>These assumptions travel with permit checks, inspiration concepts, and quote packets.</Text>
+            </View>
           </View>
         </>
       ) : null}
@@ -67,26 +79,40 @@ export default function EstimateScreen() {
 
 const styles = StyleSheet.create({
   projectCard: {
-    backgroundColor: colors.card,
-    borderRadius: radii.md,
+    alignItems: "center",
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.xs,
-    padding: spacing.md,
+    borderColor: "rgba(255,255,255,0.12)",
+    flexDirection: "row",
+    gap: spacing.md,
+    padding: spacing.lg,
     marginBottom: spacing.sm,
+    ...shadows.medium,
+  },
+  projectIcon: {
+    alignItems: "center",
+    backgroundColor: colors.highlighter,
+    borderRadius: radii.sm,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  projectBody: {
+    flex: 1,
+    gap: 2,
   },
   projectLabel: {
     ...typography.label,
-    color: colors.muted,
+    color: colors.faint,
   },
   projectTitle: {
     ...typography.h2,
-    color: colors.text,
+    color: colors.background,
     marginTop: spacing.xs,
   },
   projectText: {
     ...typography.body,
-    color: colors.muted,
+    color: colors.faint,
   },
   primaryMetrics: {
     flexDirection: "row",
@@ -95,10 +121,26 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   note: {
-    backgroundColor: colors.permitSoft,
-    borderRadius: radii.sm,
-    gap: 2,
+    alignItems: "flex-start",
+    backgroundColor: colors.warningSoft,
+    borderColor: colors.permitSoft,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    flexDirection: "row",
+    gap: spacing.sm,
     padding: spacing.md,
+  },
+  noteIcon: {
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderRadius: radii.sm,
+    height: 34,
+    justifyContent: "center",
+    width: 34,
+  },
+  noteBody: {
+    flex: 1,
+    gap: 2,
   },
   noteLabel: {
     ...typography.label,

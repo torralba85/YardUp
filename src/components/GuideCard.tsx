@@ -18,6 +18,7 @@ export function GuideCard({ guide }: GuideCardProps) {
           <Text style={styles.title}>{guide.title}</Text>
         </View>
         <View style={styles.confidence}>
+          <Feather name="shield" size={14} color={colors.accentDark} />
           <Text style={styles.confidenceText}>{guide.confidence}</Text>
         </View>
       </View>
@@ -43,7 +44,7 @@ export function GuideCard({ guide }: GuideCardProps) {
         {guide.permitSteps.map((step, index) => (
           <View key={step} style={styles.step}>
             <View style={styles.stepIndexContainer}>
-               <Text style={styles.stepIndex}>{index + 1}</Text>
+              <Text style={styles.stepIndex}>{index + 1}</Text>
             </View>
             <Text style={styles.stepText}>{step}</Text>
           </View>
@@ -57,7 +58,7 @@ export function GuideCard({ guide }: GuideCardProps) {
 
       <View style={styles.links}>
         {guide.citations.map((citation) => (
-          <Button key={citation.url} variant="secondary" onPress={() => Linking.openURL(citation.url)}>
+          <Button key={citation.url} icon="external-link" variant="secondary" onPress={() => Linking.openURL(citation.url)}>
             {citation.label}
           </Button>
         ))}
@@ -68,12 +69,15 @@ export function GuideCard({ guide }: GuideCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.canvas,
     borderRadius: radii.md,
-    borderWidth: 1,
     borderColor: colors.border,
+    borderLeftColor: colors.blueprint,
+    borderLeftWidth: 4,
+    borderWidth: 1,
     gap: spacing.lg,
     padding: spacing.lg,
+    ...shadows.soft,
   },
   header: {
     alignItems: "flex-start",
@@ -94,14 +98,19 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   confidence: {
-    backgroundColor: colors.surfaceStrong,
+    alignItems: "center",
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accentSoft,
     borderRadius: radii.sm,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
   confidenceText: {
     ...typography.label,
-    color: colors.muted,
+    color: colors.accentDark,
   },
   summary: {
     ...typography.body,
@@ -148,17 +157,17 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   stepIndexContainer: {
-    backgroundColor: colors.surfaceStrong,
+    backgroundColor: colors.ink,
     borderRadius: radii.sm,
-    minWidth: 28,
-    height: 28,
+    minWidth: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
   stepIndex: {
     ...typography.mono,
     fontSize: 12,
-    color: colors.text,
+    color: colors.canvas,
   },
   stepText: {
     ...typography.body,
@@ -167,7 +176,7 @@ const styles = StyleSheet.create({
   },
   warning: {
     alignItems: "flex-start",
-    backgroundColor: colors.warningSoft,
+    backgroundColor: colors.permitSoft,
     borderRadius: radii.md,
     flexDirection: "row",
     gap: spacing.md,

@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -8,7 +9,7 @@ import { Screen } from "../../src/components/Screen";
 import { SectionHeader } from "../../src/components/SectionHeader";
 import type { ContractorProfile } from "../../src/domain/types";
 import { useActiveProject, useAppStore } from "../../src/state/appStore";
-import { colors, radii, spacing, typography } from "../../src/theme";
+import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
 export default function ContractorsScreen() {
   const project = useActiveProject();
@@ -45,15 +46,15 @@ export default function ContractorsScreen() {
   }
 
   return (
-    <Screen title="Build Network" subtitle="Compare ADU-ready builders and send a focused quote packet.">
-      <View style={styles.packetCard}>
+    <Screen title="Builder bench" subtitle="Compare ADU-ready teams and send a packet that already carries the lot, ROI, and design story.">
+      <LinearGradient colors={[colors.ink, "#26372F"]} style={styles.packetCard}>
         <View style={styles.packetHeader}>
           <View>
             <Text style={styles.packetLabel}>Quote packet</Text>
             <Text style={styles.packetTitle}>{projectRequests.length ? `${projectRequests.length} sent` : "Ready to send"}</Text>
           </View>
           <View style={styles.packetIcon}>
-            <Feather name="send" size={18} color={colors.accent} />
+            <Feather name="send" size={18} color={colors.ink} />
           </View>
         </View>
         <Text style={styles.packetText}>{project.address}</Text>
@@ -65,7 +66,7 @@ export default function ContractorsScreen() {
             </View>
           ))}
         </View>
-      </View>
+      </LinearGradient>
 
       <SectionHeader title="Best matches" action={`${contractors.length} vetted`} />
       <View style={styles.list}>
@@ -224,12 +225,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   packetCard: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accentSoft,
-    borderRadius: radii.md,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: radii.lg,
     borderWidth: 1,
     gap: spacing.md,
     padding: spacing.md,
+    ...shadows.medium,
   },
   packetHeader: {
     alignItems: "center",
@@ -238,15 +239,15 @@ const styles = StyleSheet.create({
   },
   packetLabel: {
     ...typography.label,
-    color: colors.accentDark,
+    color: colors.faint,
   },
   packetTitle: {
     ...typography.h1,
-    color: colors.text,
+    color: colors.background,
   },
   packetIcon: {
     alignItems: "center",
-    backgroundColor: colors.card,
+    backgroundColor: colors.highlighter,
     borderRadius: radii.sm,
     height: 40,
     justifyContent: "center",
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
   },
   packetText: {
     ...typography.body,
-    color: colors.text,
+    color: colors.faint,
   },
   packetItems: {
     flexDirection: "row",
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
   },
   packetItem: {
     alignItems: "center",
-    backgroundColor: colors.card,
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: radii.sm,
     flexDirection: "row",
     gap: spacing.xs,
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   },
   packetItemText: {
     ...typography.label,
-    color: colors.accentDark,
+    color: colors.background,
     fontSize: 10,
   },
   list: {
@@ -283,6 +284,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
+    borderLeftColor: colors.blueprint,
+    borderLeftWidth: 3,
     gap: spacing.md,
     padding: spacing.md,
   },
@@ -426,6 +429,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
+    borderLeftColor: colors.clay,
+    borderLeftWidth: 3,
     flexDirection: "row",
     gap: spacing.sm,
     padding: spacing.md,

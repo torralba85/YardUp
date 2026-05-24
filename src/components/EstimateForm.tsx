@@ -4,7 +4,7 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 import { defaultEstimateInput } from "../domain/estimator";
 import { estimateInputSchema, type EstimateInputForm } from "../domain/schemas";
 import type { EstimateInput } from "../domain/types";
-import { colors, radii, spacing, typography } from "../theme";
+import { colors, radii, shadows, spacing, typography } from "../theme";
 import { Button } from "./Button";
 
 interface EstimateFormProps {
@@ -92,7 +92,7 @@ export function EstimateForm({ initialValues = defaultEstimateInput, onSubmit }:
       ))}
 
       <View style={styles.submitContainer}>
-        <Button onPress={handleSubmit(submitValues)}>Save assumptions</Button>
+        <Button icon="save" onPress={handleSubmit(submitValues)}>Save assumptions</Button>
       </View>
     </View>
   );
@@ -103,12 +103,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   group: {
-    backgroundColor: colors.card,
-    borderRadius: radii.md,
-    borderWidth: 1,
+    backgroundColor: colors.canvas,
     borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    borderLeftColor: colors.blueprint,
+    borderLeftWidth: 3,
     gap: spacing.md,
-    padding: spacing.md,
+    padding: spacing.lg,
+    ...shadows.soft,
   },
   groupTitle: {
     ...typography.h2,
@@ -138,12 +141,12 @@ const styles = StyleSheet.create({
   },
   input: {
     ...typography.body,
-    backgroundColor: colors.surfaceStrong,
+    backgroundColor: colors.canvas,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.sm,
     color: colors.text,
-    minHeight: 46,
+    minHeight: 48,
     paddingHorizontal: spacing.md,
     fontSize: 16,
   },

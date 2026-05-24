@@ -1,14 +1,24 @@
-import { Pressable, StyleSheet, Text, type PressableProps } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, View, type PressableProps } from "react-native";
 
 import { colors, radii, spacing, typography } from "../theme";
 
 interface ButtonProps extends Omit<PressableProps, "children"> {
   children: string;
+  icon?: keyof typeof Feather.glyphMap;
   variant?: "primary" | "secondary" | "ghost";
 }
 
-export function Button({ children, variant = "primary", style, ...props }: ButtonProps) {
+export function Button({ children, icon, variant = "primary", style, ...props }: ButtonProps) {
   const disabled = Boolean(props.disabled);
+  const labelColor =
+    variant === "primary" && !disabled
+      ? colors.background
+      : disabled
+        ? colors.accentDark
+        : variant === "ghost"
+          ? colors.accentDark
+          : colors.text;
 
   return (
     <Pressable
@@ -22,15 +32,18 @@ export function Button({ children, variant = "primary", style, ...props }: Butto
       ]}
       {...props}
     >
-      <Text
-        style={[
-          styles.label,
-          variant === "primary" && !disabled ? styles.primaryLabel : styles.secondaryLabel,
-          disabled && styles.disabledLabel,
-        ]}
-      >
-        {children}
-      </Text>
+      <View style={styles.content}>
+        {icon ? <Feather name={icon} size={16} color={labelColor} /> : null}
+        <Text
+          style={[
+            styles.label,
+            variant === "primary" && !disabled ? styles.primaryLabel : styles.secondaryLabel,
+            disabled && styles.disabledLabel,
+          ]}
+        >
+          {children}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -38,19 +51,27 @@ export function Button({ children, variant = "primary", style, ...props }: Butto
 const styles = StyleSheet.create({
   base: {
     alignItems: "center",
-    borderRadius: radii.sm,
+    borderRadius: radii.full,
     justifyContent: "center",
-    minHeight: 46,
+    minHeight: 50,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
+  content: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "center",
+  },
   primary: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.emerald,
+    borderWidth: 1,
+    borderColor: colors.emerald,
   },
   secondary: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.canvas,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
   },
   ghost: {
     backgroundColor: "transparent",
@@ -58,22 +79,23 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   disabled: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accentSoft,
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.border,
   },
   pressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.99 }],
+    transform: [{ translateY: 1 }, { scale: 0.985 }],
   },
   label: {
     ...typography.label,
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 17,
   },
   primaryLabel: {
-    color: colors.background,
+    color: colors.canvas,
   },
   secondaryLabel: {
-    color: colors.text,
+    color: colors.forestDeep,
   },
   disabledLabel: {
     color: colors.accentDark,

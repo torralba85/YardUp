@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatCurrencyCompact, formatPercent } from "../domain/estimator";
 import type { Project } from "../domain/types";
-import { colors, radii, spacing, typography } from "../theme";
+import { colors, radii, shadows, spacing, typography } from "../theme";
 
 interface ProjectSummaryProps {
   project: Project;
@@ -17,7 +17,10 @@ export function ProjectSummary({ project, onPress }: ProjectSummaryProps) {
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.label}>Continue project</Text>
+          <View style={styles.statusRow}>
+            <Text style={styles.label}>Continue project</Text>
+            <Text style={styles.status}>{project.status.replace(/_/g, " ")}</Text>
+          </View>
           <Text style={styles.title}>{project.name}</Text>
           <Text style={styles.address}>{project.address}</Text>
         </View>
@@ -40,7 +43,7 @@ export function ProjectSummary({ project, onPress }: ProjectSummaryProps) {
           <View style={styles.stripDivider} />
           <View style={styles.stripItem}>
             <Text style={styles.stripLabel}>Next</Text>
-            <Text style={styles.stripNext}>Quote packet</Text>
+            <Text style={styles.stripNext}>Permit guide</Text>
           </View>
         </View>
       ) : (
@@ -56,10 +59,11 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderLeftColor: colors.clay,
+    borderLeftWidth: 4,
     gap: spacing.md,
-    padding: spacing.md,
+    padding: spacing.lg,
+    ...shadows.medium,
   },
   pressed: {
     transform: [{ scale: 0.995 }],
@@ -74,9 +78,24 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xs,
   },
+  statusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
   label: {
     ...typography.label,
     color: colors.muted,
+  },
+  status: {
+    ...typography.label,
+    backgroundColor: colors.ink,
+    borderRadius: radii.xs,
+    color: colors.background,
+    overflow: "hidden",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   title: {
     ...typography.h2,
@@ -88,17 +107,19 @@ const styles = StyleSheet.create({
   },
   icon: {
     alignItems: "center",
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.surfaceStrong,
     borderRadius: radii.sm,
     height: 40,
     justifyContent: "center",
     width: 40,
   },
   projectStrip: {
-    backgroundColor: colors.surfaceStrong,
+    backgroundColor: colors.paper,
+    borderColor: colors.border,
     borderRadius: radii.sm,
+    borderWidth: 1,
     flexDirection: "row",
-    padding: spacing.sm,
+    padding: spacing.md,
   },
   stripItem: {
     flex: 1,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { aduModels } from "./aduModels";
 import { contractorProfiles } from "./contractors";
+import { designStyles } from "./designStyles";
 import { parcelSummaries } from "./parcelSummaries";
 
 describe("professional refinement seed data", () => {
@@ -22,7 +23,24 @@ describe("professional refinement seed data", () => {
       expect(model.priceFrom).toBeGreaterThan(200000);
       expect(model.fitScore).toBeGreaterThanOrEqual(80);
       expect(model.dimensions).toContain("ft");
+      expect(model.footprint.widthFt).toBeGreaterThan(10);
+      expect(model.footprint.depthFt).toBeGreaterThan(10);
+      expect(model.styleIds.length).toBeGreaterThanOrEqual(2);
+      expect(model.fitNotes.length).toBeGreaterThanOrEqual(2);
+      expect(model.accessibilityFeatures.length + model.familyFeatures.length).toBeGreaterThan(1);
     }
+  });
+
+  it("ships the explicit one-tap style system used by the planner", () => {
+    expect(designStyles.map((style) => style.id).sort()).toEqual([
+      "california_bungalow",
+      "clean_gable",
+      "coastal_minimal",
+      "farmhouse",
+      "industrial",
+      "warm_modern",
+    ]);
+    expect(aduModels.every((model) => model.styleIds.every((styleId) => designStyles.some((style) => style.id === styleId)))).toBe(true);
   });
 
   it("covers every California starter jurisdiction with parcel facts", () => {

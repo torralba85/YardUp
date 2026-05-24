@@ -1,0 +1,623 @@
+openapi: 3.1.0
+info:
+  title: ADU Advisor Firebase Callable API
+  version: 0.1.0
+  description: |
+    OpenAPI contract for the current ADU Advisor Firebase callable functions.
+    Requests and responses use the Firebase callable JSON envelope.
+servers:
+  - url: https://us-central1-{projectId}.cloudfunctions.net
+    description: Firebase production functions
+    variables:
+      projectId:
+        default: adu-advisor
+        description: Firebase project ID
+  - url: http://localhost:5001/{projectId}/us-central1
+    description: Firebase emulator
+    variables:
+      projectId:
+        default: adu-advisor
+tags:
+  - name: Regulations
+  - name: Design Concepts
+  - name: Property Records
+  - name: Quote Requests
+paths:
+  /getRegulationGuide:
+    post:
+      tags: [Regulations]
+      operationId: getRegulationGuide
+      summary: Get a source-cited ADU regulation guide for a jurisdiction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetRegulationGuideCallableRequest"
+            examples:
+              losAngeles:
+                value:
+                  data:
+                    jurisdiction: los-angeles
+      responses:
+        "200":
+          description: Regulation guide returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegulationGuideCallableResponse"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /generateDesignConcept:
+    post:
+      tags: [Design Concepts]
+      operationId: generateDesignConcept
+      summary: Generate an ADU concept from a project and optional planner preferences.
+      description: |
+        The backend must not include exact address text in AI prompts. If OpenAI is
+        unavailable, it returns a deterministic local concept.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateDesignConceptCallableRequest"
+            examples:
+              plannerConcept:
+                value:
+                  data:
+                    project:
+                      id: starter-echo-park
+                      name: Echo Park ADU study
+                      address: 1420 Baxter St, Los Angeles, CA
+                      jurisdiction: los-angeles
+                      lotSqFt: 5200
+                      primaryHomeSqFt: 1420
+                      status: estimated
+                      createdAt: "2026-05-18T00:00:00.000Z"
+                      updatedAt: "2026-05-18T00:00:00.000Z"
+                    preferences:
+                      styleId: warm_modern
+                      styleLabel: Warm Modern
+                      modelId: studio-340
+                      modelName: Garden Studio
+                      constructionMethod: prefab
+                      targetSqFt: 340
+                      placement:
+                        xPercent: 68
+                        yPercent: 70
+                        rotation: 0
+                      hasSitePhoto: true
+      responses:
+        "200":
+          description: Design concept returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DesignConceptCallableResponse"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /searchPropertyHistory:
+    post:
+      tags: [Property Records]
+      operationId: searchPropertyHistory
+      summary: Search or synthesize source-cited property history records.
+      description: Current implementation returns deterministic fallback records until a municipal provider is connected.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchPropertyHistoryCallableRequest"
+            examples:
+              projectSearch:
+                value:
+                  data:
+                    address: 1420 Baxter St, Los Angeles, CA
+                    projectId: starter-echo-park
+      responses:
+        "200":
+          description: Property history response returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyHistoryCallableResponse"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /submitQuoteRequest:
+    post:
+      tags: [Quote Requests]
+      operationId: submitQuoteRequest
+      summary: Save a builder quote request for a project.
+      security:
+        - firebaseAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitQuoteRequestCallableRequest"
+            examples:
+              builderQuote:
+                value:
+                  data:
+                    projectId: starter-echo-park
+                    contractorId: apex-adu-builders
+                    packetItems:
+                      - ROI model
+                      - Lot summary
+                      - Design concept
+                      - Permit notes
+      responses:
+        "200":
+          description: Quote request saved or echoed as sent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteRequestCallableResponse"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  securitySchemes:
+    firebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+  responses:
+    InvalidArgument:
+      description: Invalid callable payload.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CallableErrorResponse"
+          example:
+            error:
+              status: INVALID_ARGUMENT
+              message: Invalid request payload.
+    Unauthenticated:
+      description: Authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CallableErrorResponse"
+          example:
+            error:
+              status: UNAUTHENTICATED
+              message: Firebase authentication is required.
+    RateLimited:
+      description: Rate limit exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CallableErrorResponse"
+          example:
+            error:
+              status: RESOURCE_EXHAUSTED
+              message: Too many requests. Retry later.
+    InternalError:
+      description: Unexpected backend failure.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CallableErrorResponse"
+          example:
+            error:
+              status: INTERNAL
+              message: An unexpected error occurred.
+  schemas:
+    JurisdictionId:
+      type: string
+      enum: [los-angeles, san-diego, san-jose, oakland, sacramento]
+    DesignStyleId:
+      type: string
+      enum: [warm_modern, farmhouse, industrial, coastal_minimal, california_bungalow, clean_gable]
+    ConstructionMethod:
+      type: string
+      enum: [prefab, modular, site_built, conversion]
+    BudgetBand:
+      type: string
+      enum: [under_250k, 250k_400k, 400k_plus]
+    Citation:
+      type: object
+      required: [label, url]
+      properties:
+        label:
+          type: string
+        url:
+          type: string
+          format: uri
+    EstimateInput:
+      type: object
+      required: [aduType, aduSqFt, buildCostPerSqFt, softCostRate, contingencyRate, monthlyRent, opExRate, capRate]
+      properties:
+        aduType:
+          type: string
+          enum: [detached, attached, garage_conversion, jadu]
+        aduSqFt:
+          type: number
+          minimum: 150
+          maximum: 1200
+        buildCostPerSqFt:
+          type: number
+          minimum: 150
+          maximum: 900
+        softCostRate:
+          type: number
+          minimum: 0
+          maximum: 0.45
+        contingencyRate:
+          type: number
+          minimum: 0
+          maximum: 0.35
+        monthlyRent:
+          type: number
+          minimum: 500
+          maximum: 9000
+        opExRate:
+          type: number
+          minimum: 0.05
+          maximum: 0.55
+        capRate:
+          type: number
+          minimum: 0.025
+          maximum: 0.12
+    Project:
+      type: object
+      required: [id, name, address, jurisdiction, lotSqFt, primaryHomeSqFt, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          maxLength: 120
+        name:
+          type: string
+          maxLength: 180
+        address:
+          type: string
+          maxLength: 260
+        jurisdiction:
+          $ref: "#/components/schemas/JurisdictionId"
+        lotSqFt:
+          type: number
+          minimum: 500
+          maximum: 50000
+        primaryHomeSqFt:
+          type: number
+          minimum: 200
+          maximum: 10000
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastEstimateInput:
+          $ref: "#/components/schemas/EstimateInput"
+        sitePhotoUri:
+          type: string
+          description: Client-local URI; not uploaded by the current callable API.
+    InspirationItem:
+      type: object
+      required: [id, title, jurisdiction, style, budgetBand, sqft, imageUrl, tags, summary]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        jurisdiction:
+          oneOf:
+            - $ref: "#/components/schemas/JurisdictionId"
+            - type: string
+              const: california
+        style:
+          type: string
+        budgetBand:
+          $ref: "#/components/schemas/BudgetBand"
+        sqft:
+          type: number
+          minimum: 150
+          maximum: 1200
+        imageUrl:
+          type: string
+          format: uri
+        tags:
+          type: array
+          maxItems: 8
+          items:
+            type: string
+        summary:
+          type: string
+          maxLength: 500
+    DesignPlacement:
+      type: object
+      required: [xPercent, yPercent, rotation]
+      properties:
+        xPercent:
+          type: number
+          minimum: 0
+          maximum: 100
+        yPercent:
+          type: number
+          minimum: 0
+          maximum: 100
+        rotation:
+          type: number
+          minimum: -45
+          maximum: 45
+    DesignFitSignal:
+      type: object
+      required: [id, label, value, detail, status]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        value:
+          type: string
+        detail:
+          type: string
+        status:
+          type: string
+          enum: [good, review, blocked]
+    DesignConceptPreferences:
+      type: object
+      properties:
+        styleId:
+          $ref: "#/components/schemas/DesignStyleId"
+        styleLabel:
+          type: string
+        modelId:
+          type: string
+        modelName:
+          type: string
+        constructionMethod:
+          $ref: "#/components/schemas/ConstructionMethod"
+        targetSqFt:
+          type: number
+          minimum: 150
+          maximum: 1200
+        placement:
+          $ref: "#/components/schemas/DesignPlacement"
+        fitSignals:
+          type: array
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/DesignFitSignal"
+        hasSitePhoto:
+          type: boolean
+    DesignConceptPayload:
+      type: object
+      required: [title, exteriorStyle, footprintType, targetSqFt, rooms, constraints, nextSteps, thumbnailPrompt]
+      properties:
+        title:
+          type: string
+        exteriorStyle:
+          type: string
+        footprintType:
+          type: string
+        targetSqFt:
+          type: number
+        rooms:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: array
+          items:
+            type: string
+        nextSteps:
+          type: array
+          items:
+            type: string
+        thumbnailPrompt:
+          type: string
+    RegulationGuide:
+      type: object
+      required: [jurisdiction, title, summary, permitSteps, blockers, verifiedAt, confidence, citations]
+      properties:
+        jurisdiction:
+          $ref: "#/components/schemas/JurisdictionId"
+        title:
+          type: string
+        summary:
+          type: string
+        permitSteps:
+          type: array
+          items:
+            type: string
+        blockers:
+          type: array
+          items:
+            type: string
+        verifiedAt:
+          type: string
+          format: date
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+    PropertyRecord:
+      type: object
+      required: [id, projectId, source, recordType, date, summary, citationUrl]
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        source:
+          type: string
+        recordType:
+          type: string
+        date:
+          type: string
+          format: date-time
+        summary:
+          type: string
+        citationUrl:
+          type: string
+          format: uri
+    PropertyHistoryResult:
+      type: object
+      required: [records, unavailableSources, confidence]
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/PropertyRecord"
+        unavailableSources:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+    QuoteRequest:
+      type: object
+      required: [id, projectId, contractorId, packetItems, status, createdAt]
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        contractorId:
+          type: string
+        packetItems:
+          type: array
+          minItems: 1
+          maxItems: 12
+          items:
+            type: string
+        status:
+          type: string
+          enum: [sent]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    GetRegulationGuideCallableRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [jurisdiction]
+          properties:
+            jurisdiction:
+              $ref: "#/components/schemas/JurisdictionId"
+    GenerateDesignConceptCallableRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [project]
+          properties:
+            project:
+              $ref: "#/components/schemas/Project"
+            inspiration:
+              $ref: "#/components/schemas/InspirationItem"
+            preferences:
+              $ref: "#/components/schemas/DesignConceptPreferences"
+    SearchPropertyHistoryCallableRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [address, projectId]
+          properties:
+            address:
+              type: string
+              minLength: 3
+              maxLength: 260
+            projectId:
+              type: string
+              minLength: 1
+              maxLength: 120
+    SubmitQuoteRequestCallableRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [projectId, contractorId, packetItems]
+          properties:
+            projectId:
+              type: string
+              minLength: 1
+              maxLength: 120
+            contractorId:
+              type: string
+              minLength: 1
+              maxLength: 120
+            packetItems:
+              type: array
+              minItems: 1
+              maxItems: 12
+              items:
+                type: string
+                maxLength: 80
+    RegulationGuideCallableResponse:
+      type: object
+      required: [result]
+      properties:
+        result:
+          $ref: "#/components/schemas/RegulationGuide"
+    DesignConceptCallableResponse:
+      type: object
+      required: [result]
+      properties:
+        result:
+          $ref: "#/components/schemas/DesignConceptPayload"
+    PropertyHistoryCallableResponse:
+      type: object
+      required: [result]
+      properties:
+        result:
+          $ref: "#/components/schemas/PropertyHistoryResult"
+    QuoteRequestCallableResponse:
+      type: object
+      required: [result]
+      properties:
+        result:
+          $ref: "#/components/schemas/QuoteRequest"
+    CallableErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [status, message]
+          properties:
+            status:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true

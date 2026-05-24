@@ -1,54 +1,82 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 
-import { colors } from "../../src/theme";
+import { colors, radii, spacing, typography } from "../../src/theme";
 
 type IconName = keyof typeof Feather.glyphMap;
 
 const icons: Record<string, IconName> = {
-  index: "grid",
+  index: "trending-up",
+  ideas: "move",
+  guide: "map",
   estimate: "bar-chart-2",
-  ideas: "layout",
-  contractors: "users",
+  contractors: "send",
+  inspiration: "image",
 };
 
 const labels: Record<string, string> = {
   index: "Home",
-  estimate: "ROI",
-  ideas: "Design",
+  ideas: "Studio",
+  guide: "Permit",
+  estimate: "Estimate",
   contractors: "Build",
+  inspiration: "Ideas",
 };
 
 export default function TabsLayout() {
+  const { width } = useWindowDimensions();
+  const sideRail = Platform.OS === "web" && width >= 980;
+
   return (
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: sideRail ? colors.mint : colors.emerald,
+        tabBarInactiveTintColor: sideRail ? "rgba(237,243,238,0.68)" : colors.muted,
+        tabBarActiveBackgroundColor: sideRail ? "rgba(31,157,99,0.2)" : "transparent",
+        tabBarInactiveBackgroundColor: "transparent",
+        tabBarPosition: sideRail ? "left" : "bottom",
+        tabBarVariant: sideRail ? "material" : "uikit",
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          height: Platform.OS === "ios" ? 84 : 70,
-          paddingBottom: Platform.OS === "ios" ? 26 : 10,
-          paddingTop: 10,
+          backgroundColor: colors.rail,
+          borderColor: "rgba(255,255,255,0.08)",
+          borderRightWidth: sideRail ? 1 : 0,
+          borderTopWidth: sideRail ? 0 : 1,
+          height: sideRail ? "100%" : Platform.OS === "ios" ? 86 : 72,
+          maxWidth: sideRail ? 208 : undefined,
+          minWidth: sideRail ? 208 : undefined,
+          paddingBottom: sideRail ? spacing.lg : Platform.OS === "ios" ? 25 : 10,
+          paddingHorizontal: sideRail ? spacing.sm : 0,
+          paddingTop: sideRail ? spacing.xl : 10,
+          width: sideRail ? 208 : undefined,
+        },
+        tabBarItemStyle: {
+          borderRadius: radii.md,
+          height: sideRail ? 58 : undefined,
+          marginHorizontal: sideRail ? spacing.xs : 0,
+          marginVertical: sideRail ? 3 : 0,
+          paddingHorizontal: sideRail ? spacing.sm : 0,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: "700",
+          fontFamily: typography.label.fontFamily,
+          fontSize: sideRail ? 13 : 10,
+          fontWeight: "700" as const,
           letterSpacing: 0,
-          textTransform: "uppercase",
+          textTransform: "none",
         },
         tabBarAccessibilityLabel: `${labels[route.name] ?? route.name} tab`,
-        tabBarIcon: ({ color }) => <Feather name={icons[route.name] ?? "circle"} color={color} size={21} strokeWidth={2.25} />,
+        tabBarIcon: ({ color, focused }) => (
+          <Feather name={icons[route.name] ?? "circle"} color={color} size={sideRail ? 20 : 21} strokeWidth={focused ? 2.45 : 2.1} />
+        ),
       })}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="estimate" options={{ title: "ROI" }} />
-      <Tabs.Screen name="ideas" options={{ title: "Design" }} />
+      <Tabs.Screen name="ideas" options={{ title: "Studio" }} />
+      <Tabs.Screen name="guide" options={{ title: "Permit" }} />
+      <Tabs.Screen name="estimate" options={{ title: "Estimate" }} />
       <Tabs.Screen name="contractors" options={{ title: "Build" }} />
+      <Tabs.Screen name="inspiration" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -111,10 +111,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: radii.md,
-    borderWidth: 1,
     borderColor: colors.border,
+    borderLeftColor: colors.clay,
+    borderLeftWidth: 4,
+    borderWidth: 1,
     gap: spacing.lg,
     padding: spacing.xl,
+    ...shadows.soft,
   },
   row: {
     alignItems: "center",
@@ -131,7 +134,9 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   concept: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.paper,
+    borderColor: colors.border,
+    borderWidth: 1,
     borderRadius: radii.md,
     gap: spacing.sm,
     padding: spacing.md,
@@ -148,7 +153,9 @@ const styles = StyleSheet.create({
   room: {
     ...typography.label,
     backgroundColor: colors.surfaceStrong,
+    borderColor: colors.border,
     borderRadius: radii.sm,
+    borderWidth: 1,
     color: colors.muted,
     overflow: "hidden",
     paddingHorizontal: spacing.md,

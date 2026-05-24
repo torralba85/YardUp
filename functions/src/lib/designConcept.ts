@@ -1,26 +1,47 @@
-import type { DesignConceptPayload, InspirationItem, Project } from "../types";
+import type { DesignConceptPayload, DesignConceptPreferences, InspirationItem, Project } from "../types";
 
-export async function buildDesignConcept(project: Project, inspiration?: InspirationItem): Promise<DesignConceptPayload> {
+export async function buildDesignConcept(
+  project: Project,
+  inspiration?: InspirationItem,
+  preferences?: DesignConceptPreferences,
+): Promise<DesignConceptPayload> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return makeLocalConcept(project, inspiration);
+    return makeLocalConcept(project, inspiration, preferences);
   }
 
   try {
-    const remote = await callOpenAI(project, inspiration, apiKey);
-    return sanitizeConcept(remote, project, inspiration);
+    const remote = await callOpenAI(project, inspiration, preferences, apiKey);
+    return sanitizeConcept(remote, project, inspiration, preferences);
   } catch {
-    return makeLocalConcept(project, inspiration);
+    return makeLocalConcept(project, inspiration, preferences);
   }
 }
 
-export function makeLocalConcept(project: Project, inspiration?: InspirationItem): DesignConceptPayload {
-  const targetSqFt = inspiration?.sqft ?? project.lastEstimateInput?.aduSqFt ?? 650;
-  const footprintType = targetSqFt > 700 ? "one-bedroom bar plan" : "compact studio rectangle";
-  const style = inspiration?.style ?? "Warm modern";
+export function makeLocalConcept(
+  project: Project,
+  inspiration?: InspirationItem,
+  preferences?: DesignConceptPreferences,
+): DesignConceptPayload {
+  const targetSqFt = preferences?.targetSqFt ?? inspiration?.sqft ?? project.lastEstimateInput?.aduSqFt ?? 650;
+  const footprintType =
+    preferences?.modelName ??
+    (targetSqFt > 700 ? "one-bedroom bar plan" : targetSqFt > 450 ? "compact one-bedroom rectangle" : "compact studio rectangle");
+  const style = preferences?.styleLabel ?? inspiration?.style ?? "Warm modern";
+  const reviewSignals =
+    preferences?.fitSignals?.filter((signal) => signal.status !== "good").map((signal) => `${signal.label}: ${signal.detail}`) ?? [];
+  const placementText = preferences?.placement
+    ? `Place the ADU around ${Math.round(preferences.placement.xPercent)}% across and ${Math.round(
+        preferences.placement.yPercent,
+      )}% down the buildable backyard zone.`
+    : "Place the ADU in the rear buildable zone while preserving access.";
 
   return {
-    title: inspiration ? `Adapt ${inspiration.title}` : `${project.name} concept`,
+    title: preferences?.modelName
+      ? `${preferences.modelName} in ${style}`
+      : inspiration
+        ? `Adapt ${inspiration.title}`
+        : `${project.name} concept`,
     exteriorStyle: style,
     footprintType,
     targetSqFt,
@@ -29,25 +50,47 @@ export function makeLocalConcept(project: Project, inspiration?: InspirationItem
         ? ["entry", "living room", "kitchen wall", "bedroom", "bath", "laundry closet"]
         : ["entry", "sleeping zone", "kitchen wall", "bath", "storage wall"],
     constraints: [
+      placementText,
+      ...(reviewSignals.length ? reviewSignals : ["Fit signals are currently acceptable for a starter concept."]),
       "Confirm setbacks, fire access, and utility routing with the local jurisdiction.",
       "Keep glazing and privacy tuned to the primary home and adjacent parcels.",
       "Treat this as a design starting point, not stamped plans.",
     ],
     nextSteps: [
+      preferences?.hasSitePhoto ? "Use the attached backyard photo to align windows, entry, and privacy screening." : "Attach a backyard photo before design review.",
+      preferences?.modelName ? `Compare ${preferences.modelName} against at least one smaller fallback model.` : "Compare one smaller model before locking scope.",
       "Verify zoning and overlays.",
       "Sketch site placement against driveway and outdoor space.",
       "Ask a designer or architect to test code compliance.",
     ],
-    thumbnailPrompt: `Original ADU concept image, ${style}, ${targetSqFt} square feet, ${footprintType}, California backyard, daylight, realistic architecture photography.`,
+    thumbnailPrompt: `Original ADU concept image, ${style}, ${targetSqFt} square feet, ${footprintType}, ${preferences?.constructionMethod ?? "site-built"} ADU, ${preferences?.hasSitePhoto ? "adapted to the attached backyard photo" : "California backyard"}, daylight, privacy-aware window placement, realistic architecture photography.`,
   };
 }
 
-async function callOpenAI(project: Project, inspiration: InspirationItem | undefined, apiKey: string): Promise<unknown> {
+async function callOpenAI(
+  project: Project,
+  inspiration: InspirationItem | undefined,
+  preferences: DesignConceptPreferences | undefined,
+  apiKey: string,
+): Promise<unknown> {
   const prompt = [
     "Return only JSON for an ADU concept. Fields: title, exteriorStyle, footprintType, targetSqFt, rooms, constraints, nextSteps, thumbnailPrompt.",
     `Jurisdiction: ${project.jurisdiction}. Lot: ${project.lotSqFt} sqft. Home: ${project.primaryHomeSqFt} sqft.`,
     project.lastEstimateInput ? `Target ADU size: ${project.lastEstimateInput.aduSqFt} sqft.` : "",
     inspiration ? `Inspired by: ${inspiration.title}, ${inspiration.style}, ${inspiration.sqft} sqft.` : "",
+    preferences?.modelName ? `Selected model: ${preferences.modelName}, ${preferences.targetSqFt ?? "unknown"} sqft, ${preferences.constructionMethod ?? "construction method unspecified"}.` : "",
+    preferences?.styleLabel ? `Selected style: ${preferences.styleLabel}.` : "",
+    preferences?.placement
+      ? `Selected placement: ${Math.round(preferences.placement.xPercent)}% across and ${Math.round(
+          preferences.placement.yPercent,
+        )}% down the buildable area, rotated ${preferences.placement.rotation} degrees.`
+      : "",
+    preferences?.fitSignals?.length
+      ? `Fit signals: ${preferences.fitSignals
+          .map((signal) => `${signal.label} ${signal.status}: ${signal.detail}`)
+          .join("; ")}.`
+      : "",
+    preferences?.hasSitePhoto ? "A backyard site photo is attached on the client; reference it generally without describing private address details." : "",
     "Do not include exact address or personal identifiers. Mention that constraints require city verification.",
   ]
     .filter(Boolean)
@@ -82,8 +125,13 @@ async function callOpenAI(project: Project, inspiration: InspirationItem | undef
   return JSON.parse(payload.output_text);
 }
 
-function sanitizeConcept(remote: unknown, project: Project, inspiration?: InspirationItem): DesignConceptPayload {
-  const fallback = makeLocalConcept(project, inspiration);
+function sanitizeConcept(
+  remote: unknown,
+  project: Project,
+  inspiration?: InspirationItem,
+  preferences?: DesignConceptPreferences,
+): DesignConceptPayload {
+  const fallback = makeLocalConcept(project, inspiration, preferences);
   if (!remote || typeof remote !== "object") return fallback;
 
   const candidate = remote as Partial<DesignConceptPayload>;

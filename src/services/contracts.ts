@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { designConceptSchema } from "../domain/schemas";
+import { designConceptPreferencesSchema, designConceptSchema } from "../domain/schemas";
 
 export const regulationGuideResponseSchema = z.object({
   summary: z.string(),
@@ -44,3 +44,4 @@ export const designConceptResponseSchema = designConceptSchema.extend({
 export type RegulationGuideResponse = z.infer<typeof regulationGuideResponseSchema>;
 export type PropertyHistoryResponse = z.infer<typeof propertyHistoryResponseSchema>;
 export type DesignConceptResponse = z.infer<typeof designConceptResponseSchema>;
+export type DesignConceptPreferencesPayload = z.infer<typeof designConceptPreferencesSchema>;

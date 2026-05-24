@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+export const designStyleIdSchema = z.enum([
+  "warm_modern",
+  "farmhouse",
+  "industrial",
+  "coastal_minimal",
+  "california_bungalow",
+  "clean_gable",
+]);
+
 export const estimateInputSchema = z.object({
   aduType: z.enum(["detached", "attached", "garage_conversion", "jadu"]),
   aduSqFt: z.coerce.number().min(150).max(1200),
@@ -20,6 +29,32 @@ export const designConceptSchema = z.object({
   constraints: z.array(z.string()),
   nextSteps: z.array(z.string()),
   thumbnailPrompt: z.string(),
+});
+
+export const designPlacementSchema = z.object({
+  xPercent: z.number().min(0).max(100),
+  yPercent: z.number().min(0).max(100),
+  rotation: z.number().min(-45).max(45),
+});
+
+export const designFitSignalSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  value: z.string(),
+  detail: z.string(),
+  status: z.enum(["good", "review", "blocked"]),
+});
+
+export const designConceptPreferencesSchema = z.object({
+  styleId: designStyleIdSchema.optional(),
+  styleLabel: z.string().optional(),
+  modelId: z.string().optional(),
+  modelName: z.string().optional(),
+  constructionMethod: z.enum(["prefab", "modular", "site_built", "conversion"]).optional(),
+  targetSqFt: z.number().min(150).max(1200).optional(),
+  placement: designPlacementSchema.optional(),
+  fitSignals: z.array(designFitSignalSchema).max(8).optional(),
+  hasSitePhoto: z.boolean().optional(),
 });
 
 export type EstimateInputForm = z.infer<typeof estimateInputSchema>;

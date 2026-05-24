@@ -52,4 +52,31 @@ describe("makeLocalConcept", () => {
     expect(concept.exteriorStyle).toBe("Coastal minimal");
     expect(concept.footprintType).toBe("one-bedroom bar plan");
   });
+
+  it("reflects planner preferences in local fallback concepts", () => {
+    const concept = makeLocalConcept(project, undefined, {
+      styleId: "industrial",
+      styleLabel: "Industrial",
+      modelId: "studio-340",
+      modelName: "Garden Studio",
+      constructionMethod: "prefab",
+      targetSqFt: 340,
+      placement: { xPercent: 70, yPercent: 68, rotation: 0 },
+      fitSignals: [
+        {
+          id: "access-utility",
+          label: "Access and utility",
+          value: "Review needed",
+          detail: "verify sewer lateral",
+          status: "review",
+        },
+      ],
+      hasSitePhoto: true,
+    });
+
+    expect(concept.title).toBe("Garden Studio in Industrial");
+    expect(concept.constraints.join(" ")).toContain("verify sewer lateral");
+    expect(concept.nextSteps.join(" ")).toContain("attached backyard photo");
+    expect(concept.thumbnailPrompt).toContain("prefab ADU");
+  });
 });

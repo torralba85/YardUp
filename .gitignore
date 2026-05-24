@@ -26,6 +26,7 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 expo-preview*.log
+.expo-web*.log
 
 # macOS
 .DS_Store
@@ -41,3 +42,6 @@ functions/lib/
 # generated native folders
 /ios
 /android
+
+# superpowers brainstorming
+.superpowers/

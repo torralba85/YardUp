@@ -8,6 +8,9 @@ import { starterProject } from "../data/sampleProject";
 import { defaultEstimateInput, estimateAduValue } from "../domain/estimator";
 import type {
   ContractorProfile,
+  DesignPlacement,
+  DesignStyleId,
+  DesignConceptPreferences,
   DesignConcept,
   EstimateInput,
   InspirationItem,
@@ -37,6 +40,8 @@ import {
   upsertSavedItem,
 } from "../storage/database";
 
+const storageInitTimeoutMs = 3500;
+
 interface AppState {
   initialized: boolean;
   storageMode: "sqlite" | "memory";
@@ -54,9 +59,20 @@ interface AppState {
   createProject: (address: string, jurisdiction: JurisdictionId) => Promise<Project>;
   setActiveProject: (projectId: string) => void;
   saveEstimate: (projectId: string, input: EstimateInput) => Promise<void>;
+  saveWizardModelAndPlacement: (
+    projectId: string,
+    modelId: string,
+    placement: DesignPlacement,
+  ) => Promise<void>;
+  saveWizardStyle: (projectId: string, styleId: DesignStyleId) => Promise<void>;
   saveInspiration: (projectId: string, inspirationId: string) => Promise<void>;
   requestQuote: (projectId: string, contractorId: string) => Promise<QuoteRequest>;
-  createConcept: (projectId: string, inspirationId?: string) => Promise<DesignConcept | null>;
+  createConcept: (
+    projectId: string,
+    inspirationId?: string,
+    preferences?: DesignConceptPreferences,
+  ) => Promise<DesignConcept | null>;
+  saveSitePhoto: (projectId: string, sitePhotoUri?: string) => Promise<void>;
   refreshGuide: (jurisdiction: JurisdictionId) => Promise<RegulationGuide>;
   refreshPropertyHistory: (projectId: string) => Promise<PropertyRecord[]>;
 }
@@ -77,17 +93,22 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   initialize: async () => {
     try {
-      await initializeDatabase();
-      const [projects, ideas, saves, concepts, guides, contractors, quoteRequests, parcels] = await Promise.all([
-        loadProjects(),
-        loadInspirationItems(),
-        loadSavedItems(),
-        loadDesignConcepts(),
-        loadRegulationGuides(),
-        loadContractorProfiles(),
-        loadQuoteRequests(),
-        loadParcelSummaries(),
-      ]);
+      const [projects, ideas, saves, concepts, guides, contractors, quoteRequests, parcels] = await withTimeout(
+        (async () => {
+          await initializeDatabase();
+          return Promise.all([
+            loadProjects(),
+            loadInspirationItems(),
+            loadSavedItems(),
+            loadDesignConcepts(),
+            loadRegulationGuides(),
+            loadContractorProfiles(),
+            loadQuoteRequests(),
+            loadParcelSummaries(),
+          ]);
+        })(),
+        storageInitTimeoutMs,
+      );
 
       set({
         initialized: true,
@@ -120,11 +141,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   createProject: async (address, jurisdiction) => {
+    const cleanAddress = address.trim();
+
+    if (!cleanAddress) {
+      throw new Error("Project address is required");
+    }
+
     const now = new Date().toISOString();
     const project: Project = {
       id: `project-${Date.now()}`,
-      name: `${address.split(",")[0] || "New ADU"} study`,
-      address,
+      name: `${cleanAddress.split(",")[0] || "New ADU"} study`,
+      address: cleanAddress,
       jurisdiction,
       lotSqFt: 5000,
       primaryHomeSqFt: 1400,
@@ -156,6 +183,43 @@ export const useAppStore = create<AppState>((set, get) => ({
       lastEstimate: result,
       status: "estimated",
       updatedAt,
+    };
+
+    set((state) => ({
+      projects: state.projects.map((item) => (item.id === projectId ? project : item)),
+      activeProjectId: projectId,
+    }));
+
+    await persist(() => upsertProject(project));
+  },
+
+  saveWizardModelAndPlacement: async (projectId, modelId, placement) => {
+    const updatedProject = get().projects.find((project) => project.id === projectId);
+    if (!updatedProject) return;
+
+    const project: Project = {
+      ...updatedProject,
+      selectedModelId: modelId,
+      placement,
+      updatedAt: new Date().toISOString(),
+    };
+
+    set((state) => ({
+      projects: state.projects.map((item) => (item.id === projectId ? project : item)),
+      activeProjectId: projectId,
+    }));
+
+    await persist(() => upsertProject(project));
+  },
+
+  saveWizardStyle: async (projectId, styleId) => {
+    const updatedProject = get().projects.find((project) => project.id === projectId);
+    if (!updatedProject) return;
+
+    const project: Project = {
+      ...updatedProject,
+      selectedStyleId: styleId,
+      updatedAt: new Date().toISOString(),
     };
 
     set((state) => ({
@@ -209,12 +273,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     return request;
   },
 
-  createConcept: async (projectId, inspirationId) => {
+  createConcept: async (projectId, inspirationId, preferences) => {
     const project = get().projects.find((item) => item.id === projectId);
     if (!project) return null;
 
     const inspiration = get().inspirationItems.find((item) => item.id === inspirationId);
-    const concept = await generateDesignConcept(project, inspiration);
+    const concept = await generateDesignConcept(project, inspiration, preferences);
     const updatedProject: Project = {
       ...project,
       status: "concept_ready",
@@ -229,6 +293,24 @@ export const useAppStore = create<AppState>((set, get) => ({
     await persist(() => upsertDesignConcept(concept));
     await persist(() => upsertProject(updatedProject));
     return concept;
+  },
+
+  saveSitePhoto: async (projectId, sitePhotoUri) => {
+    const project = get().projects.find((item) => item.id === projectId);
+    if (!project) return;
+
+    const updatedProject: Project = {
+      ...project,
+      sitePhotoUri,
+      updatedAt: new Date().toISOString(),
+    };
+
+    set((state) => ({
+      projects: state.projects.map((item) => (item.id === projectId ? updatedProject : item)),
+      activeProjectId: projectId,
+    }));
+
+    await persist(() => upsertProject(updatedProject));
   },
 
   refreshGuide: async (jurisdiction) => {
@@ -284,4 +366,21 @@ async function persist(operation: () => Promise<void>) {
   } catch {
     // Local memory state already updated. A later app launch will reseed if SQLite is unavailable.
   }
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error("Local storage initialization timed out")), timeoutMs);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
 }

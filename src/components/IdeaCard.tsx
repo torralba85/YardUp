@@ -39,11 +39,16 @@ export function IdeaCard({
           <View style={styles.titleText}>
             <Text style={[styles.title, tile && styles.tileTitle]}>{item.title}</Text>
             <Text style={[styles.meta, tile && styles.tileMeta]}>
-              {item.sqft} sqft • {item.style}
+              {item.sqft} sqft - {item.style}
             </Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Save idea" onPress={onSave} style={styles.saveButton}>
-            <Feather name="bookmark" size={20} color={saved ? colors.background : colors.accent} style={saved ? styles.savedIcon : undefined} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={saved ? "Idea saved" : "Save idea"}
+            onPress={onSave}
+            style={[styles.saveButton, saved && styles.saveButtonSaved]}
+          >
+            <Feather name="bookmark" size={19} color={saved ? colors.background : colors.accent} />
           </Pressable>
         </View>
         {tile ? null : <Text style={styles.summary}>{item.summary}</Text>}
@@ -54,7 +59,7 @@ export function IdeaCard({
             </Text>
           ))}
         </View>
-        <Button variant={tile ? "ghost" : "secondary"} onPress={onAdapt}>
+        <Button icon="edit-3" variant={tile ? "ghost" : "secondary"} onPress={onAdapt}>
           {tile ? "Adapt" : "Adapt to my lot"}
         </Button>
       </View>
@@ -64,11 +69,12 @@ export function IdeaCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radii.md,
-    borderWidth: 1,
+    backgroundColor: colors.canvas,
+    borderRadius: radii.lg,
     borderColor: colors.border,
+    borderWidth: 1,
     overflow: "hidden",
+    ...shadows.medium,
   },
   tileCard: {
     flexBasis: "47.5%",
@@ -122,18 +128,17 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     alignItems: "center",
-    backgroundColor: colors.surfaceStrong,
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
     borderRadius: radii.sm,
-    height: 36,
+    borderWidth: 1,
+    height: 44,
     justifyContent: "center",
-    width: 36,
+    width: 44,
   },
-  savedIcon: {
-    backgroundColor: colors.text,
-    color: colors.card,
-    borderRadius: radii.sm,
-    padding: 6,
-    overflow: "hidden",
+  saveButtonSaved: {
+    backgroundColor: colors.ink,
+    borderColor: colors.highlighter,
   },
   summary: {
     ...typography.body,
@@ -147,8 +152,10 @@ const styles = StyleSheet.create({
   tag: {
     ...typography.label,
     fontSize: 10,
-    backgroundColor: colors.surfaceStrong,
-    borderRadius: radii.sm,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radii.xs,
+    borderWidth: 1,
     color: colors.muted,
     overflow: "hidden",
     paddingHorizontal: spacing.sm,

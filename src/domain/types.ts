@@ -11,6 +11,52 @@ export type BudgetBand = "under_250k" | "250k_400k" | "400k_plus";
 
 export type ProjectStatus = "draft" | "estimated" | "guide_ready" | "concept_ready";
 
+export type DesignStyleId =
+  | "warm_modern"
+  | "farmhouse"
+  | "industrial"
+  | "coastal_minimal"
+  | "california_bungalow"
+  | "clean_gable";
+
+export type ConstructionMethod = "prefab" | "modular" | "site_built" | "conversion";
+
+export type DesignFitSignalStatus = "good" | "review" | "blocked";
+
+export interface DesignStyle {
+  id: DesignStyleId;
+  label: string;
+  description: string;
+  promptCue: string;
+  tags: string[];
+}
+
+export interface DesignPlacement {
+  xPercent: number;
+  yPercent: number;
+  rotation: number;
+}
+
+export interface DesignFitSignal {
+  id: string;
+  label: string;
+  value: string;
+  detail: string;
+  status: DesignFitSignalStatus;
+}
+
+export interface DesignConceptPreferences {
+  styleId?: DesignStyleId;
+  styleLabel?: string;
+  modelId?: string;
+  modelName?: string;
+  constructionMethod?: ConstructionMethod;
+  targetSqFt?: number;
+  placement?: DesignPlacement;
+  fitSignals?: DesignFitSignal[];
+  hasSitePhoto?: boolean;
+}
+
 export interface EstimateInput {
   aduType: AduType;
   aduSqFt: number;
@@ -45,6 +91,10 @@ export interface Project {
   updatedAt: string;
   lastEstimate?: EstimateResult;
   lastEstimateInput?: EstimateInput;
+  sitePhotoUri?: string;
+  selectedModelId?: string;
+  selectedStyleId?: DesignStyleId;
+  placement?: DesignPlacement;
 }
 
 export interface Citation {
@@ -157,9 +207,19 @@ export interface AduModel {
   beds: number;
   baths: number;
   dimensions: string;
+  footprint: {
+    widthFt: number;
+    depthFt: number;
+  };
+  constructionMethod: ConstructionMethod;
+  styleIds: DesignStyleId[];
+  budgetBand: BudgetBand;
   priceFrom: number;
   monthlyEstimate: number;
   fitScore: number;
   imageUrl: string;
   tags: string[];
+  accessibilityFeatures: string[];
+  familyFeatures: string[];
+  fitNotes: string[];
 }

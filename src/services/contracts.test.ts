@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { designConceptPreferencesSchema } from "../domain/schemas";
 import {
   designConceptResponseSchema,
   propertyHistoryResponseSchema,
@@ -51,6 +52,30 @@ describe("service contracts", () => {
     });
 
     expect(result.rooms).toContain("bath");
+  });
+
+  it("accepts optional design concept planner preferences", () => {
+    const result = designConceptPreferencesSchema.parse({
+      styleId: "warm_modern",
+      styleLabel: "Warm Modern",
+      modelId: "studio-340",
+      modelName: "Garden Studio",
+      constructionMethod: "prefab",
+      targetSqFt: 340,
+      placement: { xPercent: 68, yPercent: 70, rotation: 0 },
+      fitSignals: [
+        {
+          id: "buildable-area",
+          label: "Buildable area",
+          value: "340/860 sqft",
+          detail: "Model fits the starter buildable-area allowance.",
+          status: "good",
+        },
+      ],
+      hasSitePhoto: true,
+    });
+
+    expect(result.modelName).toBe("Garden Studio");
   });
 
 });

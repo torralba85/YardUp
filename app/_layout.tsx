@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useAppStore } from "../src/state/appStore";
 import { colors, spacing, typography } from "../src/theme";
+import { YardUpLogo } from "../src/components/YardUpLogo";
 
 export default function RootLayout() {
   const initialized = useAppStore((state) => state.initialized);
@@ -22,16 +23,16 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
-        {initialized ? (
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        ) : (
-          <View style={styles.loading}>
-            <Text style={styles.loadingTitle}>ADU Advisor</Text>
-            <Text style={styles.loadingText}>Preparing offline project data</Text>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="wizard" />
+        </Stack>
+        {!initialized ? (
+          <View style={styles.loading} pointerEvents="auto">
+            <YardUpLogo size={38} />
+            <Text style={styles.loadingText}>Preparing income and builder data</Text>
           </View>
-        )}
+        ) : null}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -44,13 +45,9 @@ const styles = StyleSheet.create({
   loading: {
     alignItems: "center",
     backgroundColor: colors.background,
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     gap: spacing.sm,
-  },
-  loadingTitle: {
-    ...typography.title,
-    color: colors.accent,
   },
   loadingText: {
     ...typography.label,

@@ -38,6 +38,7 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   lastEstimateInput?: EstimateInput;
+  sitePhotoUri?: string;
 }
 
 export interface InspirationItem {
@@ -61,6 +62,42 @@ export interface DesignConceptPayload {
   constraints: string[];
   nextSteps: string[];
   thumbnailPrompt: string;
+}
+
+export type DesignStyleId =
+  | "warm_modern"
+  | "farmhouse"
+  | "industrial"
+  | "coastal_minimal"
+  | "california_bungalow"
+  | "clean_gable";
+
+export type ConstructionMethod = "prefab" | "modular" | "site_built" | "conversion";
+
+export interface DesignPlacement {
+  xPercent: number;
+  yPercent: number;
+  rotation: number;
+}
+
+export interface DesignFitSignal {
+  id: string;
+  label: string;
+  value: string;
+  detail: string;
+  status: "good" | "review" | "blocked";
+}
+
+export interface DesignConceptPreferences {
+  styleId?: DesignStyleId;
+  styleLabel?: string;
+  modelId?: string;
+  modelName?: string;
+  constructionMethod?: ConstructionMethod;
+  targetSqFt?: number;
+  placement?: DesignPlacement;
+  fitSignals?: DesignFitSignal[];
+  hasSitePhoto?: boolean;
 }
 
 export interface PropertyRecord {

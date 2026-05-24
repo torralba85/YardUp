@@ -38,6 +38,7 @@ async function getDb() {
 
 export async function initializeDatabase() {
   const db = await getDb();
+  await db.execAsync("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
   await db.execAsync(SCHEMA_SQL);
   await seedStaticData(db);
 }

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors, radii, spacing, typography } from "../theme";
+import { colors, radii, shadows, spacing, typography } from "../theme";
 
 interface MetricCardProps {
   label: string;
@@ -31,41 +31,44 @@ export function MetricCard({ label, value, detail, tone = "default", width = "fl
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radii.sm,
-    borderWidth: 1,
+    backgroundColor: colors.canvas,
     borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
     flex: 1,
     gap: spacing.xs,
     minWidth: 148,
     padding: spacing.md,
+    ...shadows.soft,
   },
   full: {
     flexBasis: "100%",
   },
   primary: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accentSoft,
+    backgroundColor: colors.forestDeep,
+    borderColor: colors.forest,
   },
   label: {
     ...typography.label,
     color: colors.muted,
   },
   primaryLabel: {
-    color: colors.text,
+    color: colors.mint,
   },
   value: {
     ...typography.title,
-    fontSize: 28,
-    lineHeight: 32,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: "600",
     color: colors.text,
+    fontFamily: typography.editorial.fontFamily,
   },
   compactValue: {
     fontSize: 24,
     lineHeight: 28,
   },
   primaryValue: {
-    color: colors.text,
+    color: colors.canvas,
   },
   detail: {
     ...typography.body,
@@ -74,6 +77,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   primaryDetail: {
-    color: colors.text,
+    color: colors.inkSoft,
+    opacity: 0.86,
   },
 });

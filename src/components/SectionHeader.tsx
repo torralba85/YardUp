@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors, spacing, typography } from "../theme";
+import { colors, radii, spacing, typography } from "../theme";
 
 interface SectionHeaderProps {
   title: string;
@@ -19,17 +19,29 @@ export function SectionHeader({ title, action }: SectionHeaderProps) {
 const styles = StyleSheet.create({
   row: {
     alignItems: "center",
+    borderBottomColor: colors.line,
+    borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: spacing.xl,
-    marginBottom: spacing.xs,
+    marginBottom: -spacing.sm,
+    paddingBottom: spacing.sm,
   },
   title: {
     ...typography.h2,
     color: colors.text,
+    fontSize: 19,
+    lineHeight: 24,
   },
   action: {
     ...typography.label,
-    color: colors.accent,
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderRadius: radii.xs,
+    borderWidth: 1,
+    color: colors.muted,
+    overflow: "hidden",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
 });
