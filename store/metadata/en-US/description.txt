@@ -1,0 +1,7 @@
+ADU Advisor helps California homeowners explore accessory dwelling unit feasibility before they call a builder.
+
+Start a local property study, compare ADU model sizes, sketch backyard placement, estimate cost and rental value assumptions, review starter permit considerations, save design references, and prepare a quote-ready planning packet.
+
+The app is local-first. Project studies and estimate assumptions are stored on your device by default. Cloud-backed actions are optional and used only when you request guidance, concept generation, property-record lookup, or quote packet actions.
+
+ADU Advisor is a planning aid. It does not replace a licensed architect, contractor, attorney, financial advisor, surveyor, or local permitting authority. Always verify zoning, overlays, setbacks, utilities, fire access, and permit requirements with the city or county before making design or construction decisions.

@@ -1,0 +1,1 @@
+ADU Advisor can be reviewed without a traditional login. Firebase anonymous authentication is used only for protected cloud-backed quote request writes. The current release is a planning aid with deterministic fallback behavior for cloud features. It does not claim official permit approval, official assessor records, or guaranteed contractor availability.
