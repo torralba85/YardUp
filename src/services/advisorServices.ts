@@ -12,6 +12,7 @@ import type {
 } from "../domain/types";
 import { callCloudFunction } from "./firebase";
 import { ensureFirebaseSession } from "./session";
+import type { FeedbackInput, FeedbackRecord } from "../domain/feedback";
 
 export async function getRegulationGuide(jurisdiction: JurisdictionId): Promise<RegulationGuide> {
   const remote = await callCloudFunction<{ jurisdiction: JurisdictionId }, RegulationGuide>("getRegulationGuide", {
@@ -87,6 +88,13 @@ export async function submitQuoteRequest(
       packetItems,
     },
   ).catch(() => null);
+}
+
+export async function submitFeedback(input: FeedbackInput): Promise<FeedbackRecord | null> {
+  return callCloudFunction<FeedbackInput, FeedbackRecord>("submitFeedback", input).catch((error) => {
+    console.error("Failed to submit feedback:", error);
+    return null;
+  });
 }
 
 function makeLocalConcept(
