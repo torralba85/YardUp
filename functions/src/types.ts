@@ -109,3 +109,29 @@ export interface PropertyRecord {
   summary: string;
   citationUrl: string;
 }
+
+export type FeedbackCategory = "general" | "bug" | "feature_request" | "data_issue" | "other";
+
+export interface FeedbackDeviceInfo {
+  os?: string;
+  osVersion?: string;
+  model?: string;
+  brand?: string;
+}
+
+export interface FeedbackInput {
+  category: FeedbackCategory;
+  message: string;
+  rating?: number;
+  pageIdentifier?: string;
+  clientVersion?: string;
+  deviceInfo?: FeedbackDeviceInfo;
+}
+
+export interface FeedbackRecord extends FeedbackInput {
+  id: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  status: "new" | "reviewed" | "archived";
+}
