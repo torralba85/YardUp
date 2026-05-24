@@ -3,6 +3,7 @@ import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getFunctions, httpsCallable, type Functions } from "firebase/functions";
+import { Platform } from "react-native";
 
 interface FirebaseConfig {
   apiKey?: string;
@@ -11,6 +12,9 @@ interface FirebaseConfig {
   storageBucket?: string;
   messagingSenderId?: string;
   appId?: string;
+  webAppId?: string;
+  iosAppId?: string;
+  androidAppId?: string;
 }
 
 interface FirebaseClients {
@@ -55,5 +59,21 @@ export async function callCloudFunction<TInput extends object, TOutput>(name: st
 
 function getConfig(): FirebaseConfig {
   const extra = Constants.expoConfig?.extra as { firebase?: FirebaseConfig } | undefined;
-  return extra?.firebase ?? {};
+  const config = extra?.firebase ?? {};
+  return {
+    ...config,
+    appId: getPlatformAppId(config),
+  };
+}
+
+function getPlatformAppId(config: FirebaseConfig): string | undefined {
+  if (Platform.OS === "ios") {
+    return config.iosAppId || config.appId;
+  }
+
+  if (Platform.OS === "android") {
+    return config.androidAppId || config.appId;
+  }
+
+  return config.webAppId || config.appId;
 }

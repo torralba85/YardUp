@@ -34,7 +34,14 @@ npm test
 
 ## Firebase Configuration
 
-The app runs without Firebase. To enable cloud-backed features, populate `expo.extra.firebase` in `app.json` or inject equivalent Expo config at build time. The mobile client only calls configured Firebase callable functions; OpenAI API keys should remain in the backend environment.
+The app runs without Firebase, but this checkout is wired to the Firebase project `adu-advisor` for native builds. The registered native identifiers are:
+
+- iOS bundle ID: `com.aduadvisor.app`
+- Android package: `com.aduadvisor.app`
+
+Native Firebase build config files live in `firebase/GoogleService-Info.plist` and `firebase/google-services.json`, and `app.config.ts` points Expo SDK 54 at those files with `ios.googleServicesFile` and `android.googleServicesFile`. The mobile client only calls configured Firebase callable functions; OpenAI API keys should remain in the backend environment.
+
+Firebase client config defaults are checked into `app.config.ts` because they are public Firebase app identifiers. To override them for another project or EAS environment, set the variables shown in `.env.example`.
 
 Expected callable functions:
 
@@ -82,6 +89,8 @@ Production builds require these EAS environment variables:
 - `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
 - `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
 - `EXPO_PUBLIC_FIREBASE_APP_ID`
+- `EXPO_PUBLIC_FIREBASE_IOS_APP_ID`
+- `EXPO_PUBLIC_FIREBASE_ANDROID_APP_ID`
 - `OPENAI_API_KEY` in Firebase Functions runtime config or Secret Manager, never in Expo client config
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.

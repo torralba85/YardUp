@@ -5,6 +5,7 @@ import {
   getRegulationGuideInputSchema,
   searchPropertyHistoryInputSchema,
   submitQuoteRequestInputSchema,
+  submitFeedbackInputSchema,
 } from "./schemas";
 
 describe("callable input schemas", () => {
@@ -60,5 +61,57 @@ describe("callable input schemas", () => {
         packetItems: ["ROI model", "Lot summary"],
       }).packetItems,
     ).toHaveLength(2);
+  });
+
+  it("validates feedback payloads", () => {
+    const valid = submitFeedbackInputSchema.parse({
+      category: "bug",
+      message: "This is a valid feedback message with more than 5 characters.",
+      rating: 5,
+      pageIdentifier: "Home",
+      clientVersion: "1.0.0",
+      deviceInfo: {
+        os: "ios",
+        osVersion: "15.0",
+        model: "iPhone 13",
+        brand: "Apple",
+      },
+    });
+    expect(valid.category).toBe("bug");
+    expect(valid.message).toContain("valid feedback");
+
+    // Invalid category
+    expect(() =>
+      submitFeedbackInputSchema.parse({
+        category: "invalid_category" as any,
+        message: "Valid length message.",
+      })
+    ).toThrow();
+
+    // Message too short (< 5 chars)
+    expect(() =>
+      submitFeedbackInputSchema.parse({
+        category: "general",
+        message: "Oops",
+      })
+    ).toThrow();
+
+    // Message too long (> 1000 chars)
+    const longMessage = "a".repeat(1001);
+    expect(() =>
+      submitFeedbackInputSchema.parse({
+        category: "general",
+        message: longMessage,
+      })
+    ).toThrow();
+
+    // Rating out of bounds (< 1 or > 5)
+    expect(() =>
+      submitFeedbackInputSchema.parse({
+        category: "general",
+        message: "Valid message content.",
+        rating: 6,
+      })
+    ).toThrow();
   });
 });

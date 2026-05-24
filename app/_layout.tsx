@@ -10,6 +10,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAppStore } from "../src/state/appStore";
 import { colors, spacing, typography } from "../src/theme";
 import { YardUpLogo } from "../src/components/YardUpLogo";
+import { FeedbackButton } from "../src/components/FeedbackButton";
 
 export default function RootLayout() {
   const initialized = useAppStore((state) => state.initialized);
@@ -27,6 +28,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="wizard" />
         </Stack>
+        {initialized ? <FeedbackButton /> : null}
         {!initialized ? (
           <View style={styles.loading} pointerEvents="auto">
             <YardUpLogo size={38} />
