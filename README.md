@@ -85,3 +85,9 @@ Production builds require these EAS environment variables:
 - `OPENAI_API_KEY` in Firebase Functions runtime config or Secret Manager, never in Expo client config
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
+
+## Store Review Materials
+
+- Privacy policy draft: `docs/legal/privacy-policy.md`
+- Support draft: `docs/legal/support.md`
+- Review notes: `docs/release/store-review-notes.md`
