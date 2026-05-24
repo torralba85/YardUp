@@ -73,3 +73,15 @@ npx eas build --profile production --platform all
 ## Privacy Defaults
 
 Exact addresses stay in local SQLite unless the user initiates a cloud-backed action such as geocoding, sync, regulation refresh, or property history search. AI design generation should receive project constraints and lot facts through backend mediation, with unnecessary personal identifiers removed.
+
+## Release Environment
+
+Production builds require these EAS environment variables:
+
+- `EXPO_PUBLIC_FIREBASE_API_KEY`
+- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
+- `EXPO_PUBLIC_FIREBASE_APP_ID`
+- `OPENAI_API_KEY` in Firebase Functions runtime config or Secret Manager, never in Expo client config
+
+The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
