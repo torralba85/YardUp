@@ -180,7 +180,7 @@ export default function DesignScreen() {
       <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectContext}>
         <View style={styles.contextTop}>
           <View style={styles.contextCopy}>
-            <Text style={styles.contextLabel}>Live design board</Text>
+            <Text style={styles.contextLabel}>Parcel canvas</Text>
             <Text style={styles.contextAddress}>{project.address}</Text>
           </View>
           <View style={styles.contextBadge}>
@@ -251,7 +251,7 @@ export default function DesignScreen() {
         </View>
       </View>
 
-      <SectionHeader title="Architectural style" action="one tap" />
+      <SectionHeader title="Exterior style" action="one tap" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.styleRail}>
         {designStyles.map((style) => (
           <StyleChip

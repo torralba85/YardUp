@@ -264,7 +264,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       id: `quote-${projectId}-${contractorId}`,
       projectId,
       contractorId,
-      status: "saved",
+      status: "submitted",
       packetItems,
       createdAt: existing?.createdAt ?? now,
       homeownerConsentAt: existing?.homeownerConsentAt ?? now,

@@ -33,7 +33,7 @@ export default function EstimateScreen() {
             <Feather name="activity" size={18} color={colors.accentDark} />
           </View>
           <View style={styles.projectBody}>
-            <Text style={styles.projectLabel}>Numbers lab</Text>
+            <Text style={styles.projectLabel}>Income model</Text>
             <Text style={styles.projectTitle}>{project.name}</Text>
             <Text style={styles.projectText}>{project.address}</Text>
           </View>

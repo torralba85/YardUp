@@ -94,29 +94,6 @@ export default function ContractorsScreen() {
     return contractors[0]; // fallback
   }, [currentRole, currentUser, contractors]);
 
-  // If role is builder, render the Builder Dashboard
-  if (currentRole === "builder") {
-    if (contractors.length === 0) {
-      return (
-        <Screen title="Builder Dashboard" subtitle="Loading builder profile...">
-          <View style={styles.emptyState}>
-            <Feather name="loader" size={24} color={colors.muted} />
-          </View>
-        </Screen>
-      );
-    }
-    return (
-      <BuilderDashboard
-        builder={builderProfile}
-        quoteRequests={quoteRequests}
-        onVerifyDelivery={deliverQuote}
-        stripeStatus={stripeStatus}
-        loadingStripe={loadingStripe}
-        onConnectStripe={handleConnectStripe}
-        onCheckStripeStatus={handleCheckStripeStatus}
-      />
-    );
-  }
 
   const projectRequests = useMemo(
     () => quoteRequests.filter((request) => request.projectId === project?.id),
@@ -165,6 +142,30 @@ export default function ContractorsScreen() {
       setSendingId(null);
     }
   };
+
+  // If role is builder, render the Builder Dashboard
+  if (currentRole === "builder") {
+    if (contractors.length === 0) {
+      return (
+        <Screen title="Builder Dashboard" subtitle="Loading builder profile...">
+          <View style={styles.emptyState}>
+            <Feather name="loader" size={24} color={colors.muted} />
+          </View>
+        </Screen>
+      );
+    }
+    return (
+      <BuilderDashboard
+        builder={builderProfile}
+        quoteRequests={quoteRequests}
+        onVerifyDelivery={deliverQuote}
+        stripeStatus={stripeStatus}
+        loadingStripe={loadingStripe}
+        onConnectStripe={handleConnectStripe}
+        onCheckStripeStatus={handleCheckStripeStatus}
+      />
+    );
+  }
 
   if (!project) {
     return (
@@ -293,7 +294,7 @@ function NextMoveCard({
         </View>
         <Text style={styles.nextMoveTitle}>Finish the quote packet first</Text>
         <Text style={styles.nextMoveBody}>
-          {packetReady} of {packetTotal} sections ready. Builders respond faster when ROI, lot, concept, and permit notes are all attached.
+          {packetReady} of {packetTotal} sections ready. Builders typically respond faster when ROI, lot, concept, and permit notes are all attached.
         </Text>
         {onCompletePacket ? (
           <Button icon="arrow-right" onPress={onCompletePacket}>
@@ -328,7 +329,7 @@ function NextMoveCard({
         </View>
         <Text style={styles.nextMoveTitle}>Packet recorded; delivery pending</Text>
         <Text style={styles.nextMoveBody}>
-          Your consented packet is recorded for {contractor.name}. It is not fee eligible until builder delivery is confirmed.
+          Your packet has been recorded for {contractor.name}. You'll hear back once the builder confirms receipt.
         </Text>
       </View>
     );
@@ -410,7 +411,7 @@ function ContractorCard({
       </View>
 
       <Text style={styles.disclosure}>
-        Consent creates builder outreach for this packet. Only verified delivery can become commercially eligible.
+        By consenting, your packet is shared with this builder for an introduction. No charge to you.
       </Text>
       <Button
         variant={delivered || submitted ? "secondary" : "primary"}
@@ -513,7 +514,7 @@ function BuilderDashboard({
           <Feather name="alert-triangle" size={42} color={colors.warning} />
           <Text style={styles.emptyTitle}>Profile not matched</Text>
           <Text style={styles.emptyText}>
-            We could not resolve your user account to a seeded builder profile. Please contact support.
+            We could not find an active builder profile for this account. Contact support at support@aduadvisor.app.
           </Text>
         </View>
       </Screen>
@@ -551,7 +552,7 @@ function BuilderDashboard({
               {stripeStatus === "active"
                 ? "Connected"
                 : stripeStatus === "pending"
-                  ? "Onboarding Pending"
+                  ? "Onboarding pending"
                   : "Not Connected"}
             </Text>
           </View>
@@ -621,7 +622,7 @@ function BuilderDashboard({
         <View style={[styles.metricCard, { borderLeftColor: colors.permit, borderLeftWidth: 4 }]}>
           <Text style={styles.metricLabel}>Pending Packets</Text>
           <Text style={styles.metricValueLarge}>{totalPending}</Text>
-          <Text style={styles.metricSubtext}>Outreach in review</Text>
+          <Text style={styles.metricSubtext}>Awaiting delivery confirmation</Text>
         </View>
       </View>
 

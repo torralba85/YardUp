@@ -58,7 +58,7 @@ export default function GuideScreen() {
           <SectionHeader title="Parcel snapshot" action={parcel.sourceLabel} />
           <View style={styles.metrics}>
             <MetricCard label="Zoning" value={parcel.zoning} detail={parcel.sourceLabel} />
-            <MetricCard label="Lot" value={`${parcel.lotSqFt.toLocaleString()} sqft`} detail="Starter parcel" />
+            <MetricCard label="Lot" value={`${parcel.lotSqFt.toLocaleString()} sqft`} detail="Estimated lot" />
             <MetricCard label="Buildable" value={`${parcel.buildableAreaSqFt.toLocaleString()} sqft`} detail="Planning allowance" />
           </View>
           <View style={styles.constraintCard}>
