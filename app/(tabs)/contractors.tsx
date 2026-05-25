@@ -536,7 +536,7 @@ function BuilderDashboard({
         </View>
       </View>
 
-      <View style={[styles.stripeCard, stripeStatus === "active" ? styles.stripeCardActive : stripeStatus === "pending" ? styles.stripeCardPending : stripeStatus === "idle" ? styles.stripeCardIdle]}>
+      <View style={[styles.stripeCard, stripeStatus === "active" ? styles.stripeCardActive : stripeStatus === "pending" ? styles.stripeCardPending : stripeStatus === "idle" ? styles.stripeCardIdle : undefined]}>
         <View style={styles.stripeHeader}>
           <View style={[styles.stripeIconContainer, stripeStatus === "active" ? styles.stripeIconActive : stripeStatus === "pending" ? styles.stripeIconPending : stripeStatus === "idle" ? styles.stripeIconIdle : undefined]}>
             <Feather
