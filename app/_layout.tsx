@@ -22,14 +22,17 @@ import { StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { AuthModal } from "../src/components/AuthModal";
 import { FeedbackButton } from "../src/components/FeedbackButton";
 import { YardUpLogo } from "../src/components/YardUpLogo";
 import { useAppStore } from "../src/state/appStore";
+import { useAuthStore } from "../src/state/authStore";
 import { colors, spacing, typography } from "../src/theme";
 
 export default function RootLayout() {
   const initialized = useAppStore((state) => state.initialized);
   const initialize = useAppStore((state) => state.initialize);
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
 
   const [hankenLoaded, hankenError] = useHanken({
     HankenGrotesk_400Regular,
@@ -49,7 +52,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     void initialize();
-  }, [initialize]);
+    const unsubscribe = initializeAuth();
+    return () => unsubscribe();
+  }, [initialize, initializeAuth]);
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -60,6 +65,7 @@ export default function RootLayout() {
           <Stack.Screen name="wizard" />
         </Stack>
         {ready ? <FeedbackButton /> : null}
+        {ready ? <AuthModal /> : null}
         {!ready ? (
           <View style={styles.loading} pointerEvents="auto">
             <YardUpLogo size={38} />
