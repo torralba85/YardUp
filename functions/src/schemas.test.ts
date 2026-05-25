@@ -12,7 +12,8 @@ describe("callable input schemas", () => {
   it("accepts supported jurisdictions only", () => {
     expect(getRegulationGuideInputSchema.parse({ jurisdiction: "oakland" }).jurisdiction).toBe("oakland");
     expect(getRegulationGuideInputSchema.parse({ jurisdiction: "local-review" }).jurisdiction).toBe("local-review");
-    expect(() => getRegulationGuideInputSchema.parse({ jurisdiction: "denver" })).toThrow();
+    expect(getRegulationGuideInputSchema.parse({ jurisdiction: "denver" }).jurisdiction).toBe("denver");
+    expect(() => getRegulationGuideInputSchema.parse({ jurisdiction: "phoenix" })).toThrow();
   });
 
   it("validates concept inputs before AI calls", () => {

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const jurisdictionSchema = z.enum(["los-angeles", "san-diego", "san-jose", "oakland", "sacramento", "local-review"]);
+export const jurisdictionSchema = z.enum(["los-angeles", "san-diego", "san-jose", "oakland", "sacramento", "denver", "local-review"]);
 export const designStyleIdSchema = z.enum([
   "warm_modern",
   "farmhouse",
@@ -133,4 +133,9 @@ export const getStripeOnboardingUrlInputSchema = z.object({
 
 export const checkStripeStatusInputSchema = z.object({
   userId: z.string().min(1).max(120),
+});
+
+export const deliverQuoteRequestInputSchema = z.object({
+  projectId: z.string().min(1).max(120),
+  quoteRequestId: z.string().min(1).max(120),
 });

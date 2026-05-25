@@ -95,6 +95,19 @@ export async function submitQuoteRequest(
   ).catch(() => null);
 }
 
+export async function deliverQuoteRequest(
+  projectId: string,
+  quoteRequestId: string,
+): Promise<QuoteRequest | null> {
+  const hasSession = await ensureFirebaseSession();
+  if (!hasSession) return null;
+
+  return callCloudFunction<{ projectId: string; quoteRequestId: string }, QuoteRequest>(
+    "deliverQuoteRequest",
+    { projectId, quoteRequestId },
+  ).catch(() => null);
+}
+
 export async function submitFeedback(input: FeedbackInput): Promise<FeedbackRecord | null> {
   return callCloudFunction<FeedbackInput, FeedbackRecord>("submitFeedback", input).catch((error) => {
     console.error("Failed to submit feedback:", error);

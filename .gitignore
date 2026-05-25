@@ -37,9 +37,10 @@ firestore-debug.log
 /my-videonpx/
 /ADU advisor.zip
 /stitch_yardup_modern_design_system.zip
-/adu-design-studio-demo/.hyperframes-preview*.log
-/adu-design-studio-demo/.thumbnails/
-/adu-design-studio-demo/renders/
+/adu-design-studio-demo/
+
+# Firebase native SDK config (secrets — source from CI or local provisioning)
+/firebase/
 
 # macOS
 .DS_Store
@@ -47,6 +48,7 @@ firestore-debug.log
 
 # local env files
 .env*.local
+.env.local.temp
 
 # typescript
 *.tsbuildinfo

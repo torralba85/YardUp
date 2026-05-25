@@ -291,8 +291,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw new Error(`Quote request for project ${projectId} and contractor ${contractorId} not found.`);
     }
 
-    const { deliverQuoteRequest } = await import("../domain/marketplace");
-    const updated = deliverQuoteRequest(existing);
+    const { deliverQuoteRequest: callDeliverRemote } = await import("../services/advisorServices");
+    const { deliverQuoteRequest: localDeliver } = await import("../domain/marketplace");
+
+    const quoteRequestId = `quote-${projectId}-${contractorId}`;
+    const remote = await callDeliverRemote(projectId, quoteRequestId).catch(() => null);
+    const updated = remote ?? localDeliver(existing);
 
     set((state) => ({
       quoteRequests: state.quoteRequests.map((item) =>
