@@ -140,10 +140,9 @@ paths:
     post:
       tags: [Quote Requests]
       operationId: submitQuoteRequest
-      summary: Save a builder quote request for a project.
+      summary: Record a consented builder outreach packet for a project.
       security:
         - firebaseAuth: []
-        - {}
       requestBody:
         required: true
         content:
@@ -161,9 +160,10 @@ paths:
                       - Lot summary
                       - Design concept
                       - Permit notes
+                    homeownerConsent: true
       responses:
         "200":
-          description: Quote request saved or echoed as sent.
+          description: Consented outreach packet recorded as awaiting verified builder delivery.
           content:
             application/json:
               schema:
@@ -226,7 +226,7 @@ components:
   schemas:
     JurisdictionId:
       type: string
-      enum: [los-angeles, san-diego, san-jose, oakland, sacramento]
+      enum: [los-angeles, san-diego, san-jose, oakland, sacramento, local-review]
     DesignStyleId:
       type: string
       enum: [warm_modern, farmhouse, industrial, coastal_minimal, california_bungalow, clean_gable]
@@ -496,7 +496,7 @@ components:
           enum: [high, medium, low]
     QuoteRequest:
       type: object
-      required: [id, projectId, contractorId, packetItems, status, createdAt]
+      required: [id, projectId, contractorId, packetItems, status, commercialStatus, createdAt]
       properties:
         id:
           type: string
@@ -512,7 +512,16 @@ components:
             type: string
         status:
           type: string
-          enum: [sent]
+          enum: [saved, submitted, sent]
+        homeownerConsentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        commercialStatus:
+          type: string
+          enum: [not_eligible, eligible_for_builder_fee]
         createdAt:
           type: string
           format: date-time
@@ -565,7 +574,7 @@ components:
       properties:
         data:
           type: object
-          required: [projectId, contractorId, packetItems]
+          required: [projectId, contractorId, packetItems, homeownerConsent]
           properties:
             projectId:
               type: string
@@ -582,6 +591,9 @@ components:
               items:
                 type: string
                 maxLength: 80
+            homeownerConsent:
+              type: boolean
+              const: true
     RegulationGuideCallableResponse:
       type: object
       required: [result]

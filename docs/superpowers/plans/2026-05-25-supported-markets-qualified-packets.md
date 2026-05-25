@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make YardUp truthful outside seeded jurisdictions and establish a consented, delivered quote-packet event that can support future builder-paid revenue.
+**Goal:** Make YardUp truthful outside seeded jurisdictions and establish a consented outreach event that can support future verified delivery and builder-paid revenue.
 
-**Architecture:** Add an explicit `local-review` coverage state instead of defaulting unknown addresses to Los Angeles, and scope builder profiles through declared jurisdiction coverage. Extend quote delivery with saved-versus-sent and commercial eligibility semantics; delivery and eligibility are set only after a successful authenticated backend write with homeowner consent. Payment collection is intentionally excluded from this plan.
+**Architecture:** Add an explicit `local-review` coverage state instead of defaulting unknown addresses to Los Angeles, and scope builder profiles through declared jurisdiction coverage. Extend quote handling with saved, submitted, and verified-sent semantics; the current authenticated backend write records consented outreach as pending, while delivery and eligibility require separate delivery evidence. Payment collection is intentionally excluded from this plan.
 
 **Tech Stack:** Expo SDK 54, React Native 0.81, Expo Router 6, Zustand, Firebase callable Functions, Zod, TypeScript, Vitest.
 
@@ -17,11 +17,11 @@
 - `src/data/contractors.ts`: explicit declared builder coverage.
 - `src/domain/marketplace.ts`: pure matching and delivery-status helpers.
 - `src/domain/marketplace.test.ts`: coverage and commercial eligibility unit tests.
-- `src/state/appStore.ts` and `src/state/appStore.test.ts`: retryable saved packet persistence and delivered transitions.
+- `src/state/appStore.ts` and `src/state/appStore.test.ts`: retryable saved packet persistence and pending/delivered transitions.
 - `src/services/advisorServices.ts`: consent-aware callable request.
 - `app/(tabs)/index.tsx`, `app/(tabs)/contractors.tsx`, `app/(tabs)/guide.tsx`, `app/wizard/step-1.tsx`, `app/wizard/step-5.tsx`: customer-visible coverage and delivery states.
 - `src/components/AuthModal.tsx`: accurate account wording without unsupported sync claims.
-- `functions/src/types.ts`, `functions/src/schemas.ts`, `functions/src/lib/regulations.ts`, `functions/src/data/regulations.ts`, `functions/src/lib/quoteRequests.ts`, `functions/src/index.ts`: backend acceptance of local-review and delivered-consent persistence.
+- `functions/src/types.ts`, `functions/src/schemas.ts`, `functions/src/lib/regulations.ts`, `functions/src/data/regulations.ts`, `functions/src/lib/quoteRequests.ts`, `functions/src/index.ts`: backend acceptance of local-review and consented outreach persistence.
 - `docs/api/api-design.md`, `docs/api/openapi.yaml`, `docs/release/store-review-notes.md`, `store/metadata/en-US/*.txt`: accurate review and commercial-boundary content.
 
 ### Task 1: Define Market Coverage And Matching Semantics
@@ -100,7 +100,7 @@ export interface QuoteRequest {
   id: string;
   projectId: string;
   contractorId: string;
-  status: "saved" | "sent";
+  status: "saved" | "submitted" | "sent";
   packetItems: string[];
   createdAt: string;
   homeownerConsentAt?: string;
@@ -151,7 +151,8 @@ export function isDeliveredQuote(request: QuoteRequest) {
 export function isCommerciallyEligible(request: QuoteRequest) {
   return request.status === "sent" &&
     request.commercialStatus === "eligible_for_builder_fee" &&
-    Boolean(request.homeownerConsentAt);
+    Boolean(request.homeownerConsentAt) &&
+    Boolean(request.deliveredAt);
 }
 ```
 
@@ -161,7 +162,7 @@ Run: `npx vitest run src/domain/marketplace.test.ts src/data/professionalData.te
 
 Expected: PASS.
 
-### Task 2: Make Quote Delivery Retryable And Commercially Truthful
+### Task 2: Make Quote Outreach Retryable And Commercially Truthful
 
 **Files:**
 - Modify: `src/services/advisorServices.ts`
@@ -228,7 +229,7 @@ export async function submitQuoteRequest(
 
 - [ ] **Step 3: Persist saved fallback records and allow delivery retry**
 
-Update the store request signature to `requestQuote(projectId, contractorId, homeownerConsent: true)`. Return an existing request immediately only when its status is `sent`; retry remote delivery for saved records. When remote delivery is unavailable, upsert:
+Update the store request signature to `requestQuote(projectId, contractorId, homeownerConsent: true)`. Return an existing request immediately when its status is `submitted` or `sent`; retry remote submission for saved records. When the cloud action is unavailable, upsert:
 
 ```typescript
 {
@@ -249,7 +250,7 @@ Run: `npx vitest run src/state/appStore.test.ts`
 
 Expected: PASS.
 
-### Task 3: Enforce Delivery Consent In Firebase Functions
+### Task 3: Enforce Outreach Consent In Firebase Functions
 
 **Files:**
 - Modify: `functions/src/types.ts`
@@ -270,7 +271,7 @@ it("accepts local review coverage without claiming a sourced city", () => {
   expect(getRegulationGuideInputSchema.parse({ jurisdiction: "local-review" }).jurisdiction).toBe("local-review");
 });
 
-it("requires affirmative homeowner consent for quote delivery", () => {
+it("requires affirmative homeowner consent for quote outreach", () => {
   expect(() => submitQuoteRequestInputSchema.parse({
     projectId: "p1",
     contractorId: "c1",
@@ -299,18 +300,17 @@ homeownerConsent: z.literal(true),
 
 Add a low-confidence `local-review` regulation guide that clearly requires local verification and has no invented city-specific parcel information.
 
-- [ ] **Step 3: Persist delivery and commercial eligibility only after server success**
+- [ ] **Step 3: Persist consented outreach without overstating delivery**
 
 Update `functions/src/lib/quoteRequests.ts` so its payload requires `homeownerConsent: true` and successful stored documents contain:
 
 ```typescript
-status: "sent",
+status: "submitted",
 homeownerConsentAt: now,
-deliveredAt: now,
-commercialStatus: "eligible_for_builder_fee",
+commercialStatus: "not_eligible",
 ```
 
-Pass `homeownerConsent` through from `functions/src/index.ts` into `saveQuoteRequest`.
+Pass `homeownerConsent` through from `functions/src/index.ts` into `saveQuoteRequest`. Only a future builder-delivery integration may set `status: "sent"`, `deliveredAt`, and `commercialStatus: "eligible_for_builder_fee"`.
 
 - [ ] **Step 4: Run backend tests and typecheck**
 
@@ -366,10 +366,10 @@ Near each available builder handoff action render:
 <Text>No fee to homeowners. By sending, you consent to share this packet with the selected builder. Builders may pay YardUp for qualified introductions.</Text>
 ```
 
-Change the CTA to `Consent and send packet`, call `requestQuote(project.id, contractorId, true)`, and distinguish statuses:
+Change the CTA to `Consent and submit packet`, call `requestQuote(project.id, contractorId, true)`, and distinguish statuses:
 
 ```tsx
-{request?.status === "saved" ? "Saved - retry delivery" : "Packet delivered"}
+{request?.status === "saved" ? "Saved - retry delivery" : request?.status === "submitted" ? "Delivery pending" : "Packet delivered"}
 ```
 
 Do not disable retry for `saved` packets.
@@ -416,7 +416,7 @@ QuoteRequest:
   properties:
     status:
       type: string
-      enum: [saved, sent]
+      enum: [saved, submitted, sent]
     commercialStatus:
       type: string
       enum: [not_eligible, eligible_for_builder_fee]
@@ -431,7 +431,7 @@ SubmitQuoteRequestCallableRequest:
 
 - [ ] **Step 3: Update review and store language**
 
-State that any location can start a study, local sourced-rule depth varies, out-of-coverage projects show local verification rather than an incorrect city guide, packet delivery requires homeowner consent and a successful backend send, and no homeowner payment is collected in this release.
+State that any location can start a study, local sourced-rule depth varies, out-of-coverage projects show local verification rather than an incorrect city guide, outreach submission requires homeowner consent, delivery is still pending after the current backend write, and no homeowner payment is collected in this release.
 
 - [ ] **Step 4: Check documentation diff**
 
@@ -465,7 +465,7 @@ Start or reuse `npm run dev`, navigate at a narrow phone width, and verify:
 1. A known city project shows only declared local builder matches and sourced permit copy.
 2. A Denver or otherwise uncovered project displays `Local rules verification needed`, has no local builder send action, and never labels itself Los Angeles.
 3. A cloud-unavailable quote action displays saved/retry language rather than sent or delivered.
-4. A successfully delivered request uses explicit consent copy and delivered wording.
+4. A successful current backend submission uses explicit consent copy and delivery-pending wording; any future sent record requires delivery evidence.
 
 - [ ] **Step 3: Review diff for local artifact safety**
 
@@ -477,4 +477,4 @@ Expected: Phase 1 implementation files are the only files selected for any commi
 
 - Spec coverage: tasks cover market coverage, scoped matching, truthful packet delivery, homeowner consent, commercial eligibility, UI wording, backend contract, API/store documentation, and verification.
 - Placeholder scan: payment collection is intentionally excluded with a concrete reason; there are no unspecified implementation placeholders in the Phase 1 tasks.
-- Type consistency: the plan consistently uses `local-review`, `homeownerConsent: true`, `status: "saved" | "sent"`, and `commercialStatus: "not_eligible" | "eligible_for_builder_fee"`.
+- Type consistency: the plan consistently uses `local-review`, `homeownerConsent: true`, `status: "saved" | "submitted" | "sent"`, and `commercialStatus: "not_eligible" | "eligible_for_builder_fee"`.

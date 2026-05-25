@@ -1,9 +1,11 @@
-export type JurisdictionId =
+export type CoveredJurisdictionId =
   | "los-angeles"
   | "san-diego"
   | "san-jose"
   | "oakland"
   | "sacramento";
+
+export type JurisdictionId = CoveredJurisdictionId | "local-review";
 
 export type AduType = "detached" | "attached" | "garage_conversion" | "jadu";
 
@@ -167,6 +169,7 @@ export interface ContractorProfile {
   licenseStatus: "verified" | "pending";
   insuranceStatus: "verified" | "pending";
   serviceArea: string;
+  supportedJurisdictions: CoveredJurisdictionId[];
   priceRange: string;
   timelineWeeks: string;
   aduCount: number;
@@ -179,9 +182,12 @@ export interface QuoteRequest {
   id: string;
   projectId: string;
   contractorId: string;
-  status: "sent";
+  status: "saved" | "submitted" | "sent";
   packetItems: string[];
   createdAt: string;
+  homeownerConsentAt?: string;
+  deliveredAt?: string;
+  commercialStatus: "not_eligible" | "eligible_for_builder_fee";
 }
 
 export interface ParcelSummary {

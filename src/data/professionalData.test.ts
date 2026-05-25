@@ -4,6 +4,7 @@ import { aduModels } from "./aduModels";
 import { contractorProfiles } from "./contractors";
 import { designStyles } from "./designStyles";
 import { parcelSummaries } from "./parcelSummaries";
+import { inferJurisdiction } from "./regulations";
 
 describe("professional refinement seed data", () => {
   it("ships contractor profiles with quote-ready trust signals", () => {
@@ -14,6 +15,7 @@ describe("professional refinement seed data", () => {
       expect(contractor.insuranceStatus).toBe("verified");
       expect(contractor.priceRange).toMatch(/\$/);
       expect(contractor.tags.length).toBeGreaterThan(1);
+      expect(contractor.supportedJurisdictions.length).toBeGreaterThan(0);
     }
   });
 
@@ -51,5 +53,10 @@ describe("professional refinement seed data", () => {
       "san-diego",
       "san-jose",
     ]);
+  });
+
+  it("does not route an address outside sourced coverage into Los Angeles", () => {
+    expect(inferJurisdiction("610 Pearl St, Denver, CO")).toBe("local-review");
+    expect(inferJurisdiction("1420 Baxter St, Los Angeles, CA")).toBe("los-angeles");
   });
 });

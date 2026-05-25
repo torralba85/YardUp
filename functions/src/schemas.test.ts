@@ -11,6 +11,7 @@ import {
 describe("callable input schemas", () => {
   it("accepts supported jurisdictions only", () => {
     expect(getRegulationGuideInputSchema.parse({ jurisdiction: "oakland" }).jurisdiction).toBe("oakland");
+    expect(getRegulationGuideInputSchema.parse({ jurisdiction: "local-review" }).jurisdiction).toBe("local-review");
     expect(() => getRegulationGuideInputSchema.parse({ jurisdiction: "denver" })).toThrow();
   });
 
@@ -59,8 +60,35 @@ describe("callable input schemas", () => {
         projectId: "p1",
         contractorId: "c1",
         packetItems: ["ROI model", "Lot summary"],
+        homeownerConsent: true,
       }).packetItems,
     ).toHaveLength(2);
+  });
+
+  it("requires affirmative homeowner consent before submitting a quote request", () => {
+    expect(
+      submitQuoteRequestInputSchema.parse({
+        projectId: "p1",
+        contractorId: "c1",
+        packetItems: ["ROI model"],
+        homeownerConsent: true,
+      }).homeownerConsent,
+    ).toBe(true);
+    expect(() =>
+      submitQuoteRequestInputSchema.parse({
+        projectId: "p1",
+        contractorId: "c1",
+        packetItems: ["ROI model"],
+        homeownerConsent: false,
+      }),
+    ).toThrow();
+    expect(() =>
+      submitQuoteRequestInputSchema.parse({
+        projectId: "p1",
+        contractorId: "c1",
+        packetItems: ["ROI model"],
+      }),
+    ).toThrow();
   });
 
   it("validates feedback payloads", () => {

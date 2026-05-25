@@ -9,7 +9,7 @@ interface RevenueSnapshotProps {
   builderMatches: number;
   estimate: EstimateResult;
   estimateInput: EstimateInput;
-  projectName?: string;
+  assumptionsLabel?: string;
   quotePacketReady: number;
   sentQuotes: number;
   wide: boolean;
@@ -19,7 +19,7 @@ interface RevenueSnapshotProps {
 export function RevenueSnapshot({
   estimate,
   estimateInput,
-  projectName,
+  assumptionsLabel = "Starter supported-market estimate",
   wide,
   onAdjust,
 }: RevenueSnapshotProps) {
@@ -51,7 +51,7 @@ export function RevenueSnapshot({
         <View style={styles.assumptionsCopy}>
           <Feather name="check-circle" size={16} color={colors.accent} />
           <Text style={styles.assumptionsText} numberOfLines={1}>
-            {projectName ? "High confidence" : "Starter supported-market estimate"}
+            {assumptionsLabel}
           </Text>
         </View>
         {onAdjust ? (

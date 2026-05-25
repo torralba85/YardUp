@@ -72,7 +72,10 @@ export const submitQuoteRequest = onCall(callableOptions, async (request) => {
   await enforceRateLimit("submitQuoteRequest", request.auth.uid, 20);
   const input = parseOrThrow(submitQuoteRequestInputSchema, request.data);
   const saved = await saveQuoteRequest({
-    ...input,
+    projectId: input.projectId,
+    contractorId: input.contractorId,
+    packetItems: input.packetItems,
+    homeownerConsent: input.homeownerConsent,
     userId: request.auth.uid,
   });
   await writeServiceLog({

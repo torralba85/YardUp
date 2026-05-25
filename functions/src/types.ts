@@ -1,4 +1,10 @@
-export type JurisdictionId = "los-angeles" | "san-diego" | "san-jose" | "oakland" | "sacramento";
+export type JurisdictionId =
+  | "los-angeles"
+  | "san-diego"
+  | "san-jose"
+  | "oakland"
+  | "sacramento"
+  | "local-review";
 
 export interface Citation {
   label: string;

@@ -7,7 +7,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "../../src/components/Button";
 import { Screen } from "../../src/components/Screen";
 import { SectionHeader } from "../../src/components/SectionHeader";
-import type { ContractorProfile } from "../../src/domain/types";
+import { getMatchedContractors, isDeliveredQuote } from "../../src/domain/marketplace";
+import type { ContractorProfile, QuoteRequest } from "../../src/domain/types";
 import { useActiveProject, useAppStore } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
@@ -46,19 +47,31 @@ export default function ContractorsScreen() {
     permit: Boolean(guide),
   };
   const packetReady = Object.values(packetStatus).filter(Boolean).length;
+  const deliveredRequests = projectRequests.filter(isDeliveredQuote);
+  const submittedRequests = projectRequests.filter((request) => request.status === "submitted");
+  const savedRequests = projectRequests.filter((request) => request.status === "saved");
+  const matchedContractors = useMemo(
+    () => (project ? getMatchedContractors(contractors, project.jurisdiction) : []),
+    [contractors, project],
+  );
 
   const sortedContractors = useMemo(
-    () => [...contractors].sort((a, b) => b.matchScore - a.matchScore),
-    [contractors],
+    () => [...matchedContractors].sort((a, b) => b.matchScore - a.matchScore),
+    [matchedContractors],
   );
   const topContractor = sortedContractors[0];
-  const topAlreadyQuoted = topContractor ? projectRequests.some((r) => r.contractorId === topContractor.id) : false;
+  const topAlreadyQuoted = topContractor
+    ? projectRequests.some((request) => request.contractorId === topContractor.id && isDeliveredQuote(request))
+    : false;
+  const topAwaitingDelivery = topContractor
+    ? projectRequests.some((request) => request.contractorId === topContractor.id && request.status === "submitted")
+    : false;
 
   const handleRequestQuote = async (contractorId: string) => {
     if (!project) return;
     setSendingId(contractorId);
     try {
-      await requestQuote(project.id, contractorId);
+      await requestQuote(project.id, contractorId, true);
     } finally {
       setSendingId(null);
     }
@@ -81,6 +94,7 @@ export default function ContractorsScreen() {
       <NextMoveCard
         contractor={topContractor}
         topAlreadyQuoted={topAlreadyQuoted}
+        topAwaitingDelivery={topAwaitingDelivery}
         packetReady={packetReady}
         packetTotal={PACKET_ITEMS.length}
         onSend={topContractor ? () => void handleRequestQuote(topContractor.id) : undefined}
@@ -92,7 +106,17 @@ export default function ContractorsScreen() {
         <View style={styles.packetHeader}>
           <View>
             <Text style={styles.packetLabel}>Quote packet</Text>
-            <Text style={styles.packetTitle}>{projectRequests.length ? `${projectRequests.length} sent` : "Ready to send"}</Text>
+            <Text style={styles.packetTitle}>
+              {!sortedContractors.length
+                ? "Awaiting builder coverage"
+                : deliveredRequests.length
+                  ? `${deliveredRequests.length} delivered`
+                  : submittedRequests.length
+                    ? `${submittedRequests.length} awaiting delivery`
+                    : savedRequests.length
+                      ? `${savedRequests.length} saved for retry`
+                      : "Ready to submit"}
+            </Text>
           </View>
           <View style={styles.packetIcon}>
             <Feather name="send" size={18} color={colors.canvas} />
@@ -112,23 +136,36 @@ export default function ContractorsScreen() {
         </View>
       </LinearGradient>
 
-      <SectionHeader title="Best matches" action={`${sortedContractors.length} vetted`} />
-      <View style={styles.list}>
-        {sortedContractors.map((contractor) => {
-          const quoteSent = projectRequests.some((request) => request.contractorId === contractor.id);
-          const sending = sendingId === contractor.id;
+      <SectionHeader title="Best matches" action={`${sortedContractors.length} declared`} />
+      {sortedContractors.length ? (
+        <View style={styles.list}>
+          {sortedContractors.map((contractor) => {
+            const quoteRequest = projectRequests.find((request) => request.contractorId === contractor.id);
+            const sending = sendingId === contractor.id;
 
-          return (
-            <ContractorCard
-              key={contractor.id}
-              contractor={contractor}
-              quoteSent={quoteSent}
-              sending={sending}
-              onRequest={() => void handleRequestQuote(contractor.id)}
-            />
-          );
-        })}
-      </View>
+            return (
+              <ContractorCard
+                key={contractor.id}
+                contractor={contractor}
+                quoteRequest={quoteRequest}
+                sending={sending}
+                onRequest={() => void handleRequestQuote(contractor.id)}
+              />
+            );
+          })}
+        </View>
+      ) : (
+        <View style={[styles.nextMove, styles.nextMovePending]}>
+          <View style={styles.nextMoveLabel}>
+            <Feather name="map-pin" size={14} color={colors.permit} />
+            <Text style={styles.nextMoveLabelText}>Market coverage</Text>
+          </View>
+          <Text style={styles.nextMoveTitle}>Local builder coverage needs verification</Text>
+          <Text style={styles.nextMoveBody}>
+            YardUp can model earning potential here, but no builder match is declared for this jurisdiction yet.
+          </Text>
+        </View>
+      )}
     </Screen>
   );
 }
@@ -136,6 +173,7 @@ export default function ContractorsScreen() {
 function NextMoveCard({
   contractor,
   topAlreadyQuoted,
+  topAwaitingDelivery,
   packetReady,
   packetTotal,
   onSend,
@@ -144,6 +182,7 @@ function NextMoveCard({
 }: {
   contractor?: ContractorProfile;
   topAlreadyQuoted: boolean;
+  topAwaitingDelivery: boolean;
   packetReady: number;
   packetTotal: number;
   onSend?: () => void;
@@ -191,19 +230,37 @@ function NextMoveCard({
     );
   }
 
+  if (topAwaitingDelivery) {
+    return (
+      <View style={[styles.nextMove, styles.nextMoveDone]}>
+        <View style={styles.nextMoveLabel}>
+          <Feather name="clock" size={14} color={colors.permit} />
+          <Text style={styles.nextMoveLabelText}>Next move</Text>
+        </View>
+        <Text style={styles.nextMoveTitle}>Packet recorded; delivery pending</Text>
+        <Text style={styles.nextMoveBody}>
+          Your consented packet is recorded for {contractor.name}. It is not fee eligible until builder delivery is confirmed.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.nextMove, styles.nextMoveReady]}>
       <View style={styles.nextMoveLabel}>
         <Feather name="send" size={14} color={colors.accentDark} />
         <Text style={[styles.nextMoveLabelText, { color: colors.accentDark }]}>Next move</Text>
       </View>
-      <Text style={styles.nextMoveTitle}>Send the packet to {contractor.name}</Text>
+      <Text style={styles.nextMoveTitle}>Submit the packet for {contractor.name}</Text>
       <Text style={styles.nextMoveBody}>
         {contractor.matchScore}% match · {contractor.specialty} · {contractor.aduCount} ADUs delivered
       </Text>
+      <Text style={styles.disclosure}>
+        By continuing, you consent to submit this packet for builder outreach. No homeowner fee is charged here; a builder fee applies only after verified delivery.
+      </Text>
       {onSend ? (
         <Button icon="send" onPress={onSend} disabled={sending}>
-          {sending ? "Sending" : "Send packet"}
+          {sending ? "Submitting" : "Consent and submit packet"}
         </Button>
       ) : null}
     </View>
@@ -212,15 +269,19 @@ function NextMoveCard({
 
 function ContractorCard({
   contractor,
-  quoteSent,
+  quoteRequest,
   sending,
   onRequest,
 }: {
   contractor: ContractorProfile;
-  quoteSent: boolean;
+  quoteRequest?: QuoteRequest;
   sending: boolean;
   onRequest: () => void;
 }) {
+  const delivered = quoteRequest ? isDeliveredQuote(quoteRequest) : false;
+  const submitted = quoteRequest?.status === "submitted";
+  const saved = quoteRequest?.status === "saved";
+
   return (
     <View style={styles.card}>
       <View style={styles.builderHeader}>
@@ -259,13 +320,16 @@ function ContractorCard({
         <TrustBadge label={contractor.permitSupport ? "Permit support" : "Permit review"} verified={contractor.permitSupport} />
       </View>
 
+      <Text style={styles.disclosure}>
+        Consent creates builder outreach for this packet. Only verified delivery can become commercially eligible.
+      </Text>
       <Button
-        variant={quoteSent ? "secondary" : "primary"}
-        style={!quoteSent ? styles.builderCta : undefined}
+        variant={delivered || submitted ? "secondary" : "primary"}
+        style={!delivered && !submitted ? styles.builderCta : undefined}
         onPress={onRequest}
-        disabled={quoteSent || sending}
+        disabled={delivered || submitted || sending}
       >
-        {quoteSent ? "Quote sent" : sending ? "Sending" : "Request quote"}
+        {delivered ? "Packet delivered" : submitted ? "Delivery pending" : sending ? "Submitting" : saved ? "Retry submission" : "Consent and submit packet"}
       </Button>
     </View>
   );
@@ -347,6 +411,12 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 13,
     lineHeight: 19,
+  },
+  disclosure: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 18,
   },
   packetCard: {
     borderColor: colors.border,

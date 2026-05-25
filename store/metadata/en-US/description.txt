@@ -5,8 +5,8 @@ Start a property study, see an estimated monthly rent range and net annual incom
 WHAT YOU CAN DO
 - See an estimated monthly rent and net annual income range based on your inputs
 - Compare ADU model sizes against an estimated cost range and payback window
-- Get builder matches with license, insurance, and service-area signals
-- Build a quote packet you can send to a matched builder
+- Get builder matches with license, insurance, and declared service-area signals where coverage exists
+- Consent to create a quote packet outreach request for a selected matched builder; pending delivery and saved retries are clearly labeled
 - Review permit risk, common blockers, and verification steps for supported markets
 - Sketch backyard placement, generate a design direction, and save site photos on your device
 - Use the guided onboarding wizard to capture address, lot facts, and goals in a few steps
@@ -15,7 +15,7 @@ LOCAL-FIRST BY DESIGN
 Project studies and estimate assumptions are stored on your device by default. Cloud-backed actions (regulation guidance, property history lookup, quote requests, product feedback) only run when you ask for them, and use anonymous Firebase authentication so you do not need to create a traditional account to evaluate the app.
 
 SUPPORTED MARKETS
-YardUp is not limited to a single state. Coverage depth varies by jurisdiction. Where verified local data is available, the app uses it; where it is not, the app uses deterministic fallback guidance and labels it as such so you can verify with your city or county.
+YardUp is not limited to a single state. Coverage depth varies by jurisdiction. Where sourced local data is available, the app uses it; where it is not, the app shows a local verification state and does not present another city's parcel, permit, or builder facts as local coverage.
 
 PLANNING AID, NOT A SUBSTITUTE FOR LICENSED PROS
 YardUp is a planning aid. Estimates are not guarantees. The app does not promise rental income, permit approval, financial returns, or builder availability. It does not replace a licensed architect, contractor, attorney, financial advisor, surveyor, real estate professional, or local permitting authority. Always verify zoning, overlays, setbacks, utilities, fire access, and permit requirements with the city or county before making design or construction decisions.

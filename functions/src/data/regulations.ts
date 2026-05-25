@@ -117,4 +117,19 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
       { label: "California HCD ADU Handbook", url: "https://www.hcd.ca.gov/building-standards/adu/handbook" },
     ],
   },
+  "local-review": {
+    jurisdiction: "local-review",
+    title: "Local rules verification needed",
+    summary:
+      "YardUp can model earning potential here, but sourced local permit coverage is not available for this jurisdiction yet. Verify requirements with your city or county before construction decisions.",
+    permitSteps: [
+      "Identify the city or county permitting authority for this property.",
+      "Confirm ADU eligibility, setbacks, utilities, overlays, and fire access locally.",
+      "Use the estimate and concept as planning inputs only until local review is complete.",
+    ],
+    blockers: ["Sourced local zoning and permit guidance is not available in YardUp for this jurisdiction yet."],
+    verifiedAt: "2026-05-25",
+    confidence: "low",
+    citations: [],
+  },
 };

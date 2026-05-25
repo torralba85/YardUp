@@ -10,4 +10,13 @@ describe("getSeededRegulationGuide", () => {
     expect(guide.permitSteps.length).toBeGreaterThan(2);
     expect(guide.citations.every((citation) => citation.url.startsWith("https://"))).toBe(true);
   });
+
+  it("returns a low-confidence source-honest local-review guide outside covered markets", () => {
+    const guide = getSeededRegulationGuide("local-review");
+
+    expect(guide.jurisdiction).toBe("local-review");
+    expect(guide.confidence).toBe("low");
+    expect(guide.summary).toContain("sourced local permit coverage is not available");
+    expect(guide.citations).toEqual([]);
+  });
 });

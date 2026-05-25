@@ -7,25 +7,26 @@ REVIEWER WALKTHROUGH
 2. Value tab: start a property study with the address control. The first viewport shows monthly rent, net annual income, cost range, payback, builder matches, and quote packet readiness.
 3. Studio tab (ideas): move or rotate the ADU footprint inside the buildable zone. Tap Generate concept; if the Gemini integration is unavailable a deterministic fallback returns a usable result.
 4. Estimate tab: confirm gross rent, expenses, net annual income, cost range, value range, payback, and sensitivity assumptions recalculate together.
-5. Builders tab (contractors): view matched builders with license and insurance signals. Request a quote to exercise the authenticated callable.
+5. Builders tab (contractors): view builders declared for the selected jurisdiction with license and insurance signals. Tap Consent and submit packet to exercise authenticated outreach recording; the current response is labeled delivery pending, while any local retry stays labeled saved.
 6. Permits tab (guide): review risk level, blockers, verification steps, and source citations for the selected jurisdiction.
 7. Tap the floating feedback control on any tab to submit a short feedback message. Submission is rate-limited per anonymous user.
 
 BACKEND STATE DURING REVIEW
 Firebase project: yardup-2026. Functions region: us-central1.
-- Regulation guide: source-cited seeded guide with deterministic fallback
+- Regulation guide: source-cited seeded guide for covered jurisdictions and a labeled local-review state elsewhere
 - Design concept: deterministic fallback if Gemini is unavailable
 - Property history: fallback verification records until a municipal provider is connected
-- Quote request: authenticated anonymous Firestore write, validated server-side
+- Quote request: consent-required authenticated anonymous Firestore outreach write; pending submissions and local retries are not marked delivered
 - Feedback: authenticated anonymous Firestore write, rate-limited per user
 
 SUPPORTED MARKETS
-YardUp is not restricted to a single state. Coverage depth varies by local jurisdiction. Where verified local data is available the app uses it; where it is not, the app uses deterministic fallback content and labels it accordingly.
+YardUp is not restricted to a single state. Coverage depth varies by local jurisdiction. Where sourced local data is unavailable, the app displays local verification guidance and no declared builder match rather than substituting Los Angeles coverage.
 
 IMPORTANT LIMITATIONS
 - The release is a planning aid and does not claim official permit approval, official assessor records, contractor availability guarantees, or financial returns.
 - Site photos remain on-device. The backend receives only whether a site photo exists.
 - Exact addresses are sent only when the user initiates a cloud-backed action (regulation refresh, property history search, quote request).
+- No homeowner payment is collected in this release; no packet becomes fee eligible without a future verified builder-delivery event.
 
 CONTACT
 support@aduadvisor.app

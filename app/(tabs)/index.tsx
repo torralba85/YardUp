@@ -10,6 +10,7 @@ import { Screen } from "../../src/components/Screen";
 import { YardUpLogo } from "../../src/components/YardUpLogo";
 import { inferJurisdiction, jurisdictionLabels } from "../../src/data/regulations";
 import { defaultEstimateInput, estimateAduValue, formatCurrencyCompact, formatPercent } from "../../src/domain/estimator";
+import { getMatchedContractors, isDeliveredQuote } from "../../src/domain/marketplace";
 import { deriveRisk } from "../../src/domain/risk";
 import { useActiveGuide, useActiveParcelSummary, useActiveProject, useAppStore } from "../../src/state/appStore";
 import { useAuthStore } from "../../src/state/authStore";
@@ -75,9 +76,15 @@ export default function HomeScreen() {
   const costLow = estimate.totalCost * 0.9;
   const costHigh = estimate.totalCost * 1.1;
   const packetPercent = Math.round((Math.min(packetReady, QUOTE_PACKET_TOTAL) / QUOTE_PACKET_TOTAL) * 100);
+  const matchedContractors = useMemo(
+    () => (project ? getMatchedContractors(contractors, project.jurisdiction) : []),
+    [contractors, project],
+  );
+  const deliveredQuotes = projectQuotes.filter(isDeliveredQuote);
+  const needsLocalReview = project?.jurisdiction === "local-review";
   const topContractor = useMemo(
-    () => [...contractors].sort((a, b) => b.matchScore - a.matchScore)[0],
-    [contractors],
+    () => [...matchedContractors].sort((a, b) => b.matchScore - a.matchScore)[0],
+    [matchedContractors],
   );
 
   return (
@@ -110,12 +117,12 @@ export default function HomeScreen() {
       </Pressable>
 
       <RevenueSnapshot
-        builderMatches={contractors.length}
+        builderMatches={matchedContractors.length}
         estimate={estimate}
         estimateInput={estimateInput}
-        projectName={project?.name}
+        assumptionsLabel={needsLocalReview ? "Estimate only - verify local inputs" : hasEstimate ? "Modeled estimate - verify assumptions" : undefined}
         quotePacketReady={packetReady}
-        sentQuotes={projectQuotes.length}
+        sentQuotes={deliveredQuotes.length}
         wide={isWide}
         onAdjust={() => router.push("/estimate")}
       />
@@ -134,21 +141,31 @@ export default function HomeScreen() {
               <Feather name="tool" size={20} color={colors.accentDark} />
               <View style={styles.previewCopy}>
                 <Text style={styles.previewTitle}>Builder matches</Text>
-                <Text style={styles.previewText}>{contractors.length} qualified builders near this property.</Text>
+                <Text style={styles.previewText}>
+                  {!project
+                    ? "Start a property study to see declared coverage."
+                    : needsLocalReview
+                      ? "Local builder coverage needs verification."
+                      : matchedContractors.length
+                        ? `${matchedContractors.length} qualified builders declared for this market.`
+                        : "No declared builder matches for this market yet."}
+                </Text>
               </View>
             </View>
-            <Text style={styles.previewPill}>{contractors.length} ready</Text>
+            <Text style={styles.previewPill}>
+              {!project ? "study first" : needsLocalReview ? "verify market" : `${matchedContractors.length} ready`}
+            </Text>
           </View>
           <View style={styles.builderPreviewBody}>
             <View style={styles.initialStack}>
-              {contractors.slice(0, 3).map((contractor) => (
+              {matchedContractors.slice(0, 3).map((contractor) => (
                 <View key={contractor.id} style={styles.initialBubble}>
                   <Text style={styles.initialText}>{contractor.name.slice(0, 1)}</Text>
                 </View>
               ))}
             </View>
             <Button style={styles.builderButton} onPress={() => router.push("/contractors")}>
-              View matches
+              {needsLocalReview ? "Review coverage" : "View matches"}
             </Button>
           </View>
           {topContractor ? <Text style={styles.topMatchText}>{topContractor.name} leads at {topContractor.matchScore}% match.</Text> : null}
@@ -205,7 +222,9 @@ export default function HomeScreen() {
 
       <View style={styles.sectionBreak}>
         <Text style={styles.sectionBreakTitle}>Permit signal</Text>
-        <Text style={styles.sectionBreakMeta}>{parcel ? `verified ${parcel.verifiedAt}` : "needs a study"}</Text>
+        <Text style={styles.sectionBreakMeta}>
+          {needsLocalReview ? "local verification" : parcel ? `verified ${parcel.verifiedAt}` : "needs a study"}
+        </Text>
       </View>
       <RiskIndicator
         label={guide ? `${jurisdictionLabels[guide.jurisdiction]} review` : "Run a study to see permit risk"}

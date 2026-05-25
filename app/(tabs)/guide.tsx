@@ -41,7 +41,10 @@ export default function GuideScreen() {
         </LinearGradient>
       ) : null}
 
-      <SectionHeader title="Permit risk" action={parcel ? `verified ${parcel.verifiedAt}` : "needs a study"} />
+      <SectionHeader
+        title="Permit risk"
+        action={project?.jurisdiction === "local-review" ? "local verification required" : parcel ? `verified ${parcel.verifiedAt}` : "needs a study"}
+      />
       <RiskIndicator
         label={guide ? `${jurisdictionLabels[guide.jurisdiction]} review` : "Run a study to see permit risk"}
         level={risk.level}

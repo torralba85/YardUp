@@ -1,6 +1,6 @@
 # YardUp API Design
 
-Updated: 2026-05-24
+Updated: 2026-05-25
 
 This document defines the resource-oriented API contract for the YardUp planner (legal name ADU Advisor) and maps it to the current Firebase callable backend. The mobile app still works offline first; cloud APIs are optional accelerators for regulation refreshes, design concepts, public-record search, quote packets, and product feedback.
 
@@ -15,7 +15,7 @@ Core resources:
 - `DesignFitEvaluation`: computed planner result for buildable area, setbacks, lot coverage, access, and utilities.
 - `RegulationGuide`: source-cited jurisdiction guide with summary, permit steps, blockers, confidence, and citations.
 - `PropertyRecord`: public-record search result or fallback verification note, scoped to a project.
-- `QuoteRequest`: builder outreach event with quote packet items and delivery status.
+- `QuoteRequest`: homeowner-consented builder outreach event with packet items, saved-versus-delivered state, delivery evidence, and commercial eligibility status.
 - `FeedbackSubmission`: free-text user feedback with category, optional rating, optional page identifier, and lightweight client/device metadata.
 
 Relationships:
@@ -33,7 +33,7 @@ The deployed backend (Firebase project `yardup-2026`, region `us-central1`) curr
 - `getRegulationGuide({ jurisdiction })`
 - `generateDesignConcept({ project, inspiration?, preferences? })`
 - `searchPropertyHistory({ address, projectId })`
-- `submitQuoteRequest({ projectId, contractorId, packetItems })`
+- `submitQuoteRequest({ projectId, contractorId, packetItems, homeownerConsent: true })`
 - `submitFeedback({ category, message, rating?, pageIdentifier?, clientVersion?, deviceInfo? })`
 
 Callable requests use Firebase's envelope shape:
@@ -59,6 +59,19 @@ Firebase callable errors use:
   }
 }
 ```
+
+### `submitQuoteRequest` delivery boundary
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `projectId` | string | yes | Active local project identifier |
+| `contractorId` | string | yes | Builder explicitly selected by the homeowner |
+| `packetItems` | string[] | yes | Packet contents shared with the selected builder |
+| `homeownerConsent` | `true` | yes | Affirmative consent to deliver the packet |
+
+A successful authenticated callable write records homeowner outreach as `status: "submitted"`, includes `homeownerConsentAt`, and remains `commercialStatus: "not_eligible"` because the current backend does not prove delivery to a builder. If the client cannot reach the callable, it may save a local `status: "saved"` / `commercialStatus: "not_eligible"` retry state. A future verified delivery integration may record `status: "sent"`, `deliveredAt`, and `commercialStatus: "eligible_for_builder_fee"`.
+
+Addresses outside currently sourced jurisdictions use `jurisdiction: "local-review"`. That state returns low-confidence verification guidance and must not inherit parcel, permit, or builder facts from a covered market.
 
 ### `submitFeedback` payload
 
@@ -97,6 +110,7 @@ Collection endpoints must use cursor pagination with `data` plus `pagination.nex
 - Firebase Auth bearer tokens should be accepted when user-scoped Firestore writes are needed.
 - Read-only fallback calls may allow anonymous use while rate-limited.
 - Exact addresses should be sent only when the user initiates cloud-backed actions such as property history search or regulation refresh.
+- Submitting a quote packet requires affirmative homeowner consent and records outreach for the selected builder; delivery must be separately verified before commercial eligibility.
 - Gemini prompts must omit exact address text and unnecessary personal identifiers.
 - Site photo binaries are not part of the current API; only `hasSitePhoto` and local `sitePhotoUri` state exist client-side.
 - Feedback payloads should not include personal identifiers or third-party data; client UX must communicate this to the user.

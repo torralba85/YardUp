@@ -16,7 +16,7 @@ YardUp should help a homeowner see ADU earning potential and reach an appropriat
 4. Unknown locations never silently inherit Los Angeles parcel facts, permit guidance, or builder matches.
 5. The initial monetization model is a builder-paid qualified introduction or delivered quote-packet fee.
 6. A packet saved locally because delivery is unavailable is not delivered, not billable, and remains retryable.
-7. A delivered packet is commercially eligible only when the homeowner explicitly consented to send it to the selected builder.
+7. A delivered packet is commercially eligible only when the homeowner explicitly consented to send it to the selected builder and delivery is independently recorded.
 8. Phase 1 does not collect money. A charge flow requires a builder fee schedule, builder acceptance of commercial terms, tax/receipt policy, dispute handling, and Stripe account setup.
 
 ## Homeowner Flow
@@ -39,11 +39,12 @@ The builder action is a transparent homeowner-authorized handoff:
 
 1. The homeowner prepares a packet containing the ROI model, lot summary when available, concept, and permit notes when available.
 2. Before delivery, the UI states that sending shares the packet with the selected builder and that builders may pay YardUp for qualified introductions; homeowners are not charged for sending.
-3. The CTA is explicit, such as `Consent and send packet`.
-4. The callable accepts the consent assertion and persists delivery only after the server write succeeds.
-5. A successful remote write records status `sent`, consent timestamp, delivery timestamp, and commercial status `eligible_for_builder_fee`.
+3. The current CTA is explicit and honest, such as `Consent and submit packet`; use delivery wording only once delivery exists.
+4. The callable accepts the consent assertion and records an outreach submission after the server write succeeds.
+5. A successful remote write records status `submitted`, a consent timestamp, and commercial status `not_eligible` because it is not proof of builder delivery.
 6. A failed or unavailable cloud action stores status `saved` and commercial status `not_eligible`, labels the packet as saved for retry, and keeps the send action available.
-7. Legacy `sent` records without recorded consent remain displayable as delivered but are not newly marked billable.
+7. A future verified delivery event may record status `sent`, a delivery timestamp, and commercial status `eligible_for_builder_fee`.
+8. Legacy `sent` records without recorded consent or delivery evidence remain displayable as delivered but are not newly marked billable.
 
 This creates an auditable revenue boundary without taking payment or overclaiming revenue generation.
 
@@ -66,12 +67,12 @@ Introduce:
 
 `QuoteRequest` gains:
 
-- `status: "saved" | "sent"`
+- `status: "saved" | "submitted" | "sent"`
 - `homeownerConsentAt?: string`
 - `deliveredAt?: string`
 - `commercialStatus: "not_eligible" | "eligible_for_builder_fee"`
 
-The callable input gains `homeownerConsent: true`. Server-created delivered records set timestamps and eligibility. Client fallback records are saved locally as non-eligible.
+The callable input gains `homeownerConsent: true`. Server-created outreach records set consent time but remain pending and non-eligible. Client fallback records are saved locally as non-eligible. Only a verified future delivery record sets delivery time and eligibility.
 
 ## UI And Copy
 
@@ -87,8 +88,8 @@ The callable input gains `homeownerConsent: true`. Server-created delivered reco
 Update API documentation and store-review content to state:
 
 - jurisdiction coverage varies; unknown locations receive verification guidance, not Los Angeles defaults;
-- quote requests are delivered only when a cloud write succeeds;
-- local-only saved packets are retryable and are not delivered;
+- quote requests recorded by the current cloud write remain pending verified delivery;
+- local-only saved packets and server-recorded pending submissions are not delivered or fee eligible;
 - no homeowner payment is required in Phase 1;
 - builder-paid introductions are a planned commercial model supported by delivered-consent records, not a live charge feature.
 
@@ -100,7 +101,8 @@ Required tests:
 - `local-review` returns generic low-confidence guide and no parcel or direct builder matches;
 - contractor filtering honors declared supported jurisdictions;
 - failed quote delivery yields a saved, non-eligible packet that can be retried;
-- successful delivery requires homeowner consent and yields an eligible sent record;
+- successful outreach submission requires homeowner consent but remains pending and non-eligible without delivery evidence;
+- a sent record becomes eligible only with both consent and delivery evidence;
 - UI labels distinguish saved packets from delivered requests.
 
 Before reporting completion, run:

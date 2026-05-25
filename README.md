@@ -69,7 +69,7 @@ Callable functions exposed by the backend:
 - `getRegulationGuide({ jurisdiction })`
 - `generateDesignConcept({ project, inspiration, preferences? })`
 - `searchPropertyHistory({ address, projectId })`
-- `submitQuoteRequest({ projectId, contractorId, packetItems })`
+- `submitQuoteRequest({ projectId, contractorId, packetItems, homeownerConsent: true })`
 - `submitFeedback({ message, surface, projectId? })` — rate-limited per anonymous user
 
 See [docs/api/api-design.md](./docs/api/api-design.md) for the full callable contract, payload shapes, and the future REST surface.
@@ -120,6 +120,8 @@ Production builds require these EAS environment variables:
 - `GEMINI_API_KEY` in Firebase Functions runtime config or Secret Manager, never in Expo client config
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
+
+Addresses outside sourced jurisdiction coverage enter a `local-review` state: earning potential remains available, while parcel facts, permit guidance, and builder matches require local verification. A recorded builder outreach submission is not delivery; a packet is commercially eligible only after the homeowner consents and a future verified delivery event is recorded. Local retries and pending submissions are not chargeable events.
 
 ## Store Review Materials
 
