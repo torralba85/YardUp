@@ -134,9 +134,11 @@ Brand and marketing asset briefs that follow the Quiet Ascent identity:
 - [docs/marketing/marketing-kit.md](./docs/marketing/marketing-kit.md)
 - [docs/marketing/web-assets.md](./docs/marketing/web-assets.md)
 
-## Related Repositories
+## Repository Identity
 
-- `github.com/torralba85/YardUp` — Next.js web prototype that experiments with property-photo + address upload backed by Gemini Vision for ADU mockup generation. Outputs from that prototype feed the mobile product's Studio surface only after backend mediation and the privacy rules above.
+This checkout is the YardUp mobile product repository: `https://github.com/torralba85/YardUp.git`. The local directory name `ADU Advisor` and native bundle identifier `com.aduadvisor.app` preserve legal and store-listing continuity; they do not refer to a separate app repository.
+
+Use this checkout and `origin/main` as the source of truth for product, design, release, and backend work. Treat a prototype as a separate system only when it is supplied with a distinct path or remote, and do not transfer its privacy or deployment assumptions into the mobile app without verification.
 
 ## Documentation Index
 
