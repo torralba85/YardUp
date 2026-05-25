@@ -12,6 +12,7 @@ import { inferJurisdiction, jurisdictionLabels } from "../../src/data/regulation
 import { defaultEstimateInput, estimateAduValue, formatCurrencyCompact, formatPercent } from "../../src/domain/estimator";
 import { deriveRisk } from "../../src/domain/risk";
 import { useActiveGuide, useActiveParcelSummary, useActiveProject, useAppStore } from "../../src/state/appStore";
+import { useAuthStore } from "../../src/state/authStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
 const QUOTE_PACKET_TOTAL = 4;
@@ -25,6 +26,9 @@ export default function HomeScreen() {
   const contractors = useAppStore((state) => state.contractorProfiles);
   const quoteRequests = useAppStore((state) => state.quoteRequests);
   const concepts = useAppStore((state) => state.concepts);
+
+  const { currentUser, setAuthModalOpen } = useAuthStore();
+  const isGuest = !currentUser || currentUser.isAnonymous;
   const [address, setAddress] = useState("");
   const [addressError, setAddressError] = useState("");
   const [isStarting, setIsStarting] = useState(false);
@@ -79,8 +83,14 @@ export default function HomeScreen() {
   return (
     <Screen scroll>
       <View style={styles.appBar}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Account" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-          <Feather name="user" size={20} color={colors.muted} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Account"
+          onPress={() => setAuthModalOpen(true)}
+          style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+        >
+          <Feather name="user" size={20} color={isGuest ? colors.muted : colors.emerald} />
+          {!isGuest ? <View style={styles.activeUserDot} /> : null}
         </Pressable>
         <YardUpLogo size={34} />
         <Pressable accessibilityRole="button" accessibilityLabel="Notifications" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
@@ -368,6 +378,17 @@ const styles = StyleSheet.create({
     height: 42,
     justifyContent: "center",
     width: 42,
+  },
+  activeUserDot: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: radii.full,
+    backgroundColor: colors.emerald,
+    borderWidth: 1.5,
+    borderColor: colors.background,
   },
   pressed: {
     opacity: 0.78,
