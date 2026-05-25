@@ -3,7 +3,8 @@ export type CoveredJurisdictionId =
   | "san-diego"
   | "san-jose"
   | "oakland"
-  | "sacramento";
+  | "sacramento"
+  | "denver";
 
 export type JurisdictionId = CoveredJurisdictionId | "local-review";
 

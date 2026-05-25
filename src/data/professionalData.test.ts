@@ -56,7 +56,8 @@ describe("professional refinement seed data", () => {
   });
 
   it("does not route an address outside sourced coverage into Los Angeles", () => {
-    expect(inferJurisdiction("610 Pearl St, Denver, CO")).toBe("local-review");
+    expect(inferJurisdiction("610 Pearl St, Denver, CO")).toBe("denver");
     expect(inferJurisdiction("1420 Baxter St, Los Angeles, CA")).toBe("los-angeles");
+    expect(inferJurisdiction("123 Main St, Seattle, WA")).toBe("local-review");
   });
 });

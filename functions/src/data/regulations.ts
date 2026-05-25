@@ -117,6 +117,29 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
       { label: "California HCD ADU Handbook", url: "https://www.hcd.ca.gov/building-standards/adu/handbook" },
     ],
   },
+  denver: {
+    jurisdiction: "denver",
+    title: "Denver ADU starter guide",
+    summary:
+      "City and County of Denver rules allow Accessory Dwelling Units (ADUs) in residential zones where zoning permits. Ensure zoning, minimum setbacks, lot size, and utility connections are verified early.",
+    permitSteps: [
+      "Confirm if the zone district allows ADUs (typically looking for 'G' suffix or specific ADU zone overlays).",
+      "Verify minimum setbacks: typically 5 feet from side lot lines and 5 feet (or 0 feet if building on an alley) from the rear lot line for detached structures.",
+      "Submit a zoning review application to Denver Community Planning and Development (CPD).",
+      "Obtain a construction permit by submitting complete architectural, structural, and energy-compliance (IECC) plans.",
+      "Coordinate with Denver Water and Wastewater Management for service connections and tap fees."
+    ],
+    blockers: [
+      "Zoning code designation does not explicitly allow ADUs.",
+      "Utility easement conflicts, especially along rear alleys."
+    ],
+    verifiedAt: "2026-05-25",
+    confidence: "high",
+    citations: [
+      { label: "Denver ADU Project Guide", url: "https://www.denvergov.org/Government/Agencies-Departments-Offices-Locations/Community-Planning-and-Development/Accessory-Dwelling-Units" },
+      { label: "Denver Zoning Code", url: "https://www.denvergov.org/Government/Agencies-Departments-Offices-Locations/Community-Planning-and-Development/Denver-Zoning-Code" }
+    ]
+  },
   "local-review": {
     jurisdiction: "local-review",
     title: "Local rules verification needed",

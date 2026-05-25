@@ -8,6 +8,7 @@ describe("marketplace coverage and delivery", () => {
     expect(getMatchedContractors(contractorProfiles, "local-review")).toEqual([]);
     expect(getMatchedContractors(contractorProfiles, "san-diego").map((builder) => builder.id)).toContain("golden-state-modular");
     expect(getMatchedContractors(contractorProfiles, "san-diego").map((builder) => builder.id)).not.toContain("apex-adu-builders");
+    expect(getMatchedContractors(contractorProfiles, "denver").map((builder) => builder.id)).toContain("rocky-mountain-adus");
   });
 
   it("only treats delivered consented packets as commercially eligible", () => {

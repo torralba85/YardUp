@@ -58,4 +58,23 @@ export const contractorProfiles: ContractorProfile[] = [
     tags: ["high performance", "custom finish", "solar ready"],
     reviewExcerpt: "Thoughtful design decisions, especially around privacy and daylight.",
   },
+  {
+    id: "rocky-mountain-adus",
+    name: "Rocky Mountain ADUs",
+    specialty: "High-altitude zoning & site-built ADUs",
+    imageUrl: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=640&q=80",
+    rating: 4.9,
+    reviews: 45,
+    matchScore: 94,
+    licenseStatus: "verified",
+    insuranceStatus: "verified",
+    serviceArea: "Denver Metro Area",
+    supportedJurisdictions: ["denver"],
+    priceRange: "$250k-$420k",
+    timelineWeeks: "24-32",
+    aduCount: 19,
+    permitSupport: true,
+    tags: ["site-built", "Denver zoning", "energy efficient"],
+    reviewExcerpt: "Navigated the Denver zoning setbacks and permitting smoothly. Very satisfied."
+  }
 ];
