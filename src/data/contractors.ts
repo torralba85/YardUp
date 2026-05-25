@@ -19,6 +19,7 @@ export const contractorProfiles: ContractorProfile[] = [
     permitSupport: true,
     tags: ["garage conversions", "detached studios", "LADBS"],
     reviewExcerpt: "Clear estimate, clean schedule, and no surprises after plan check.",
+    billingTier: "premium",
   },
   {
     id: "golden-state-modular",
@@ -38,6 +39,7 @@ export const contractorProfiles: ContractorProfile[] = [
     permitSupport: true,
     tags: ["prefab", "fixed scope", "fast install"],
     reviewExcerpt: "The price packet matched the final scope and the install window held.",
+    billingTier: "growth",
   },
   {
     id: "ecostudio-construction",
@@ -57,5 +59,6 @@ export const contractorProfiles: ContractorProfile[] = [
     permitSupport: true,
     tags: ["high performance", "custom finish", "solar ready"],
     reviewExcerpt: "Thoughtful design decisions, especially around privacy and daylight.",
+    billingTier: "starter",
   },
 ];
