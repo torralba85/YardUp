@@ -1,1 +1,31 @@
-ADU Advisor can be reviewed without a traditional login. Firebase anonymous authentication is used only for protected cloud-backed quote request writes. The current release is a planning aid with deterministic fallback behavior for cloud features. It does not claim official permit approval, official assessor records, or guaranteed contractor availability.
+YardUp is the customer-facing brand. The legal entity and store account is ADU Advisor. Native bundle identifiers remain com.aduadvisor.app on iOS and Android to preserve listing continuity through the rebrand.
+
+The app can be reviewed without creating a traditional account. Firebase anonymous authentication is used only to protect cloud-backed writes (quote requests and product feedback). No login screen is required to exercise the core flows.
+
+REVIEWER WALKTHROUGH
+1. Launch the app. New installs see a guided ADU stepper wizard (address, lot facts, goals). The wizard can be skipped from the header control to land directly on the Value tab.
+2. Value tab: start a property study with the address control. The first viewport shows monthly rent, net annual income, cost range, payback, builder matches, and quote packet readiness.
+3. Studio tab (ideas): move or rotate the ADU footprint inside the buildable zone. Tap Generate concept; if the Gemini integration is unavailable a deterministic fallback returns a usable result.
+4. Estimate tab: confirm gross rent, expenses, net annual income, cost range, value range, payback, and sensitivity assumptions recalculate together.
+5. Builders tab (contractors): view matched builders with license and insurance signals. Request a quote to exercise the authenticated callable.
+6. Permits tab (guide): review risk level, blockers, verification steps, and source citations for the selected jurisdiction.
+7. Tap the floating feedback control on any tab to submit a short feedback message. Submission is rate-limited per anonymous user.
+
+BACKEND STATE DURING REVIEW
+Firebase project: yardup-2026. Functions region: us-central1.
+- Regulation guide: source-cited seeded guide with deterministic fallback
+- Design concept: deterministic fallback if Gemini is unavailable
+- Property history: fallback verification records until a municipal provider is connected
+- Quote request: authenticated anonymous Firestore write, validated server-side
+- Feedback: authenticated anonymous Firestore write, rate-limited per user
+
+SUPPORTED MARKETS
+YardUp is not restricted to a single state. Coverage depth varies by local jurisdiction. Where verified local data is available the app uses it; where it is not, the app uses deterministic fallback content and labels it accordingly.
+
+IMPORTANT LIMITATIONS
+- The release is a planning aid and does not claim official permit approval, official assessor records, contractor availability guarantees, or financial returns.
+- Site photos remain on-device. The backend receives only whether a site photo exists.
+- Exact addresses are sent only when the user initiates a cloud-backed action (regulation refresh, property history search, quote request).
+
+CONTACT
+support@aduadvisor.app

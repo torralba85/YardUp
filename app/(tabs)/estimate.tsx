@@ -24,13 +24,13 @@ export default function EstimateScreen() {
 
   return (
     <Screen
-      title="Estimate"
-      subtitle="A deterministic feasibility sheet — value, rent, cost, and payback — pinned to the active lot."
+      title="Underwriting"
+      subtitle="Rent, expenses, NOI, cost, value range, and payback in one compact sheet."
     >
       {project ? (
-        <LinearGradient colors={[colors.forestDeep, colors.forest]} style={styles.projectCard}>
+        <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectCard}>
           <View style={styles.projectIcon}>
-            <Feather name="activity" size={18} color={colors.canvas} />
+            <Feather name="activity" size={18} color={colors.accentDark} />
           </View>
           <View style={styles.projectBody}>
             <Text style={styles.projectLabel}>Numbers lab</Text>
@@ -82,16 +82,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: colors.border,
     flexDirection: "row",
     gap: spacing.md,
     padding: spacing.lg,
     marginBottom: spacing.sm,
-    ...shadows.medium,
+    ...shadows.soft,
   },
   projectIcon: {
     alignItems: "center",
-    backgroundColor: "rgba(207,248,109,0.18)",
+    backgroundColor: colors.mint,
+    borderColor: colors.successSoft,
+    borderWidth: 1,
     borderRadius: radii.sm,
     height: 44,
     justifyContent: "center",
@@ -103,16 +105,16 @@ const styles = StyleSheet.create({
   },
   projectLabel: {
     ...typography.label,
-    color: colors.faint,
+    color: colors.muted,
   },
   projectTitle: {
     ...typography.h2,
-    color: colors.background,
+    color: colors.text,
     marginTop: spacing.xs,
   },
   projectText: {
     ...typography.body,
-    color: colors.faint,
+    color: colors.muted,
   },
   primaryMetrics: {
     flexDirection: "row",

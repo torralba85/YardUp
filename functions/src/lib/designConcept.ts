@@ -5,13 +5,13 @@ export async function buildDesignConcept(
   inspiration?: InspirationItem,
   preferences?: DesignConceptPreferences,
 ): Promise<DesignConceptPayload> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return makeLocalConcept(project, inspiration, preferences);
   }
 
   try {
-    const remote = await callOpenAI(project, inspiration, preferences, apiKey);
+    const remote = await callGemini(project, inspiration, preferences, apiKey);
     return sanitizeConcept(remote, project, inspiration, preferences);
   } catch {
     return makeLocalConcept(project, inspiration, preferences);
@@ -63,11 +63,11 @@ export function makeLocalConcept(
       "Sketch site placement against driveway and outdoor space.",
       "Ask a designer or architect to test code compliance.",
     ],
-    thumbnailPrompt: `Original ADU concept image, ${style}, ${targetSqFt} square feet, ${footprintType}, ${preferences?.constructionMethod ?? "site-built"} ADU, ${preferences?.hasSitePhoto ? "adapted to the attached backyard photo" : "California backyard"}, daylight, privacy-aware window placement, realistic architecture photography.`,
+    thumbnailPrompt: `Original ADU concept image, ${style}, ${targetSqFt} square feet, ${footprintType}, ${preferences?.constructionMethod ?? "site-built"} ADU, ${preferences?.hasSitePhoto ? "adapted to the attached backyard photo" : "supported-markets backyard"}, daylight, privacy-aware window placement, realistic architecture photography.`,
   };
 }
 
-async function callOpenAI(
+async function callGemini(
   project: Project,
   inspiration: InspirationItem | undefined,
   preferences: DesignConceptPreferences | undefined,
@@ -96,33 +96,43 @@ async function callOpenAI(
     .filter(Boolean)
     .join("\n");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
+  const model = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+    model,
+  )}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
-      input: prompt,
-      text: {
-        format: {
-          type: "json_object",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
         },
+      ],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.5,
       },
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`OpenAI request failed with ${response.status}`);
+    throw new Error(`Gemini request failed with ${response.status}`);
   }
 
-  const payload = (await response.json()) as { output_text?: string };
-  if (!payload.output_text) {
-    throw new Error("OpenAI response missing output_text");
+  const payload = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error("Gemini response missing candidate text");
   }
 
-  return JSON.parse(payload.output_text);
+  return JSON.parse(text);
 }
 
 function sanitizeConcept(

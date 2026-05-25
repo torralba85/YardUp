@@ -7,16 +7,14 @@ import { Button } from "../../src/components/Button";
 import { RevenueSnapshot } from "../../src/components/RevenueSnapshot";
 import { RiskIndicator } from "../../src/components/RiskIndicator";
 import { Screen } from "../../src/components/Screen";
-import { SectionHeader } from "../../src/components/SectionHeader";
 import { YardUpLogo } from "../../src/components/YardUpLogo";
-import { aduModels } from "../../src/data/aduModels";
 import { inferJurisdiction, jurisdictionLabels } from "../../src/data/regulations";
 import { defaultEstimateInput, estimateAduValue, formatCurrencyCompact, formatPercent } from "../../src/domain/estimator";
 import { deriveRisk } from "../../src/domain/risk";
 import { useActiveGuide, useActiveParcelSummary, useActiveProject, useAppStore } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
-const PACKET_TOTAL = 6;
+const QUOTE_PACKET_TOTAL = 4;
 
 export default function HomeScreen() {
   const { width } = useWindowDimensions();
@@ -24,7 +22,6 @@ export default function HomeScreen() {
   const parcel = useActiveParcelSummary();
   const guide = useActiveGuide();
   const createProject = useAppStore((state) => state.createProject);
-  const storageMode = useAppStore((state) => state.storageMode);
   const contractors = useAppStore((state) => state.contractorProfiles);
   const quoteRequests = useAppStore((state) => state.quoteRequests);
   const concepts = useAppStore((state) => state.concepts);
@@ -57,99 +54,149 @@ export default function HomeScreen() {
   const isWide = width >= 980;
   const narrow = width < 560;
   const status = project?.status.replace(/_/g, " ") ?? "not run";
-  const storageLabel = storageMode === "sqlite" ? "Saved locally" : "Memory mode";
   const estimateInput = project?.lastEstimateInput ?? defaultEstimateInput;
   const estimate = project?.lastEstimate ?? estimateAduValue(estimateInput);
   const hasEstimate = Boolean(project?.lastEstimate);
   const projectQuotes = project ? quoteRequests.filter((request) => request.projectId === project.id) : [];
   const projectConcepts = project ? concepts.filter((concept) => concept.projectId === project.id) : [];
   const packetReady = useMemo(
-    () => derivePacketReady({ hasEstimate, hasConcept: projectConcepts.length > 0, hasParcel: Boolean(parcel), hasGuide: Boolean(guide), quotesSent: projectQuotes.length }),
-    [hasEstimate, projectConcepts.length, parcel, guide, projectQuotes.length],
+    () => derivePacketReady({ hasEstimate, hasConcept: projectConcepts.length > 0, hasParcel: Boolean(parcel), hasGuide: Boolean(guide) }),
+    [hasEstimate, projectConcepts.length, parcel, guide],
   );
-  const risk = useMemo(
-    () => deriveRisk({ guide, parcel }),
-    [guide, parcel],
-  );
+  const risk = useMemo(() => deriveRisk({ guide, parcel }), [guide, parcel]);
   const nextActions = useMemo(
     () => deriveNextActions({ parcel, guide, hasEstimate, hasConcept: projectConcepts.length > 0, packetReady, hasProject: Boolean(project) }),
     [parcel, guide, hasEstimate, projectConcepts.length, packetReady, project],
   );
+  const costLow = estimate.totalCost * 0.9;
+  const costHigh = estimate.totalCost * 1.1;
+  const packetPercent = Math.round((Math.min(packetReady, QUOTE_PACKET_TOTAL) / QUOTE_PACKET_TOTAL) * 100);
+  const topContractor = useMemo(
+    () => [...contractors].sort((a, b) => b.matchScore - a.matchScore)[0],
+    [contractors],
+  );
 
   return (
     <Screen scroll>
-      <View style={styles.topbar}>
-        <View style={styles.brandGroup}>
-          <YardUpLogo size={32} />
-          <Text style={styles.brandLine}>Earning potential and builder readiness for your backyard</Text>
-        </View>
-        {isWide ? (
-          <View style={styles.topbarActions}>
-            <View style={styles.savedBadge}>
-              <Feather name={storageMode === "sqlite" ? "check-circle" : "cloud-off"} size={15} color={colors.accentDark} />
-              <Text style={styles.savedText}>{storageLabel}</Text>
-            </View>
-          </View>
-        ) : null}
+      <View style={styles.appBar}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Account" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+          <Feather name="user" size={20} color={colors.muted} />
+        </Pressable>
+        <YardUpLogo size={34} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Notifications" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+          <Feather name="bell" size={20} color={colors.muted} />
+        </Pressable>
       </View>
 
-      <View style={[styles.commandCenter, isWide && styles.commandCenterWide]}>
-        <RevenueSnapshot
-          builderMatches={contractors.length}
-          estimate={estimate}
-          estimateInput={estimateInput}
-          projectName={project?.name}
-          quotePacketReady={packetReady}
-          sentQuotes={projectQuotes.length}
-          wide={isWide}
-          onAdjust={() => router.push("/estimate")}
-        />
+      <Pressable accessibilityRole="button" onPress={() => router.push("/wizard/step-1")} style={({ pressed }) => [styles.propertyControl, pressed && styles.pressed]}>
+        <View style={styles.propertyLeft}>
+          <Feather name="home" size={21} color={colors.muted} />
+          <View style={styles.propertyText}>
+            <Text style={styles.propertyAddress} numberOfLines={1}>{project?.address ?? "Add a supported-market property"}</Text>
+            <Text style={styles.propertyMeta} numberOfLines={1}>{project?.name ?? "Start with earning potential"}</Text>
+          </View>
+        </View>
+        <Feather name="edit-2" size={20} color={colors.accentDark} />
+      </Pressable>
 
-        <View style={[styles.studyPanel, isWide && styles.studyPanelWide]}>
-          <View style={styles.panelHeader}>
-            <Text style={styles.panelTitle}>Run property study</Text>
-            <Text style={styles.studyStatus}>{status}</Text>
+      <RevenueSnapshot
+        builderMatches={contractors.length}
+        estimate={estimate}
+        estimateInput={estimateInput}
+        projectName={project?.name}
+        quotePacketReady={packetReady}
+        sentQuotes={projectQuotes.length}
+        wide={isWide}
+        onAdjust={() => router.push("/estimate")}
+      />
+
+      <View style={[styles.financeGrid, isWide && styles.financeGridWide]}>
+        <ValueTile label="Est. total cost" value={`${formatCurrencyCompact(costLow)}-${formatCurrencyCompact(costHigh)}`} />
+        <ValueTile label="Est. payback" value={`${estimate.paybackYears.toFixed(1)} years`} />
+        <ValueTile label="ROI" value={formatPercent(estimate.roi)} />
+        <ValueTile label="Value range" value={`${formatCurrencyCompact(estimate.lowValue)}-${formatCurrencyCompact(estimate.highValue)}`} />
+      </View>
+
+      <View style={[styles.marketGrid, isWide && styles.marketGridWide]}>
+        <View style={styles.builderPreview}>
+          <View style={styles.builderPreviewHeader}>
+            <View style={styles.builderTitleRow}>
+              <Feather name="tool" size={20} color={colors.accentDark} />
+              <View style={styles.previewCopy}>
+                <Text style={styles.previewTitle}>Builder matches</Text>
+                <Text style={styles.previewText}>{contractors.length} qualified builders near this property.</Text>
+              </View>
+            </View>
+            <Text style={styles.previewPill}>{contractors.length} ready</Text>
           </View>
-          <View style={styles.inputShell}>
-            <Feather name="search" size={18} color={colors.muted} />
-            <TextInput
-              accessibilityLabel="Property address"
-              autoCapitalize="words"
-              onChangeText={(value) => {
-                setAddress(value);
-                if (addressError) setAddressError("");
-              }}
-              onSubmitEditing={startProject}
-              placeholder={project?.address ?? "Address or city"}
-              placeholderTextColor={colors.muted}
-              returnKeyType="go"
-              style={styles.searchInput}
-              textContentType="fullStreetAddress"
-              value={address}
-            />
+          <View style={styles.builderPreviewBody}>
+            <View style={styles.initialStack}>
+              {contractors.slice(0, 3).map((contractor) => (
+                <View key={contractor.id} style={styles.initialBubble}>
+                  <Text style={styles.initialText}>{contractor.name.slice(0, 1)}</Text>
+                </View>
+              ))}
+            </View>
+            <Button style={styles.builderButton} onPress={() => router.push("/contractors")}>
+              View matches
+            </Button>
           </View>
-          {addressError ? <Text style={styles.errorText}>{addressError}</Text> : null}
-          <Button disabled={isStarting} icon="arrow-right" onPress={startProject}>
-            {isStarting ? "Starting" : "Start study"}
+          {topContractor ? <Text style={styles.topMatchText}>{topContractor.name} leads at {topContractor.matchScore}% match.</Text> : null}
+        </View>
+
+        <View style={styles.packetPreview}>
+          <View style={styles.packetHeader}>
+            <Text style={styles.previewTitle}>Quote packet readiness</Text>
+            <Text style={styles.packetPercent}>{packetPercent}%</Text>
+          </View>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${packetPercent}%` }]} />
+          </View>
+          <View style={styles.packetList}>
+            <PacketChecklistItem label="ROI model" ready={hasEstimate} />
+            <PacketChecklistItem label="Lot summary" ready={Boolean(parcel)} />
+            <PacketChecklistItem label="Design concept" ready={projectConcepts.length > 0} />
+            <PacketChecklistItem label="Permit notes" ready={Boolean(guide)} />
+          </View>
+          <Button variant="secondary" onPress={() => router.push("/contractors")}>
+            Complete packet
           </Button>
-
-          <View style={styles.studyDivider} />
-          <View style={styles.projectMini}>
-            <View style={styles.projectMiniText}>
-              <Text style={styles.miniLabel}>Active study</Text>
-              <Text style={styles.miniTitle}>{project?.name ?? "No active study"}</Text>
-            </View>
-            <Text style={styles.miniValue}>{parcel?.zoning ?? "—"}</Text>
-          </View>
-          <View style={styles.miniMetrics}>
-            <MiniMetric label="Lot" value={parcel ? `${Math.round(parcel.lotSqFt / 1000)}k sqft` : "—"} />
-            <MiniMetric label="Models" value={`${aduModels.length}`} />
-            <MiniMetric label="Packet" value={project ? `${packetReady}/${PACKET_TOTAL}` : "—"} />
-          </View>
         </View>
       </View>
 
-      <SectionHeader title="Permit signal" action={parcel ? `verified ${parcel.verifiedAt}` : "needs a study"} />
+      <View style={styles.studyStrip}>
+        <View style={styles.studyStripHeader}>
+          <Text style={styles.previewTitle}>Run another property study</Text>
+          <Text style={styles.studyStatus}>{status}</Text>
+        </View>
+        <View style={styles.inputShell}>
+          <Feather name="search" size={18} color={colors.muted} />
+          <TextInput
+            accessibilityLabel="Property address"
+            autoCapitalize="words"
+            onChangeText={(value) => {
+              setAddress(value);
+              if (addressError) setAddressError("");
+            }}
+            onSubmitEditing={startProject}
+            placeholder={project?.address ?? "Address or city"}
+            placeholderTextColor={colors.muted}
+            returnKeyType="go"
+            style={styles.searchInput}
+            textContentType="fullStreetAddress"
+            value={address}
+          />
+        </View>
+        {addressError ? <Text style={styles.errorText}>{addressError}</Text> : null}
+        <Button disabled={isStarting} icon="arrow-right" onPress={startProject}>
+          {isStarting ? "Starting" : "Start study"}
+        </Button>
+      </View>
+
+      <View style={styles.sectionBreak}>
+        <Text style={styles.sectionBreakTitle}>Permit signal</Text>
+        <Text style={styles.sectionBreakMeta}>{parcel ? `verified ${parcel.verifiedAt}` : "needs a study"}</Text>
+      </View>
       <RiskIndicator
         label={guide ? `${jurisdictionLabels[guide.jurisdiction]} review` : "Run a study to see permit risk"}
         level={risk.level}
@@ -160,28 +207,12 @@ export default function HomeScreen() {
         onVerify={guide ? () => router.push("/guide") : undefined}
       />
 
-      <View style={[styles.boardGrid, isWide && styles.boardGridWide]}>
-        {project ? (
-          <ProjectSnapshot
-            project={project}
-            estimate={hasEstimate ? estimate : null}
-            packetReady={packetReady}
-            sentQuotes={projectQuotes.length}
-          />
-        ) : (
-          <EmptySnapshot />
-        )}
-        <WorkflowPanel
-          hasEstimate={hasEstimate}
-          hasConcept={projectConcepts.length > 0}
-          packetReady={packetReady}
-          sentQuotes={projectQuotes.length}
-        />
-      </View>
-
       {nextActions.length > 0 ? (
         <>
-          <SectionHeader title="Next actions" action={`${nextActions.length} open`} />
+          <View style={styles.sectionBreak}>
+            <Text style={styles.sectionBreakTitle}>Next actions</Text>
+            <Text style={styles.sectionBreakMeta}>{nextActions.length} open</Text>
+          </View>
           <View style={styles.actionTable}>
             {nextActions.map((item, index) => (
               <View
@@ -214,140 +245,22 @@ export default function HomeScreen() {
   );
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
+function ValueTile({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.miniMetric}>
-      <Text style={styles.miniMetricLabel}>{label}</Text>
-      <Text style={styles.miniMetricValue}>{value}</Text>
-    </View>
-  );
-}
-
-function EmptySnapshot() {
-  return (
-    <View style={styles.projectDeck}>
-      <View style={styles.emptyHeader}>
-        <View style={styles.emptyIcon}>
-          <Feather name="map-pin" size={18} color={colors.canvas} />
-        </View>
-        <View style={styles.emptyCopy}>
-          <Text style={styles.projectLabel}>Active study</Text>
-          <Text style={styles.projectTitle}>No active property study</Text>
-          <Text style={styles.projectAddress}>The next address becomes the working lot for fit, permits, ROI, and builder packet prep.</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function ProjectSnapshot({
-  project,
-  estimate,
-  packetReady,
-  sentQuotes,
-}: {
-  project: NonNullable<ReturnType<typeof useActiveProject>>;
-  estimate: ReturnType<typeof estimateAduValue> | null;
-  packetReady: number;
-  sentQuotes: number;
-}) {
-  return (
-    <View style={styles.projectDeck}>
-      <View style={styles.projectHeader}>
-        <View style={styles.projectTitleGroup}>
-          <Text style={styles.projectLabel}>Active study</Text>
-          <Text style={styles.projectTitle}>{project.name}</Text>
-          <Text style={styles.projectAddress}>{project.address}</Text>
-        </View>
-        <Text style={styles.projectStatus}>{project.status.replace(/_/g, " ")}</Text>
-      </View>
-
-      {estimate ? (
-        <View style={styles.snapshotStrip}>
-          <StripMetric label="Value" value={`${formatCurrencyCompact(estimate.lowValue)}–${formatCurrencyCompact(estimate.highValue)}`} />
-          <View style={styles.stripDivider} />
-          <StripMetric label="ROI" value={formatPercent(estimate.roi)} />
-          <View style={styles.stripDivider} />
-          <StripMetric label="Payback" value={`${estimate.paybackYears.toFixed(1)} yr`} />
-        </View>
-      ) : (
-        <Text style={styles.projectHint}>The first estimate will pin value range, rent, cost, and payback to this property.</Text>
-      )}
-
-      <View style={styles.snapshotStrip}>
-        <StripMetric label="Packet" value={`${packetReady}/${PACKET_TOTAL}`} />
-        <View style={styles.stripDivider} />
-        <StripMetric label="Quotes sent" value={`${sentQuotes}`} />
-      </View>
-
-      <View style={styles.projectActions}>
-        <Button icon="send" style={styles.projectActionButton} onPress={() => router.push("/contractors")}>
-          Open Build
-        </Button>
-        <Button style={styles.projectActionButton} variant="secondary" onPress={() => router.push(`/project/${project.id}`)}>
-          View packet
-        </Button>
-      </View>
-    </View>
-  );
-}
-
-function StripMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.stripItem}>
-      <Text style={styles.stripLabel}>{label}</Text>
-      <Text style={styles.stripValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+    <View style={styles.valueTile}>
+      <Text style={styles.valueTileLabel}>{label}</Text>
+      <Text style={styles.valueTileValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
         {value}
       </Text>
     </View>
   );
 }
 
-function WorkflowPanel({
-  hasEstimate,
-  hasConcept,
-  packetReady,
-  sentQuotes,
-}: {
-  hasEstimate: boolean;
-  hasConcept: boolean;
-  packetReady: number;
-  sentQuotes: number;
-}) {
-  const steps = [
-    { title: "Property study", done: true, meta: "Lot, zoning, parcel facts" },
-    { title: "Estimate", done: hasEstimate, meta: hasEstimate ? "Saved" : "Set size, rent, cost" },
-    { title: "Build", done: sentQuotes > 0, meta: sentQuotes > 0 ? `${sentQuotes} quote${sentQuotes === 1 ? "" : "s"} sent` : "Send packet to builders" },
-    { title: "Permit", done: packetReady >= PACKET_TOTAL, meta: "Verify with local jurisdiction" },
-    { title: "Studio", done: hasConcept, meta: hasConcept ? "Concept ready" : "Optional proof path" },
-  ];
-  const completed = steps.filter((step) => step.done).length;
-
+function PacketChecklistItem({ label, ready }: { label: string; ready: boolean }) {
   return (
-    <View style={styles.workflowPanel}>
-      <View style={styles.workflowHeader}>
-        <Text style={styles.workflowTitle}>Study path</Text>
-        <Text style={styles.workflowMeta}>{completed}/{steps.length} done</Text>
-      </View>
-      {steps.map((step, index) => {
-        const isActive = !step.done && (index === 0 || steps[index - 1]?.done);
-        return (
-          <View key={step.title} style={styles.workflowStep}>
-            <View style={[styles.workflowIndex, step.done && styles.workflowIndexDone, isActive && styles.workflowIndexActive]}>
-              {step.done ? (
-                <Feather name="check" size={13} color={colors.canvas} />
-              ) : (
-                <Text style={[styles.workflowIndexText, isActive && styles.workflowIndexTextActive]}>{index + 1}</Text>
-              )}
-            </View>
-            <View style={styles.workflowCopy}>
-              <Text style={styles.workflowStepTitle}>{step.title}</Text>
-              <Text style={styles.workflowStepMeta}>{step.meta}</Text>
-            </View>
-            {step.done ? <Feather name="check-circle" size={15} color={colors.accent} /> : null}
-          </View>
-        );
-      })}
+    <View style={[styles.packetItem, ready && styles.packetItemReady]}>
+      <Feather name={ready ? "check-circle" : "circle"} size={16} color={ready ? colors.accent : colors.permit} />
+      <Text style={[styles.packetItemText, !ready && styles.packetItemPending]}>{label}</Text>
     </View>
   );
 }
@@ -357,21 +270,17 @@ function derivePacketReady({
   hasConcept,
   hasParcel,
   hasGuide,
-  quotesSent,
 }: {
   hasEstimate: boolean;
   hasConcept: boolean;
   hasParcel: boolean;
   hasGuide: boolean;
-  quotesSent: number;
 }) {
   const items = [
     hasEstimate,
     hasConcept,
     hasParcel,
     hasGuide,
-    quotesSent > 0,
-    hasEstimate && hasParcel, // ROI summary requires both
   ];
   return items.filter(Boolean).length;
 }
@@ -419,9 +328,9 @@ function deriveNextActions({
       tone: "permit",
     });
   }
-  if (packetReady < PACKET_TOTAL) {
+  if (packetReady < QUOTE_PACKET_TOTAL) {
     actions.push({
-      label: `Complete quote packet (${packetReady}/${PACKET_TOTAL})`,
+      label: `Complete quote packet (${packetReady}/${QUOTE_PACKET_TOTAL})`,
       icon: "file-text",
       impact: packetReady < 4 ? "High" : "Medium",
       cta: "Build",
@@ -445,54 +354,241 @@ type NextAction = {
 };
 
 const styles = StyleSheet.create({
-  topbar: {
+  appBar: {
     alignItems: "center",
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.md,
     justifyContent: "space-between",
   },
-  brandGroup: {
+  iconButton: {
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    height: 42,
+    justifyContent: "center",
+    width: 42,
+  },
+  pressed: {
+    opacity: 0.78,
+    transform: [{ translateY: 1 }],
+  },
+  propertyControl: {
+    alignItems: "center",
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 76,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    ...shadows.soft,
+  },
+  propertyLeft: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: spacing.md,
+    minWidth: 0,
+  },
+  propertyText: {
     flex: 1,
     gap: 2,
-    minWidth: 230,
+    minWidth: 0,
   },
-  brandLine: {
+  propertyAddress: {
+    ...typography.h2,
+    color: colors.text,
+    fontSize: 18,
+    lineHeight: 23,
+  },
+  propertyMeta: {
     ...typography.body,
     color: colors.muted,
     fontSize: 13,
     lineHeight: 18,
   },
-  topbarActions: {
-    alignItems: "center",
+  financeGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
-    maxWidth: "100%",
   },
-  savedBadge: {
-    alignItems: "center",
-    backgroundColor: colors.successSoft,
-    borderColor: colors.accentSoft,
-    borderRadius: radii.md,
+  financeGridWide: {
+    flexWrap: "nowrap",
+  },
+  valueTile: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    flexDirection: "row",
-    gap: spacing.xs,
-    minHeight: 38,
-    paddingHorizontal: spacing.sm,
+    flexBasis: "48%",
+    flexGrow: 1,
+    gap: spacing.sm,
+    minHeight: 112,
+    padding: spacing.md,
+    ...shadows.soft,
   },
-  savedText: {
+  valueTileLabel: {
     ...typography.label,
-    color: colors.accentDark,
+    color: colors.muted,
+    textTransform: "uppercase",
   },
-  commandCenter: {
+  valueTileValue: {
+    ...typography.mono,
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  marketGrid: {
     gap: spacing.md,
   },
-  commandCenterWide: {
+  marketGridWide: {
     alignItems: "stretch",
     flexDirection: "row",
   },
-  studyPanel: {
-    alignSelf: "stretch",
+  builderPreview: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    flex: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+    ...shadows.soft,
+  },
+  builderPreviewHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "space-between",
+  },
+  builderTitleRow: {
+    alignItems: "flex-start",
+    flex: 1,
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  previewCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  previewTitle: {
+    ...typography.h2,
+    color: colors.text,
+    fontSize: 18,
+    lineHeight: 23,
+  },
+  previewText: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  previewPill: {
+    ...typography.label,
+    backgroundColor: colors.mint,
+    borderColor: colors.successSoft,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    color: colors.accentDark,
+    overflow: "hidden",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    textTransform: "lowercase",
+  },
+  builderPreviewBody: {
+    alignItems: "center",
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: spacing.md,
+  },
+  initialStack: {
+    flexDirection: "row",
+  },
+  initialBubble: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.canvas,
+    borderRadius: radii.full,
+    borderWidth: 2,
+    height: 36,
+    justifyContent: "center",
+    marginRight: -6,
+    width: 36,
+  },
+  initialText: {
+    ...typography.label,
+    color: colors.muted,
+    fontSize: 13,
+  },
+  builderButton: {
+    backgroundColor: colors.parcel,
+    borderColor: colors.parcel,
+    minHeight: 48,
+  },
+  topMatchText: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  packetPreview: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    flex: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+    ...shadows.soft,
+  },
+  packetHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  packetPercent: {
+    ...typography.mono,
+    color: colors.parcel,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  progressTrack: {
+    backgroundColor: colors.surfaceStrong,
+    borderRadius: radii.full,
+    height: 8,
+    overflow: "hidden",
+  },
+  progressFill: {
+    backgroundColor: colors.parcel,
+    borderRadius: radii.full,
+    height: "100%",
+  },
+  packetList: {
+    gap: spacing.sm,
+  },
+  packetItem: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  packetItemReady: {
+    opacity: 0.62,
+  },
+  packetItemText: {
+    ...typography.body,
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  packetItemPending: {
+    fontFamily: typography.h2.fontFamily,
+  },
+  studyStrip: {
     backgroundColor: colors.canvas,
     borderColor: colors.border,
     borderRadius: radii.lg,
@@ -501,19 +597,10 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     ...shadows.soft,
   },
-  studyPanelWide: {
-    flex: 0.85,
-  },
-  panelHeader: {
+  studyStripHeader: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  panelTitle: {
-    ...typography.h2,
-    color: colors.text,
-    fontSize: 19,
-    lineHeight: 24,
   },
   studyStatus: {
     ...typography.label,
@@ -542,249 +629,30 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.warning,
   },
-  studyDivider: {
-    backgroundColor: colors.border,
-    height: 1,
-  },
-  projectMini: {
-    alignItems: "flex-start",
+  sectionBreak: {
+    alignItems: "center",
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
     flexDirection: "row",
-    gap: spacing.md,
     justifyContent: "space-between",
+    paddingBottom: spacing.sm,
   },
-  projectMiniText: {
-    flex: 1,
-    gap: 2,
-  },
-  miniLabel: {
-    ...typography.label,
-    color: colors.muted,
-  },
-  miniTitle: {
+  sectionBreakTitle: {
     ...typography.h2,
     color: colors.text,
-    fontSize: 16,
-    lineHeight: 21,
-    marginTop: 2,
+    fontSize: 20,
+    lineHeight: 26,
   },
-  miniValue: {
-    ...typography.mono,
-    color: colors.parcel,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  miniMetrics: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  miniMetric: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    flex: 1,
-    gap: 2,
-    padding: spacing.sm,
-  },
-  miniMetricLabel: {
+  sectionBreakMeta: {
     ...typography.label,
-    color: colors.muted,
-    fontSize: 10,
-  },
-  miniMetricValue: {
-    ...typography.mono,
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 19,
-  },
-  boardGrid: {
-    gap: spacing.md,
-  },
-  boardGridWide: {
-    alignItems: "stretch",
-    flexDirection: "row",
-  },
-  projectDeck: {
     backgroundColor: colors.canvas,
     borderColor: colors.border,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    flex: 1.4,
-    gap: spacing.md,
-    padding: spacing.lg,
-    ...shadows.soft,
-  },
-  emptyHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  emptyIcon: {
-    alignItems: "center",
-    backgroundColor: colors.accent,
-    borderRadius: radii.md,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  emptyCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  projectHeader: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: spacing.md,
-    justifyContent: "space-between",
-  },
-  projectTitleGroup: {
-    flex: 1,
-    gap: 2,
-  },
-  projectLabel: {
-    ...typography.label,
-    color: colors.accent,
-  },
-  projectTitle: {
-    ...typography.h2,
-    color: colors.text,
-    fontSize: 18,
-    lineHeight: 23,
-  },
-  projectAddress: {
-    ...typography.body,
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  projectStatus: {
-    ...typography.label,
-    backgroundColor: colors.accentSoft,
     borderRadius: radii.xs,
-    color: colors.accentDark,
+    borderWidth: 1,
+    color: colors.muted,
     overflow: "hidden",
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    textTransform: "capitalize",
-  },
-  snapshotStrip: {
-    alignItems: "stretch",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    flexDirection: "row",
-    padding: spacing.sm,
-  },
-  stripItem: {
-    flex: 1,
-    gap: 2,
-    paddingHorizontal: spacing.sm,
-  },
-  stripDivider: {
-    backgroundColor: colors.border,
-    width: 1,
-  },
-  stripLabel: {
-    ...typography.label,
-    color: colors.muted,
-    fontSize: 10,
-  },
-  stripValue: {
-    ...typography.mono,
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  projectHint: {
-    ...typography.body,
-    color: colors.muted,
-  },
-  projectActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  projectActionButton: {
-    flexBasis: 170,
-    flexGrow: 1,
-  },
-  workflowPanel: {
-    backgroundColor: colors.canvas,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    flex: 1,
-    gap: spacing.sm,
-    padding: spacing.lg,
-    ...shadows.soft,
-  },
-  workflowHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  workflowTitle: {
-    ...typography.h2,
-    color: colors.text,
-    fontSize: 18,
-    lineHeight: 23,
-  },
-  workflowMeta: {
-    ...typography.label,
-    color: colors.muted,
-  },
-  workflowStep: {
-    alignItems: "center",
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: spacing.sm,
-    padding: spacing.sm,
-  },
-  workflowIndex: {
-    alignItems: "center",
-    backgroundColor: colors.canvas,
-    borderColor: colors.border,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    height: 30,
-    justifyContent: "center",
-    width: 30,
-  },
-  workflowIndexActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  workflowIndexDone: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  workflowIndexText: {
-    ...typography.mono,
-    color: colors.muted,
-    fontSize: 12,
-  },
-  workflowIndexTextActive: {
-    color: colors.canvas,
-  },
-  workflowCopy: {
-    flex: 1,
-    gap: 1,
-  },
-  workflowStepTitle: {
-    ...typography.h2,
-    color: colors.text,
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  workflowStepMeta: {
-    ...typography.body,
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 16,
   },
   actionTable: {
     backgroundColor: colors.canvas,

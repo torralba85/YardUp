@@ -58,7 +58,7 @@ paths:
       operationId: generateDesignConcept
       summary: Generate an ADU concept from a project and optional planner preferences.
       description: |
-        The backend must not include exact address text in AI prompts. If OpenAI is
+        The backend must not include exact address text in AI prompts. If Gemini is
         unavailable, it returns a deterministic local concept.
       requestBody:
         required: true

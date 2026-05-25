@@ -176,15 +176,15 @@ export default function DesignScreen() {
   }
 
   return (
-    <Screen title="Backyard studio" subtitle="Fit a model, choose the architectural language, and generate a packet-ready design direction.">
-      <LinearGradient colors={[colors.ink, "#20372F", "#244234"]} style={styles.projectContext}>
+    <Screen title="Backyard Fit" subtitle="Place the ADU, check buildable area, and prove the income model is physically plausible.">
+      <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectContext}>
         <View style={styles.contextTop}>
           <View style={styles.contextCopy}>
             <Text style={styles.contextLabel}>Live design board</Text>
             <Text style={styles.contextAddress}>{project.address}</Text>
           </View>
           <View style={styles.contextBadge}>
-            <Feather name="crosshair" size={15} color={colors.highlighter} />
+            <Feather name="crosshair" size={15} color={colors.accentDark} />
             <Text style={styles.contextBadgeText}>true-scale fit</Text>
           </View>
         </View>
@@ -633,12 +633,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   projectContext: {
-    borderColor: "rgba(255,255,255,0.14)",
+    borderColor: colors.border,
     borderRadius: radii.lg,
     borderWidth: 1,
     gap: spacing.md,
     padding: spacing.md,
-    ...shadows.medium,
+    ...shadows.soft,
   },
   contextTop: {
     alignItems: "flex-start",
@@ -652,18 +652,18 @@ const styles = StyleSheet.create({
   },
   contextLabel: {
     ...typography.label,
-    color: colors.highlighter,
+    color: colors.muted,
   },
   contextAddress: {
     ...typography.h2,
-    color: colors.background,
+    color: colors.text,
     fontSize: 18,
     lineHeight: 23,
   },
   contextBadge: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: colors.mint,
+    borderColor: colors.successSoft,
     borderRadius: radii.sm,
     borderWidth: 1,
     flexDirection: "row",
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
   },
   contextBadgeText: {
     ...typography.label,
-    color: colors.background,
+    color: colors.accentDark,
     fontSize: 10,
   },
   contextStats: {
@@ -682,8 +682,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   studioStat: {
-    backgroundColor: "rgba(255,255,255,0.09)",
-    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
     flex: 1,
@@ -692,12 +692,12 @@ const styles = StyleSheet.create({
   },
   studioStatLabel: {
     ...typography.label,
-    color: colors.faint,
+    color: colors.muted,
     fontSize: 10,
   },
   studioStatValue: {
     ...typography.h2,
-    color: colors.background,
+    color: colors.text,
     fontSize: 15,
     lineHeight: 19,
   },

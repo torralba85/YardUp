@@ -22,14 +22,14 @@ export default function GuideScreen() {
 
   return (
     <Screen
-      title="Permit"
+      title="Permit Risk"
       subtitle="Local-first risk read, parcel constraints, and source-backed steps. Verify with your jurisdiction before construction decisions."
     >
       {project ? (
-        <LinearGradient colors={[colors.forestDeep, colors.forest]} style={styles.projectCard}>
+        <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectCard}>
           <View style={styles.projectHeader}>
             <View style={styles.projectIcon}>
-              <Feather name="map-pin" size={18} color={colors.canvas} />
+              <Feather name="map-pin" size={18} color={colors.accentDark} />
             </View>
             <View style={styles.projectText}>
               <Text style={styles.projectLabel}>Permit field notes</Text>
@@ -82,12 +82,12 @@ export default function GuideScreen() {
 
 const styles = StyleSheet.create({
   projectCard: {
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: colors.border,
     borderRadius: radii.lg,
     borderWidth: 1,
     gap: spacing.md,
     padding: spacing.md,
-    ...shadows.medium,
+    ...shadows.soft,
   },
   projectHeader: {
     alignItems: "center",
@@ -96,7 +96,9 @@ const styles = StyleSheet.create({
   },
   projectIcon: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
     borderRadius: radii.sm,
     height: 42,
     justifyContent: "center",
@@ -108,26 +110,26 @@ const styles = StyleSheet.create({
   },
   projectLabel: {
     ...typography.label,
-    color: colors.faint,
+    color: colors.muted,
   },
   projectTitle: {
     ...typography.h2,
-    color: colors.background,
+    color: colors.text,
   },
   projectAddress: {
     ...typography.body,
-    color: colors.faint,
+    color: colors.muted,
     fontSize: 13,
     lineHeight: 18,
   },
   jurisdiction: {
     ...typography.label,
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderColor: "rgba(255,255,255,0.15)",
+    backgroundColor: colors.mint,
+    borderColor: colors.successSoft,
     borderRadius: radii.sm,
     borderWidth: 1,
-    color: colors.background,
+    color: colors.accentDark,
     overflow: "hidden",
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,

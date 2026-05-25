@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   SafeAreaView,
+  useWindowDimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { colors, radii, spacing, typography } from "../theme";
@@ -24,6 +25,7 @@ interface FeedbackButtonProps {
 type FeedbackCategory = "general" | "bug" | "feature_request" | "data_issue" | "other";
 
 export function FeedbackButton({ pageIdentifier = "AppRoot", clientVersion = "1.0.0" }: FeedbackButtonProps) {
+  const { width } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<FeedbackCategory>("general");
   const [rating, setRating] = useState<number | undefined>(undefined);
@@ -93,6 +95,10 @@ export function FeedbackButton({ pageIdentifier = "AppRoot", clientVersion = "1.
     { value: "feature_request", label: "Feature", icon: "plus-circle" },
     { value: "data_issue", label: "Data Issue", icon: "database" },
   ];
+
+  if (width < 560) {
+    return null;
+  }
 
   return (
     <>
@@ -281,7 +287,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.forest,
     borderRadius: radii.full,
-    bottom: spacing.lg,
+    bottom: Platform.OS === "ios" ? 104 : 92,
     elevation: 5,
     height: 56,
     justifyContent: "center",

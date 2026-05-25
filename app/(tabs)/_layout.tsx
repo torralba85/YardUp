@@ -7,19 +7,19 @@ import { colors, radii, spacing, typography } from "../../src/theme";
 type IconName = keyof typeof Feather.glyphMap;
 
 const icons: Record<string, IconName> = {
-  index: "trending-up",
-  estimate: "bar-chart-2",
-  contractors: "send",
-  guide: "shield",
-  ideas: "move",
+  index: "bar-chart-2",
+  estimate: "file-text",
+  contractors: "tool",
+  guide: "check-square",
+  ideas: "compass",
   inspiration: "image",
 };
 
 const labels: Record<string, string> = {
-  index: "Home",
+  index: "Value",
   estimate: "Estimate",
-  contractors: "Build",
-  guide: "Permit",
+  contractors: "Builders",
+  guide: "Permits",
   ideas: "Studio",
   inspiration: "Ideas",
 };
@@ -32,15 +32,15 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: sideRail ? colors.mint : colors.emerald,
-        tabBarInactiveTintColor: sideRail ? "rgba(237,243,238,0.68)" : colors.muted,
-        tabBarActiveBackgroundColor: sideRail ? "rgba(31,157,99,0.2)" : "transparent",
+        tabBarActiveTintColor: sideRail ? colors.mint : colors.forestDeep,
+        tabBarInactiveTintColor: sideRail ? "rgba(237,243,238,0.68)" : colors.text,
+        tabBarActiveBackgroundColor: sideRail ? "rgba(31,157,99,0.2)" : colors.mint,
         tabBarInactiveBackgroundColor: "transparent",
         tabBarPosition: sideRail ? "left" : "bottom",
         tabBarVariant: sideRail ? "material" : "uikit",
         tabBarStyle: {
-          backgroundColor: colors.rail,
-          borderColor: "rgba(255,255,255,0.08)",
+          backgroundColor: sideRail ? colors.rail : colors.canvas,
+          borderColor: sideRail ? "rgba(255,255,255,0.08)" : colors.border,
           borderRightWidth: sideRail ? 1 : 0,
           borderTopWidth: sideRail ? 0 : 1,
           height: sideRail ? "100%" : Platform.OS === "ios" ? 86 : 72,
@@ -52,11 +52,11 @@ export default function TabsLayout() {
           width: sideRail ? 208 : undefined,
         },
         tabBarItemStyle: {
-          borderRadius: radii.md,
-          height: sideRail ? 58 : undefined,
+          borderRadius: radii.lg,
+          height: sideRail ? 58 : Platform.OS === "ios" ? 56 : 52,
           marginHorizontal: sideRail ? spacing.xs : 0,
           marginVertical: sideRail ? 3 : 0,
-          paddingHorizontal: sideRail ? spacing.sm : 0,
+          paddingHorizontal: sideRail ? spacing.sm : spacing.xs,
         },
         tabBarLabelStyle: {
           fontFamily: typography.label.fontFamily,
@@ -71,11 +71,11 @@ export default function TabsLayout() {
         ),
       })}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="estimate" options={{ title: "Estimate" }} />
-      <Tabs.Screen name="contractors" options={{ title: "Build" }} />
-      <Tabs.Screen name="guide" options={{ title: "Permit" }} />
+      <Tabs.Screen name="index" options={{ title: "Value" }} />
       <Tabs.Screen name="ideas" options={{ title: "Studio" }} />
+      <Tabs.Screen name="contractors" options={{ title: "Builders" }} />
+      <Tabs.Screen name="guide" options={{ title: "Permits" }} />
+      <Tabs.Screen name="estimate" options={{ title: "Estimate" }} />
       <Tabs.Screen name="inspiration" options={{ href: null }} />
     </Tabs>
   );

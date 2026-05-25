@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
@@ -78,7 +77,7 @@ export default function ContractorsScreen() {
   }
 
   return (
-    <Screen title="Build" subtitle="Vetted ADU builders, packet completeness, and the one next move that actually advances a quote.">
+    <Screen title="Builder Matches" subtitle="Qualified builders, match score, start window, and quote-packet readiness.">
       <NextMoveCard
         contractor={topContractor}
         topAlreadyQuoted={topAlreadyQuoted}
@@ -89,7 +88,7 @@ export default function ContractorsScreen() {
         sending={topContractor ? sendingId === topContractor.id : false}
       />
 
-      <LinearGradient colors={[colors.forestDeep, colors.forest]} style={styles.packetCard}>
+      <LinearGradient colors={[colors.canvas, colors.parcelSoft]} style={styles.packetCard}>
         <View style={styles.packetHeader}>
           <View>
             <Text style={styles.packetLabel}>Quote packet</Text>
@@ -105,7 +104,7 @@ export default function ContractorsScreen() {
             const ready = packetStatus[item.key];
             return (
               <View key={item.label} style={[styles.packetItem, ready && styles.packetItemReady]}>
-                <Feather name={ready ? "check" : "circle"} size={13} color={ready ? colors.highlighter : "rgba(255,255,255,0.55)"} />
+                <Feather name={ready ? "check" : "circle"} size={13} color={ready ? colors.accent : colors.muted} />
                 <Text style={[styles.packetItemText, !ready && styles.packetItemTextPending]}>{item.label}</Text>
               </View>
             );
@@ -224,73 +223,50 @@ function ContractorCard({
 }) {
   return (
     <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <ContractorImage contractor={contractor} />
-        <View style={styles.cardInfo}>
-          <View style={styles.titleRow}>
-            <Text style={styles.name}>{contractor.name}</Text>
-            <Text style={styles.matchBadge}>{contractor.matchScore}%</Text>
-          </View>
-          <Text style={styles.specialty}>{contractor.specialty}</Text>
-          <View style={styles.ratingRow}>
-            <Feather name="star" size={13} color={colors.permit} />
-            <Text style={styles.ratingText}>
-              {contractor.rating.toFixed(1)} ({contractor.reviews} reviews)
+      <View style={styles.builderHeader}>
+        <View style={styles.builderNameBlock}>
+          <Text style={styles.name}>{contractor.name}</Text>
+          <View style={styles.licenseRow}>
+            <Feather name="check-circle" size={15} color={colors.accentDark} />
+            <Text style={styles.licenseText}>
+              {contractor.licenseStatus === "verified" && contractor.insuranceStatus === "verified" ? "Licensed & insured" : "Credentials pending"}
             </Text>
           </View>
         </View>
+        <View style={styles.matchScoreBlock}>
+          <Text style={styles.matchScoreLarge}>{contractor.matchScore}%</Text>
+          <Text style={styles.matchScoreLabel}>Match score</Text>
+        </View>
+      </View>
+
+      <View style={styles.builderDivider} />
+
+      <View style={styles.statsRow}>
+        <Stat label="Estimated start" value={`${contractor.timelineWeeks} weeks`} />
+        <Stat label="Specialty" value={contractor.specialty} />
+      </View>
+
+      <View style={styles.builderMetaRow}>
+        <Feather name="map-pin" size={14} color={colors.muted} />
+        <Text style={styles.builderMetaText}>
+          {contractor.aduCount} ADUs delivered in {contractor.serviceArea}
+        </Text>
       </View>
 
       <View style={styles.trustRow}>
-        <TrustBadge label="License" verified={contractor.licenseStatus === "verified"} />
-        <TrustBadge label="Insurance" verified={contractor.insuranceStatus === "verified"} />
-        <TrustBadge label="Permits" verified={contractor.permitSupport} />
+        <TrustBadge label={contractor.priceRange} verified />
+        <TrustBadge label={`${contractor.rating.toFixed(1)} rating`} verified />
+        <TrustBadge label={contractor.permitSupport ? "Permit support" : "Permit review"} verified={contractor.permitSupport} />
       </View>
 
-      <View style={styles.statsRow}>
-        <Stat label="Range" value={contractor.priceRange} wide />
-        <Stat label="Timeline" value={`${contractor.timelineWeeks} wk`} />
-        <Stat label="ADUs" value={`${contractor.aduCount}`} />
-      </View>
-
-      <Text style={styles.reviewText}>"{contractor.reviewExcerpt}"</Text>
-
-      <View style={styles.tagRow}>
-        {contractor.tags.map((tag) => (
-          <Text key={tag} style={styles.tag}>
-            {tag}
-          </Text>
-        ))}
-      </View>
-
-      <Button variant={quoteSent ? "secondary" : "primary"} onPress={onRequest} disabled={quoteSent || sending}>
+      <Button
+        variant={quoteSent ? "secondary" : "primary"}
+        style={!quoteSent ? styles.builderCta : undefined}
+        onPress={onRequest}
+        disabled={quoteSent || sending}
+      >
         {quoteSent ? "Quote sent" : sending ? "Sending" : "Request quote"}
       </Button>
-    </View>
-  );
-}
-
-function ContractorImage({ contractor }: { contractor: ContractorProfile }) {
-  const [failed, setFailed] = useState(false);
-  const initials = contractor.name
-    .split(" ")
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("");
-
-  return (
-    <View style={styles.imageFrame}>
-      {!failed ? (
-        <Image
-          source={{ uri: contractor.imageUrl }}
-          style={styles.avatar}
-          contentFit="cover"
-          transition={200}
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <Text style={styles.initials}>{initials}</Text>
-      )}
     </View>
   );
 }
@@ -373,12 +349,12 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   packetCard: {
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: colors.border,
     borderRadius: radii.lg,
     borderWidth: 1,
     gap: spacing.md,
     padding: spacing.md,
-    ...shadows.medium,
+    ...shadows.soft,
   },
   packetHeader: {
     alignItems: "center",
@@ -387,15 +363,15 @@ const styles = StyleSheet.create({
   },
   packetLabel: {
     ...typography.label,
-    color: colors.faint,
+    color: colors.muted,
   },
   packetTitle: {
     ...typography.h1,
-    color: colors.background,
+    color: colors.text,
   },
   packetIcon: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.parcel,
     borderRadius: radii.sm,
     height: 40,
     justifyContent: "center",
@@ -403,7 +379,7 @@ const styles = StyleSheet.create({
   },
   packetText: {
     ...typography.body,
-    color: colors.faint,
+    color: colors.muted,
   },
   packetItems: {
     flexDirection: "row",
@@ -412,8 +388,8 @@ const styles = StyleSheet.create({
   },
   packetItem: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
     borderRadius: radii.sm,
     borderWidth: 1,
     flexDirection: "row",
@@ -422,16 +398,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   packetItemReady: {
-    backgroundColor: "rgba(207,248,109,0.16)",
-    borderColor: "rgba(207,248,109,0.36)",
+    backgroundColor: colors.mint,
+    borderColor: colors.successSoft,
   },
   packetItemText: {
     ...typography.label,
-    color: colors.background,
+    color: colors.text,
     fontSize: 11,
   },
   packetItemTextPending: {
-    color: "rgba(255,255,255,0.66)",
+    color: colors.muted,
   },
   list: {
     gap: spacing.md,
@@ -439,74 +415,59 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.canvas,
     borderColor: colors.border,
-    borderLeftColor: colors.parcel,
-    borderLeftWidth: 3,
     borderRadius: radii.md,
     borderWidth: 1,
     gap: spacing.md,
-    padding: spacing.md,
+    padding: spacing.lg,
+    ...shadows.soft,
   },
-  cardTop: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  imageFrame: {
-    alignItems: "center",
-    backgroundColor: colors.surfaceStrong,
-    borderRadius: radii.sm,
-    height: 82,
-    justifyContent: "center",
-    overflow: "hidden",
-    width: 82,
-  },
-  avatar: {
-    height: "100%",
-    width: "100%",
-  },
-  initials: {
-    ...typography.h2,
-    color: colors.accent,
-  },
-  cardInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  titleRow: {
+  builderHeader: {
     alignItems: "flex-start",
     flexDirection: "row",
     gap: spacing.sm,
+    justifyContent: "space-between",
+  },
+  builderNameBlock: {
+    flex: 1,
+    gap: spacing.xs,
   },
   name: {
-    ...typography.h2,
+    ...typography.h1,
     color: colors.text,
     flex: 1,
-    fontSize: 17,
-    lineHeight: 22,
+    fontSize: 22,
+    lineHeight: 27,
   },
-  matchBadge: {
-    ...typography.label,
-    backgroundColor: colors.accent,
-    borderRadius: radii.sm,
-    color: colors.background,
-    overflow: "hidden",
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  specialty: {
-    ...typography.body,
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  ratingRow: {
+  licenseRow: {
     alignItems: "center",
     flexDirection: "row",
     gap: spacing.xs,
   },
-  ratingText: {
-    ...typography.mono,
+  licenseText: {
+    ...typography.label,
+    color: colors.accentDark,
+    fontSize: 13,
+  },
+  matchScoreBlock: {
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  matchScoreLarge: {
+    ...typography.display,
+    color: colors.accentDark,
+    fontSize: 35,
+    lineHeight: 38,
+  },
+  matchScoreLabel: {
+    ...typography.label,
     color: colors.text,
-    fontSize: 12,
+    fontSize: 10,
+    textAlign: "right",
+    textTransform: "uppercase",
+  },
+  builderDivider: {
+    backgroundColor: colors.border,
+    height: 1,
   },
   trustRow: {
     flexDirection: "row",
@@ -541,10 +502,9 @@ const styles = StyleSheet.create({
   stat: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: radii.sm,
-    borderWidth: 1,
     flex: 1,
     gap: 2,
+    minWidth: 132,
     padding: spacing.sm,
   },
   statWide: {
@@ -560,6 +520,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     lineHeight: 18,
+  },
+  builderMetaRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  builderMetaText: {
+    ...typography.body,
+    color: colors.muted,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  builderCta: {
+    backgroundColor: colors.parcel,
+    borderColor: colors.parcel,
   },
   reviewText: {
     ...typography.body,

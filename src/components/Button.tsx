@@ -51,7 +51,7 @@ export function Button({ children, icon, variant = "primary", style, ...props }:
 const styles = StyleSheet.create({
   base: {
     alignItems: "center",
-    borderRadius: radii.full,
+    borderRadius: radii.lg,
     justifyContent: "center",
     minHeight: 50,
     paddingHorizontal: spacing.lg,

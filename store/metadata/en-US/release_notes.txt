@@ -1,1 +1,17 @@
-Initial release with local-first ADU project studies, backyard model planning, estimate assumptions, starter permit guidance, design references, and quote packet preparation.
+Welcome to YardUp.
+
+This first release helps you answer the questions that matter before you call a builder: how much an ADU could earn, what it could cost, how fast it could pay back, and which builders can act on it.
+
+What is in this release:
+- Value tab with monthly rent estimate, net annual income, cost range, payback, builder matches, and quote packet readiness
+- Estimate tab with gross rent, expenses, cost range, value range, payback, and sensitivity assumptions
+- Builders tab with matched builders, license and insurance signals, and quote request flow
+- Permits tab with risk level, blockers, verification steps, and source citations for supported markets
+- Studio tab for backyard placement, ADU model fit, style direction, and concept generation with a deterministic fallback
+- Guided onboarding wizard for address, lot facts, and goals
+- Floating feedback control for sending short product feedback (rate-limited)
+- Local-first project storage; cloud-backed actions only run when you request them
+
+YardUp is a planning aid and does not guarantee rental income, permit approval, financial returns, or builder availability. Always verify with your local jurisdiction and licensed professionals.
+
+YardUp is operated by ADU Advisor.

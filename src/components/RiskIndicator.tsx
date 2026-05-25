@@ -31,27 +31,38 @@ const META: Record<RiskLevel, { tint: string; soft: string; icon: keyof typeof F
 export function RiskIndicator({ label, level, score, drivers, verifyLabel, onVerify, verifiedAt }: RiskIndicatorProps) {
   const meta = META[level];
   const showVerify = Boolean(verifyLabel && onVerify);
+  const driverCount = drivers?.length ?? 0;
+  const summary =
+    driverCount > 0
+      ? `${driverCount} potential ${driverCount === 1 ? "blocker" : "blockers"} identified. Verify early before pricing or builder commitments.`
+      : label;
 
   return (
-    <View style={[styles.card, { borderLeftColor: meta.tint }]}>
-      <View style={styles.header}>
-        <View style={[styles.iconChip, { backgroundColor: meta.soft }]}>
-          <Feather name={meta.icon} size={16} color={meta.tint} />
+    <View style={styles.card}>
+      <View style={[styles.topStripe, { backgroundColor: meta.tint }]} />
+      <View style={styles.scorecard}>
+        <View style={styles.riskLabelRow}>
+          <Feather name={meta.icon} size={17} color={meta.tint} />
+          <Text style={[styles.riskLabel, { color: meta.tint }]}>Risk assessment</Text>
         </View>
-        <View style={styles.headerCopy}>
-          <Text style={styles.label}>{label}</Text>
-          {verifiedAt ? <Text style={styles.verifiedAt}>Verified {verifiedAt}</Text> : null}
-        </View>
-        <View style={[styles.levelPill, { backgroundColor: meta.soft }]}>
-          <Text style={[styles.levelText, { color: meta.tint }]}>{meta.word}</Text>
+        <Text style={styles.levelWord}>{meta.word}</Text>
+        <Text style={styles.summaryText}>{summary}</Text>
+        <View style={styles.coveragePill}>
+          <Feather name="database" size={13} color={colors.muted} />
+          <Text style={styles.coverageText} numberOfLines={1}>
+            {verifiedAt ? `Verified ${verifiedAt}` : label}
+          </Text>
         </View>
       </View>
 
       {typeof score === "number" ? (
-        <Text style={styles.score}>
-          {Math.round(score)}
-          <Text style={styles.scoreUnit}>/100</Text>
-        </Text>
+        <View style={styles.scoreRow}>
+          <Text style={styles.scoreLabel}>Score</Text>
+          <Text style={styles.score}>
+            {Math.round(score)}
+            <Text style={styles.scoreUnit}>/100</Text>
+          </Text>
+        </View>
       ) : null}
 
       <View style={styles.meter} accessibilityLabel={`Risk level ${meta.word}`}>
@@ -94,51 +105,81 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderLeftWidth: 3,
-    gap: spacing.sm,
+    gap: spacing.md,
+    overflow: "hidden",
     padding: spacing.md,
     ...shadows.soft,
   },
-  header: {
+  topStripe: {
+    height: 4,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
+  scorecard: {
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+  },
+  riskLabelRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  iconChip: {
-    alignItems: "center",
-    borderRadius: radii.sm,
-    height: 38,
-    justifyContent: "center",
-    width: 38,
-  },
-  headerCopy: {
-    flex: 1,
-    gap: 1,
-  },
-  label: {
-    ...typography.h2,
-    color: colors.text,
-    fontSize: 16,
-    lineHeight: 21,
-  },
-  verifiedAt: {
+  riskLabel: {
     ...typography.label,
-    color: colors.muted,
-    fontSize: 10,
+    textTransform: "uppercase",
   },
-  levelPill: {
-    borderRadius: radii.sm,
+  levelWord: {
+    ...typography.display,
+    color: colors.forestDeep,
+    fontSize: 44,
+    lineHeight: 50,
+    textAlign: "center",
+  },
+  summaryText: {
+    ...typography.body,
+    color: colors.muted,
+    maxWidth: 390,
+    textAlign: "center",
+  },
+  coveragePill: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radii.xs,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.xs,
+    maxWidth: "100%",
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  levelText: {
+  coverageText: {
+    ...typography.mono,
+    color: colors.muted,
+    flexShrink: 1,
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  scoreRow: {
+    alignItems: "center",
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: spacing.sm,
+  },
+  scoreLabel: {
     ...typography.label,
+    color: colors.muted,
   },
   score: {
     ...typography.mono,
     color: colors.text,
-    fontSize: 28,
-    lineHeight: 32,
+    fontSize: 20,
+    lineHeight: 26,
   },
   scoreUnit: {
     ...typography.mono,
@@ -157,7 +198,10 @@ const styles = StyleSheet.create({
     height: 6,
   },
   drivers: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
     gap: spacing.xs,
+    paddingTop: spacing.sm,
   },
   driverRow: {
     alignItems: "flex-start",

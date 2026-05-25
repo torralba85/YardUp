@@ -79,33 +79,33 @@ export const spacing = {
 };
 
 export const radii = {
-  xs: 6,
-  sm: 10,
-  md: 16,
-  lg: 22,
+  xs: 3,
+  sm: 5,
+  md: 8,
+  lg: 8,
   full: 9999, // Reserved strictly for small circular icons or status dots
 };
 
 export const shadows = {
   soft: {
     shadowColor: "#14281E",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 1,
   } as ViewStyle,
   medium: {
     shadowColor: "#0E2C20",
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.12,
-    shadowRadius: 34,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   } as ViewStyle,
   crisp: {
     shadowColor: "#0E2C20",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
     elevation: 1,
   } as ViewStyle,
 };

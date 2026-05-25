@@ -39,7 +39,7 @@ export const generateDesignConcept = onCall(callableOptions, async (request) => 
   const concept = await buildDesignConcept(input.project, input.inspiration, input.preferences);
   await writeServiceLog({
     service: "generateDesignConcept",
-    status: process.env.OPENAI_API_KEY ? "ok" : "fallback",
+    status: process.env.GEMINI_API_KEY ? "ok" : "fallback",
     projectId: input.project.id,
     jurisdiction: input.project.jurisdiction,
     address: input.project.address,

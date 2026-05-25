@@ -1,1 +1,1 @@
-ADU,accessory dwelling unit,backyard home,garage conversion,California housing,permit planning,homeowner,feasibility,estimate
+ADU,YardUp,rental income,backyard home,cost estimate,payback,builder,permits,homeowner,feasibility

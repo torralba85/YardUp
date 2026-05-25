@@ -45,15 +45,15 @@ const styles = StyleSheet.create({
     flexBasis: "100%",
   },
   primary: {
-    backgroundColor: colors.forestDeep,
-    borderColor: colors.forest,
+    backgroundColor: colors.mint,
+    borderColor: colors.successSoft,
   },
   label: {
     ...typography.label,
     color: colors.muted,
   },
   primaryLabel: {
-    color: colors.mint,
+    color: colors.accentDark,
   },
   value: {
     ...typography.title,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   primaryValue: {
-    color: colors.canvas,
+    color: colors.forestDeep,
   },
   detail: {
     ...typography.body,
@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   primaryDetail: {
-    color: colors.inkSoft,
-    opacity: 0.86,
+    color: colors.muted,
   },
 });

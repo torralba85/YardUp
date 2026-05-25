@@ -1,3 +1,139 @@
+---
+name: Quiet Ascent
+colors:
+  surface: '#FFFFFF'
+  surface-dim: '#dcdad4'
+  surface-bright: '#fbf9f3'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#f5f3ed'
+  surface-container: '#f0eee8'
+  surface-container-high: '#eae8e2'
+  surface-container-highest: '#e4e2dd'
+  on-surface: '#1b1c18'
+  on-surface-variant: '#434844'
+  inverse-surface: '#30312d'
+  inverse-on-surface: '#f3f1eb'
+  outline: '#737874'
+  outline-variant: '#c3c8c3'
+  surface-tint: '#536259'
+  primary: '#010b06'
+  on-primary: '#ffffff'
+  primary-container: '#15231c'
+  on-primary-container: '#7c8b82'
+  inverse-primary: '#bacac0'
+  secondary: '#006d41'
+  on-secondary: '#ffffff'
+  secondary-container: '#84f6b3'
+  on-secondary-container: '#007144'
+  tertiary: '#00081a'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#001f47'
+  on-tertiary-container: '#4b87e4'
+  error: '#D1583F'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#d6e7db'
+  primary-fixed-dim: '#bacac0'
+  on-primary-fixed: '#101e18'
+  on-primary-fixed-variant: '#3b4a42'
+  secondary-fixed: '#87f9b6'
+  secondary-fixed-dim: '#6adc9c'
+  on-secondary-fixed: '#002110'
+  on-secondary-fixed-variant: '#005230'
+  tertiary-fixed: '#d7e3ff'
+  tertiary-fixed-dim: '#abc7ff'
+  on-tertiary-fixed: '#001b3f'
+  on-tertiary-fixed-variant: '#00458e'
+  background: '#fbf9f3'
+  on-background: '#1b1c18'
+  surface-variant: '#e4e2dd'
+  ink: '#15231C'
+  forest-deep: '#0E2C20'
+  forest: '#143D2B'
+  revenue-green: '#1F9D63'
+  cash-highlight: '#CFF86D'
+  builder-blue: '#0D5DB8'
+  permit-amber: '#C1760D'
+  paper: '#F6F4EE'
+  mint: '#DCF1E5'
+  muted-text: '#566159'
+  border: '#E5E3D9'
+typography:
+  display-revenue:
+    fontFamily: Fraunces
+    fontSize: 40px
+    fontWeight: '600'
+    lineHeight: 46px
+    letterSpacing: '0'
+  screen-title:
+    fontFamily: Hanken Grotesk
+    fontSize: 30px
+    fontWeight: '800'
+    lineHeight: 36px
+    letterSpacing: '0'
+  section-title:
+    fontFamily: Hanken Grotesk
+    fontSize: 20px
+    fontWeight: '800'
+    lineHeight: 26px
+    letterSpacing: '0'
+  card-title:
+    fontFamily: Hanken Grotesk
+    fontSize: 16px
+    fontWeight: '700'
+    lineHeight: 21px
+    letterSpacing: '0'
+  body-md:
+    fontFamily: Hanken Grotesk
+    fontSize: 14px
+    fontWeight: '400'
+    lineHeight: 21px
+    letterSpacing: '0'
+  body-sm:
+    fontFamily: Hanken Grotesk
+    fontSize: 13px
+    fontWeight: '400'
+    lineHeight: 18px
+    letterSpacing: '0'
+  ui-label:
+    fontFamily: Hanken Grotesk
+    fontSize: 11px
+    fontWeight: '700'
+    lineHeight: 16px
+    letterSpacing: '0'
+  data-lg:
+    fontFamily: IBM Plex Mono
+    fontSize: 28px
+    fontWeight: '600'
+    lineHeight: 34px
+    letterSpacing: '0'
+  data-md:
+    fontFamily: IBM Plex Mono
+    fontSize: 14px
+    fontWeight: '500'
+    lineHeight: 20px
+    letterSpacing: '0'
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  base: 8px
+  2xs: 2px
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 32px
+  2xl: 48px
+  3xl: 64px
+  max-width: 1180px
+---
+
 # Design System - YardUp / ADU Advisor
 
 ## Product Context
