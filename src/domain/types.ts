@@ -177,6 +177,7 @@ export interface ContractorProfile {
   permitSupport: boolean;
   tags: string[];
   reviewExcerpt: string;
+  billingTier?: "starter" | "growth" | "premium";
 }
 
 export interface QuoteRequest {
@@ -189,6 +190,8 @@ export interface QuoteRequest {
   homeownerConsentAt?: string;
   deliveredAt?: string;
   commercialStatus: "not_eligible" | "eligible_for_builder_fee";
+  introductionFee?: number;
+  billingTier?: "starter" | "growth" | "premium";
 }
 
 export interface ParcelSummary {

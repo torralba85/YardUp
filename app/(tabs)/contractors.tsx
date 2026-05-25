@@ -75,76 +75,46 @@ export default function ContractorsScreen() {
   const parcelSummaries = useAppStore((state) => state.parcelSummaries);
   const regulationGuides = useAppStore((state) => state.regulationGuides);
   const requestQuote = useAppStore((state) => state.requestQuote);
+  const deliverQuote = useAppStore((state) => state.deliverQuote);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
+  // Match current user to builder profile if they are a builder
+  const builderProfile = useMemo(() => {
+    if (currentRole !== "builder" || !currentUser?.email) return undefined;
+    const email = currentUser.email.toLowerCase();
+    if (email.includes("apex")) {
+      return contractors.find((c) => c.id === "apex-adu-builders");
+    }
+    if (email.includes("golden") || email.includes("state")) {
+      return contractors.find((c) => c.id === "golden-state-modular");
+    }
+    if (email.includes("eco") || email.includes("studio")) {
+      return contractors.find((c) => c.id === "ecostudio-construction");
+    }
+    return contractors[0]; // fallback
+  }, [currentRole, currentUser, contractors]);
+
+  // If role is builder, render the Builder Dashboard
   if (currentRole === "builder") {
-    return (
-      <Screen title="Builder Portal" subtitle="Manage your payout routing and credentials.">
-        <View style={styles.builderDashboard}>
-          <Text style={styles.dashboardTitle}>Welcome back, Builder</Text>
-          <Text style={styles.dashboardText}>
-            Set up and manage your payout method to receive commercial project match payments directly.
-          </Text>
-
-          <View style={[styles.stripeCard, stripeStatus === "active" ? styles.stripeCardActive : stripeStatus === "pending" ? styles.stripeCardPending : styles.stripeCardIdle]}>
-            <View style={styles.stripeHeader}>
-              <View style={[styles.stripeIconContainer, stripeStatus === "active" ? styles.stripeIconActive : stripeStatus === "pending" ? styles.stripeIconPending : stripeStatus === "idle" ? styles.stripeIconIdle : undefined]}>
-                <Feather
-                  name={stripeStatus === "active" ? "check-circle" : stripeStatus === "pending" ? "clock" : "credit-card"}
-                  size={24}
-                  color={stripeStatus === "active" ? colors.emerald : stripeStatus === "pending" ? colors.permit : colors.muted}
-                />
-              </View>
-              <View style={styles.stripeTitleContainer}>
-                <Text style={styles.stripeLabel}>Stripe Connect</Text>
-                <Text style={styles.stripeStatusText}>
-                  {stripeStatus === "active"
-                    ? "Connected"
-                    : stripeStatus === "pending"
-                      ? "Onboarding Pending"
-                      : "Not Connected"}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.stripeDescription}>
-              {stripeStatus === "active"
-                ? "Your Stripe Connect express account is active. Payouts will be routed automatically."
-                : stripeStatus === "pending"
-                  ? "We've generated your express onboarding link, but your account is not yet active. Please finish the Stripe form."
-                  : "Connect your Stripe account to enable direct payout routing and receive authenticated homeowner leads."}
-            </Text>
-
-            {loadingStripe ? (
-              <ActivityIndicator size="small" color={colors.emerald} style={{ marginVertical: spacing.sm }} />
-            ) : (
-              <View style={styles.stripeActions}>
-                {stripeStatus === "idle" && (
-                  <Button icon="credit-card" onPress={handleConnectStripe}>
-                    Connect Stripe Account
-                  </Button>
-                )}
-                {stripeStatus === "pending" && (
-                  <View style={styles.actionRow}>
-                    <Button icon="refresh-cw" onPress={handleCheckStripeStatus} style={{ flex: 1 }}>
-                      Verify Connection
-                    </Button>
-                    <Button variant="secondary" icon="external-link" onPress={handleConnectStripe} style={{ flex: 1 }}>
-                      Resume Onboarding
-                    </Button>
-                  </View>
-                )}
-                {stripeStatus === "active" && (
-                  <View style={styles.connectedBadge}>
-                    <Feather name="check" size={16} color={colors.emerald} />
-                    <Text style={styles.connectedBadgeText}>Account Ready for Payouts</Text>
-                  </View>
-                )}
-              </View>
-            )}
+    if (contractors.length === 0) {
+      return (
+        <Screen title="Builder Dashboard" subtitle="Loading builder profile...">
+          <View style={styles.emptyState}>
+            <Feather name="loader" size={24} color={colors.muted} />
           </View>
-        </View>
-      </Screen>
+        </Screen>
+      );
+    }
+    return (
+      <BuilderDashboard
+        builder={builderProfile}
+        quoteRequests={quoteRequests}
+        onVerifyDelivery={deliverQuote}
+        stripeStatus={stripeStatus}
+        loadingStripe={loadingStripe}
+        onConnectStripe={handleConnectStripe}
+        onCheckStripeStatus={handleCheckStripeStatus}
+      />
     );
   }
 
@@ -474,6 +444,260 @@ function Stat({ label, value, wide = false }: { label: string; value: string; wi
   );
 }
 
+interface BuilderDashboardProps {
+  builder: ContractorProfile | undefined;
+  quoteRequests: QuoteRequest[];
+  onVerifyDelivery: (projectId: string, contractorId: string) => Promise<QuoteRequest>;
+  stripeStatus: "idle" | "pending" | "active";
+  loadingStripe: boolean;
+  onConnectStripe: () => void;
+  onCheckStripeStatus: () => void;
+}
+
+function BuilderDashboard({
+  builder,
+  quoteRequests,
+  onVerifyDelivery,
+  stripeStatus,
+  loadingStripe,
+  onConnectStripe,
+  onCheckStripeStatus,
+}: BuilderDashboardProps) {
+  const projects = useAppStore((state) => state.projects);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  // Filter requests that target this builder
+  const builderRequests = useMemo(() => {
+    if (!builder) return [];
+    return quoteRequests.filter((q) => q.contractorId === builder.id);
+  }, [builder, quoteRequests]);
+
+  // Calculate statistics
+  const totalSent = useMemo(() => {
+    return builderRequests.filter((q) => q.status === "sent").length;
+  }, [builderRequests]);
+
+  const totalPending = useMemo(() => {
+    return builderRequests.filter((q) => q.status === "submitted").length;
+  }, [builderRequests]);
+
+  const totalFees = useMemo(() => {
+    return builderRequests
+      .filter((q) => q.status === "sent" && q.commercialStatus === "eligible_for_builder_fee")
+      .reduce((sum, q) => sum + (q.introductionFee || 0), 0);
+  }, [builderRequests]);
+
+  // Map billing tier details
+  const tierName = builder?.billingTier || "starter";
+  const tierDisplay = tierName.charAt(0).toUpperCase() + tierName.slice(1);
+  
+  let tierFeeText = "$49 per sent packet";
+  if (tierName === "growth") tierFeeText = "$99 per sent packet";
+  if (tierName === "premium") tierFeeText = "$149 per sent packet";
+
+  const handleVerify = async (projectId: string, contractorId: string) => {
+    setVerifyingId(projectId + "-" + contractorId);
+    try {
+      await onVerifyDelivery(projectId, contractorId);
+    } catch (err) {
+      console.error("Failed to verify delivery:", err);
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
+  if (!builder) {
+    return (
+      <Screen title="Builder Dashboard" subtitle="No matching builder profile found.">
+        <View style={styles.emptyState}>
+          <Feather name="alert-triangle" size={42} color={colors.warning} />
+          <Text style={styles.emptyTitle}>Profile not matched</Text>
+          <Text style={styles.emptyText}>
+            We could not resolve your user account to a seeded builder profile. Please contact support.
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen title="Builder Dashboard" subtitle="Manage incoming project packets, check billing tier, and track introduction fees.">
+      <View style={styles.builderProfileHeader}>
+        <View style={styles.avatarContainer}>
+          <Feather name="briefcase" size={24} color={colors.accentDark} />
+        </View>
+        <View style={styles.headerInfo}>
+          <Text style={styles.builderDashboardName}>{builder.name}</Text>
+          <Text style={styles.builderSpecialtyText}>{builder.specialty} · {builder.serviceArea}</Text>
+          <View style={styles.licenseRow}>
+            <Feather name="shield" size={13} color={colors.emerald} />
+            <Text style={styles.licenseText}>License: {builder.licenseStatus === "verified" ? "Verified" : "Pending"}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={[styles.stripeCard, stripeStatus === "active" ? styles.stripeCardActive : stripeStatus === "pending" ? styles.stripeCardPending : stripeStatus === "idle" ? styles.stripeCardIdle]}>
+        <View style={styles.stripeHeader}>
+          <View style={[styles.stripeIconContainer, stripeStatus === "active" ? styles.stripeIconActive : stripeStatus === "pending" ? styles.stripeIconPending : stripeStatus === "idle" ? styles.stripeIconIdle : undefined]}>
+            <Feather
+              name={stripeStatus === "active" ? "check-circle" : stripeStatus === "pending" ? "clock" : "credit-card"}
+              size={24}
+              color={stripeStatus === "active" ? colors.emerald : stripeStatus === "pending" ? colors.permit : colors.muted}
+            />
+          </View>
+          <View style={styles.stripeTitleContainer}>
+            <Text style={styles.stripeLabel}>Stripe Connect</Text>
+            <Text style={styles.stripeStatusText}>
+              {stripeStatus === "active"
+                ? "Connected"
+                : stripeStatus === "pending"
+                  ? "Onboarding Pending"
+                  : "Not Connected"}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.stripeDescription}>
+          {stripeStatus === "active"
+            ? "Your Stripe Connect express account is active. Payouts will be routed automatically."
+            : stripeStatus === "pending"
+              ? "We've generated your express onboarding link, but your account is not yet active. Please finish the Stripe form."
+              : "Connect your Stripe account to enable direct payout routing and receive authenticated homeowner leads."}
+        </Text>
+
+        {loadingStripe ? (
+          <ActivityIndicator size="small" color={colors.emerald} style={{ marginVertical: spacing.sm }} />
+        ) : (
+          <View style={styles.stripeActions}>
+            {stripeStatus === "idle" && (
+              <Button icon="credit-card" onPress={onConnectStripe}>
+                Connect Stripe Account
+              </Button>
+            )}
+            {stripeStatus === "pending" && (
+              <View style={styles.actionRow}>
+                <Button icon="refresh-cw" onPress={onCheckStripeStatus} style={{ flex: 1 }}>
+                  Verify Connection
+                </Button>
+                <Button variant="secondary" icon="external-link" onPress={onConnectStripe} style={{ flex: 1 }}>
+                  Resume Onboarding
+                </Button>
+              </View>
+            )}
+            {stripeStatus === "active" && (
+              <View style={styles.connectedBadge}>
+                <Feather name="check" size={16} color={colors.emerald} style={{ marginRight: 6 }} />
+                <Text style={styles.connectedBadgeText}>Account Ready for Payouts</Text>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+
+      <View style={styles.tierBanner}>
+        <View style={styles.tierBannerLeft}>
+          <Text style={styles.tierLabel}>CURRENT BILLING TIER</Text>
+          <Text style={styles.tierTitle}>{tierDisplay} Tier</Text>
+          <Text style={styles.tierSubtext}>{tierFeeText}</Text>
+        </View>
+        <View style={styles.tierBadge}>
+          <Feather name="award" size={20} color={colors.canvas} />
+        </View>
+      </View>
+
+      <View style={styles.metricsRow}>
+        <View style={[styles.metricCard, { borderLeftColor: colors.emerald, borderLeftWidth: 4 }]}>
+          <Text style={styles.metricLabel}>Total Fees</Text>
+          <Text style={styles.metricValueLarge}>${totalFees}</Text>
+          <Text style={styles.metricSubtext}>Pending payment</Text>
+        </View>
+        
+        <View style={[styles.metricCard, { borderLeftColor: colors.parcel, borderLeftWidth: 4 }]}>
+          <Text style={styles.metricLabel}>Sent Packets</Text>
+          <Text style={styles.metricValueLarge}>{totalSent}</Text>
+          <Text style={styles.metricSubtext}>Verified deliveries</Text>
+        </View>
+
+        <View style={[styles.metricCard, { borderLeftColor: colors.permit, borderLeftWidth: 4 }]}>
+          <Text style={styles.metricLabel}>Pending Packets</Text>
+          <Text style={styles.metricValueLarge}>{totalPending}</Text>
+          <Text style={styles.metricSubtext}>Outreach in review</Text>
+        </View>
+      </View>
+
+      <SectionHeader title="Project Packets" action={builderRequests.length + " total"} />
+      {builderRequests.length > 0 ? (
+        <View style={styles.list}>
+          {builderRequests.map((request) => {
+            const project = projects.find((p) => p.id === request.projectId);
+            const isSent = request.status === "sent";
+            const isPending = request.status === "submitted";
+            const formattedDate = new Date(request.createdAt).toLocaleDateString();
+            const formattedDeliveredDate = request.deliveredAt ? new Date(request.deliveredAt).toLocaleDateString() : undefined;
+            const verifying = verifyingId === (request.projectId + "-" + request.contractorId);
+
+            return (
+              <View key={request.id} style={styles.packetListItem}>
+                <View style={styles.packetItemHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.packetAddress} numberOfLines={1}>{project?.address || "Address details hidden"}</Text>
+                    <Text style={styles.packetDateText}>Received: {formattedDate}</Text>
+                    {formattedDeliveredDate && (
+                      <Text style={styles.packetDateText}>Delivered: {formattedDeliveredDate}</Text>
+                    )}
+                  </View>
+                  <View style={[styles.statusBadge, isSent ? styles.statusBadgeSent : styles.statusBadgePending]}>
+                    <Text style={[styles.statusBadgeText, isSent ? styles.statusBadgeTextSent : styles.statusBadgeTextPending]}>
+                      {isSent ? "Delivered" : "Pending Delivery"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.packetDetailsDivider} />
+
+                <View style={styles.packetMetaInfoRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.packetDetailsLabel}>PACKET CONTENTS</Text>
+                    <Text style={styles.packetContentsText}>{request.packetItems.join(" · ")}</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={styles.packetDetailsLabel}>INTRO FEE</Text>
+                    <Text style={styles.packetFeeValue}>
+                      {request.introductionFee ? "$" + request.introductionFee : "-"}
+                    </Text>
+                  </View>
+                </View>
+
+                {isPending && (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.verifyButton,
+                      pressed && styles.verifyButtonPressed,
+                    ]}
+                    onPress={() => handleVerify(request.projectId, request.contractorId)}
+                    disabled={verifying}
+                  >
+                    <Feather name="check" size={14} color={colors.canvas} style={{ marginRight: 6 }} />
+                    <Text style={styles.verifyButtonText}>
+                      {verifying ? "Verifying..." : "Verify Delivery"}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={styles.emptyDashboardState}>
+          <Feather name="file-text" size={32} color={colors.faint} />
+          <Text style={styles.emptyTitle}>No packets yet</Text>
+          <Text style={styles.emptyText}>When homeowners choose you for quote requests, the packets will appear here.</Text>
+        </View>
+      )}
+    </Screen>
+  );
+}
+
 const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
@@ -768,6 +992,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     ...shadows.crisp,
+    marginBottom: spacing.md,
   },
   stripeCardIdle: {
     borderColor: colors.border,
@@ -843,5 +1068,214 @@ const styles = StyleSheet.create({
   connectedBadgeText: {
     ...typography.label,
     color: colors.emerald,
+  },
+  builderProfileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.md,
+    ...shadows.soft,
+    marginBottom: spacing.md,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.full,
+    backgroundColor: colors.accentSoft,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  builderDashboardName: {
+    ...typography.h1,
+    color: colors.text,
+    fontSize: 20,
+    lineHeight: 25,
+  },
+  builderSpecialtyText: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 13,
+  },
+  tierBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: colors.accentDark,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    ...shadows.medium,
+    marginBottom: spacing.md,
+  },
+  tierBannerLeft: {
+    gap: 2,
+  },
+  tierLabel: {
+    ...typography.label,
+    color: colors.highlighter,
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  tierTitle: {
+    ...typography.display,
+    color: colors.canvas,
+    fontSize: 24,
+    lineHeight: 30,
+  },
+  tierSubtext: {
+    ...typography.body,
+    color: colors.accentSoft,
+    fontSize: 13,
+  },
+  tierBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.full,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  metricsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "space-between",
+    marginBottom: spacing.md,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.sm,
+    gap: 2,
+    ...shadows.soft,
+  },
+  metricLabel: {
+    ...typography.label,
+    color: colors.muted,
+    fontSize: 10,
+  },
+  metricValueLarge: {
+    ...typography.monoLarge,
+    color: colors.text,
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  metricSubtext: {
+    ...typography.body,
+    color: colors.faint,
+    fontSize: 10,
+  },
+  packetListItem: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+    ...shadows.soft,
+  },
+  packetItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+  },
+  packetAddress: {
+    ...typography.h2,
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  packetDateText: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs - 2,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+  },
+  statusBadgeSent: {
+    backgroundColor: colors.successSoft,
+    borderColor: colors.success,
+  },
+  statusBadgePending: {
+    backgroundColor: colors.permitSoft,
+    borderColor: colors.permit,
+  },
+  statusBadgeText: {
+    ...typography.label,
+    fontSize: 10,
+  },
+  statusBadgeTextSent: {
+    color: colors.emerald,
+  },
+  statusBadgeTextPending: {
+    color: colors.permit,
+  },
+  packetDetailsDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 2,
+  },
+  packetMetaInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  packetDetailsLabel: {
+    ...typography.label,
+    color: colors.faint,
+    fontSize: 9,
+  },
+  packetContentsText: {
+    ...typography.body,
+    color: colors.text,
+    fontSize: 13,
+  },
+  packetFeeValue: {
+    ...typography.mono,
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  verifyButton: {
+    flexDirection: "row",
+    backgroundColor: colors.parcel,
+    borderRadius: radii.sm,
+    paddingVertical: spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: spacing.xs,
+  },
+  verifyButtonPressed: {
+    backgroundColor: "#0a4b96",
+  },
+  verifyButtonText: {
+    ...typography.label,
+    color: colors.canvas,
+    fontSize: 12,
+  },
+  emptyDashboardState: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.xl,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.sm,
   },
 });

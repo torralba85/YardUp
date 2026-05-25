@@ -67,6 +67,7 @@ interface AppState {
   saveWizardStyle: (projectId: string, styleId: DesignStyleId) => Promise<void>;
   saveInspiration: (projectId: string, inspirationId: string) => Promise<void>;
   requestQuote: (projectId: string, contractorId: string, homeownerConsent: true) => Promise<QuoteRequest>;
+  deliverQuote: (projectId: string, contractorId: string) => Promise<QuoteRequest>;
   createConcept: (
     projectId: string,
     inspirationId?: string,
@@ -280,6 +281,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
     await persist(() => upsertQuoteRequest(request));
     return request;
+  },
+
+  deliverQuote: async (projectId, contractorId) => {
+    const existing = get().quoteRequests.find(
+      (request) => request.projectId === projectId && request.contractorId === contractorId,
+    );
+    if (!existing) {
+      throw new Error(`Quote request for project ${projectId} and contractor ${contractorId} not found.`);
+    }
+
+    const { deliverQuoteRequest } = await import("../domain/marketplace");
+    const updated = deliverQuoteRequest(existing);
+
+    set((state) => ({
+      quoteRequests: state.quoteRequests.map((item) =>
+        item.projectId === projectId && item.contractorId === contractorId ? updated : item
+      ),
+    }));
+
+    await persist(() => upsertQuoteRequest(updated));
+    return updated;
   },
 
   createConcept: async (projectId, inspirationId, preferences) => {
