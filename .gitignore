@@ -27,6 +27,19 @@ yarn-debug.*
 yarn-error.*
 expo-preview*.log
 .expo-web*.log
+.expo-*.log
+firestore-debug.log
+
+# local tooling and generated previews
+.antigravitycli/
+.playwright-cli/
+/output/
+/my-videonpx/
+/ADU advisor.zip
+/stitch_yardup_modern_design_system.zip
+/adu-design-studio-demo/.hyperframes-preview*.log
+/adu-design-studio-demo/.thumbnails/
+/adu-design-studio-demo/renders/
 
 # macOS
 .DS_Store
