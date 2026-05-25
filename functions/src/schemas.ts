@@ -126,3 +126,11 @@ export const submitFeedbackInputSchema = z.object({
     })
     .optional(),
 });
+
+export const getStripeOnboardingUrlInputSchema = z.object({
+  userId: z.string().min(1).max(120),
+});
+
+export const checkStripeStatusInputSchema = z.object({
+  userId: z.string().min(1).max(120),
+});

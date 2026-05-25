@@ -1,8 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
 
 import { Button } from "../../src/components/Button";
 import { Screen } from "../../src/components/Screen";
@@ -11,6 +11,12 @@ import { getMatchedContractors, isDeliveredQuote } from "../../src/domain/market
 import type { ContractorProfile, QuoteRequest } from "../../src/domain/types";
 import { useActiveProject, useAppStore } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
+import { useAuthStore } from "../../src/state/authStore";
+import {
+  getStripeOnboardingUrl,
+  checkStripeStatus,
+  fetchStripeStatusFromFirestore,
+} from "../../src/services/stripeService";
 
 const PACKET_ITEMS: { label: string; key: "estimate" | "lot" | "concept" | "permit" }[] = [
   { label: "ROI model", key: "estimate" },
@@ -20,6 +26,48 @@ const PACKET_ITEMS: { label: string; key: "estimate" | "lot" | "concept" | "perm
 ];
 
 export default function ContractorsScreen() {
+  const { currentUser, currentRole } = useAuthStore();
+  const [stripeStatus, setStripeStatus] = useState<"idle" | "pending" | "active">("idle");
+  const [loadingStripe, setLoadingStripe] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && currentRole === "builder") {
+      setLoadingStripe(true);
+      fetchStripeStatusFromFirestore(currentUser.uid)
+        .then((status) => setStripeStatus(status))
+        .catch((err) => console.error("Error fetching stripe status:", err))
+        .finally(() => setLoadingStripe(false));
+    }
+  }, [currentUser, currentRole]);
+
+  const handleConnectStripe = async () => {
+    if (!currentUser) return;
+    setLoadingStripe(true);
+    try {
+      const url = await getStripeOnboardingUrl(currentUser.uid);
+      if (url) {
+        setStripeStatus("pending");
+      }
+    } catch (err) {
+      console.error("Error starting Stripe onboarding:", err);
+    } finally {
+      setLoadingStripe(false);
+    }
+  };
+
+  const handleCheckStripeStatus = async () => {
+    if (!currentUser) return;
+    setLoadingStripe(true);
+    try {
+      const newStatus = await checkStripeStatus(currentUser.uid);
+      setStripeStatus(newStatus);
+    } catch (err) {
+      console.error("Error checking Stripe status:", err);
+    } finally {
+      setLoadingStripe(false);
+    }
+  };
+
   const project = useActiveProject();
   const contractors = useAppStore((state) => state.contractorProfiles);
   const quoteRequests = useAppStore((state) => state.quoteRequests);
@@ -28,6 +76,77 @@ export default function ContractorsScreen() {
   const regulationGuides = useAppStore((state) => state.regulationGuides);
   const requestQuote = useAppStore((state) => state.requestQuote);
   const [sendingId, setSendingId] = useState<string | null>(null);
+
+  if (currentRole === "builder") {
+    return (
+      <Screen title="Builder Portal" subtitle="Manage your payout routing and credentials.">
+        <View style={styles.builderDashboard}>
+          <Text style={styles.dashboardTitle}>Welcome back, Builder</Text>
+          <Text style={styles.dashboardText}>
+            Set up and manage your payout method to receive commercial project match payments directly.
+          </Text>
+
+          <View style={[styles.stripeCard, stripeStatus === "active" ? styles.stripeCardActive : stripeStatus === "pending" ? styles.stripeCardPending : styles.stripeCardIdle]}>
+            <View style={styles.stripeHeader}>
+              <View style={[styles.stripeIconContainer, stripeStatus === "active" ? styles.stripeIconActive : stripeStatus === "pending" ? styles.stripeIconPending : stripeStatus === "idle" ? styles.stripeIconIdle : undefined]}>
+                <Feather
+                  name={stripeStatus === "active" ? "check-circle" : stripeStatus === "pending" ? "clock" : "credit-card"}
+                  size={24}
+                  color={stripeStatus === "active" ? colors.emerald : stripeStatus === "pending" ? colors.permit : colors.muted}
+                />
+              </View>
+              <View style={styles.stripeTitleContainer}>
+                <Text style={styles.stripeLabel}>Stripe Connect</Text>
+                <Text style={styles.stripeStatusText}>
+                  {stripeStatus === "active"
+                    ? "Connected"
+                    : stripeStatus === "pending"
+                      ? "Onboarding Pending"
+                      : "Not Connected"}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.stripeDescription}>
+              {stripeStatus === "active"
+                ? "Your Stripe Connect express account is active. Payouts will be routed automatically."
+                : stripeStatus === "pending"
+                  ? "We've generated your express onboarding link, but your account is not yet active. Please finish the Stripe form."
+                  : "Connect your Stripe account to enable direct payout routing and receive authenticated homeowner leads."}
+            </Text>
+
+            {loadingStripe ? (
+              <ActivityIndicator size="small" color={colors.emerald} style={{ marginVertical: spacing.sm }} />
+            ) : (
+              <View style={styles.stripeActions}>
+                {stripeStatus === "idle" && (
+                  <Button icon="credit-card" onPress={handleConnectStripe}>
+                    Connect Stripe Account
+                  </Button>
+                )}
+                {stripeStatus === "pending" && (
+                  <View style={styles.actionRow}>
+                    <Button icon="refresh-cw" onPress={handleCheckStripeStatus} style={{ flex: 1 }}>
+                      Verify Connection
+                    </Button>
+                    <Button variant="secondary" icon="external-link" onPress={handleConnectStripe} style={{ flex: 1 }}>
+                      Resume Onboarding
+                    </Button>
+                  </View>
+                )}
+                {stripeStatus === "active" && (
+                  <View style={styles.connectedBadge}>
+                    <Feather name="check" size={16} color={colors.emerald} />
+                    <Text style={styles.connectedBadgeText}>Account Ready for Payouts</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      </Screen>
+    );
+  }
 
   const projectRequests = useMemo(
     () => quoteRequests.filter((request) => request.projectId === project?.id),
@@ -629,5 +748,100 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+  },
+  builderDashboard: {
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  dashboardTitle: {
+    ...typography.h1,
+    color: colors.text,
+  },
+  dashboardText: {
+    ...typography.body,
+    color: colors.muted,
+  },
+  stripeCard: {
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    gap: spacing.md,
+    ...shadows.crisp,
+  },
+  stripeCardIdle: {
+    borderColor: colors.border,
+  },
+  stripeCardPending: {
+    borderColor: colors.permit,
+    backgroundColor: colors.permitSoft,
+  },
+  stripeCardActive: {
+    borderColor: colors.emerald,
+    backgroundColor: colors.accentSoft,
+  },
+  stripeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  stripeIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.md,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  stripeIconIdle: {
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceStrong,
+  },
+  stripeIconPending: {
+    borderColor: colors.permit,
+    backgroundColor: colors.canvas,
+  },
+  stripeIconActive: {
+    borderColor: colors.emerald,
+    backgroundColor: colors.canvas,
+  },
+  stripeTitleContainer: {
+    flex: 1,
+  },
+  stripeLabel: {
+    ...typography.label,
+    color: colors.muted,
+  },
+  stripeStatusText: {
+    ...typography.h2,
+    color: colors.text,
+  },
+  stripeDescription: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  stripeActions: {
+    marginTop: spacing.sm,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  connectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.successSoft,
+    borderColor: colors.emerald,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+  },
+  connectedBadgeText: {
+    ...typography.label,
+    color: colors.emerald,
   },
 });
