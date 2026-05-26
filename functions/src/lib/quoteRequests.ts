@@ -31,7 +31,10 @@ export async function saveQuoteRequest(payload: QuoteRequestPayload) {
   }
 
   const now = Timestamp.now();
-  const id = `quote-${payload.projectId}-${payload.contractorId}`;
+  // Include userId so the id is globally unique across all homeowners. Without
+  // it, two users with the same projectId + contractorId produce the same id,
+  // and a collectionGroup .limit(1) would non-deterministically pick one.
+  const id = `quote-${payload.userId}-${payload.projectId}-${payload.contractorId}`;
   const document = {
     id,
     projectId: payload.projectId,

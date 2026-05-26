@@ -48,7 +48,7 @@ describe("saveQuoteRequest", () => {
       userId: "user-1",
     });
 
-    expect(mocks.doc).toHaveBeenCalledWith("users/user-1/projects/p1/quoteRequests/quote-p1-c1");
+    expect(mocks.doc).toHaveBeenCalledWith("users/user-1/projects/p1/quoteRequests/quote-user-1-p1-c1");
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({
         homeownerConsent: true,
