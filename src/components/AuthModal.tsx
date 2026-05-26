@@ -135,8 +135,8 @@ export function AuthModal() {
 
                   <Text style={styles.tagline}>
                     {activeTab === "login"
-                      ? "Sign in to sync your ADU project plans and quotes."
-                      : "Create a secure account to save your backyard revenue estimates."}
+                      ? "Sign in to manage cloud-backed builder outreach and account access."
+                      : "Create an account to manage builder outreach and delivery history."}
                   </Text>
 
                   {/* Form Fields */}
@@ -272,7 +272,7 @@ export function AuthModal() {
                   <View style={styles.statusBox}>
                     <Feather name="shield" size={16} color={colors.emerald} />
                     <Text style={styles.statusText}>
-                      Your ADU project data is securely synced to the cloud.
+                      Cloud-backed requests use your account when you choose to send them. Project studies remain stored locally by default.
                     </Text>
                   </View>
 

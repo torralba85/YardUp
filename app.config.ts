@@ -1,14 +1,14 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
 
 const firebaseDefaults = {
-  apiKey: "AIzaSyD34VMPks8SLrHFRFoFqO8lunMRmiGSS2M",
-  authDomain: "adu-advisor.firebaseapp.com",
-  projectId: "adu-advisor",
-  storageBucket: "adu-advisor.firebasestorage.app",
-  messagingSenderId: "674234371665",
-  webAppId: "1:674234371665:web:d1c9673d6f691b2217b270",
-  iosAppId: "1:674234371665:ios:d37df5e16d5f461217b270",
-  androidAppId: "1:674234371665:android:668530b5eb01f3f017b270",
+  apiKey: "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
+  authDomain: "yardup-2026.firebaseapp.com",
+  projectId: "yardup-2026",
+  storageBucket: "yardup-2026.firebasestorage.app",
+  messagingSenderId: "166268911022",
+  webAppId: "1:166268911022:web:08b5493550c6f176305c3f",
+  iosAppId: "1:166268911022:ios:8468cae4173f4d8d305c3f",
+  androidAppId: "1:166268911022:android:4b0f68fd6bf9e918305c3f",
 };
 
 function env(name: string, fallback: string): string {

@@ -15,7 +15,7 @@ When a user starts a cloud-backed action, YardUp may send the minimum data neede
 - Jurisdiction identifier for regulation guidance
 - Project constraints and selected model information for design concept generation
 - Property address for property history lookup
-- Contractor identifier and packet items for quote requests
+- Contractor identifier, packet items, and affirmative consent for a builder outreach request
 - Free-text message, originating surface, and optional project identifier for product feedback
 
 ## AI processing
@@ -36,7 +36,7 @@ Backend service logs may record service name, project identifier, jurisdiction, 
 
 ## Sharing
 
-YardUp does not sell user data. Backend providers (Firebase, Gemini when configured) are used only to operate the app features described in this policy.
+YardUp does not sell user data. When a user explicitly consents to create a builder outreach request, YardUp may store the selected builder identifier and packet items in its backend workflow. A locally saved retry or recorded submission has not been confirmed as delivered to a builder. Backend providers (Firebase, Gemini when configured) are used only to operate the app features described in this policy.
 
 ## Children
 

@@ -27,6 +27,20 @@ yarn-debug.*
 yarn-error.*
 expo-preview*.log
 .expo-web*.log
+.expo-*.log
+firestore-debug.log
+
+# local tooling and generated previews
+.antigravitycli/
+.playwright-cli/
+/output/
+/my-videonpx/
+/ADU advisor.zip
+/stitch_yardup_modern_design_system.zip
+/adu-design-studio-demo/
+
+# Firebase native SDK config (secrets — source from CI or local provisioning)
+/firebase/
 
 # macOS
 .DS_Store
@@ -34,6 +48,7 @@ expo-preview*.log
 
 # local env files
 .env*.local
+.env.local.temp
 
 # typescript
 *.tsbuildinfo

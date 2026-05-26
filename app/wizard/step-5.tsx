@@ -4,6 +4,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "../../src/components/Button";
 import { WizardHeader } from "../../src/components/WizardHeader";
+import { getMatchedContractors } from "../../src/domain/marketplace";
 import { useActiveProject, useAppStore } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
@@ -12,11 +13,19 @@ export default function WizardStepFive() {
   const contractorProfiles = useAppStore((state) => state.contractorProfiles);
   const quoteRequests = useAppStore((state) => state.quoteRequests);
   const requestQuote = useAppStore((state) => state.requestQuote);
+  const matchedBuilders = project ? getMatchedContractors(contractorProfiles, project.jurisdiction) : [];
 
   const handleRequestQuote = async (contractorId: string, name: string) => {
     if (!project) return;
-    await requestQuote(project.id, contractorId);
-    Alert.alert("Quote request sent", `Your packet was sent to ${name}.`);
+    const request = await requestQuote(project.id, contractorId, true);
+    Alert.alert(
+      request.status === "sent" ? "Packet delivered" : request.status === "submitted" ? "Packet recorded" : "Packet saved for retry",
+      request.status === "sent"
+        ? `Your consented packet was delivered to ${name}.`
+        : request.status === "submitted"
+          ? `Your consent was recorded for ${name}. Delivery has not been confirmed yet.`
+        : "The packet is saved on this device. Retry delivery when builder service is available.",
+    );
   };
 
   if (!project) {
@@ -28,7 +37,7 @@ export default function WizardStepFive() {
       <WizardHeader currentStep={5} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.intro}>
-          <Text style={styles.subhead}>Send the project packet</Text>
+          <Text style={styles.subhead}>Submit the project packet</Text>
           <Text style={styles.body}>
             Package the lot summary, fit sketch, design concept, and ROI model for matched builders.
           </Text>
@@ -45,10 +54,21 @@ export default function WizardStepFive() {
         </View>
 
         <Text style={styles.sectionTitle}>Builder matches</Text>
-        {contractorProfiles.map((builder) => {
-          const isSent = quoteRequests.some(
+        {matchedBuilders.length === 0 ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Local builder coverage needs verification</Text>
+            <Text style={styles.bodySmall}>
+              No YardUp builder match is declared for this jurisdiction yet. Complete the estimate while local coverage is reviewed.
+            </Text>
+          </View>
+        ) : null}
+        {matchedBuilders.map((builder) => {
+          const request = quoteRequests.find(
             (request) => request.projectId === project.id && request.contractorId === builder.id,
           );
+          const isSent = request?.status === "sent";
+          const isSubmitted = request?.status === "submitted";
+          const isSaved = request?.status === "saved";
 
           return (
             <View key={builder.id} style={styles.card}>
@@ -79,8 +99,11 @@ export default function WizardStepFive() {
                 </View>
               </View>
 
-              <Button disabled={isSent} onPress={() => handleRequestQuote(builder.id, builder.name)} variant={isSent ? "secondary" : "primary"}>
-                {isSent ? "Request sent" : "Send packet"}
+              <Text style={styles.disclosure}>
+                You consent to submit this packet for builder outreach. No homeowner fee is charged here; delivery must be verified before any builder fee applies.
+              </Text>
+              <Button disabled={isSent || isSubmitted} onPress={() => handleRequestQuote(builder.id, builder.name)} variant={isSent || isSubmitted ? "secondary" : "primary"}>
+                {isSent ? "Packet delivered" : isSubmitted ? "Delivery pending" : isSaved ? "Retry submission" : "Consent and submit packet"}
               </Button>
             </View>
           );
@@ -206,6 +229,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontStyle: "italic",
     lineHeight: 19,
+  },
+  disclosure: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 18,
   },
   divider: {
     backgroundColor: colors.border,

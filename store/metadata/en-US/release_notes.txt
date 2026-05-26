@@ -5,8 +5,8 @@ This first release helps you answer the questions that matter before you call a 
 What is in this release:
 - Value tab with monthly rent estimate, net annual income, cost range, payback, builder matches, and quote packet readiness
 - Estimate tab with gross rent, expenses, cost range, value range, payback, and sensitivity assumptions
-- Builders tab with matched builders, license and insurance signals, and quote request flow
-- Permits tab with risk level, blockers, verification steps, and source citations for supported markets
+- Builders tab with jurisdiction-declared matches, consented outreach, delivery-pending status, and honest saved-for-retry states
+- Permits tab with risk level, blockers, verification steps, source citations for covered markets, and local-review guidance elsewhere
 - Studio tab for backyard placement, ADU model fit, style direction, and concept generation with a deterministic fallback
 - Guided onboarding wizard for address, lot facts, and goals
 - Floating feedback control for sending short product feedback (rate-limited)

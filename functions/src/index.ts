@@ -1,20 +1,25 @@
 import { initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { buildDesignConcept } from "./lib/designConcept";
 import { saveFeedback } from "./lib/feedback";
 import { buildStarterPropertyHistory } from "./lib/propertyHistory";
-import { saveQuoteRequest } from "./lib/quoteRequests";
+import { saveQuoteRequest, deliverQuoteRequest as deliverQuoteRequestLib } from "./lib/quoteRequests";
 import { enforceRateLimit } from "./lib/rateLimit";
 import { getSeededRegulationGuide } from "./lib/regulations";
 import { writeServiceLog } from "./lib/serviceLog";
+import { getStripeOnboardingUrlHelper, checkStripeStatusHelper } from "./lib/stripeOnboarding";
 import {
   generateDesignConceptInputSchema,
   getRegulationGuideInputSchema,
   searchPropertyHistoryInputSchema,
   submitQuoteRequestInputSchema,
   submitFeedbackInputSchema,
+  getStripeOnboardingUrlInputSchema,
+  checkStripeStatusInputSchema,
+  deliverQuoteRequestInputSchema,
 } from "./schemas";
 
 initializeApp();
@@ -72,7 +77,10 @@ export const submitQuoteRequest = onCall(callableOptions, async (request) => {
   await enforceRateLimit("submitQuoteRequest", request.auth.uid, 20);
   const input = parseOrThrow(submitQuoteRequestInputSchema, request.data);
   const saved = await saveQuoteRequest({
-    ...input,
+    projectId: input.projectId,
+    contractorId: input.contractorId,
+    packetItems: input.packetItems,
+    homeownerConsent: input.homeownerConsent,
     userId: request.auth.uid,
   });
   await writeServiceLog({
@@ -96,6 +104,55 @@ export const submitFeedback = onCall(callableOptions, async (request) => {
     status: "ok",
   });
   return saved;
+});
+
+export const getStripeOnboardingUrl = onCall(callableOptions, async (request) => {
+  const input = parseOrThrow(getStripeOnboardingUrlInputSchema, request.data);
+  const userId = input.userId || request.auth?.uid;
+  if (!userId) {
+    throw new HttpsError("unauthenticated", "User UID is required.");
+  }
+
+  const url = await getStripeOnboardingUrlHelper(userId);
+
+  await writeServiceLog({
+    service: "getStripeOnboardingUrl",
+    status: "ok",
+  });
+
+  return { url };
+});
+
+export const checkStripeStatus = onCall(callableOptions, async (request) => {
+  const input = parseOrThrow(checkStripeStatusInputSchema, request.data);
+  const userId = input.userId || request.auth?.uid;
+  if (!userId) {
+    throw new HttpsError("unauthenticated", "User UID is required.");
+  }
+
+  try {
+    const status = await checkStripeStatusHelper(userId);
+    await writeServiceLog({
+      service: "checkStripeStatus",
+      status: "ok",
+    });
+    return { stripeConnectStatus: status };
+  } catch (error: any) {
+    logger.error("checkStripeStatus failed", { userId, error });
+    throw new HttpsError("not-found", error.message || "User profile not found.");
+  }
+});
+
+export const deliverQuoteRequest = onCall(callableOptions, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Firebase authentication is required.");
+  }
+
+  await enforceRateLimit("deliverQuoteRequest", request.auth.uid, 60);
+  const input = parseOrThrow(deliverQuoteRequestInputSchema, request.data);
+  const delivered = await deliverQuoteRequestLib(request.auth.uid, input.projectId, input.quoteRequestId);
+  await writeServiceLog({ service: "deliverQuoteRequest", status: "ok", projectId: input.projectId });
+  return delivered;
 });
 
 function parseOrThrow<T>(schema: { parse: (data: unknown) => T }, data: unknown): T {

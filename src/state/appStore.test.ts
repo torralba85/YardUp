@@ -41,6 +41,7 @@ describe("appStore wizard actions", () => {
     useAppStore.setState({
       activeProjectId: starterProject.id,
       projects: [starterProject],
+      quoteRequests: [],
     });
   });
 
@@ -88,5 +89,61 @@ describe("appStore wizard actions", () => {
 
     expect(useAppStore.getState().projects).toEqual([starterProject]);
     expect(mocks.upsertProject).not.toHaveBeenCalled();
+  });
+
+  it("keeps an undelivered quote packet saved and retryable", async () => {
+    mocks.submitQuoteRequest.mockResolvedValue(null);
+
+    const request = await useAppStore.getState().requestQuote(starterProject.id, "apex-adu-builders", true);
+
+    expect(request.status).toBe("saved");
+    expect(request.commercialStatus).toBe("not_eligible");
+    expect(mocks.submitQuoteRequest).toHaveBeenCalledTimes(1);
+
+    await useAppStore.getState().requestQuote(starterProject.id, "apex-adu-builders", true);
+
+    expect(mocks.submitQuoteRequest).toHaveBeenCalledTimes(2);
+    expect(useAppStore.getState().quoteRequests).toHaveLength(1);
+  });
+
+  it("keeps a server-recorded outreach submission ineligible until delivery is confirmed", async () => {
+    mocks.submitQuoteRequest.mockResolvedValue({
+      id: "quote-submitted",
+      projectId: starterProject.id,
+      contractorId: "apex-adu-builders",
+      packetItems: ["ROI model"],
+      status: "submitted",
+      createdAt: "2026-05-25T00:00:00.000Z",
+      homeownerConsentAt: "2026-05-25T00:00:00.000Z",
+      commercialStatus: "not_eligible",
+    });
+
+    const request = await useAppStore.getState().requestQuote(starterProject.id, "apex-adu-builders", true);
+
+    expect(request.status).toBe("submitted");
+    expect(request.commercialStatus).toBe("not_eligible");
+    expect(request.deliveredAt).toBeUndefined();
+
+    await useAppStore.getState().requestQuote(starterProject.id, "apex-adu-builders", true);
+    expect(mocks.submitQuoteRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("stores a delivered consented packet as commercially eligible", async () => {
+    mocks.submitQuoteRequest.mockResolvedValue({
+      id: "quote-1",
+      projectId: starterProject.id,
+      contractorId: "apex-adu-builders",
+      packetItems: ["ROI model"],
+      status: "sent",
+      createdAt: "2026-05-25T00:00:00.000Z",
+      homeownerConsentAt: "2026-05-25T00:00:00.000Z",
+      deliveredAt: "2026-05-25T00:00:00.000Z",
+      commercialStatus: "eligible_for_builder_fee",
+    });
+
+    const request = await useAppStore.getState().requestQuote(starterProject.id, "apex-adu-builders", true);
+
+    expect(request.status).toBe("sent");
+    expect(request.commercialStatus).toBe("eligible_for_builder_fee");
   });
 });

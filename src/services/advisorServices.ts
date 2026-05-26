@@ -74,19 +74,37 @@ export async function submitQuoteRequest(
   projectId: string,
   contractorId: string,
   packetItems: string[],
+  homeownerConsent: true,
 ): Promise<QuoteRequest | null> {
   const hasSession = await ensureFirebaseSession();
   if (!hasSession) {
     return null;
   }
 
-  return callCloudFunction<{ projectId: string; contractorId: string; packetItems: string[] }, QuoteRequest>(
+  return callCloudFunction<
+    { projectId: string; contractorId: string; packetItems: string[]; homeownerConsent: true },
+    QuoteRequest
+  >(
     "submitQuoteRequest",
     {
       projectId,
       contractorId,
       packetItems,
+      homeownerConsent,
     },
+  ).catch(() => null);
+}
+
+export async function deliverQuoteRequest(
+  projectId: string,
+  quoteRequestId: string,
+): Promise<QuoteRequest | null> {
+  const hasSession = await ensureFirebaseSession();
+  if (!hasSession) return null;
+
+  return callCloudFunction<{ projectId: string; quoteRequestId: string }, QuoteRequest>(
+    "deliverQuoteRequest",
+    { projectId, quoteRequestId },
   ).catch(() => null);
 }
 
@@ -146,6 +164,6 @@ function makeLocalConcept(
       "Sketch site placement against driveway and outdoor space.",
       "Ask a designer or architect to test code compliance.",
     ],
-    thumbnailPrompt: `Original ADU concept image, ${style}, ${targetSqFt} square feet, ${footprintType}, ${preferences?.constructionMethod ?? "site-built"} ADU, ${preferences?.hasSitePhoto ? "adapted to the attached backyard photo" : "California backyard"}, daylight, privacy-aware window placement, realistic architecture photography.`,
+    thumbnailPrompt: `Original ADU concept image, ${style}, ${targetSqFt} square feet, ${footprintType}, ${preferences?.constructionMethod ?? "site-built"} ADU, ${preferences?.hasSitePhoto ? "adapted to the attached backyard photo" : "residential backyard"}, daylight, privacy-aware window placement, realistic architecture photography.`,
   };
 }

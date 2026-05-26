@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const jurisdictionSchema = z.enum(["los-angeles", "san-diego", "san-jose", "oakland", "sacramento"]);
+export const jurisdictionSchema = z.enum(["los-angeles", "san-diego", "san-jose", "oakland", "sacramento", "denver", "local-review"]);
 export const designStyleIdSchema = z.enum([
   "warm_modern",
   "farmhouse",
@@ -97,6 +97,7 @@ export const submitQuoteRequestInputSchema = z.object({
   projectId: z.string().min(1).max(120),
   contractorId: z.string().min(1).max(120),
   packetItems: z.array(z.string().min(1).max(80)).min(1).max(12),
+  homeownerConsent: z.literal(true),
 });
 
 export const feedbackCategorySchema = z.enum([
@@ -124,4 +125,17 @@ export const submitFeedbackInputSchema = z.object({
       brand: z.string().max(100).optional(),
     })
     .optional(),
+});
+
+export const getStripeOnboardingUrlInputSchema = z.object({
+  userId: z.string().min(1).max(120),
+});
+
+export const checkStripeStatusInputSchema = z.object({
+  userId: z.string().min(1).max(120),
+});
+
+export const deliverQuoteRequestInputSchema = z.object({
+  projectId: z.string().min(1).max(120),
+  quoteRequestId: z.string().min(1).max(120),
 });

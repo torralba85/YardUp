@@ -6,6 +6,12 @@ The product is YardUp (customer-facing brand) operated under the legal name ADU 
 
 Do not restrict the app's framing to California unless the specific feature or data source is California-only. Use "supported markets", "local rules", and "jurisdiction" framing.
 
+## Repository Identity
+
+This checkout is the canonical YardUp mobile application repository. Its Git remote is `https://github.com/torralba85/YardUp.git`; the local folder name `ADU Advisor` and native bundle ID preserve legal and store continuity and do not indicate a separate product repository.
+
+Before using prior repo assumptions or moving work between projects, verify the active checkout with `git remote -v` and treat this repository and `origin/main` as the source of truth. Do not describe `github.com/torralba85/YardUp` as a sibling prototype unless a separate, explicit prototype repository is provided.
+
 ## Design System
 
 Always read [DESIGN.md](./DESIGN.md) before making any visual or UI decisions. All font choices, colors, spacing, hierarchy, and copy posture are defined there. DESIGN.md now includes machine-readable design tokens in its frontmatter — prefer those over re-deriving values from prose.
@@ -21,7 +27,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 - Backend: Firebase Cloud Functions under `functions/` targeting the `yardup-2026` Firebase project, region `us-central1`. Native bundle IDs remain `com.aduadvisor.app`.
 - Local persistence: `expo-sqlite` with tables for projects, inspirations, concepts, regulations, property records, and a sync queue.
 - AI: Gemini is server-side only. Mobile must never hold a Gemini key.
-- Sibling: `github.com/torralba85/YardUp` is a Next.js prototype that experiments with Gemini Vision photo analysis. It is not part of the mobile bundle and its privacy assumptions do not transfer to this app.
+- Repository: `github.com/torralba85/YardUp` is this Expo mobile product repository. Any web or Gemini Vision prototype must be identified by a separate explicit path or remote before its behavior or privacy assumptions are considered.
 
 ## Verification
 

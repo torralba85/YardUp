@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "../../src/components/Button";
 import { WizardHeader } from "../../src/components/WizardHeader";
+import { jurisdictionLabels } from "../../src/data/regulations";
 import { useActiveGuide, useActiveParcelSummary, useActiveProject } from "../../src/state/appStore";
 import { colors, radii, shadows, spacing, typography } from "../../src/theme";
 
@@ -32,9 +33,19 @@ export default function WizardStepOne() {
           <Text style={styles.cardTitle}>{project.address}</Text>
           <View style={styles.badge}>
             <Feather name="map-pin" size={13} color={colors.accent} />
-            <Text style={styles.badgeText}>{project.jurisdiction.replace(/-/g, " ")}</Text>
+            <Text style={styles.badgeText}>{jurisdictionLabels[project.jurisdiction]}</Text>
           </View>
         </View>
+
+        {project.jurisdiction === "local-review" ? (
+          <View style={[styles.card, styles.verificationCard]}>
+            <Text style={styles.label}>Market coverage</Text>
+            <Text style={styles.cardTitle}>Local rules verification needed</Text>
+            <Text style={styles.body}>
+              YardUp can model earning potential here, but sourced parcel and permit coverage is not available for this jurisdiction yet.
+            </Text>
+          </View>
+        ) : null}
 
         {parcel ? (
           <View style={styles.card}>
@@ -134,6 +145,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.md,
     ...shadows.soft,
+  },
+  verificationCard: {
+    backgroundColor: colors.permitSoft,
+    borderColor: colors.permit,
   },
   label: {
     ...typography.label,

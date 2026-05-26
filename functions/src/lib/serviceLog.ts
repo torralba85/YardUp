@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
-type ServiceName = "getRegulationGuide" | "generateDesignConcept" | "searchPropertyHistory" | "submitQuoteRequest" | "submitFeedback";
+type ServiceName = "getRegulationGuide" | "generateDesignConcept" | "searchPropertyHistory" | "submitQuoteRequest" | "deliverQuoteRequest" | "submitFeedback" | "getStripeOnboardingUrl" | "checkStripeStatus";
 type ServiceStatus = "ok" | "fallback" | "error";
 
 export interface ServiceLogEntry {

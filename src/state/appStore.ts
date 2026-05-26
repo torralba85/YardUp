@@ -66,7 +66,8 @@ interface AppState {
   ) => Promise<void>;
   saveWizardStyle: (projectId: string, styleId: DesignStyleId) => Promise<void>;
   saveInspiration: (projectId: string, inspirationId: string) => Promise<void>;
-  requestQuote: (projectId: string, contractorId: string) => Promise<QuoteRequest>;
+  requestQuote: (projectId: string, contractorId: string, homeownerConsent: true) => Promise<QuoteRequest>;
+  deliverQuote: (projectId: string, contractorId: string) => Promise<QuoteRequest>;
   createConcept: (
     projectId: string,
     inspirationId?: string,
@@ -247,30 +248,64 @@ export const useAppStore = create<AppState>((set, get) => ({
     await persist(() => upsertSavedItem(item));
   },
 
-  requestQuote: async (projectId, contractorId) => {
+  requestQuote: async (projectId, contractorId, homeownerConsent) => {
     const existing = get().quoteRequests.find(
       (request) => request.projectId === projectId && request.contractorId === contractorId,
     );
 
-    if (existing) {
+    if (existing && existing.status !== "saved") {
       return existing;
     }
 
     const now = new Date().toISOString();
     const packetItems = ["ROI model", "Lot summary", "Design concept", "Permit notes"];
-    const remote = await submitQuoteRequest(projectId, contractorId, packetItems);
+    const remote = await submitQuoteRequest(projectId, contractorId, packetItems, homeownerConsent);
     const request: QuoteRequest = remote ?? {
       id: `quote-${projectId}-${contractorId}`,
       projectId,
       contractorId,
-      status: "sent",
+      status: "submitted",
       packetItems,
-      createdAt: now,
+      createdAt: existing?.createdAt ?? now,
+      homeownerConsentAt: existing?.homeownerConsentAt ?? now,
+      commercialStatus: "not_eligible",
     };
 
-    set((state) => ({ quoteRequests: [request, ...state.quoteRequests] }));
+    set((state) => ({
+      quoteRequests: [
+        request,
+        ...state.quoteRequests.filter(
+          (item) => item.projectId !== projectId || item.contractorId !== contractorId,
+        ),
+      ],
+    }));
     await persist(() => upsertQuoteRequest(request));
     return request;
+  },
+
+  deliverQuote: async (projectId, contractorId) => {
+    const existing = get().quoteRequests.find(
+      (request) => request.projectId === projectId && request.contractorId === contractorId,
+    );
+    if (!existing) {
+      throw new Error(`Quote request for project ${projectId} and contractor ${contractorId} not found.`);
+    }
+
+    const { deliverQuoteRequest: callDeliverRemote } = await import("../services/advisorServices");
+    const { deliverQuoteRequest: localDeliver } = await import("../domain/marketplace");
+
+    const quoteRequestId = `quote-${projectId}-${contractorId}`;
+    const remote = await callDeliverRemote(projectId, quoteRequestId).catch(() => null);
+    const updated = remote ?? localDeliver(existing);
+
+    set((state) => ({
+      quoteRequests: state.quoteRequests.map((item) =>
+        item.projectId === projectId && item.contractorId === contractorId ? updated : item
+      ),
+    }));
+
+    await persist(() => upsertQuoteRequest(updated));
+    return updated;
   },
 
   createConcept: async (projectId, inspirationId, preferences) => {

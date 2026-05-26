@@ -27,6 +27,9 @@ interface FirebaseClients {
 let clients: FirebaseClients | null = null;
 
 export function getFirebaseClients(): FirebaseClients | null {
+  if (process.env.EXPO_PUBLIC_USE_MOCK_SERVICES === "true") {
+    return null;
+  }
   const config = getConfig();
   if (!config.apiKey || !config.projectId || !config.appId) {
     return null;

@@ -69,7 +69,7 @@ Callable functions exposed by the backend:
 - `getRegulationGuide({ jurisdiction })`
 - `generateDesignConcept({ project, inspiration, preferences? })`
 - `searchPropertyHistory({ address, projectId })`
-- `submitQuoteRequest({ projectId, contractorId, packetItems })`
+- `submitQuoteRequest({ projectId, contractorId, packetItems, homeownerConsent: true })`
 - `submitFeedback({ message, surface, projectId? })` — rate-limited per anonymous user
 
 See [docs/api/api-design.md](./docs/api/api-design.md) for the full callable contract, payload shapes, and the future REST surface.
@@ -121,6 +121,8 @@ Production builds require these EAS environment variables:
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
 
+Addresses outside sourced jurisdiction coverage enter a `local-review` state: earning potential remains available, while parcel facts, permit guidance, and builder matches require local verification. A recorded builder outreach submission is not delivery; a packet is commercially eligible only after the homeowner consents and a future verified delivery event is recorded. Local retries and pending submissions are not chargeable events.
+
 ## Store Review Materials
 
 - Privacy policy: [docs/legal/privacy-policy.md](./docs/legal/privacy-policy.md)
@@ -134,9 +136,11 @@ Brand and marketing asset briefs that follow the Quiet Ascent identity:
 - [docs/marketing/marketing-kit.md](./docs/marketing/marketing-kit.md)
 - [docs/marketing/web-assets.md](./docs/marketing/web-assets.md)
 
-## Related Repositories
+## Repository Identity
 
-- `github.com/torralba85/YardUp` — Next.js web prototype that experiments with property-photo + address upload backed by Gemini Vision for ADU mockup generation. Outputs from that prototype feed the mobile product's Studio surface only after backend mediation and the privacy rules above.
+This checkout is the YardUp mobile product repository: `https://github.com/torralba85/YardUp.git`. The local directory name `ADU Advisor` and native bundle identifier `com.aduadvisor.app` preserve legal and store-listing continuity; they do not refer to a separate app repository.
+
+Use this checkout and `origin/main` as the source of truth for product, design, release, and backend work. Treat a prototype as a separate system only when it is supplied with a distinct path or remote, and do not transfer its privacy or deployment assumptions into the mobile app without verification.
 
 ## Documentation Index
 
