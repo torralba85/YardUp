@@ -50,6 +50,10 @@ firestore-debug.log
 .env*.local
 .env.local.temp
 
+# next.js build output (legacy — project migrated to Expo)
+.next/
+out/
+
 # typescript
 *.tsbuildinfo
 functions/lib/
