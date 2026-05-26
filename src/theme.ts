@@ -66,6 +66,10 @@ export const colors = {
 
   // Grid wash used behind sketches; kept as a single hint of the brand grid.
   grid: "rgba(31,157,99,0.1)",
+
+  // Capital Brass — premium value marker for ROI chips, valuation badges, milestone states.
+  // Use sparingly; it signals realized wealth, not generic emphasis.
+  capitalBrass: "#A47A3B",
 };
 
 export const spacing = {
@@ -111,31 +115,31 @@ export const shadows = {
 };
 
 /**
- * Font families. expo-google-fonts loads Hanken Grotesk, Fraunces, and IBM
+ * Font families. expo-google-fonts loads Inter Tight, Fraunces, and IBM
  * Plex Mono at app boot (see app/_layout.tsx). When the loader is still
  * running, the fallback chain renders the platform default so the UI doesn't
  * flash unstyled.
  */
 // expo-google-fonts registers @font-face with the suffixed weight name on
-// every platform (e.g. "HankenGrotesk_400Regular"). Web fallback chains can
+// every platform (e.g. "InterTight_400Regular"). Web fallback chains can
 // append system fonts after the loaded name so the page doesn't flash blank
 // if a face hasn't fetched yet.
 const sansFamily = Platform.select({
-  default: "HankenGrotesk_400Regular, Aptos, Segoe UI, sans-serif",
-  ios: "HankenGrotesk_400Regular",
-  android: "HankenGrotesk_400Regular",
+  default: "InterTight_400Regular, Aptos, Segoe UI, sans-serif",
+  ios: "InterTight_400Regular",
+  android: "InterTight_400Regular",
 }) as string;
 
 const sansBold = Platform.select({
-  default: "HankenGrotesk_700Bold, Aptos, Segoe UI, sans-serif",
-  ios: "HankenGrotesk_700Bold",
-  android: "HankenGrotesk_700Bold",
+  default: "InterTight_700Bold, Aptos, Segoe UI, sans-serif",
+  ios: "InterTight_700Bold",
+  android: "InterTight_700Bold",
 }) as string;
 
 const sansExtra = Platform.select({
-  default: "HankenGrotesk_800ExtraBold, Aptos, Segoe UI, sans-serif",
-  ios: "HankenGrotesk_800ExtraBold",
-  android: "HankenGrotesk_800ExtraBold",
+  default: "InterTight_800ExtraBold, Aptos, Segoe UI, sans-serif",
+  ios: "InterTight_800ExtraBold",
+  android: "InterTight_800ExtraBold",
 }) as string;
 
 const serifFamily = Platform.select({
@@ -181,7 +185,7 @@ export const typography = {
     fontWeight: "600" as const,
     letterSpacing: 0,
   },
-  // Screen title (DESIGN.md: 30/36, Hanken 800)
+  // Screen title (DESIGN.md: 30/36, Inter Tight 800)
   title: {
     fontFamily: sansExtra,
     fontSize: 30,
@@ -189,7 +193,7 @@ export const typography = {
     fontWeight: "800" as const,
     letterSpacing: 0,
   },
-  // Section title (DESIGN.md: 20/26, Hanken 800)
+  // Section title (DESIGN.md: 20/26, Inter Tight 800)
   h1: {
     fontFamily: sansExtra,
     fontSize: 25,
@@ -197,7 +201,7 @@ export const typography = {
     fontWeight: "800" as const,
     letterSpacing: 0,
   },
-  // Card title (DESIGN.md: 16/21, Hanken 700)
+  // Card title (DESIGN.md: 16/21, Inter Tight 700)
   h2: {
     fontFamily: sansBold,
     fontSize: 18,
@@ -205,7 +209,7 @@ export const typography = {
     fontWeight: "700" as const,
     letterSpacing: 0,
   },
-  // Body (DESIGN.md: 14/21, Hanken 400)
+  // Body (DESIGN.md: 14/21, Inter Tight 400)
   body: {
     fontFamily: sansFamily,
     fontSize: 14,
@@ -213,7 +217,7 @@ export const typography = {
     fontWeight: "400" as const,
     letterSpacing: 0,
   },
-  // Label (DESIGN.md: 11/16, Hanken 700)
+  // Label (DESIGN.md: 11/16, Inter Tight 700)
   label: {
     fontFamily: sansBold,
     fontSize: 11,

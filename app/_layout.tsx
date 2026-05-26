@@ -5,11 +5,11 @@ import {
   useFonts as useFraunces,
 } from "@expo-google-fonts/fraunces";
 import {
-  HankenGrotesk_400Regular,
-  HankenGrotesk_700Bold,
-  HankenGrotesk_800ExtraBold,
-  useFonts as useHanken,
-} from "@expo-google-fonts/hanken-grotesk";
+  InterTight_400Regular,
+  InterTight_700Bold,
+  InterTight_800ExtraBold,
+  useFonts as useInterTight,
+} from "@expo-google-fonts/inter-tight";
 import {
   IBMPlexMono_500Medium,
   IBMPlexMono_600SemiBold,
@@ -34,10 +34,10 @@ export default function RootLayout() {
   const initialize = useAppStore((state) => state.initialize);
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
 
-  const [hankenLoaded, hankenError] = useHanken({
-    HankenGrotesk_400Regular,
-    HankenGrotesk_700Bold,
-    HankenGrotesk_800ExtraBold,
+  const [interTightLoaded, interTightError] = useInterTight({
+    InterTight_400Regular,
+    InterTight_700Bold,
+    InterTight_800ExtraBold,
   });
   const [fraunesLoaded, fraunesError] = useFraunces({ Fraunces_600SemiBold });
   const [plexLoaded, plexError] = useIBMPlex({ IBMPlexMono_500Medium, IBMPlexMono_600SemiBold });
@@ -45,7 +45,7 @@ export default function RootLayout() {
   // Fonts are ready when loaded — or we move on if a load failed so the app
   // never gets stuck on the splash. Native falls back to platform sans/serif.
   const fontsReady =
-    (hankenLoaded || Boolean(hankenError)) &&
+    (interTightLoaded || Boolean(interTightError)) &&
     (fraunesLoaded || Boolean(fraunesError)) &&
     (plexLoaded || Boolean(plexError));
   const ready = initialized && fontsReady;
