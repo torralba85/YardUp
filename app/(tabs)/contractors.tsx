@@ -26,7 +26,7 @@ const PACKET_ITEMS: { label: string; key: "estimate" | "lot" | "concept" | "perm
 ];
 
 export default function ContractorsScreen() {
-  const { currentUser, currentRole } = useAuthStore();
+  const { currentUser, currentRole, builderId } = useAuthStore();
   const [stripeStatus, setStripeStatus] = useState<"idle" | "pending" | "active">("idle");
   const [loadingStripe, setLoadingStripe] = useState(false);
 
@@ -44,9 +44,14 @@ export default function ContractorsScreen() {
     if (!currentUser) return;
     setLoadingStripe(true);
     try {
+      // stripeService is a pure data fetcher — it returns the URL and the
+      // caller (this component) is responsible for opening it. This keeps
+      // the service composable and testable, while still actually routing
+      // the user into Stripe's Express Connect flow.
       const url = await getStripeOnboardingUrl(currentUser.uid);
       if (url) {
         setStripeStatus("pending");
+        await Linking.openURL(url);
       }
     } catch (err) {
       console.error("Error starting Stripe onboarding:", err);
@@ -78,21 +83,18 @@ export default function ContractorsScreen() {
   const deliverQuote = useAppStore((state) => state.deliverQuote);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
-  // Match current user to builder profile if they are a builder
+  // Resolve the builder profile from the server-issued builderId on
+  // userProfiles/{uid}. Replaces the previous email-substring matching,
+  // which could surface the wrong dashboard whenever an email happened to
+  // contain a keyword like "state" or "studio". If builderId is unset or
+  // points at an unknown contractor, return undefined and let
+  // BuilderDashboard render its "profile not matched" empty state — never
+  // fall back to contractors[0], which would silently show one builder's
+  // pipeline to another.
   const builderProfile = useMemo(() => {
-    if (currentRole !== "builder" || !currentUser?.email) return undefined;
-    const email = currentUser.email.toLowerCase();
-    if (email.includes("apex")) {
-      return contractors.find((c) => c.id === "apex-adu-builders");
-    }
-    if (email.includes("golden") || email.includes("state")) {
-      return contractors.find((c) => c.id === "golden-state-modular");
-    }
-    if (email.includes("eco") || email.includes("studio")) {
-      return contractors.find((c) => c.id === "ecostudio-construction");
-    }
-    return contractors[0]; // fallback
-  }, [currentRole, currentUser, contractors]);
+    if (currentRole !== "builder" || !builderId) return undefined;
+    return contractors.find((c) => c.id === builderId);
+  }, [currentRole, builderId, contractors]);
 
 
   const projectRequests = useMemo(
