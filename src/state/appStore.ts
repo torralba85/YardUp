@@ -22,7 +22,7 @@ import type {
   QuoteRequest,
   RegulationGuide,
 } from "../domain/types";
-import { generateDesignConcept, getRegulationGuide, searchPropertyHistory, submitQuoteRequest } from "../services/advisorServices";
+import { deliverQuoteRequest as callDeliverRemote, generateDesignConcept, getRegulationGuide, searchPropertyHistory, submitQuoteRequest } from "../services/advisorServices";
 import {
   initializeDatabase,
   loadContractorProfiles,
@@ -260,11 +260,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     const now = new Date().toISOString();
     const packetItems = ["ROI model", "Lot summary", "Design concept", "Permit notes"];
     const remote = await submitQuoteRequest(projectId, contractorId, packetItems, homeownerConsent);
+    // If the remote call failed (remote === null), keep the local record as
+    // "saved" so the next requestQuote attempt is allowed to retry (the early
+    // return above only short-circuits on a status that is NOT "saved").
+    // Storing "submitted" here would lie about server state AND block retries.
     const request: QuoteRequest = remote ?? {
       id: `quote-${projectId}-${contractorId}`,
       projectId,
       contractorId,
-      status: "submitted",
+      status: "saved",
       packetItems,
       createdAt: existing?.createdAt ?? now,
       homeownerConsentAt: existing?.homeownerConsentAt ?? now,
@@ -291,12 +295,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw new Error(`Quote request for project ${projectId} and contractor ${contractorId} not found.`);
     }
 
-    const { deliverQuoteRequest: callDeliverRemote } = await import("../services/advisorServices");
-    const { deliverQuoteRequest: localDeliver } = await import("../domain/marketplace");
-
     const quoteRequestId = `quote-${projectId}-${contractorId}`;
-    const remote = await callDeliverRemote(projectId, quoteRequestId).catch(() => null);
-    const updated = remote ?? localDeliver(existing);
+
+    // Delivery flips billing state ("sent" + introductionFee + commercialStatus).
+    // We never fall back to localDeliver: it unconditionally sets
+    // commercialStatus: "eligible_for_builder_fee", which would mint a billable
+    // record locally without server authorization. If the Cloud Function rejects
+    // (auth failure, missing builderId, already delivered), the error propagates
+    // and the UI shows an alert. If there is no Firebase session (mock mode),
+    // the service returns null and we surface an explicit error rather than
+    // silently promoting the local record.
+    const remote = await callDeliverRemote(projectId, quoteRequestId);
+    if (!remote) {
+      throw new Error("Delivery confirmation requires a signed-in Firebase session.");
+    }
+    const updated = remote;
 
     set((state) => ({
       quoteRequests: state.quoteRequests.map((item) =>

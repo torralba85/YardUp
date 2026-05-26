@@ -107,13 +107,16 @@ export const submitFeedback = onCall(callableOptions, async (request) => {
 });
 
 export const getStripeOnboardingUrl = onCall(callableOptions, async (request) => {
-  const input = parseOrThrow(getStripeOnboardingUrlInputSchema, request.data);
-  const userId = input.userId || request.auth?.uid;
-  if (!userId) {
-    throw new HttpsError("unauthenticated", "User UID is required.");
+  // Lock to the authenticated caller — no client-supplied userId, so a caller
+  // cannot start onboarding (and flip Stripe state) for someone else's account.
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Firebase authentication is required.");
   }
 
-  const url = await getStripeOnboardingUrlHelper(userId);
+  parseOrThrow(getStripeOnboardingUrlInputSchema, request.data);
+  await enforceRateLimit("getStripeOnboardingUrl", request.auth.uid, 20);
+
+  const url = await getStripeOnboardingUrlHelper(request.auth.uid);
 
   await writeServiceLog({
     service: "getStripeOnboardingUrl",
@@ -124,21 +127,22 @@ export const getStripeOnboardingUrl = onCall(callableOptions, async (request) =>
 });
 
 export const checkStripeStatus = onCall(callableOptions, async (request) => {
-  const input = parseOrThrow(checkStripeStatusInputSchema, request.data);
-  const userId = input.userId || request.auth?.uid;
-  if (!userId) {
-    throw new HttpsError("unauthenticated", "User UID is required.");
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Firebase authentication is required.");
   }
 
+  parseOrThrow(checkStripeStatusInputSchema, request.data);
+  await enforceRateLimit("checkStripeStatus", request.auth.uid, 60);
+
   try {
-    const status = await checkStripeStatusHelper(userId);
+    const status = await checkStripeStatusHelper(request.auth.uid);
     await writeServiceLog({
       service: "checkStripeStatus",
       status: "ok",
     });
     return { stripeConnectStatus: status };
   } catch (error: any) {
-    logger.error("checkStripeStatus failed", { userId, error });
+    logger.error("checkStripeStatus failed", { uid: request.auth.uid, error });
     throw new HttpsError("not-found", error.message || "User profile not found.");
   }
 });
@@ -150,9 +154,32 @@ export const deliverQuoteRequest = onCall(callableOptions, async (request) => {
 
   await enforceRateLimit("deliverQuoteRequest", request.auth.uid, 60);
   const input = parseOrThrow(deliverQuoteRequestInputSchema, request.data);
-  const delivered = await deliverQuoteRequestLib(request.auth.uid, input.projectId, input.quoteRequestId);
-  await writeServiceLog({ service: "deliverQuoteRequest", status: "ok", projectId: input.projectId });
-  return delivered;
+
+  // Require a builder role + a resolved builderId on the caller's userProfile.
+  // Without this, a homeowner could call deliverQuoteRequest on their own quote
+  // and flip commercialStatus to billable without any independent verification.
+  const profileSnap = await getFirestore().doc(`userProfiles/${request.auth.uid}`).get();
+  const profile = profileSnap.data();
+  if (!profile || profile.role !== "builder" || !profile.builderId) {
+    throw new HttpsError(
+      "permission-denied",
+      "Only an authenticated builder with a linked builder profile may confirm delivery.",
+    );
+  }
+
+  try {
+    const delivered = await deliverQuoteRequestLib(
+      request.auth.uid,
+      profile.builderId,
+      input.projectId,
+      input.quoteRequestId,
+    );
+    await writeServiceLog({ service: "deliverQuoteRequest", status: "ok", projectId: input.projectId });
+    return delivered;
+  } catch (error: any) {
+    logger.warn("deliverQuoteRequest failed", { uid: request.auth.uid, error: error?.message });
+    throw new HttpsError("permission-denied", error?.message || "Delivery confirmation rejected.");
+  }
 });
 
 function parseOrThrow<T>(schema: { parse: (data: unknown) => T }, data: unknown): T {

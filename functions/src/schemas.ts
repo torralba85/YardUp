@@ -127,13 +127,11 @@ export const submitFeedbackInputSchema = z.object({
     .optional(),
 });
 
-export const getStripeOnboardingUrlInputSchema = z.object({
-  userId: z.string().min(1).max(120),
-});
+// No client-supplied userId — the callable derives it from request.auth.uid
+// so a caller cannot start onboarding or read Stripe state for another account.
+export const getStripeOnboardingUrlInputSchema = z.object({}).strict();
 
-export const checkStripeStatusInputSchema = z.object({
-  userId: z.string().min(1).max(120),
-});
+export const checkStripeStatusInputSchema = z.object({}).strict();
 
 export const deliverQuoteRequestInputSchema = z.object({
   projectId: z.string().min(1).max(120),

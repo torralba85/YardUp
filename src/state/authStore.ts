@@ -29,6 +29,12 @@ export type AuthUser = User | MockUser;
 interface AuthState {
   currentUser: AuthUser | null;
   currentRole: UserRole | null;
+  /**
+   * For users with role === "builder", the contractor profile id their account
+   * is linked to (e.g. "apex-adu-builders"). Used to look up the BuilderDashboard
+   * profile without fragile email-substring matching. Null until set.
+   */
+  builderId: string | null;
   authInitialized: boolean;
   isAuthModalOpen: boolean;
   authModalTab: "login" | "register" | "profile";
@@ -46,6 +52,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   currentUser: null,
   currentRole: null,
+  builderId: null,
   authInitialized: false,
   isAuthModalOpen: false,
   authModalTab: "login",
@@ -62,6 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAnonymous: true,
         },
         currentRole: null,
+        builderId: null,
         authInitialized: true,
       });
       return () => {};
@@ -69,11 +77,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const unsubscribe = onAuthStateChanged(clients.auth, async (user) => {
       if (!user || user.isAnonymous) {
-        set({ currentUser: user, currentRole: null, authInitialized: true });
+        set({ currentUser: user, currentRole: null, builderId: null, authInitialized: true });
         return;
       }
-      const role = await loadUserRole(user.uid);
-      set({ currentUser: user, currentRole: role, authInitialized: true });
+      const profile = await loadUserProfile(user.uid);
+      set({
+        currentUser: user,
+        currentRole: profile.role,
+        builderId: profile.builderId,
+        authInitialized: true,
+      });
     });
 
     return unsubscribe;
@@ -158,11 +171,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: null,
           isAnonymous: true,
         };
-        set({ currentUser: user, currentRole: null, isAuthModalOpen: false });
+        set({ currentUser: user, currentRole: null, builderId: null, isAuthModalOpen: false });
       } else {
         await firebaseSignOut(clients.auth);
         await signInAnonymously(clients.auth);
-        set({ currentRole: null, isAuthModalOpen: false });
+        set({ currentRole: null, builderId: null, isAuthModalOpen: false });
       }
     } catch (err: any) {
       set({ error: err?.message ?? "Sign out failed" });
@@ -174,14 +187,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearError: () => set({ error: null }),
 }));
 
-async function loadUserRole(uid: string): Promise<UserRole | null> {
+async function loadUserProfile(uid: string): Promise<{ role: UserRole | null; builderId: string | null }> {
   const clients = getFirebaseClients();
-  if (!clients) return null;
+  if (!clients) return { role: null, builderId: null };
   try {
     const snap = await getDoc(doc(clients.db, "userProfiles", uid));
-    const data = snap.data() as { role?: UserRole } | undefined;
-    return data?.role ?? null;
+    const data = snap.data() as { role?: UserRole; builderId?: string } | undefined;
+    return {
+      role: data?.role ?? null,
+      builderId: data?.builderId ?? null,
+    };
   } catch {
-    return null;
+    return { role: null, builderId: null };
   }
 }

@@ -1,7 +1,15 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 
-export type LimitedService = "getRegulationGuide" | "generateDesignConcept" | "searchPropertyHistory" | "submitQuoteRequest" | "deliverQuoteRequest" | "submitFeedback";
+export type LimitedService =
+  | "getRegulationGuide"
+  | "generateDesignConcept"
+  | "searchPropertyHistory"
+  | "submitQuoteRequest"
+  | "deliverQuoteRequest"
+  | "submitFeedback"
+  | "getStripeOnboardingUrl"
+  | "checkStripeStatus";
 
 export function buildRateLimitKey(service: LimitedService, uid?: string): string {
   return uid ? `${service}:user:${uid}` : `${service}:anonymous`;

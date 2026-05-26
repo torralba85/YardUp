@@ -1,6 +1,5 @@
-import { Linking } from "react-native";
 import { callCloudFunction, getFirebaseClients } from "./firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 
 export interface OnboardingUrlResponse {
   url: string;
@@ -11,53 +10,43 @@ export interface StripeStatusResponse {
 }
 
 /**
- * Calls the Cloud Function to get a mock Stripe Express Connect onboarding link,
- * records pending status in Firestore, and opens the link using Linking.openURL.
+ * Fetches a mock Stripe Express Connect onboarding URL. The backend derives
+ * the user from request.auth.uid, so no userId is sent from the client. The
+ * caller is responsible for opening the URL (e.g., via Linking.openURL) so
+ * this service stays a pure data fetcher and is easy to test/compose.
  */
 export async function getStripeOnboardingUrl(userId: string): Promise<string | null> {
   const clients = getFirebaseClients();
   if (!clients) {
-    // Local mock environment
-    const mockUrl = `https://connect.stripe.com/express/oauth/authorize?state=${userId}`;
-    const supported = await Linking.canOpenURL(mockUrl);
-    if (supported) {
-      await Linking.openURL(mockUrl);
-    }
-    return mockUrl;
+    return `https://connect.stripe.com/express/oauth/authorize?state=${userId}`;
   }
 
   try {
-    const res = await callCloudFunction<{ userId: string }, OnboardingUrlResponse>(
+    const res = await callCloudFunction<Record<string, never>, OnboardingUrlResponse>(
       "getStripeOnboardingUrl",
-      { userId }
+      {},
     );
-    if (res?.url) {
-      const supported = await Linking.canOpenURL(res.url);
-      if (supported) {
-        await Linking.openURL(res.url);
-      }
-      return res.url;
-    }
+    return res?.url ?? null;
   } catch (error) {
     console.error("Failed to start Stripe onboarding:", error);
+    return null;
   }
-  return null;
 }
 
 /**
  * Calls the Cloud Function to verify/update the builder's Stripe status.
+ * The backend derives the user from request.auth.uid.
  */
-export async function checkStripeStatus(userId: string): Promise<"idle" | "pending" | "active"> {
+export async function checkStripeStatus(_userId: string): Promise<"idle" | "pending" | "active"> {
   const clients = getFirebaseClients();
   if (!clients) {
-    // Local mock environment
-    return "active"; // Auto-transition mock user to active
+    return "active"; // Mock environment auto-transitions to active
   }
 
   try {
-    const res = await callCloudFunction<{ userId: string }, StripeStatusResponse>(
+    const res = await callCloudFunction<Record<string, never>, StripeStatusResponse>(
       "checkStripeStatus",
-      { userId }
+      {},
     );
     return res?.stripeConnectStatus ?? "idle";
   } catch (error) {

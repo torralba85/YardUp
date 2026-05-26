@@ -95,6 +95,17 @@ export async function submitQuoteRequest(
   ).catch(() => null);
 }
 
+/**
+ * Delivery is a billable state transition. Distinguish three outcomes so
+ * the caller can decide what to persist:
+ *   - `null` → no Firebase session (mock / anonymous). Caller may fall
+ *     back to a local-only "delivered" record for development.
+ *   - resolved `QuoteRequest` → backend accepted the transition.
+ *   - thrown error → backend rejected (permission-denied, not-found,
+ *     rate-limited, validation). Caller MUST NOT silently mark the
+ *     quote as delivered — that would create a client/server mismatch
+ *     and could show a builder a billable fee the server never accepted.
+ */
 export async function deliverQuoteRequest(
   projectId: string,
   quoteRequestId: string,
@@ -102,10 +113,13 @@ export async function deliverQuoteRequest(
   const hasSession = await ensureFirebaseSession();
   if (!hasSession) return null;
 
+  // No .catch here on purpose — see contract above. Backend errors must
+  // propagate so the store does not stamp a successful delivery on a
+  // failed remote call.
   return callCloudFunction<{ projectId: string; quoteRequestId: string }, QuoteRequest>(
     "deliverQuoteRequest",
     { projectId, quoteRequestId },
-  ).catch(() => null);
+  );
 }
 
 export async function submitFeedback(input: FeedbackInput): Promise<FeedbackRecord | null> {

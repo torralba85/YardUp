@@ -38,6 +38,7 @@ export async function saveQuoteRequest(payload: QuoteRequestPayload) {
     contractorId: payload.contractorId,
     packetItems: payload.packetItems,
     homeownerConsent: payload.homeownerConsent,
+    homeownerUserId: payload.userId,
     status: "submitted" as const,
     homeownerConsentAt: now,
     commercialStatus: "not_eligible" as const,
@@ -57,18 +58,38 @@ export async function saveQuoteRequest(payload: QuoteRequestPayload) {
   };
 }
 
-export async function deliverQuoteRequest(userId: string, projectId: string, quoteRequestId: string) {
+/**
+ * Look up a quote request by id without needing the homeowner's UID, so the
+ * builder caller never has to know (or be able to spoof) another user's UID.
+ * Uses a collectionGroup query against the doc's `id` field.
+ */
+export async function deliverQuoteRequest(
+  callerUid: string,
+  callerBuilderId: string,
+  projectId: string,
+  quoteRequestId: string,
+) {
   const firestore = getFirestore();
-  const docRef = firestore.doc(`users/${userId}/projects/${projectId}/quoteRequests/${quoteRequestId}`);
-  const snap = await docRef.get();
-  
-  if (!snap.exists) {
+
+  const query = await firestore
+    .collectionGroup("quoteRequests")
+    .where("id", "==", quoteRequestId)
+    .where("projectId", "==", projectId)
+    .limit(1)
+    .get();
+
+  if (query.empty) {
     throw new Error(`Quote request ${quoteRequestId} not found.`);
   }
-  
-  const data = snap.data();
+
+  const docSnap = query.docs[0];
+  const data = docSnap.data();
   if (!data) {
     throw new Error(`Quote request ${quoteRequestId} contains no data.`);
+  }
+
+  if (data.contractorId !== callerBuilderId) {
+    throw new Error("Caller is not the builder this quote is addressed to.");
   }
 
   const tier = resolveContractorTier(data.contractorId);
@@ -79,13 +100,14 @@ export async function deliverQuoteRequest(userId: string, projectId: string, quo
     ...data,
     status: "sent" as const,
     deliveredAt: now,
+    deliveredByBuilderUid: callerUid,
     commercialStatus: "eligible_for_builder_fee" as const,
     introductionFee: fee,
     billingTier: tier,
     updatedAt: now,
   };
 
-  await docRef.set(document, { merge: true });
+  await docSnap.ref.set(document, { merge: true });
 
   return {
     ...document,
