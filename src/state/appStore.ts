@@ -22,7 +22,7 @@ import type {
   QuoteRequest,
   RegulationGuide,
 } from "../domain/types";
-import { generateDesignConcept, getRegulationGuide, searchPropertyHistory, submitQuoteRequest } from "../services/advisorServices";
+import { deliverQuoteRequest as callDeliverRemote, generateDesignConcept, getRegulationGuide, searchPropertyHistory, submitQuoteRequest } from "../services/advisorServices";
 import {
   initializeDatabase,
   loadContractorProfiles,
@@ -295,19 +295,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw new Error(`Quote request for project ${projectId} and contractor ${contractorId} not found.`);
     }
 
-    const { deliverQuoteRequest: callDeliverRemote } = await import("../services/advisorServices");
-    const { deliverQuoteRequest: localDeliver } = await import("../domain/marketplace");
-
     const quoteRequestId = `quote-${projectId}-${contractorId}`;
 
     // Delivery flips billing state ("sent" + introductionFee + commercialStatus).
-    // The service returns `null` ONLY when no Firebase session exists (mock /
-    // anonymous mode); a thrown error means the backend explicitly rejected
-    // the transition and we must NOT mark the quote as delivered. Letting
-    // the error propagate keeps the local record at "submitted" so the
-    // builder dashboard cannot show a billable fee the server never accepted.
+    // We never fall back to localDeliver: it unconditionally sets
+    // commercialStatus: "eligible_for_builder_fee", which would mint a billable
+    // record locally without server authorization. If the Cloud Function rejects
+    // (auth failure, missing builderId, already delivered), the error propagates
+    // and the UI shows an alert. If there is no Firebase session (mock mode),
+    // the service returns null and we surface an explicit error rather than
+    // silently promoting the local record.
     const remote = await callDeliverRemote(projectId, quoteRequestId);
-    const updated = remote ?? localDeliver(existing);
+    if (!remote) {
+      throw new Error("Delivery confirmation requires a signed-in Firebase session.");
+    }
+    const updated = remote;
 
     set((state) => ({
       quoteRequests: state.quoteRequests.map((item) =>

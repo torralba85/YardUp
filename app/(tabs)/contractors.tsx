@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import { Alert, Linking, Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
 
 import { Button } from "../../src/components/Button";
 import { Screen } from "../../src/components/Screen";
@@ -502,8 +502,8 @@ function BuilderDashboard({
     setVerifyingId(projectId + "-" + contractorId);
     try {
       await onVerifyDelivery(projectId, contractorId);
-    } catch (err) {
-      console.error("Failed to verify delivery:", err);
+    } catch (err: any) {
+      Alert.alert("Delivery failed", err?.message ?? "Could not confirm delivery. Please try again.");
     } finally {
       setVerifyingId(null);
     }
