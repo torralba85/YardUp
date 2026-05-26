@@ -11,8 +11,14 @@ const firebaseDefaults = {
   androidAppId: "1:166268911022:android:4b0f68fd6bf9e918305c3f",
 };
 
+const firebaseNativeFiles = {
+  ios: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./firebase/GoogleService-Info.plist",
+  android: process.env.GOOGLE_SERVICES_JSON ?? "./firebase/google-services.json",
+};
+
 function env(name: string, fallback: string): string {
-  return process.env[name] ?? fallback;
+  const value = process.env[name]?.trim();
+  return value || fallback;
 }
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -35,7 +41,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     bundleIdentifier: "com.aduadvisor.app",
-    googleServicesFile: "./firebase/GoogleService-Info.plist",
+    googleServicesFile: firebaseNativeFiles.ios,
     buildNumber: "1",
     supportsTablet: true,
     infoPlist: {
@@ -44,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.aduadvisor.app",
-    googleServicesFile: "./firebase/google-services.json",
+    googleServicesFile: firebaseNativeFiles.android,
     versionCode: 1,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",

@@ -13,6 +13,7 @@
     "backend:build": "npm --prefix functions run build",
     "backend:test": "npm --prefix functions test",
     "backend:typecheck": "npm --prefix functions run typecheck",
+    "firebase:check": "node scripts/firebase-config-check.mjs",
     "release:check": "node scripts/release-check.mjs"
   },
   "dependencies": {

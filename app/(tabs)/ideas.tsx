@@ -165,18 +165,22 @@ export default function DesignScreen() {
 
   if (!project || !parcel) {
     return (
-      <Screen title="Design Studio" subtitle="Start a project on Home to test ADU fit against a parcel.">
+      <Screen eyebrow="Physical feasibility" title="Backyard fit" subtitle="Start a property study on Value to test ADU fit against a parcel.">
         <View style={styles.emptyState}>
           <Feather name="map-pin" size={42} color={colors.faint} />
           <Text style={styles.emptyTitle}>No active lot</Text>
-          <Text style={styles.emptyText}>Create a project to unlock the parcel sketch, model library, and concept generator.</Text>
+          <Text style={styles.emptyText}>Create a property study to test fit, cost, rent potential, and an exterior concept.</Text>
         </View>
       </Screen>
     );
   }
 
   return (
-    <Screen title="Backyard Fit" subtitle="Place the ADU, check buildable area, and prove the income model is physically plausible.">
+    <Screen
+      eyebrow="Physical feasibility"
+      title="Backyard fit"
+      subtitle="Place an ADU, check buildable area, and prove the income model is physically plausible."
+    >
       <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectContext}>
         <View style={styles.contextTop}>
           <View style={styles.contextCopy}>
@@ -185,14 +189,14 @@ export default function DesignScreen() {
           </View>
           <View style={styles.contextBadge}>
             <Feather name="crosshair" size={15} color={colors.accentDark} />
-            <Text style={styles.contextBadgeText}>true-scale fit</Text>
+            <Text style={styles.contextBadgeText}>fit study</Text>
           </View>
         </View>
         <View style={styles.contextStats}>
           <StudioStat label="Model" value={selectedModel.name} />
-          <StudioStat label="Area" value={`${selectedModel.sqft} sqft`} />
-          <StudioStat label="Style" value={selectedStyle.label} />
-          <StudioStat label="Photo" value={project.sitePhotoUri ? "attached" : "open"} />
+          <StudioStat label="Buildable" value={`${parcel.buildableAreaSqFt} sqft`} />
+          <StudioStat label="Cost from" value={formatCurrencyCompact(selectedModel.priceFrom)} />
+          <StudioStat label="Rent est." value={`${formatCurrencyCompact(selectedModel.monthlyEstimate)}/mo`} />
         </View>
       </LinearGradient>
 
@@ -251,7 +255,19 @@ export default function DesignScreen() {
         </View>
       </View>
 
-      <SectionHeader title="Exterior style" action="one tap" />
+      <SectionHeader title="ADU models" action={`${aduModels.length} income options`} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modelRail}>
+        {aduModels.map((model) => (
+          <AduModelCard
+            key={model.id}
+            model={model}
+            selected={model.id === selectedModel.id}
+            onPress={() => handleSelectModel(model)}
+          />
+        ))}
+      </ScrollView>
+
+      <SectionHeader title="Exterior style" action="supports fit" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.styleRail}>
         {designStyles.map((style) => (
           <StyleChip
@@ -260,18 +276,6 @@ export default function DesignScreen() {
             compatible={selectedModel.styleIds.includes(style.id)}
             selected={style.id === selectedStyle.id}
             onPress={() => setSelectedStyleId(style.id)}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionHeader title="ADU model directory" action={`${aduModels.length} models`} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modelRail}>
-        {aduModels.map((model) => (
-          <AduModelCard
-            key={model.id}
-            model={model}
-            selected={model.id === selectedModel.id}
-            onPress={() => handleSelectModel(model)}
           />
         ))}
       </ScrollView>
@@ -290,7 +294,7 @@ export default function DesignScreen() {
             </Text>
           ))}
         </View>
-        <Text style={styles.sourceText}>{parcel.sourceLabel}. Verify with the city before design or construction decisions.</Text>
+        <Text style={styles.sourceText}>{parcel.sourceLabel}. Verify with your jurisdiction before design or construction decisions.</Text>
       </View>
 
       <SectionHeader title="Property records" action={`${projectRecords.length} records`} />
@@ -348,7 +352,7 @@ export default function DesignScreen() {
         </View>
       </View>
 
-      <SectionHeader title="AI concept" action={latestConcept ? "ready" : "draft"} />
+      <SectionHeader title="Exterior concept" action={latestConcept ? "ready" : "draft"} />
       <View style={styles.conceptCard}>
         {latestConcept ? (
           <>
@@ -370,10 +374,10 @@ export default function DesignScreen() {
             <Text style={styles.sourceText}>{latestConcept.nextSteps.slice(0, 2).join(" ")}</Text>
           </>
         ) : (
-          <Text style={styles.cardText}>Generate a first-pass concept from the parcel fit, selected model, style, and site-photo context.</Text>
+          <Text style={styles.cardText}>Generate a first-pass exterior concept from the parcel fit, income option, style, and site-photo context.</Text>
         )}
         <Button onPress={handleGenerateConcept} disabled={isGenerating}>
-          {isGenerating ? "Generating concept" : latestConcept ? "Regenerate concept" : "Generate concept"}
+          {isGenerating ? "Generating concept" : latestConcept ? "Regenerate exterior concept" : "Generate exterior concept"}
         </Button>
       </View>
     </Screen>

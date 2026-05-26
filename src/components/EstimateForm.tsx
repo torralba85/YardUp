@@ -14,10 +14,12 @@ interface EstimateFormProps {
 
 const fieldGroups: Array<{
   title: string;
+  tone: "capital" | "income" | "risk";
   fields: Array<{ name: keyof EstimateInputForm; label: string; suffix?: string }>;
 }> = [
   {
     title: "Build scope",
+    tone: "capital",
     fields: [
       { name: "aduSqFt", label: "ADU size", suffix: "sqft" },
       { name: "buildCostPerSqFt", label: "Build cost", suffix: "/sqft" },
@@ -25,10 +27,12 @@ const fieldGroups: Array<{
   },
   {
     title: "Income",
+    tone: "income",
     fields: [{ name: "monthlyRent", label: "Monthly rent", suffix: "mo" }],
   },
   {
     title: "Risk and rates",
+    tone: "risk",
     fields: [
       { name: "softCostRate", label: "Soft cost rate", suffix: "decimal" },
       { name: "contingencyRate", label: "Contingency", suffix: "decimal" },
@@ -58,7 +62,14 @@ export function EstimateForm({ initialValues = defaultEstimateInput, onSubmit }:
   return (
     <View style={styles.form}>
       {fieldGroups.map((group) => (
-        <View key={group.title} style={styles.group}>
+        <View
+          key={group.title}
+          style={[
+            styles.group,
+            group.tone === "income" && styles.groupIncome,
+            group.tone === "risk" && styles.groupRisk,
+          ]}
+        >
           <Text style={styles.groupTitle}>{group.title}</Text>
           <View style={styles.groupFields}>
             {group.fields.map((field) => (
@@ -107,11 +118,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radii.md,
-    borderLeftColor: colors.blueprint,
+    borderLeftColor: colors.capitalBrass,
     borderLeftWidth: 3,
     gap: spacing.md,
     padding: spacing.lg,
     ...shadows.soft,
+  },
+  groupIncome: {
+    borderLeftColor: colors.emerald,
+  },
+  groupRisk: {
+    borderLeftColor: colors.permit,
   },
   groupTitle: {
     ...typography.h2,

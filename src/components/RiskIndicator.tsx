@@ -22,10 +22,10 @@ interface RiskIndicatorProps {
 
 const META: Record<RiskLevel, { tint: string; soft: string; icon: keyof typeof Feather.glyphMap; word: string; fill: number }> = {
   low: { tint: colors.success, soft: colors.successSoft, icon: "check-circle", word: "Low", fill: 1 },
-  moderate: { tint: colors.permit, soft: colors.permitSoft, icon: "alert-triangle", word: "Moderate", fill: 2 },
+  moderate: { tint: colors.permit, soft: colors.permitSoft, icon: "alert-triangle", word: "Medium", fill: 2 },
   high: { tint: colors.warning, soft: colors.warningSoft, icon: "alert-octagon", word: "High", fill: 3 },
   // Amber by default for unknowns, per design system.
-  unknown: { tint: colors.permit, soft: colors.permitSoft, icon: "help-circle", word: "Needs review", fill: 0 },
+  unknown: { tint: colors.permit, soft: colors.permitSoft, icon: "help-circle", word: "Under review", fill: 0 },
 };
 
 export function RiskIndicator({ label, level, score, drivers, verifyLabel, onVerify, verifiedAt }: RiskIndicatorProps) {

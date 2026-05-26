@@ -21,11 +21,13 @@ export default function EstimateScreen() {
   };
 
   const estimate = project?.lastEstimate;
+  const estimateInput = getEstimateDefaults(project);
 
   return (
     <Screen
-      title="Underwriting"
-      subtitle="Rent, expenses, NOI, cost, value range, and payback in one compact sheet."
+      eyebrow="Income model"
+      title="Estimate"
+      subtitle="Net income, cost range, value range, and payback under explicit assumptions."
     >
       {project ? (
         <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectCard}>
@@ -42,7 +44,30 @@ export default function EstimateScreen() {
 
       {estimate ? (
         <>
-          <SectionHeader title="Current model" action="saved locally" />
+          <SectionHeader title="Decision summary" action="estimated range" />
+          <View style={styles.modelSheet}>
+            <View style={styles.noiHero}>
+              <Text style={styles.noiLabel}>Net annual income</Text>
+              <Text style={styles.noiValue}>+{formatCurrency(estimate.annualNOI)}</Text>
+              <Text style={styles.noiDetail}>after modeled operating expenses</Text>
+            </View>
+            <View style={styles.sheetRows}>
+              <ModelRow label="Gross annual rent" value={formatCurrency(estimate.annualRent)} />
+              <ModelRow label="Operating expenses" value={`-${formatCurrency(estimate.annualOpEx)}`} />
+              <ModelRow
+                label="Estimated cost range"
+                value={`${formatCurrencyCompact(estimate.totalCost * 0.9)}-${formatCurrencyCompact(estimate.totalCost * 1.1)}`}
+              />
+              <ModelRow label="Payback period" value={`${estimate.paybackYears.toFixed(1)} years`} highlight />
+            </View>
+          </View>
+          <View style={styles.sensitivity}>
+            <Text style={styles.sensitivityLabel}>Rent sensitivity range</Text>
+            <Text style={styles.sensitivityValue}>
+              {formatCurrency(estimateInput.monthlyRent * 0.9)} - {formatCurrency(estimateInput.monthlyRent * 1.1)} / month
+            </Text>
+            <Text style={styles.sensitivityText}>Adjust assumptions below to update income, cost, value, and payback.</Text>
+          </View>
           <View style={styles.primaryMetrics}>
             <MetricCard
               label="Value range"
@@ -56,8 +81,6 @@ export default function EstimateScreen() {
               value={formatPercent(estimate.roi)}
               detail={`${estimate.paybackYears.toFixed(1)} yr payback`}
             />
-            <MetricCard label="Annual NOI" value={formatCurrency(estimate.annualNOI)} />
-            <MetricCard label="Total cost" value={formatCurrency(estimate.totalCost)} />
           </View>
           <View style={styles.note}>
             <View style={styles.noteIcon}>
@@ -71,9 +94,18 @@ export default function EstimateScreen() {
         </>
       ) : null}
 
-      <SectionHeader title="Assumptions" />
-      <EstimateForm initialValues={getEstimateDefaults(project)} onSubmit={handleSubmit} />
+      <SectionHeader title="Underwriting assumptions" />
+      <EstimateForm initialValues={estimateInput} onSubmit={handleSubmit} />
     </Screen>
+  );
+}
+
+function ModelRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <View style={styles.sheetRow}>
+      <Text style={styles.sheetLabel}>{label}</Text>
+      <Text style={[styles.sheetValue, highlight && styles.sheetValueHighlight]}>{value}</Text>
+    </View>
   );
 }
 
@@ -121,6 +153,85 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.sm,
+  },
+  modelSheet: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+    ...shadows.soft,
+  },
+  noiHero: {
+    backgroundColor: colors.mint,
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+    gap: spacing.xs,
+    padding: spacing.lg,
+  },
+  noiLabel: {
+    ...typography.label,
+    color: colors.accentDark,
+  },
+  noiValue: {
+    ...typography.display,
+    color: colors.emerald,
+  },
+  noiDetail: {
+    ...typography.body,
+    color: colors.muted,
+  },
+  sheetRows: {
+    paddingHorizontal: spacing.lg,
+  },
+  sheetRow: {
+    alignItems: "center",
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "space-between",
+    minHeight: 48,
+    paddingVertical: spacing.sm,
+  },
+  sheetLabel: {
+    ...typography.body,
+    color: colors.muted,
+    flex: 1,
+  },
+  sheetValue: {
+    ...typography.mono,
+    color: colors.text,
+  },
+  sheetValueHighlight: {
+    color: colors.capitalBrass,
+    fontFamily: typography.monoLarge.fontFamily,
+  },
+  sensitivity: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.border,
+    borderLeftColor: colors.capitalBrass,
+    borderLeftWidth: 3,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+    padding: spacing.md,
+  },
+  sensitivityLabel: {
+    ...typography.label,
+    color: colors.capitalBrass,
+  },
+  sensitivityValue: {
+    ...typography.mono,
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  sensitivityText: {
+    ...typography.body,
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
   },
   note: {
     alignItems: "flex-start",

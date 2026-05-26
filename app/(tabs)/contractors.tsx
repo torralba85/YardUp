@@ -19,9 +19,9 @@ import {
 } from "../../src/services/stripeService";
 
 const PACKET_ITEMS: { label: string; key: "estimate" | "lot" | "concept" | "permit" }[] = [
-  { label: "ROI model", key: "estimate" },
-  { label: "Lot summary", key: "lot" },
-  { label: "Design concept", key: "concept" },
+  { label: "Income model", key: "estimate" },
+  { label: "Parcel snapshot", key: "lot" },
+  { label: "Exterior concept", key: "concept" },
   { label: "Permit notes", key: "permit" },
 ];
 
@@ -149,7 +149,7 @@ export default function ContractorsScreen() {
   if (currentRole === "builder") {
     if (contractors.length === 0) {
       return (
-        <Screen title="Builder Dashboard" subtitle="Loading builder profile...">
+        <Screen eyebrow="Builder workspace" accent="builder" title="Builder dashboard" subtitle="Loading builder profile...">
           <View style={styles.emptyState}>
             <Feather name="loader" size={24} color={colors.muted} />
           </View>
@@ -171,7 +171,7 @@ export default function ContractorsScreen() {
 
   if (!project) {
     return (
-      <Screen title="Build" subtitle="Start a project on Home to prepare a quote packet.">
+      <Screen eyebrow="Builder readiness" accent="builder" title="Builders" subtitle="Start a property study on Value to prepare a quote packet.">
         <View style={styles.emptyState}>
           <Feather name="users" size={42} color={colors.faint} />
           <Text style={styles.emptyTitle}>No active project</Text>
@@ -182,7 +182,12 @@ export default function ContractorsScreen() {
   }
 
   return (
-    <Screen title="Builder Matches" subtitle="Qualified builders, match score, start window, and quote-packet readiness.">
+    <Screen
+      eyebrow="Builder readiness"
+      accent="builder"
+      title="Builders"
+      subtitle="Trust signals, declared market coverage, estimated start windows, and quote-packet readiness."
+    >
       <NextMoveCard
         contractor={topContractor}
         topAlreadyQuoted={topAlreadyQuoted}
@@ -202,9 +207,9 @@ export default function ContractorsScreen() {
               {!sortedContractors.length
                 ? "Awaiting builder coverage"
                 : deliveredRequests.length
-                  ? `${deliveredRequests.length} delivered`
+                  ? `${deliveredRequests.length} packet${deliveredRequests.length === 1 ? "" : "s"} sent`
                   : submittedRequests.length
-                    ? `${submittedRequests.length} awaiting delivery`
+                    ? `${submittedRequests.length} awaiting sharing`
                     : savedRequests.length
                       ? `${savedRequests.length} saved for retry`
                       : "Ready to submit"}
@@ -296,10 +301,10 @@ function NextMoveCard({
         </View>
         <Text style={styles.nextMoveTitle}>Finish the quote packet first</Text>
         <Text style={styles.nextMoveBody}>
-          {packetReady} of {packetTotal} sections ready. Builders typically respond faster when ROI, lot, concept, and permit notes are all attached.
+          {packetReady} of {packetTotal} sections ready. Include the income model, parcel snapshot, exterior concept, and permit notes before outreach.
         </Text>
         {onCompletePacket ? (
-          <Button icon="arrow-right" onPress={onCompletePacket}>
+          <Button icon="arrow-right" style={styles.builderCta} onPress={onCompletePacket}>
             Complete packet
           </Button>
         ) : null}
@@ -316,7 +321,7 @@ function NextMoveCard({
         </View>
         <Text style={styles.nextMoveTitle}>Packet sent to your top match</Text>
         <Text style={styles.nextMoveBody}>
-          {contractor.name} typically responds in {contractor.timelineWeeks} weeks. Send to a second match while you wait.
+          {contractor.name} has your packet. Compare another qualified match while you wait for a response.
         </Text>
       </View>
     );
@@ -329,9 +334,9 @@ function NextMoveCard({
           <Feather name="clock" size={14} color={colors.permit} />
           <Text style={styles.nextMoveLabelText}>Next move</Text>
         </View>
-        <Text style={styles.nextMoveTitle}>Packet recorded; delivery pending</Text>
+        <Text style={styles.nextMoveTitle}>Packet recorded; sharing pending</Text>
         <Text style={styles.nextMoveBody}>
-          Your packet has been recorded for {contractor.name}. You'll hear back once the builder confirms receipt.
+          Your request has been recorded for {contractor.name}. We'll update this status after the builder receives it.
         </Text>
       </View>
     );
@@ -348,10 +353,10 @@ function NextMoveCard({
         {contractor.matchScore}% match · {contractor.specialty} · {contractor.aduCount} ADUs delivered
       </Text>
       <Text style={styles.disclosure}>
-        By continuing, you consent to submit this packet for builder outreach. No homeowner fee is charged here; a builder fee applies only after verified delivery.
+        By continuing, you consent to share this packet with {contractor.name} for an introduction. No charge to you.
       </Text>
       {onSend ? (
-        <Button icon="send" onPress={onSend} disabled={sending}>
+        <Button icon="send" style={styles.builderCta} onPress={onSend} disabled={sending}>
           {sending ? "Submitting" : "Consent and submit packet"}
         </Button>
       ) : null}
@@ -421,7 +426,7 @@ function ContractorCard({
         onPress={onRequest}
         disabled={delivered || submitted || sending}
       >
-        {delivered ? "Packet delivered" : submitted ? "Delivery pending" : sending ? "Submitting" : saved ? "Retry submission" : "Consent and submit packet"}
+        {delivered ? "Packet sent" : submitted ? "Sharing pending" : sending ? "Submitting" : saved ? "Retry submission" : "Consent and submit packet"}
       </Button>
     </View>
   );
@@ -511,7 +516,7 @@ function BuilderDashboard({
 
   if (!builder) {
     return (
-      <Screen title="Builder Dashboard" subtitle="No matching builder profile found.">
+      <Screen eyebrow="Builder workspace" accent="builder" title="Builder dashboard" subtitle="No matching builder profile found.">
         <View style={styles.emptyState}>
           <Feather name="alert-triangle" size={42} color={colors.warning} />
           <Text style={styles.emptyTitle}>Profile not matched</Text>
@@ -524,7 +529,7 @@ function BuilderDashboard({
   }
 
   return (
-    <Screen title="Builder Dashboard" subtitle="Manage incoming project packets, check billing tier, and track introduction fees.">
+    <Screen eyebrow="Builder workspace" accent="builder" title="Builder dashboard" subtitle="Manage incoming project packets, check billing tier, and track introduction fees.">
       <View style={styles.builderProfileHeader}>
         <View style={styles.avatarContainer}>
           <Feather name="briefcase" size={24} color={colors.accentDark} />

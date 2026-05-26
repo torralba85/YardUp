@@ -128,10 +128,10 @@ export default function HomeScreen() {
       />
 
       <View style={[styles.financeGrid, isWide && styles.financeGridWide]}>
-        <ValueTile label="Est. total cost" value={`${formatCurrencyCompact(costLow)}-${formatCurrencyCompact(costHigh)}`} />
-        <ValueTile label="Est. payback" value={`${estimate.paybackYears.toFixed(1)} years`} />
-        <ValueTile label="ROI" value={formatPercent(estimate.roi)} />
-        <ValueTile label="Value range" value={`${formatCurrencyCompact(estimate.lowValue)}-${formatCurrencyCompact(estimate.highValue)}`} />
+        <ValueTile label="Est. total cost" value={`${formatCurrencyCompact(costLow)}-${formatCurrencyCompact(costHigh)}`} wide={isWide} />
+        <ValueTile label="Est. payback" value={`${estimate.paybackYears.toFixed(1)} years`} wide={isWide} />
+        <ValueTile label="ROI" value={formatPercent(estimate.roi)} tone={estimate.roi > 0 ? "roi" : "default"} wide={isWide} />
+        <ValueTile label="Value range" value={`${formatCurrencyCompact(estimate.lowValue)}-${formatCurrencyCompact(estimate.highValue)}`} wide={isWide} />
       </View>
 
       <View style={[styles.marketGrid, isWide && styles.marketGridWide]}>
@@ -180,9 +180,9 @@ export default function HomeScreen() {
             <View style={[styles.progressFill, { width: `${packetPercent}%` }]} />
           </View>
           <View style={styles.packetList}>
-            <PacketChecklistItem label="ROI model" ready={hasEstimate} />
-            <PacketChecklistItem label="Lot summary" ready={Boolean(parcel)} />
-            <PacketChecklistItem label="Design concept" ready={projectConcepts.length > 0} />
+            <PacketChecklistItem label="Income model" ready={hasEstimate} />
+            <PacketChecklistItem label="Parcel snapshot" ready={Boolean(parcel)} />
+            <PacketChecklistItem label="Exterior concept" ready={projectConcepts.length > 0} />
             <PacketChecklistItem label="Permit notes" ready={Boolean(guide)} />
           </View>
           <Button variant="secondary" onPress={() => router.push("/contractors")}>
@@ -274,11 +274,21 @@ export default function HomeScreen() {
   );
 }
 
-function ValueTile({ label, value }: { label: string; value: string }) {
+function ValueTile({
+  label,
+  value,
+  tone = "default",
+  wide = false,
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "roi";
+  wide?: boolean;
+}) {
   return (
-    <View style={styles.valueTile}>
-      <Text style={styles.valueTileLabel}>{label}</Text>
-      <Text style={styles.valueTileValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
+    <View style={[styles.valueTile, wide && styles.valueTileWide, tone === "roi" && styles.valueTileRoi]}>
+      <Text style={[styles.valueTileLabel, tone === "roi" && styles.valueTileLabelRoi]}>{label}</Text>
+      <Text style={[styles.valueTileValue, tone === "roi" && styles.valueTileValueRoi]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
         {value}
       </Text>
     </View>
@@ -362,7 +372,7 @@ function deriveNextActions({
       label: `Complete quote packet (${packetReady}/${QUOTE_PACKET_TOTAL})`,
       icon: "file-text",
       impact: packetReady < 4 ? "High" : "Medium",
-      cta: "Build",
+      cta: "Builders",
       route: "/contractors",
       tone: "builder",
     });
@@ -470,6 +480,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     ...shadows.soft,
   },
+  valueTileWide: {
+    flexBasis: 0,
+    minWidth: 0,
+  },
   valueTileLabel: {
     ...typography.label,
     color: colors.muted,
@@ -480,6 +494,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     lineHeight: 20,
+  },
+  valueTileRoi: {
+    backgroundColor: "#FBF7EE",
+    borderColor: colors.capitalBrass,
+  },
+  valueTileLabelRoi: {
+    color: colors.capitalBrass,
+  },
+  valueTileValueRoi: {
+    color: colors.capitalBrass,
+    fontFamily: typography.monoLarge.fontFamily,
   },
   marketGrid: {
     gap: spacing.md,

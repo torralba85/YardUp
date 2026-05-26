@@ -39,7 +39,7 @@ firestore-debug.log
 /stitch_yardup_modern_design_system.zip
 /adu-design-studio-demo/
 
-# Firebase native SDK config (secrets — source from CI or local provisioning)
+# Firebase native SDK config (provide locally or through EAS File variables)
 /firebase/
 
 # macOS

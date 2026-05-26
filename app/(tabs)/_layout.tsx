@@ -72,10 +72,10 @@ export default function TabsLayout() {
       })}
     >
       <Tabs.Screen name="index" options={{ title: "Value" }} />
-      <Tabs.Screen name="ideas" options={{ title: "Studio" }} />
+      <Tabs.Screen name="estimate" options={{ title: "Estimate" }} />
       <Tabs.Screen name="contractors" options={{ title: "Builders" }} />
       <Tabs.Screen name="guide" options={{ title: "Permits" }} />
-      <Tabs.Screen name="estimate" options={{ title: "Estimate" }} />
+      <Tabs.Screen name="ideas" options={{ title: "Studio" }} />
       <Tabs.Screen name="inspiration" options={{ href: null }} />
     </Tabs>
   );
