@@ -74,7 +74,8 @@ describe("Stripe onboarding flow", () => {
       expect(mocks.update).not.toHaveBeenCalled();
     });
 
-    it("transitions pending onboarding to active", async () => {
+    it("transitions pending onboarding to active when STRIPE_MOCK_ONBOARDING=true", async () => {
+      process.env.STRIPE_MOCK_ONBOARDING = "true";
       mocks.get.mockResolvedValue({
         exists: true,
         data: () => ({ stripeConnectStatus: "pending" }),
@@ -90,6 +91,21 @@ describe("Stripe onboarding flow", () => {
           stripeConnectStatus: "active",
         })
       );
+
+      delete process.env.STRIPE_MOCK_ONBOARDING;
+    });
+
+    it("leaves pending status unchanged in production (no STRIPE_MOCK_ONBOARDING)", async () => {
+      delete process.env.STRIPE_MOCK_ONBOARDING;
+      mocks.get.mockResolvedValue({
+        exists: true,
+        data: () => ({ stripeConnectStatus: "pending" }),
+      });
+
+      const status = await checkStripeStatusHelper("builder-789");
+
+      expect(status).toBe("pending");
+      expect(mocks.update).not.toHaveBeenCalled();
     });
 
     it("leaves already active status unchanged", async () => {

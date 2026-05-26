@@ -173,4 +173,24 @@ describe("deliverQuoteRequest backend transition", () => {
 
     expect(mocks.set).not.toHaveBeenCalled();
   });
+
+  it("rejects re-delivery of an already delivered quote", async () => {
+    mockCollectionGroup({
+      id: "quote-p1-apex-adu-builders",
+      projectId: "p1",
+      contractorId: "apex-adu-builders",
+      packetItems: ["ROI model"],
+      homeownerConsent: true,
+      status: "sent",
+      homeownerConsentAt: timestamp,
+      commercialStatus: "eligible_for_builder_fee",
+      introductionFee: 149,
+    });
+
+    await expect(
+      deliverQuoteRequest("builder-user-123", "apex-adu-builders", "p1", "quote-p1-apex-adu-builders"),
+    ).rejects.toThrow(/already been delivered/i);
+
+    expect(mocks.set).not.toHaveBeenCalled();
+  });
 });

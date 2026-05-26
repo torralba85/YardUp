@@ -295,7 +295,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw new Error(`Quote request for project ${projectId} and contractor ${contractorId} not found.`);
     }
 
-    const quoteRequestId = `quote-${projectId}-${contractorId}`;
+    const quoteRequestId = existing.id;
 
     // Delivery flips billing state ("sent" + introductionFee + commercialStatus).
     // We never fall back to localDeliver: it unconditionally sets

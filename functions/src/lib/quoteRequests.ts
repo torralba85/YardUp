@@ -92,6 +92,10 @@ export async function deliverQuoteRequest(
     throw new Error("Caller is not the builder this quote is addressed to.");
   }
 
+  if (data.status === "sent") {
+    throw new Error(`Quote request ${quoteRequestId} has already been delivered.`);
+  }
+
   const tier = resolveContractorTier(data.contractorId);
   const fee = getIntroductionFee(tier);
   const now = Timestamp.now();

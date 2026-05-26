@@ -36,6 +36,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /userProfiles/{userId} {
+      // Cloud Functions write via Admin SDK (bypasses rules).
+      // Client reads role + builderId on auth state change.
+      allow read: if owns(userId);
+      allow write: if false;
+    }
+
     match /serviceRequests/{requestId} {
       allow read, write: if false;
     }
