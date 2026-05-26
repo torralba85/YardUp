@@ -299,7 +299,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { deliverQuoteRequest: localDeliver } = await import("../domain/marketplace");
 
     const quoteRequestId = `quote-${projectId}-${contractorId}`;
-    const remote = await callDeliverRemote(projectId, quoteRequestId).catch(() => null);
+
+    // Delivery flips billing state ("sent" + introductionFee + commercialStatus).
+    // The service returns `null` ONLY when no Firebase session exists (mock /
+    // anonymous mode); a thrown error means the backend explicitly rejected
+    // the transition and we must NOT mark the quote as delivered. Letting
+    // the error propagate keeps the local record at "submitted" so the
+    // builder dashboard cannot show a billable fee the server never accepted.
+    const remote = await callDeliverRemote(projectId, quoteRequestId);
     const updated = remote ?? localDeliver(existing);
 
     set((state) => ({
