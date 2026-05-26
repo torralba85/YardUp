@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
 
 import { Button } from "../../src/components/Button";
 import { Screen } from "../../src/components/Screen";

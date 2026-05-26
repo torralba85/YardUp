@@ -41,29 +41,29 @@ describe("stripeService", () => {
   });
 
   describe("getStripeOnboardingUrl", () => {
-    it("handles mock environment when firebase is not configured", async () => {
+    it("returns a mock URL without opening it when firebase is not configured", async () => {
       mocks.getFirebaseClients.mockReturnValue(null);
-      mocks.canOpenURL.mockResolvedValue(true);
-      mocks.openURL.mockResolvedValue(undefined);
 
       const url = await getStripeOnboardingUrl("mock-builder");
 
+      // Pure data fetcher — the caller (e.g. BuilderDashboard) is responsible
+      // for opening the URL via Linking.openURL. The service must not open it.
       expect(url).toBe("https://connect.stripe.com/express/oauth/authorize?state=mock-builder");
-      expect(mocks.openURL).toHaveBeenCalledWith(url);
+      expect(mocks.openURL).not.toHaveBeenCalled();
       expect(mocks.callCloudFunction).not.toHaveBeenCalled();
     });
 
-    it("calls Cloud Function when firebase is configured", async () => {
+    it("calls Cloud Function with no userId payload and returns the URL", async () => {
       mocks.getFirebaseClients.mockReturnValue({ db: {}, functions: {} });
       mocks.callCloudFunction.mockResolvedValue({ url: "https://stripe.com/oauth?state=builder-123" });
-      mocks.canOpenURL.mockResolvedValue(true);
-      mocks.openURL.mockResolvedValue(undefined);
 
       const url = await getStripeOnboardingUrl("builder-123");
 
       expect(url).toBe("https://stripe.com/oauth?state=builder-123");
-      expect(mocks.callCloudFunction).toHaveBeenCalledWith("getStripeOnboardingUrl", { userId: "builder-123" });
-      expect(mocks.openURL).toHaveBeenCalledWith(url);
+      // The backend derives identity from request.auth.uid, so the client
+      // sends an empty payload — never a client-supplied userId.
+      expect(mocks.callCloudFunction).toHaveBeenCalledWith("getStripeOnboardingUrl", {});
+      expect(mocks.openURL).not.toHaveBeenCalled();
     });
   });
 
@@ -77,14 +77,14 @@ describe("stripeService", () => {
       expect(mocks.callCloudFunction).not.toHaveBeenCalled();
     });
 
-    it("calls checkStripeStatus Cloud Function when firebase is configured", async () => {
+    it("calls checkStripeStatus Cloud Function with no userId payload", async () => {
       mocks.getFirebaseClients.mockReturnValue({ db: {}, functions: {} });
       mocks.callCloudFunction.mockResolvedValue({ stripeConnectStatus: "active" });
 
       const status = await checkStripeStatus("builder-456");
 
       expect(status).toBe("active");
-      expect(mocks.callCloudFunction).toHaveBeenCalledWith("checkStripeStatus", { userId: "builder-456" });
+      expect(mocks.callCloudFunction).toHaveBeenCalledWith("checkStripeStatus", {});
     });
   });
 

@@ -260,11 +260,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     const now = new Date().toISOString();
     const packetItems = ["ROI model", "Lot summary", "Design concept", "Permit notes"];
     const remote = await submitQuoteRequest(projectId, contractorId, packetItems, homeownerConsent);
+    // If the remote call failed (remote === null), keep the local record as
+    // "saved" so the next requestQuote attempt is allowed to retry (the early
+    // return above only short-circuits on a status that is NOT "saved").
+    // Storing "submitted" here would lie about server state AND block retries.
     const request: QuoteRequest = remote ?? {
       id: `quote-${projectId}-${contractorId}`,
       projectId,
       contractorId,
-      status: "submitted",
+      status: "saved",
       packetItems,
       createdAt: existing?.createdAt ?? now,
       homeownerConsentAt: existing?.homeownerConsentAt ?? now,

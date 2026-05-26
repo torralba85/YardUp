@@ -4,10 +4,11 @@ const mocks = vi.hoisted(() => ({
   doc: vi.fn(),
   set: vi.fn(),
   now: vi.fn(),
+  collectionGroup: vi.fn(),
 }));
 
 vi.mock("firebase-admin/firestore", () => ({
-  getFirestore: () => ({ doc: mocks.doc }),
+  getFirestore: () => ({ doc: mocks.doc, collectionGroup: mocks.collectionGroup }),
   Timestamp: { now: mocks.now },
 }));
 
@@ -74,29 +75,57 @@ describe("deliverQuoteRequest backend transition", () => {
   const recordedAt = new Date("2026-05-25T12:00:00.000Z");
   const timestamp = { toDate: () => recordedAt };
 
+  // Helper that wires the collectionGroup query chain mock and returns the
+  // ref that the implementation should call .set() on. Keeps each test honest
+  // about what shape it's matching against without copying the chain four
+  // times.
+  function mockCollectionGroup(data: Record<string, unknown>): { ref: { set: typeof mocks.set } } {
+    const ref = { set: mocks.set };
+    const docSnap = { ref, data: () => data };
+    const limit = vi.fn().mockReturnValue({
+      get: vi.fn().mockResolvedValue({ empty: false, docs: [docSnap] }),
+    });
+    const where2 = vi.fn().mockReturnValue({ limit });
+    const where1 = vi.fn().mockReturnValue({ where: where2 });
+    mocks.collectionGroup.mockReturnValue({ where: where1 });
+    return { ref };
+  }
+
+  function mockEmptyCollectionGroup(): void {
+    const limit = vi.fn().mockReturnValue({
+      get: vi.fn().mockResolvedValue({ empty: true, docs: [] }),
+    });
+    const where2 = vi.fn().mockReturnValue({ limit });
+    const where1 = vi.fn().mockReturnValue({ where: where2 });
+    mocks.collectionGroup.mockReturnValue({ where: where1 });
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.doc.mockReturnValue({ set: mocks.set, get: vi.fn().mockResolvedValue({
-      exists: true,
-      data: () => ({
-        id: "quote-p1-apex-adu-builders",
-        projectId: "p1",
-        contractorId: "apex-adu-builders",
-        packetItems: ["ROI model"],
-        homeownerConsent: true,
-        status: "submitted",
-        homeownerConsentAt: timestamp,
-        commercialStatus: "not_eligible",
-      })
-    }) });
     mocks.set.mockResolvedValue(undefined);
     mocks.now.mockReturnValue(timestamp);
   });
 
   it("transitions an existing quote to sent status and assigns builder fees based on tier", async () => {
-    const delivered = await deliverQuoteRequest("user-123", "p1", "quote-p1-apex-adu-builders");
+    mockCollectionGroup({
+      id: "quote-p1-apex-adu-builders",
+      projectId: "p1",
+      contractorId: "apex-adu-builders",
+      packetItems: ["ROI model"],
+      homeownerConsent: true,
+      status: "submitted",
+      homeownerConsentAt: timestamp,
+      commercialStatus: "not_eligible",
+    });
 
-    expect(mocks.doc).toHaveBeenCalledWith("users/user-123/projects/p1/quoteRequests/quote-p1-apex-adu-builders");
+    const delivered = await deliverQuoteRequest(
+      "builder-user-123",
+      "apex-adu-builders",
+      "p1",
+      "quote-p1-apex-adu-builders",
+    );
+
+    expect(mocks.collectionGroup).toHaveBeenCalledWith("quoteRequests");
     expect(mocks.set).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "sent",
@@ -104,13 +133,44 @@ describe("deliverQuoteRequest backend transition", () => {
         introductionFee: 149,
         billingTier: "premium",
         deliveredAt: timestamp,
+        deliveredByBuilderUid: "builder-user-123",
       }),
-      { merge: true }
+      { merge: true },
     );
     expect(delivered.status).toBe("sent");
     expect(delivered.commercialStatus).toBe("eligible_for_builder_fee");
     expect(delivered.introductionFee).toBe(149);
     expect(delivered.billingTier).toBe("premium");
     expect(delivered.deliveredAt).toBe(recordedAt.toISOString());
+    expect(delivered.deliveredByBuilderUid).toBe("builder-user-123");
+  });
+
+  it("refuses delivery when the caller's builderId does not match the quote", async () => {
+    mockCollectionGroup({
+      id: "quote-p1-apex-adu-builders",
+      projectId: "p1",
+      contractorId: "apex-adu-builders",
+      packetItems: ["ROI model"],
+      homeownerConsent: true,
+      status: "submitted",
+      homeownerConsentAt: timestamp,
+      commercialStatus: "not_eligible",
+    });
+
+    await expect(
+      deliverQuoteRequest("builder-user-123", "wrong-builder-id", "p1", "quote-p1-apex-adu-builders"),
+    ).rejects.toThrow(/not the builder/i);
+
+    expect(mocks.set).not.toHaveBeenCalled();
+  });
+
+  it("throws when the quote is not found", async () => {
+    mockEmptyCollectionGroup();
+
+    await expect(
+      deliverQuoteRequest("builder-user-123", "apex-adu-builders", "p1", "missing"),
+    ).rejects.toThrow(/not found/i);
+
+    expect(mocks.set).not.toHaveBeenCalled();
   });
 });
