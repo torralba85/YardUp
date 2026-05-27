@@ -78,6 +78,7 @@ export const contractorProfiles: ContractorProfile[] = [
     aduCount: 19,
     permitSupport: true,
     tags: ["site-built", "Denver zoning", "energy efficient"],
-    reviewExcerpt: "Navigated the Denver zoning setbacks and permitting smoothly. Very satisfied."
-  }
+    reviewExcerpt: "Navigated the Denver zoning setbacks and permitting smoothly. Very satisfied.",
+    billingTier: "growth",
+  },
 ];

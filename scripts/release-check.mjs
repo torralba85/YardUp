@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 
 const commands = [
+  ["npm", ["run", "firebase:check"]],
   ["npm", ["run", "typecheck"]],
   ["npm", ["test"]],
   ["npm", ["run", "backend:typecheck"]],

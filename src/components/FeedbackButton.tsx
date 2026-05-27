@@ -26,6 +26,7 @@ type FeedbackCategory = "general" | "bug" | "feature_request" | "data_issue" | "
 
 export function FeedbackButton({ pageIdentifier = "AppRoot", clientVersion = "1.0.0" }: FeedbackButtonProps) {
   const { width } = useWindowDimensions();
+  const sideRail = Platform.OS === "web" && width >= 980;
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<FeedbackCategory>("general");
   const [rating, setRating] = useState<number | undefined>(undefined);
@@ -108,6 +109,7 @@ export function FeedbackButton({ pageIdentifier = "AppRoot", clientVersion = "1.
         accessibilityLabel="Open feedback form"
         style={({ pressed }) => [
           styles.fab,
+          sideRail && styles.fabRail,
           pressed && styles.pressed,
         ]}
         onPress={() => setIsOpen(true)}
@@ -299,6 +301,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     width: 56,
     zIndex: 9999,
+  },
+  fabRail: {
+    backgroundColor: colors.emerald,
+    bottom: spacing.xl,
+    left: 76,
+    right: undefined,
   },
   modalBackdrop: {
     backgroundColor: "rgba(14, 44, 32, 0.4)",

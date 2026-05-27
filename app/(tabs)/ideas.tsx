@@ -165,18 +165,22 @@ export default function DesignScreen() {
 
   if (!project || !parcel) {
     return (
-      <Screen title="Design Studio" subtitle="Start a project on Home to test ADU fit against a parcel.">
+      <Screen eyebrow="Physical feasibility" title="Backyard fit" subtitle="Start a property study on Value to test ADU fit against a parcel.">
         <View style={styles.emptyState}>
           <Feather name="map-pin" size={42} color={colors.faint} />
           <Text style={styles.emptyTitle}>No active lot</Text>
-          <Text style={styles.emptyText}>Create a project to unlock the parcel sketch, model library, and concept generator.</Text>
+          <Text style={styles.emptyText}>Create a property study to test fit, cost, rent potential, and an exterior concept.</Text>
         </View>
       </Screen>
     );
   }
 
   return (
-    <Screen title="Backyard Fit" subtitle="Place the ADU, check buildable area, and prove the income model is physically plausible.">
+    <Screen
+      eyebrow="Physical feasibility"
+      title="Backyard fit"
+      subtitle="Place an ADU, check buildable area, and prove the income model is physically plausible."
+    >
       <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectContext}>
         <View style={styles.contextTop}>
           <View style={styles.contextCopy}>
@@ -185,14 +189,14 @@ export default function DesignScreen() {
           </View>
           <View style={styles.contextBadge}>
             <Feather name="crosshair" size={15} color={colors.accentDark} />
-            <Text style={styles.contextBadgeText}>true-scale fit</Text>
+            <Text style={styles.contextBadgeText}>fit study</Text>
           </View>
         </View>
         <View style={styles.contextStats}>
           <StudioStat label="Model" value={selectedModel.name} />
-          <StudioStat label="Area" value={`${selectedModel.sqft} sqft`} />
-          <StudioStat label="Style" value={selectedStyle.label} />
-          <StudioStat label="Photo" value={project.sitePhotoUri ? "attached" : "open"} />
+          <StudioStat label="Buildable" value={`${parcel.buildableAreaSqFt} sqft`} />
+          <StudioStat label="Cost from" value={formatCurrencyCompact(selectedModel.priceFrom)} />
+          <StudioStat label="Rent est." value={`${formatCurrencyCompact(selectedModel.monthlyEstimate)}/mo`} />
         </View>
       </LinearGradient>
 
@@ -202,7 +206,7 @@ export default function DesignScreen() {
           <View style={styles.canvasToolbar}>
             <View style={styles.canvasLabel}>
               <Feather name="crosshair" size={15} color={colors.parcel} />
-              <Text style={styles.canvasLabelText}>True-scale parcel canvas</Text>
+              <Text style={styles.canvasLabelText}>Parcel placement preview</Text>
             </View>
             <View style={styles.viewSwitch}>
               {(["2D", "3D"] as const).map((mode) => (
@@ -251,7 +255,19 @@ export default function DesignScreen() {
         </View>
       </View>
 
-      <SectionHeader title="Exterior style" action="one tap" />
+      <SectionHeader title="ADU models" action={`${aduModels.length} income options`} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modelRail}>
+        {aduModels.map((model) => (
+          <AduModelCard
+            key={model.id}
+            model={model}
+            selected={model.id === selectedModel.id}
+            onPress={() => handleSelectModel(model)}
+          />
+        ))}
+      </ScrollView>
+
+      <SectionHeader title="Exterior style" action="supports fit" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.styleRail}>
         {designStyles.map((style) => (
           <StyleChip
@@ -260,18 +276,6 @@ export default function DesignScreen() {
             compatible={selectedModel.styleIds.includes(style.id)}
             selected={style.id === selectedStyle.id}
             onPress={() => setSelectedStyleId(style.id)}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionHeader title="ADU model directory" action={`${aduModels.length} models`} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modelRail}>
-        {aduModels.map((model) => (
-          <AduModelCard
-            key={model.id}
-            model={model}
-            selected={model.id === selectedModel.id}
-            onPress={() => handleSelectModel(model)}
           />
         ))}
       </ScrollView>
@@ -290,7 +294,7 @@ export default function DesignScreen() {
             </Text>
           ))}
         </View>
-        <Text style={styles.sourceText}>{parcel.sourceLabel}. Verify with the city before design or construction decisions.</Text>
+        <Text style={styles.sourceText}>{parcel.sourceLabel}. Verify with your jurisdiction before design or construction decisions.</Text>
       </View>
 
       <SectionHeader title="Property records" action={`${projectRecords.length} records`} />
@@ -348,7 +352,7 @@ export default function DesignScreen() {
         </View>
       </View>
 
-      <SectionHeader title="AI concept" action={latestConcept ? "ready" : "draft"} />
+      <SectionHeader title="Exterior concept" action={latestConcept ? "ready" : "draft"} />
       <View style={styles.conceptCard}>
         {latestConcept ? (
           <>
@@ -370,10 +374,10 @@ export default function DesignScreen() {
             <Text style={styles.sourceText}>{latestConcept.nextSteps.slice(0, 2).join(" ")}</Text>
           </>
         ) : (
-          <Text style={styles.cardText}>Generate a first-pass concept from the parcel fit, selected model, style, and site-photo context.</Text>
+          <Text style={styles.cardText}>Generate a first-pass exterior concept from the parcel fit, income option, style, and site-photo context.</Text>
         )}
         <Button onPress={handleGenerateConcept} disabled={isGenerating}>
-          {isGenerating ? "Generating concept" : latestConcept ? "Regenerate concept" : "Generate concept"}
+          {isGenerating ? "Generating concept" : latestConcept ? "Regenerate exterior concept" : "Generate exterior concept"}
         </Button>
       </View>
     </Screen>
@@ -395,13 +399,31 @@ function PlannerSketch({
   return (
     <View style={styles.sketch}>
       <View style={styles.lotFrame}>
-        <Image source={{ uri: aerialImage }} style={styles.aerialImage} contentFit="cover" transition={250} />
-        <View style={styles.aerialWash} />
+        <Image
+          accessibilityLabel="Property photo used for the ADU placement preview"
+          source={{ uri: aerialImage }}
+          style={styles.aerialImage}
+          contentFit="cover"
+          transition={250}
+        />
+        <LinearGradient
+          colors={["rgba(14,44,32,0.40)", "rgba(14,44,32,0.08)", "rgba(14,44,32,0.70)"]}
+          locations={[0, 0.48, 1]}
+          style={styles.aerialWash}
+        />
+        <View style={styles.canvasStatus}>
+          <View style={styles.canvasStatusDot} />
+          <Text style={styles.canvasStatusText}>Modeled placement</Text>
+        </View>
         <View style={styles.primaryHouse}>
-          <Text style={styles.sketchLabel}>Home</Text>
+          <Text style={styles.homeLabel}>Existing home</Text>
+          <Text style={styles.homeMeta}>Primary structure</Text>
         </View>
         <View style={styles.buildableArea}>
-          <Text style={styles.sketchLabel}>Buildable zone</Text>
+          <View style={styles.zoneBadge}>
+            <Text style={styles.zoneLabel}>Buildable area</Text>
+            <Text style={styles.zoneMeta}>{parcel.buildableAreaSqFt.toLocaleString()} sqft</Text>
+          </View>
         </View>
         <View
           style={[
@@ -419,11 +441,22 @@ function PlannerSketch({
             },
           ]}
         >
-          <Text style={styles.aduLabel}>{model.name}</Text>
-          <Text style={styles.aduMeta}>{model.sqft} sqft</Text>
+          <View style={styles.aduMark} />
+          <Text style={styles.aduLabel}>ADU</Text>
+          <Text style={styles.aduMeta}>{model.sqft} sf</Text>
         </View>
         <Text style={[styles.setbackLabel, styles.sideSetback]}>{parcel.setbacks.side} side</Text>
         <Text style={[styles.setbackLabel, styles.rearSetback]}>{parcel.setbacks.rear} rear</Text>
+        <View style={styles.selectedCallout}>
+          <View style={styles.selectedCopy}>
+            <Text style={styles.selectedLabel}>Selected ADU</Text>
+            <Text style={styles.selectedName} numberOfLines={1}>{model.name}</Text>
+          </View>
+          <View style={styles.selectedIncome}>
+            <Text style={styles.selectedRent}>{formatCurrencyCompact(model.monthlyEstimate)}/mo</Text>
+            <Text style={styles.selectedRentLabel}>est. rent</Text>
+          </View>
+        </View>
       </View>
       <Text style={styles.sketchMeta}>{parcel.lotSqFt.toLocaleString()} sqft parcel - source: {parcel.sourceLabel}</Text>
     </View>
@@ -746,11 +779,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   viewSwitchButton: {
+    minHeight: 44,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   viewSwitchActive: {
     backgroundColor: colors.parcel,
+    minHeight: 44,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
@@ -768,7 +803,7 @@ const styles = StyleSheet.create({
   lotFrame: {
     backgroundColor: colors.ink,
     borderColor: colors.line,
-    borderRadius: radii.sm,
+    borderRadius: radii.md,
     borderWidth: 1,
     height: 430,
     overflow: "hidden",
@@ -776,84 +811,195 @@ const styles = StyleSheet.create({
   },
   aerialImage: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.92,
   },
   aerialWash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(6,20,27,0.12)",
   },
-  primaryHouse: {
+  canvasStatus: {
     alignItems: "center",
-    backgroundColor: "rgba(251,250,244,0.9)",
-    borderColor: "rgba(255,255,255,0.8)",
+    backgroundColor: "rgba(14,44,32,0.76)",
+    borderColor: "rgba(220,241,229,0.22)",
     borderRadius: radii.sm,
     borderWidth: 1,
-    height: 112,
-    justifyContent: "center",
-    left: 42,
+    flexDirection: "row",
+    gap: spacing.xs,
+    left: spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     position: "absolute",
-    top: 54,
-    width: 170,
+    top: spacing.md,
+  },
+  canvasStatusDot: {
+    backgroundColor: colors.highlighter,
+    borderRadius: radii.full,
+    height: 7,
+    width: 7,
+  },
+  canvasStatusText: {
+    ...typography.label,
+    color: colors.mint,
+    fontSize: 10,
+  },
+  primaryHouse: {
+    backgroundColor: "rgba(14,44,32,0.28)",
+    borderColor: "rgba(246,244,238,0.72)",
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    gap: 2,
+    height: 106,
+    justifyContent: "flex-end",
+    left: spacing.md,
+    padding: spacing.sm,
+    position: "absolute",
+    top: 68,
+    width: 154,
+  },
+  homeLabel: {
+    ...typography.label,
+    color: colors.canvas,
+  },
+  homeMeta: {
+    ...typography.mono,
+    color: colors.mint,
+    fontSize: 10,
+    lineHeight: 14,
   },
   buildableArea: {
-    alignItems: "center",
-    backgroundColor: "rgba(207,248,109,0.18)",
-    borderColor: "rgba(255,255,255,0.84)",
+    backgroundColor: "rgba(207,248,109,0.12)",
+    borderColor: "rgba(207,248,109,0.94)",
     borderRadius: radii.sm,
     borderStyle: "dashed",
-    borderWidth: 2,
-    bottom: 52,
-    justifyContent: "center",
+    borderWidth: 1.5,
+    bottom: 94,
     position: "absolute",
-    right: 34,
-    top: 86,
+    right: spacing.md,
+    top: 68,
     width: "50%",
+  },
+  zoneBadge: {
+    alignItems: "flex-start",
+    backgroundColor: "rgba(14,44,32,0.84)",
+    borderRadius: radii.xs,
+    gap: 1,
+    left: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    position: "absolute",
+    top: spacing.sm,
+  },
+  zoneLabel: {
+    ...typography.label,
+    color: colors.highlighter,
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  zoneMeta: {
+    ...typography.mono,
+    color: colors.canvas,
+    fontSize: 10,
+    lineHeight: 13,
   },
   aduBlock: {
     alignItems: "center",
-    backgroundColor: "rgba(228,240,255,0.78)",
-    borderColor: colors.parcel,
+    backgroundColor: "rgba(220,241,229,0.94)",
+    borderColor: colors.emerald,
     borderRadius: radii.sm,
     borderWidth: 2,
+    gap: 1,
     justifyContent: "center",
     position: "absolute",
     paddingHorizontal: spacing.xs,
+    shadowColor: colors.forestDeep,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
   },
-  sketchLabel: {
-    ...typography.label,
-    color: colors.text,
-    textAlign: "center",
+  aduMark: {
+    backgroundColor: colors.emerald,
+    borderRadius: radii.full,
+    height: 5,
+    marginBottom: 1,
+    width: 5,
   },
   aduLabel: {
     ...typography.label,
-    color: colors.ink,
+    color: colors.forestDeep,
     fontSize: 10,
     textAlign: "center",
   },
   aduMeta: {
     ...typography.mono,
-    color: colors.ink,
+    color: colors.forestDeep,
     fontSize: 10,
     lineHeight: 14,
   },
   setbackLabel: {
     ...typography.mono,
-    backgroundColor: colors.canvas,
+    backgroundColor: "rgba(14,44,32,0.84)",
     borderRadius: radii.xs,
-    color: colors.parcel,
-    fontSize: 11,
+    color: colors.canvas,
+    fontSize: 10,
     overflow: "hidden",
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
     position: "absolute",
   },
   sideSetback: {
-    right: 8,
-    top: 116,
+    right: 2,
+    top: 128,
     transform: [{ rotate: "90deg" }],
   },
   rearSetback: {
-    bottom: 10,
-    right: 72,
+    bottom: 104,
+    right: spacing.lg,
+  },
+  selectedCallout: {
+    alignItems: "center",
+    backgroundColor: "rgba(14,44,32,0.93)",
+    borderColor: "rgba(220,241,229,0.18)",
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    bottom: spacing.md,
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "space-between",
+    left: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    position: "absolute",
+    right: spacing.md,
+  },
+  selectedCopy: {
+    flex: 1,
+    gap: 1,
+  },
+  selectedLabel: {
+    ...typography.label,
+    color: colors.mint,
+    fontSize: 9,
+    lineHeight: 13,
+  },
+  selectedName: {
+    ...typography.h2,
+    color: colors.canvas,
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  selectedIncome: {
+    alignItems: "flex-end",
+    gap: 1,
+  },
+  selectedRent: {
+    ...typography.mono,
+    color: colors.highlighter,
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  selectedRentLabel: {
+    ...typography.label,
+    color: colors.mint,
+    fontSize: 9,
+    lineHeight: 13,
   },
   sketchMeta: {
     ...typography.mono,
@@ -884,9 +1030,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radii.sm,
-    height: 38,
+    height: 48,
     justifyContent: "center",
-    width: 46,
+    width: 48,
   },
   pressed: {
     opacity: 0.82,

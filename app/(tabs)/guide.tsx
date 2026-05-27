@@ -22,8 +22,10 @@ export default function GuideScreen() {
 
   return (
     <Screen
-      title="Permit Risk"
-      subtitle="Local-first risk read, parcel constraints, and source-backed steps. Verify with your jurisdiction before construction decisions."
+      eyebrow="Local rules"
+      accent="permit"
+      title="Permit review"
+      subtitle="Risk, parcel constraints, and source-backed steps. Verify with your jurisdiction before construction decisions."
     >
       {project ? (
         <LinearGradient colors={[colors.canvas, colors.surface]} style={styles.projectCard}>

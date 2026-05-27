@@ -1,5 +1,7 @@
 # App Store Readiness Implementation Plan
 
+> Historical plan snapshot. Current release configuration is defined by `README.md`, `app.config.ts`, and `.firebaserc`; the production Firebase project is `yardup-2026` and the backend AI secret is `GEMINI_API_KEY`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Move ADU Advisor from a local-first Expo/Firebase MVP to an App Store Connect and Google Play-ready release candidate.
@@ -250,13 +252,14 @@ Add this section to `README.md`:
 ```markdown
 ## Release Environment
 
-Production builds require these EAS environment variables:
+Production native builds require these EAS File environment variables:
 
-- `EXPO_PUBLIC_FIREBASE_API_KEY`
-- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
-- `EXPO_PUBLIC_FIREBASE_APP_ID`
-- `OPENAI_API_KEY` in Firebase Functions runtime config or Secret Manager, never in Expo client config
+- `GOOGLE_SERVICES_JSON`
+- `GOOGLE_SERVICE_INFO_PLIST`
+
+The public `EXPO_PUBLIC_FIREBASE_*` defaults target `yardup-2026`; override the full set together only when deliberately using another Firebase app configuration.
+
+`GEMINI_API_KEY` belongs in Firebase Functions runtime config or Secret Manager, never in Expo client config.
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
 ```
@@ -552,7 +555,7 @@ export const generateDesignConcept = onCall(callableOptions, async (request) => 
   const concept = await buildDesignConcept(input.project, input.inspiration, input.preferences);
   await writeServiceLog({
     service: "generateDesignConcept",
-    status: process.env.OPENAI_API_KEY ? "ok" : "fallback",
+    status: process.env.GEMINI_API_KEY ? "ok" : "fallback",
     projectId: input.project.id,
     jurisdiction: input.project.jurisdiction,
     address: input.project.address,
@@ -850,16 +853,16 @@ git commit -m "chore: add release readiness check"
 Run:
 ```powershell
 firebase projects:list
-firebase use adu-advisor
+firebase use yardup-2026
 ```
 
-Expected: active Firebase project is `adu-advisor`.
+Expected: active Firebase project is `yardup-2026`.
 
 - [ ] **Step 2: Configure backend secret**
 
 Run:
 ```powershell
-firebase functions:secrets:set OPENAI_API_KEY
+firebase functions:secrets:set GEMINI_API_KEY
 ```
 
 Expected: Firebase CLI prompts for the secret value and stores it outside the repository.
@@ -896,8 +899,8 @@ Add:
 ```markdown
 ## Backend Release Deployment
 
-1. `firebase use adu-advisor`
-2. `firebase functions:secrets:set OPENAI_API_KEY`
+1. `firebase use yardup-2026`
+2. `firebase functions:secrets:set GEMINI_API_KEY`
 3. `firebase deploy --only firestore:rules,functions`
 4. Verify callable logs for `generateDesignConcept`, `searchPropertyHistory`, and `submitQuoteRequest`.
 ```

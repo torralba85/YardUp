@@ -81,12 +81,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
       const profile = await loadUserProfile(user.uid);
-      set({
+      // Functional update: preserve existing role/builderId when loadUserProfile
+      // returns null. This prevents a race during signup where onAuthStateChanged
+      // fires before the setDoc in signUp completes, causing the freshly-set role
+      // to be overwritten with null from a not-yet-written profile document.
+      set((state) => ({
         currentUser: user,
-        currentRole: profile.role,
-        builderId: profile.builderId,
+        currentRole: profile.role ?? state.currentRole,
+        builderId: profile.builderId ?? state.builderId,
         authInitialized: true,
-      });
+      }));
     });
 
     return unsubscribe;

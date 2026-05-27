@@ -60,9 +60,9 @@ The app runs without Firebase, but this checkout is wired to the Firebase projec
 
 Native bundle IDs intentionally keep the `aduadvisor` reverse-DNS to preserve store listing continuity; the user-visible product name is `YardUp`.
 
-Native Firebase build config files live in `firebase/GoogleService-Info.plist` and `firebase/google-services.json`, and `app.config.ts` points Expo SDK 54 at those files with `ios.googleServicesFile` and `android.googleServicesFile`. The mobile client only calls configured Firebase callable functions; Gemini API keys remain in the backend environment.
+For local native builds, download the `yardup-2026` SDK config files into the ignored paths `firebase/GoogleService-Info.plist` and `firebase/google-services.json`. For EAS builds, provide those same files as File environment variables named `GOOGLE_SERVICE_INFO_PLIST` and `GOOGLE_SERVICES_JSON`; `app.config.ts` passes the supplied paths to Expo SDK 54 through `ios.googleServicesFile` and `android.googleServicesFile`.
 
-Firebase client config defaults are checked into `app.config.ts` because they are public Firebase app identifiers. To override them for another project or EAS environment, set the variables shown in `.env.example`.
+Firebase client config defaults are checked into `app.config.ts` because they are public Firebase app identifiers. `.env.example` records the same `yardup-2026` identifiers and the local native-file fallback paths. `npm run firebase:check`, included in `npm run release:check`, rejects a native build configuration that drifts from the production project or from `com.aduadvisor.app`. The mobile client only calls configured Firebase callable functions; Gemini API keys remain in the backend environment.
 
 Callable functions exposed by the backend:
 
@@ -91,7 +91,7 @@ For local Firebase emulators:
 npx firebase emulators:start
 ```
 
-For deployment, set the real Firebase project in `.firebaserc`, populate the Expo Firebase config, and keep `GEMINI_API_KEY` as a backend environment secret. If no Gemini key or municipal property-data provider is configured, backend functions return deterministic, source-cited fallback responses so the app remains usable.
+For deployment, confirm `.firebaserc` targets `yardup-2026`, provide the native SDK files through the local or EAS File-variable paths described above, and keep `GEMINI_API_KEY` as a backend environment secret. If no Gemini key or municipal property-data provider is configured, backend functions return deterministic, source-cited fallback responses so the app remains usable.
 
 ## Builds
 
@@ -109,15 +109,14 @@ See [docs/legal/privacy-policy.md](./docs/legal/privacy-policy.md) and [docs/leg
 
 ## Release Environment
 
-Production builds require these EAS environment variables:
+Production and preview native builds require these EAS **File** environment variables:
 
-- `EXPO_PUBLIC_FIREBASE_API_KEY`
-- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `EXPO_PUBLIC_FIREBASE_PROJECT_ID` (currently `yardup-2026`)
-- `EXPO_PUBLIC_FIREBASE_APP_ID`
-- `EXPO_PUBLIC_FIREBASE_IOS_APP_ID`
-- `EXPO_PUBLIC_FIREBASE_ANDROID_APP_ID`
-- `GEMINI_API_KEY` in Firebase Functions runtime config or Secret Manager, never in Expo client config
+- `GOOGLE_SERVICES_JSON`: the Android `yardup-2026` config registered to `com.aduadvisor.app`
+- `GOOGLE_SERVICE_INFO_PLIST`: the iOS `yardup-2026` config registered to `com.aduadvisor.app`
+
+`eas.json` selects the corresponding `development`, `preview`, or `production` EAS environment for each build profile. The public JavaScript Firebase defaults in `app.config.ts` already target `yardup-2026`; if an environment deliberately overrides them, supply the full `EXPO_PUBLIC_FIREBASE_*` set shown in `.env.example` together so the runtime app IDs stay aligned with the native files.
+
+`GEMINI_API_KEY` belongs in Firebase Functions runtime config or Secret Manager, never in Expo client config.
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
 

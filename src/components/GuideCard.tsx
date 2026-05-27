@@ -35,7 +35,7 @@ export function GuideCard({ guide }: GuideCardProps) {
         </View>
         <View style={styles.summaryItemWide}>
           <Text style={styles.summaryLabel}>Next action</Text>
-          <Text style={styles.summaryValue}>Verify with city</Text>
+          <Text style={styles.summaryValue}>Verify locally</Text>
         </View>
       </View>
 
@@ -53,7 +53,7 @@ export function GuideCard({ guide }: GuideCardProps) {
 
       <View style={styles.warning}>
         <Feather name="info" size={20} color={colors.warning} />
-        <Text style={styles.warningText}>Verify requirements with the city before design or construction decisions.</Text>
+        <Text style={styles.warningText}>Verify requirements with your local jurisdiction before design or construction decisions.</Text>
       </View>
 
       <View style={styles.links}>

@@ -10,13 +10,13 @@ servers:
     description: Firebase production functions
     variables:
       projectId:
-        default: adu-advisor
+        default: yardup-2026
         description: Firebase project ID
   - url: http://localhost:5001/{projectId}/us-central1
     description: Firebase emulator
     variables:
       projectId:
-        default: adu-advisor
+        default: yardup-2026
 tags:
   - name: Regulations
   - name: Design Concepts
