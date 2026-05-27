@@ -1,14 +1,14 @@
-# Agent Working Agreement — YardUp / ADU Advisor
+# Agent Working Agreement — Lot/Foundry / ADU Advisor
 
 ## Product Center
 
-The product is YardUp (customer-facing brand) operated under the legal name ADU Advisor. The center is **ADU earning potential and builder connection**, not design exploration. In QA mode, flag any UI that hides revenue, cost, payback, or builder-readiness behind decorative design controls.
+The product is Lot/Foundry (customer-facing brand, always rendered with the slash) operated under the legal name ADU Advisor. The center is **ADU earning potential and builder connection**, not design exploration. In QA mode, flag any UI that hides revenue, cost, payback, or builder-readiness behind decorative design controls.
 
 Do not restrict the app's framing to California unless the specific feature or data source is California-only. Use "supported markets", "local rules", and "jurisdiction" framing.
 
 ## Repository Identity
 
-This checkout is the canonical YardUp mobile application repository. Its Git remote is `https://github.com/torralba85/YardUp.git`; the local folder name `ADU Advisor` and native bundle ID preserve legal and store continuity and do not indicate a separate product repository.
+This checkout is the canonical Lot/Foundry mobile application repository. Its Git remote is `https://github.com/torralba85/YardUp.git`; the GitHub repo name, the local folder name `ADU Advisor`, and the native bundle IDs preserve legal and store continuity and do not indicate a separate product repository. The repository was previously branded YardUp; brand assets, copy, and visual system have moved to Lot/Foundry (see DESIGN.md), but identifiers stayed put for store-listing and link continuity.
 
 Before using prior repo assumptions or moving work between projects, verify the active checkout with `git remote -v` and treat this repository and `origin/main` as the source of truth. Do not describe `github.com/torralba85/YardUp` as a sibling prototype unless a separate, explicit prototype repository is provided.
 
@@ -44,7 +44,9 @@ Run `npm run release:check` before tagging a store build.
 
 ## What Not To Do
 
-- Do not change the bundle IDs (`com.aduadvisor.app`). The rebrand to YardUp is brand-only; store listing continuity depends on stable identifiers.
+- Do not change the bundle IDs (`com.aduadvisor.app`). The rebrand to Lot/Foundry is brand-only; store-listing continuity depends on stable identifiers.
+- Do not change the GitHub remote URL or repository name. The repo stays at `github.com/torralba85/YardUp` for link and history continuity.
+- Always render the brand as `Lot/Foundry` with the slash. Never `LotFoundry`, never `Lot Foundry`, never "the Foundry" on its own.
 - Do not invent support emails, domains, or legal entities — use `support@aduadvisor.app` until explicitly told otherwise.
 - Do not commit OpenAI keys, Gemini keys, Firebase service-account JSON, or other secrets. Backend env lives in Firebase runtime config / Secret Manager.
 - Do not mention California as the product's geographic scope outside California-only features.
@@ -53,7 +55,8 @@ Run `npm run release:check` before tagging a store build.
 ## Documentation Sources Of Truth
 
 - [README.md](./README.md) — Stack, scripts, app surfaces, release env
-- [DESIGN.md](./DESIGN.md) — Quiet Ascent design system + tokens
+- [DESIGN.md](./DESIGN.md) — Lot/Foundry (Foundry System) design tokens, mark, and voice
+- [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) — Canonical brand identity reference (Direction 05)
 - [docs/api/api-design.md](./docs/api/api-design.md) — Callable contract and resource model
 - [docs/legal/privacy-policy.md](./docs/legal/privacy-policy.md)
 - [docs/legal/support.md](./docs/legal/support.md)
