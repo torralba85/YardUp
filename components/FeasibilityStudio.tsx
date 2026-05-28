@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -14,6 +14,10 @@ import {
   type ADUConfig,
   type FinancialAssumptions,
 } from "@/lib/feasibility";
+import {
+  parseScenarioParams,
+  serializeScenarioParams,
+} from "@/lib/scenario-url";
 import AppShell from "./studio/AppShell";
 import ControlBadge from "./studio/ControlBadge";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
@@ -25,15 +29,26 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
   loading: () => <div className="h-full min-h-[460px] bg-[#16251f]" />,
 });
 
+function readInitialScenarioFromUrl() {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  return parseScenarioParams(params);
+}
+
 export default function FeasibilityStudio() {
-  const [parcelId, setParcelId] = useState(parcelPresets[0].id);
-  const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
+  const [parcelId, setParcelId] = useState(
+    () => readInitialScenarioFromUrl()?.parcelId ?? parcelPresets[0].id,
+  );
+  const [config, setConfig] = useState<ADUConfig>(
+    () => readInitialScenarioFromUrl()?.config ?? defaultAduConfig,
+  );
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
-    defaultFinancialAssumptions,
+    () => readInitialScenarioFromUrl()?.assumptions ?? defaultFinancialAssumptions,
   );
   const [reportOpen, setReportOpen] = useState(true);
   const [activeNav, setActiveNav] = useState("studio");
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
 
   const parcel = getParcelById(parcelId);
   const result = useMemo(
@@ -41,6 +56,13 @@ export default function FeasibilityStudio() {
     [assumptions, config, parcel],
   );
   const isCompliant = result.zoningStatus === "Compliant";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const serialized = serializeScenarioParams({ parcelId, config, assumptions });
+    const next = `${window.location.pathname}?${serialized}`;
+    window.history.replaceState(null, "", next);
+  }, [assumptions, config, parcelId]);
 
   function resetScenario() {
     setParcelId(parcelPresets[0].id);
@@ -61,6 +83,18 @@ export default function FeasibilityStudio() {
   function handleGenerateReport() {
     setReportOpen(true);
     setReportAutoFocus(true);
+  }
+
+  async function handleShareLink() {
+    if (typeof window === "undefined") return;
+    const href = window.location.href;
+    try {
+      await navigator.clipboard.writeText(href);
+      setShareNotice("Link copied");
+    } catch {
+      setShareNotice(href);
+    }
+    setTimeout(() => setShareNotice(null), 2500);
   }
 
   function downloadReport() {
@@ -128,6 +162,8 @@ export default function FeasibilityStudio() {
           result={result}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
+          onShare={handleShareLink}
+          shareNotice={shareNotice}
           autoFocus={reportAutoFocus}
         />
       )}

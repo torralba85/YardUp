@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BarChart3, CheckCircle2, Download, FileText, Printer, Ruler } from "lucide-react";
+import { BarChart3, CheckCircle2, Download, FileText, Printer, Ruler, Share2 } from "lucide-react";
 import { formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 
@@ -10,6 +10,8 @@ export interface ReportPreviewProps {
   result: FeasibilityResult;
   onClose: () => void;
   onDownload: () => void;
+  onShare?: () => void;
+  shareNotice?: string | null;
   autoFocus?: boolean;
 }
 
@@ -18,6 +20,8 @@ export default function ReportPreview({
   result,
   onClose,
   onDownload,
+  onShare,
+  shareNotice,
   autoFocus = false,
 }: ReportPreviewProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -122,6 +126,16 @@ export default function ReportPreview({
             <Download size={16} />
             Download Summary
           </button>
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            >
+              <Share2 size={16} />
+              {shareNotice ?? "Share Link"}
+            </button>
+          )}
           <div className="rounded-md bg-slate-50 p-3 text-xs leading-5 text-slate-500">
             Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
             and market rents before investment decisions.
