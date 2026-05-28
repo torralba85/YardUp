@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BarChart3, CheckCircle2, Download, FileSpreadsheet, FileText, Printer, Ruler, Share2 } from "lucide-react";
+import { BarChart3, CheckCircle2, Download, FileSpreadsheet, FileText, Printer, Ruler, Share2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 
@@ -109,7 +109,7 @@ export default function ReportPreview({
               aria-label="Close report preview"
               className="rounded p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
             >
-              <span aria-hidden="true">×</span>
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
           <button

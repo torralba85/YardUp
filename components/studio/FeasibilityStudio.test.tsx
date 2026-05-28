@@ -54,8 +54,12 @@ describe("FeasibilityStudio", () => {
     expect(monthlyRentSection).toHaveTextContent("$2,350");
   });
 
-  it("exposes report print and download controls", () => {
+  it("exposes report print and download controls after generating the report", async () => {
+    const user = userEvent.setup();
     render(<FeasibilityStudio />);
+
+    await user.click(screen.getByRole("button", { name: /Generate Concept Report/i }));
+
     expect(screen.getByRole("button", { name: /Print \/ Save PDF/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download Summary/i })).toBeInTheDocument();
   });

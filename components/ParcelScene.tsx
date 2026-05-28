@@ -160,39 +160,19 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
 
 export default function ParcelScene({ parcel, config, isCompliant }: ParcelSceneProps) {
   return (
-    <div className="relative h-full min-h-[460px] overflow-hidden bg-[#16251f]">
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(145deg,#31402f_0%,#183126_55%,#101b19_100%)]">
-        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
-        <div
-          className={`absolute left-[23%] top-[13%] h-[69%] w-[54%] -skew-x-6 border-2 ${
-            isCompliant ? "border-lime-300/80 bg-lime-300/10" : "border-amber-300/90 bg-amber-300/10"
-          } shadow-[0_0_35px_rgba(190,242,100,0.25)]`}
-        >
-          <div className="absolute inset-[10%] border-2 border-dashed border-white/80" />
-          <div className="absolute left-[27%] top-[47%] h-[23%] w-[43%] rounded-sm border border-white/35 bg-slate-600 shadow-2xl">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded bg-white px-2 py-1 text-[10px] font-bold text-slate-800">EXISTING HOUSE</div>
-            <div className="absolute inset-x-2 top-2 h-3 rounded-sm bg-slate-800/70" />
-          </div>
-          <div
-            className="absolute left-[33%] top-[16%] h-[23%] rounded-sm border border-white/30 shadow-2xl"
-            style={{ width: `${Math.min(44, Math.max(28, config.width * 1.25))}%`, background: finishColors[config.finish] }}
-          >
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 rounded bg-white px-2 py-1 text-[10px] font-bold text-slate-800">PROPOSED ADU</div>
-            <div className="absolute inset-x-2 top-2 h-4 rounded-sm bg-slate-900/75" />
-            <div className="absolute bottom-0 left-1/2 h-12 w-16 -translate-x-1/2 bg-slate-950/75" />
-          </div>
-          <div className="absolute bottom-[6%] left-1/2 -translate-x-1/2 text-xs font-semibold text-white drop-shadow">Front Setback {parcel.setbacks.front}.0 ft</div>
-          <div className="absolute left-[7%] top-1/2 -translate-y-1/2 text-xs font-semibold text-white drop-shadow">Side Setback {parcel.setbacks.side}.0 ft</div>
-          <div className="absolute right-[7%] top-1/2 -translate-y-1/2 text-xs font-semibold text-white drop-shadow">Side Setback {parcel.setbacks.side}.0 ft</div>
-          <div className="absolute left-1/2 top-[4%] -translate-x-1/2 text-xs font-semibold text-white drop-shadow">Rear Setback {parcel.setbacks.rear}.0 ft</div>
-        </div>
-      </div>
+    <div
+      className="relative h-full min-h-[460px] overflow-hidden bg-[#13221c]"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at 50% 15%, rgba(255,255,255,0.16), transparent 28%), linear-gradient(145deg, #31402f 0%, #183126 55%, #101b19 100%)",
+      }}
+    >
       <Canvas
         shadows
         camera={{ position: [58, 58, 72], fov: 42, near: 1, far: 500 }}
         dpr={[1, 1.8]}
         gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
-        className="relative z-[1] h-full w-full"
+        className="relative z-0 h-full w-full"
         style={{ background: "transparent" }}
       >
         <fog attach="fog" args={["#13221c", 120, 230]} />
@@ -227,17 +207,17 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         <OrbitControls enableDamping dampingFactor={0.06} maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
       </Canvas>
 
-      <div className="pointer-events-none absolute left-5 top-5 flex gap-2 rounded-md border border-white/70 bg-white/90 p-2 text-xs font-medium text-slate-800 shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-white/70 bg-white/90 p-2 text-xs font-medium text-slate-800 shadow-sm backdrop-blur sm:flex">
         <span className="rounded bg-emerald-700 px-2 py-1 text-white">3D</span>
         <span className="px-2 py-1">Setbacks</span>
         <span className="px-2 py-1">Sun 3:00 PM</span>
       </div>
 
-      <div className="pointer-events-none absolute right-5 top-5 rounded-full border border-white/60 bg-slate-950/70 px-3 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-white/60 bg-slate-950/70 px-3 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur">
         N
       </div>
 
-      <div className="pointer-events-none absolute bottom-5 left-5 max-w-xs rounded-md border border-white/15 bg-slate-950/70 p-3 text-xs text-slate-100 shadow-xl backdrop-blur">
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-white/15 bg-slate-950/70 p-3 text-xs text-slate-100 shadow-xl backdrop-blur">
         <div className="font-semibold text-white">{parcel.address}</div>
         <div className="mt-1 text-slate-300">
           {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}

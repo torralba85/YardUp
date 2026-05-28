@@ -142,6 +142,28 @@ export default function AppShell({
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col bg-[#f5f7f4] lg:h-screen lg:overflow-hidden">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-emerald-600/30 bg-emerald-50 text-emerald-700">
+              <Home size={20} />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-base font-semibold tracking-tight text-slate-950">
+                UrbanLens AR
+              </div>
+              <div className="truncate text-xs text-slate-500">
+                {parcelAddress}, {parcelCity}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onReset}
+            className="h-9 rounded-md border border-slate-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+          >
+            Reset
+          </button>
+        </header>
         {children}
       </main>
     </div>

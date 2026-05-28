@@ -50,6 +50,7 @@ test.describe("Feasibility Studio", () => {
 
   test("downloads a summary text file", async ({ page }) => {
     await page.goto("/");
+    await page.getByRole("button", { name: /Generate Concept Report/i }).click();
     const [download] = await Promise.all([
       page.waitForEvent("download"),
       page.getByRole("button", { name: /Download Summary/i }).click(),
