@@ -51,6 +51,10 @@ See `docs/release-checklist.md` for the full manual sign-off list and `docs/depl
 
 CI runs on every push to `main`/`master` and on every pull request via `.github/workflows/ci.yml`. The workflow runs lint, unit tests, typecheck, build, and Playwright end-to-end tests against Chromium. Do not merge a pull request whose CI run is failing.
 
+## Deployment
+
+The app is configured to deploy to Vercel without secrets. See `docs/deployment.md` for the full deployment guide, including post-deploy smoke checks and rollback steps.
+
 ## Scope Notes
 
 - No external API keys are required.
