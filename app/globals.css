@@ -21,19 +21,41 @@ input {
 @media print {
   aside,
   canvas,
-  .print\:hidden {
+  .print\:hidden,
+  [aria-labelledby="feasibility-heading"],
+  [aria-label="Parcel massing scene"] {
     display: none !important;
   }
 
   body {
     background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+  }
+
+  html {
+    background: #ffffff !important;
   }
 
   main {
     overflow: visible !important;
+    background: #ffffff !important;
   }
 
-  section {
+  #export {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  #export button {
+    display: none !important;
+  }
+
+  #summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     page-break-inside: avoid;
   }
 }

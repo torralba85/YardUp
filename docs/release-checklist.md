@@ -3,7 +3,7 @@
 - [x] `npm ci`
 - [x] `npm run lint`
 - [x] `npm run test` — 24 passing
-- [x] `npm run test:e2e` — 24 passing across desktop-chromium and mobile-chromium
+- [x] `npm run test:e2e` — 26 passing across desktop-chromium and mobile-chromium
 - [x] `npx tsc --noEmit`
 - [x] `npm run build` — production build succeeds
 - [x] Desktop visual check at 1440x900 (e2e screenshot)

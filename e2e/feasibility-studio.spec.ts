@@ -56,4 +56,18 @@ test.describe("Feasibility Studio", () => {
     ]);
     expect(download.suggestedFilename()).toMatch(/\.txt$/);
   });
+
+  test("hydrates state from a shared URL", async ({ page }) => {
+    await page.goto(
+      "/?parcel=compact-lot&size=1000&roof=gable&finish=board&rent=market&openings=0",
+    );
+
+    await expect(page.getByLabel("Parcel Preset")).toHaveValue("compact-lot");
+    await expect(
+      page.getByRole("alert").filter({ hasText: /Review needed/i }),
+    ).toBeVisible();
+
+    const monthlyRentCard = page.getByText("Monthly Rent").locator("..");
+    await expect(monthlyRentCard).toContainText("$2,150");
+  });
 });
