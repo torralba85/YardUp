@@ -16,30 +16,37 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       label: "Build Cost Range",
       value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
       detail: `$${result.costPerSqftLow} - $${result.costPerSqftHigh} / sf`,
+      fontClass: "font-serif",
+      detailClass: "font-mono",
     },
     {
       icon: Home,
       label: "Monthly Rent",
       value: formatCurrency(result.monthlyRent),
       detail: "Local demo estimate",
+      fontClass: "font-serif",
     },
     {
       icon: BarChart3,
       label: "Annual NOI",
       value: formatCurrency(result.annualNoi),
       detail: "After OpEx & vacancy",
+      fontClass: "font-serif",
     },
     {
       icon: SlidersHorizontal,
       label: "Payback",
       value: `${result.paybackYears}`,
       detail: "Years at mid-range cost",
+      fontClass: "font-serif",
     },
     {
       icon: Layers3,
       label: "Coverage Used",
       value: `${Math.round(result.coveragePercent)}%`,
       detail: `${result.totalFootprint.toLocaleString()} sf / ${result.allowedFootprint.toLocaleString()} sf allowed`,
+      fontClass: "font-mono text-xl mt-3",
+      detailClass: "font-mono",
     },
     {
       icon: CheckCircle2,
@@ -47,6 +54,9 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       value: result.zoningStatus,
       detail:
         result.zoningStatus === "Compliant" ? "ADU appears allowed" : "Needs review",
+      fontClass: `font-sans font-semibold ${
+        result.zoningStatus === "Compliant" ? "text-emerald-700" : "text-amber-700"
+      }`,
     },
   ];
 
@@ -68,13 +78,13 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
               {metric.label}
             </div>
             <div
-              className={`mt-2 text-2xl font-semibold tracking-tight ${
-                metric.label === "Zoning Status" ? "text-emerald-700" : "text-slate-950"
-              }`}
+              className={`mt-2 text-2xl font-semibold tracking-tight text-slate-950 ${metric.fontClass}`}
             >
               {metric.value}
             </div>
-            <div className="mt-1 text-xs text-slate-500">{metric.detail}</div>
+            <div className={`mt-1 text-xs text-slate-500 ${metric.detailClass ?? ""}`}>
+              {metric.detail}
+            </div>
           </div>
         );
       })}

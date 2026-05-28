@@ -38,7 +38,7 @@ export default function ReportPreview({
     <section
       id="export"
       aria-labelledby="report-preview-heading"
-      className="border-t border-slate-200 bg-white px-6 py-5 shadow-[0_-18px_40px_rgba(15,23,42,0.08)] print:shadow-none lg:h-[202px] lg:overflow-hidden"
+      className="border-t border-slate-200 bg-white px-6 py-5 shadow-[0_-18px_40px_rgba(15,23,42,0.08)] print:shadow-none lg:h-auto lg:max-h-[260px] lg:overflow-y-auto"
     >
       <div className="grid gap-6 lg:grid-cols-[150px_1fr_1fr_250px]">
         <div className="hidden rounded-md border border-slate-200 bg-slate-50 p-3 lg:block">
@@ -57,7 +57,7 @@ export default function ReportPreview({
             id="report-preview-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="text-2xl font-semibold tracking-tight text-slate-950 focus:outline-none"
+            className="font-serif text-2xl font-semibold tracking-tight text-slate-950 focus:outline-none"
           >
             Concept Feasibility Report
           </h2>
@@ -112,42 +112,44 @@ export default function ReportPreview({
               <X size={16} aria-hidden="true" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
-          >
-            <Printer size={16} />
-            Print / Save PDF
-          </button>
-          <button
-            type="button"
-            onClick={onDownload}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
-          >
-            <Download size={16} />
-            Download Summary
-          </button>
-          {onExportCsv && (
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={onExportCsv}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+              onClick={() => window.print()}
+              className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-emerald-700 text-xs font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
             >
-              <FileSpreadsheet size={16} />
-              Export CSV
+              <Printer size={14} />
+              Print / Save
             </button>
-          )}
-          {onShare && (
             <button
               type="button"
-              onClick={onShare}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+              onClick={onDownload}
+              className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
             >
-              <Share2 size={16} />
-              {shareNotice ?? "Share Link"}
+              <Download size={14} />
+              Download
             </button>
-          )}
+            {onExportCsv && (
+              <button
+                type="button"
+                onClick={onExportCsv}
+                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+              >
+                <FileSpreadsheet size={14} />
+                CSV Export
+              </button>
+            )}
+            {onShare && (
+              <button
+                type="button"
+                onClick={onShare}
+                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+              >
+                <Share2 size={14} />
+                <span className="truncate">{shareNotice ?? "Share Link"}</span>
+              </button>
+            )}
+          </div>
           <div className="rounded-md bg-slate-50 p-3 text-xs leading-5 text-slate-500">
             Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
             and market rents before investment decisions.

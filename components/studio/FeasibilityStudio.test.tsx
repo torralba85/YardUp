@@ -60,7 +60,7 @@ describe("FeasibilityStudio", () => {
 
     await user.click(screen.getByRole("button", { name: /Generate Concept Report/i }));
 
-    expect(screen.getByRole("button", { name: /Print \/ Save PDF/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Download Summary/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();
   });
 });

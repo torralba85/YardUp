@@ -165,11 +165,7 @@ export default function FeasibilityStudio() {
       onLoadScenario={handleLoadScenario}
       onDeleteScenario={handleDeleteScenario}
     >
-      <div
-        className={`flex min-h-screen flex-col lg:min-h-0 ${
-          reportOpen ? "lg:h-[calc(100vh-320px)]" : "lg:h-[calc(100vh-118px)]"
-        } xl:flex-row`}
-      >
+      <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
           aria-label="Parcel massing scene"
           className="relative min-h-[540px] flex-1 overflow-hidden border-b border-slate-200 bg-[#13221c] xl:border-b-0 xl:border-r"
@@ -224,9 +220,9 @@ function IncomeLens({
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">
             ADU income potential
           </p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
             {formatCurrency(result.monthlyRent)}
-            <span className="ml-2 text-base font-medium text-slate-300">/ mo rent</span>
+            <span className="ml-2 font-sans text-base font-medium text-slate-300">/ mo rent</span>
           </h2>
         </div>
         <div
@@ -245,12 +241,19 @@ function IncomeLens({
           icon={BadgeDollarSign}
           label="Annual NOI"
           value={formatCurrency(result.annualNoi)}
+          fontClass="font-serif"
         />
-        <LensFact icon={Clock3} label="Payback" value={`${result.paybackYears} yrs`} />
+        <LensFact
+          icon={Clock3}
+          label="Payback"
+          value={`${result.paybackYears} yrs`}
+          fontClass="font-serif"
+        />
         <LensFact
           icon={Hammer}
           label="Build range"
           value={`${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`}
+          fontClass="font-mono text-base mt-1.5"
         />
       </div>
 
@@ -266,10 +269,12 @@ function LensFact({
   icon: Icon,
   label,
   value,
+  fontClass = "font-serif",
 }: {
   icon: typeof BadgeDollarSign;
   label: string;
   value: string;
+  fontClass?: string;
 }) {
   return (
     <div className="rounded-md border border-white/10 bg-white/[0.08] px-3 py-2">
@@ -277,7 +282,7 @@ function LensFact({
         <Icon size={14} />
         {label}
       </div>
-      <div className="mt-1 text-lg font-semibold tracking-tight text-white">{value}</div>
+      <div className={`mt-1 text-lg font-semibold tracking-tight text-white ${fontClass}`}>{value}</div>
     </div>
   );
 }

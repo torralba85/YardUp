@@ -61,7 +61,7 @@ export default function FeasibilityInspector({
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 bg-white xl:w-[404px]"
+      className="w-full shrink-0 bg-white lg:h-full xl:w-[404px]"
     >
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
@@ -116,7 +116,7 @@ export default function FeasibilityInspector({
           </div>
 
           <div className="space-y-3">
-            <LabelRow label="ADU Size" value="Footprint" />
+            <LabelRow label="ADU Size" value="Footprint" valueClass="font-sans text-slate-500 font-medium" />
             <div
               role="group"
               aria-label="ADU footprint size"
@@ -299,11 +299,19 @@ export default function FeasibilityInspector({
   );
 }
 
-function LabelRow({ label, value }: { label: string; value?: string }) {
+function LabelRow({
+  label,
+  value,
+  valueClass = "font-serif text-emerald-700",
+}: {
+  label: string;
+  value?: string;
+  valueClass?: string;
+}) {
   return (
     <div className="flex items-center justify-between">
       <h3 className="text-sm font-semibold text-slate-950">{label}</h3>
-      {value && <span className="text-sm font-semibold text-emerald-700">{value}</span>}
+      {value && <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>}
     </div>
   );
 }
@@ -312,7 +320,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-0.5 font-medium text-slate-800">{value}</div>
+      <div className="mt-0.5 font-mono text-xs font-medium text-slate-800">{value}</div>
     </div>
   );
 }

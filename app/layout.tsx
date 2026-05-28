@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Instrument_Sans, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-serif",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -19,11 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable}`}>
-      <body
-        className="font-sans antialiased bg-slate-950 text-slate-50 overflow-hidden"
-        suppressHydrationWarning
-      >
+    <html
+      lang="en"
+      className={`${instrumentSans.variable} ${fraunces.variable} ${ibmPlexMono.variable}`}
+    >
+      <body className="font-sans antialiased bg-slate-950 text-slate-50" suppressHydrationWarning>
         {children}
       </body>
     </html>

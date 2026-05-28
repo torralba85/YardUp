@@ -53,7 +53,7 @@ test.describe("Feasibility Studio", () => {
     await page.getByRole("button", { name: /Generate Concept Report/i }).click();
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: /Download Summary/i }).click(),
+      page.getByRole("button", { name: /Download/i }).click(),
     ]);
     expect(download.suggestedFilename()).toMatch(/\.txt$/);
   });
