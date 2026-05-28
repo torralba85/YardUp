@@ -47,6 +47,10 @@ npm run build
 
 See `docs/release-checklist.md` for the full manual sign-off list and `docs/deployment.md` for deployment steps.
 
+## Continuous Integration
+
+CI runs on every push to `main`/`master` and on every pull request via `.github/workflows/ci.yml`. The workflow runs lint, unit tests, typecheck, build, and Playwright end-to-end tests against Chromium. Do not merge a pull request whose CI run is failing.
+
 ## Scope Notes
 
 - No external API keys are required.
