@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
@@ -159,6 +159,27 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
 }
 
 export default function ParcelScene({ parcel, config, isCompliant }: ParcelSceneProps) {
+  const [webglAvailable, setWebglAvailable] = useState(true);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    try {
+      const canvas = document.createElement("canvas");
+      const isAvailable = !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+      );
+      setWebglAvailable(isAvailable);
+    } catch {
+      setWebglAvailable(false);
+    }
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  if (!webglAvailable) {
+    return <Parcel2DScene parcel={parcel} config={config} isCompliant={isCompliant} />;
+  }
+
   return (
     <div
       className="relative h-full min-h-[460px] overflow-hidden bg-[#13221c]"
@@ -217,6 +238,183 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         N
       </div>
 
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-white/15 bg-slate-950/70 p-3 text-xs text-slate-100 shadow-xl backdrop-blur">
+        <div className="font-semibold text-white">{parcel.address}</div>
+        <div className="mt-1 text-slate-300">
+          {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}
+          {parcel.setbacks.side} ft side setbacks.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
+  const finishColor = finishColors[config.finish];
+
+  // Calculate existing house dimensions
+  const houseWidth = Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28);
+  const houseLength = Math.min(parcel.existingHouseSqft / houseWidth, 36);
+
+  // Calculate SVG ViewBox
+  const viewBoxWidth = parcel.lotWidth + 30;
+  const viewBoxLength = parcel.lotLength + 30;
+  const viewBoxX = -viewBoxWidth / 2;
+  const viewBoxY = -viewBoxLength / 2;
+
+  // Setback coordinates
+  const leftSetback = -parcel.lotWidth / 2 + parcel.setbacks.side;
+  const rightSetback = parcel.lotWidth / 2 - parcel.setbacks.side;
+  const frontSetback = parcel.lotLength / 2 - parcel.setbacks.front;
+  const rearSetback = -parcel.lotLength / 2 + parcel.setbacks.rear;
+
+  return (
+    <div
+      className="relative h-full min-h-[460px] overflow-hidden bg-[#13221c] flex flex-col items-center justify-center p-6"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at 50% 15%, rgba(255,255,255,0.16), transparent 28%), linear-gradient(145deg, #31402f 0%, #183126 55%, #101b19 100%)",
+      }}
+    >
+      {/* 2D Mode Badge */}
+      <div className="absolute right-5 top-20 z-40 flex gap-2 rounded-md border border-white/70 bg-white/90 p-2 text-xs font-medium text-slate-800 shadow-sm backdrop-blur">
+        <span className="rounded bg-emerald-700 px-2 py-1 text-white">2D SITE PLAN</span>
+        <span className="px-2 py-1 text-slate-500">WebGL Fallback</span>
+      </div>
+
+      <div className="absolute right-5 top-5 z-40 rounded-full border border-white/60 bg-slate-950/70 px-3 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur">
+        N
+      </div>
+
+      <svg
+        viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxLength}`}
+        className="w-full h-full max-h-[480px] text-white"
+        style={{ filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))" }}
+      >
+        {/* Outer Grid Representation */}
+        <defs>
+          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+          </pattern>
+        </defs>
+        <rect x={viewBoxX} y={viewBoxY} width={viewBoxWidth} height={viewBoxLength} fill="url(#grid)" />
+
+        {/* Lot Boundary Background */}
+        <rect
+          x={-parcel.lotWidth / 2}
+          y={-parcel.lotLength / 2}
+          width={parcel.lotWidth}
+          height={parcel.lotLength}
+          fill="rgba(34, 48, 40, 0.6)"
+          stroke={isCompliant ? "#9be982" : "#f59e0b"}
+          strokeWidth="0.8"
+        />
+
+        {/* Setback Guideline Envelope */}
+        <rect
+          x={leftSetback}
+          y={rearSetback}
+          width={rightSetback - leftSetback}
+          height={frontSetback - rearSetback}
+          fill="none"
+          stroke="#f8fafc"
+          strokeWidth="0.4"
+          strokeDasharray="2, 1.5"
+          opacity="0.6"
+        />
+
+        {/* Existing House */}
+        <g>
+          <rect
+            x={-houseWidth / 2}
+            y={18 - houseLength / 2}
+            width={houseWidth}
+            height={houseLength}
+            fill="#4a5568"
+            stroke="#2d3748"
+            strokeWidth="0.5"
+            rx="1"
+          />
+          <text
+            x="0"
+            y="18"
+            fill="#e2e8f0"
+            fontSize="3.2"
+            fontWeight="bold"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            className="font-sans pointer-events-none select-none"
+          >
+            EXISTING HOUSE
+          </text>
+        </g>
+
+        {/* Proposed ADU */}
+        <g>
+          <rect
+            x={-config.width / 2}
+            y={-32 - config.length / 2}
+            width={config.width}
+            height={config.length}
+            fill={finishColor}
+            stroke={isCompliant ? "#9be982" : "#f59e0b"}
+            strokeWidth="0.8"
+            rx="1"
+          />
+          <text
+            x="0"
+            y="-32"
+            fill="#0f172a"
+            fontSize="3.2"
+            fontWeight="bold"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            className="font-sans pointer-events-none select-none"
+          >
+            PROPOSED ADU
+          </text>
+          {/* ADU Dimensions Labels */}
+          <text
+            x="0"
+            y={-32 - config.length / 2 - 3}
+            fill="#9be982"
+            fontSize="2.5"
+            textAnchor="middle"
+            className="font-mono pointer-events-none select-none"
+          >
+            {config.width}&apos; w x {config.length}&apos; l
+          </text>
+        </g>
+
+        {/* Lot Dimension Labels */}
+        <text
+          x={-parcel.lotWidth / 2 - 4}
+          y="0"
+          fill="#cbd5e1"
+          fontSize="3.2"
+          textAnchor="middle"
+          transform={`rotate(-90, ${-parcel.lotWidth / 2 - 4}, 0)`}
+          className="font-mono pointer-events-none select-none"
+        >
+          {parcel.lotLength}&apos; Length
+        </text>
+        <text
+          x="0"
+          y={parcel.lotLength / 2 + 5}
+          fill="#cbd5e1"
+          fontSize="3.2"
+          textAnchor="middle"
+          className="font-mono pointer-events-none select-none"
+        >
+          {parcel.lotWidth}&apos; Width
+        </text>
+
+        {/* Compass Helper (North indicator) */}
+        <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#cbd5e1" strokeWidth="0.5" />
+        <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#cbd5e1" />
+      </svg>
+
+      {/* Info Card */}
       <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-white/15 bg-slate-950/70 p-3 text-xs text-slate-100 shadow-xl backdrop-blur">
         <div className="font-semibold text-white">{parcel.address}</div>
         <div className="mt-1 text-slate-300">
