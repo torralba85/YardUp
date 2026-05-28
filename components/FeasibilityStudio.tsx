@@ -18,6 +18,10 @@ import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
+import {
+  createSavedScenarioStore,
+  type SavedScenario,
+} from "@/lib/saved-scenarios";
 import AppShell from "./studio/AppShell";
 import ControlBadge from "./studio/ControlBadge";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
@@ -49,6 +53,11 @@ export default function FeasibilityStudio() {
   const [activeNav, setActiveNav] = useState("studio");
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>(() => {
+    if (typeof window === "undefined") return [];
+    return createSavedScenarioStore(window.localStorage).list();
+  });
 
   const parcel = getParcelById(parcelId);
   const result = useMemo(
@@ -83,6 +92,38 @@ export default function FeasibilityStudio() {
   function handleGenerateReport() {
     setReportOpen(true);
     setReportAutoFocus(true);
+  }
+
+  function handleSaveScenario() {
+    if (typeof window === "undefined") return;
+    const store = createSavedScenarioStore(window.localStorage);
+    const created = store.save({
+      name: `${parcel.address} - ${config.footprint} sf`,
+      parcelId,
+      config,
+      assumptions,
+    });
+    setSavedScenarios(store.list());
+    setSaveNotice("Saved");
+    setTimeout(() => setSaveNotice(null), 2000);
+    return created;
+  }
+
+  function handleLoadScenario(id: string) {
+    if (typeof window === "undefined") return;
+    const store = createSavedScenarioStore(window.localStorage);
+    const scenario = store.load(id);
+    if (!scenario) return;
+    setParcelId(scenario.parcelId);
+    setConfig(scenario.config);
+    setAssumptions(scenario.assumptions);
+  }
+
+  function handleDeleteScenario(id: string) {
+    if (typeof window === "undefined") return;
+    const store = createSavedScenarioStore(window.localStorage);
+    store.remove(id);
+    setSavedScenarios(store.list());
   }
 
   async function handleShareLink() {
@@ -128,6 +169,9 @@ export default function FeasibilityStudio() {
       parcelCity={parcel.city}
       onNavigate={handleNavigate}
       onReset={resetScenario}
+      savedScenarios={savedScenarios}
+      onLoadScenario={handleLoadScenario}
+      onDeleteScenario={handleDeleteScenario}
     >
       <div className="flex min-h-screen flex-col lg:min-h-0 lg:h-[calc(100vh-320px)] xl:flex-row">
         <section
@@ -152,6 +196,8 @@ export default function FeasibilityStudio() {
           onAssumptionsChange={setAssumptions}
           onReset={resetScenario}
           onGenerateReport={handleGenerateReport}
+          onSaveScenario={handleSaveScenario}
+          saveNotice={saveNotice}
         />
       </div>
 

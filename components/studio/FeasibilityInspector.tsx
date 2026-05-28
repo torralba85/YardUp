@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, Building2, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { Bookmark, BookmarkPlus, Building2, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import {
   configForFootprint,
   finishColors,
@@ -37,6 +37,8 @@ export interface FeasibilityInspectorProps {
   onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
   onReset: () => void;
   onGenerateReport: () => void;
+  onSaveScenario?: () => void;
+  saveNotice?: string | null;
 }
 
 export default function FeasibilityInspector({
@@ -49,6 +51,8 @@ export default function FeasibilityInspector({
   onAssumptionsChange,
   onReset,
   onGenerateReport,
+  onSaveScenario,
+  saveNotice,
 }: FeasibilityInspectorProps) {
   const parcel = parcelPresets.find((preset) => preset.id === parcelId) ?? parcelPresets[0];
   const selectedOption =
@@ -268,6 +272,16 @@ export default function FeasibilityInspector({
             <Sparkles size={17} />
             Generate Concept Report
           </button>
+          {onSaveScenario && (
+            <button
+              type="button"
+              onClick={onSaveScenario}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            >
+              <BookmarkPlus size={16} />
+              {saveNotice ?? "Save Concept"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() =>

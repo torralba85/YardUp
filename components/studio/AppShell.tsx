@@ -1,7 +1,8 @@
 "use client";
 
-import { BarChart3, Box, ChevronDown, FileText, Home, Share2 } from "lucide-react";
+import { BarChart3, Box, ChevronDown, FileText, Home, Share2, Trash2 } from "lucide-react";
 import type { NavItem } from "./types";
+import type { SavedScenario } from "@/lib/saved-scenarios";
 
 export const navItems: NavItem[] = [
   { id: "studio", label: "Feasibility Studio", icon: Box },
@@ -16,6 +17,9 @@ export interface AppShellProps {
   parcelCity: string;
   onNavigate: (id: string) => void;
   onReset: () => void;
+  savedScenarios?: SavedScenario[];
+  onLoadScenario?: (id: string) => void;
+  onDeleteScenario?: (id: string) => void;
   children: React.ReactNode;
 }
 
@@ -25,6 +29,9 @@ export default function AppShell({
   parcelCity,
   onNavigate,
   onReset,
+  savedScenarios = [],
+  onLoadScenario,
+  onDeleteScenario,
   children,
 }: AppShellProps) {
   return (
@@ -87,6 +94,38 @@ export default function AppShell({
                 Reset Project
               </button>
             </div>
+
+            {savedScenarios.length > 0 && (
+              <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Saved Concepts
+                </div>
+                <ul className="space-y-1">
+                  {savedScenarios.slice(0, 5).map((scenario) => (
+                    <li
+                      key={scenario.id}
+                      className="flex items-center gap-2 rounded px-1 py-1 text-xs hover:bg-white/5"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => onLoadScenario?.(scenario.id)}
+                        className="min-w-0 flex-1 truncate text-left text-slate-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111a]"
+                      >
+                        {scenario.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteScenario?.(scenario.id)}
+                        aria-label={`Delete saved concept ${scenario.name}`}
+                        className="rounded p-1 text-slate-400 transition hover:bg-rose-500/20 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111a]"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 rounded-md px-2 py-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700 text-sm font-semibold">
