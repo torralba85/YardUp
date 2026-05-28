@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BarChart3, CheckCircle2, Download, FileText, Printer, Ruler, Share2 } from "lucide-react";
+import { BarChart3, CheckCircle2, Download, FileSpreadsheet, FileText, Printer, Ruler, Share2 } from "lucide-react";
 import { formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 
@@ -10,6 +10,7 @@ export interface ReportPreviewProps {
   result: FeasibilityResult;
   onClose: () => void;
   onDownload: () => void;
+  onExportCsv?: () => void;
   onShare?: () => void;
   shareNotice?: string | null;
   autoFocus?: boolean;
@@ -20,6 +21,7 @@ export default function ReportPreview({
   result,
   onClose,
   onDownload,
+  onExportCsv,
   onShare,
   shareNotice,
   autoFocus = false,
@@ -126,6 +128,16 @@ export default function ReportPreview({
             <Download size={16} />
             Download Summary
           </button>
+          {onExportCsv && (
+            <button
+              type="button"
+              onClick={onExportCsv}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            >
+              <FileSpreadsheet size={16} />
+              Export CSV
+            </button>
+          )}
           {onShare && (
             <button
               type="button"

@@ -6,14 +6,12 @@ import {
   calculateFeasibility,
   defaultAduConfig,
   defaultFinancialAssumptions,
-  finishLabels,
-  formatCurrency,
   getParcelById,
   parcelPresets,
-  roofLabels,
   type ADUConfig,
   type FinancialAssumptions,
 } from "@/lib/feasibility";
+import { buildReportCsv, buildReportText, downloadBlob } from "@/lib/report";
 import {
   parseScenarioParams,
   serializeScenarioParams,
@@ -139,27 +137,13 @@ export default function FeasibilityStudio() {
   }
 
   function downloadReport() {
-    const lines = [
-      "UrbanLens AR - Concept Feasibility Report",
-      `${parcel.address}, ${parcel.city}`,
-      "",
-      `ADU concept: ${result.aduSqft.toLocaleString()} sf, ${roofLabels[config.roof]} roof, ${finishLabels[config.finish]} finish`,
-      `Lot coverage: ${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% max`,
-      `Zoning status: ${result.zoningStatus}`,
-      `Estimated build cost: ${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`,
-      `Monthly rent estimate: ${formatCurrency(result.monthlyRent)}`,
-      `Annual NOI estimate: ${formatCurrency(result.annualNoi)}`,
-      `Simple payback: ${result.paybackYears} years`,
-      "",
-      "Investor-demo estimate only. Verify zoning, costs, financing, taxes, and rent assumptions before decisions.",
-    ];
-    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "urbanlens-concept-feasibility-report.txt";
-    link.click();
-    URL.revokeObjectURL(url);
+    const text = buildReportText({ parcel, config, result });
+    downloadBlob("urbanlens-concept-feasibility-report.txt", text, "text/plain");
+  }
+
+  function exportCsv() {
+    const csv = buildReportCsv({ parcel, config, result });
+    downloadBlob("urbanlens-concept-feasibility-report.csv", csv, "text/csv");
   }
 
   return (
@@ -208,6 +192,7 @@ export default function FeasibilityStudio() {
           result={result}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
+          onExportCsv={exportCsv}
           onShare={handleShareLink}
           shareNotice={shareNotice}
           autoFocus={reportAutoFocus}
