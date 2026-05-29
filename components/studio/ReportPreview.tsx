@@ -38,15 +38,15 @@ export default function ReportPreview({
     <section
       id="export"
       aria-labelledby="report-preview-heading"
-      className="border-t border-lf-hairline bg-lf-card px-6 py-5 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none lg:h-auto lg:max-h-[260px] lg:overflow-y-auto"
+      className="border-t border-lf-hairline bg-lf-card px-6 py-4 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none lg:h-auto lg:max-h-[240px] lg:overflow-y-auto"
     >
       <div className="grid gap-6 lg:grid-cols-[150px_1fr_1fr_250px]">
-        <div className="hidden rounded-md border border-lf-hairline bg-lf-sand-2 p-3 lg:block">
-          <div className="text-[9px] font-bold uppercase tracking-widest text-lf-forest">
+        <div className="hidden rounded-md border border-lf-hairline bg-lf-sand-2 p-2.5 lg:block">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-lf-mahogany">
             LotFoundry
           </div>
-          <div className="mt-3 aspect-[4/5] rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
-          <div className="mt-3 text-xs font-semibold text-lf-espresso">
+          <div className="mt-2 aspect-[3/2] rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
+          <div className="mt-2 text-xs font-semibold text-lf-espresso">
             Concept Feasibility Report
           </div>
           <div className="mt-1 text-[11px] text-lf-muted">{parcelName}</div>
@@ -57,15 +57,15 @@ export default function ReportPreview({
             id="report-preview-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="font-display text-2xl font-black tracking-tight text-lf-espresso focus:outline-none"
+            className="font-display text-xl font-black tracking-tight text-lf-espresso focus:outline-none"
           >
             Concept Feasibility Report
           </h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-lf-muted">
+          <p className="mt-1.5 max-w-xl text-sm leading-6 text-lf-muted">
             A shareable investor-demo summary of the selected ADU concept, site assumptions,
             estimated costs, rental upside, and zoning feasibility.
           </p>
-          <div className="mt-5 grid gap-3 text-sm text-lf-muted sm:grid-cols-2">
+          <div className="mt-3 grid gap-2.5 text-sm text-lf-muted sm:grid-cols-2">
             <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
             <ReportFact
               icon={Ruler}
@@ -93,14 +93,14 @@ export default function ReportPreview({
               "Next steps",
             ].map((item) => (
               <div key={item} className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-lf-forest" />
+                <CheckCircle2 size={16} className="text-lf-mahogany" />
                 {item}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="space-y-3 border-t border-lf-hairline pt-5 lg:border-l lg:border-lf-hairline lg:border-t-0 lg:pl-7 lg:pt-0">
+        <div className="space-y-2.5 border-t border-lf-hairline pt-5 lg:border-l lg:border-lf-hairline lg:border-t-0 lg:pl-7 lg:pt-0">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-lf-espresso">Share or Export</h3>
             <button
@@ -116,7 +116,7 @@ export default function ReportPreview({
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-lf-forest text-xs font-semibold text-lf-sand-2 transition hover:bg-lf-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-lf-mahogany text-xs font-semibold text-lf-sand-2 transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <Printer size={14} />
               Print / Save
@@ -124,7 +124,7 @@ export default function ReportPreview({
             <button
               type="button"
               onClick={onDownload}
-              className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <Download size={14} />
               Download
@@ -133,7 +133,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onExportCsv}
-                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <FileSpreadsheet size={14} />
                 CSV Export
@@ -143,14 +143,14 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onShare}
-                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <Share2 size={14} />
                 <span className="truncate">{shareNotice ?? "Share Link"}</span>
               </button>
             )}
           </div>
-          <div className="rounded-md bg-lf-sand-2 p-3 text-xs leading-5 text-lf-muted border border-lf-hairline/40">
+          <div className="rounded-md bg-lf-sand-2 p-2.5 text-[11px] leading-snug text-lf-muted border border-lf-hairline/40">
             Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
             and market rents before investment decisions.
           </div>

@@ -35,7 +35,7 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="flex min-h-screen bg-lf-mahogany text-slate-900">
+    <div className="flex min-h-dvh bg-lf-mahogany text-lf-espresso">
       <aside
         aria-label="Application navigation"
         className="hidden w-[238px] shrink-0 flex-col border-r border-white/10 bg-lf-mahogany text-white lg:flex"
@@ -76,7 +76,13 @@ export default function AppShell({
           <div className="mt-auto space-y-4">
             <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
               <div className="flex gap-3">
-                <div className="h-14 w-14 rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/lotfoundry-mark-dark.svg"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-14 w-14 rounded border border-lf-taupe/15 bg-lf-espresso/40 p-1.5"
+                />
                 <div>
                   <div className="text-sm font-semibold text-lf-sand">{parcelAddress}</div>
                   <div className="mt-1 text-xs text-lf-taupe">{parcelCity}</div>
@@ -113,7 +119,7 @@ export default function AppShell({
                         type="button"
                         onClick={() => onDeleteScenario?.(scenario.id)}
                         aria-label={`Delete saved concept ${scenario.name}`}
-                        className="rounded p-1 text-lf-taupe transition hover:bg-rose-500/20 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                        className="rounded p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -136,7 +142,7 @@ export default function AppShell({
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col bg-lf-sand lg:h-screen lg:overflow-hidden">
+      <main className="lf-grain flex min-w-0 flex-1 flex-col bg-lf-sand lg:h-screen lg:overflow-hidden">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
           <div className="flex min-w-0 items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}

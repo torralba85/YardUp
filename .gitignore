@@ -10,3 +10,4 @@ qa-artifacts/
 .env
 .env.*
 !.env.example
+.gstack/

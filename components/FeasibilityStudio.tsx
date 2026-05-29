@@ -31,7 +31,25 @@ import type { FeasibilityResult } from "./studio/types";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
-  loading: () => <div className="h-full min-h-[460px] bg-[#16251f]" />,
+  loading: () => (
+    <div
+      className="relative h-full min-h-[460px] overflow-hidden bg-lf-espresso"
+      aria-label="Loading parcel scene"
+      role="status"
+    >
+      <div
+        className="absolute inset-0 animate-pulse"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 50% 18%, rgba(242,229,213,0.07), transparent 38%), linear-gradient(150deg, rgba(89,42,15,0.45) 0%, rgba(38,19,7,0.95) 60%)",
+        }}
+      />
+      <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
+        <div className="h-3 w-32 animate-pulse rounded bg-lf-taupe/15" />
+        <div className="h-2.5 w-56 animate-pulse rounded bg-lf-taupe/10" />
+      </div>
+    </div>
+  ),
 });
 
 export default function FeasibilityStudio() {
@@ -168,7 +186,7 @@ export default function FeasibilityStudio() {
       <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
           aria-label="Parcel massing scene"
-          className="relative min-h-[540px] flex-1 overflow-hidden border-b border-lf-hairline bg-[#13221c] xl:border-b-0 xl:border-r"
+          className="relative min-h-[540px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:border-b-0 xl:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
           <ParcelScene parcel={parcel} config={config} isCompliant={isCompliant} />
@@ -220,16 +238,16 @@ function IncomeLens({
           <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
             ADU income potential
           </p>
-          <h2 className="mt-1 font-display text-3xl font-black tracking-tight text-lf-sand sm:text-4xl">
+          <h2 className="mt-1 font-display text-4xl font-black leading-[0.95] tracking-[-0.035em] text-lf-sand sm:text-5xl">
             {formatCurrency(result.monthlyRent)}
-            <span className="ml-2 font-sans text-base font-medium text-lf-sand/70 pl-1.5">/ mo rent</span>
+            <span className="ml-2 font-sans text-base font-medium tracking-normal text-lf-sand/70 pl-1.5">/ mo rent</span>
           </h2>
         </div>
         <div
           className={`rounded-md border px-3 py-2 text-sm font-semibold ${
             isCompliant
-              ? "border-lf-forest/35 bg-lf-forest-soft text-emerald-300"
-              : "border-lf-amber/40 bg-lf-amber/15 text-amber-300"
+              ? "border-lf-mahogany bg-lf-mahogany text-lf-sand"
+              : "border-lf-clay bg-lf-clay text-lf-sand"
           }`}
         >
           {result.zoningStatus}
@@ -258,7 +276,7 @@ function IncomeLens({
       </div>
 
       <div className="mt-3 flex items-start gap-2 text-xs leading-5 text-lf-taupe">
-        <CircleCheck size={15} className="mt-0.5 shrink-0 text-lf-forest" />
+        <CircleCheck size={15} className="mt-0.5 shrink-0 text-lf-clay" />
         Estimate updates as you change parcel, size, finish, and rent assumptions.
       </div>
     </div>

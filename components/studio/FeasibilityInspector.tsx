@@ -250,7 +250,7 @@ export default function FeasibilityInspector({
           {result.warnings.length > 0 && (
             <div
               role="alert"
-              className="rounded-md border border-lf-amber/35 bg-lf-amber/10 p-3 text-sm text-lf-amber"
+              className="rounded-md border border-lf-clay/40 bg-lf-clay/10 p-3 text-sm text-lf-clay"
             >
               <div className="flex items-start gap-2">
                 <TriangleAlert className="mt-0.5 shrink-0" size={17} />
@@ -267,7 +267,7 @@ export default function FeasibilityInspector({
           <button
             type="button"
             onClick={onGenerateReport}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-forest text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-mahogany text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <Sparkles size={17} />
             Generate Concept Report
@@ -302,7 +302,7 @@ export default function FeasibilityInspector({
 function LabelRow({
   label,
   value,
-  valueClass = "font-display text-lf-forest",
+  valueClass = "font-display text-lf-mahogany",
 }: {
   label: string;
   value?: string;

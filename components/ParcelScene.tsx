@@ -29,7 +29,7 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompli
     ]);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-    const material = new THREE.LineBasicMaterial({ color: isCompliant ? "#9be982" : "#f59e0b" });
+    const material = new THREE.LineBasicMaterial({ color: isCompliant ? "#F2E5D5" : "#8C5B3F" });
     return new THREE.LineSegments(geometry, material);
   }, [isCompliant, parcel.lotLength, parcel.lotWidth]);
 
@@ -57,7 +57,7 @@ function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
     const material = new THREE.LineDashedMaterial({
-      color: "#f8fafc",
+      color: "#BFA58E",
       dashSize: 2.4,
       gapSize: 1.6,
       transparent: true,
@@ -79,17 +79,17 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
     <group position={[0, 3.2, 18]}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[width, 6.4, length]} />
-        <meshStandardMaterial color="#69757c" roughness={0.82} />
+        <meshStandardMaterial color="#592A0F" roughness={0.82} />
       </mesh>
       <mesh position={[0, 3.65, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
         <boxGeometry args={[width * 0.76, 1.6, length * 1.08]} />
-        <meshStandardMaterial color="#2b343b" roughness={0.72} />
+        <meshStandardMaterial color="#3a1c0c" roughness={0.72} />
       </mesh>
       <Text
         position={[0, 7.6, 0]}
         rotation={[-Math.PI / 2.8, 0, 0]}
         fontSize={1.6}
-        color="#0f172a"
+        color="#261307"
         anchorX="center"
         anchorY="middle"
       >
@@ -113,7 +113,7 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
       {config.roof === "gable" ? (
         <mesh position={[0, config.height + 1.1, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
           <coneGeometry args={[config.width / 1.35, config.length + 1.6, 4]} />
-          <meshStandardMaterial color="#293038" roughness={0.66} />
+          <meshStandardMaterial color="#3a1c0c" roughness={0.66} />
         </mesh>
       ) : (
         <mesh
@@ -122,7 +122,7 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
           castShadow
         >
           <boxGeometry args={[config.width + 1.2, 0.8, config.length + 1.2]} />
-          <meshStandardMaterial color="#2f3437" roughness={0.68} />
+          <meshStandardMaterial color="#3a1c0c" roughness={0.68} />
         </mesh>
       )}
 
@@ -130,25 +130,25 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
         <group position={[0, config.height * 0.45, config.length / 2 + 0.08]}>
           <mesh position={[-config.width * 0.23, 0, 0]}>
             <boxGeometry args={[config.width * 0.24, config.height * 0.42, 0.22]} />
-            <meshStandardMaterial color="#17202a" roughness={0.25} metalness={0.25} />
+            <meshStandardMaterial color="#261307" roughness={0.25} metalness={0.25} />
           </mesh>
           <mesh position={[config.width * 0.18, -0.5, 0]}>
             <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
-            <meshStandardMaterial color="#0f172a" roughness={0.2} metalness={0.3} />
+            <meshStandardMaterial color="#3a1c0c" roughness={0.2} metalness={0.3} />
           </mesh>
         </group>
       )}
 
       <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
         <boxGeometry args={[config.width + 5, 0.24, 5]} />
-        <meshStandardMaterial color="#c9c4b7" roughness={0.9} />
+        <meshStandardMaterial color="#BFA58E" roughness={0.9} />
       </mesh>
 
       <Text
         position={[0, config.height + 2.4, config.length / 2 + 0.2]}
         rotation={[-Math.PI / 3, 0, 0]}
         fontSize={1.8}
-        color="#0f172a"
+        color="#261307"
         anchorX="center"
         anchorY="middle"
       >
@@ -234,10 +234,10 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
 
   return (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-[#13221c]"
+      className="relative h-full min-h-[460px] overflow-hidden bg-lf-espresso"
       style={{
         backgroundImage:
-          "radial-gradient(circle at 50% 15%, rgba(255,255,255,0.16), transparent 28%), linear-gradient(145deg, #31402f 0%, #183126 55%, #101b19 100%)",
+          "radial-gradient(circle at 50% 15%, rgba(242,229,213,0.12), transparent 30%), linear-gradient(145deg, #592A0F 0%, #3a1c0c 55%, #261307 100%)",
       }}
     >
       <Canvas
@@ -249,7 +249,7 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         className="relative z-0 h-full w-full"
         style={{ background: "transparent" }}
       >
-        <fog attach="fog" args={["#13221c", 120, 230]} />
+        <fog attach="fog" args={["#261307", 120, 230]} />
         <ambientLight intensity={1.8} />
         <directionalLight
           castShadow
@@ -265,11 +265,11 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
-          <meshStandardMaterial color="#386a39" roughness={0.95} />
+          <meshStandardMaterial color="#8C5B3F" roughness={0.95} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} receiveShadow>
           <planeGeometry args={[parcel.lotWidth + 26, parcel.lotLength + 26]} />
-          <meshStandardMaterial color="#223028" roughness={0.98} />
+          <meshStandardMaterial color="#3a1c0c" roughness={0.98} />
         </mesh>
 
         <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
@@ -277,23 +277,23 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         <ExistingHouse parcel={parcel} />
         <ProposedAdu config={config} />
 
-        <gridHelper args={[160, 32, "#315241", "#22382f"]} position={[0, 0.05, 0]} />
+        <gridHelper args={[160, 32, "#BFA58E", "#592A0F"]} position={[0, 0.05, 0]} />
         <OrbitControls enableDamping dampingFactor={0.06} maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
       </Canvas>
 
-      <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-white/70 bg-white/90 p-2 text-xs font-medium text-slate-800 shadow-sm backdrop-blur sm:flex">
-        <span className="rounded bg-emerald-700 px-2 py-1 text-white">3D</span>
+      <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
+        <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">3D</span>
         <span className="px-2 py-1">Setbacks</span>
         <span className="px-2 py-1">Sun 3:00 PM</span>
       </div>
 
-      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-white/60 bg-slate-950/70 px-3 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
         N
       </div>
 
-      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-white/15 bg-slate-950/70 p-3 text-xs text-slate-100 shadow-xl backdrop-blur">
-        <div className="font-semibold text-white">{parcel.address}</div>
-        <div className="mt-1 text-slate-300">
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/75 p-3 text-xs text-lf-sand-2 shadow-xl backdrop-blur">
+        <div className="font-semibold text-lf-sand">{parcel.address}</div>
+        <div className="mt-1 text-lf-taupe">
           {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}
           {parcel.setbacks.side} ft side setbacks.
         </div>
@@ -323,19 +323,20 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
 
   return (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-[#13221c] flex flex-col items-center justify-center p-6"
+      className="relative h-full min-h-[460px] overflow-hidden bg-lf-espresso flex flex-col items-center justify-center p-6"
       style={{
         backgroundImage:
-          "radial-gradient(circle at 50% 15%, rgba(255,255,255,0.16), transparent 28%), linear-gradient(145deg, #31402f 0%, #183126 55%, #101b19 100%)",
+          "radial-gradient(circle at 50% 15%, rgba(242,229,213,0.10), transparent 32%), linear-gradient(145deg, #592A0F 0%, #3a1c0c 55%, #261307 100%)",
       }}
     >
-      {/* 2D Mode Badge */}
-      <div className="absolute right-5 top-20 z-40 flex gap-2 rounded-md border border-white/70 bg-white/90 p-2 text-xs font-medium text-slate-800 shadow-sm backdrop-blur">
-        <span className="rounded bg-emerald-700 px-2 py-1 text-white">2D SITE PLAN</span>
-        <span className="px-2 py-1 text-slate-500">WebGL Fallback</span>
+      {/* 2D Mode Badge — hidden on mobile to match the 3D badge and avoid
+          overlapping the income-potential overlay card on narrow screens. */}
+      <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
+        <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
+        <span className="px-2 py-1 text-lf-muted">WebGL Fallback</span>
       </div>
 
-      <div className="absolute right-5 top-5 z-40 rounded-full border border-white/60 bg-slate-950/70 px-3 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur">
+      <div className="absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
         N
       </div>
 
@@ -358,8 +359,8 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           y={-parcel.lotLength / 2}
           width={parcel.lotWidth}
           height={parcel.lotLength}
-          fill="rgba(34, 48, 40, 0.6)"
-          stroke={isCompliant ? "#9be982" : "#f59e0b"}
+          fill="rgba(38, 19, 7, 0.6)"
+          stroke={isCompliant ? "#F2E5D5" : "#8C5B3F"}
           strokeWidth="0.8"
         />
 
@@ -370,7 +371,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           width={rightSetback - leftSetback}
           height={frontSetback - rearSetback}
           fill="none"
-          stroke="#f8fafc"
+          stroke="#BFA58E"
           strokeWidth="0.4"
           strokeDasharray="2, 1.5"
           opacity="0.6"
@@ -383,15 +384,15 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
             y={18 - houseLength / 2}
             width={houseWidth}
             height={houseLength}
-            fill="#4a5568"
-            stroke="#2d3748"
+            fill="#592A0F"
+            stroke="#3a1c0c"
             strokeWidth="0.5"
             rx="1"
           />
           <text
             x="0"
             y="18"
-            fill="#e2e8f0"
+            fill="#F2E5D5"
             fontSize="3.2"
             fontWeight="bold"
             textAnchor="middle"
@@ -410,14 +411,14 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
             width={config.width}
             height={config.length}
             fill={finishColor}
-            stroke={isCompliant ? "#9be982" : "#f59e0b"}
+            stroke={isCompliant ? "#F2E5D5" : "#8C5B3F"}
             strokeWidth="0.8"
             rx="1"
           />
           <text
             x="0"
             y="-32"
-            fill="#0f172a"
+            fill="#261307"
             fontSize="3.2"
             fontWeight="bold"
             textAnchor="middle"
@@ -430,7 +431,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           <text
             x="0"
             y={-32 - config.length / 2 - 3}
-            fill="#9be982"
+            fill="#F2E5D5"
             fontSize="2.5"
             textAnchor="middle"
             className="font-mono pointer-events-none select-none"
@@ -443,7 +444,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         <text
           x={-parcel.lotWidth / 2 - 4}
           y="0"
-          fill="#cbd5e1"
+          fill="#BFA58E"
           fontSize="3.2"
           textAnchor="middle"
           transform={`rotate(-90, ${-parcel.lotWidth / 2 - 4}, 0)`}
@@ -454,7 +455,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         <text
           x="0"
           y={parcel.lotLength / 2 + 5}
-          fill="#cbd5e1"
+          fill="#BFA58E"
           fontSize="3.2"
           textAnchor="middle"
           className="font-mono pointer-events-none select-none"
@@ -463,14 +464,14 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         </text>
 
         {/* Compass Helper (North indicator) */}
-        <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#cbd5e1" strokeWidth="0.5" />
-        <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#cbd5e1" />
+        <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#BFA58E" strokeWidth="0.5" />
+        <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#BFA58E" />
       </svg>
 
       {/* Info Card */}
-      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-white/15 bg-slate-950/70 p-3 text-xs text-slate-100 shadow-xl backdrop-blur">
-        <div className="font-semibold text-white">{parcel.address}</div>
-        <div className="mt-1 text-slate-300">
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/75 p-3 text-xs text-lf-sand-2 shadow-xl backdrop-blur">
+        <div className="font-semibold text-lf-sand">{parcel.address}</div>
+        <div className="mt-1 text-lf-taupe">
           {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}
           {parcel.setbacks.side} ft side setbacks.
         </div>

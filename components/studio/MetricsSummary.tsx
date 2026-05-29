@@ -10,43 +10,56 @@ export interface MetricsSummaryProps {
 }
 
 export default function MetricsSummary({ result }: MetricsSummaryProps) {
+  // Tier 1: money figures lead — larger, heavier display weight.
+  // Tier 2: supporting figures sit visually quieter so hierarchy reads at a glance.
   const metrics = [
-    {
-      icon: Ruler,
-      label: "Build Cost Range",
-      value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
-      detail: `$${result.costPerSqftLow} - $${result.costPerSqftHigh} / sf`,
-      fontClass: "font-display",
-      detailClass: "font-mono",
-    },
     {
       icon: Home,
       label: "Monthly Rent",
       value: formatCurrency(result.monthlyRent),
       detail: "Local demo estimate",
-      fontClass: "font-display",
+      valueClass: "font-display font-black text-3xl tracking-[-0.03em] text-lf-espresso",
+      tier: 1,
     },
     {
       icon: BarChart3,
       label: "Annual NOI",
       value: formatCurrency(result.annualNoi),
       detail: "After OpEx & vacancy",
-      fontClass: "font-display",
+      valueClass: "font-display font-black text-3xl tracking-[-0.03em] text-lf-mahogany",
+      tier: 1,
+    },
+    {
+      icon: Ruler,
+      label: "Build Cost Range",
+      value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
+      detail: `$${result.costPerSqftLow} - $${result.costPerSqftHigh} / sf`,
+      valueClass: "font-display font-semibold text-xl tracking-tight text-lf-espresso",
+      detailClass: "font-mono",
+      tier: 2,
     },
     {
       icon: SlidersHorizontal,
       label: "Payback",
-      value: `${result.paybackYears}`,
-      detail: "Years at mid-range cost",
-      fontClass: "font-display",
+      value: `${result.paybackYears} yrs`,
+      detail: "At mid-range cost",
+      valueClass: "font-display font-semibold text-xl tracking-tight text-lf-espresso",
+      tier: 2,
     },
     {
       icon: Layers3,
-      label: "Coverage Used",
+      label: "Lot Coverage",
+      // Value and detail share one basis — lot coverage vs. the zoning cap —
+      // matching report.ts / ReportPreview ("X% of Y% max"). The previous
+      // "40% / 1,980 of 2,000 sf" mixed lot-coverage (%) with allowance-used
+      // (sf), so one cell told two stories. Turns clay once over the cap.
       value: `${Math.round(result.coveragePercent)}%`,
-      detail: `${result.totalFootprint.toLocaleString()} sf / ${result.allowedFootprint.toLocaleString()} sf allowed`,
-      fontClass: "font-mono text-xl mt-3",
+      detail: `of ${result.maxCoveragePercent}% max`,
+      valueClass: `font-mono font-semibold text-xl ${
+        result.remainingCapacity < 0 ? "text-lf-clay" : "text-lf-espresso"
+      }`,
       detailClass: "font-mono",
+      tier: 2,
     },
     {
       icon: CheckCircle2,
@@ -54,9 +67,10 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       value: result.zoningStatus,
       detail:
         result.zoningStatus === "Compliant" ? "ADU appears allowed" : "Needs review",
-      fontClass: `font-sans font-semibold ${
-        result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-amber"
+      valueClass: `font-sans font-semibold text-xl ${
+        result.zoningStatus === "Compliant" ? "text-lf-mahogany" : "text-lf-clay"
       }`,
+      tier: 2,
     },
   ];
 
@@ -68,20 +82,19 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
     >
       {metrics.map((metric) => {
         const Icon = metric.icon;
+        const isLead = metric.tier === 1;
         return (
           <div
             key={metric.label}
-            className="border-b border-lf-hairline px-6 py-5 lg:border-b-0 lg:border-r lg:border-lf-hairline last:lg:border-r-0"
+            className={`border-b border-lf-hairline px-6 py-5 lg:border-b-0 lg:border-r lg:border-lf-hairline last:lg:border-r-0 ${
+              isLead ? "bg-lf-sand-2/60" : ""
+            }`}
           >
-            <div className="flex items-center gap-2 text-xs font-medium text-lf-muted">
-              <Icon size={15} />
+            <div className="flex items-center gap-2 text-[11px] font-mono font-medium uppercase tracking-[0.14em] text-lf-muted">
+              <Icon size={14} />
               {metric.label}
             </div>
-            <div
-              className={`mt-2 text-2xl font-semibold tracking-tight text-lf-espresso ${metric.fontClass}`}
-            >
-              {metric.value}
-            </div>
+            <div className={`mt-3 ${metric.valueClass}`}>{metric.value}</div>
             <div className={`mt-1 text-xs text-lf-muted ${metric.detailClass ?? ""}`}>
               {metric.detail}
             </div>
