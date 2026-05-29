@@ -43,7 +43,7 @@ export default function AppShell({
         <div className="flex h-full flex-col p-4">
           <div className="flex flex-col gap-1 px-2 py-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-8 w-auto self-start" />
+            <img src="/lotfoundry-lockup-horizontal-inverse.svg" alt="LotFoundry" className="h-8 w-auto self-start" />
             <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-lf-taupe pl-0.5">
               a foundry for lots
             </p>
