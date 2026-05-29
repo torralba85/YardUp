@@ -1,6 +1,6 @@
 # Deployment Guide
 
-UrbanLens AR ships as a static-friendly Next.js 16 app. Default target: **Vercel**.
+LotFoundry ships as a static-friendly Next.js 16 app. Default target: **Vercel**.
 
 ## Prerequisites
 
@@ -68,7 +68,7 @@ All commands must pass. CI (`.github/workflows/ci.yml`) runs the same gate.
 
 After deployment, manually verify:
 
-- Title `UrbanLens AR | ADU Feasibility Studio` loads.
+- Title `LotFoundry | ADU Feasibility Studio` loads.
 - The default feasibility workflow is visible.
 - The report preview is visible at the bottom of the page.
 - Selecting `compact-lot` and `1,000 sf` displays the `Review needed` alert.

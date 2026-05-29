@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Feasibility Studio", () => {
   test("loads the studio with default metrics and scene", async ({ page }, testInfo) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/UrbanLens AR \| ADU Feasibility Studio/);
+    await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility Studio/);
 
     const heading = page.getByRole("heading", { name: "Feasibility Studio", level: 2 });
     await expect(heading).toBeVisible();
