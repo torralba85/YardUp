@@ -1,6 +1,6 @@
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
 
-export const STORAGE_KEY = "urbanlens.savedScenarios.v1";
+export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
 
 export interface SavedScenario {
   id: string;

@@ -1,6 +1,6 @@
 {
-  "name": "UrbanLens: ADU AR Visualizer",
-  "description": "An investor-demo ADU feasibility studio with local parcel assumptions, 3D massing, cost ranges, and rental payback estimates.",
+  "name": "LotFoundry",
+  "description": "An investor-demo ADU feasibility studio with local parcel assumptions, 3D massing, cost ranges, and rental payback estimates by LotFoundry",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

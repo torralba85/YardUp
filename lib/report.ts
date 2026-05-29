@@ -18,7 +18,7 @@ const DISCLAIMER =
 
 export function buildReportText({ parcel, config, result }: ReportInput): string {
   const lines = [
-    "UrbanLens AR - Concept Feasibility Report",
+    "LotFoundry - Concept Feasibility Report",
     `${parcel.address}, ${parcel.city}`,
     "",
     `ADU concept: ${result.aduSqft.toLocaleString()} sf, ${roofLabels[config.roof]} roof, ${finishLabels[config.finish]} finish`,

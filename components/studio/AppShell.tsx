@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Box, ChevronDown, FileText, Home, Share2, Trash2 } from "lucide-react";
+import { BarChart3, Box, FileText, Share2, Trash2 } from "lucide-react";
 import type { NavItem } from "./types";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 
@@ -35,22 +35,18 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="flex min-h-screen bg-[#07111a] text-slate-900">
+    <div className="flex min-h-screen bg-lf-mahogany text-slate-900">
       <aside
         aria-label="Application navigation"
-        className="hidden w-[238px] shrink-0 flex-col border-r border-white/10 bg-[#07111a] text-white lg:flex"
+        className="hidden w-[238px] shrink-0 flex-col border-r border-white/10 bg-lf-mahogany text-white lg:flex"
       >
         <div className="flex h-full flex-col p-4">
-          <div className="flex items-center gap-3 px-2 py-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-emerald-400/50 bg-emerald-400/10 text-emerald-300">
-              <Home size={22} />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight">UrbanLens AR</h1>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
-                ADU Feasibility Visualizer
-              </p>
-            </div>
+          <div className="flex flex-col gap-1 px-2 py-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-8 w-auto self-start" />
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-lf-taupe pl-0.5">
+              a foundry for lots
+            </p>
           </div>
 
           <nav aria-label="Primary" className="mt-8 space-y-2">
@@ -64,13 +60,13 @@ export default function AppShell({
                   type="button"
                   onClick={() => onNavigate(item.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex h-12 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111a] ${
+                  className={`flex h-12 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany ${
                     isActive
-                      ? "bg-emerald-500/20 text-white ring-1 ring-emerald-400/15"
-                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                      ? "bg-lf-espresso/45 text-white ring-1 ring-lf-taupe/20"
+                      : "text-lf-taupe hover:bg-white/5 hover:text-lf-sand"
                   }`}
                 >
-                  <Icon size={18} className={isActive ? "text-emerald-300" : "text-slate-400"} />
+                  <Icon size={18} className={isActive ? "text-lf-sand" : "text-lf-taupe"} />
                   {item.label}
                 </button>
               );
@@ -80,16 +76,16 @@ export default function AppShell({
           <div className="mt-auto space-y-4">
             <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
               <div className="flex gap-3">
-                <div className="h-14 w-14 rounded bg-gradient-to-br from-emerald-200 to-slate-500" />
+                <div className="h-14 w-14 rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
                 <div>
-                  <div className="text-sm font-semibold">{parcelAddress}</div>
-                  <div className="mt-1 text-xs text-slate-400">{parcelCity}</div>
+                  <div className="text-sm font-semibold text-lf-sand">{parcelAddress}</div>
+                  <div className="mt-1 text-xs text-lf-taupe">{parcelCity}</div>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-9 w-full rounded border border-white/10 text-xs font-medium text-slate-200 transition hover:border-emerald-300/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111a]"
+                className="mt-3 h-9 w-full rounded border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
@@ -97,7 +93,7 @@ export default function AppShell({
 
             {savedScenarios.length > 0 && (
               <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-lf-taupe">
                   Saved Concepts
                 </div>
                 <ul className="space-y-1">
@@ -109,7 +105,7 @@ export default function AppShell({
                       <button
                         type="button"
                         onClick={() => onLoadScenario?.(scenario.id)}
-                        className="min-w-0 flex-1 truncate text-left text-slate-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111a]"
+                        className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                       >
                         {scenario.name}
                       </button>
@@ -117,7 +113,7 @@ export default function AppShell({
                         type="button"
                         onClick={() => onDeleteScenario?.(scenario.id)}
                         aria-label={`Delete saved concept ${scenario.name}`}
-                        className="rounded p-1 text-slate-400 transition hover:bg-rose-500/20 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111a]"
+                        className="rounded p-1 text-lf-taupe transition hover:bg-rose-500/20 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -128,30 +124,25 @@ export default function AppShell({
             )}
 
             <div className="flex items-center gap-3 rounded-md px-2 py-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700 text-sm font-semibold">
-                MC
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
+                LO
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">M. Carter</div>
-                <div className="text-xs text-slate-400">Investor Demo</div>
+                <div className="truncate text-sm font-medium text-lf-sand-2">Lot Owner</div>
+                <div className="text-xs text-lf-taupe">Feasibility Desk</div>
               </div>
-              <ChevronDown size={16} className="text-slate-400" />
             </div>
           </div>
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col bg-[#f5f7f4] lg:h-screen lg:overflow-hidden">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+      <main className="flex min-w-0 flex-1 flex-col bg-lf-sand lg:h-screen lg:overflow-hidden">
+        <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-emerald-600/30 bg-emerald-50 text-emerald-700">
-              <Home size={20} />
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-base font-semibold tracking-tight text-slate-950">
-                UrbanLens AR
-              </div>
-              <div className="truncate text-xs text-slate-500">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto shrink-0" />
+            <div className="hidden min-w-0 sm:block border-l border-lf-hairline pl-3">
+              <div className="truncate text-xs text-lf-muted">
                 {parcelAddress}, {parcelCity}
               </div>
             </div>
@@ -159,7 +150,7 @@ export default function AppShell({
           <button
             type="button"
             onClick={onReset}
-            className="h-9 rounded-md border border-slate-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            className="h-9 rounded-md border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             Reset
           </button>

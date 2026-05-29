@@ -144,14 +144,14 @@ export default function FeasibilityStudio() {
     setTimeout(() => setShareNotice(null), 2500);
   }
 
-  function downloadReport() {
+    function downloadReport() {
     const text = buildReportText({ parcel, config, result });
-    downloadBlob("urbanlens-concept-feasibility-report.txt", text, "text/plain");
+    downloadBlob("lotfoundry-concept-feasibility-report.txt", text, "text/plain");
   }
 
   function exportCsv() {
     const csv = buildReportCsv({ parcel, config, result });
-    downloadBlob("urbanlens-concept-feasibility-report.csv", csv, "text/csv");
+    downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
   }
 
   return (
@@ -168,7 +168,7 @@ export default function FeasibilityStudio() {
       <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
           aria-label="Parcel massing scene"
-          className="relative min-h-[540px] flex-1 overflow-hidden border-b border-slate-200 bg-[#13221c] xl:border-b-0 xl:border-r"
+          className="relative min-h-[540px] flex-1 overflow-hidden border-b border-lf-hairline bg-[#13221c] xl:border-b-0 xl:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
           <ParcelScene parcel={parcel} config={config} isCompliant={isCompliant} />
@@ -214,22 +214,22 @@ function IncomeLens({
   isCompliant: boolean;
 }) {
   return (
-    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-white/20 bg-slate-950/[0.78] p-4 text-white shadow-2xl backdrop-blur-md sm:left-5 sm:right-auto sm:min-w-[520px]">
+    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/20 bg-lf-espresso/[0.84] p-4 text-lf-sand-2 shadow-2xl backdrop-blur-md sm:left-5 sm:right-auto sm:min-w-[520px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">
+          <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
             ADU income potential
           </p>
-          <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-1 font-display text-3xl font-black tracking-tight text-lf-sand sm:text-4xl">
             {formatCurrency(result.monthlyRent)}
-            <span className="ml-2 font-sans text-base font-medium text-slate-300">/ mo rent</span>
+            <span className="ml-2 font-sans text-base font-medium text-lf-sand/70 pl-1.5">/ mo rent</span>
           </h2>
         </div>
         <div
           className={`rounded-md border px-3 py-2 text-sm font-semibold ${
             isCompliant
-              ? "border-emerald-300/40 bg-emerald-400/15 text-emerald-100"
-              : "border-amber-300/50 bg-amber-300/15 text-amber-100"
+              ? "border-lf-forest/35 bg-lf-forest-soft text-emerald-300"
+              : "border-lf-amber/40 bg-lf-amber/15 text-amber-300"
           }`}
         >
           {result.zoningStatus}
@@ -241,24 +241,24 @@ function IncomeLens({
           icon={BadgeDollarSign}
           label="Annual NOI"
           value={formatCurrency(result.annualNoi)}
-          fontClass="font-serif"
+          fontClass="font-display text-white text-xl"
         />
         <LensFact
           icon={Clock3}
           label="Payback"
           value={`${result.paybackYears} yrs`}
-          fontClass="font-serif"
+          fontClass="font-display text-white text-xl"
         />
         <LensFact
           icon={Hammer}
           label="Build range"
           value={`${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`}
-          fontClass="font-mono text-base mt-1.5"
+          fontClass="font-mono text-base mt-1.5 text-lf-sand-2"
         />
       </div>
 
-      <div className="mt-3 flex items-start gap-2 text-xs leading-5 text-slate-300">
-        <CircleCheck size={15} className="mt-0.5 shrink-0 text-emerald-200" />
+      <div className="mt-3 flex items-start gap-2 text-xs leading-5 text-lf-taupe">
+        <CircleCheck size={15} className="mt-0.5 shrink-0 text-lf-forest" />
         Estimate updates as you change parcel, size, finish, and rent assumptions.
       </div>
     </div>
@@ -269,7 +269,7 @@ function LensFact({
   icon: Icon,
   label,
   value,
-  fontClass = "font-serif",
+  fontClass = "font-display text-white text-xl",
 }: {
   icon: typeof BadgeDollarSign;
   label: string;
@@ -277,12 +277,12 @@ function LensFact({
   fontClass?: string;
 }) {
   return (
-    <div className="rounded-md border border-white/10 bg-white/[0.08] px-3 py-2">
-      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-300">
+    <div className="rounded-md border border-lf-taupe/15 bg-lf-sand-2/[0.08] px-3 py-2">
+      <div className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-lf-taupe">
         <Icon size={14} />
         {label}
       </div>
-      <div className={`mt-1 text-lg font-semibold tracking-tight text-white ${fontClass}`}>{value}</div>
+      <div className={`mt-1 font-semibold tracking-tight ${fontClass}`}>{value}</div>
     </div>
   );
 }

@@ -61,25 +61,25 @@ export default function FeasibilityInspector({
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 bg-white lg:h-full xl:w-[404px]"
+      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full xl:w-[404px] xl:border-l"
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-lf-hairline px-6 py-5">
           <div>
             <h2
               id="feasibility-heading"
-              className="text-2xl font-semibold tracking-tight text-slate-950"
+              className="text-2xl font-semibold tracking-tight text-lf-espresso"
             >
               Feasibility Studio
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-lf-muted">
               Live concept assumptions and investor-grade outputs.
             </p>
           </div>
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
@@ -96,7 +96,7 @@ export default function FeasibilityInspector({
               id="parcel-preset"
               value={parcelId}
               onChange={(event) => onParcelChange(event.target.value)}
-              className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+              className="h-11 w-full rounded-md border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
             >
               {parcelPresets.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -116,7 +116,7 @@ export default function FeasibilityInspector({
           </div>
 
           <div className="space-y-3">
-            <LabelRow label="ADU Size" value="Footprint" valueClass="font-sans text-slate-500 font-medium" />
+            <LabelRow label="ADU Size" value="Footprint" valueClass="font-sans text-lf-muted font-medium" />
             <div
               role="group"
               aria-label="ADU footprint size"
@@ -128,17 +128,17 @@ export default function FeasibilityInspector({
                   type="button"
                   onClick={() => onConfigChange(configForFootprint(option.value, config))}
                   aria-pressed={config.footprint === option.value}
-                  className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                  className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                     config.footprint === option.value
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
                   }`}
                 >
                   {option.label}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-lf-muted">
               Selected: {selectedOption.label} ({selectedOption.summary})
             </p>
           </div>
@@ -184,10 +184,10 @@ export default function FeasibilityInspector({
                   type="button"
                   onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
                   aria-pressed={config.roof === key}
-                  className={`flex h-16 flex-col items-center justify-center gap-1 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                  className={`flex h-16 flex-col items-center justify-center gap-1 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                     config.roof === key
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-300 text-slate-600 hover:border-slate-400"
+                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
                   }`}
                 >
                   <Building2 size={22} />
@@ -208,10 +208,10 @@ export default function FeasibilityInspector({
                     onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
                   }
                   aria-pressed={config.finish === key}
-                  className={`rounded-md border p-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                  className={`rounded-md border p-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                     config.finish === key
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-300 text-slate-600 hover:border-slate-400"
+                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
                   }`}
                 >
                   <span
@@ -235,10 +235,10 @@ export default function FeasibilityInspector({
                     onAssumptionsChange({ ...assumptions, rentScenario: scenario })
                   }
                   aria-pressed={assumptions.rentScenario === scenario}
-                  className={`h-10 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                  className={`h-10 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                     assumptions.rentScenario === scenario
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-300 text-slate-600 hover:border-slate-400"
+                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
                   }`}
                 >
                   {rentLabels[scenario]}
@@ -250,7 +250,7 @@ export default function FeasibilityInspector({
           {result.warnings.length > 0 && (
             <div
               role="alert"
-              className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              className="rounded-md border border-lf-amber/35 bg-lf-amber/10 p-3 text-sm text-lf-amber"
             >
               <div className="flex items-start gap-2">
                 <TriangleAlert className="mt-0.5 shrink-0" size={17} />
@@ -263,11 +263,11 @@ export default function FeasibilityInspector({
           )}
         </div>
 
-        <div className="space-y-3 border-t border-slate-200 px-6 py-5">
+        <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
           <button
             type="button"
             onClick={onGenerateReport}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-forest text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <Sparkles size={17} />
             Generate Concept Report
@@ -276,7 +276,7 @@ export default function FeasibilityInspector({
             <button
               type="button"
               onClick={onSaveScenario}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <BookmarkPlus size={16} />
               {saveNotice ?? "Save Concept"}
@@ -288,7 +288,7 @@ export default function FeasibilityInspector({
               onConfigChange({ ...config, includeOpenings: !config.includeOpenings })
             }
             aria-pressed={config.includeOpenings}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <Bookmark size={16} />
             {config.includeOpenings ? "Remove Openings" : "Add Entry / Windows"}
@@ -302,7 +302,7 @@ export default function FeasibilityInspector({
 function LabelRow({
   label,
   value,
-  valueClass = "font-serif text-emerald-700",
+  valueClass = "font-display text-lf-forest",
 }: {
   label: string;
   value?: string;
@@ -310,7 +310,7 @@ function LabelRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="text-sm font-semibold text-slate-950">{label}</h3>
+      <h3 className="text-sm font-semibold text-lf-espresso">{label}</h3>
       {value && <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>}
     </div>
   );
@@ -319,8 +319,8 @@ function LabelRow({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-0.5 font-mono text-xs font-medium text-slate-800">{value}</div>
+      <div className="text-xs text-lf-muted">{label}</div>
+      <div className="mt-0.5 font-mono text-xs font-medium text-lf-espresso">{value}</div>
     </div>
   );
 }
@@ -343,9 +343,9 @@ function Slider({
   const inputId = `slider-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
     <label className="block" htmlFor={inputId}>
-      <span className="mb-1 flex items-center justify-between text-xs font-medium text-slate-500">
+      <span className="mb-1 flex items-center justify-between text-xs font-medium text-lf-muted">
         {label}
-        <span className="font-mono text-slate-800">
+        <span className="font-mono text-lf-espresso">
           {value} {suffix}
         </span>
       </span>
@@ -356,7 +356,7 @@ function Slider({
         max={max}
         value={value}
         onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
-        className="w-full accent-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+        className="w-full accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
       />
     </label>
   );
