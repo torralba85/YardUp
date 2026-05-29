@@ -2,8 +2,26 @@
 
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  --font-display: var(--font-display), var(--font-sans), sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  /* LotFoundry Warm Earth Palette */
+  --color-lf-sand: #F2E5D5;
+  --color-lf-sand-2: #F8F0E4;
+  --color-lf-card: #FBF6EE;
+  --color-lf-taupe: #BFA58E;
+  --color-lf-taupe-soft: #BFA58E2E;
+  --color-lf-clay: #8C5B3F;
+  --color-lf-mahogany: #592A0F;
+  --color-lf-espresso: #261307;
+  --color-lf-muted: #6B5B4D;
+  --color-lf-hairline: #E0CDB4;
+
+  /* Semantic status colors */
+  --color-lf-forest: #2F4A38;
+  --color-lf-forest-soft: #2F4A3820;
+  --color-lf-amber: #B5792E;
+  --color-lf-brick: #A23B26;
 }
 
 * {
@@ -11,11 +29,13 @@
 }
 
 html {
-  background: #07111a;
+  background: var(--color-lf-sand);
 }
 
 body {
   margin: 0;
+  background: var(--color-lf-sand);
+  color: var(--color-lf-espresso);
 }
 
 button,
@@ -35,7 +55,7 @@ input {
 
   body {
     background: #ffffff !important;
-    color: #0f172a !important;
+    color: #261307 !important;
     overflow: visible !important;
   }
 
@@ -76,3 +96,4 @@ input {
     transition-duration: 0.01ms !important;
   }
 }
+
