@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, type RootState } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
 import type { ADUConfig, ParcelPreset } from "@/lib/feasibility";
@@ -72,8 +72,8 @@ function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
 }
 
 function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
-  const width = Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28);
-  const length = Math.min(parcel.existingHouseSqft / width, 36);
+  const width = Math.max(Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28), 8);
+  const length = Math.max(Math.min(parcel.existingHouseSqft / width, 36), 8);
 
   return (
     <group position={[0, 3.2, 18]}>
@@ -160,21 +160,73 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
 
 export default function ParcelScene({ parcel, config, isCompliant }: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
+  const restoreTimer = useRef<number | null>(null);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    let cancelled = false;
     try {
-      const canvas = document.createElement("canvas");
-      const isAvailable = !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
-      );
-      setWebglAvailable(isAvailable);
+      const probe = document.createElement("canvas");
+      const ctx = (probe.getContext("webgl") ||
+        probe.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+      const isAvailable = !!(window.WebGLRenderingContext && ctx);
+      // Release the probe context immediately. Browsers cap concurrent WebGL
+      // contexts (~16); leaking one here can evict the live scene's context
+      // and blank the canvas.
+      ctx?.getExtension("WEBGL_lose_context")?.loseContext();
+      if (!cancelled) setWebglAvailable(isAvailable);
     } catch {
-      setWebglAvailable(false);
+      if (!cancelled) setWebglAvailable(false);
     }
+    return () => {
+      cancelled = true;
+    };
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    return () => {
+      if (restoreTimer.current !== null) window.clearTimeout(restoreTimer.current);
+    };
+  }, []);
+
+  // R3F sizes the canvas from react-use-measure's initial ResizeObserver callback,
+  // which is dropped under Next dev's StrictMode double-mount — the canvas stays at
+  // its 300x150 default and the scene renders into a tiny corner. The hook's window
+  // 'resize' listener stays live, so dispatching one resize after layout forces the
+  // canvas to fill its parent. Harmless in production where the initial measure works.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [webglAvailable]);
+
+  const handleCreated = useCallback((state: RootState) => {
+    const canvasEl = state.gl.domElement;
+    const armFallback = () => {
+      restoreTimer.current = window.setTimeout(() => setWebglAvailable(false), 4000);
+    };
+    const onLost = (event: Event) => {
+      // preventDefault lets the browser attempt to restore the context
+      // instead of leaving the canvas permanently blank.
+      event.preventDefault();
+      armFallback();
+    };
+    const onRestored = () => {
+      if (restoreTimer.current !== null) {
+        window.clearTimeout(restoreTimer.current);
+        restoreTimer.current = null;
+      }
+      state.invalidate();
+    };
+    canvasEl.addEventListener("webglcontextlost", onLost, false);
+    canvasEl.addEventListener("webglcontextrestored", onRestored, false);
+    // A context can be *born* lost after a GPU reset/throttle; no "lost" event
+    // fires in that case, so arm the 2D fallback directly.
+    const gl = state.gl.getContext();
+    if (gl && gl.isContextLost()) armFallback();
+  }, []);
 
   if (!webglAvailable) {
     return <Parcel2DScene parcel={parcel} config={config} isCompliant={isCompliant} />;
@@ -192,7 +244,8 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         shadows
         camera={{ position: [58, 58, 72], fov: 42, near: 1, far: 500 }}
         dpr={[1, 1.8]}
-        gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+        gl={{ alpha: true, antialias: true }}
+        onCreated={handleCreated}
         className="relative z-0 h-full w-full"
         style={{ background: "transparent" }}
       >
