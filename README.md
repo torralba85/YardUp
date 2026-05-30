@@ -105,6 +105,17 @@ npx eas build --profile preview --platform android
 npx eas build --profile production --platform all
 ```
 
+## Web Preview (shareable URL)
+
+The app exports to a static single-page web build (`web.output: "single"` in `app.config.ts`) that deploys to Firebase Hosting on the `yardup-2026` project, giving a shareable demo link (e.g. `https://yardup-2026.web.app`).
+
+```bash
+npm run web:export   # builds the static site into dist/
+npm run web:deploy   # web:export + firebase deploy --only hosting
+```
+
+`firebase.json` serves `dist/` with a catch-all rewrite to `/index.html` so Expo Router's client-side routes resolve. Deploying requires Firebase CLI auth with access to `yardup-2026` (`npx firebase login`). The web target uses the public `EXPO_PUBLIC_FIREBASE_*` config; native-only capabilities degrade gracefully in the browser. For an ephemeral on-device preview instead, run `npx expo start --tunnel` and scan the QR code with Expo Go.
+
 ## Privacy Defaults
 
 Exact addresses stay in local SQLite unless the user initiates a cloud-backed action such as geocoding, sync, regulation refresh, property history search, or quote request. AI design generation receives project constraints and lot facts through backend mediation, with unnecessary personal identifiers removed. Site photos remain on-device in the React Native client; the backend receives only whether a site photo exists.
