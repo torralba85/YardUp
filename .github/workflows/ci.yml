@@ -51,6 +51,6 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_LOTFOUNDRY }}"
-          projectId: lotfoundry
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_YARDUP_2026 }}"
+          projectId: yardup-2026
           channelId: live

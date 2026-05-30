@@ -59,7 +59,7 @@ const nextConfig: NextConfig = {
 
 ### `.firebaserc`
 
-Sets the default Firebase project ID. Update `"lotfoundry"` to match your actual Firebase project.
+Sets the default Firebase project ID to `yardup-2026`.
 
 ### `functions/index.js`
 
@@ -76,7 +76,7 @@ A Firebase Functions v2 HTTPS function that boots Next.js in production mode and
 
 | Secret | Purpose |
 |---|---|
-| `FIREBASE_SERVICE_ACCOUNT_LOTFOUNDRY` | JSON service account key for Firebase deploy. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
+| `FIREBASE_SERVICE_ACCOUNT_YARDUP_2026` | JSON service account key for Firebase deploy. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
 
 ## Environment Variables
 
