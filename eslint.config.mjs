@@ -13,7 +13,10 @@ const eslintConfig = [
       "test-results/**",
       "playwright-report/**",
       "qa-artifacts/**",
-      "coverage/**"
+      "coverage/**",
+      "functions/**",
+      "scripts/**",
+      "dist/**",
     ],
   },
 ];

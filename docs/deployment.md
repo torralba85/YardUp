@@ -1,12 +1,37 @@
 # Deployment Guide
 
-LotFoundry ships as a static-friendly Next.js 16 app. Default target: **Vercel**.
+LotFoundry ships as a Next.js 16 app deployed to **Firebase Hosting + Cloud Functions**.
+
+## Architecture
+
+| Layer | Firebase Service | Purpose |
+|---|---|---|
+| Static assets & SPA | Firebase Hosting | Serves the Next.js standalone build, fonts, icons, manifest |
+| API routes (`/api/*`) | Cloud Functions (nodejs22) | Proxies Regrid parcel data and Google Maps Static aerial images |
 
 ## Prerequisites
 
-- Node.js 20 or newer locally.
-- A Vercel account linked to this repository (or any host able to run `next build` + `next start`).
-- No environment variables, secrets, or external accounts are required for the demo.
+- Node.js 22 or newer locally.
+- Firebase CLI installed: `npm install -g firebase-tools`
+- A Firebase project named `lotfoundry` (or update `.firebaserc` with your project ID).
+- A service account key with the **Firebase Hosting Admin** role for CI deployment.
+
+## Local Deploy
+
+```bash
+# 1. Install dependencies
+npm ci
+
+# 2. Build the app + prepare Firebase output
+npm run build:firebase
+
+# 3. Login to Firebase (first time only)
+firebase login
+
+# 4. Deploy hosting + functions
+npm run deploy
+# or: firebase deploy --only hosting,functions
+```
 
 ## Build Configuration
 
@@ -20,34 +45,50 @@ const nextConfig: NextConfig = {
 };
 ```
 
-- `output: "standalone"` produces a self-contained server bundle for Docker / self-hosted environments. Vercel transparently supports it; remove only if your platform documents a conflict.
-- `transpilePackages` covers a known ESM transpilation requirement for the `motion` dependency.
+- `output: "standalone"` produces a self-contained server bundle that the Cloud Function uses.
+- `scripts/prepare-firebase.js` copies the standalone output into `dist/` (for Hosting) and `functions/.next/` (for Functions).
 
-## Vercel Deployment
+## Firebase Configuration
 
-1. Connect the GitHub repository in the Vercel dashboard.
-2. Framework preset: **Next.js** (auto-detected).
-3. Install command: `npm ci`
-4. Build command: `npm run build`
-5. Output: default (Vercel handles `.next/`).
-6. Environment variables: **none required**.
-7. Click **Deploy**.
+### `firebase.json`
 
-After the first deployment Vercel will give you a `*.vercel.app` URL. Subsequent commits to the default branch deploy automatically. Pull requests get preview URLs.
+- `hosting.public`: `dist` — the prepared static + standalone output.
+- `hosting.rewrites`: `/api/**` routes to the `api` Cloud Function; all other routes serve `index.html` for SPA client-side routing.
+- `functions.source`: `functions` — the Node.js function directory.
+- `functions.runtime`: `nodejs22`.
 
-## Self-Hosting
+### `.firebaserc`
 
-```bash
-npm ci
-npm run build
-npm run start    # serves on port 3000 by default
+Sets the default Firebase project ID. Update `"lotfoundry"` to match your actual Firebase project.
+
+### `functions/index.js`
+
+A Firebase Functions v2 HTTPS function that boots Next.js in production mode and delegates requests to the Next.js request handler. This serves `/api/parcel` and `/api/aerial`.
+
+## CI/CD (GitHub Actions)
+
+`.github/workflows/ci.yml` runs two jobs:
+
+1. **verify** — lint, test, typecheck, build, and Playwright E2E (runs on every push and PR).
+2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase` and deploys to Firebase Hosting via `FirebaseExtended/action-hosting-deploy`.
+
+### Required CI Secrets
+
+| Secret | Purpose |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_LOTFOUNDRY` | JSON service account key for Firebase deploy. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
+
+## Environment Variables
+
+Set these in the Firebase Console → Functions → Configuration (or via `firebase functions:config:set`):
+
+```
+GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
+NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
+REGRID_API_KEY=<server-side Regrid Parcel API key>
 ```
 
-For Docker / containerized hosts, copy the `.next/standalone` output:
-
-```bash
-node .next/standalone/server.js
-```
+Without these keys the app runs in demo mode with three built-in presets.
 
 ## Release Verification
 
@@ -68,18 +109,28 @@ All commands must pass. CI (`.github/workflows/ci.yml`) runs the same gate.
 
 After deployment, manually verify:
 
-- Title `LotFoundry | ADU Feasibility Studio` loads.
+- Title `LotFoundry | ADU Feasibility Studio` loads on the Firebase Hosting URL.
 - The default feasibility workflow is visible.
 - The report preview is visible at the bottom of the page.
 - Selecting `compact-lot` and `1,000 sf` displays the `Review needed` alert.
 - No console errors in the browser devtools.
 - The Share Link button copies the current scenario URL.
+- (If API keys configured) Address search returns parcel data via `/api/parcel`.
 
 ## Rollback
 
-Vercel: open the deployments list, find the previous successful production deployment, and click **Promote to Production**. No data migration is required because the app stores all user state locally in the browser.
+Firebase Hosting:
+```bash
+firebase hosting:rollback
+```
 
-Self-hosted: redeploy the previous git tag (`rc-2026-05-28-1` for the initial RC) or the previous successful Docker image.
+Cloud Functions:
+```bash
+git revert <commit> && git push
+firebase deploy --only functions
+```
+
+No data migration is required because the app stores all user state locally in the browser.
 
 ## Audit Note
 

@@ -62,7 +62,7 @@ CI runs on every push to `main`/`master` and on every pull request via `.github/
 
 ## Deployment
 
-The app deploys to Vercel. Set the three environment variables in the Vercel project settings. See `docs/deployment.md` for the full deployment guide, including post-deploy smoke checks and rollback steps.
+The app deploys to Firebase Hosting + Cloud Functions. Set the three environment variables in the Firebase Functions config. See `docs/deployment.md` for the full deployment guide, including CI setup, post-deploy smoke checks, and rollback steps.
 
 ## Scope Notes
 
