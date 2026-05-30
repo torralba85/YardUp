@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, BookmarkPlus, Building2, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { Bookmark, BookmarkPlus, Building2, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import {
   configForFootprint,
   finishColors,
@@ -10,6 +10,8 @@ import {
   parcelPresets,
   roofLabels,
 } from "@/lib/feasibility";
+import { useParcel } from "@/lib/parcel-context";
+import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import type {
   ADUConfig,
   FeasibilityResult,
@@ -54,9 +56,23 @@ export default function FeasibilityInspector({
   onSaveScenario,
   saveNotice,
 }: FeasibilityInspectorProps) {
-  const parcel = parcelPresets.find((preset) => preset.id === parcelId) ?? parcelPresets[0];
+  const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, resetToPreset } = useParcel();
+
+  // In preset mode, fall back to the preset lookup for compatibility
+  const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
+  const displayParcel = parcelMode === "live" ? parcel : presetParcel;
+
   const selectedOption =
     footprintOptions.find((item) => item.value === config.footprint) ?? footprintOptions[1];
+
+  function handleAddressSelect(result: AddressSearchResult) {
+    searchParcel(result.lat, result.lng);
+  }
+
+  function handleResetToPreset() {
+    resetToPreset(presetParcel);
+    onReset();
+  }
 
   return (
     <section
@@ -87,31 +103,106 @@ export default function FeasibilityInspector({
         </div>
 
         <div className="flex-1 space-y-7 overflow-y-auto px-6 py-5">
+          {/* Parcel source section: address search (live) vs preset selector (demo) */}
           <div className="space-y-3" id="parcel">
-            <LabelRow label="Parcel Preset" />
-            <label className="sr-only" htmlFor="parcel-preset">
-              Parcel Preset
-            </label>
-            <select
-              id="parcel-preset"
-              value={parcelId}
-              onChange={(event) => onParcelChange(event.target.value)}
-              className="h-11 w-full rounded-md border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
-            >
-              {parcelPresets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name} ({preset.lotArea.toLocaleString()} sf)
-                </option>
-              ))}
-            </select>
+            {parcelMode === "live" ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <LabelRow label="Property" />
+                  <button
+                    type="button"
+                    onClick={handleResetToPreset}
+                    className="flex items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                  >
+                    <RefreshCcw size={12} />
+                    Demo mode
+                  </button>
+                </div>
+
+                {/* Live parcel address display */}
+                <div className="flex items-start gap-2 rounded-md border border-lf-hairline bg-lf-sand p-3">
+                  <MapPin size={15} className="mt-0.5 shrink-0 text-lf-clay" />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-lf-espresso">
+                      {displayParcel.address}
+                    </div>
+                    <div className="mt-0.5 text-xs text-lf-muted">{displayParcel.city}</div>
+                  </div>
+                </div>
+
+                {/* Fallback warning */}
+                {"source" in displayParcel && displayParcel.source === "fallback" && (
+                  <div
+                    role="note"
+                    className="flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
+                  >
+                    <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber" />
+                    Parcel data unavailable — showing estimated defaults. Verify with your jurisdiction.
+                  </div>
+                )}
+
+                {/* Parcel error */}
+                {parcelError && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+                  >
+                    <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                    {parcelError}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <LabelRow label="Parcel Preset" />
+                <label className="sr-only" htmlFor="parcel-preset">
+                  Parcel Preset
+                </label>
+                <select
+                  id="parcel-preset"
+                  value={parcelId}
+                  onChange={(event) => onParcelChange(event.target.value)}
+                  className="h-11 w-full rounded-md border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
+                >
+                  {parcelPresets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} ({preset.lotArea.toLocaleString()} sf)
+                    </option>
+                  ))}
+                </select>
+
+                {/* Search prompt */}
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-lf-muted">Or search your address:</p>
+                  <AddressSearch onSelect={handleAddressSelect} />
+                </div>
+              </>
+            )}
+
+            {/* Loading overlay */}
+            {parcelLoading && (
+              <div className="flex items-center gap-2 rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+                <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+                Looking up parcel data…
+              </div>
+            )}
+
+            {/* Parcel facts */}
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <Fact label="Lot Area" value={`${parcel.lotArea.toLocaleString()} sf`} />
-              <Fact label="Lot Dimensions" value={`${parcel.lotWidth}' x ${parcel.lotLength}'`} />
+              <Fact label="Lot Area" value={`${displayParcel.lotArea.toLocaleString()} sf`} />
+              <Fact label="Lot Dimensions" value={`${displayParcel.lotWidth}' x ${displayParcel.lotLength}'`} />
               <Fact
                 label="Existing Footprint"
-                value={`${parcel.existingHouseSqft.toLocaleString()} sf`}
+                value={`${displayParcel.existingHouseSqft.toLocaleString()} sf`}
               />
-              <Fact label="Max Coverage" value={`${parcel.maxLotCoveragePercent}%`} />
+              <Fact label="Max Coverage" value={`${displayParcel.maxLotCoveragePercent}%`} />
+              {"zoning" in displayParcel && (
+                <Fact label="Zoning" value={String((displayParcel as { zoning: string }).zoning)} />
+              )}
+              <Fact
+                label="Setbacks"
+                value={`${displayParcel.setbacks.front}/${displayParcel.setbacks.side}/${displayParcel.setbacks.rear} ft`}
+              />
             </div>
           </div>
 

@@ -4,11 +4,11 @@ import {
   roofLabels,
   type ADUConfig,
   type FeasibilityResult,
-  type ParcelPreset,
 } from "./feasibility";
+import type { Parcel } from "./parcel-types";
 
 export interface ReportInput {
-  parcel: ParcelPreset;
+  parcel: Parcel;
   config: ADUConfig;
   result: FeasibilityResult;
 }

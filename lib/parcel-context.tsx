@@ -1,0 +1,91 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
+import type { LiveParcelData } from "./parcel-types";
+import type { ParcelPreset } from "./feasibility";
+import { fetchParcel, ParcelFetchError } from "./parcel-api";
+
+export type ParcelMode = "preset" | "live";
+export type AnyParcel = LiveParcelData | ParcelPreset;
+
+interface ParcelContextValue {
+  parcel: AnyParcel;
+  parcelMode: ParcelMode;
+  parcelLoading: boolean;
+  parcelError: string | null;
+  /** Search an address by lat/lng — switches to live mode. */
+  searchParcel: (lat: number, lng: number, address?: string) => Promise<void>;
+  /** Return to demo preset mode and clear live parcel data. */
+  resetToPreset: (preset: ParcelPreset) => void;
+}
+
+const ParcelContext = createContext<ParcelContextValue | null>(null);
+
+export function useParcel(): ParcelContextValue {
+  const ctx = useContext(ParcelContext);
+  if (!ctx) {
+    throw new Error("useParcel must be used inside <ParcelProvider>");
+  }
+  return ctx;
+}
+
+interface ParcelProviderProps {
+  initialPreset: ParcelPreset;
+  children: ReactNode;
+}
+
+export function ParcelProvider({ initialPreset, children }: ParcelProviderProps) {
+  const [parcel, setParcel] = useState<AnyParcel>(initialPreset);
+  const [parcelMode, setParcelMode] = useState<ParcelMode>("preset");
+  const [parcelLoading, setParcelLoading] = useState(false);
+  const [parcelError, setParcelError] = useState<string | null>(null);
+
+  const searchParcel = useCallback(
+    async (lat: number, lng: number) => {
+      setParcelLoading(true);
+      setParcelError(null);
+      try {
+        const data = await fetchParcel(lat, lng);
+        setParcel(data);
+        setParcelMode("live");
+      } catch (err) {
+        if (err instanceof ParcelFetchError) {
+          setParcelError(err.userMessage);
+        } else {
+          setParcelError("An unexpected error occurred. Please try again.");
+        }
+        // Keep current parcel / mode on error
+      } finally {
+        setParcelLoading(false);
+      }
+    },
+    [],
+  );
+
+  const resetToPreset = useCallback((preset: ParcelPreset) => {
+    setParcel(preset);
+    setParcelMode("preset");
+    setParcelError(null);
+  }, []);
+
+  return (
+    <ParcelContext.Provider
+      value={{
+        parcel,
+        parcelMode,
+        parcelLoading,
+        parcelError,
+        searchParcel,
+        resetToPreset,
+      }}
+    >
+      {children}
+    </ParcelContext.Provider>
+  );
+}

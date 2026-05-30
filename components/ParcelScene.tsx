@@ -13,6 +13,29 @@ interface ParcelSceneProps {
   isCompliant: boolean;
 }
 
+// Scene palette is deliberately "true to color" (a clean architectural studio
+// render) rather than the warm LotFoundry UI theme: a muted sage ground, light
+// neutral massing, dark slate roofs, and a pale backdrop. The branded overlay
+// cards (income HUD, compass, info card) stay on-theme on top of the scene.
+const SCENE = {
+  ground: "#8a937e", // muted sage lawn
+  groundOuter: "#767f6b", // desaturated context beyond the lot
+  wall: "#cdc9c0", // light neutral existing-house walls
+  roof: "#3a3f44", // dark slate roof / door
+  glass: "#243038", // window glazing
+  slab: "#c9c4b7", // light concrete patio
+  label: "#2b2f33", // dark labels on light surfaces
+  boundaryOk: "#3f8f4f", // compliant lot boundary (green)
+  boundaryOver: "#c07a1f", // over-cap lot boundary (amber)
+  setback: "#cfcabd", // setback guideline (light gray)
+  gridCenter: "#8f8a7e",
+  gridLine: "#a8a294",
+  fog: "#cdc2b1",
+};
+
+const SCENE_BACKDROP =
+  "radial-gradient(circle at 50% 12%, rgba(255,255,255,0.55), transparent 42%), linear-gradient(160deg, #e2dccf 0%, #cdc2b1 58%, #b4a892 100%)";
+
 function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompliant: boolean }) {
   const object = useMemo(() => {
     const halfWidth = parcel.lotWidth / 2;
@@ -29,7 +52,7 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompli
     ]);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-    const material = new THREE.LineBasicMaterial({ color: isCompliant ? "#F2E5D5" : "#8C5B3F" });
+    const material = new THREE.LineBasicMaterial({ color: isCompliant ? SCENE.boundaryOk : SCENE.boundaryOver });
     return new THREE.LineSegments(geometry, material);
   }, [isCompliant, parcel.lotLength, parcel.lotWidth]);
 
@@ -57,11 +80,11 @@ function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
     const material = new THREE.LineDashedMaterial({
-      color: "#BFA58E",
+      color: SCENE.setback,
       dashSize: 2.4,
       gapSize: 1.6,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.9,
     });
     const lines = new THREE.LineSegments(geometry, material);
     lines.computeLineDistances();
@@ -79,17 +102,17 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
     <group position={[0, 3.2, 18]}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[width, 6.4, length]} />
-        <meshStandardMaterial color="#592A0F" roughness={0.82} />
+        <meshStandardMaterial color={SCENE.wall} roughness={0.82} />
       </mesh>
       <mesh position={[0, 3.65, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
         <boxGeometry args={[width * 0.76, 1.6, length * 1.08]} />
-        <meshStandardMaterial color="#3a1c0c" roughness={0.72} />
+        <meshStandardMaterial color={SCENE.roof} roughness={0.72} />
       </mesh>
       <Text
         position={[0, 7.6, 0]}
         rotation={[-Math.PI / 2.8, 0, 0]}
         fontSize={1.6}
-        color="#261307"
+        color={SCENE.label}
         anchorX="center"
         anchorY="middle"
       >
@@ -113,7 +136,7 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
       {config.roof === "gable" ? (
         <mesh position={[0, config.height + 1.1, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
           <coneGeometry args={[config.width / 1.35, config.length + 1.6, 4]} />
-          <meshStandardMaterial color="#3a1c0c" roughness={0.66} />
+          <meshStandardMaterial color={SCENE.roof} roughness={0.66} />
         </mesh>
       ) : (
         <mesh
@@ -122,7 +145,7 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
           castShadow
         >
           <boxGeometry args={[config.width + 1.2, 0.8, config.length + 1.2]} />
-          <meshStandardMaterial color="#3a1c0c" roughness={0.68} />
+          <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
         </mesh>
       )}
 
@@ -130,25 +153,25 @@ function ProposedAdu({ config }: { config: ADUConfig }) {
         <group position={[0, config.height * 0.45, config.length / 2 + 0.08]}>
           <mesh position={[-config.width * 0.23, 0, 0]}>
             <boxGeometry args={[config.width * 0.24, config.height * 0.42, 0.22]} />
-            <meshStandardMaterial color="#261307" roughness={0.25} metalness={0.25} />
+            <meshStandardMaterial color={SCENE.glass} roughness={0.25} metalness={0.25} />
           </mesh>
           <mesh position={[config.width * 0.18, -0.5, 0]}>
             <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
-            <meshStandardMaterial color="#3a1c0c" roughness={0.2} metalness={0.3} />
+            <meshStandardMaterial color={SCENE.roof} roughness={0.2} metalness={0.3} />
           </mesh>
         </group>
       )}
 
       <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
         <boxGeometry args={[config.width + 5, 0.24, 5]} />
-        <meshStandardMaterial color="#BFA58E" roughness={0.9} />
+        <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
       </mesh>
 
       <Text
         position={[0, config.height + 2.4, config.length / 2 + 0.2]}
         rotation={[-Math.PI / 3, 0, 0]}
         fontSize={1.8}
-        color="#261307"
+        color={SCENE.label}
         anchorX="center"
         anchorY="middle"
       >
@@ -234,11 +257,8 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
 
   return (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-lf-espresso"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at 50% 15%, rgba(242,229,213,0.12), transparent 30%), linear-gradient(145deg, #592A0F 0%, #3a1c0c 55%, #261307 100%)",
-      }}
+      className="relative h-full min-h-[460px] overflow-hidden bg-lf-sand"
+      style={{ backgroundImage: SCENE_BACKDROP }}
     >
       <Canvas
         shadows
@@ -249,8 +269,8 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         className="relative z-0 h-full w-full"
         style={{ background: "transparent" }}
       >
-        <fog attach="fog" args={["#261307", 120, 230]} />
-        <ambientLight intensity={1.8} />
+        <fog attach="fog" args={[SCENE.fog, 120, 230]} />
+        <ambientLight intensity={1.3} />
         <directionalLight
           castShadow
           position={[36, 70, 28]}
@@ -265,11 +285,11 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
-          <meshStandardMaterial color="#8C5B3F" roughness={0.95} />
+          <meshStandardMaterial color={SCENE.ground} roughness={0.95} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} receiveShadow>
           <planeGeometry args={[parcel.lotWidth + 26, parcel.lotLength + 26]} />
-          <meshStandardMaterial color="#3a1c0c" roughness={0.98} />
+          <meshStandardMaterial color={SCENE.groundOuter} roughness={0.98} />
         </mesh>
 
         <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
@@ -277,7 +297,7 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         <ExistingHouse parcel={parcel} />
         <ProposedAdu config={config} />
 
-        <gridHelper args={[160, 32, "#BFA58E", "#592A0F"]} position={[0, 0.05, 0]} />
+        <gridHelper args={[160, 32, SCENE.gridCenter, SCENE.gridLine]} position={[0, 0.05, 0]} />
         <OrbitControls enableDamping dampingFactor={0.06} maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
       </Canvas>
 
@@ -321,13 +341,12 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
   const frontSetback = parcel.lotLength / 2 - parcel.setbacks.front;
   const rearSetback = -parcel.lotLength / 2 + parcel.setbacks.rear;
 
+  const boundaryStroke = isCompliant ? SCENE.boundaryOk : SCENE.boundaryOver;
+
   return (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-lf-espresso flex flex-col items-center justify-center p-6"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at 50% 15%, rgba(242,229,213,0.10), transparent 32%), linear-gradient(145deg, #592A0F 0%, #3a1c0c 55%, #261307 100%)",
-      }}
+      className="relative h-full min-h-[460px] overflow-hidden bg-lf-sand flex flex-col items-center justify-center p-6"
+      style={{ backgroundImage: SCENE_BACKDROP }}
     >
       {/* 2D Mode Badge — hidden on mobile to match the 3D badge and avoid
           overlapping the income-potential overlay card on narrow screens. */}
@@ -342,25 +361,25 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
 
       <svg
         viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxLength}`}
-        className="w-full h-full max-h-[480px] text-white"
-        style={{ filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))" }}
+        className="w-full h-full max-h-[480px]"
+        style={{ filter: "drop-shadow(0 8px 18px rgba(38,31,23,0.18))" }}
       >
         {/* Outer Grid Representation */}
         <defs>
           <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(38,31,23,0.06)" strokeWidth="0.5" />
           </pattern>
         </defs>
         <rect x={viewBoxX} y={viewBoxY} width={viewBoxWidth} height={viewBoxLength} fill="url(#grid)" />
 
-        {/* Lot Boundary Background */}
+        {/* Lot Boundary Background (sage lawn) */}
         <rect
           x={-parcel.lotWidth / 2}
           y={-parcel.lotLength / 2}
           width={parcel.lotWidth}
           height={parcel.lotLength}
-          fill="rgba(38, 19, 7, 0.6)"
-          stroke={isCompliant ? "#F2E5D5" : "#8C5B3F"}
+          fill="rgba(138, 147, 126, 0.32)"
+          stroke={boundaryStroke}
           strokeWidth="0.8"
         />
 
@@ -371,10 +390,10 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           width={rightSetback - leftSetback}
           height={frontSetback - rearSetback}
           fill="none"
-          stroke="#BFA58E"
+          stroke="#8a8478"
           strokeWidth="0.4"
           strokeDasharray="2, 1.5"
-          opacity="0.6"
+          opacity="0.7"
         />
 
         {/* Existing House */}
@@ -384,15 +403,15 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
             y={18 - houseLength / 2}
             width={houseWidth}
             height={houseLength}
-            fill="#592A0F"
-            stroke="#3a1c0c"
+            fill={SCENE.wall}
+            stroke={SCENE.roof}
             strokeWidth="0.5"
             rx="1"
           />
           <text
             x="0"
             y="18"
-            fill="#F2E5D5"
+            fill={SCENE.label}
             fontSize="3.2"
             fontWeight="bold"
             textAnchor="middle"
@@ -411,14 +430,14 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
             width={config.width}
             height={config.length}
             fill={finishColor}
-            stroke={isCompliant ? "#F2E5D5" : "#8C5B3F"}
+            stroke={boundaryStroke}
             strokeWidth="0.8"
             rx="1"
           />
           <text
             x="0"
             y="-32"
-            fill="#261307"
+            fill={SCENE.label}
             fontSize="3.2"
             fontWeight="bold"
             textAnchor="middle"
@@ -431,7 +450,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           <text
             x="0"
             y={-32 - config.length / 2 - 3}
-            fill="#F2E5D5"
+            fill="#5b6150"
             fontSize="2.5"
             textAnchor="middle"
             className="font-mono pointer-events-none select-none"
@@ -444,7 +463,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         <text
           x={-parcel.lotWidth / 2 - 4}
           y="0"
-          fill="#BFA58E"
+          fill="#6b6f63"
           fontSize="3.2"
           textAnchor="middle"
           transform={`rotate(-90, ${-parcel.lotWidth / 2 - 4}, 0)`}
@@ -455,7 +474,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         <text
           x="0"
           y={parcel.lotLength / 2 + 5}
-          fill="#BFA58E"
+          fill="#6b6f63"
           fontSize="3.2"
           textAnchor="middle"
           className="font-mono pointer-events-none select-none"
@@ -464,8 +483,8 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         </text>
 
         {/* Compass Helper (North indicator) */}
-        <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#BFA58E" strokeWidth="0.5" />
-        <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#BFA58E" />
+        <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#6b6f63" strokeWidth="0.5" />
+        <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#6b6f63" />
       </svg>
 
       {/* Info Card */}

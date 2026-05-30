@@ -35,6 +35,32 @@ export const metadata: Metadata = {
   title: "LotFoundry | ADU Feasibility Studio",
   description:
     "Evaluate your lot's earning potential. Get instant ADU construction estimates, zoning coverage limits, and rental payback models.",
+  manifest: "/manifest.json",
+  metadataBase: new URL("http://localhost:3000"),
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon-180.png",
+  },
+  openGraph: {
+    title: "LotFoundry | ADU Feasibility Studio",
+    description:
+      "Evaluate your lot's earning potential. Get instant ADU construction estimates, zoning coverage limits, and rental payback models.",
+    images: [
+      {
+        url: "/lotfoundry-og.png",
+        width: 1200,
+        height: 630,
+        alt: "LotFoundry ADU Feasibility Studio",
+      },
+    ],
+    type: "website",
+  },
+};
+
+export const viewport = {
+  themeColor: "#F2E5D5",
 };
 
 export default function RootLayout({

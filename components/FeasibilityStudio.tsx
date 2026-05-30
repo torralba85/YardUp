@@ -23,7 +23,9 @@ import {
   createSavedScenarioStore,
   type SavedScenario,
 } from "@/lib/saved-scenarios";
+import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import AppShell from "./studio/AppShell";
+import AerialView from "./studio/AerialView";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
@@ -53,6 +55,16 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
 });
 
 export default function FeasibilityStudio() {
+  const initialPreset = parcelPresets[0];
+  return (
+    <ParcelProvider initialPreset={initialPreset}>
+      <FeasibilityStudioInner />
+    </ParcelProvider>
+  );
+}
+
+function FeasibilityStudioInner() {
+  const { parcel: liveParcel, parcelMode } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
@@ -69,10 +81,14 @@ export default function FeasibilityStudio() {
     return createSavedScenarioStore(window.localStorage).list();
   });
 
-  const parcel = getParcelById(parcelId);
+  const presetParcel = getParcelById(parcelId);
+  // Use live parcel data when available, otherwise the preset
+  const activeParcel = parcelMode === "live" ? liveParcel : presetParcel;
+  const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
-    () => calculateFeasibility(parcel, config, assumptions),
-    [assumptions, config, parcel],
+    () => calculateFeasibility(activeParcel, config, assumptions, expectedRent),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [assumptions, config, activeParcel],
   );
   const isCompliant = result.zoningStatus === "Compliant";
 
@@ -122,7 +138,7 @@ export default function FeasibilityStudio() {
     if (typeof window === "undefined") return;
     const store = createSavedScenarioStore(window.localStorage);
     const created = store.save({
-      name: `${parcel.address} - ${config.footprint} sf`,
+      name: `${activeParcel.address} - ${config.footprint} sf`,
       parcelId,
       config,
       assumptions,
@@ -162,21 +178,21 @@ export default function FeasibilityStudio() {
     setTimeout(() => setShareNotice(null), 2500);
   }
 
-    function downloadReport() {
-    const text = buildReportText({ parcel, config, result });
+  function downloadReport() {
+    const text = buildReportText({ parcel: activeParcel, config, result });
     downloadBlob("lotfoundry-concept-feasibility-report.txt", text, "text/plain");
   }
 
   function exportCsv() {
-    const csv = buildReportCsv({ parcel, config, result });
+    const csv = buildReportCsv({ parcel: activeParcel, config, result });
     downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
   }
 
   return (
     <AppShell
       activeNav={activeNav}
-      parcelAddress={parcel.address}
-      parcelCity={parcel.city}
+      parcelAddress={activeParcel.address}
+      parcelCity={activeParcel.city}
       onNavigate={handleNavigate}
       onReset={resetScenario}
       savedScenarios={savedScenarios}
@@ -189,7 +205,15 @@ export default function FeasibilityStudio() {
           className="relative min-h-[540px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:border-b-0 xl:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
-          <ParcelScene parcel={parcel} config={config} isCompliant={isCompliant} />
+          {parcelMode === "live" && "lat" in activeParcel ? (
+            <AerialView
+              parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
+              config={config}
+              isCompliant={isCompliant}
+            />
+          ) : (
+            <ParcelScene parcel={presetParcel} config={config} isCompliant={isCompliant} />
+          )}
         </section>
 
         <FeasibilityInspector
@@ -210,7 +234,7 @@ export default function FeasibilityStudio() {
       <MetricsSummary result={result} />
       {reportOpen && (
         <ReportPreview
-          parcelName={`${parcel.address}, ${parcel.city}`}
+          parcelName={`${activeParcel.address}, ${activeParcel.city}`}
           result={result}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}

@@ -1,17 +1,15 @@
-# UrbanLens AR ADU Feasibility Studio
+# LotFoundry — ADU Feasibility Studio
 
-Investor-demo web MVP for exploring ADU feasibility with deterministic local parcel data, a 3D massing scene, cost ranges, rental upside, payback estimates, and an exportable concept report.
+A production-grade ADU feasibility studio. Search a real property address to pull live parcel data (lot dimensions, setbacks, zoning) via Regrid, visualize the lot on a satellite aerial map, and instantly see zoning coverage, build cost ranges, monthly rent, NOI, and a payback estimate. Generate a concept report you can print, save, or share.
 
 ## Product Scope
 
-A local-first ADU feasibility studio. Pick a parcel preset, dial in a footprint, roof, finish, and rent scenario, and immediately see zoning coverage, build cost ranges, monthly rent, NOI, and a payback estimate. Generate a concept report you can print, save, or share.
-
-## Non-Goals
-
-- No live GIS lookups or live permitting guarantees.
-- No backend, database, or user accounts.
-- No external auth, ARKit, ARCore, Mapbox, or Gemini integrations.
-- Outputs are deterministic investor-demo estimates — confirm zoning, utilities, build costs, financing, taxes, and rents with local professionals before investing.
+- **Live parcel search:** Enter any US residential address → Regrid parcel API returns actual lot dimensions, setbacks, and zoning
+- **Aerial visualization:** Google Maps Static satellite view with parcel boundary + ADU footprint overlay
+- **Feasibility engine:** Instant NOI, payback, build cost ranges, and zoning compliance
+- **Demo mode:** Three hardcoded presets (Seattle, Portland, Austin) for offline / API-less use
+- **Scenario persistence:** Named scenarios saved locally; shareable deep-link URLs
+- **Concept report:** Printable / downloadable PDF-quality summary
 
 ## Run Locally
 
@@ -23,6 +21,17 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+### Environment Variables (optional — enables live parcel data)
+
+Create `.env.local`:
+```
+GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
+NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
+REGRID_API_KEY=<server-side Regrid Parcel API key>
+```
+
+Without these keys the app runs in demo mode with the three built-in presets.
 
 ## Verification Commands
 
@@ -53,10 +62,9 @@ CI runs on every push to `main`/`master` and on every pull request via `.github/
 
 ## Deployment
 
-The app is configured to deploy to Vercel without secrets. See `docs/deployment.md` for the full deployment guide, including post-deploy smoke checks and rollback steps.
+The app deploys to Vercel. Set the three environment variables in the Vercel project settings. See `docs/deployment.md` for the full deployment guide, including post-deploy smoke checks and rollback steps.
 
 ## Scope Notes
 
-- No external API keys are required.
-- No real GIS, permitting, ARKit, ARCore, Mapbox, Gemini, auth, or backend service is used.
-- Feasibility and financial outputs are deterministic investor-demo estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents before making investment decisions.
+- Feasibility and financial outputs are estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents with local professionals before investing.
+- Parcel data is sourced from Regrid and may not reflect recent changes. Always verify with your local jurisdiction.

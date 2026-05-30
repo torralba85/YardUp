@@ -1,22 +1,13 @@
+import type { Parcel } from "./parcel-types";
+export type { Parcel } from "./parcel-types";
+
 export type RoofStyle = "shed" | "gable" | "flat";
 export type ExteriorFinish = "cedar" | "lap" | "stucco" | "board";
 export type RentScenario = "conservative" | "market" | "optimistic";
 
-export interface ParcelPreset {
+export interface ParcelPreset extends Parcel {
   id: string;
   name: string;
-  address: string;
-  city: string;
-  lotArea: number;
-  lotWidth: number;
-  lotLength: number;
-  existingHouseSqft: number;
-  maxLotCoveragePercent: number;
-  setbacks: {
-    front: number;
-    rear: number;
-    side: number;
-  };
   expectedRent: Record<RentScenario, number>;
 }
 
@@ -161,9 +152,10 @@ export function configForFootprint(footprint: number, config: ADUConfig): ADUCon
 }
 
 export function calculateFeasibility(
-  parcel: ParcelPreset,
+  parcel: Parcel,
   config: ADUConfig,
   assumptions: FinancialAssumptions,
+  expectedRent?: Record<RentScenario, number>,
 ): FeasibilityResult {
   const aduSqft = config.width * config.length;
   const totalFootprint = parcel.existingHouseSqft + aduSqft;
@@ -177,7 +169,9 @@ export function calculateFeasibility(
   const costMid = hardCost * assumptions.softCostMultiplier;
   const costLow = Math.round((costMid * 0.92) / 1000) * 1000;
   const costHigh = Math.round((costMid * 1.15) / 1000) * 1000;
-  const monthlyRent = parcel.expectedRent[assumptions.rentScenario];
+  // For live parcels, expectedRent is passed separately or estimated from lotArea.
+  const rentTable = expectedRent ?? ("expectedRent" in parcel ? (parcel as ParcelPreset).expectedRent : estimateRent(parcel.lotArea));
+  const monthlyRent = rentTable[assumptions.rentScenario];
   const annualNoi = Math.round(monthlyRent * 12 * (1 - assumptions.operatingExpenseRatio));
   const paybackYears = Number((costMid / annualNoi).toFixed(1));
   const warnings: string[] = [];
@@ -206,6 +200,19 @@ export function calculateFeasibility(
     annualNoi,
     paybackYears,
     warnings,
+  };
+}
+
+/**
+ * Estimate expected rent for a live parcel that doesn't have preset rent data.
+ * Uses a simple lot-size heuristic — callers should treat this as a rough estimate.
+ */
+function estimateRent(lotArea: number): Record<RentScenario, number> {
+  const base = lotArea < 5000 ? 1800 : lotArea < 7000 ? 2100 : 2400;
+  return {
+    conservative: base,
+    market: Math.round(base * 1.15),
+    optimistic: Math.round(base * 1.3),
   };
 }
 
