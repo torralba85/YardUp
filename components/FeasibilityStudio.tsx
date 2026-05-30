@@ -202,7 +202,7 @@ function FeasibilityStudioInner() {
       <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
           aria-label="Parcel massing scene"
-          className="relative min-h-[540px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:border-b-0 xl:border-r"
+          className="relative min-h-[360px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:min-h-0 xl:border-b-0 xl:border-r lg:min-h-[420px]"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
           {parcelMode === "live" && "lat" in activeParcel ? (

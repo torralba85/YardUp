@@ -77,9 +77,9 @@ export default function FeasibilityInspector({
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full xl:w-[404px] xl:border-l"
+      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden xl:w-[404px] xl:border-l"
     >
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col lg:min-h-0">
         <div className="flex items-center justify-between border-b border-lf-hairline px-6 py-5">
           <div>
             <h2
@@ -102,7 +102,7 @@ export default function FeasibilityInspector({
           </button>
         </div>
 
-        <div className="flex-1 space-y-7 overflow-y-auto px-6 py-5">
+        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4 lg:min-h-0">
           {/* Parcel source section: address search (live) vs preset selector (demo) */}
           <div className="space-y-3" id="parcel">
             {parcelMode === "live" ? (

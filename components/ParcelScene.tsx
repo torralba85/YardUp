@@ -154,25 +154,84 @@ function LabelSprite({ text, position, scale = 6 }: { text: string; position: [n
 }
 
 function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
-  const width = Math.max(Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28), 8);
-  const length = Math.max(Math.min(parcel.existingHouseSqft / width, 36), 8);
-  const wallHeight = 6.4;
-  // Place house on ground (not floating) — group Y puts wall base at ground level
-  const groupY = wallHeight / 2;
+  // Derive realistic house dimensions from lot and sqft
+  const maxBuildableWidth = parcel.lotWidth - parcel.setbacks.side * 2;
+  const width = Math.max(Math.min(maxBuildableWidth * 0.65, 32), 10);
+  const depth = Math.max(Math.min(parcel.existingHouseSqft / width, 28), 8);
+  const wallHeight = 9; // realistic single-story wall height
+  const ridgeHeight = 5; // gable peak above walls
+
+  // Position house toward the front-center of the lot
+  const zPos = parcel.lotLength / 2 - depth - parcel.setbacks.front + 2;
 
   return (
-    <group position={[0, groupY, 18]}>
-      {/* Wall body */}
-      <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[width, wallHeight, length]} />
+    <group position={[0, wallHeight / 2, zPos]}>
+      {/* Foundation / slab */}
+      <mesh position={[0, -wallHeight / 2 + 0.2, 0]} receiveShadow>
+        <boxGeometry args={[width + 1.5, 0.4, depth + 1.5]} />
+        <meshStandardMaterial color="#b0a898" roughness={0.92} />
+      </mesh>
+
+      {/* Main walls */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[width, wallHeight, depth]} />
         <meshStandardMaterial color={SCENE.wall} roughness={0.82} />
       </mesh>
-      {/* Gable roof sitting on top of walls — raised so bottom edge clears wall top */}
-      <mesh position={[0, wallHeight / 2 + 1.2, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <boxGeometry args={[width * 0.72, 0.3, length * 1.12]} />
-        <meshStandardMaterial color={SCENE.roof} roughness={0.72} />
+
+      {/* Gable roof (peaked triangle shape using a thin wedge) */}
+      <mesh position={[0, ridgeHeight / 2 + 0.3, 0]} castShadow>
+        <boxGeometry args={[width + 1.2, 0.35, depth + 1.4]} />
+        <meshStandardMaterial color={SCENE.roof} roughness={0.7} />
       </mesh>
-      <LabelSprite text="EXISTING HOUSE" position={[0, wallHeight + 3, 0]} scale={7} />
+      {/* Roof slope planes (two angled sides) */}
+      <mesh position={[0, ridgeHeight / 4 + 0.5, depth / 2 + 0.55]} rotation={[0.45, 0, 0]} castShadow>
+        <boxGeometry args={[width + 1.2, depth * 0.65, 0.2]} />
+        <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
+      </mesh>
+      <mesh position={[0, ridgeHeight / 4 + 0.5, -depth / 2 - 0.55]} rotation={[-0.45, 0, 0]} castShadow>
+        <boxGeometry args={[width + 1.2, depth * 0.65, 0.2]} />
+        <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
+      </mesh>
+
+      {/* Front door */}
+      <mesh position={[width * 0.28, -wallHeight / 2 + 2.2, depth / 2 + 0.05]}>
+        <boxGeometry args={[2.5, 4.4, 0.3]} />
+        <meshStandardMaterial color="#5a3a20" roughness={0.55} />
+      </mesh>
+      {/* Door frame */}
+      <mesh position={[width * 0.28, -wallHeight / 2 + 4.6, depth / 2 + 0.06]}>
+        <boxGeometry args={[3.0, 0.5, 0.35]} />
+        <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
+      </mesh>
+
+      {/* Front window (left side) */}
+      <mesh position={[-width * 0.2, -wallHeight / 2 + 3, depth / 2 + 0.05]} castShadow>
+        <boxGeometry args={[3.2, 3, 0.3]} />
+        <meshStandardMaterial color={SCENE.glass} roughness={0.2} metalness={0.3} />
+      </mesh>
+      {/* Window frame */}
+      <mesh position={[-width * 0.2, -wallHeight / 2 + 4.7, depth / 2 + 0.06]}>
+        <boxGeometry args={[3.6, 0.4, 0.35]} />
+        <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
+      </mesh>
+      <mesh position={[-width * 0.2, -wallHeight / 2 + 1.5, depth / 2 + 0.06]}>
+        <boxGeometry args={[3.6, 0.4, 0.35]} />
+        <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
+      </mesh>
+
+      {/* Side window (right face) */}
+      <mesh position={[width / 2 + 0.05, -wallHeight / 2 + 3, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[2.8, 2.8, 0.3]} />
+        <meshStandardMaterial color={SCENE.glass} roughness={0.2} metalness={0.3} />
+      </mesh>
+
+      {/* Front walkway to door */}
+      <mesh position={[width * 0.28, -wallHeight / 2 + 0.15, depth / 2 + 5]} receiveShadow>
+        <boxGeometry args={[3, 0.2, 7]} />
+        <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
+      </mesh>
+
+      <LabelSprite text="EXISTING HOUSE" position={[0, wallHeight + ridgeHeight + 2, 0]} scale={Math.max(width * 0.2, 6)} />
     </group>
   );
 }

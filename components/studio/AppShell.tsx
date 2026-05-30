@@ -81,11 +81,11 @@ export default function AppShell({
                   src="/lotfoundry-mark-dark.svg"
                   alt=""
                   aria-hidden="true"
-                  className="h-14 w-14 rounded border border-lf-taupe/15 bg-lf-espresso/40 p-1.5"
+                  className="h-14 w-14 shrink-0 rounded border border-lf-taupe/15 bg-lf-espresso/40 p-1.5"
                 />
-                <div>
-                  <div className="text-sm font-semibold text-lf-sand">{parcelAddress}</div>
-                  <div className="mt-1 text-xs text-lf-taupe">{parcelCity}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-lf-sand">{parcelAddress}</div>
+                  <div className="truncate mt-1 text-xs text-lf-taupe">{parcelCity}</div>
                 </div>
               </div>
               <button
@@ -142,7 +142,7 @@ export default function AppShell({
         </div>
       </aside>
 
-      <main className="lf-grain flex min-w-0 flex-1 flex-col bg-lf-sand lg:h-screen lg:overflow-hidden">
+      <main className="lf-grain flex min-h-dvh flex-col bg-lf-sand lg:min-h-0 lg:h-dvh lg:overflow-hidden">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
           <div className="flex min-w-0 items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}

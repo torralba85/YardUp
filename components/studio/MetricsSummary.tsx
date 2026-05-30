@@ -78,7 +78,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
     <section
       id="summary"
       aria-label="Feasibility metrics"
-      className="grid border-t border-lf-hairline bg-lf-card lg:grid-cols-6"
+      className="grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-card sm:grid-cols-3 lg:grid-cols-6"
     >
       {metrics.map((metric) => {
         const Icon = metric.icon;
@@ -86,16 +86,16 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
         return (
           <div
             key={metric.label}
-            className={`border-b border-lf-hairline px-6 py-5 lg:border-b-0 lg:border-r lg:border-lf-hairline last:lg:border-r-0 ${
+            className={`border-b border-lf-hairline px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5 lg:border-b-0 lg:border-r lg:border-lf-hairline last:lg:border-r-0 ${
               isLead ? "bg-lf-sand-2/60" : ""
             }`}
           >
-            <div className="flex items-center gap-2 text-[11px] font-mono font-medium uppercase tracking-[0.14em] text-lf-muted">
-              <Icon size={14} />
+            <div className="flex items-center gap-1.5 text-[10px] font-mono font-medium uppercase tracking-[0.12em] text-lf-muted sm:text-[11px]">
+              <Icon size={13} />
               {metric.label}
             </div>
-            <div className={`mt-3 ${metric.valueClass}`}>{metric.value}</div>
-            <div className={`mt-1 text-xs text-lf-muted ${metric.detailClass ?? ""}`}>
+            <div className={`mt-2 ${metric.valueClass}`}>{metric.value}</div>
+            <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailClass ?? ""}`}>
               {metric.detail}
             </div>
           </div>

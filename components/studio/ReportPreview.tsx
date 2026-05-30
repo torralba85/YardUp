@@ -38,9 +38,9 @@ export default function ReportPreview({
     <section
       id="export"
       aria-labelledby="report-preview-heading"
-      className="border-t border-lf-hairline bg-lf-card px-6 py-4 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none lg:h-auto lg:max-h-[240px] lg:overflow-y-auto"
+      className="border-t border-lf-hairline bg-lf-card px-6 py-4 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none lg:max-h-[40vh] lg:overflow-y-auto"
     >
-      <div className="grid gap-6 lg:grid-cols-[150px_1fr_1fr_250px]">
+      <div className="grid gap-6 lg:grid-cols-[140px_1fr_1fr_220px] xl:grid-cols-[150px_1fr_1fr_250px]">
         <div className="hidden rounded-md border border-lf-hairline bg-lf-sand-2 p-2.5 lg:block">
           <div className="text-[9px] font-bold uppercase tracking-widest text-lf-mahogany">
             LotFoundry
