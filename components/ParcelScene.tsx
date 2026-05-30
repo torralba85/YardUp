@@ -434,18 +434,9 @@ function ProposedAdu({
 
 export default function ParcelScene({ parcel, config, isCompliant, aduPosition, onAduPositionChange }: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
-  const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? [0, 0]);
   const restoreTimer = useRef<number | null>(null);
   const keysDown = useRef(new Set<string>());
   const animFrame = useRef<number | null>(null);
-
-  const handleAduPosChange = useCallback(
-    (pos: [number, number]) => {
-      setAduPos(pos);
-      onAduPositionChange?.(pos);
-    },
-    [onAduPositionChange],
-  );
 
   // Buildable area (mirrors ProposedAdu logic)
   const buildableBounds = useMemo(() => {
@@ -454,6 +445,29 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
     const rearZ = -parcel.setbacks.rear + parcel.lotLength / 2 - config.length / 2;
     return { minX: -halfW, maxX: halfW, minZ: -halfL, maxZ: rearZ };
   }, [parcel, config]);
+
+  // Default ADU position: centered, at rear setback (clear of the house)
+  const defaultAduPos = useMemo((): [number, number] => {
+    const rearZ = -parcel.lotLength / 2 + parcel.setbacks.rear + config.length / 2 + 3;
+    return [0, Math.min(rearZ, buildableBounds.maxZ)];
+  }, [parcel, config, buildableBounds]);
+
+  const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? defaultAduPos);
+
+  // Re-sync when parcel or config changes (e.g., switching presets)
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setAduPos(defaultAduPos);
+  }, [defaultAduPos]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const handleAduPosChange = useCallback(
+    (pos: [number, number]) => {
+      setAduPos(pos);
+      onAduPositionChange?.(pos);
+    },
+    [onAduPositionChange],
+  );
 
   // Arrow-key ADU placement: ←→ moves X (side-to-side), ↑↓ moves Z (front/back)
   useEffect(() => {
