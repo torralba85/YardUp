@@ -1,40 +1,68 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, type RootState } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
+import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, type RootState, type ThreeEvent } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { ADUConfig, ParcelPreset } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
+
+/** Minimal error boundary that falls back to a render function. */
+class ErrorBoundary extends Component<
+  { children: React.ReactNode; fallbackRender: () => React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallbackRender: () => React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallbackRender();
+    }
+    return this.props.children;
+  }
+}
 
 interface ParcelSceneProps {
   parcel: ParcelPreset;
   config: ADUConfig;
   isCompliant: boolean;
+  aduPosition?: [number, number];
+  onAduPositionChange?: (pos: [number, number]) => void;
 }
 
-// Scene palette is deliberately "true to color" (a clean architectural studio
-// render) rather than the warm LotFoundry UI theme: a muted sage ground, light
-// neutral massing, dark slate roofs, and a pale backdrop. The branded overlay
-// cards (income HUD, compass, info card) stay on-theme on top of the scene.
+// Scene palette: architectural studio render with natural tones
 const SCENE = {
-  ground: "#8a937e", // muted sage lawn
-  groundOuter: "#767f6b", // desaturated context beyond the lot
-  wall: "#cdc9c0", // light neutral existing-house walls
-  roof: "#3a3f44", // dark slate roof / door
-  glass: "#243038", // window glazing
-  slab: "#c9c4b7", // light concrete patio
-  label: "#2b2f33", // dark labels on light surfaces
-  boundaryOk: "#3f8f4f", // compliant lot boundary (green)
-  boundaryOver: "#c07a1f", // over-cap lot boundary (amber)
-  setback: "#cfcabd", // setback guideline (light gray)
+  ground: "#7a8b5e", // richer green lawn
+  groundOuter: "#5a6b4e", // darker surrounding context
+  groundPatch: "#8a7e6e", // dirt/path areas
+  wall: "#d8d2c8", // warm cream existing-house walls
+  wallAccent: "#b8b0a4", // shadow side wall tone
+  roof: "#3d3428", // warm dark brown roof
+  glass: "#1a2a34", // deep blue-green glazing
+  slab: "#c4bfb3", // warm concrete
+  label: "#2b2f33",
+  boundaryOk: "#3a9e4f",
+  boundaryOver: "#c07a1f",
+  setback: "#cfcabd",
   gridCenter: "#8f8a7e",
   gridLine: "#a8a294",
-  fog: "#cdc2b1",
+  fog: "#c8bfa8",
+  tree: "#4a6e3a", // tree canopy green
+  treeTrunk: "#5a4430", // bark brown
+  fence: "#8a7e6e", // weathered wood fence
+  driveway: "#9e9688", // gravel driveway
+  sun: "#fff4e0", // warm sun light
+  skyTop: "#87CEEB", // sky blue
+  skyBottom: "#f0e6d2", // warm horizon
 };
 
 const SCENE_BACKDROP =
-  "radial-gradient(circle at 50% 12%, rgba(255,255,255,0.55), transparent 42%), linear-gradient(160deg, #e2dccf 0%, #cdc2b1 58%, #b4a892 100%)";
+  "linear-gradient(180deg, #a8d8ea 0%, #c8e0d0 30%, #e8dcc8 60%, #d4c8b0 100%)";
 
 function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompliant: boolean }) {
   const object = useMemo(() => {
@@ -94,96 +122,269 @@ function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
   return <primitive object={object} />;
 }
 
+function LabelSprite({ text, position, scale = 6 }: { text: string; position: [number, number, number]; scale?: number }) {
+  const sprite = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = 512;
+    canvas.height = 64;
+    ctx.font = "bold 36px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // Subtle background pill
+    const metrics = ctx.measureText(text);
+    const pillW = metrics.width + 40;
+    const pillH = 48;
+    ctx.fillStyle = "rgba(242,229,213,0.88)";
+    ctx.beginPath();
+    ctx.roundRect((512 - pillW) / 2, (64 - pillH) / 2, pillW, pillH, 24);
+    ctx.fill();
+    ctx.fillStyle = "#2b2f33";
+    ctx.fillText(text, 256, 34);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const s = new THREE.Sprite(mat);
+    s.scale.set(scale, scale * 0.125, 1);
+    s.position.set(...position);
+    return s;
+  }, [text, position, scale]);
+
+  return <primitive object={sprite} />;
+}
+
 function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
   const width = Math.max(Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28), 8);
   const length = Math.max(Math.min(parcel.existingHouseSqft / width, 36), 8);
+  const wallHeight = 6.4;
+  // Place house on ground (not floating) — group Y puts wall base at ground level
+  const groupY = wallHeight / 2;
 
   return (
-    <group position={[0, 3.2, 18]}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[width, 6.4, length]} />
+    <group position={[0, groupY, 18]}>
+      {/* Wall body */}
+      <mesh position={[0, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[width, wallHeight, length]} />
         <meshStandardMaterial color={SCENE.wall} roughness={0.82} />
       </mesh>
-      <mesh position={[0, 3.65, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
-        <boxGeometry args={[width * 0.76, 1.6, length * 1.08]} />
+      {/* Gable roof sitting on top of walls — raised so bottom edge clears wall top */}
+      <mesh position={[0, wallHeight / 2 + 1.2, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <boxGeometry args={[width * 0.72, 0.3, length * 1.12]} />
         <meshStandardMaterial color={SCENE.roof} roughness={0.72} />
       </mesh>
-      <Text
-        position={[0, 7.6, 0]}
-        rotation={[-Math.PI / 2.8, 0, 0]}
-        fontSize={1.6}
-        color={SCENE.label}
-        anchorX="center"
-        anchorY="middle"
-      >
-        EXISTING HOUSE
-      </Text>
+      <LabelSprite text="EXISTING HOUSE" position={[0, wallHeight + 3, 0]} scale={7} />
     </group>
   );
 }
 
-function ProposedAdu({ config }: { config: ADUConfig }) {
-  const finishColor = finishColors[config.finish];
-  const y = config.height / 2;
+/** Tree: trunk + canopy sphere, placed at lot edges. */
+function Tree({ position, height = 8, radius = 3 }: { position: [number, number, number]; height?: number; radius?: number }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, height / 2, 0]} castShadow>
+        <cylinderGeometry args={[0.4, 0.6, height, 6]} />
+        <meshStandardMaterial color={SCENE.treeTrunk} roughness={0.9} />
+      </mesh>
+      <mesh position={[0, height + radius * 0.6, 0]} castShadow>
+        <sphereGeometry args={[radius, 8, 6]} />
+        <meshStandardMaterial color={SCENE.tree} roughness={0.85} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Fence posts along a property line. */
+function FenceLine({ start, end, postSpacing = 8, postHeight = 3 }: { start: [number, number, number]; end: [number, number, number]; postSpacing?: number; postHeight?: number }) {
+  const posts = useMemo(() => {
+    const dx = end[0] - start[0];
+    const dz = end[2] - start[2];
+    const len = Math.sqrt(dx * dx + dz * dz);
+    const count = Math.floor(len / postSpacing);
+    const nx = dx / len;
+    const nz = dz / len;
+    const result: { position: [number, number, number]; angle: number }[] = [];
+    for (let i = 0; i <= count; i++) {
+      result.push({
+        position: [start[0] + nx * postSpacing * i, postHeight / 2, start[2] + nz * postSpacing * i],
+        angle: Math.atan2(dx, dz),
+      });
+    }
+    return result;
+  }, [start, end, postSpacing, postHeight]);
 
   return (
-    <group position={[0, 0, -32]}>
-      <mesh position={[0, y, 0]} castShadow receiveShadow>
-        <boxGeometry args={[config.width, config.height, config.length]} />
-        <meshStandardMaterial color={finishColor} roughness={0.74} />
-      </mesh>
-
-      {config.roof === "gable" ? (
-        <mesh position={[0, config.height + 1.1, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-          <coneGeometry args={[config.width / 1.35, config.length + 1.6, 4]} />
-          <meshStandardMaterial color={SCENE.roof} roughness={0.66} />
+    <>
+      {posts.map((p, i) => (
+        <mesh key={i} position={p.position} rotation={[0, p.angle, 0]} castShadow>
+          <boxGeometry args={[0.3, postHeight, 0.3]} />
+          <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
         </mesh>
-      ) : (
-        <mesh
-          position={[0, config.height + 0.4, config.roof === "shed" ? -0.8 : 0]}
-          rotation={[config.roof === "shed" ? -0.08 : 0, 0, 0]}
-          castShadow
-        >
-          <boxGeometry args={[config.width + 1.2, 0.8, config.length + 1.2]} />
-          <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
-        </mesh>
-      )}
-
-      {config.includeOpenings && (
-        <group position={[0, config.height * 0.45, config.length / 2 + 0.08]}>
-          <mesh position={[-config.width * 0.23, 0, 0]}>
-            <boxGeometry args={[config.width * 0.24, config.height * 0.42, 0.22]} />
-            <meshStandardMaterial color={SCENE.glass} roughness={0.25} metalness={0.25} />
-          </mesh>
-          <mesh position={[config.width * 0.18, -0.5, 0]}>
-            <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
-            <meshStandardMaterial color={SCENE.roof} roughness={0.2} metalness={0.3} />
-          </mesh>
-        </group>
-      )}
-
-      <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
-        <boxGeometry args={[config.width + 5, 0.24, 5]} />
-        <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
-      </mesh>
-
-      <Text
-        position={[0, config.height + 2.4, config.length / 2 + 0.2]}
-        rotation={[-Math.PI / 3, 0, 0]}
-        fontSize={1.8}
-        color={SCENE.label}
-        anchorX="center"
-        anchorY="middle"
-      >
-        PROPOSED ADU
-      </Text>
-    </group>
+      ))}
+    </>
   );
 }
 
-export default function ParcelScene({ parcel, config, isCompliant }: ParcelSceneProps) {
+/** Draggable ADU: click-drag on the lot to reposition within setback bounds. */
+function ProposedAdu({
+  config,
+  parcel,
+  position: aduPos,
+  onPositionChange,
+}: {
+  config: ADUConfig;
+  parcel: ParcelPreset;
+  position: [number, number];
+  onPositionChange?: (pos: [number, number]) => void;
+}) {
+  const finishColor = finishColors[config.finish];
+  const y = config.height / 2;
+  const groundPlaneRef = useRef<THREE.Mesh>(null);
+  const isDragging = useRef(false);
+
+  const buildableArea = useMemo(() => {
+    const halfWidth = parcel.lotWidth / 2 - parcel.setbacks.side - config.width / 2;
+    const halfLength = parcel.lotLength / 2 - parcel.setbacks.front - config.length / 2;
+    return { maxX: halfWidth, minX: -halfWidth, maxZ: -parcel.setbacks.rear + parcel.lotLength / 2 - config.length / 2, minZ: -halfLength };
+  }, [parcel, config]);
+
+  // Clamp position within buildable area
+  const clampPos = useCallback(
+    (x: number, z: number): [number, number] => {
+      const cx = Math.max(buildableArea.minX, Math.min(buildableArea.maxX, x));
+      const cz = Math.max(buildableArea.minZ, Math.min(buildableArea.maxZ, z));
+      return [cx, cz];
+    },
+    [buildableArea],
+  );
+
+  const handlePointerDown = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      if (!onPositionChange) return;
+      e.stopPropagation();
+      isDragging.current = true;
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [onPositionChange],
+  );
+
+  const handlePointerMove = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      if (!isDragging.current || !onPositionChange) return;
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2(e.pointer.x, e.pointer.y);
+      raycaster.setFromCamera(pointer, (e as unknown as { camera: THREE.Camera }).camera);
+      // Project onto XZ plane at y=0
+      const origin = raycaster.ray.origin;
+      const dir = raycaster.ray.direction;
+      if (dir.y === 0) return;
+      const t = -origin.y / dir.y;
+      if (t < 0) return;
+      const hit = new THREE.Vector3();
+      hit.copy(origin).add(dir.clone().multiplyScalar(t));
+      const [cx, cz] = clampPos(hit.x, hit.z);
+      onPositionChange([cx, cz]);
+    },
+    [onPositionChange, clampPos],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
+
+  const [x, z] = aduPos;
+  const isInsideSetback = x >= buildableArea.minX && x <= buildableArea.maxX && z >= buildableArea.minZ && z <= buildableArea.maxZ;
+
+  return (
+    <>
+      {/* Invisible ground plane for raycasting */}
+      <mesh
+        ref={groundPlaneRef}
+        visible={false}
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.01, 0]}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+      >
+        <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
+      </mesh>
+
+      <group position={[x, 0, z]} onPointerDown={handlePointerDown}>
+        {/* Shadow indicator on ground */}
+        <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[config.width + 1, config.length + 1]} />
+          <meshBasicMaterial color={isInsideSetback ? "rgba(58,158,79,0.15)" : "rgba(192,122,31,0.2)"} transparent />
+        </mesh>
+
+        {/* ADU body */}
+        <mesh position={[0, y, 0]} castShadow receiveShadow>
+          <boxGeometry args={[config.width, config.height, config.length]} />
+          <meshStandardMaterial color={finishColor} roughness={0.74} />
+        </mesh>
+
+        {/* Roof */}
+        {config.roof === "gable" ? (
+          <mesh position={[0, config.height + 1.1, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+            <coneGeometry args={[config.width / 1.35, config.length + 1.6, 4]} />
+            <meshStandardMaterial color={SCENE.roof} roughness={0.66} />
+          </mesh>
+        ) : (
+          <mesh
+            position={[0, config.height + 0.4, config.roof === "shed" ? -0.8 : 0]}
+            rotation={[config.roof === "shed" ? -0.08 : 0, 0, 0]}
+            castShadow
+          >
+            <boxGeometry args={[config.width + 1.2, 0.8, config.length + 1.2]} />
+            <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
+          </mesh>
+        )}
+
+        {/* Windows and door */}
+        {config.includeOpenings && (
+          <group position={[0, config.height * 0.45, config.length / 2 + 0.08]}>
+            <mesh position={[-config.width * 0.23, 0, 0]}>
+              <boxGeometry args={[config.width * 0.24, config.height * 0.42, 0.22]} />
+              <meshStandardMaterial color={SCENE.glass} roughness={0.25} metalness={0.25} />
+            </mesh>
+            <mesh position={[config.width * 0.18, -0.5, 0]}>
+              <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
+              <meshStandardMaterial color={SCENE.roof} roughness={0.2} metalness={0.3} />
+            </mesh>
+          </group>
+        )}
+
+        {/* Concrete pad */}
+        <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
+          <boxGeometry args={[config.width + 5, 0.24, 5]} />
+          <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
+        </mesh>
+
+        {/* Label */}
+        <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
+
+        {/* Setback compliance indicator ring */}
+        <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
+          <meshBasicMaterial color={isInsideSetback ? SCENE.boundaryOk : SCENE.boundaryOver} transparent opacity={0.6} side={THREE.DoubleSide} />
+        </mesh>
+      </group>
+    </>
+  );
+}
+
+export default function ParcelScene({ parcel, config, isCompliant, aduPosition, onAduPositionChange }: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
+  const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? [0, 0]);
   const restoreTimer = useRef<number | null>(null);
+
+  const handleAduPosChange = useCallback(
+    (pos: [number, number]) => {
+      setAduPos(pos);
+      onAduPositionChange?.(pos);
+    },
+    [onAduPositionChange],
+  );
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -260,15 +461,21 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
       className="relative h-full min-h-[460px] overflow-hidden bg-lf-sand"
       style={{ backgroundImage: SCENE_BACKDROP }}
     >
-      <Canvas
-        shadows
-        camera={{ position: [58, 58, 72], fov: 42, near: 1, far: 500 }}
-        dpr={[1, 1.8]}
-        gl={{ alpha: true, antialias: true }}
-        onCreated={handleCreated}
-        className="relative z-0 h-full w-full"
-        style={{ background: "transparent" }}
+      <ErrorBoundary
+        fallbackRender={() => {
+          setWebglAvailable(false);
+          return null;
+        }}
       >
+        <Canvas
+          shadows
+          camera={{ position: [58, 58, 72], fov: 42, near: 1, far: 500 }}
+          dpr={[1, 1.8]}
+          gl={{ alpha: true, antialias: true }}
+          onCreated={handleCreated}
+          className="relative z-0 h-full w-full"
+          style={{ background: "transparent" }}
+        >
         <fog attach="fog" args={[SCENE.fog, 120, 230]} />
         <ambientLight intensity={1.3} />
         <directionalLight
@@ -295,16 +502,42 @@ export default function ParcelScene({ parcel, config, isCompliant }: ParcelScene
         <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
         <SetbackLines parcel={parcel} />
         <ExistingHouse parcel={parcel} />
-        <ProposedAdu config={config} />
+        <ProposedAdu config={config} parcel={parcel} position={aduPos} onPositionChange={handleAduPosChange} />
 
-        <gridHelper args={[160, 32, SCENE.gridCenter, SCENE.gridLine]} position={[0, 0.05, 0]} />
+        {/* Landscape elements */}
+        <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
+        <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
+        <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />
+        <Tree position={[parcel.lotWidth / 2 - 5, 0, -parcel.lotLength / 2 + 8]} height={9} radius={3.5} />
+
+        {/* Side fences */}
+        <FenceLine
+          start={[-parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
+          end={[-parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+          postSpacing={6}
+          postHeight={4}
+        />
+        <FenceLine
+          start={[parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
+          end={[parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+          postSpacing={6}
+          postHeight={4}
+        />
+
+        {/* Driveway strip along one side */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[parcel.lotWidth / 2 - 3, 0.02, 0]} receiveShadow>
+          <planeGeometry args={[5, parcel.lotLength * 0.6]} />
+          <meshStandardMaterial color={SCENE.driveway} roughness={0.95} />
+        </mesh>
+
+        <gridHelper args={[160, 32, SCENE.gridCenter, SCENE.gridLine]} position={[0, 0.02, 0]} />
         <OrbitControls enableDamping dampingFactor={0.06} maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
       </Canvas>
+      </ErrorBoundary>
 
       <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">3D</span>
-        <span className="px-2 py-1">Setbacks</span>
-        <span className="px-2 py-1">Sun 3:00 PM</span>
+        <span className="px-2 py-1">Drag to place ADU</span>
       </div>
 
       <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
