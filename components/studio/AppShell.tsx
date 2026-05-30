@@ -142,7 +142,7 @@ export default function AppShell({
         </div>
       </aside>
 
-      <main className="lf-grain flex min-h-dvh flex-col bg-lf-sand lg:min-h-0 lg:h-dvh lg:overflow-hidden">
+      <main className="lf-grain flex min-h-dvh flex-col bg-lf-sand pb-16 lg:min-h-0 lg:h-dvh lg:overflow-hidden lg:pb-0">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
           <div className="flex min-w-0 items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -162,6 +162,39 @@ export default function AppShell({
           </button>
         </header>
         {children}
+
+        {/* Mobile bottom tab navigation */}
+        <nav
+          aria-label="Mobile navigation"
+          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-lf-hairline bg-lf-card/95 backdrop-blur-sm lg:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeNav === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onNavigate(item.id)}
+                aria-current={isActive ? "page" : undefined}
+                className="flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset"
+              >
+                <Icon
+                  size={20}
+                  className={`shrink-0 ${isActive ? "text-lf-mahogany" : "text-lf-muted"}`}
+                />
+                <span
+                  className={`truncate text-[10px] font-semibold ${
+                    isActive ? "text-lf-mahogany" : "text-lf-muted"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
       </main>
     </div>
   );

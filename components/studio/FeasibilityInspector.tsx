@@ -89,7 +89,7 @@ export default function FeasibilityInspector({
               Feasibility Studio
             </h2>
             <p className="mt-1 text-sm text-lf-muted">
-              Live concept assumptions and investor-grade outputs.
+              Adjust parcel, size, and finish to see income potential.
             </p>
           </div>
           <button
@@ -154,10 +154,7 @@ export default function FeasibilityInspector({
               </>
             ) : (
               <>
-                <LabelRow label="Parcel Preset" />
-                <label className="sr-only" htmlFor="parcel-preset">
-                  Parcel Preset
-                </label>
+                <LabelRow label="Parcel Preset" htmlFor="parcel-preset" />
                 <select
                   id="parcel-preset"
                   value={parcelId}
@@ -393,15 +390,23 @@ export default function FeasibilityInspector({
 function LabelRow({
   label,
   value,
+  htmlFor,
   valueClass = "font-display text-lf-mahogany",
 }: {
   label: string;
   value?: string;
+  htmlFor?: string;
   valueClass?: string;
 }) {
+  const Tag = htmlFor ? "label" : "h3";
   return (
     <div className="flex items-center justify-between">
-      <h3 className="text-sm font-semibold text-lf-espresso">{label}</h3>
+      <Tag
+        className="text-sm font-semibold text-lf-espresso"
+        {...(htmlFor ? { htmlFor } : {})}
+      >
+        {label}
+      </Tag>
       {value && <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>}
     </div>
   );

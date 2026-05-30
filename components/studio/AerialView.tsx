@@ -102,7 +102,9 @@ export default function AerialView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng, parcel.lotLength]);
 
-  const statusColor = isCompliant ? "#2F4A38" : "#A23B26"; // lf-forest or lf-brick
+  // SVG overlay colors — these match --lf-forest (#2F4A38) and --lf-brick (#A23B26)
+  // but must be hardcoded hex for SVG attributes (CSS variables don't work in SVG stroke/fill)
+  const statusColor = isCompliant ? "#2F4A38" : "#A23B26";
 
   return (
     <div
@@ -164,7 +166,7 @@ export default function AerialView({
           textAnchor="middle"
           fill="white"
           fontSize="10"
-          fontFamily="monospace"
+          fontFamily="'Geist Mono', monospace"
           fontWeight="600"
           letterSpacing="0.06em"
         >
@@ -186,7 +188,7 @@ export default function AerialView({
           textAnchor="middle"
           fill="rgba(255,255,255,0.85)"
           fontSize="10"
-          fontFamily="monospace"
+          fontFamily="'Geist Mono', monospace"
           fontWeight="600"
           letterSpacing="0.06em"
         >
@@ -217,7 +219,7 @@ export default function AerialView({
       {/* Zoning badge */}
       <div
         className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-md ${
-          isCompliant ? "bg-[#2F4A38]" : "bg-[#A23B26]"
+          isCompliant ? "bg-[var(--lf-forest)]" : "bg-[var(--lf-brick)]"
         }`}
         aria-label={`Zoning status: ${isCompliant ? "Compliant" : "Review needed"}`}
       >
@@ -266,7 +268,7 @@ function SetbackLabel({
         textAnchor="middle"
         fill="white"
         fontSize="9.5"
-        fontFamily="monospace"
+        fontFamily="'Geist Mono', monospace"
         opacity="0.92"
         letterSpacing="0.04em"
       >

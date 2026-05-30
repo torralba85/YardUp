@@ -22,8 +22,9 @@ describe("FeasibilityStudio", () => {
     expect(
       screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
     ).toBeInTheDocument();
+    // "Parcel Preset" is now a label (not h3) for the select element
     expect(
-      screen.getByRole("heading", { name: "Parcel Preset", level: 3 }),
+      screen.getByRole("combobox", { name: "Parcel Preset" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Generate Concept Report/i }),
