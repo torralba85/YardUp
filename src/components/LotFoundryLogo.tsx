@@ -3,7 +3,7 @@ import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { colors, radii, spacing, typography } from "../theme";
 
 /**
- * Lot/Foundry "Foundation Monogram" mark — an interlocking L + F built as a
+ * LOTFOUNDRY "Foundation Monogram" mark — an interlocking L + F built as a
  * solid geometric block. LOT reads in charcoal (structure / the lot), FOUNDRY
  * in Capital Brass (realized value / the foundry). Rendered from Views so it
  * stays crisp at any size without an SVG dependency.
@@ -31,7 +31,7 @@ export function LotFoundryMark({ charcoal = CHARCOAL, brass = BRASS, size = 34, 
     <View
       style={[{ height: size, width: size }, style]}
       accessible
-      accessibilityLabel="Lot/Foundry mark"
+      accessibilityLabel="LOTFOUNDRY mark"
     >
       {/* L — charcoal: left stem + base */}
       <View style={bar({ backgroundColor: charcoal, left: size * 0.1, top: size * 0.1, width: size * 0.2, height: size * 0.8 })} />
@@ -56,7 +56,7 @@ export function LotFoundryLogo({
   const foundryColor = brass ?? colors.capitalBrass;
 
   return (
-    <View style={[styles.logo, style]} accessible accessibilityLabel="Lot/Foundry">
+    <View style={[styles.logo, style]} accessible accessibilityLabel="LOTFOUNDRY">
       <LotFoundryMark charcoal={lotColor} brass={foundryColor} size={size} />
       {showWordmark ? (
         <Text

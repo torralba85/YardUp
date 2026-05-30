@@ -1,8 +1,8 @@
-# Lot/Foundry
+# LOTFOUNDRY
 
-Lot/Foundry (always rendered with the slash) is the customer-facing brand, operated under the legal name ADU Advisor. It is an Expo React Native app that helps homeowners understand the money, feasibility, and builder path for an accessory dwelling unit before they spend on professional work. The first surface answers how much an ADU could earn, what it would cost, how fast it could pay back, and which builders can act on it. Design, permit checks, model fit, and photo context are proof paths under the revenue story, not the headline.
+LOTFOUNDRY is the customer-facing brand, operated under the legal name ADU Advisor. It is an Expo React Native app that helps homeowners understand the money, feasibility, and builder path for an accessory dwelling unit before they spend on professional work. The first surface answers how much an ADU could earn, what it would cost, how fast it could pay back, and which builders can act on it. Design, permit checks, model fit, and photo context are proof paths under the revenue story, not the headline.
 
-> The repository, GitHub remote (`github.com/torralba85/YardUp`), local folder name (`ADU Advisor`), and native bundle IDs (`com.aduadvisor.app`) were previously branded YardUp and keep those identifiers for store-listing and link continuity. The brand, copy, and visual system have moved to Lot/Foundry (Direction 05); YardUp / Quiet Ascent is retired.
+> The repository, GitHub remote (`github.com/torralba85/YardUp`), local folder name (`ADU Advisor`), and native bundle IDs (`com.aduadvisor.app`) were previously branded YardUp and keep those identifiers for store-listing and link continuity. The brand, copy, and visual system have moved to LOTFOUNDRY; YardUp / Quiet Ascent is retired.
 
 Local-first by default: project studies live in on-device SQLite. Cloud services (Firebase Auth, Firestore, callable Cloud Functions) layer in on top for sync, regulation refreshes, public-record lookups, AI concept generation, builder quote requests, and product feedback.
 
@@ -62,7 +62,7 @@ The app runs without Firebase, but this checkout is wired to the Firebase projec
 - iOS bundle ID: `com.aduadvisor.app`
 - Android package: `com.aduadvisor.app`
 
-Native bundle IDs intentionally keep the `aduadvisor` reverse-DNS to preserve store listing continuity; the user-visible product name is `Lot/Foundry`.
+Native bundle IDs intentionally keep the `aduadvisor` reverse-DNS to preserve store listing continuity; the user-visible product name is `LOTFOUNDRY`.
 
 For local native builds, download the `yardup-2026` SDK config files into the ignored paths `firebase/GoogleService-Info.plist` and `firebase/google-services.json`. For EAS builds, provide those same files as File environment variables named `GOOGLE_SERVICE_INFO_PLIST` and `GOOGLE_SERVICES_JSON`; `app.config.ts` passes the supplied paths to Expo SDK 54 through `ios.googleServicesFile` and `android.googleServicesFile`.
 
@@ -145,21 +145,21 @@ Addresses outside sourced jurisdiction coverage enter a `local-review` state: ea
 
 ## Marketing And Web
 
-Brand and marketing asset briefs that follow the Lot/Foundry (Foundry System) identity:
+Brand and marketing asset briefs that follow the LOTFOUNDRY (Foundry System) identity:
 
 - [docs/marketing/marketing-kit.md](./docs/marketing/marketing-kit.md)
 - [docs/marketing/web-assets.md](./docs/marketing/web-assets.md)
 
 ## Repository Identity
 
-This checkout is the canonical Lot/Foundry mobile product repository: `https://github.com/torralba85/YardUp.git`. The GitHub repo name, the local directory name `ADU Advisor`, and the native bundle identifier `com.aduadvisor.app` preserve legal and store-listing continuity; they do not refer to a separate app repository. The repository was previously branded YardUp; the brand has since moved to Lot/Foundry while these identifiers stayed put.
+This checkout is the canonical LOTFOUNDRY mobile product repository: `https://github.com/torralba85/YardUp.git`. The GitHub repo name, the local directory name `ADU Advisor`, and the native bundle identifier `com.aduadvisor.app` preserve legal and store-listing continuity; they do not refer to a separate app repository. The repository was previously branded YardUp; the brand has since moved to LOTFOUNDRY while these identifiers stayed put.
 
 Use this checkout and `origin/main` (the default branch) as the source of truth for product, design, release, and backend work. Treat a prototype as a separate system only when it is supplied with a distinct path or remote, and do not transfer its privacy or deployment assumptions into the mobile app without verification.
 
 ## Documentation Index
 
 - [DESIGN.md](./DESIGN.md) — Foundry System design system, tokens, and copy rules
-- [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) — Canonical Lot/Foundry brand identity reference (Direction 05)
+- [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) — Historical Direction 05 brand reference (emerald-slash mark; superseded by the Foundation Monogram — see DESIGN.md changelog)
 - [AGENTS.md](./AGENTS.md) — Working agreement for agent-driven changes
 - [docs/api/api-design.md](./docs/api/api-design.md) — Resource model and callable contract
 - [docs/hyperframes/design-studio-demo.md](./docs/hyperframes/design-studio-demo.md) — Demo composition brief

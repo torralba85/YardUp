@@ -1,14 +1,14 @@
-# Agent Working Agreement — Lot/Foundry / ADU Advisor
+# Agent Working Agreement — LOTFOUNDRY / ADU Advisor
 
 ## Product Center
 
-The product is Lot/Foundry (customer-facing brand, always rendered with the slash) operated under the legal name ADU Advisor. The center is **ADU earning potential and builder connection**, not design exploration. In QA mode, flag any UI that hides revenue, cost, payback, or builder-readiness behind decorative design controls.
+The product is LOTFOUNDRY (customer-facing brand) operated under the legal name ADU Advisor. The center is **ADU earning potential and builder connection**, not design exploration. In QA mode, flag any UI that hides revenue, cost, payback, or builder-readiness behind decorative design controls.
 
 Do not restrict the app's framing to California unless the specific feature or data source is California-only. Use "supported markets", "local rules", and "jurisdiction" framing.
 
 ## Repository Identity
 
-This checkout is the canonical Lot/Foundry mobile application repository. Its Git remote is `https://github.com/torralba85/YardUp.git`; the GitHub repo name, the local folder name `ADU Advisor`, and the native bundle IDs preserve legal and store continuity and do not indicate a separate product repository. The repository was previously branded YardUp; brand assets, copy, and visual system have moved to Lot/Foundry (see DESIGN.md), but identifiers stayed put for store-listing and link continuity.
+This checkout is the canonical LOTFOUNDRY mobile application repository. Its Git remote is `https://github.com/torralba85/YardUp.git`; the GitHub repo name, the local folder name `ADU Advisor`, and the native bundle IDs preserve legal and store continuity and do not indicate a separate product repository. The repository was previously branded YardUp; brand assets, copy, and visual system have moved to LOTFOUNDRY (see DESIGN.md), but identifiers stayed put for store-listing and link continuity.
 
 Before using prior repo assumptions or moving work between projects, verify the active checkout with `git remote -v` and treat this repository and `origin/main` as the source of truth. Do not describe `github.com/torralba85/YardUp` as a sibling prototype unless a separate, explicit prototype repository is provided.
 
@@ -44,9 +44,9 @@ Run `npm run release:check` before tagging a store build.
 
 ## What Not To Do
 
-- Do not change the bundle IDs (`com.aduadvisor.app`). The rebrand to Lot/Foundry is brand-only; store-listing continuity depends on stable identifiers.
+- Do not change the bundle IDs (`com.aduadvisor.app`). The rebrand to LOTFOUNDRY is brand-only; store-listing continuity depends on stable identifiers.
 - Do not change the GitHub remote URL or repository name. The repo stays at `github.com/torralba85/YardUp` for link and history continuity.
-- In running copy, always render the brand name as `Lot/Foundry` with the slash. Never `LotFoundry`, never `Lot Foundry`, never "the Foundry" on its own. The all-caps `LOTFOUNDRY` form is reserved exclusively for the logo lockup wordmark (see below) and is not used in prose.
+- Always render the brand name as `LOTFOUNDRY` — all caps, one word, no slash and no space. Never `Lot/Foundry`, never `Lot Foundry`, never `LotFoundry`, never "the Foundry" on its own. (The slash form `Lot/Foundry` is retired; it survives only in historical changelog entries and the dated `docs/brand/lotfoundry-direction-05.html` snapshot.)
 - The logo is the **Foundation Monogram**: an interlocking L + F block where LOT reads in charcoal (`colors.text`) and FOUNDRY in Capital Brass (`colors.capitalBrass` `#A47A3B`), paired with the `LOTFOUNDRY` wordmark. It is implemented in `src/components/LotFoundryLogo.tsx`. This supersedes the earlier emerald-slash mark.
 - Do not invent support emails, domains, or legal entities — use `support@aduadvisor.app` until explicitly told otherwise.
 - Do not commit OpenAI keys, Gemini keys, Firebase service-account JSON, or other secrets. Backend env lives in Firebase runtime config / Secret Manager.
@@ -56,7 +56,7 @@ Run `npm run release:check` before tagging a store build.
 ## Documentation Sources Of Truth
 
 - [README.md](./README.md) — Stack, scripts, app surfaces, release env
-- [DESIGN.md](./DESIGN.md) — Lot/Foundry (Foundry System) design tokens, mark, and voice
+- [DESIGN.md](./DESIGN.md) — LOTFOUNDRY (Foundry System) design tokens, mark, and voice
 - [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) — Canonical brand identity reference (Direction 05)
 - [docs/api/api-design.md](./docs/api/api-design.md) — Callable contract and resource model
 - [docs/legal/privacy-policy.md](./docs/legal/privacy-policy.md)

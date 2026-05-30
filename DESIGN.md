@@ -1,6 +1,6 @@
 ---
 name: Foundry System
-brand: Lot/Foundry
+brand: LOTFOUNDRY
 tagline: a foundry for lots
 mark:
   grid: 1024
@@ -136,19 +136,19 @@ elevation:
   raised: '0 1px 0 rgba(15,23,20,0.04), 0 18px 36px -24px rgba(15,23,20,0.35)'
 ---
 
-# Design System — Lot/Foundry
+# Design System — LOTFOUNDRY
 
 ## Product Context
 
-- **What this is:** Lot/Foundry helps a homeowner turn a lot they already own into earning potential — and connects them to a builder who can act on it. The ADU is the first thing the foundry makes from a lot.
+- **What this is:** LOTFOUNDRY helps a homeowner turn a lot they already own into earning potential — and connects them to a builder who can act on it. The ADU is the first thing the foundry makes from a lot.
 - **Who it is for:** Homeowners who own or are evaluating property and want to know whether their lot can produce rental income, resale value, family housing flexibility, or builder-ready scope.
 - **Space/industry:** Residential development, homeowner finance, real estate planning, ADU construction, builder marketplace.
 - **Project type:** Mobile-first product tool with dashboard, planner, estimate, permit-risk, and builder-matching surfaces.
 - **Core memory:** Someone should leave thinking, "My lot could be making real money — and a real builder is one tap away."
 
-Lot/Foundry is the customer-facing brand operated under the legal name ADU Advisor. The native bundle ID (`com.aduadvisor.app`) and store-listing continuity remain on ADU Advisor. The product is not primarily a design studio. Design, permit checks, model fit, and photo context are proof paths. The dominant product promise is value unlocked from the lot, then a credible path to builders.
+LOTFOUNDRY is the customer-facing brand operated under the legal name ADU Advisor. The native bundle ID (`com.aduadvisor.app`) and store-listing continuity remain on ADU Advisor. The product is not primarily a design studio. Design, permit checks, model fit, and photo context are proof paths. The dominant product promise is value unlocked from the lot, then a credible path to builders.
 
-The repository remains `github.com/torralba85/YardUp` for store continuity; the customer-facing brand is Lot/Foundry.
+The repository remains `github.com/torralba85/YardUp` for store continuity; the customer-facing brand is LOTFOUNDRY.
 
 ## Positioning
 
@@ -169,34 +169,26 @@ Do not restrict copy, data models, or navigation language to California unless t
 
 ### The Mark
 
-Lot/Foundry is a single emerald slash on a dark ground. The slash is the wordmark gesture made geometric:
+LOTFOUNDRY is the **Foundation Monogram**: an interlocking L + F built as a solid geometric block. The charcoal **L** is the lot (ground / structure); the Capital Brass **F** is the foundry (realized value). The two share a structural square.
 
-- **Grid:** 1024 × 1024
-- **Tile corner radius:** 224 (≈22%)
-- **Slash polygon:** `328,800 → 472,800 → 696,224 → 552,224`
-- **Slash width:** 14% of canvas
-- **Slash angle:** 21.2°
-- **Slash color:** Emerald `#1E8F5E`
-- **Tile color:** Ink `#0F1714` (primary) or Paper `#F1EDE3` (inverse)
+- **L (charcoal `colors.text`):** left stem + base.
+- **F (Capital Brass `#A47A3B`):** stem + top arm + mid arm, interlocking with the L.
+- **Construction:** built from rounded rectangles (no SVG dependency), so it holds from 16px favicon to billboard.
+- **Reference implementation:** `src/components/LotFoundryLogo.tsx` (`LotFoundryMark`).
 
-The mark holds from 16px favicon to billboard. Do not redraw the slash, add a serif, inset a roof, or animate the proportions.
+Do not re-skew the letters, add a serif, recolor the split, or animate the proportions.
 
 ### The Wordmark
 
-`Lot/Foundry` set in IBM Plex Mono Medium, tracked tight (`-0.022em`). The forward slash is rendered in emerald `#1E8F5E`. Always typeset as one word — never "Lot Foundry", never "LotFoundry" without the slash, never with the slash in any other color.
+`LOTFOUNDRY` set as one all-caps word, tracked open: `LOT` in charcoal, `FOUNDRY` in Capital Brass `#A47A3B`. Never "Lot/Foundry", never "Lot Foundry", never mixed case. The emerald-slash wordmark is retired.
 
 Approved variants:
 
 | Variant | Use |
 |---------|-----|
-| `Lot/Foundry` with emerald slash | Default. Headers, marketing, in-app branding. |
-| Mark alone (Ink tile) | Favicon, app icon, navbar collapse, tight chrome. |
-| Mark alone (Paper tile) | Inverse surfaces (dark hero, photo overlays). |
-| Lockup (mark + wordmark) | Splash, login, marketing kit. Mark left, wordmark right, 22% gap of mark height. |
-
-### The Slash Motif
-
-The slash is the structural metaphor: lot **/** foundry, input **/** output, dirt **/** value. Use sparingly in editorial copy as a thought separator (e.g., "income / payback", "permit / builder"). Never decorate it. Never animate it as a sweep, wipe, or particle effect.
+| `LOTFOUNDRY` lockup (mark + wordmark) | Default. Headers, splash, marketing, in-app branding. Mark left, wordmark right, ~22% gap of mark height. |
+| Mark alone (Foundation Monogram) | Favicon, app icon, navbar collapse, tight chrome. |
+| Mark on Paper tile | App icon and inverse surfaces (dark hero, photo overlays). |
 
 ### Tagline
 
@@ -251,7 +243,7 @@ Three families, three roles. Each has one job.
 | Small body | Libre Baskerville | 13 / 19 | 400 | 0 | Caption-weight prose |
 | UI label | IBM Plex Mono | 11 / 16 | 500 | 0.18em | Buttons, tabs, badges (UPPERCASE) |
 | UI meta | IBM Plex Mono | 10.5 / 14 | 400 | 0.16em | Eyebrow, footer chrome (UPPERCASE) |
-| Wordmark | IBM Plex Mono | 32 / 32 | 500 | -0.022em | `Lot/Foundry` in chrome |
+| Wordmark | IBM Plex Mono | 32 / 32 | 500 | -0.022em | `LOTFOUNDRY` in chrome |
 | Data large | IBM Plex Mono | 28 / 32 | 600 | -0.01em | Headline data (cost range, ROI) |
 | Data regular | IBM Plex Mono | 14 / 20 | 500 | 0 | Table rows, range pairs |
 
@@ -569,7 +561,7 @@ Do not animate decorative blobs, background gradients, generic page entrances, o
 | Parcel data | "your lot", "estimated parcel", "planning allowance" | "starter parcel", "placeholder" |
 | Risk | "verify with your jurisdiction", "permit review required" | "you're approved", "low risk means go" |
 | Support | "support@aduadvisor.app" | invented domains, email aliases, or legal entities |
-| Brand | "Lot/Foundry" (always with the slash) | "LotFoundry", "Lot Foundry", "the Foundry" |
+| Brand | "LOTFOUNDRY" (all caps, one word) | "Lot/Foundry", "LotFoundry", "Lot Foundry", "the Foundry" |
 
 ### Tone by Screen
 
@@ -618,4 +610,5 @@ The canonical brand identity reference is [docs/brand/lotfoundry-direction-05.ht
 | 2026-05-23 | Resolved typography to Hanken Grotesk | Warmer, more humanist than Instrument Sans |
 | 2026-05-25 | Private Capital Evolution: Inter Tight replaces Hanken Grotesk; Capital Brass added | Inter Tight reads as institutional precision; Capital Brass marks realized-value moments |
 | 2026-05-27 | **Adopted Lot/Foundry Direction 05 as the customer-facing brand.** YardUp / Quiet Ascent is retired. New system: Ink `#0F1714`, Paper `#F1EDE3`, Emerald `#1E8F5E`, slash motif, Playfair Display + Libre Baskerville + IBM Plex Mono. Legal entity (ADU Advisor), bundle ID (`com.aduadvisor.app`), and support email (`support@aduadvisor.app`) unchanged for store-listing continuity. Product center (ADU value + builder connection) unchanged. | The new mark reads as a financial-broadsheet instrument rather than a consumer SaaS app. The slash motif gives a structural metaphor — lot / foundry, input / output, dirt / value — that the previous mark never had. Editorial serif + engineering mono pair signals an underwriting tool that also ships software. |
-| 2026-05-30 | **Adopted the Foundation Monogram as the logo mark**, superseding the emerald slash mark. An interlocking L + F block: LOT in charcoal (`colors.text`), FOUNDRY in Capital Brass (`#A47A3B`), paired with the all-caps `LOTFOUNDRY` wordmark lockup. Implemented in `src/components/LotFoundryLogo.tsx`. The brand name in running copy remains `Lot/Foundry` with the slash; `LOTFOUNDRY` is the logo lockup only. | The LF monogram is a more ownable, structural mark than an abstract slash, and the charcoal/brass split visually encodes the LOT (structure) → FOUNDRY (realized value) story. Reusing the existing Capital Brass token keeps it inside the sanctioned palette. |
+| 2026-05-30 | **Adopted the Foundation Monogram as the logo mark**, superseding the emerald slash mark. An interlocking L + F block: LOT in charcoal (`colors.text`), FOUNDRY in Capital Brass (`#A47A3B`), paired with the all-caps `LOTFOUNDRY` wordmark lockup. Implemented in `src/components/LotFoundryLogo.tsx`. | The LF monogram is a more ownable, structural mark than an abstract slash, and the charcoal/brass split visually encodes the LOT (structure) → FOUNDRY (realized value) story. Reusing the existing Capital Brass token keeps it inside the sanctioned palette. |
+| 2026-05-30 | **Dropped the slash from the brand name and aligned the structural palette to charcoal + warm cream.** The brand name is now `LOTFOUNDRY` (all caps, one word) in all copy, UI, and the app display name; the `Lot/Foundry` slash form is retired (surviving only in historical changelog entries and the dated Direction-05 HTML snapshot). `src/theme.ts` neutrals (text, surfaces, borders, dark structure) moved from green-tinted to warm charcoal/cream; Capital Brass carries brand accenting. Semantic colors are unchanged: emerald = revenue, amber = permits, blue = builders, coral = error. | The monogram and wordmark read as one ownable mark without the slash, and warm charcoal/cream neutrals let the brass and the emerald revenue cue both register without competing with a green-tinted ground. |

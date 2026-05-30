@@ -1,27 +1,30 @@
 import { Platform, ViewStyle } from "react-native";
 
 /**
- * YardUp Quiet Ascent palette. The sanctioned tokens are the ones DESIGN.md
- * names explicitly; aliases keep older callsites compiling without
- * fragmenting the visual system. New code should prefer the sanctioned names.
+ * LOTFOUNDRY palette — warm charcoal + cream structural neutrals with a
+ * Capital Brass accent. Semantic colors are unchanged: emerald = revenue,
+ * amber = permits, blue = builders, coral = error. The sanctioned tokens are
+ * the ones DESIGN.md names explicitly; aliases keep older callsites compiling
+ * without fragmenting the visual system. New code should prefer the
+ * sanctioned names.
  */
 export const colors = {
   // Surfaces
-  background: "#F6F4EE",
-  paper: "#F6F4EE",
-  surface: "#F6F4EE",
-  surfaceStrong: "#EFEEE7",
+  background: "#F2EEE4",
+  paper: "#F2EEE4",
+  surface: "#F2EEE4",
+  surfaceStrong: "#E8E3D6",
   canvas: "#FFFFFF",
   card: "#FFFFFF",
-  inkSoft: "#EDF3EE",
+  inkSoft: "#EFEADF",
 
   // Brand
-  text: "#15231C",
-  muted: "#566159",
-  faint: "#8C968D",
-  border: "#E5E3D9",
-  line: "rgba(21,35,28,0.12)",
-  veil: "rgba(21,35,28,0.07)",
+  text: "#211E19",
+  muted: "#6B645A",
+  faint: "#9C958A",
+  border: "#E3DDD0",
+  line: "rgba(33,30,25,0.12)",
+  veil: "rgba(33,30,25,0.07)",
 
   // Revenue green (sanctioned: the income / readiness color)
   emerald: "#1F9D63",
@@ -34,13 +37,13 @@ export const colors = {
   mint: "#DCF1E5",
   mintSoft: "#EBF6EF",
 
-  // Forest structure
-  forestDeep: "#0E2C20",
-  forest: "#143D2B",
-  ink: "#0E2C20",
-  ink2: "#143D2B",
-  rail: "#0E2C20",
-  black: "#10110F",
+  // Charcoal structure (dark grounds, rails, headers)
+  forestDeep: "#1C1A16",
+  forest: "#26231E",
+  ink: "#1C1A16",
+  ink2: "#26231E",
+  rail: "#1C1A16",
+  black: "#141310",
 
   // Cash highlight (rare emphasis — selected state, money opportunity)
   highlighter: "#CFF86D",
