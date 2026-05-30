@@ -80,15 +80,29 @@ A Firebase Functions v2 HTTPS function that boots Next.js in production mode and
 
 ## Environment Variables
 
-Set these in the Firebase Console → Functions → Configuration (or via `firebase functions:config:set`):
+### Local development
 
+Create `functions/.env` (copied from `functions/.env.example`):
 ```
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
 ```
 
-Without these keys the app runs in demo mode with three built-in presets.
+Firebase Functions v2 reads this file automatically. Do **not** commit `.env` — it's in `.gitignore`.
+
+### CI / production
+
+Set these four secrets in your GitHub repository Settings → Secrets → Actions:
+
+| Secret | Purpose |
+|---|---|
+| `GOOGLE_MAPS_API_KEY` | Server-side Maps Static + Geocoding key |
+| `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places Autocomplete key (restricted by HTTP referrer in GCP Console) |
+| `REGRID_API_KEY` | Regrid Parcel API key |
+| `FIREBASE_SERVICE_ACCOUNT_YARDUP_2026` | JSON service account key for Firebase deploy |
+
+The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result.
 
 ## Release Verification
 
