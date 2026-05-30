@@ -56,12 +56,16 @@ export const colors = {
   // `blueprint` and `parcel` are aliases for the single sanctioned Builder Blue.
   parcel: "#0D5DB8",
   parcelSoft: "#E4F0FF",
+  parcelPress: "#0a4b96",
   blueprint: "#0D5DB8",
 
   // Error / blocked
   warning: "#D1583F",
   warningSoft: "#FDE3DA",
   coral: "#D1583F",
+  // Blocked / hard-stop signal — a deeper terracotta red, distinct from the
+  // coral error tint. Sanctioned single value for "blocked" status indicators.
+  blocked: "#B84D35",
 
   // Warmth accent — used sparingly for "active project" warmth on card rails
   // and the wizard's progress marker. Distinct from permit amber semantically.
@@ -73,6 +77,8 @@ export const colors = {
   // Capital Brass — premium value marker for ROI chips, valuation badges, milestone states.
   // Use sparingly; it signals realized wealth, not generic emphasis.
   capitalBrass: "#A47A3B",
+  // Soft brass surface — warm cream ground for brass-accented value/ROI tiles.
+  brassSoft: "#FBF7EE",
 };
 
 export const spacing = {

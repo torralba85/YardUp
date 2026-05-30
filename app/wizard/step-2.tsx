@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warning,
   },
   blockedDot: {
-    backgroundColor: "#A72C2C",
+    backgroundColor: colors.blocked,
   },
   signalText: {
     flex: 1,

@@ -620,7 +620,7 @@ function buildFitSignals(project: Project, parcel: ParcelSummary, model: AduMode
 }
 
 function signalColor(status: DesignFitSignal["status"]) {
-  if (status === "blocked") return "#B84D35";
+  if (status === "blocked") return colors.blocked;
   if (status === "review") return colors.permit;
   return colors.success;
 }
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
   },
   primaryHouse: {
     backgroundColor: "rgba(28,26,22,0.28)",
-    borderColor: "rgba(246,244,238,0.72)",
+    borderColor: "rgba(242,238,228,0.72)",
     borderRadius: radii.sm,
     borderWidth: 1,
     gap: 2,
@@ -1331,7 +1331,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...typography.body,
-    color: "#B84D35",
+    color: colors.blocked,
     fontSize: 12,
     lineHeight: 17,
   },

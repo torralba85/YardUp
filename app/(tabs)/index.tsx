@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   valueTileRoi: {
-    backgroundColor: "#FBF7EE",
+    backgroundColor: colors.brassSoft,
     borderColor: colors.capitalBrass,
   },
   valueTileLabelRoi: {

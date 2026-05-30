@@ -33,7 +33,7 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: sideRail ? colors.mint : colors.forestDeep,
-        tabBarInactiveTintColor: sideRail ? "rgba(237,243,238,0.68)" : colors.text,
+        tabBarInactiveTintColor: sideRail ? "rgba(239,234,223,0.68)" : colors.text,
         tabBarActiveBackgroundColor: sideRail ? "rgba(31,157,99,0.2)" : colors.mint,
         tabBarInactiveBackgroundColor: "transparent",
         tabBarPosition: sideRail ? "left" : "bottom",

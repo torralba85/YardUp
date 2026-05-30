@@ -1269,7 +1269,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   verifyButtonPressed: {
-    backgroundColor: "#0a4b96",
+    backgroundColor: colors.parcelPress,
   },
   verifyButtonText: {
     ...typography.label,
