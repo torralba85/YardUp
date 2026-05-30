@@ -436,6 +436,8 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
   const [webglAvailable, setWebglAvailable] = useState(true);
   const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? [0, 0]);
   const restoreTimer = useRef<number | null>(null);
+  const keysDown = useRef(new Set<string>());
+  const animFrame = useRef<number | null>(null);
 
   const handleAduPosChange = useCallback(
     (pos: [number, number]) => {
@@ -444,6 +446,60 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
     },
     [onAduPositionChange],
   );
+
+  // Buildable area (mirrors ProposedAdu logic)
+  const buildableBounds = useMemo(() => {
+    const halfW = parcel.lotWidth / 2 - parcel.setbacks.side - config.width / 2;
+    const halfL = parcel.lotLength / 2 - parcel.setbacks.front - config.length / 2;
+    const rearZ = -parcel.setbacks.rear + parcel.lotLength / 2 - config.length / 2;
+    return { minX: -halfW, maxX: halfW, minZ: -halfL, maxZ: rearZ };
+  }, [parcel, config]);
+
+  // Arrow-key ADU placement: ←→ moves X (side-to-side), ↑↓ moves Z (front/back)
+  useEffect(() => {
+    const STEP = 1.5; // feet per frame
+    const tick = () => {
+      const k = keysDown.current;
+      if (k.size === 0) return;
+      let [x, z] = aduPos;
+      if (k.has("ArrowLeft")) x -= STEP;
+      if (k.has("ArrowRight")) x += STEP;
+      if (k.has("ArrowUp")) z -= STEP;
+      if (k.has("ArrowDown")) z += STEP;
+      // Clamp to buildable bounds
+      x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
+      z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
+      if (x !== aduPos[0] || z !== aduPos[1]) {
+        handleAduPosChange([x, z]);
+      }
+    };
+    const loop = () => {
+      tick();
+      animFrame.current = requestAnimationFrame(loop);
+    };
+    animFrame.current = requestAnimationFrame(loop);
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+        keysDown.current.add(e.key);
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      keysDown.current.delete(e.key);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      if (animFrame.current !== null) cancelAnimationFrame(animFrame.current);
+    };
+  }, [aduPos, buildableBounds, handleAduPosChange]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -590,13 +646,14 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
         </mesh>
 
         <gridHelper args={[160, 32, SCENE.gridCenter, SCENE.gridLine]} position={[0, 0.02, 0]} />
-        <OrbitControls enableDamping dampingFactor={0.06} maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
+        <OrbitControls enableDamping dampingFactor={0.06} makeDefault maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
       </Canvas>
       </ErrorBoundary>
 
       <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">3D</span>
-        <span className="px-2 py-1">Drag to place ADU</span>
+        <span className="px-2 py-1">Mouse: Orbit</span>
+        <span className="px-2 py-1">↑↓←→: Move ADU</span>
       </div>
 
       <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
