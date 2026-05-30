@@ -57,7 +57,7 @@ Run `npm run release:check` before tagging a store build.
 
 - [README.md](./README.md) — Stack, scripts, app surfaces, release env
 - [DESIGN.md](./DESIGN.md) — LOTFOUNDRY (Foundry System) design tokens, mark, and voice
-- [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) — Canonical brand identity reference (Direction 05)
+- [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) — Archived Direction 05 reference (emerald-slash, retired). Mark/palette source of truth is DESIGN.md + `src/components/LotFoundryLogo.tsx`.
 - [docs/api/api-design.md](./docs/api/api-design.md) — Callable contract and resource model
 - [docs/legal/privacy-policy.md](./docs/legal/privacy-policy.md)
 - [docs/legal/support.md](./docs/legal/support.md)

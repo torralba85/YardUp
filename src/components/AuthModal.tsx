@@ -297,7 +297,7 @@ export function AuthModal() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(14, 44, 32, 0.45)",
+    backgroundColor: "rgba(28, 26, 22, 0.45)",
     justifyContent: "center",
     alignItems: "center",
     padding: spacing.md,

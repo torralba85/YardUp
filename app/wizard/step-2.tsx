@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   },
   canvas: {
     alignSelf: "center",
-    backgroundColor: "#DCE7D9",
+    backgroundColor: colors.surfaceStrong,
     borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   zoneLabel: {
     ...typography.label,
-    backgroundColor: "#DCE7D9",
+    backgroundColor: colors.surfaceStrong,
     color: colors.accentDark,
     left: spacing.sm,
     paddingHorizontal: spacing.xs,

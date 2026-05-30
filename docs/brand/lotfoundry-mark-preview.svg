@@ -1,30 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
-  <rect width="640" height="420" fill="#F6F4EE"/>
-  <!-- ===== App-icon tile (left) ===== -->
-  <g transform="translate(60,110)">
-    <rect x="-16" y="-16" width="192" height="192" rx="46" fill="#FFFFFF" stroke="#E5E3D9" stroke-width="2"/>
-    <!-- mark at size 160 -->
-    <!-- L charcoal -->
-    <rect x="16" y="16" width="32" height="128" rx="8" fill="#15231C"/>
-    <rect x="16" y="112" width="99.2" height="32" rx="8" fill="#15231C"/>
-    <!-- F brass -->
-    <rect x="73.6" y="16" width="28.8" height="128" rx="8" fill="#A47A3B"/>
-    <rect x="73.6" y="16" width="70.4" height="28.8" rx="8" fill="#A47A3B"/>
-    <rect x="73.6" y="62.4" width="54.4" height="25.6" rx="8" fill="#A47A3B"/>
-  </g>
-  <!-- ===== Horizontal lockup (right) ===== -->
-  <g transform="translate(300,150)">
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="520" viewBox="0 0 760 520">
+  <rect width="760" height="520" fill="#F2EEE4"/>
+
+  <!-- ===== Logo lockup ===== -->
+  <g transform="translate(60,56)">
     <!-- mark at size 96 -->
-    <g>
-      <rect x="9.6" y="9.6" width="19.2" height="76.8" rx="5" fill="#15231C"/>
-      <rect x="9.6" y="67.2" width="59.5" height="19.2" rx="5" fill="#15231C"/>
-      <rect x="44.2" y="9.6" width="17.3" height="76.8" rx="5" fill="#A47A3B"/>
-      <rect x="44.2" y="9.6" width="42.2" height="17.3" rx="5" fill="#A47A3B"/>
-      <rect x="44.2" y="37.4" width="32.6" height="15.4" rx="5" fill="#A47A3B"/>
-    </g>
+    <rect x="9.6" y="9.6" width="19.2" height="76.8" rx="5" fill="#211E19"/>
+    <rect x="9.6" y="67.2" width="59.5" height="19.2" rx="5" fill="#211E19"/>
+    <rect x="44.2" y="9.6" width="17.3" height="76.8" rx="5" fill="#A47A3B"/>
+    <rect x="44.2" y="9.6" width="42.2" height="17.3" rx="5" fill="#A47A3B"/>
+    <rect x="44.2" y="37.4" width="32.6" height="15.4" rx="5" fill="#A47A3B"/>
     <text x="112" y="64" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="44" letter-spacing="3">
-      <tspan fill="#15231C">LOT</tspan><tspan fill="#A47A3B">FOUNDRY</tspan>
+      <tspan fill="#211E19">LOT</tspan><tspan fill="#A47A3B">FOUNDRY</tspan>
     </text>
   </g>
-  <text x="60" y="360" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#566159">Foundation Monogram — LOT (charcoal) + FOUNDRY (Capital Brass), built from Views in LotFoundryLogo.tsx</text>
+
+  <text x="60" y="170" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#6B645A">Structural neutrals (changed) — warm charcoal + cream</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#6B645A">
+    <g transform="translate(60,184)"><rect width="120" height="64" rx="8" fill="#F2EEE4" stroke="#E3DDD0"/><text x="8" y="84">paper #F2EEE4</text></g>
+    <g transform="translate(196,184)"><rect width="120" height="64" rx="8" fill="#E8E3D6" stroke="#E3DDD0"/><text x="8" y="84">surfaceStrong</text></g>
+    <g transform="translate(332,184)"><rect width="120" height="64" rx="8" fill="#211E19"/><text x="8" y="84">text #211E19</text></g>
+    <g transform="translate(468,184)"><rect width="120" height="64" rx="8" fill="#1C1A16"/><text x="8" y="84">ink/rail #1C1A16</text></g>
+    <g transform="translate(604,184)"><rect width="120" height="64" rx="8" fill="#A47A3B"/><text x="8" y="84" fill="#F2EEE4">brass #A47A3B</text></g>
+  </g>
+
+  <text x="60" y="316" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#6B645A">Semantic colors (unchanged)</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="12">
+    <g transform="translate(60,330)"><rect width="150" height="64" rx="8" fill="#1F9D63"/><text x="8" y="84" fill="#6B645A">emerald = revenue</text></g>
+    <g transform="translate(226,330)"><rect width="150" height="64" rx="8" fill="#C1760D"/><text x="8" y="84" fill="#6B645A">amber = permits</text></g>
+    <g transform="translate(392,330)"><rect width="150" height="64" rx="8" fill="#0D5DB8"/><text x="8" y="84" fill="#6B645A">blue = builders</text></g>
+    <g transform="translate(558,330)"><rect width="150" height="64" rx="8" fill="#D1583F"/><text x="8" y="84" fill="#6B645A">coral = error</text></g>
+  </g>
+
+  <text x="60" y="476" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#211E19" font-weight="700">LOTFOUNDRY — Foundation Monogram + warm charcoal/cream neutrals. Semantic palette retained.</text>
+  <text x="60" y="496" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#6B645A">(Wordmark preview uses a system font; the app renders it in the Fraunces title face.)</text>
 </svg>

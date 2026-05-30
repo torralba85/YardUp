@@ -597,7 +597,9 @@ Do not animate decorative blobs, background gradients, generic page entrances, o
 
 ## Brand Reference
 
-The canonical brand identity reference is [docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html). Open it before making brand-layer decisions. Numeric values in this document's frontmatter are the source of truth for tokens; the HTML is the source of truth for the mark, lockup geometry, and editorial posture.
+The source of truth for the mark and palette is this document (DESIGN.md) plus the reference implementation `src/components/LotFoundryLogo.tsx`. Numeric values in this document's frontmatter are the source of truth for tokens.
+
+[docs/brand/lotfoundry-direction-05.html](./docs/brand/lotfoundry-direction-05.html) is **archived** — it documents the retired Direction 05 emerald-slash identity and the `Lot/Foundry` slash wordmark, both superseded by the LOTFOUNDRY Foundation Monogram. Keep it for history only; do not derive brand decisions from it.
 
 ## Decisions Log
 

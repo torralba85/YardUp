@@ -407,7 +407,7 @@ function PlannerSketch({
           transition={250}
         />
         <LinearGradient
-          colors={["rgba(14,44,32,0.40)", "rgba(14,44,32,0.08)", "rgba(14,44,32,0.70)"]}
+          colors={["rgba(28,26,22,0.40)", "rgba(28,26,22,0.08)", "rgba(28,26,22,0.70)"]}
           locations={[0, 0.48, 1]}
           style={styles.aerialWash}
         />
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   },
   canvasStatus: {
     alignItems: "center",
-    backgroundColor: "rgba(14,44,32,0.76)",
+    backgroundColor: "rgba(28,26,22,0.76)",
     borderColor: "rgba(220,241,229,0.22)",
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   primaryHouse: {
-    backgroundColor: "rgba(14,44,32,0.28)",
+    backgroundColor: "rgba(28,26,22,0.28)",
     borderColor: "rgba(246,244,238,0.72)",
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   },
   zoneBadge: {
     alignItems: "flex-start",
-    backgroundColor: "rgba(14,44,32,0.84)",
+    backgroundColor: "rgba(28,26,22,0.84)",
     borderRadius: radii.xs,
     gap: 1,
     left: spacing.sm,
@@ -935,7 +935,7 @@ const styles = StyleSheet.create({
   },
   setbackLabel: {
     ...typography.mono,
-    backgroundColor: "rgba(14,44,32,0.84)",
+    backgroundColor: "rgba(28,26,22,0.84)",
     borderRadius: radii.xs,
     color: colors.canvas,
     fontSize: 10,
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
   },
   selectedCallout: {
     alignItems: "center",
-    backgroundColor: "rgba(14,44,32,0.93)",
+    backgroundColor: "rgba(28,26,22,0.93)",
     borderColor: "rgba(220,241,229,0.18)",
     borderRadius: radii.sm,
     borderWidth: 1,
