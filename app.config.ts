@@ -23,7 +23,7 @@ function env(name: string, fallback: string): string {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "YardUp",
+  name: "Lot/Foundry",
   slug: "adu-advisor",
   scheme: "aduadvisor",
   version: "1.0.0",
@@ -81,8 +81,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-image-picker",
       {
-        photosPermission: "YardUp lets you choose backyard photos to tailor ADU concepts to your property.",
-        cameraPermission: "YardUp lets you take backyard photos to tailor ADU concepts to your property.",
+        photosPermission: "Lot/Foundry lets you choose backyard photos to tailor ADU concepts to your property.",
+        cameraPermission: "Lot/Foundry lets you take backyard photos to tailor ADU concepts to your property.",
         microphonePermission: false,
       },
     ],
