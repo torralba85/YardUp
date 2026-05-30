@@ -1,6 +1,6 @@
 {
   "name": "lotfoundry-api",
-  "description": "LotFoundry API server (Next.js on Firebase Functions)",
+  "description": "LotFoundry Next.js app on Firebase Functions",
   "main": "index.js",
   "engines": {
     "node": "22"
@@ -8,6 +8,8 @@
   "dependencies": {
     "firebase-functions": "^6.3.0",
     "firebase-admin": "^13.5.0",
-    "next": "^16.2.6"
+    "next": "^16.2.6",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
   }
 }

@@ -63,20 +63,22 @@ Sets the default Firebase project ID to `yardup-2026`.
 
 ### `functions/index.js`
 
-A Firebase Functions v2 HTTPS function that boots Next.js in production mode and delegates requests to the Next.js request handler. This serves `/api/parcel` and `/api/aerial`.
+Two Firebase Functions v2 HTTPS functions:
+- **`app`** — serves all Next.js SSR pages and static assets
+- **`api`** — serves `/api/parcel` and `/api/aerial` proxy routes
 
 ## CI/CD (GitHub Actions)
 
 `.github/workflows/ci.yml` runs two jobs:
 
 1. **verify** — lint, test, typecheck, build, and Playwright E2E (runs on every push and PR).
-2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase` and deploys to Firebase Hosting via `FirebaseExtended/action-hosting-deploy`.
+2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase`, authenticates via `google-github-actions/auth`, and runs `firebase deploy --only hosting,functions`.
 
 ### Required CI Secrets
 
 | Secret | Purpose |
 |---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | JSON service account key for Firebase deploy. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
+| `FIREBASE_SERVICE_ACCOUNT` | JSON service account key with **Firebase Admin** role. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
 
 ## Environment Variables
 
