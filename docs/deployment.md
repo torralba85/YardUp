@@ -76,7 +76,7 @@ A Firebase Functions v2 HTTPS function that boots Next.js in production mode and
 
 | Secret | Purpose |
 |---|---|
-| `FIREBASE_SERVICE_ACCOUNT_YARDUP_2026` | JSON service account key for Firebase deploy. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
+| `FIREBASE_SERVICE_ACCOUNT` | JSON service account key for Firebase deploy. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
 
 ## Environment Variables
 
@@ -100,7 +100,7 @@ Set these four secrets in your GitHub repository Settings → Secrets → Action
 | `GOOGLE_MAPS_API_KEY` | Server-side Maps Static + Geocoding key |
 | `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places Autocomplete key (restricted by HTTP referrer in GCP Console) |
 | `REGRID_API_KEY` | Regrid Parcel API key |
-| `FIREBASE_SERVICE_ACCOUNT_YARDUP_2026` | JSON service account key for Firebase deploy |
+| `FIREBASE_SERVICE_ACCOUNT` | JSON service account key for Firebase deploy |
 
 The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result.
 
