@@ -24,7 +24,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthModal } from "../src/components/AuthModal";
 import { FeedbackButton } from "../src/components/FeedbackButton";
-import { YardUpLogo } from "../src/components/YardUpLogo";
+import { LotFoundryLogo } from "../src/components/LotFoundryLogo";
 import { useAppStore } from "../src/state/appStore";
 import { useAuthStore } from "../src/state/authStore";
 import { colors, spacing, typography } from "../src/theme";
@@ -68,7 +68,7 @@ export default function RootLayout() {
         {ready ? <AuthModal /> : null}
         {!ready ? (
           <View style={styles.loading} pointerEvents="auto">
-            <YardUpLogo size={38} />
+            <LotFoundryLogo size={38} />
             <Text style={styles.loadingText}>
               {fontsReady ? "Preparing income and builder data" : "Loading typography"}
             </Text>

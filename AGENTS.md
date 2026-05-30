@@ -46,7 +46,8 @@ Run `npm run release:check` before tagging a store build.
 
 - Do not change the bundle IDs (`com.aduadvisor.app`). The rebrand to Lot/Foundry is brand-only; store-listing continuity depends on stable identifiers.
 - Do not change the GitHub remote URL or repository name. The repo stays at `github.com/torralba85/YardUp` for link and history continuity.
-- Always render the brand as `Lot/Foundry` with the slash. Never `LotFoundry`, never `Lot Foundry`, never "the Foundry" on its own.
+- In running copy, always render the brand name as `Lot/Foundry` with the slash. Never `LotFoundry`, never `Lot Foundry`, never "the Foundry" on its own. The all-caps `LOTFOUNDRY` form is reserved exclusively for the logo lockup wordmark (see below) and is not used in prose.
+- The logo is the **Foundation Monogram**: an interlocking L + F block where LOT reads in charcoal (`colors.text`) and FOUNDRY in Capital Brass (`colors.capitalBrass` `#A47A3B`), paired with the `LOTFOUNDRY` wordmark. It is implemented in `src/components/LotFoundryLogo.tsx`. This supersedes the earlier emerald-slash mark.
 - Do not invent support emails, domains, or legal entities — use `support@aduadvisor.app` until explicitly told otherwise.
 - Do not commit OpenAI keys, Gemini keys, Firebase service-account JSON, or other secrets. Backend env lives in Firebase runtime config / Secret Manager.
 - Do not mention California as the product's geographic scope outside California-only features.

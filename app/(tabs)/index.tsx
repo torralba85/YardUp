@@ -7,7 +7,7 @@ import { Button } from "../../src/components/Button";
 import { RevenueSnapshot } from "../../src/components/RevenueSnapshot";
 import { RiskIndicator } from "../../src/components/RiskIndicator";
 import { Screen } from "../../src/components/Screen";
-import { YardUpLogo } from "../../src/components/YardUpLogo";
+import { LotFoundryLogo } from "../../src/components/LotFoundryLogo";
 import { inferJurisdiction, jurisdictionLabels } from "../../src/data/regulations";
 import { defaultEstimateInput, estimateAduValue, formatCurrencyCompact, formatPercent } from "../../src/domain/estimator";
 import { getMatchedContractors, isDeliveredQuote } from "../../src/domain/marketplace";
@@ -99,7 +99,7 @@ export default function HomeScreen() {
           <Feather name="user" size={20} color={isGuest ? colors.muted : colors.emerald} />
           {!isGuest ? <View style={styles.activeUserDot} /> : null}
         </Pressable>
-        <YardUpLogo size={34} />
+        <LotFoundryLogo size={34} />
         <Pressable accessibilityRole="button" accessibilityLabel="Notifications" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
           <Feather name="bell" size={20} color={colors.muted} />
         </Pressable>
