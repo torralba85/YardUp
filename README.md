@@ -14,6 +14,8 @@ The product is not California-only. Use "supported markets", "local rules", and 
 - Zustand for app state, React Hook Form + Zod for estimate validation
 - `expo-sqlite` for local project, inspiration, concept, regulation, property-record, and sync-queue tables
 - Self-hosted brand fonts via `@expo-google-fonts/fraunces`, `@expo-google-fonts/inter-tight`, and `@expo-google-fonts/ibm-plex-mono`
+
+> **Font note:** `app/_layout.tsx` currently loads Fraunces, Inter Tight, and IBM Plex Mono — the shipping typeface stack documented above. `DESIGN.md`'s typography tokens specify Playfair Display + Libre Baskerville for the Foundry System. This is a known divergence between the design tokens and the loaded fonts; the app has not yet been migrated to the Direction 05 typefaces. Reconcile before treating the typography tokens as implemented.
 - Firebase client SDK for optional Auth, Firestore, and callable Cloud Functions
 - Gemini integration runs server-side through Cloud Functions, not directly from the mobile client
 
