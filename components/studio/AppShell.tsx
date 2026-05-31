@@ -161,7 +161,7 @@ export default function AppShell({
         </div>
       </aside>
 
-      <main className="lf-grain flex min-h-dvh flex-col bg-lf-sand pb-16 lg:min-h-0 lg:h-dvh lg:overflow-hidden lg:pb-0">
+      <main className="lf-grain flex min-h-dvh w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-lf-sand pb-16 lg:min-h-0 lg:h-dvh lg:overflow-hidden lg:pb-0">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
           <div className="flex min-w-0 items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
