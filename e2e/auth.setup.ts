@@ -11,7 +11,7 @@ setup("authenticate", async ({ page }) => {
     throw new Error("TEST_EMAIL and TEST_PASSWORD env vars must be set to run e2e tests");
   }
 
-  await page.goto("/login");
+  await page.goto("/login?next=/studio");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
