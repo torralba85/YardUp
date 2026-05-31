@@ -104,6 +104,9 @@ export async function GET(request: NextRequest) {
     // Derive approximate lot width/length from bounding box if not explicit
     const { lotWidth, lotLength } = deriveWidthLength(lotAreaSqft, geometry);
 
+    // Regrid's standard parcel schema does not include zoning setbacks, so
+    // this resolves to DEFAULT_SETBACKS. Kept as a single seam so a future
+    // zoning data source can populate setbacks without touching the mapper.
     const setbacks = parseSetbacks(fields.zoning_setbacks);
 
     const parcelData: LiveParcelData = {
@@ -231,19 +234,17 @@ function formatAddress(
   lat: number,
   lng: number,
 ): string {
-  const num = fields.address ?? "";
-  const street = fields.streetname ?? "";
-  const streetType = fields.streetsuf ?? "";
-  if (num && street) {
-    return `${num} ${street}${streetType ? ` ${streetType}` : ""}`.trim();
-  }
+  // Regrid returns the full street address in the `address` field (which is
+  // what we request). Fall back to coordinates only if it's missing.
+  const address = fields.address;
+  if (address) return String(address).trim();
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 
 function formatCity(
   fields: Record<string, string | number | undefined>,
 ): string {
-  const city = fields.scity ?? fields.city ?? "";
+  const city = fields.city ?? "";
   const state = fields.state ?? "";
   const zip = fields.zip ?? "";
   if (city && state) return `${city}, ${state} ${zip}`.trim();
