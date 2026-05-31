@@ -95,7 +95,7 @@ function FeasibilityStudioInner() {
         if (!cancelled) setSavedScenarios([]);
       });
     } else if (typeof window !== "undefined") {
-      setSavedScenarios(createSavedScenarioStore(window.localStorage).list());
+      Promise.resolve(createSavedScenarioStore(window.localStorage).list()).then((scenarios) => { if (!cancelled) setSavedScenarios(scenarios); });
     }
     return () => { cancelled = true; };
   }, [user]);
