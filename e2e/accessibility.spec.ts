@@ -37,7 +37,7 @@ test.describe("Accessibility smoke", () => {
   });
 
   test("Generate Concept Report moves focus to the report heading", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/studio");
 
     await page.getByRole("button", { name: /Generate Concept Report/i }).click();
 

@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import path from "path";
+
+const authFile = path.join(__dirname, ".auth/user.json");
 
 const breakpoints = [
   { name: "desktop-1440", width: 1440, height: 900, statsVisible: true },
@@ -13,9 +16,10 @@ test.describe("Visual breakpoint coverage", () => {
     test(`renders without clipped primary UI at ${bp.name}`, async ({ browser }, testInfo) => {
       const context = await browser.newContext({
         viewport: { width: bp.width, height: bp.height },
+        storageState: authFile,
       });
       const page = await context.newPage();
-      await page.goto("/");
+      await page.goto("/studio");
 
       const heading = page.getByRole("heading", { name: "Feasibility Studio", level: 2 });
       await expect(heading).toBeVisible();
