@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -17,11 +17,13 @@ export default function SignupPage() {
   const [role, setRole] = useState<"user" | "builder">("user");
   const [error, setError] = useState<string | null>(null);
 
-  // If already logged in, redirect
-  if (user) {
-    router.replace("/studio");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      router.replace("/studio");
+    }
+  }, [router, user]);
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -54,44 +54,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = useCallback(async (u: User) => {
     const docRef = doc(db, "users", u.uid);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      setProfile({
-        uid: u.uid,
-        email: u.email || "",
-        displayName: data.displayName || u.displayName || null,
-        role: data.role || "user",
-        createdAt: data.createdAt?.toDate?.() || null,
-      });
-    } else {
-      // Create profile if missing
-      const newProfile: UserProfile = {
-        uid: u.uid,
-        email: u.email || "",
-        displayName: u.displayName || null,
-        role: "user",
-        createdAt: null,
-      };
-      await setDoc(docRef, {
-        displayName: u.displayName || null,
-        email: u.email || null,
-        role: "user",
-        createdAt: serverTimestamp(),
-      }, { merge: true });
-      setProfile(newProfile);
+    const fallbackProfile: UserProfile = {
+      uid: u.uid,
+      email: u.email || "",
+      displayName: u.displayName || null,
+      role: "user",
+      createdAt: null,
+    };
+
+    try {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setProfile({
+          uid: u.uid,
+          email: u.email || "",
+          displayName: data.displayName || u.displayName || null,
+          role: data.role || "user",
+          createdAt: data.createdAt?.toDate?.() || null,
+        });
+      } else {
+        await setDoc(docRef, {
+          displayName: u.displayName || null,
+          email: u.email || null,
+          role: "user",
+          createdAt: serverTimestamp(),
+        }, { merge: true });
+        setProfile(fallbackProfile);
+      }
+    } catch {
+      setProfile(fallbackProfile);
     }
   }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u) {
-        await fetchProfile(u);
-      } else {
-        setProfile(null);
+      try {
+        if (u) {
+          await fetchProfile(u);
+        } else {
+          setProfile(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, [fetchProfile]);

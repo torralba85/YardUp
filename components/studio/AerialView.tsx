@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import { latLngToPixel } from "@/lib/map-utils";
+import { useAuth } from "@/lib/auth-context";
 
 const IMG_W = 800;
 const IMG_H = 540;
@@ -31,10 +32,54 @@ export default function AerialView({
   config,
   isCompliant,
 }: AerialViewProps) {
+  const { user } = useAuth();
   const { lat, lng } = parcel;
+  const [aerialSrc, setAerialSrc] = useState<string | null>(null);
+  const [aerialError, setAerialError] = useState(false);
 
-  // Build the aerial image URL (server-proxied)
-  const aerialSrc = `/api/aerial?lat=${lat}&lng=${lng}&w=${IMG_W}&h=${IMG_H}`;
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    async function loadAerial() {
+      setAerialError(false);
+      setAerialSrc(null);
+
+      try {
+        const idToken = await user?.getIdToken();
+        const res = await fetch(
+          `/api/aerial?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&w=${IMG_W}&h=${IMG_H}`,
+          {
+            headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
+            cache: "no-store",
+          },
+        );
+        if (!res.ok) throw new Error(`Aerial image returned ${res.status}`);
+
+        const blob = await res.blob();
+        objectUrl = URL.createObjectURL(blob);
+        if (cancelled) {
+          URL.revokeObjectURL(objectUrl);
+          return;
+        }
+        if (!cancelled) {
+          setAerialSrc(objectUrl);
+        }
+      } catch (err) {
+        console.error("[AerialView] Failed to load aerial image:", err);
+        if (!cancelled) {
+          setAerialError(true);
+        }
+      }
+    }
+
+    loadAerial();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [lat, lng, user]);
 
   // Project a lat/lng to SVG pixel coordinates
   const toPixel = (pLat: number, pLng: number) =>
@@ -111,16 +156,25 @@ export default function AerialView({
       className="relative h-full min-h-[460px] w-full overflow-hidden bg-lf-espresso"
       aria-label="Aerial parcel view"
     >
-      {/* Satellite base map */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={aerialSrc}
-        alt={`Satellite view of ${parcel.address}`}
-        className="absolute inset-0 h-full w-full object-cover"
-        width={IMG_W}
-        height={IMG_H}
-        draggable={false}
-      />
+      {aerialSrc ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={aerialSrc}
+            alt={`Satellite view of ${parcel.address}`}
+            className="absolute inset-0 h-full w-full object-cover"
+            width={IMG_W}
+            height={IMG_H}
+            draggable={false}
+          />
+        </>
+      ) : (
+        <div
+          className="absolute inset-0 bg-lf-espresso"
+          aria-label={aerialError ? "Aerial image unavailable" : "Loading aerial image"}
+          role="status"
+        />
+      )}
 
       {/* SVG overlay */}
       <svg

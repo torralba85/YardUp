@@ -25,7 +25,7 @@ vi.mock("@/lib/firebase", () => ({
 vi.mock("firebase/auth", () => ({
   getAuth: () => ({}),
   onAuthStateChanged: (_auth: unknown, cb: (u: null) => void) => {
-    cb(null);
+    Promise.resolve().then(() => cb(null));
     return () => {};
   },
   signInWithEmailAndPassword: vi.fn(),

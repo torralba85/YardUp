@@ -1,9 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { parcelPresets } from "@/lib/feasibility";
+import { requireApiAuth } from "@/lib/server/api-auth";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { parseCoordinateParams } from "@/lib/server/request-validation";
 
 const REGRID_API = "https://app.regrid.com/api/v2/query.json";
 const TIMEOUT_MS = 5000;
+
+export const runtime = "nodejs";
 
 /** Rough R-1 fallback setbacks used when Regrid has no zoning data. */
 const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
@@ -17,32 +22,20 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const latStr = searchParams.get("lat");
-  const lngStr = searchParams.get("lng");
 
-  if (!latStr || !lngStr) {
-    return NextResponse.json(
-      { error: "lat and lng query params are required" },
-      { status: 400 },
-    );
-  }
+  const auth = await requireApiAuth(request);
+  if (auth instanceof NextResponse) return auth;
 
-  const lat = parseFloat(latStr);
-  const lng = parseFloat(lngStr);
+  const limited = checkRateLimit(request, {
+    limit: 60,
+    namespace: "parcel",
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
 
-  if (
-    isNaN(lat) ||
-    isNaN(lng) ||
-    lat < -90 ||
-    lat > 90 ||
-    lng < -180 ||
-    lng > 180
-  ) {
-    return NextResponse.json(
-      { error: "lat or lng is out of valid range" },
-      { status: 400 },
-    );
-  }
+  const coordinates = parseCoordinateParams(searchParams);
+  if (coordinates instanceof NextResponse) return coordinates;
+  const { lat, lng } = coordinates;
 
   const regridKey = process.env.REGRID_API_KEY;
   if (!regridKey) {
@@ -127,7 +120,7 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(parcelData, {
-      headers: { "Cache-Control": "public, max-age=86400" },
+      headers: { "Cache-Control": "private, max-age=3600" },
     });
   } catch (err) {
     console.error("[/api/parcel] Regrid fetch failed:", err);

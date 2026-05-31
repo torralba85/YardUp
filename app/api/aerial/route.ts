@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { requireApiAuth } from "@/lib/server/api-auth";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { parseCoordinateParams } from "@/lib/server/request-validation";
 
 const MAPS_STATIC_API = "https://maps.googleapis.com/maps/api/staticmap";
+const TIMEOUT_MS = 5000;
+
+export const runtime = "nodejs";
 
 /**
  * GET /api/aerial?lat={lat}&lng={lng}&w={width}&h={height}
@@ -13,20 +19,22 @@ const MAPS_STATIC_API = "https://maps.googleapis.com/maps/api/staticmap";
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const latStr = searchParams.get("lat");
-  const lngStr = searchParams.get("lng");
   const wStr = searchParams.get("w") ?? "800";
   const hStr = searchParams.get("h") ?? "540";
 
-  if (!latStr || !lngStr) {
-    return new NextResponse("lat and lng are required", { status: 400 });
-  }
+  const auth = await requireApiAuth(request);
+  if (auth instanceof NextResponse) return auth;
 
-  const lat = parseFloat(latStr);
-  const lng = parseFloat(lngStr);
-  if (isNaN(lat) || isNaN(lng)) {
-    return new NextResponse("Invalid lat or lng", { status: 400 });
-  }
+  const limited = checkRateLimit(request, {
+    limit: 120,
+    namespace: "aerial",
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
+
+  const coordinates = parseCoordinateParams(searchParams);
+  if (coordinates instanceof NextResponse) return coordinates;
+  const { lat, lng } = coordinates;
 
   const w = Math.min(Math.max(parseInt(wStr, 10) || 800, 100), 1280);
   const h = Math.min(Math.max(parseInt(hStr, 10) || 540, 100), 1280);
@@ -45,7 +53,16 @@ export async function GET(request: NextRequest) {
   url.searchParams.set("key", mapsKey);
 
   try {
-    const res = await fetch(url.toString());
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    let res: Response;
+    try {
+      res = await fetch(url.toString(), { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+
     if (!res.ok) {
       console.error(`[/api/aerial] Maps Static returned ${res.status}`);
       return new NextResponse("Aerial image unavailable", { status: 502 });
@@ -58,7 +75,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=604800, immutable",
+        "Cache-Control": "private, max-age=86400",
       },
     });
   } catch (err) {

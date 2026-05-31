@@ -432,7 +432,11 @@ function ProposedAdu({
         {/* Shadow indicator on ground */}
         <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[config.width + 1, config.length + 1]} />
-          <meshBasicMaterial color={isInsideSetback ? "rgba(58,158,79,0.15)" : "rgba(192,122,31,0.2)"} transparent />
+          <meshBasicMaterial
+            color={isInsideSetback ? "#3a9e4f" : "#c07a1f"}
+            opacity={isInsideSetback ? 0.15 : 0.2}
+            transparent
+          />
         </mesh>
 
         {/* ADU body */}

@@ -47,9 +47,6 @@ export default function AddressSearch({
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
     if (!apiKey) {
-      console.warn(
-        "[AddressSearch] NEXT_PUBLIC_GOOGLE_PLACES_KEY is not set — address search disabled",
-      );
       return;
     }
 

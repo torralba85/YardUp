@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -15,13 +15,15 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const next = searchParams.get("next") || "/studio";
+  const next = safeRedirectPath(searchParams.get("next"));
 
-  // If already logged in, redirect
-  if (user) {
-    router.replace(next);
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      router.replace(next);
+    }
+  }, [next, router, user]);
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +31,7 @@ export default function LoginForm() {
     startTransition(async () => {
       try {
         await signIn(email, password);
-        const next = searchParams.get("next") || "/studio";
-        router.push(next);
+        router.push(safeRedirectPath(searchParams.get("next")));
       } catch (err: unknown) {
         const message =
           err instanceof Error && "code" in err
@@ -161,6 +162,25 @@ export default function LoginForm() {
     </p>
     </>
   );
+}
+
+function safeRedirectPath(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/studio";
+  }
+
+  try {
+    const parsed = new URL(value, "https://lotfoundry.local");
+    if (parsed.origin !== "https://lotfoundry.local") {
+      return "/studio";
+    }
+    if (!["/studio"].includes(parsed.pathname)) {
+      return "/studio";
+    }
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return "/studio";
+  }
 }
 
 function getAuthErrorMessage(code: string): string {

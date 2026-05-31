@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useAuth } from "./auth-context";
 import type { LiveParcelData } from "./parcel-types";
 import type { ParcelPreset } from "./feasibility";
 import { fetchParcel, ParcelFetchError } from "./parcel-api";
@@ -41,6 +42,7 @@ interface ParcelProviderProps {
 }
 
 export function ParcelProvider({ initialPreset, children }: ParcelProviderProps) {
+  const { user } = useAuth();
   const [parcel, setParcel] = useState<AnyParcel>(initialPreset);
   const [parcelMode, setParcelMode] = useState<ParcelMode>("preset");
   const [parcelLoading, setParcelLoading] = useState(false);
@@ -51,7 +53,8 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       setParcelLoading(true);
       setParcelError(null);
       try {
-        const data = await fetchParcel(lat, lng);
+        const idToken = await user?.getIdToken();
+        const data = await fetchParcel(lat, lng, idToken);
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
@@ -65,7 +68,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         setParcelLoading(false);
       }
     },
-    [],
+    [user],
   );
 
   const resetToPreset = useCallback((preset: ParcelPreset) => {
