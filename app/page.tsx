@@ -34,37 +34,56 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-32">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-lf-hairline bg-lf-card px-3 py-1.5 text-xs font-medium text-lf-muted">
-            <Box className="h-3.5 w-3.5" />
-            ADU Feasibility Studio — now with saved projects
+      <section className="mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_minmax(0,440px)] lg:gap-16">
+          {/* Left: copy */}
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-lf-hairline bg-lf-card px-3 py-1.5 text-xs font-medium text-lf-muted">
+              <Box className="h-3.5 w-3.5" />
+              ADU Feasibility Studio — now with saved projects
+            </div>
+            <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight text-lf-espresso md:text-7xl">
+              See what your lot
+              <br />
+              <span className="text-lf-clay">can build.</span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-lf-muted md:text-xl">
+              LotFoundry turns any address into a 3D feasibility study. Place an ADU on your
+              actual parcel, check zoning coverage, estimate costs and rental income — in
+              minutes, not months.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-lg bg-lf-mahogany px-6 py-3.5 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
+              >
+                Start free
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-lg border border-lf-hairline px-6 py-3.5 text-base font-semibold text-lf-espresso transition-colors hover:bg-lf-taupe/10"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
-          <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight text-lf-espresso md:text-7xl">
-            See what your lot
-            <br />
-            <span className="text-lf-clay">can build.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-lf-muted md:text-xl">
-            LotFoundry turns any address into a 3D feasibility study. Place an ADU on your
-            actual parcel, check zoning coverage, estimate costs and rental income — in
-            minutes, not months.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-lg bg-lf-mahogany px-6 py-3.5 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-            >
-              Start free
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-lg border border-lf-hairline px-6 py-3.5 text-base font-semibold text-lf-espresso transition-colors hover:bg-lf-taupe/10"
-            >
-              Sign in
-            </Link>
-          </div>
+
+          {/* Right: cadastral study plate — a framed brand artwork */}
+          <figure className="group mx-auto mt-4 w-full max-w-[280px] sm:max-w-[320px] lg:mt-0 lg:max-w-none lg:justify-self-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/hero-cadastral-plate.png"
+              alt="Cadastral study plate: a single lot with its existing house, setback envelope, and a proposed ADU footprint."
+              width={1200}
+              height={1600}
+              className="w-full select-none rounded-[2px] shadow-[0_28px_60px_-24px_rgba(38,19,7,0.45)] ring-1 ring-lf-espresso/10 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-1"
+              draggable={false}
+            />
+            <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-lf-muted">
+              Plate I — A foundry for lots
+            </figcaption>
+          </figure>
         </div>
       </section>
 

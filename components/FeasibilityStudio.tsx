@@ -319,7 +319,7 @@ function IncomeLens({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-4 hidden sm:grid sm:gap-2 sm:grid-cols-3">
         <LensFact
           icon={BadgeDollarSign}
           label="Annual NOI"
@@ -340,7 +340,7 @@ function IncomeLens({
         />
       </div>
 
-      <div className="mt-3 flex items-start gap-2 text-xs leading-5 text-lf-taupe">
+      <div className="mt-3 hidden items-start gap-2 text-xs leading-5 text-lf-taupe sm:flex">
         <CircleCheck size={15} className="mt-0.5 shrink-0 text-lf-clay" />
         Estimate updates as you change parcel, size, finish, and rent assumptions.
       </div>

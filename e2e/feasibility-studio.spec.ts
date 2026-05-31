@@ -58,6 +58,19 @@ test.describe("Feasibility Studio", () => {
     expect(download.suggestedFilename()).toMatch(/\.txt$/);
   });
 
+  test("arrow keys move ADU without scrolling the page", async ({ page }) => {
+    await page.goto("/");
+    // Click outside any form element so the window keydown handler receives the event
+    await page.locator("body").click({ position: { x: 10, y: 10 } });
+
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press("ArrowDown");
+    }
+    const scrollAfter = await page.evaluate(() => window.scrollY);
+    expect(scrollAfter).toBe(scrollBefore);
+  });
+
   test("hydrates state from a shared URL", async ({ page }) => {
     await page.goto(
       "/?parcel=compact-lot&size=1000&roof=gable&finish=board&rent=market&openings=0",

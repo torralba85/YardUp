@@ -1,9 +1,10 @@
 "use client";
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, type RootState, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, ParcelPreset } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
 
@@ -358,6 +359,16 @@ function ProposedAdu({
   const y = config.height / 2;
   const groundPlaneRef = useRef<THREE.Mesh>(null);
   const isDragging = useRef(false);
+  // OrbitControls instance (registered via `makeDefault`). We suspend it while
+  // the ADU is being dragged so a press on the building never doubles as a
+  // camera orbit — mouse drag on empty ground still orbits as normal. Held in a
+  // ref so the pointer handlers can toggle `.enabled` without the React Compiler
+  // flagging a render-scoped mutation.
+  const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
+  const controlsRef = useRef(controls);
+  useEffect(() => {
+    controlsRef.current = controls;
+  }, [controls]);
 
   const buildableArea = useMemo(() => {
     const halfWidth = parcel.lotWidth / 2 - parcel.setbacks.side - config.width / 2;
@@ -380,6 +391,7 @@ function ProposedAdu({
       if (!onPositionChange) return;
       e.stopPropagation();
       isDragging.current = true;
+      if (controlsRef.current) controlsRef.current.enabled = false;
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
     [onPositionChange],
@@ -388,18 +400,12 @@ function ProposedAdu({
   const handlePointerMove = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       if (!isDragging.current || !onPositionChange) return;
-      const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2(e.pointer.x, e.pointer.y);
-      raycaster.setFromCamera(pointer, (e as unknown as { camera: THREE.Camera }).camera);
-      // Project onto XZ plane at y=0
-      const origin = raycaster.ray.origin;
-      const dir = raycaster.ray.direction;
-      if (dir.y === 0) return;
-      const t = -origin.y / dir.y;
+      // e.ray is the pre-computed raycasting ray from R3F — no allocation needed.
+      const { origin, direction } = e.ray;
+      if (direction.y === 0) return;
+      const t = -origin.y / direction.y;
       if (t < 0) return;
-      const hit = new THREE.Vector3();
-      hit.copy(origin).add(dir.clone().multiplyScalar(t));
-      const [cx, cz] = clampPos(hit.x, hit.z);
+      const [cx, cz] = clampPos(origin.x + direction.x * t, origin.z + direction.z * t);
       onPositionChange([cx, cz]);
     },
     [onPositionChange, clampPos],
@@ -407,6 +413,7 @@ function ProposedAdu({
 
   const handlePointerUp = useCallback(() => {
     isDragging.current = false;
+    if (controlsRef.current) controlsRef.current.enabled = true;
   }, []);
 
   const [x, z] = aduPos;
@@ -414,16 +421,17 @@ function ProposedAdu({
 
   return (
     <>
-      {/* Invisible ground plane for raycasting */}
+      {/* Invisible ground plane: tracks the cursor across the whole lot during
+          an active drag. It deliberately has NO onPointerDown — a drag can only
+          begin on the ADU group below, so pressing empty ground orbits the
+          camera instead of snatching the building. */}
       <mesh
         ref={groundPlaneRef}
         visible={false}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0.01, 0]}
-        onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
       >
         <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
       </mesh>
@@ -516,6 +524,12 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
   }, [parcel, config, buildableBounds]);
 
   const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? defaultAduPos);
+  // Mirror of aduPos read by the rAF movement loop, so the loop never re-subscribes
+  // on every keystroke and never reads a stale position from a captured closure.
+  const aduPosRef = useRef<[number, number]>(aduPos);
+  useEffect(() => {
+    aduPosRef.current = aduPos;
+  }, [aduPos]);
 
   // Re-sync when parcel or config changes (e.g., switching presets)
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -526,32 +540,38 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
 
   const handleAduPosChange = useCallback(
     (pos: [number, number]) => {
+      aduPosRef.current = pos;
       setAduPos(pos);
       onAduPositionChange?.(pos);
     },
     [onAduPositionChange],
   );
 
-  // Arrow-key ADU placement: ←→ moves X (side-to-side), ↑↓ moves Z (front/back)
+  // Arrow-key ADU placement: ←→ moves X (side-to-side), ↑↓ moves Z (front/back).
+  // Movement is delta-time based (feet per *second*), so it feels identical on a
+  // 60Hz or 120Hz display and a quick tap nudges rather than rockets the ADU.
   useEffect(() => {
-    const STEP = 1.5; // feet per frame
-    const tick = () => {
+    const SPEED = 22; // feet per second while key is held
+    const NUDGE = 1;  // feet on first keydown, before glide kicks in
+    let last = performance.now();
+    const loop = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05); // clamp after tab-away
+      last = now;
       const k = keysDown.current;
-      if (k.size === 0) return;
-      let [x, z] = aduPos;
-      if (k.has("ArrowLeft")) x -= STEP;
-      if (k.has("ArrowRight")) x += STEP;
-      if (k.has("ArrowUp")) z -= STEP;
-      if (k.has("ArrowDown")) z += STEP;
-      // Clamp to buildable bounds
-      x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
-      z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
-      if (x !== aduPos[0] || z !== aduPos[1]) {
-        handleAduPosChange([x, z]);
+      if (k.size > 0) {
+        const d = SPEED * dt;
+        let [x, z] = aduPosRef.current;
+        if (k.has("ArrowLeft")) x -= d;
+        if (k.has("ArrowRight")) x += d;
+        if (k.has("ArrowUp")) z -= d;
+        if (k.has("ArrowDown")) z += d;
+        // Clamp to buildable bounds
+        x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
+        z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
+        if (x !== aduPosRef.current[0] || z !== aduPosRef.current[1]) {
+          handleAduPosChange([x, z]);
+        }
       }
-    };
-    const loop = () => {
-      tick();
       animFrame.current = requestAnimationFrame(loop);
     };
     animFrame.current = requestAnimationFrame(loop);
@@ -562,6 +582,19 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
         e.preventDefault();
+        // Initial press only (e.repeat is true for the OS auto-repeat stream):
+        // apply one precise step so a quick tap nudges by exactly NUDGE feet.
+        // Holding the key then hands off to the delta-time glide loop above.
+        if (!e.repeat) {
+          let [x, z] = aduPosRef.current;
+          if (e.key === "ArrowLeft") x -= NUDGE;
+          if (e.key === "ArrowRight") x += NUDGE;
+          if (e.key === "ArrowUp") z -= NUDGE;
+          if (e.key === "ArrowDown") z += NUDGE;
+          x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
+          z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
+          handleAduPosChange([x, z]);
+        }
         keysDown.current.add(e.key);
       }
     };
@@ -576,7 +609,7 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
       window.removeEventListener("keyup", onKeyUp);
       if (animFrame.current !== null) cancelAnimationFrame(animFrame.current);
     };
-  }, [aduPos, buildableBounds, handleAduPosChange]);
+  }, [buildableBounds, handleAduPosChange]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -729,8 +762,8 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
 
       <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">3D</span>
-        <span className="px-2 py-1">Mouse: Orbit</span>
-        <span className="px-2 py-1">↑↓←→: Move ADU</span>
+        <span className="px-2 py-1">Drag empty space: orbit</span>
+        <span className="px-2 py-1">Drag ADU / ↑↓←→: move it</span>
       </div>
 
       <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
