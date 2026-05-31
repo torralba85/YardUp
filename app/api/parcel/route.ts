@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     url.searchParams.set("lon", String(lng));
     url.searchParams.set("token", regridKey);
     url.searchParams.set("limit", "1");
-    url.searchParams.set("fields", "ll_gisacre,ll_bldg_footprint_sqft,sqft,zoning,address,city,state,zip");
+    url.searchParams.set("fields", "ll_gisacre,ll_bldg_footprint_sqft,sqft,zoning,saddress,scity,state2,szip5,address,city,state,zip");
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -234,9 +234,9 @@ function formatAddress(
   lat: number,
   lng: number,
 ): string {
-  // Regrid returns the full street address in the `address` field (which is
-  // what we request). Fall back to coordinates only if it's missing.
-  const address = fields.address;
+  // Regrid returns the full street address in the `saddress` (Situs Address) or fallback `address` field.
+  // Fall back to coordinates only if it's missing.
+  const address = fields.saddress ?? fields.address;
   if (address) return String(address).trim();
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
@@ -244,9 +244,9 @@ function formatAddress(
 function formatCity(
   fields: Record<string, string | number | undefined>,
 ): string {
-  const city = fields.city ?? "";
-  const state = fields.state ?? "";
-  const zip = fields.zip ?? "";
+  const city = fields.scity ?? fields.city ?? "";
+  const state = fields.state2 ?? fields.state ?? "";
+  const zip = fields.szip5 ?? fields.zip ?? "";
   if (city && state) return `${city}, ${state} ${zip}`.trim();
   return String(city || "");
 }

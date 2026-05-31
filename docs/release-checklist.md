@@ -1,15 +1,43 @@
 # Release Checklist
 
-- [x] `npm ci`
-- [x] `npm run lint`
-- [x] `npm run test` — 24 passing
-- [x] `npm run test:e2e` — 26 passing across desktop-chromium and mobile-chromium
-- [x] `npx tsc --noEmit`
-- [x] `npm run build` — production build succeeds
-- [x] Desktop visual check at 1440x900 (e2e screenshot)
-- [x] Tablet visual check at 768x1024 (e2e screenshot)
-- [x] Mobile visual check at 390x844 and 320x568 (e2e screenshots + overflow assertion)
-- [x] Keyboard navigation check (accessibility.spec)
-- [x] Report print/save check (CSS print rules + Print/Save PDF button)
-- [x] Download summary check (e2e download assertion)
-- [x] Audit reviewed; no unsafe forced downgrade applied (Next/PostCSS advisory acknowledged in deployment.md)
+Run against a clean install: `rm -rf node_modules .next && npm ci`
+
+## Automated Gates
+
+- [ ] `npm ci`
+- [ ] `npm run lint` — zero warnings, zero errors
+- [ ] `npm run test` — all unit tests passing
+- [ ] `npm run test:e2e` — all Playwright tests passing
+- [ ] `npx tsc --noEmit` — zero type errors
+- [ ] `npm run build` — production build succeeds
+
+## Manual QA
+
+- [ ] Desktop visual check at 1440x900 — no clipped UI, no blank scene
+- [ ] Tablet visual check at 768x1024 — no horizontal overflow
+- [ ] Mobile visual check at 390x844 — no horizontal overflow
+- [ ] Mobile visual check at 320x568 — no horizontal overflow
+- [ ] Keyboard navigation — Tab cycles through controls, no focus traps
+- [ ] Report print/save — print stylesheet hides controls, shows report
+- [ ] Download summary — `.txt` file downloads with scenario data
+- [ ] Export CSV — `.csv` file downloads
+- [ ] Share link — copies current scenario URL to clipboard
+- [ ] 3D scene renders — house, ADU, trees, fences visible
+- [ ] Arrow keys move ADU — within setback bounds, clamped
+- [ ] Drag to place ADU — mouse drag repositions within buildable area
+- [ ] Address search renders — input appears (disabled without API key)
+- [ ] Live parcel flow — with API keys, address search → aerial view
+
+## Security
+
+- [ ] No secrets committed — check `.env.local`, `functions/.env` not staged
+- [ ] `npm audit` reviewed — no unsafe forced downgrade applied
+- [ ] API keys restricted — Google Places key restricted by HTTP referrer in GCP Console
+
+## Firebase Deploy (if applicable)
+
+- [ ] `npm run build:firebase` succeeds
+- [ ] `firebase deploy --only hosting,functions` succeeds
+- [ ] Site loads on Firebase Hosting URL
+- [ ] API routes return 200 on Firebase Functions URL
+- [ ] Address search works with live API keys

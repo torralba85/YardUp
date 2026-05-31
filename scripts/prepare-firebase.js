@@ -54,7 +54,12 @@ fs.cpSync(PUBLIC, DIST, {
 // 4. Prepare functions/.next/standalone for the Cloud Function
 console.log("[firebase] Preparing functions/.next/standalone…");
 copyDir(STANDALONE, path.resolve(FUNC_NEXT, "standalone"));
-fs.cpSync(STATIC, path.resolve(FUNC_NEXT, "static"), {
+
+// 5. Copy static assets into standalone/.next/static so the Cloud Function
+//    can serve /_next/static/* for any requests it handles directly.
+//    (Firebase Hosting also serves them for cached/CDN hits.)
+console.log("[firebase] Copying static assets into standalone/.next/static…");
+fs.cpSync(STATIC, path.resolve(FUNC_NEXT, "standalone", ".next", "static"), {
   recursive: true,
   dereference: true,
 });
