@@ -14,12 +14,12 @@ export function AuthLayout({
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lf-mahogany font-display font-black text-lg text-lf-sand">
-            LF
-          </div>
-          <span className="font-display font-bold tracking-tight text-xl text-lf-mahogany">
-            LotFoundry
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/lotfoundry-lockup-horizontal.svg"
+            alt="LotFoundry"
+            className="h-9 w-auto"
+          />
         </Link>
 
         {/* Card */}
@@ -38,11 +38,11 @@ export function AuthLayout({
           <Link href="/terms" className="hover:text-lf-espresso transition-colors">
             Terms
           </Link>
-          <span>·</span>
+          <span>/</span>
           <Link href="/privacy" className="hover:text-lf-espresso transition-colors">
             Privacy
           </Link>
-          <span>·</span>
+          <span>/</span>
           <span>Estimates, not guarantees.</span>
         </div>
       </div>

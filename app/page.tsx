@@ -1,20 +1,27 @@
-import { ArrowRight, MapPin, Box, TrendingUp, Users, Lock, Layers } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeDollarSign,
+  Box,
+  FileText,
+  Ruler,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-lf-sand text-lf-espresso">
-      {/* Top bar */}
       <header className="border-b border-lf-hairline/50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-lf-mahogany font-display font-black text-sm text-lf-sand">
-              LF
-            </div>
-            <span className="font-display font-bold tracking-tight text-lf-mahogany">
-              LotFoundry
-            </span>
-          </div>
+          <Link href="/" aria-label="LotFoundry home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lotfoundry-lockup-horizontal.svg"
+              alt="LotFoundry"
+              className="h-8 w-auto"
+            />
+          </Link>
           <div className="flex items-center gap-3">
             <Link
               href="/login"
@@ -26,156 +33,207 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-md bg-lf-mahogany px-4 py-2 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-clay"
             >
-              Get started
+              Estimate my lot
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_minmax(0,440px)] lg:gap-16">
-          {/* Left: copy */}
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_minmax(0,480px)] lg:gap-16">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-lf-hairline bg-lf-card px-3 py-1.5 text-xs font-medium text-lf-muted">
-              <Box className="h-3.5 w-3.5" />
-              ADU Feasibility Studio — now with saved projects
+              <BadgeDollarSign className="h-3.5 w-3.5" />
+              ADU income estimate for lot owners
             </div>
             <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight text-lf-espresso md:text-7xl">
-              See what your lot
-              <br />
-              <span className="text-lf-clay">can build.</span>
+              See what your lot{" "}
+              <span className="block text-lf-clay">could earn.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-lf-muted md:text-xl">
-              LotFoundry turns any address into a 3D feasibility study. Place an ADU on your
-              actual parcel, check zoning coverage, estimate costs and rental income — in
-              minutes, not months.
+              LotFoundry turns an address into an ADU income snapshot:
+              estimated rent, build range, payback, and site fit in minutes.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg bg-lf-mahogany px-6 py-3.5 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
               >
-                Start free
+                Estimate my lot
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
                 href="/login"
                 className="rounded-lg border border-lf-hairline px-6 py-3.5 text-base font-semibold text-lf-espresso transition-colors hover:bg-lf-taupe/10"
               >
-                Sign in
+                View saved concepts
               </Link>
             </div>
           </div>
 
-          {/* Right: cadastral study plate — a framed brand artwork */}
-          <figure className="group mx-auto mt-4 w-full max-w-[280px] sm:max-w-[320px] lg:mt-0 lg:max-w-none lg:justify-self-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/hero-cadastral-plate.png"
-              alt="Cadastral study plate: a single lot with its existing house, setback envelope, and a proposed ADU footprint."
-              width={1200}
-              height={1600}
-              className="w-full select-none rounded-[2px] shadow-[0_28px_60px_-24px_rgba(38,19,7,0.45)] ring-1 ring-lf-espresso/10 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-1"
-              draggable={false}
-            />
-            <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-lf-muted">
-              Plate I — A foundry for lots
-            </figcaption>
-          </figure>
+          <ProductProof />
         </div>
       </section>
 
-      {/* Features */}
       <section className="border-t border-lf-hairline/50 bg-lf-sand-2/40">
         <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
           <h2 className="font-display text-3xl font-bold tracking-tight text-lf-espresso md:text-4xl">
-            Everything you need to evaluate a lot
+            Turn a lot into an income decision
           </h2>
           <p className="mt-3 max-w-2xl text-lg text-lf-muted">
-            From parcel lookup to financial projections — all in one studio.
+            Move from curiosity to a saved, shareable ADU concept with the
+            numbers that matter.
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <FeatureCard
-              icon={<MapPin className="h-6 w-6" />}
-              title="Parcel intelligence"
-              description="Search any US address. Pull lot size, zoning, setbacks, and existing structure data automatically."
+              icon={<BadgeDollarSign className="h-6 w-6" />}
+              title="Monthly rent estimate"
+              description="Start with a clear rent range so the ADU conversation begins with upside, not guesswork."
             />
             <FeatureCard
-              icon={<Layers className="h-6 w-6" />}
-              title="3D site visualization"
-              description="See your ADU placed on the real lot with aerial imagery. Drag to position, rotate, and adjust dimensions."
+              icon={<Ruler className="h-6 w-6" />}
+              title="Site fit and zoning review"
+              description="See how size, setbacks, and lot coverage affect whether the concept needs local review."
             />
             <FeatureCard
               icon={<TrendingUp className="h-6 w-6" />}
-              title="Feasibility metrics"
-              description="Instant cost estimates, rental income projections, payback period, and zoning compliance checks."
+              title="Build range and payback"
+              description="Compare estimated construction range, annual NOI, and payback before hiring consultants."
             />
             <FeatureCard
               icon={<Box className="h-6 w-6" />}
-              title="Multiple configurations"
-              description="Compare different footprints, roof styles, exterior finishes, and rental scenarios side by side."
+              title="Saved concepts"
+              description="Save different ADU sizes, finishes, and rent assumptions without losing your scenario."
+            />
+            <FeatureCard
+              icon={<FileText className="h-6 w-6" />}
+              title="Shareable owner report"
+              description="Export a concept summary with costs, rent assumptions, coverage, and estimate disclaimers."
             />
             <FeatureCard
               icon={<Users className="h-6 w-6" />}
-              title="Built for teams"
-              description="Builders, designers, and homeowners all share the same studio with role-based access."
-            />
-            <FeatureCard
-              icon={<Lock className="h-6 w-6" />}
-              title="Saved projects"
-              description="Save your feasibility studies and share them with clients or stakeholders via link."
+              title="Builder-ready next step"
+              description="Keep the concept organized so a builder or designer can review the same assumptions."
             />
           </div>
         </div>
       </section>
 
-      {/* CTA */}
       <section className="border-t border-lf-hairline/50">
         <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
           <div className="rounded-2xl border border-lf-hairline bg-lf-card p-10 text-center md:p-16">
             <h2 className="font-display text-3xl font-bold tracking-tight text-lf-espresso md:text-4xl">
-              Ready to explore your lot?
+              Find the ADU income potential in your lot.
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-lg text-lf-muted">
-              Create a free account and start placing ADUs on real parcels in under a minute.
+              Create a saved concept with estimated rent, payback, site fit,
+              and a report you can share.
             </p>
             <Link
               href="/signup"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-lf-mahogany px-8 py-4 text-lg font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
             >
-              Create account
+              Estimate my lot
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-lf-hairline/50">
         <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-lf-mahogany font-display font-black text-xs text-lf-sand">
-                LF
-              </div>
-              <span className="font-display font-semibold text-lf-espresso">LotFoundry</span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lotfoundry-lockup-horizontal.svg"
+              alt="LotFoundry"
+              className="h-7 w-auto"
+            />
             <p className="text-sm text-lf-muted">
               A foundry for lots. Estimates, not guarantees.
             </p>
             <div className="flex items-center gap-4 text-sm text-lf-muted">
-              <Link href="/terms" className="hover:text-lf-espresso transition-colors">
+              <Link href="/terms" className="transition-colors hover:text-lf-espresso">
                 Terms
               </Link>
-              <Link href="/privacy" className="hover:text-lf-espresso transition-colors">
+              <Link href="/privacy" className="transition-colors hover:text-lf-espresso">
                 Privacy
               </Link>
             </div>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function ProductProof() {
+  return (
+    <figure className="mx-auto mt-4 w-full max-w-[480px] lg:mt-0 lg:justify-self-center">
+      <div className="overflow-hidden rounded-xl border border-lf-hairline bg-lf-card shadow-[0_28px_60px_-24px_rgba(38,19,7,0.45)]">
+        <div className="border-b border-lf-hairline bg-lf-sand-2 px-5 py-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-muted">
+            ADU income snapshot
+          </p>
+          <div className="mt-2 flex items-end justify-between gap-4">
+            <div>
+              <div className="font-display text-4xl font-black leading-none text-lf-espresso">
+                $2,350
+              </div>
+              <div className="mt-1 text-sm font-medium text-lf-muted">
+                estimated monthly rent
+              </div>
+            </div>
+            <div className="rounded-md bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand">
+              Concept fit
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4 p-5 sm:grid-cols-[1fr_132px]">
+          <div className="grid grid-cols-2 gap-3">
+            <ProofMetric label="Annual NOI" value="$20.6k" />
+            <ProofMetric label="Payback" value="9.8 yrs" />
+            <ProofMetric label="Build range" value="$178-221k" />
+            <ProofMetric label="Coverage" value="31% of 40%" />
+          </div>
+          <div className="rounded-lg border border-lf-hairline bg-lf-sand p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/hero-cadastral-plate.png"
+              alt="Lot diagram with proposed ADU placement"
+              width={1200}
+              height={1600}
+              className="h-full max-h-[210px] w-full object-cover object-top opacity-85"
+              draggable={false}
+            />
+          </div>
+        </div>
+        <div className="border-t border-lf-hairline px-5 py-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium text-lf-espresso">Owner report ready</span>
+            <span className="font-mono text-xs uppercase tracking-[0.14em] text-lf-muted">
+              estimates, not guarantees
+            </span>
+          </div>
+        </div>
+      </div>
+      <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-lf-muted">
+        Income first. Site fit second. Better decisions sooner.
+      </figcaption>
+    </figure>
+  );
+}
+
+function ProofMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-lf-hairline bg-lf-sand px-3 py-3">
+      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        {label}
+      </div>
+      <div className="mt-1 font-display text-xl font-black text-lf-espresso">
+        {value}
+      </div>
     </div>
   );
 }

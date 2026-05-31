@@ -65,7 +65,7 @@ export default function SignupPage() {
   return (
     <AuthLayout
       title="Create account"
-      subtitle="Start placing ADUs on real parcels in minutes"
+      subtitle="Estimate rent, payback, and site fit for your lot."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -131,21 +131,20 @@ export default function SignupPage() {
           />
         </div>
 
-        {/* Role selector */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-lf-espresso">
-            I am a…
+            I am a...
           </label>
           <div className="grid grid-cols-2 gap-3">
             <RoleButton
               label="Homeowner"
-              description="Evaluating my own lot"
+              description="Estimating my lot"
               selected={role === "user"}
               onClick={() => setRole("user")}
             />
             <RoleButton
               label="Builder"
-              description="Working with clients"
+              description="Reviewing client lots"
               selected={role === "builder"}
               onClick={() => setRole("builder")}
             />
@@ -160,7 +159,8 @@ export default function SignupPage() {
           and{" "}
           <Link href="/privacy" className="text-lf-clay hover:text-lf-mahogany">
             Privacy Policy
-          </Link>.
+          </Link>
+          .
         </p>
 
         <button
@@ -168,11 +168,10 @@ export default function SignupPage() {
           disabled={isPending}
           className="w-full rounded-md bg-lf-mahogany py-2.5 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay disabled:opacity-50"
         >
-          {isPending ? "Creating account…" : "Create account"}
+          {isPending ? "Creating account..." : "Create account"}
         </button>
       </form>
 
-      {/* Divider */}
       <div className="relative mt-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-lf-hairline" />
@@ -182,7 +181,6 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Google */}
       <button
         onClick={handleGoogle}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-lf-hairline bg-lf-card py-2.5 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"

@@ -28,11 +28,11 @@ const manrope = localFont({
 
 
 export const metadata: Metadata = {
-  title: "LotFoundry | ADU Feasibility Studio",
+  title: "LotFoundry | ADU Income Potential",
   description:
-    "Evaluate your lot's earning potential. Get instant ADU construction estimates, zoning coverage limits, and rental payback models.",
+    "Estimate your lot's ADU income potential with monthly rent, build range, payback, and site fit in minutes.",
   manifest: "/manifest.json",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://www.veri-share.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -40,9 +40,9 @@ export const metadata: Metadata = {
     apple: "/icon-180.png",
   },
   openGraph: {
-    title: "LotFoundry | ADU Feasibility Studio",
+    title: "LotFoundry | ADU Income Potential",
     description:
-      "Evaluate your lot's earning potential. Get instant ADU construction estimates, zoning coverage limits, and rental payback models.",
+      "Estimate your lot's ADU income potential with monthly rent, build range, payback, and site fit in minutes.",
     images: [
       {
         url: "/lotfoundry-og.png",
@@ -75,4 +75,3 @@ export default function RootLayout({
     </html>
   );
 }
-
