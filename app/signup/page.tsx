@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
 export default function SignupPage() {
-  const { signUp, signInWithGoogle, user } = useAuth();
+  const { signUp, signInWithGoogle, user, profile } = useAuth();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -18,10 +18,10 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      router.replace("/studio");
+    if (user && profile) {
+      router.replace(profile.role === "builder" ? "/builder" : "/studio");
     }
-  }, [router, user]);
+  }, [profile, router, user]);
 
   if (user) return null;
 
@@ -37,7 +37,7 @@ export default function SignupPage() {
     startTransition(async () => {
       try {
         await signUp(email, password, displayName, role);
-        router.push("/studio");
+        router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const message =
           err instanceof Error && "code" in err

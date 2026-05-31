@@ -46,7 +46,7 @@ export default function LoginForm() {
     setError(null);
     try {
       await signInWithGoogle();
-      router.push("/studio");
+      router.push(safeRedirectPath(searchParams.get("next")));
     } catch (err: unknown) {
       const message =
         err instanceof Error && "code" in err
@@ -174,7 +174,7 @@ function safeRedirectPath(value: string | null): string {
     if (parsed.origin !== "https://lotfoundry.local") {
       return "/studio";
     }
-    if (!["/studio"].includes(parsed.pathname)) {
+    if (!["/studio", "/builder"].includes(parsed.pathname)) {
       return "/studio";
     }
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;

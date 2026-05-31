@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BarChart3, CheckCircle2, Download, FileSpreadsheet, FileText, Printer, Ruler, Share2, X } from "lucide-react";
+import { BarChart3, CheckCircle2, Download, FileSpreadsheet, FileText, Hammer, Printer, Ruler, Share2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 
@@ -12,6 +12,7 @@ export interface ReportPreviewProps {
   onDownload: () => void;
   onExportCsv?: () => void;
   onShare?: () => void;
+  onConnectBuilders?: () => void;
   shareNotice?: string | null;
   autoFocus?: boolean;
 }
@@ -23,6 +24,7 @@ export default function ReportPreview({
   onDownload,
   onExportCsv,
   onShare,
+  onConnectBuilders,
   shareNotice,
   autoFocus = false,
 }: ReportPreviewProps) {
@@ -147,6 +149,16 @@ export default function ReportPreview({
               >
                 <Share2 size={14} />
                 <span className="truncate">{shareNotice ?? "Share Link"}</span>
+              </button>
+            )}
+            {onConnectBuilders && (
+              <button
+                type="button"
+                onClick={onConnectBuilders}
+                className="col-span-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-lf-mahogany text-xs font-semibold text-lf-sand-2 transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              >
+                <Hammer size={14} />
+                Connect with local builders
               </button>
             )}
           </div>

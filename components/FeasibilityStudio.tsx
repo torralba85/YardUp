@@ -24,6 +24,11 @@ import {
   type SavedScenario,
 } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
+import { getMatchedBuilders } from "@/lib/marketplace";
+import {
+  createConnectionRequest,
+  fetchActiveBuilders,
+} from "@/lib/marketplace-firestore";
 import {
   fetchSavedScenarios,
   saveSavedScenario,
@@ -35,6 +40,9 @@ import AerialView from "./studio/AerialView";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
+import BuilderLeadPanel, {
+  type BuilderLeadSubmitInput,
+} from "./studio/BuilderLeadPanel";
 import type { FeasibilityResult } from "./studio/types";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
@@ -83,6 +91,7 @@ function FeasibilityStudioInner() {
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
 
   // Load saved scenarios: Firestore for authenticated users, localStorage for guests
@@ -141,6 +150,7 @@ function FeasibilityStudioInner() {
     setConfig(defaultAduConfig);
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
+    setBuilderLeadOpen(false);
     setActiveNav("studio");
     setReportAutoFocus(false);
   }
@@ -217,6 +227,31 @@ function FeasibilityStudioInner() {
     setTimeout(() => setShareNotice(null), 2500);
   }
 
+  async function handleBuilderLeadSubmit(input: BuilderLeadSubmitInput) {
+    if (!user) {
+      throw new Error("Sign in before connecting with builders.");
+    }
+
+    const builders = await fetchActiveBuilders();
+    const matchedBuilders = getMatchedBuilders(
+      builders,
+      `${input.snapshot.parcelCity}, ${input.snapshot.parcelState}`,
+    );
+
+    if (matchedBuilders.length === 0) {
+      throw new Error("No local builders are registered for this area yet.");
+    }
+
+    await createConnectionRequest({
+      ownerUid: user.uid,
+      ownerContact: input.contact,
+      snapshot: input.snapshot,
+      matchedBuilderIds: matchedBuilders.map((builder) => builder.id),
+    });
+
+    return { matchedCount: matchedBuilders.length };
+  }
+
   function downloadReport() {
     const text = buildReportText({ parcel: activeParcel, config, result });
     downloadBlob("lotfoundry-concept-feasibility-report.txt", text, "text/plain");
@@ -281,10 +316,25 @@ function FeasibilityStudioInner() {
           onDownload={downloadReport}
           onExportCsv={exportCsv}
           onShare={handleShareLink}
+          onConnectBuilders={() => setBuilderLeadOpen(true)}
           shareNotice={shareNotice}
           autoFocus={reportAutoFocus}
         />
       )}
+      <BuilderLeadPanel
+        open={builderLeadOpen}
+        userDefaults={{
+          name: user?.displayName || "",
+          email: user?.email || "",
+        }}
+        parcelKey={parcelId}
+        parcel={activeParcel}
+        config={config}
+        assumptions={assumptions}
+        result={result}
+        onClose={() => setBuilderLeadOpen(false)}
+        onSubmit={handleBuilderLeadSubmit}
+      />
     </AppShell>
   );
 }

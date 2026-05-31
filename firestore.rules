@@ -5,6 +5,74 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBuilder(builderId) {
+      return request.auth != null && request.auth.uid == builderId;
+    }
+
+    function isValidBuilderProfile(builderId) {
+      return request.resource.data.keys().hasOnly([
+        "ownerUid",
+        "companyName",
+        "contactEmail",
+        "phone",
+        "licenseNumber",
+        "serviceAreas",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.ownerUid == builderId &&
+      request.resource.data.companyName is string &&
+      request.resource.data.companyName.size() > 0 &&
+      request.resource.data.companyName.size() <= 160 &&
+      request.resource.data.contactEmail is string &&
+      request.resource.data.contactEmail.size() > 3 &&
+      request.resource.data.serviceAreas is list &&
+      request.resource.data.serviceAreas.size() > 0 &&
+      request.resource.data.serviceAreas.size() <= 25 &&
+      request.resource.data.active is bool &&
+      (!("phone" in request.resource.data) ||
+        request.resource.data.phone == null ||
+        request.resource.data.phone is string) &&
+      (!("licenseNumber" in request.resource.data) ||
+        request.resource.data.licenseNumber == null ||
+        request.resource.data.licenseNumber is string);
+    }
+
+    function isValidConnectionRequest() {
+      return request.resource.data.keys().hasOnly([
+        "ownerUid",
+        "ownerContact",
+        "snapshot",
+        "matchedBuilderIds",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.ownerUid == request.auth.uid &&
+      request.resource.data.ownerContact is map &&
+      request.resource.data.snapshot is map &&
+      request.resource.data.matchedBuilderIds is list &&
+      request.resource.data.matchedBuilderIds.size() > 0 &&
+      request.resource.data.matchedBuilderIds.size() <= 25 &&
+      request.resource.data.status == "submitted";
+    }
+
+    function isValidBuilderResponse(builderId) {
+      return request.resource.data.keys().hasOnly([
+        "builderId",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.builderId == builderId &&
+      request.resource.data.status in ["new", "interested", "not-a-fit"];
+    }
+
     function isValidRole() {
       return request.resource.data.role in ["user", "builder"];
     }
@@ -57,6 +125,37 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow create, update: if isOwner(userId) && isValidScenario();
         allow delete: if isOwner(userId);
+      }
+    }
+
+    match /builders/{builderId} {
+      allow read: if isSignedIn();
+      allow create, update: if isBuilder(builderId) && isValidBuilderProfile(builderId);
+      allow delete: if false;
+    }
+
+    match /connectionRequests/{requestId} {
+      allow read: if isSignedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        request.auth.uid in resource.data.matchedBuilderIds
+      );
+      allow create: if isSignedIn() && isValidConnectionRequest();
+      allow update, delete: if false;
+
+      match /builderResponses/{builderId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
+          request.auth.uid == builderId
+        );
+        allow create: if isSignedIn() &&
+          get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid &&
+          builderId in get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.matchedBuilderIds &&
+          isValidBuilderResponse(builderId) &&
+          request.resource.data.status == "new";
+        allow update: if isBuilder(builderId) &&
+          request.auth.uid in get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.matchedBuilderIds &&
+          isValidBuilderResponse(builderId);
+        allow delete: if false;
       }
     }
   }
