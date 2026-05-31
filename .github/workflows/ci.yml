@@ -21,7 +21,13 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Run e2e tests
+        run: |
+          if [ -n "${TEST_EMAIL}" ] && [ -n "${TEST_PASSWORD}" ]; then
+            npm run test:e2e
+          else
+            echo "Skipping e2e tests: add TEST_EMAIL and TEST_PASSWORD secrets to enable them"
+          fi
         env:
           CI: "true"
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
