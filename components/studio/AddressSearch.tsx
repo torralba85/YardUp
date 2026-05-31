@@ -99,7 +99,7 @@ export default function AddressSearch({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isDisabled = disabled || !ready;
+  const isDisabled = disabled;
 
   return (
     <div className="relative w-full">

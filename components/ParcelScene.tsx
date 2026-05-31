@@ -153,80 +153,138 @@ function LabelSprite({ text, position, scale = 6 }: { text: string; position: [n
   return <primitive object={sprite} />;
 }
 
+function GableRoof({
+  width,
+  depth,
+  wallHeight,
+  ridgeHeight,
+}: {
+  width: number;
+  depth: number;
+  wallHeight: number;
+  ridgeHeight: number;
+}) {
+  const overhang = 0.8;
+  const eaveW = width / 2 + overhang;
+  const eaveZ = depth / 2 + overhang;
+  const ridgeY = wallHeight + ridgeHeight;
+  const eaveY = wallHeight;
+
+  const roofMat = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: SCENE.roof, roughness: 0.7, side: THREE.DoubleSide }),
+    [],
+  );
+
+  const frontGeo = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const verts = new Float32Array([
+      -eaveW, eaveY,  eaveZ,
+       eaveW, eaveY,  eaveZ,
+       eaveW, ridgeY, 0,
+      -eaveW, ridgeY, 0,
+    ]);
+    geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    geo.setIndex([0, 1, 2, 0, 2, 3]);
+    geo.computeVertexNormals();
+    return geo;
+  }, [eaveW, eaveZ, eaveY, ridgeY]);
+
+  const rearGeo = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const verts = new Float32Array([
+       eaveW, eaveY,  -eaveZ,
+      -eaveW, eaveY,  -eaveZ,
+      -eaveW, ridgeY, 0,
+       eaveW, ridgeY, 0,
+    ]);
+    geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    geo.setIndex([0, 1, 2, 0, 2, 3]);
+    geo.computeVertexNormals();
+    return geo;
+  }, [eaveW, eaveZ, eaveY, ridgeY]);
+
+  const gableGeo = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const verts = new Float32Array([
+      eaveW, eaveY,  -eaveZ,
+      eaveW, eaveY,   eaveZ,
+      eaveW, ridgeY,  0,
+      -eaveW, eaveY,   eaveZ,
+      -eaveW, eaveY,  -eaveZ,
+      -eaveW, ridgeY,  0,
+    ]);
+    geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    geo.setIndex([0, 1, 2, 3, 4, 5]);
+    geo.computeVertexNormals();
+    return geo;
+  }, [eaveW, eaveZ, eaveY, ridgeY]);
+
+  return (
+    <group>
+      <mesh geometry={frontGeo} material={roofMat} castShadow />
+      <mesh geometry={rearGeo} material={roofMat} castShadow />
+      <mesh geometry={gableGeo} material={roofMat} castShadow />
+    </group>
+  );
+}
+
 function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
-  // Derive realistic house dimensions from lot and sqft
   const maxBuildableWidth = parcel.lotWidth - parcel.setbacks.side * 2;
   const width = Math.max(Math.min(maxBuildableWidth * 0.65, 32), 10);
   const depth = Math.max(Math.min(parcel.existingHouseSqft / width, 28), 8);
-  const wallHeight = 9; // realistic single-story wall height
-  const ridgeHeight = 5; // gable peak above walls
-
-  // Position house toward the front-center of the lot
+  const wallHeight = 9;
+  const ridgeHeight = 5;
   const zPos = parcel.lotLength / 2 - depth - parcel.setbacks.front + 2;
 
   return (
-    <group position={[0, wallHeight / 2, zPos]}>
-      {/* Foundation / slab */}
-      <mesh position={[0, -wallHeight / 2 + 0.2, 0]} receiveShadow>
+    <group position={[0, 0, zPos]}>
+      {/* Foundation */}
+      <mesh position={[0, 0.2, 0]} receiveShadow>
         <boxGeometry args={[width + 1.5, 0.4, depth + 1.5]} />
         <meshStandardMaterial color="#b0a898" roughness={0.92} />
       </mesh>
 
-      {/* Main walls */}
-      <mesh castShadow receiveShadow>
+      {/* Walls */}
+      <mesh position={[0, wallHeight / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, wallHeight, depth]} />
         <meshStandardMaterial color={SCENE.wall} roughness={0.82} />
       </mesh>
 
-      {/* Gable roof (peaked triangle shape using a thin wedge) */}
-      <mesh position={[0, ridgeHeight / 2 + 0.3, 0]} castShadow>
-        <boxGeometry args={[width + 1.2, 0.35, depth + 1.4]} />
-        <meshStandardMaterial color={SCENE.roof} roughness={0.7} />
-      </mesh>
-      {/* Roof slope planes (two angled sides) */}
-      <mesh position={[0, ridgeHeight / 4 + 0.5, depth / 2 + 0.55]} rotation={[0.45, 0, 0]} castShadow>
-        <boxGeometry args={[width + 1.2, depth * 0.65, 0.2]} />
-        <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
-      </mesh>
-      <mesh position={[0, ridgeHeight / 4 + 0.5, -depth / 2 - 0.55]} rotation={[-0.45, 0, 0]} castShadow>
-        <boxGeometry args={[width + 1.2, depth * 0.65, 0.2]} />
-        <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
-      </mesh>
+      {/* Proper gable roof */}
+      <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
 
       {/* Front door */}
-      <mesh position={[width * 0.28, -wallHeight / 2 + 2.2, depth / 2 + 0.05]}>
+      <mesh position={[width * 0.28, 2.2, depth / 2 + 0.05]}>
         <boxGeometry args={[2.5, 4.4, 0.3]} />
         <meshStandardMaterial color="#5a3a20" roughness={0.55} />
       </mesh>
-      {/* Door frame */}
-      <mesh position={[width * 0.28, -wallHeight / 2 + 4.6, depth / 2 + 0.06]}>
+      <mesh position={[width * 0.28, 4.6, depth / 2 + 0.06]}>
         <boxGeometry args={[3.0, 0.5, 0.35]} />
         <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
       </mesh>
 
-      {/* Front window (left side) */}
-      <mesh position={[-width * 0.2, -wallHeight / 2 + 3, depth / 2 + 0.05]} castShadow>
+      {/* Front window */}
+      <mesh position={[-width * 0.2, 3, depth / 2 + 0.05]} castShadow>
         <boxGeometry args={[3.2, 3, 0.3]} />
         <meshStandardMaterial color={SCENE.glass} roughness={0.2} metalness={0.3} />
       </mesh>
-      {/* Window frame */}
-      <mesh position={[-width * 0.2, -wallHeight / 2 + 4.7, depth / 2 + 0.06]}>
+      <mesh position={[-width * 0.2, 4.7, depth / 2 + 0.06]}>
         <boxGeometry args={[3.6, 0.4, 0.35]} />
         <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
       </mesh>
-      <mesh position={[-width * 0.2, -wallHeight / 2 + 1.5, depth / 2 + 0.06]}>
+      <mesh position={[-width * 0.2, 1.5, depth / 2 + 0.06]}>
         <boxGeometry args={[3.6, 0.4, 0.35]} />
         <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
       </mesh>
 
-      {/* Side window (right face) */}
-      <mesh position={[width / 2 + 0.05, -wallHeight / 2 + 3, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+      {/* Side window */}
+      <mesh position={[width / 2 + 0.05, 3, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
         <boxGeometry args={[2.8, 2.8, 0.3]} />
         <meshStandardMaterial color={SCENE.glass} roughness={0.2} metalness={0.3} />
       </mesh>
 
-      {/* Front walkway to door */}
-      <mesh position={[width * 0.28, -wallHeight / 2 + 0.15, depth / 2 + 5]} receiveShadow>
+      {/* Front walkway */}
+      <mesh position={[width * 0.28, 0.15, depth / 2 + 5]} receiveShadow>
         <boxGeometry args={[3, 0.2, 7]} />
         <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
       </mesh>
@@ -235,6 +293,7 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
     </group>
   );
 }
+
 
 /** Tree: trunk + canopy sphere, placed at lot edges. */
 function Tree({ position, height = 8, radius = 3 }: { position: [number, number, number]; height?: number; radius?: number }) {

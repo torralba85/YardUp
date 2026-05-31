@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   description:
     "Evaluate your lot's earning potential. Get instant ADU construction estimates, zoning coverage limits, and rental payback models.",
   manifest: "/manifest.json",
-  metadataBase: new URL("http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://www.veri-share.com"),
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
