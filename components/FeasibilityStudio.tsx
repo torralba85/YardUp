@@ -23,6 +23,12 @@ import {
   createSavedScenarioStore,
   type SavedScenario,
 } from "@/lib/saved-scenarios";
+import { useAuth } from "@/lib/auth-context";
+import {
+  fetchSavedScenarios,
+  saveSavedScenario,
+  deleteSavedScenario,
+} from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import AppShell from "./studio/AppShell";
 import AerialView from "./studio/AerialView";
@@ -64,6 +70,7 @@ export default function FeasibilityStudio() {
 }
 
 function FeasibilityStudioInner() {
+  const { user } = useAuth();
   const { parcel: liveParcel, parcelMode } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
@@ -76,10 +83,22 @@ function FeasibilityStudioInner() {
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
-  const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>(() => {
-    if (typeof window === "undefined") return [];
-    return createSavedScenarioStore(window.localStorage).list();
-  });
+  const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
+
+  // Load saved scenarios: Firestore for authenticated users, localStorage for guests
+  useEffect(() => {
+    let cancelled = false;
+    if (user) {
+      fetchSavedScenarios(user.uid).then((scenarios) => {
+        if (!cancelled) setSavedScenarios(scenarios);
+      }).catch(() => {
+        if (!cancelled) setSavedScenarios([]);
+      });
+    } else if (typeof window !== "undefined") {
+      setSavedScenarios(createSavedScenarioStore(window.localStorage).list());
+    }
+    return () => { cancelled = true; };
+  }, [user]);
 
   const presetParcel = getParcelById(parcelId);
   // Use live parcel data when available, otherwise the preset
@@ -134,36 +153,52 @@ function FeasibilityStudioInner() {
     setReportAutoFocus(true);
   }
 
-  function handleSaveScenario() {
+  async function handleSaveScenario() {
     if (typeof window === "undefined") return;
-    const store = createSavedScenarioStore(window.localStorage);
-    const created = store.save({
+    const entry = {
       name: `${activeParcel.address} - ${config.footprint} sf`,
       parcelId,
       config,
       assumptions,
-    });
-    setSavedScenarios(store.list());
+    };
+
+    if (user) {
+      const created = await saveSavedScenario(user.uid, entry);
+      setSavedScenarios((prev) => [created, ...prev]);
+    } else {
+      const store = createSavedScenarioStore(window.localStorage);
+      store.save(entry);
+      setSavedScenarios(store.list());
+    }
     setSaveNotice("Saved");
     setTimeout(() => setSaveNotice(null), 2000);
-    return created;
   }
 
   function handleLoadScenario(id: string) {
     if (typeof window === "undefined") return;
-    const store = createSavedScenarioStore(window.localStorage);
-    const scenario = store.load(id);
+    let scenario: SavedScenario | undefined;
+    if (user) {
+      scenario = savedScenarios.find((s) => s.id === id);
+    } else {
+      const store = createSavedScenarioStore(window.localStorage);
+      scenario = store.load(id);
+    }
     if (!scenario) return;
     setParcelId(scenario.parcelId);
     setConfig(scenario.config);
     setAssumptions(scenario.assumptions);
   }
 
-  function handleDeleteScenario(id: string) {
+  async function handleDeleteScenario(id: string) {
     if (typeof window === "undefined") return;
-    const store = createSavedScenarioStore(window.localStorage);
-    store.remove(id);
-    setSavedScenarios(store.list());
+    if (user) {
+      await deleteSavedScenario(user.uid, id);
+      setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
+    } else {
+      const store = createSavedScenarioStore(window.localStorage);
+      store.remove(id);
+      setSavedScenarios(store.list());
+    }
   }
 
   async function handleShareLink() {
