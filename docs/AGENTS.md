@@ -1,0 +1,236 @@
+# LotFoundry — Agent Guide
+
+**Last updated:** 2026-05-29 | **Repo:** `urbanlens_-adu-ar-visualizer` | **Project ID:** `yardup-2026`
+
+---
+
+## Project Overview
+
+**LotFoundry** is a browser-based ADU (Accessory Dwelling Unit) feasibility studio. Users search a real property address or select a demo preset, visualize their lot in 3D, configure an ADU concept, and receive instant feasibility outputs: zoning compliance, build cost range, monthly rent estimate, annual NOI, and payback period.
+
+**Architecture:**
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4
+- **3D Scene:** `@react-three/fiber` + `@react-three/drei` + Three.js 0.164
+- **Backend API:** Firebase Cloud Functions (nodejs22) proxying Regrid parcel data and Google Maps Static aerial images
+- **Hosting:** Firebase Hosting + Cloud Functions
+- **Testing:** Vitest (34 unit tests) + Playwright (26 E2E tests)
+
+**What this app IS:**
+- Local-first investor-demo with optional live parcel data via API keys
+- A browser-based 3D/2D parcel massing and feasibility calculator
+- Deployed to Firebase (project: `yardup-2026`)
+
+**What this app is NOT:**
+- Not a GIS platform, permitting system, or AR app
+- Not an auth-based SaaS (no user accounts yet)
+- Not a real estate marketplace (no builder routing yet)
+
+---
+
+## Quick Reference
+
+### Development
+
+```bash
+npm install           # Install dependencies
+npm run dev           # Start dev server (localhost:3000)
+npm run build         # Production build
+npm run test          # Unit tests (Vitest)
+npm run test:e2e      # E2E tests (Playwright)
+npm run lint          # ESLint (zero warnings required)
+```
+
+### Deployment
+
+```bash
+npm run build:firebase  # Build + prepare Firebase output
+npm run deploy          # Deploy Hosting + Functions
+```
+
+### Environment Variables
+
+**Local (`.env.local`):**
+```
+GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
+NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
+REGRID_API_KEY=<server-side Regrid Parcel API key>
+```
+
+**CI (GitHub Secrets):**
+| Secret | Purpose |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | JSON key with Firebase Admin role |
+| `GOOGLE_MAPS_API_KEY` | Server-side Maps Static + Geocoding key |
+| `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places Autocomplete key |
+| `REGRID_API_KEY` | Regrid Parcel API key |
+
+Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Austin).
+
+---
+
+## Codebase Map
+
+### Entry Points
+
+| File | Purpose |
+|---|---|
+| `app/page.tsx` | Renders `<FeasibilityStudio />` |
+| `app/layout.tsx` | Root layout with fonts, metadata, theme-color |
+| `app/globals.css` | Tailwind import + LotFoundry theme tokens + print rules |
+
+### Core Components
+
+| File | Purpose |
+|---|---|
+| `components/FeasibilityStudio.tsx` | Main orchestrator: wraps ParcelProvider, manages state, renders scene + inspector + metrics + report |
+| `components/ParcelScene.tsx` | 3D scene (Canvas) with drag-to-place + arrow-key ADU placement, trees, fences, driveway |
+| `components/studio/AppShell.tsx` | Desktop sidebar nav + mobile header, saved scenarios list |
+| `components/studio/FeasibilityInspector.tsx` | Right-side control panel: parcel selector, ADU config sliders, roof/finish/rent controls |
+| `components/studio/MetricsSummary.tsx` | Bottom 6-metric bento strip: rent, NOI, build cost, payback, coverage, zoning |
+| `components/studio/ReportPreview.tsx` | Expandable report export panel: print/PDF, download text/CSV, share link |
+| `components/studio/AerialView.tsx` | Satellite aerial view with parcel boundary + ADU SVG overlay (live mode) |
+| `components/studio/AddressSearch.tsx` | Google Places Autocomplete address input |
+
+### Library Modules
+
+| File | Purpose |
+|---|---|
+| `lib/feasibility.ts` | Core calculation engine: parcel presets, ADU config, zoning coverage, cost ranges, NOI, payback |
+| `lib/parcel-types.ts` | TypeScript interfaces: `Parcel`, `LiveParcelData`, `ParcelPreset` |
+| `lib/parcel-context.tsx` | React context: `ParcelProvider`, `useParcel` hook for live/preset parcel state |
+| `lib/parcel-api.ts` | Client fetch helper for `/api/parcel` |
+| `lib/saved-scenarios.ts` | localStorage persistence for named scenarios |
+| `lib/scenario-url.ts` | URL serialization/deserialization for shareable deep links |
+| `lib/report.ts` | Report text/CSV builder + download helpers |
+| `lib/map-utils.ts` | Web Mercator projection: lat/lng → SVG pixel coordinates |
+| `lib/utils.ts` | Shared formatting utilities |
+
+### API Routes
+
+| Route | Purpose |
+|---|---|
+| `app/api/parcel/route.ts` | GET: Proxies Regrid parcel data by lat/lng, falls back to preset defaults |
+| `app/api/aerial/route.ts` | GET: Proxies Google Maps Static satellite image by lat/lng |
+
+### Firebase
+
+| File | Purpose |
+|---|---|
+| `firebase.json` | Hosting + Functions config: `/api/**` → `api` function, `/**` → `app` function |
+| `.firebaserc` | Firebase project ID (`yardup-2026`) |
+| `functions/index.js` | Two Cloud Functions: `app` (Next.js SSR), `api` (API routes) |
+| `functions/package.json` | Functions dependencies (firebase-functions, next, react, react-dom) |
+| `scripts/prepare-firebase.js` | Build helper: copies `.next/standalone` → `dist/` and `functions/.next/` |
+
+### Tests
+
+| File | Coverage |
+|---|---|
+| `lib/feasibility.test.ts` | 5 tests: zoning compliance, coverage limits, rent scenarios, finish costs |
+| `lib/scenario-url.test.ts` | 7 tests: URL parse/serialize round-trips |
+| `lib/saved-scenarios.test.ts` | 5 tests: CRUD operations, malformed data recovery |
+| `lib/report.test.ts` | 3 tests: report text generation |
+| `lib/parcel-api.test.ts` | 5 tests: fetchParcel success/error paths |
+| `lib/map-utils.test.ts` | 5 tests: lat/lng → pixel projection |
+| `components/studio/FeasibilityStudio.test.tsx` | 4 tests: full UI workflow |
+| `e2e/feasibility-studio.spec.ts` | Desktop + mobile: load, review-needed, market rent, download |
+| `e2e/accessibility.spec.ts` | Keyboard navigation, focus visibility, overflow check |
+| `e2e/visual-breakpoints.spec.ts` | Screenshot checkpoints at 5 breakpoints |
+
+---
+
+## Design System
+
+See `DESIGN.md` for the full brand spec. Key rules:
+
+### Colors
+- **Forest green** (`--lf-forest`) = positive financial value only
+- **Clay** (`--lf-clay`) = interactive accent, actions
+- **Mahogany** (`--lf-mahogany`) = dark panels, rails
+- **Amber** (`--lf-amber`) = permit risk, review needed
+- **Brick** (`--lf-brick`) = genuine blockers
+
+### Typography
+- **Outfit** = display/hero numbers (money figures, titles)
+- **Manrope** = body text, labels, controls
+- **Geist Mono** = tabular data, dimensions, status values, eyebrows
+
+### Layout
+- Desktop: 238px dark sidebar + scrollable main content
+- Mobile: header bar + stacked sections
+- Metrics strip: 6-column responsive bento grid at bottom
+- Report: expandable drawer, max 40vh on desktop
+
+---
+
+## Working Guidelines
+
+### Before Making Changes
+
+1. **Read relevant files first** — never assume. Check `lib/feasibility.ts` before touching calculations, `ParcelScene.tsx` before touching 3D, etc.
+2. **Run verification after every change:**
+   ```bash
+   npm run lint && npm run test && npx tsc --noEmit && npm run build
+   ```
+   All four must pass. No exceptions.
+3. **Keep ESLint clean** — `--max-warnings=0` is enforced.
+4. **Don't commit secrets** — `.env.local` and `functions/.env` are in `.gitignore`.
+5. **Follow existing patterns** — component structure, naming, and styling conventions are established. Match them.
+
+### Common Pitfalls
+
+- **R3F `Text` component** — uses `troika-three-text` which loads fonts via CDN and fails silently in dev. Use `LabelSprite` (canvas-based sprite) instead.
+- **`react-hooks/set-state-in-effect`** — Next.js 16's ESLint rules flag synchronous `setState` in effects. Use `/* eslint-disable react-hooks/set-state-in-effect */` when the pattern is intentional (e.g., URL hydration sync).
+- **`three` types** — import `ThreeEvent` from `@react-three/fiber`, not as a global. Use `as unknown as { camera: THREE.Camera }` instead of `any`.
+- **Parcel positioning** — the house is positioned dynamically based on lot dimensions. Don't hardcode Z positions.
+- **Firebase Functions** — both `app` and `api` functions serve the same Next.js app via different rewrite rules. They share the same code path.
+
+### Git Workflow
+
+- Commit from the project repo, not the workspace root
+- Use Conventional Commits: `fix(3d): ...`, `feat(parcel): ...`, `chore(deploy): ...`
+- Keep commits focused — one logical change per commit
+
+---
+
+## Current Status
+
+| Dimension | Status | Notes |
+|---|---|---|
+| Brand/Identity | ✅ Complete | LotFoundry fully integrated |
+| Core Feasibility Logic | ✅ Complete | 3 presets + live parcel support |
+| 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
+| Aerial View | ✅ Code written | Requires live API keys to render |
+| UI/UX Polish | ✅ Improved | Scroll containment, bento grid responsive |
+| Testing | ✅ 34 unit + 26 E2E | All passing |
+| Deployment | ✅ Configured | Firebase Hosting + Functions, CI pipeline active |
+| Auth / User Accounts | ❌ Not started | Planned: Firebase Auth |
+| Builder Routing | ❌ Not started | Planned: lead capture flow |
+
+---
+
+## Next Priorities (from audit)
+
+1. **Solar simulation** — time-of-day slider with SunCalc + Three.js directional light
+2. **View mode selector** — aerial/layers/setbacks toggles on the scene
+3. **Aerial view polish** — tick marks, corner dots, better label positioning to match the design target
+4. **Firebase Auth** — user/builder registration and login
+5. **Builder routing** — lead capture, partner network, marketplace element
+6. **Server-side scenario persistence** — move saved scenarios from localStorage to Firestore
+
+---
+
+## Firebase Deployment Troubleshooting
+
+If `firebase deploy` fails:
+
+1. **Check service account role** — must be **Firebase Admin**, not just Hosting Admin
+2. **Check billing** — Blaze (pay-as-you-go) plan required for Cloud Functions
+3. **Check APIs enabled** — Cloud Functions API + Cloud Build API
+4. **Check functions logs** — `firebase functions:log` after a failed deploy
+5. **Check CI workflow** — view at https://github.com/torralba85/YardUp/actions
+
+If the site deploys but API routes return 404:
+- Verify `firebase.json` rewrites: `/api/**` → `api` function
+- Verify `functions/index.js` exports both `app` and `api`
+- Verify `prepare-firebase.js` copied `.next/` into `functions/.next/`
