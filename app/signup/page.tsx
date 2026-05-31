@@ -152,6 +152,17 @@ export default function SignupPage() {
           </div>
         </div>
 
+        <p className="text-xs text-lf-muted">
+          By creating an account you agree to our{" "}
+          <Link href="/terms" className="text-lf-clay hover:text-lf-mahogany">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-lf-clay hover:text-lf-mahogany">
+            Privacy Policy
+          </Link>.
+        </p>
+
         <button
           type="submit"
           disabled={isPending}

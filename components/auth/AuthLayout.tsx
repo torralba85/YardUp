@@ -33,10 +33,18 @@ export function AuthLayout({
           <div className="mt-6">{children}</div>
         </div>
 
-        {/* Footer link */}
-        <p className="mt-6 text-center text-sm text-lf-muted">
-          Estimates, not guarantees.
-        </p>
+        {/* Footer links */}
+        <div className="mt-6 flex justify-center gap-4 text-xs text-lf-muted">
+          <Link href="/terms" className="hover:text-lf-espresso transition-colors">
+            Terms
+          </Link>
+          <span>·</span>
+          <Link href="/privacy" className="hover:text-lf-espresso transition-colors">
+            Privacy
+          </Link>
+          <span>·</span>
+          <span>Estimates, not guarantees.</span>
+        </div>
       </div>
     </div>
   );

@@ -165,6 +165,14 @@ export default function LandingPage() {
             <p className="text-sm text-lf-muted">
               A foundry for lots. Estimates, not guarantees.
             </p>
+            <div className="flex items-center gap-4 text-sm text-lf-muted">
+              <Link href="/terms" className="hover:text-lf-espresso transition-colors">
+                Terms
+              </Link>
+              <Link href="/privacy" className="hover:text-lf-espresso transition-colors">
+                Privacy
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
