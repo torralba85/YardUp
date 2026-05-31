@@ -55,14 +55,14 @@ export function RevenueSnapshot({
     valueTranslate.value = withDelay(140, withTiming(0, { duration: 320, easing: EASE_OUT }));
     railScale.value = withDelay(280, withSpring(1, { damping: 14, stiffness: 180 }));
     incomeOpacity.value = withDelay(340, withTiming(1, { duration: 300, easing: EASE_OUT }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [panelOpacity, panelTranslate, washOpacity, valueOpacity, valueTranslate, railScale, incomeOpacity]);
 
-  // Re-flash value section when the estimate changes
-  const prevRentRef = useRef(rentLow);
+  // Re-flash value and income sections when any estimate figure changes
+  const prevKeyRef = useRef(`${rentLow}:${estimate.annualNOI}`);
   useEffect(() => {
-    if (prevRentRef.current === rentLow) return;
-    prevRentRef.current = rentLow;
+    const key = `${rentLow}:${estimate.annualNOI}`;
+    if (prevKeyRef.current === key) return;
+    prevKeyRef.current = key;
     valueOpacity.value = withSequence(
       withTiming(0.25, { duration: 90 }),
       withTiming(1, { duration: 300, easing: EASE_OUT }),
@@ -75,7 +75,7 @@ export function RevenueSnapshot({
       withTiming(0.25, { duration: 90 }),
       withTiming(1, { duration: 300, easing: EASE_OUT }),
     );
-  }, [rentLow, valueOpacity, valueTranslate, incomeOpacity]);
+  }, [rentLow, estimate.annualNOI, valueOpacity, valueTranslate, incomeOpacity]);
 
   const panelStyle = useAnimatedStyle(() => ({
     opacity: panelOpacity.value,
