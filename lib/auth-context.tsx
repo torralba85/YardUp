@@ -17,6 +17,7 @@ import {
   GoogleAuthProvider,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
   type UserCredential,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -43,6 +44,7 @@ interface AuthContextType {
   ) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -130,9 +132,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => signOut(auth);
 
+  const sendPasswordReset = (email: string) =>
+    sendPasswordResetEmail(auth, email);
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signInWithGoogle, logout }}
+      value={{ user, profile, loading, signIn, signUp, signInWithGoogle, logout, sendPasswordReset }}
     >
       {children}
     </AuthContext.Provider>
