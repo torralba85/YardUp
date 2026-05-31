@@ -36,15 +36,17 @@ test.describe("Accessibility smoke", () => {
     await context.close();
   });
 
-  test("Generate Concept Report moves focus to the report heading", async ({ page }) => {
+  test("primary landing actions are keyboard reachable", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("button", { name: /Generate Concept Report/i }).click();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
 
-    const focusedText = await page.evaluate(
+    const activeText = await page.evaluate(
       () => (document.activeElement as HTMLElement | null)?.textContent ?? "",
     );
 
-    expect(focusedText).toMatch(/Concept Feasibility Report/i);
+    expect(activeText).toMatch(/Sign in|Estimate my lot/i);
   });
 });

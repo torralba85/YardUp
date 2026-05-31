@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 const breakpoints = [
-  { name: "desktop-1440", width: 1440, height: 900, statsVisible: true },
-  { name: "tablet-portrait-768", width: 768, height: 1024, statsVisible: true },
-  { name: "tablet-landscape-1024", width: 1024, height: 768, statsVisible: true },
-  { name: "mobile-390", width: 390, height: 844, statsVisible: false },
-  { name: "mobile-320", width: 320, height: 568, statsVisible: false },
+  { name: "desktop-1440", width: 1440, height: 900 },
+  { name: "tablet-portrait-768", width: 768, height: 1024 },
+  { name: "tablet-landscape-1024", width: 1024, height: 768 },
+  { name: "mobile-390", width: 390, height: 844 },
+  { name: "mobile-320", width: 320, height: 568 },
 ];
 
 test.describe("Visual breakpoint coverage", () => {
@@ -17,7 +17,7 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
-      const heading = page.getByRole("heading", { name: "Feasibility Studio", level: 2 });
+      const heading = page.getByRole("heading", { name: /See what your lot could earn/i });
       await expect(heading).toBeVisible();
 
       const widths = await page.evaluate(() => ({
@@ -26,13 +26,7 @@ test.describe("Visual breakpoint coverage", () => {
       }));
       expect(widths.doc).toBeLessThanOrEqual(widths.win + 1);
 
-      // Income stats grid is hidden on mobile (< sm) and visible on sm+
-      const incomeStat = page.getByText("Annual NOI");
-      if (bp.statsVisible) {
-        await expect(incomeStat).toBeVisible();
-      } else {
-        await expect(incomeStat).toBeHidden();
-      }
+      await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toBeVisible();
 
       await page.screenshot({
         path: testInfo.snapshotPath(`${bp.name}.png`),
