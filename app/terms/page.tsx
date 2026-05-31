@@ -136,7 +136,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div>
       <h2 className="font-display text-xl font-bold text-lf-espresso">{title}</h2>
-      <p className="mt-3 leading-relaxed text-lf-muted">{children}</p>
+      <div className="mt-3 leading-relaxed text-lf-muted">{children}</div>
     </div>
   );
 }
