@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
@@ -27,10 +26,6 @@ const manrope = localFont({
   variable: "--font-sans",
 });
 
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-});
 
 export const metadata: Metadata = {
   title: "LotFoundry | ADU Feasibility Studio",
@@ -72,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${manrope.variable} ${geistMono.variable}`}
+      className={`${outfit.variable} ${manrope.variable}`}
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>

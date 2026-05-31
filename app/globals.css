@@ -3,7 +3,7 @@
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-sans), sans-serif;
-  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* LotFoundry Warm Earth Palette */
   --color-lf-sand: #F2E5D5;
