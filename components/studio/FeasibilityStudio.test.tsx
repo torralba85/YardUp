@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
+import { AuthProvider } from "@/lib/auth-context";
+import type { ReactNode } from "react";
 
 vi.mock("next/dynamic", () => ({
   default: () => {
@@ -13,12 +15,46 @@ vi.mock("next/dynamic", () => ({
   },
 }));
 
+// Mock Firebase auth for tests
+vi.mock("@/lib/firebase", () => ({
+  auth: {},
+  db: {},
+  app: {},
+}));
+
+vi.mock("firebase/auth", () => ({
+  getAuth: () => ({}),
+  onAuthStateChanged: (_auth: unknown, cb: (u: null) => void) => {
+    cb(null);
+    return () => {};
+  },
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signInWithPopup: vi.fn(),
+  GoogleAuthProvider: class {},
+  signOut: vi.fn(),
+  updateProfile: vi.fn(),
+}));
+
+vi.mock("firebase/firestore", () => ({
+  getFirestore: () => ({}),
+  doc: vi.fn(),
+  setDoc: vi.fn(),
+  getDoc: vi.fn(),
+  serverTimestamp: vi.fn(),
+}));
+
+function TestWrapper({ children }: { children: ReactNode }) {
+  return <AuthProvider>{children}</AuthProvider>;
+}
+
 describe("FeasibilityStudio", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
   });
+
   it("renders the complete feasibility workflow", () => {
-    render(<FeasibilityStudio />);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
       screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
     ).toBeInTheDocument();
@@ -34,7 +70,7 @@ describe("FeasibilityStudio", () => {
 
   it("flags review needed when selecting a 1,000 sf concept on the compact preset", async () => {
     const user = userEvent.setup();
-    render(<FeasibilityStudio />);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     await user.selectOptions(screen.getByLabelText("Parcel Preset"), "compact-lot");
 
@@ -46,7 +82,7 @@ describe("FeasibilityStudio", () => {
 
   it("updates the rental estimate when switching to Market", async () => {
     const user = userEvent.setup();
-    render(<FeasibilityStudio />);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     const rentGroup = screen.getByRole("group", { name: /Rental estimate/i });
     await user.click(within(rentGroup).getByRole("button", { name: "Market" }));
@@ -57,7 +93,7 @@ describe("FeasibilityStudio", () => {
 
   it("exposes report print and download controls after generating the report", async () => {
     const user = userEvent.setup();
-    render(<FeasibilityStudio />);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     await user.click(screen.getByRole("button", { name: /Generate Concept Report/i }));
 

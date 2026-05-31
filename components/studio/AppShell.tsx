@@ -1,8 +1,9 @@
 "use client";
 
-import { BarChart3, Box, FileText, Share2, Trash2 } from "lucide-react";
+import { BarChart3, Box, FileText, LogOut, Share2, Trash2 } from "lucide-react";
 import type { NavItem } from "./types";
 import type { SavedScenario } from "@/lib/saved-scenarios";
+import { useAuth } from "@/lib/auth-context";
 
 export const navItems: NavItem[] = [
   { id: "studio", label: "Feasibility Studio", icon: Box },
@@ -34,6 +35,16 @@ export default function AppShell({
   onDeleteScenario,
   children,
 }: AppShellProps) {
+  const { profile, logout } = useAuth();
+  const displayName = profile?.displayName || profile?.email?.split("@")[0] || "User";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "U";
+  const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
+
   return (
     <div className="flex min-h-dvh bg-lf-mahogany text-lf-espresso">
       <aside
@@ -129,14 +140,22 @@ export default function AppShell({
               </div>
             )}
 
-            <div className="flex items-center gap-3 rounded-md px-2 py-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
-                LO
+            <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
+                {initials}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-lf-sand-2">Lot Owner</div>
-                <div className="text-xs text-lf-taupe">Feasibility Desk</div>
+                <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
+                <div className="text-xs text-lf-taupe">{roleLabel}</div>
               </div>
+              <button
+                type="button"
+                onClick={logout}
+                aria-label="Sign out"
+                className="rounded p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+              >
+                <LogOut size={14} />
+              </button>
             </div>
           </div>
         </div>
