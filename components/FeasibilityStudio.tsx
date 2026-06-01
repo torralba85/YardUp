@@ -44,6 +44,9 @@ import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
 import type { FeasibilityResult } from "./studio/types";
+import PermitGuidePanel from "./studio/PermitGuidePanel";
+import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
+import { configForFootprint } from "@/lib/feasibility";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -290,19 +293,37 @@ function FeasibilityStudioInner() {
           )}
         </section>
 
-        <FeasibilityInspector
-          parcelId={parcelId}
-          config={config}
-          assumptions={assumptions}
-          result={result}
-          onParcelChange={setParcelId}
-          onConfigChange={setConfig}
-          onAssumptionsChange={setAssumptions}
-          onReset={resetScenario}
-          onGenerateReport={handleGenerateReport}
-          onSaveScenario={handleSaveScenario}
-          saveNotice={saveNotice}
-        />
+        {activeNav === "guide" ? (
+          <PermitGuidePanel address={activeParcel.address} />
+        ) : activeNav === "inspiration" ? (
+          <InspirationGalleryPanel
+            onApply={(item) => {
+              const baseConfig = configForFootprint(item.sqft, config);
+              setConfig({
+                ...baseConfig,
+                width: item.width,
+                length: item.length,
+                roof: item.roof,
+                finish: item.finish,
+              });
+              setActiveNav("studio");
+            }}
+          />
+        ) : (
+          <FeasibilityInspector
+            parcelId={parcelId}
+            config={config}
+            assumptions={assumptions}
+            result={result}
+            onParcelChange={setParcelId}
+            onConfigChange={setConfig}
+            onAssumptionsChange={setAssumptions}
+            onReset={resetScenario}
+            onGenerateReport={handleGenerateReport}
+            onSaveScenario={handleSaveScenario}
+            saveNotice={saveNotice}
+          />
+        )}
       </div>
 
       <div className="lf-entrance lf-entrance-delay-1">
