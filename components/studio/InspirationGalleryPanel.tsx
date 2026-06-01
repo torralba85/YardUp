@@ -57,7 +57,7 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
                       {item.style}
                     </span>
                     <span className="text-[10px] font-mono font-medium text-lf-muted border border-lf-hairline px-1.5 py-0.5 rounded bg-lf-sand/30">
-                      {item.sqft} sf ({item.width}'x{item.length}')
+                      {item.sqft} sf ({item.width}&apos;x{item.length}&apos;)
                     </span>
                   </div>
                 </div>
