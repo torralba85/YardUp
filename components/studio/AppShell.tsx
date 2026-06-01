@@ -1,13 +1,14 @@
 "use client";
 
-import { BarChart3, Box, FileText, LogOut, Share2, Trash2 } from "lucide-react";
+import { BarChart3, Box, FileText, LogOut, Sparkles, Share2, Trash2 } from "lucide-react";
 import type { NavItem } from "./types";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 
 export const navItems: NavItem[] = [
   { id: "studio", label: "Feasibility Studio", icon: Box },
-  { id: "parcel", label: "Parcel Assumptions", icon: FileText },
+  { id: "guide", label: "Permit Guide", icon: FileText },
+  { id: "inspiration", label: "Inspiration Gallery", icon: Sparkles },
   { id: "summary", label: "Estimate Summary", icon: BarChart3 },
   { id: "export", label: "Export Preview", icon: Share2 },
 ];
