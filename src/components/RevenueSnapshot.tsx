@@ -1,9 +1,73 @@
 import { Feather } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatCurrency } from "../domain/estimator";
 import type { EstimateInput, EstimateResult } from "../domain/types";
 import { colors, radii, shadows, spacing, typography } from "../theme";
+
+// Motion is minimal-functional (DESIGN.md): we only animate the revenue
+// figures recalculating and a single sparing "rise" entrance. Durations sit in
+// the sanctioned 250-400ms recalculation band; the rise uses the 600ms first-
+// paint window. Nothing decorative moves.
+const RECALC_MS = 360;
+const RISE_MS = 600;
+const RISE_OFFSET = 8;
+
+/** Tracks the OS "reduce motion" setting so we can skip straight to final values. */
+function useReduceMotion(): boolean {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((value) => {
+      if (mounted) setReduce(value);
+    });
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduce);
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
+  return reduce;
+}
+
+/**
+ * Counts a money figure up to `target` — from 0 on first paint, from the prior
+ * value on recalculation. When motion is reduced it renders the target
+ * immediately. Returns the live value to format with `formatCurrency`.
+ */
+function useCountUp(target: number, animate: boolean): number {
+  const animated = useRef(new Animated.Value(animate ? 0 : target)).current;
+  const [display, setDisplay] = useState(animate ? 0 : target);
+  const prev = useRef(animate ? 0 : target);
+
+  useEffect(() => {
+    const id = animated.addListener(({ value }) => setDisplay(value));
+    return () => animated.removeListener(id);
+  }, [animated]);
+
+  useEffect(() => {
+    if (!animate) {
+      animated.stopAnimation();
+      animated.setValue(target);
+      setDisplay(target);
+      prev.current = target;
+      return;
+    }
+    if (prev.current === target) return;
+    const anim = Animated.timing(animated, {
+      toValue: target,
+      duration: RECALC_MS,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    });
+    anim.start();
+    prev.current = target;
+    return () => anim.stop();
+  }, [animated, target, animate]);
+
+  return display;
+}
 
 interface RevenueSnapshotProps {
   builderMatches: number;
@@ -26,14 +90,40 @@ export function RevenueSnapshot({
   const rentLow = estimateInput.monthlyRent * 0.9;
   const rentHigh = estimateInput.monthlyRent * 1.1;
 
+  const reduceMotion = useReduceMotion();
+  const animate = !reduceMotion;
+
+  // Sparing first-paint "rise": 8px translateY + fade, native-driven.
+  const enterOpacity = useRef(new Animated.Value(animate ? 0 : 1)).current;
+  const enterTranslate = useRef(new Animated.Value(animate ? RISE_OFFSET : 0)).current;
+  useEffect(() => {
+    if (!animate) {
+      enterOpacity.setValue(1);
+      enterTranslate.setValue(0);
+      return;
+    }
+    const anim = Animated.parallel([
+      Animated.timing(enterOpacity, { toValue: 1, duration: RISE_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(enterTranslate, { toValue: 0, duration: RISE_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [animate, enterOpacity, enterTranslate]);
+
+  const displayRentLow = useCountUp(rentLow, animate);
+  const displayRentHigh = useCountUp(rentHigh, animate);
+  const displayNOI = useCountUp(estimate.annualNOI, animate);
+
   return (
-    <View style={[styles.revenuePanel, wide && styles.revenuePanelWide]}>
+    <Animated.View
+      style={[styles.revenuePanel, wide && styles.revenuePanelWide, { opacity: enterOpacity, transform: [{ translateY: enterTranslate }] }]}
+    >
       <View pointerEvents="none" style={styles.mintWash} />
       <Text style={styles.revenueEyebrow}>Estimated monthly rent</Text>
       <Text style={styles.revenueValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
-        {formatCurrency(rentLow)}
+        {formatCurrency(displayRentLow)}
         <Text style={styles.revenueDash}> - </Text>
-        {formatCurrency(rentHigh)}
+        {formatCurrency(displayRentHigh)}
       </Text>
 
       <View style={styles.incomeRow}>
@@ -41,7 +131,7 @@ export function RevenueSnapshot({
         <View style={styles.incomeCopy}>
           <Text style={styles.incomeLabel}>Net annual income</Text>
           <Text style={styles.incomeValue}>
-            +{formatCurrency(estimate.annualNOI)}
+            +{formatCurrency(displayNOI)}
             <Text style={styles.incomeUnit}> avg/yr</Text>
           </Text>
         </View>
@@ -60,7 +150,7 @@ export function RevenueSnapshot({
           </Pressable>
         ) : null}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
