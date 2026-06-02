@@ -28,9 +28,10 @@ npm run build:firebase
 # 3. Login to Firebase (first time only)
 firebase login
 
-# 4. Deploy hosting + functions
+# 4. Validate and deploy hosting + functions + Firestore rules
+npm run deploy:dry-run
 npm run deploy
-# or: firebase deploy --only hosting,functions
+# or: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026
 ```
 
 ## Build Configuration
@@ -72,7 +73,7 @@ Two Firebase Functions v2 HTTPS functions:
 `.github/workflows/ci.yml` runs two jobs:
 
 1. **verify** — lint, test, typecheck, build, and Playwright E2E (runs on every push and PR).
-2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase`, authenticates via `google-github-actions/auth`, and runs `firebase deploy --only hosting,functions,firestore:rules`.
+2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase`, authenticates via `google-github-actions/auth`, dry-runs the same Firebase target set, and then runs `firebase deploy --only hosting,functions,firestore:rules`.
 
 ### Required CI Secrets
 
@@ -116,7 +117,7 @@ Set these secrets in your GitHub repository Settings → Secrets → Actions:
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app ID |
 | `FIREBASE_SERVICE_ACCOUNT` | JSON service account key for Firebase deploy |
 
-The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result.
+The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result. The service account must be able to deploy Firebase Hosting, Cloud Functions v2, and Firestore rules in `yardup-2026`; if Cloud Billing API access or required Firebase/GCP APIs are disabled, the dry-run step fails before the live deploy command.
 
 ## Release Verification
 
@@ -129,6 +130,8 @@ npm run test
 npm run test:e2e
 npx tsc --noEmit
 npm run build
+npm run build:firebase
+npm run deploy:dry-run
 FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
 ```
 
@@ -158,6 +161,7 @@ Cloud Functions:
 ```bash
 git revert <commit> && git push
 firebase deploy --only functions
+firebase deploy --only firestore:rules
 ```
 
 Saved scenarios for authenticated users live in Firestore under `users/{uid}/savedScenarios`; rollback does not require a schema migration for the current create/load/delete flow.

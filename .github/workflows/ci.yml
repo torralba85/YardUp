@@ -69,5 +69,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+      - name: Firebase deploy dry run
+        run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
       - name: Deploy to Firebase Hosting + Functions + Firestore Rules
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026
