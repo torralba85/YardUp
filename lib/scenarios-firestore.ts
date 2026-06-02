@@ -10,7 +10,12 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import type { SavedScenario } from "./saved-scenarios";
+import {
+  isValidAduConfig,
+  isValidFinancialAssumptions,
+  isValidSavedScenario,
+  type SavedScenario,
+} from "./saved-scenarios";
 
 const COLLECTION = "savedScenarios";
 
@@ -21,8 +26,8 @@ function userScenariosRef(uid: string) {
 function firestoreToScenario(
   id: string,
   data: Record<string, unknown>,
-): SavedScenario {
-  return {
+): SavedScenario | null {
+  const scenario = {
     id,
     name: (data.name as string) || "Untitled",
     createdAt:
@@ -30,33 +35,39 @@ function firestoreToScenario(
         ? data.createdAt.toDate().toISOString()
         : (data.createdAt as string) || new Date().toISOString(),
     parcelId: (data.parcelId as string) || "",
-    config: (data.config as SavedScenario["config"]) || {
-      footprint: 600,
-      width: 20,
-      length: 30,
-      roofStyle: "gable",
-      exteriorFinish: "standard",
-    },
-    assumptions:
-      (data.assumptions as SavedScenario["assumptions"]) ||
-      ({ rentScenario: "conservative" as const } as SavedScenario["assumptions"]),
+    config: data.config,
+    assumptions: data.assumptions,
   };
+
+  return isValidSavedScenario(scenario) ? scenario : null;
 }
 
 export async function fetchSavedScenarios(uid: string): Promise<SavedScenario[]> {
   const q = query(userScenariosRef(uid), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => firestoreToScenario(d.id, d.data()));
+  return snap.docs
+    .map((d) => firestoreToScenario(d.id, d.data()))
+    .filter((scenario): scenario is SavedScenario => scenario !== null);
 }
 
 export async function saveSavedScenario(
   uid: string,
   input: Omit<SavedScenario, "id" | "createdAt">,
 ): Promise<SavedScenario> {
+  if (
+    !input.name.trim() ||
+    !input.parcelId ||
+    !isValidAduConfig(input.config) ||
+    !isValidFinancialAssumptions(input.assumptions)
+  ) {
+    throw new Error("Scenario is missing required fields.");
+  }
+
   const ref = userScenariosRef(uid);
   const docRef = await addDoc(ref, {
     ...input,
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
   return {
     ...input,

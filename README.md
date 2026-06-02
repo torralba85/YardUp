@@ -8,7 +8,7 @@ A production-grade ADU feasibility studio. Search a real property address to pul
 - **Aerial visualization:** Google Maps Static satellite view with parcel boundary + ADU footprint overlay
 - **Feasibility engine:** Instant NOI, payback, build cost ranges, and zoning compliance
 - **Demo mode:** Three hardcoded presets (Seattle, Portland, Austin) for offline / API-less use
-- **Scenario persistence:** Named scenarios saved locally; shareable deep-link URLs
+- **Scenario persistence:** Authenticated users save scenarios to Firebase; guest users keep local browser saves; shareable deep-link URLs
 - **Concept report:** Printable / downloadable PDF-quality summary
 
 ## Run Locally
@@ -29,9 +29,16 @@ Create `.env.local`:
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
+NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<Firebase storage bucket>
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
+NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 ```
 
-Without these keys the app runs in demo mode with the three built-in presets.
+Without parcel API keys the app runs in demo mode with the three built-in presets.
+Without Firebase overrides the app uses the checked-in `yardup-2026` web app config.
 
 ## Verification Commands
 
@@ -39,6 +46,7 @@ Without these keys the app runs in demo mode with the three built-in presets.
 npm run lint
 npm run test
 npm run test:e2e
+FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
 npx tsc --noEmit
 npm run build
 ```

@@ -43,19 +43,33 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_minmax(0,480px)] lg:gap-16">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-lf-hairline bg-lf-card px-3 py-1.5 text-xs font-medium text-lf-muted">
+            <div
+              className="lf-hero-rise inline-flex items-center gap-2 rounded-full border border-lf-hairline bg-lf-card px-3 py-1.5 text-xs font-medium text-lf-muted"
+              style={{ "--lf-step": 0 } as React.CSSProperties}
+            >
               <BadgeDollarSign className="h-3.5 w-3.5" />
               ADU income estimate for lot owners
             </div>
-            <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight text-lf-espresso md:text-7xl">
+            <h1
+              className="lf-hero-rise mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight text-lf-espresso md:text-7xl"
+              style={{ "--lf-step": 1 } as React.CSSProperties}
+            >
               See what your lot{" "}
-              <span className="block text-lf-clay">could earn.</span>
+              <span className="lf-hero-shimmer block text-lf-clay">
+                could earn.
+              </span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-lf-muted md:text-xl">
+            <p
+              className="lf-hero-rise mt-6 max-w-xl text-lg leading-relaxed text-lf-muted md:text-xl"
+              style={{ "--lf-step": 2 } as React.CSSProperties}
+            >
               LotFoundry turns an address into an ADU income snapshot:
               estimated rent, build range, payback, and site fit in minutes.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div
+              className="lf-hero-rise mt-8 flex flex-wrap items-center gap-4"
+              style={{ "--lf-step": 3 } as React.CSSProperties}
+            >
               <Link
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg bg-lf-mahogany px-6 py-3.5 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
@@ -170,8 +184,11 @@ export default function LandingPage() {
 
 function ProductProof() {
   return (
-    <figure className="mx-auto mt-4 w-full max-w-[480px] lg:mt-0 lg:justify-self-center">
-      <div className="overflow-hidden rounded-xl border border-lf-hairline bg-lf-card shadow-[0_28px_60px_-24px_rgba(38,19,7,0.45)]">
+    <figure
+      className="lf-hero-rise mx-auto mt-4 w-full max-w-[480px] lg:mt-0 lg:justify-self-center"
+      style={{ "--lf-step": 4 } as React.CSSProperties}
+    >
+      <div className="lf-hero-float overflow-hidden rounded-xl border border-lf-hairline bg-lf-card shadow-[0_28px_60px_-24px_rgba(38,19,7,0.45)]">
         <div className="border-b border-lf-hairline bg-lf-sand-2 px-5 py-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-muted">
             ADU income snapshot
@@ -185,7 +202,7 @@ function ProductProof() {
                 estimated monthly rent
               </div>
             </div>
-            <div className="rounded-md bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand">
+            <div className="lf-hero-glow rounded-md bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand">
               Concept fit
             </div>
           </div>

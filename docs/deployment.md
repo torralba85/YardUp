@@ -13,7 +13,7 @@ LotFoundry ships as a Next.js 16 app deployed to **Firebase Hosting + Cloud Func
 
 - Node.js 22 or newer locally.
 - Firebase CLI installed: `npm install -g firebase-tools`
-- A Firebase project named `lotfoundry` (or update `.firebaserc` with your project ID).
+- Firebase project access for `yardup-2026` (or update `.firebaserc` and the `NEXT_PUBLIC_FIREBASE_*` values for another project).
 - A service account key with the **Firebase Hosting Admin** role for CI deployment.
 
 ## Local Deploy
@@ -72,7 +72,7 @@ Two Firebase Functions v2 HTTPS functions:
 `.github/workflows/ci.yml` runs two jobs:
 
 1. **verify** — lint, test, typecheck, build, and Playwright E2E (runs on every push and PR).
-2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase`, authenticates via `google-github-actions/auth`, and runs `firebase deploy --only hosting,functions`.
+2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase`, authenticates via `google-github-actions/auth`, and runs `firebase deploy --only hosting,functions,firestore:rules`.
 
 ### Required CI Secrets
 
@@ -89,19 +89,31 @@ Create `functions/.env` (copied from `functions/.env.example`):
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
+NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<Firebase storage bucket>
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
+NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 ```
 
 Firebase Functions v2 reads this file automatically. Do **not** commit `.env` — it's in `.gitignore`.
 
 ### CI / production
 
-Set these four secrets in your GitHub repository Settings → Secrets → Actions:
+Set these secrets in your GitHub repository Settings → Secrets → Actions:
 
 | Secret | Purpose |
 |---|---|
 | `GOOGLE_MAPS_API_KEY` | Server-side Maps Static + Geocoding key |
 | `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places Autocomplete key (restricted by HTTP referrer in GCP Console) |
 | `REGRID_API_KEY` | Regrid Parcel API key |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web API key |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app ID |
 | `FIREBASE_SERVICE_ACCOUNT` | JSON service account key for Firebase deploy |
 
 The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result.
@@ -117,9 +129,10 @@ npm run test
 npm run test:e2e
 npx tsc --noEmit
 npm run build
+FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
 ```
 
-All commands must pass. CI (`.github/workflows/ci.yml`) runs the same gate.
+All commands must pass before promotion. CI (`.github/workflows/ci.yml`) runs the non-credentialed gates; run the Firebase smoke command with a dedicated test user before or after deploy.
 
 ## Post-Deploy Smoke Test
 
@@ -131,6 +144,7 @@ After deployment, manually verify:
 - Selecting `compact-lot` and `1,000 sf` displays the `Review needed` alert.
 - No console errors in the browser devtools.
 - The Share Link button copies the current scenario URL.
+- `FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase` signs in, saves a scenario to Firestore, loads it, and deletes it.
 - (If API keys configured) Address search returns parcel data via `/api/parcel`.
 
 ## Rollback
@@ -146,7 +160,7 @@ git revert <commit> && git push
 firebase deploy --only functions
 ```
 
-No data migration is required because the app stores all user state locally in the browser.
+Saved scenarios for authenticated users live in Firestore under `users/{uid}/savedScenarios`; rollback does not require a schema migration for the current create/load/delete flow.
 
 ## Audit Note
 

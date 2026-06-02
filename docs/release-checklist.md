@@ -10,6 +10,7 @@ Run against a clean install: `rm -rf node_modules .next && npm ci`
 - [ ] `npm run test:e2e` — all Playwright tests passing
 - [ ] `npx tsc --noEmit` — zero type errors
 - [ ] `npm run build` — production build succeeds
+- [ ] `FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase` - Firebase Auth sign-in and scenario save/load/delete pass against the deploy project
 
 ## Manual QA
 
@@ -33,6 +34,8 @@ Run against a clean install: `rm -rf node_modules .next && npm ci`
 - [ ] No secrets committed — check `.env.local`, `functions/.env` not staged
 - [ ] `npm audit` reviewed — no unsafe forced downgrade applied
 - [ ] API keys restricted — Google Places key restricted by HTTP referrer in GCP Console
+- [ ] Firebase Auth provider enabled - email/password sign-in works for the smoke test user
+- [ ] Firestore rules deployed - `users/{uid}/savedScenarios` allows owner create/read/delete and rejects malformed scenario payloads
 
 ## Firebase Deploy (if applicable)
 
@@ -41,3 +44,4 @@ Run against a clean install: `rm -rf node_modules .next && npm ci`
 - [ ] Site loads on Firebase Hosting URL
 - [ ] API routes return 200 on Firebase Functions URL
 - [ ] Address search works with live API keys
+- [ ] Scenario smoke command passes after deploy
