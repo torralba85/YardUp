@@ -39,7 +39,8 @@ export interface FeasibilityInspectorProps {
   onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
   onReset: () => void;
   onGenerateReport: () => void;
-  onSaveScenario?: () => void;
+  onSaveScenario?: () => Promise<void> | void;
+  savingScenario?: boolean;
   saveNotice?: string | null;
 }
 
@@ -54,6 +55,7 @@ export default function FeasibilityInspector({
   onReset,
   onGenerateReport,
   onSaveScenario,
+  savingScenario = false,
   saveNotice,
 }: FeasibilityInspectorProps) {
   const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, resetToPreset } = useParcel();
@@ -364,10 +366,11 @@ export default function FeasibilityInspector({
             <button
               type="button"
               onClick={onSaveScenario}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              disabled={savingScenario}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <BookmarkPlus size={16} />
-              {saveNotice ?? "Save Concept"}
+              {saveNotice ?? (savingScenario ? "Saving..." : "Save Concept")}
             </button>
           )}
           <button

@@ -99,7 +99,86 @@ service cloud.firestore {
       );
     }
 
-    function isValidScenario() {
+    function isValidAduConfig(config) {
+      return config is map &&
+        config.keys().hasOnly([
+          "footprint",
+          "width",
+          "length",
+          "height",
+          "roof",
+          "finish",
+          "includeOpenings"
+        ]) &&
+        config.keys().hasAll([
+          "footprint",
+          "width",
+          "length",
+          "height",
+          "roof",
+          "finish",
+          "includeOpenings"
+        ]) &&
+        config.footprint is number &&
+        config.footprint > 0 &&
+        config.footprint <= 2000 &&
+        config.width is number &&
+        config.width > 0 &&
+        config.width <= 80 &&
+        config.length is number &&
+        config.length > 0 &&
+        config.length <= 80 &&
+        config.height is number &&
+        config.height > 0 &&
+        config.height <= 30 &&
+        config.roof in ["shed", "gable", "flat"] &&
+        config.finish in ["cedar", "lap", "stucco", "board"] &&
+        config.includeOpenings is bool;
+    }
+
+    function isValidCostPerSqft(costs) {
+      return costs is map &&
+        costs.keys().hasOnly(["cedar", "lap", "stucco", "board"]) &&
+        costs.keys().hasAll(["cedar", "lap", "stucco", "board"]) &&
+        costs.cedar is number &&
+        costs.cedar >= 100 &&
+        costs.cedar <= 1000 &&
+        costs.lap is number &&
+        costs.lap >= 100 &&
+        costs.lap <= 1000 &&
+        costs.stucco is number &&
+        costs.stucco >= 100 &&
+        costs.stucco <= 1000 &&
+        costs.board is number &&
+        costs.board >= 100 &&
+        costs.board <= 1000;
+    }
+
+    function isValidFinancialAssumptions(assumptions) {
+      return assumptions is map &&
+        assumptions.keys().hasOnly([
+          "costPerSqft",
+          "softCostMultiplier",
+          "operatingExpenseRatio",
+          "rentScenario"
+        ]) &&
+        assumptions.keys().hasAll([
+          "costPerSqft",
+          "softCostMultiplier",
+          "operatingExpenseRatio",
+          "rentScenario"
+        ]) &&
+        isValidCostPerSqft(assumptions.costPerSqft) &&
+        assumptions.softCostMultiplier is number &&
+        assumptions.softCostMultiplier >= 1 &&
+        assumptions.softCostMultiplier <= 3 &&
+        assumptions.operatingExpenseRatio is number &&
+        assumptions.operatingExpenseRatio >= 0 &&
+        assumptions.operatingExpenseRatio <= 1 &&
+        assumptions.rentScenario in ["conservative", "market", "optimistic"];
+    }
+
+    function isValidNewScenario() {
       return request.resource.data.keys().hasOnly([
         "name",
         "parcelId",
@@ -112,8 +191,11 @@ service cloud.firestore {
       request.resource.data.name.size() > 0 &&
       request.resource.data.name.size() <= 160 &&
       request.resource.data.parcelId is string &&
-      request.resource.data.config is map &&
-      request.resource.data.assumptions is map;
+      request.resource.data.parcelId.size() > 0 &&
+      isValidAduConfig(request.resource.data.config) &&
+      isValidFinancialAssumptions(request.resource.data.assumptions) &&
+      request.resource.data.createdAt == request.time &&
+      request.resource.data.updatedAt == request.time;
     }
 
     match /users/{userId} {
@@ -123,7 +205,8 @@ service cloud.firestore {
       
       match /savedScenarios/{scenarioId} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isValidScenario();
+        allow create: if isOwner(userId) && isValidNewScenario();
+        allow update: if false;
         allow delete: if isOwner(userId);
       }
     }

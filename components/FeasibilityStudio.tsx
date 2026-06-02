@@ -94,6 +94,8 @@ function FeasibilityStudioInner() {
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
+  const [savingScenario, setSavingScenario] = useState(false);
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
 
@@ -172,6 +174,8 @@ function FeasibilityStudioInner() {
 
   async function handleSaveScenario() {
     if (typeof window === "undefined") return;
+    if (savingScenario) return;
+
     const entry = {
       name: `${activeParcel.address} - ${config.footprint} sf`,
       parcelId,
@@ -179,16 +183,24 @@ function FeasibilityStudioInner() {
       assumptions,
     };
 
-    if (user) {
-      const created = await saveSavedScenario(user.uid, entry);
-      setSavedScenarios((prev) => [created, ...prev]);
-    } else {
-      const store = createSavedScenarioStore(window.localStorage);
-      store.save(entry);
-      setSavedScenarios(store.list());
+    setSavingScenario(true);
+    setSaveNotice(null);
+    try {
+      if (user) {
+        const created = await saveSavedScenario(user.uid, entry);
+        setSavedScenarios((prev) => [created, ...prev]);
+      } else {
+        const store = createSavedScenarioStore(window.localStorage);
+        store.save(entry);
+        setSavedScenarios(store.list());
+      }
+      setSaveNotice("Saved");
+    } catch {
+      setSaveNotice("Save failed");
+    } finally {
+      setSavingScenario(false);
+      setTimeout(() => setSaveNotice(null), 2000);
     }
-    setSaveNotice("Saved");
-    setTimeout(() => setSaveNotice(null), 2000);
   }
 
   function handleLoadScenario(id: string) {
@@ -208,13 +220,18 @@ function FeasibilityStudioInner() {
 
   async function handleDeleteScenario(id: string) {
     if (typeof window === "undefined") return;
-    if (user) {
-      await deleteSavedScenario(user.uid, id);
-      setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
-    } else {
-      const store = createSavedScenarioStore(window.localStorage);
-      store.remove(id);
-      setSavedScenarios(store.list());
+    try {
+      if (user) {
+        await deleteSavedScenario(user.uid, id);
+        setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
+      } else {
+        const store = createSavedScenarioStore(window.localStorage);
+        store.remove(id);
+        setSavedScenarios(store.list());
+      }
+    } catch {
+      setDeleteNotice("Delete failed");
+      setTimeout(() => setDeleteNotice(null), 2000);
     }
   }
 
@@ -275,6 +292,7 @@ function FeasibilityStudioInner() {
       savedScenarios={savedScenarios}
       onLoadScenario={handleLoadScenario}
       onDeleteScenario={handleDeleteScenario}
+      deleteNotice={deleteNotice}
     >
       <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
@@ -321,6 +339,7 @@ function FeasibilityStudioInner() {
             onReset={resetScenario}
             onGenerateReport={handleGenerateReport}
             onSaveScenario={handleSaveScenario}
+            savingScenario={savingScenario}
             saveNotice={saveNotice}
           />
         )}
