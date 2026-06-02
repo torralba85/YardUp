@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
+import { Html, OrbitControls } from "@react-three/drei";
+import { Box, Home, Ruler } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, ParcelPreset } from "@/lib/feasibility";
@@ -36,6 +37,8 @@ interface ParcelSceneProps {
   onAduPositionChange?: (pos: [number, number]) => void;
 }
 
+type ViewMode = "overview" | "adu" | "setbacks";
+
 // Scene palette: architectural studio render with natural tones
 const SCENE = {
   ground: "#7a8b5e", // richer green lawn
@@ -64,6 +67,105 @@ const SCENE = {
 
 const SCENE_BACKDROP =
   "linear-gradient(180deg, #a8d8ea 0%, #c8e0d0 30%, #e8dcc8 60%, #d4c8b0 100%)";
+
+function SceneCallout({
+  eyebrow,
+  title,
+  detail,
+  position,
+  tone = "neutral",
+}: {
+  eyebrow: string;
+  title: string;
+  detail: string;
+  position: [number, number, number];
+  tone?: "neutral" | "ok" | "warn";
+}) {
+  const toneClass =
+    tone === "ok"
+      ? "border-lf-forest/30 bg-lf-forest text-lf-sand"
+      : tone === "warn"
+        ? "border-lf-amber/40 bg-lf-amber text-lf-espresso"
+        : "border-lf-hairline bg-lf-card/95 text-lf-espresso";
+
+  return (
+    <Html position={position} center distanceFactor={74} occlude>
+      <div
+        className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] backdrop-blur xl:block ${toneClass}`}
+      >
+        <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.12em] opacity-75">{eyebrow}</div>
+        <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
+        <div className="mt-1 text-[11px] leading-[1.45] opacity-80">{detail}</div>
+      </div>
+    </Html>
+  );
+}
+
+function SceneCameraChoreography({
+  mode,
+  parcel,
+  config,
+  aduPos,
+}: {
+  mode: ViewMode;
+  parcel: ParcelPreset;
+  config: ADUConfig;
+  aduPos: [number, number];
+}) {
+  const camera = useThree((state) => state.camera);
+  const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
+  const active = useRef(true);
+
+  const destination = useMemo(() => {
+    const [aduX, aduZ] = aduPos;
+    if (mode === "adu") {
+      return {
+        position: new THREE.Vector3(aduX + 30, Math.max(config.height + 24, 32), aduZ + 34),
+        target: new THREE.Vector3(aduX, config.height * 0.45, aduZ),
+      };
+    }
+    if (mode === "setbacks") {
+      return {
+        position: new THREE.Vector3(0, Math.max(parcel.lotLength * 0.7, 86), 8),
+        target: new THREE.Vector3(0, 0, 0),
+      };
+    }
+    return {
+      position: new THREE.Vector3(58, 58, 72),
+      target: new THREE.Vector3(0, 0, 0),
+    };
+  }, [aduPos, config.height, mode, parcel.lotLength]);
+
+  useEffect(() => {
+    active.current = true;
+  }, [destination]);
+
+  useFrame((_, delta) => {
+    if (!active.current) return;
+    const alpha = 1 - Math.exp(-delta * 4.8);
+    camera.position.lerp(destination.position, alpha);
+    if (controls) {
+      controls.target.lerp(destination.target, alpha);
+      controls.update();
+    } else {
+      camera.lookAt(destination.target);
+    }
+    const positionSettled = camera.position.distanceTo(destination.position) < 0.08;
+    const targetSettled = !controls || controls.target.distanceTo(destination.target) < 0.08;
+    if (positionSettled && targetSettled) {
+      camera.position.copy(destination.position);
+      if (controls) {
+        controls.target.copy(destination.target);
+        controls.update();
+      } else {
+        camera.lookAt(destination.target);
+      }
+      active.current = false;
+    }
+  });
+
+  return null;
+}
 
 function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompliant: boolean }) {
   const object = useMemo(() => {
@@ -349,19 +451,23 @@ function ProposedAdu({
   parcel,
   position: aduPos,
   onPositionChange,
+  showCallout = true,
 }: {
   config: ADUConfig;
   parcel: ParcelPreset;
   position: [number, number];
   onPositionChange?: (pos: [number, number]) => void;
+  showCallout?: boolean;
 }) {
   const finishColor = finishColors[config.finish];
   const y = config.height / 2;
   const groundPlaneRef = useRef<THREE.Mesh>(null);
   const isDragging = useRef(false);
+  const [isDraggingActive, setIsDraggingActive] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   // OrbitControls instance (registered via `makeDefault`). We suspend it while
   // the ADU is being dragged so a press on the building never doubles as a
-  // camera orbit — mouse drag on empty ground still orbits as normal. Held in a
+  // camera orbit â€” mouse drag on empty ground still orbits as normal. Held in a
   // ref so the pointer handlers can toggle `.enabled` without the React Compiler
   // flagging a render-scoped mutation.
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
@@ -391,6 +497,8 @@ function ProposedAdu({
       if (!onPositionChange) return;
       e.stopPropagation();
       isDragging.current = true;
+      setIsDraggingActive(true);
+      setIsHovered(true);
       if (controlsRef.current) controlsRef.current.enabled = false;
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
@@ -400,7 +508,7 @@ function ProposedAdu({
   const handlePointerMove = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       if (!isDragging.current || !onPositionChange) return;
-      // e.ray is the pre-computed raycasting ray from R3F — no allocation needed.
+      // e.ray is the pre-computed raycasting ray from R3F â€” no allocation needed.
       const { origin, direction } = e.ray;
       if (direction.y === 0) return;
       const t = -origin.y / direction.y;
@@ -413,16 +521,26 @@ function ProposedAdu({
 
   const handlePointerUp = useCallback(() => {
     isDragging.current = false;
+    setIsDraggingActive(false);
     if (controlsRef.current) controlsRef.current.enabled = true;
   }, []);
 
   const [x, z] = aduPos;
   const isInsideSetback = x >= buildableArea.minX && x <= buildableArea.maxX && z >= buildableArea.minZ && z <= buildableArea.maxZ;
 
+  useEffect(() => {
+    if (!isHovered && !isDraggingActive) return;
+    const previousCursor = document.body.style.cursor;
+    document.body.style.cursor = isDraggingActive ? "grabbing" : "grab";
+    return () => {
+      document.body.style.cursor = previousCursor;
+    };
+  }, [isDraggingActive, isHovered]);
+
   return (
     <>
       {/* Invisible ground plane: tracks the cursor across the whole lot during
-          an active drag. It deliberately has NO onPointerDown — a drag can only
+          an active drag. It deliberately has NO onPointerDown â€” a drag can only
           begin on the ADU group below, so pressing empty ground orbits the
           camera instead of snatching the building. */}
       <mesh
@@ -436,7 +554,18 @@ function ProposedAdu({
         <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
       </mesh>
 
-      <group position={[x, 0, z]} onPointerDown={handlePointerDown}>
+      <group
+        position={[x, isHovered ? 0.35 : 0, z]}
+        onPointerDown={handlePointerDown}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          setIsHovered(true);
+        }}
+        onPointerOut={() => {
+          if (!isDragging.current) setIsHovered(false);
+        }}
+        onPointerUp={handlePointerUp}
+      >
         {/* Shadow indicator on ground */}
         <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[config.width + 1, config.length + 1]} />
@@ -450,7 +579,12 @@ function ProposedAdu({
         {/* ADU body */}
         <mesh position={[0, y, 0]} castShadow receiveShadow>
           <boxGeometry args={[config.width, config.height, config.length]} />
-          <meshStandardMaterial color={finishColor} roughness={0.74} />
+          <meshStandardMaterial
+            color={finishColor}
+            roughness={0.74}
+            emissive={isHovered ? "#f3c87a" : "#000000"}
+            emissiveIntensity={isHovered ? 0.16 : 0}
+          />
         </mesh>
 
         {/* Roof */}
@@ -492,11 +626,25 @@ function ProposedAdu({
 
         {/* Label */}
         <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
+        {showCallout && (
+          <SceneCallout
+            eyebrow={isInsideSetback ? "Concept fit" : "Needs review"}
+            title={`${config.width} x ${config.length} ft ADU`}
+            detail={isHovered ? "Drag to reposition inside the buildable envelope." : `${config.finish} finish, ${config.roof} roof.`}
+            position={[config.width * 0.35, config.height + 7, -config.length / 2 - 3]}
+            tone={isInsideSetback ? "ok" : "warn"}
+          />
+        )}
 
         {/* Setback compliance indicator ring */}
         <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
-          <meshBasicMaterial color={isInsideSetback ? SCENE.boundaryOk : SCENE.boundaryOver} transparent opacity={0.6} side={THREE.DoubleSide} />
+          <meshBasicMaterial
+            color={isInsideSetback ? SCENE.boundaryOk : SCENE.boundaryOver}
+            transparent
+            opacity={isHovered ? 0.86 : 0.6}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       </group>
     </>
@@ -505,6 +653,7 @@ function ProposedAdu({
 
 export default function ParcelScene({ parcel, config, isCompliant, aduPosition, onAduPositionChange }: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("overview");
   const restoreTimer = useRef<number | null>(null);
   const keysDown = useRef(new Set<string>());
   const animFrame = useRef<number | null>(null);
@@ -547,7 +696,7 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
     [onAduPositionChange],
   );
 
-  // Arrow-key ADU placement: ←→ moves X (side-to-side), ↑↓ moves Z (front/back).
+  // Arrow-key ADU placement: â†â†’ moves X (side-to-side), â†‘â†“ moves Z (front/back).
   // Movement is delta-time based (feet per *second*), so it feels identical on a
   // 60Hz or 120Hz display and a quick tap nudges rather than rockets the ADU.
   useEffect(() => {
@@ -640,7 +789,7 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
   }, []);
 
   // R3F sizes the canvas from react-use-measure's initial ResizeObserver callback,
-  // which is dropped under Next dev's StrictMode double-mount — the canvas stays at
+  // which is dropped under Next dev's StrictMode double-mount â€” the canvas stays at
   // its 300x150 default and the scene renders into a tiny corner. The hook's window
   // 'resize' listener stays live, so dispatching one resize after layout forces the
   // canvas to fill its parent. Harmless in production where the initial measure works.
@@ -726,8 +875,27 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
 
         <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
         <SetbackLines parcel={parcel} />
+        {viewMode === "overview" && (
+          <SceneCallout
+            eyebrow="Buildable envelope"
+            title={isCompliant ? "Within declared limits" : "Local review likely"}
+            detail={`${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side setbacks.`}
+            position={[
+              -parcel.lotWidth / 2 + parcel.setbacks.side + 12,
+              6,
+              -parcel.lotLength / 2 + parcel.setbacks.rear + 18,
+            ]}
+            tone={isCompliant ? "ok" : "warn"}
+          />
+        )}
         <ExistingHouse parcel={parcel} />
-        <ProposedAdu config={config} parcel={parcel} position={aduPos} onPositionChange={handleAduPosChange} />
+        <ProposedAdu
+          config={config}
+          parcel={parcel}
+          position={aduPos}
+          onPositionChange={handleAduPosChange}
+          showCallout={viewMode === "overview"}
+        />
 
         {/* Landscape elements */}
         <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
@@ -757,13 +925,34 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
 
         <gridHelper args={[160, 32, SCENE.gridCenter, SCENE.gridLine]} position={[0, 0.02, 0]} />
         <OrbitControls enableDamping dampingFactor={0.06} makeDefault maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
+        <SceneCameraChoreography mode={viewMode} parcel={parcel} config={config} aduPos={aduPos} />
       </Canvas>
       </ErrorBoundary>
 
-      <div className="pointer-events-none absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
-        <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">3D</span>
-        <span className="px-2 py-1">Drag empty space: orbit</span>
-        <span className="px-2 py-1">Drag ADU / ↑↓←→: move it</span>
+      <div className="absolute bottom-24 right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card/90 p-1 shadow-sm backdrop-blur">
+        {[
+          { mode: "overview" as const, label: "Overview", icon: Home },
+          { mode: "adu" as const, label: "ADU", icon: Box },
+          { mode: "setbacks" as const, label: "Setbacks", icon: Ruler },
+        ].map(({ mode, label, icon: Icon }) => {
+          const active = viewMode === mode;
+          return (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              aria-pressed={active}
+              className={`inline-flex h-9 min-w-9 items-center justify-center gap-2 rounded px-2.5 text-xs font-semibold leading-none transition-colors sm:min-w-[86px] ${
+                active
+                  ? "bg-lf-mahogany text-lf-sand"
+                  : "text-lf-espresso hover:bg-lf-taupe/10 focus-visible:bg-lf-taupe/10"
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
@@ -807,7 +996,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
       className="relative h-full min-h-[460px] overflow-hidden bg-lf-sand flex flex-col items-center justify-center p-6"
       style={{ backgroundImage: SCENE_BACKDROP }}
     >
-      {/* 2D Mode Badge — hidden on mobile to match the 3D badge and avoid
+      {/* 2D Mode Badge â€” hidden on mobile to match the 3D badge and avoid
           overlapping the income-potential overlay card on narrow screens. */}
       <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
