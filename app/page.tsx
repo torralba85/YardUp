@@ -9,38 +9,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { FloatingNavBar } from "@/components/FloatingNavBar";
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-lf-sand text-lf-espresso">
-      <header className="border-b border-lf-hairline/50">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" aria-label="LotFoundry home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lotfoundry-lockup-horizontal.svg"
-              alt="LotFoundry"
-              className="h-8 w-auto"
-            />
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="rounded-md px-4 py-2 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-md bg-lf-mahogany px-4 py-2 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-clay"
-            >
-              Estimate my lot
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <FloatingNavBar />
 
-      <section className="mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">
+      <section className="mx-auto max-w-7xl px-6 pb-20 pt-32 md:pt-40">
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_minmax(0,480px)] lg:gap-16">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-lf-hairline bg-lf-card px-3 py-1.5 text-xs font-medium text-lf-muted">
