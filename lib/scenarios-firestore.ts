@@ -23,6 +23,24 @@ function userScenariosRef(uid: string) {
   return collection(db, "users", uid, COLLECTION);
 }
 
+/**
+ * Back-compat shim for ADU configs. An earlier iteration of this feature
+ * persisted configs with `roofStyle` / `exteriorFinish`; alias those to the
+ * current `roof` / `finish` keys so any documents written by that build still
+ * pass validation. Missing fields are deliberately NOT defaulted —
+ * isValidSavedScenario remains the gate, so genuinely-incomplete documents are
+ * rejected rather than surfaced with fabricated numbers in a financial estimate.
+ */
+function migrateLegacyConfig(raw: unknown): unknown {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return raw;
+  const config = raw as Record<string, unknown>;
+  return {
+    ...config,
+    roof: config.roof ?? config.roofStyle,
+    finish: config.finish ?? config.exteriorFinish,
+  };
+}
+
 function firestoreToScenario(
   id: string,
   data: Record<string, unknown>,
@@ -35,7 +53,7 @@ function firestoreToScenario(
         ? data.createdAt.toDate().toISOString()
         : (data.createdAt as string) || new Date().toISOString(),
     parcelId: (data.parcelId as string) || "",
-    config: data.config,
+    config: migrateLegacyConfig(data.config),
     assumptions: data.assumptions,
   };
 
