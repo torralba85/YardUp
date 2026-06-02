@@ -18,26 +18,37 @@ Run the following script to list candidates for cleanup:
 # Fetch latest remote information and prune deleted remotes
 git fetch --all --prune
 
-# List all remote branches merged into origin/master (safe to delete immediately)
-git branch -r --merged origin/master
+# List remote branches merged into origin/master, excluding the default branch/HEAD
+git branch -r --merged origin/master \
+  | sed 's/^ *//' \
+  | grep -Ev '^(origin/HEAD|origin/master)$'
 
-# List all remote branches that have had no commits in the last 45 days
-git for-each-ref --sort=-committerdate --format='%(committerdate:relative)%09%(refname:short)' refs/remotes/origin | grep "days ago" | awk -F'\t' '$1 ~ /([4-9][0-9]|1[0-9][0-9]) days/ {print $0}'
+# List remote branches that have had no commits in the last 45 days
+cutoff=$(date -d "45 days ago" +%s 2>/dev/null || date -v-45d +%s)
+git for-each-ref --sort=-committerdate --format='%(committerdate:unix)%09%(refname:short)' refs/remotes/origin \
+  | while IFS=$'\t' read -r committed_at ref; do
+      case "$ref" in
+        origin/HEAD|origin/master) continue ;;
+      esac
+      if [ "$committed_at" -lt "$cutoff" ]; then
+        echo "$ref"
+      fi
+    done
 ```
 
 ### Step 2: Communication & Warning
-*   For **fully merged branches**, delete them immediately from the remote.
+*   For **fully merged branches**, delete them from the remote after confirming they are not `origin/HEAD` or `origin/master`.
 *   For **inactive, unmerged branches**:
     1.  Identify the author of the branch using `git log -1 --format="%an <%ae>" <branch-name>`.
-    2.  Send a automated/templated Slack message or comment on the related issue:
+    2.  Send an automated/templated Slack message or comment on the related issue:
         > *"Hi @username, your branch `<branch-name>` has been inactive for over 45 days. It is scheduled for deletion on Friday. If you are still working on this, please push a commit or let us know. Otherwise, we will remove the remote branch."*
 
 ### Step 3: Deletion Policy
-*   If no response or commit activity occurs within **5 business days** of the warning, delete the branch from the remote:
-    `git push origin --delete <branch-name>`
+*   If no response or commit activity occurs within **5 business days** of the warning, delete the branch from the remote. Strip the `origin/` prefix before deleting:
+    `git push origin --delete <branch-name-without-origin-prefix>`
 
 ### Step 4: Archival (Safeguard)
 *   Before deleting any highly complex unmerged branches, take a git tag snapshot for backup:
-    `git tag archive/<branch-name>-backup <branch-name>`
+    `git tag archive/<branch-name>-backup origin/<branch-name>`
     `git push origin archive/<branch-name>-backup`
 *   This ensures that work is never permanently lost and can be recovered if the feature is resurrected.
