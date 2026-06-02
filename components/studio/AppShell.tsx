@@ -22,6 +22,7 @@ export interface AppShellProps {
   savedScenarios?: SavedScenario[];
   onLoadScenario?: (id: string) => void;
   onDeleteScenario?: (id: string) => void;
+  deleteNotice?: string | null;
   children: React.ReactNode;
 }
 
@@ -34,6 +35,7 @@ export default function AppShell({
   savedScenarios = [],
   onLoadScenario,
   onDeleteScenario,
+  deleteNotice,
   children,
 }: AppShellProps) {
   const { profile, logout } = useAuth();
@@ -138,6 +140,11 @@ export default function AppShell({
                     </li>
                   ))}
                 </ul>
+                {deleteNotice && (
+                  <p role="status" className="mt-2 text-[11px] text-lf-brick">
+                    {deleteNotice}
+                  </p>
+                )}
               </div>
             )}
 

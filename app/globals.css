@@ -224,6 +224,9 @@ input {
     background-size: 250% 100%;
     -webkit-background-clip: text;
     background-clip: text;
+    /* Fill must be transparent for the clipped gradient to show through;
+       currentColor in the gradient still resolves to the text's clay color. */
+    -webkit-text-fill-color: transparent;
     animation: lf-shimmer 6s ease-in-out 1.6s infinite;
   }
 }

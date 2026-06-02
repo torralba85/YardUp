@@ -94,6 +94,7 @@ function FeasibilityStudioInner() {
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
   const [savingScenario, setSavingScenario] = useState(false);
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
@@ -229,8 +230,8 @@ function FeasibilityStudioInner() {
         setSavedScenarios(store.list());
       }
     } catch {
-      setSaveNotice("Delete failed");
-      setTimeout(() => setSaveNotice(null), 2000);
+      setDeleteNotice("Delete failed");
+      setTimeout(() => setDeleteNotice(null), 2000);
     }
   }
 
@@ -291,6 +292,7 @@ function FeasibilityStudioInner() {
       savedScenarios={savedScenarios}
       onLoadScenario={handleLoadScenario}
       onDeleteScenario={handleDeleteScenario}
+      deleteNotice={deleteNotice}
     >
       <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
