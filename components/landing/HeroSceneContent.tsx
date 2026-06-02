@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import type { MotionValue } from "motion/react";
 import * as THREE from "three";
-import { localStageProgress, clamp01 } from "@/lib/landing-stages";
+import { localStageProgress, clamp01, lerp } from "@/lib/landing-stages";
 
 // Warm, brand-aligned scene palette (subset of ParcelScene's SCENE).
 const C = {
@@ -53,28 +55,59 @@ function GableRoof({ w, d, wallH, ridge }: { w: number; d: number; wallH: number
   );
 }
 
+const BODY_W = 18;
+const BODY_D = 12;
+const BODY_H = 8;
+
 /**
- * The lot + ADU. Everything animates from `progress` (0..1):
- *  - 'rise' stage scales the ADU up out of the ground and drops the roof in.
- *  - 'numbers'/'report' stages light the windows.
+ * The lot + ADU scene. A SINGLE source of truth — the `progress` MotionValue —
+ * is read once per frame inside `useFrame` and applied imperatively to refs
+ * (camera, ADU group, window material). Geometry is memoized and the R3F tree
+ * never re-renders on scroll, so the scene stays jank-free. Math lives in the
+ * unit-tested helpers (localStageProgress/clamp01/lerp); the scene only applies it.
  */
-export function HeroSceneContent({ progress }: { progress: number }) {
-  const rise = localStageProgress(progress, "rise");
-  const lit = clamp01((progress - 0.5) / 0.15); // windows glow as numbers appear
+export function HeroSceneContent({ progress }: { progress: MotionValue<number> }) {
+  const aduGroup = useRef<THREE.Group>(null);
+  const padGroup = useRef<THREE.Group>(null);
+  const camera = useThree((s) => s.camera);
+  const invalidate = useThree((s) => s.invalidate);
 
-  const bodyW = 18;
-  const bodyD = 12;
-  const bodyH = 8;
-  const built = Math.max(rise, 0.001);
+  // Window materials are declared as JSX children with refs, then their
+  // emissiveIntensity is mutated per frame in useFrame — the idiomatic R3F
+  // pattern that satisfies the React Compiler ref/immutability rules.
+  const win1 = useRef<THREE.MeshStandardMaterial>(null);
+  const win2 = useRef<THREE.MeshStandardMaterial>(null);
 
-  const winMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      color: C.window, roughness: 0.25, metalness: 0.2,
-      emissive: new THREE.Color(C.window),
-    });
-    m.emissiveIntensity = lit * 0.9;
-    return m;
-  }, [lit]);
+  // Demand frameloop: request a render whenever scroll progress changes.
+  useEffect(() => {
+    const stop = progress.on("change", invalidate);
+    invalidate(); // paint the initial frame from the starting progress
+    return stop;
+  }, [progress, invalidate]);
+
+  useFrame(() => {
+    const p = progress.get();
+    const rise = localStageProgress(p, "rise");
+    const built = Math.max(rise, 0.001);
+    const lit = clamp01((p - 0.5) / 0.15);
+
+    if (aduGroup.current) {
+      aduGroup.current.scale.y = built;
+      aduGroup.current.visible = rise > 0.001;
+    }
+    if (padGroup.current) {
+      padGroup.current.scale.y = built;
+      padGroup.current.position.y = 0.1 * built;
+      padGroup.current.visible = rise > 0.001;
+    }
+    if (win1.current) win1.current.emissiveIntensity = lit * 0.9;
+    if (win2.current) win2.current.emissiveIntensity = lit * 0.9;
+
+    // Slow cinematic orbit, derived purely from progress.
+    const az = lerp(0.66, 0.32, p);
+    camera.position.set(Math.sin(az) * 70, 44, Math.cos(az) * 70);
+    camera.lookAt(2, 4, -2);
+  });
 
   return (
     <group>
@@ -99,35 +132,47 @@ export function HeroSceneContent({ progress }: { progress: number }) {
         <lineBasicMaterial color={C.setback} transparent opacity={0.7} />
       </lineSegments>
 
-      {/* Pad + ADU only exist once the build begins, so the 'lot' stage reads
-          as a clean, empty parcel. Both scale up in Y during 'rise'. */}
-      {rise > 0.001 && (
-        <group>
-          {/* Concrete pad */}
-          <mesh position={[6, 0.1 * built, -4]} scale={[1, built, 1]} receiveShadow>
-            <boxGeometry args={[bodyW + 3, 0.4, bodyD + 3]} />
-            <meshStandardMaterial color={C.pad} roughness={0.92} />
-          </mesh>
+      {/* Concrete pad — scales up in Y with the build (visibility toggled per frame) */}
+      <group ref={padGroup} position={[6, 0, -4]} visible={false}>
+        <mesh receiveShadow>
+          <boxGeometry args={[BODY_W + 3, 0.4, BODY_D + 3]} />
+          <meshStandardMaterial color={C.pad} roughness={0.92} />
+        </mesh>
+      </group>
 
-          {/* ADU — scales up out of the ground during 'rise' */}
-          <group position={[6, 0, -4]} scale={[1, built, 1]}>
-            <mesh position={[0, bodyH / 2, 0]} castShadow receiveShadow>
-              <boxGeometry args={[bodyW, bodyH, bodyD]} />
-              <meshStandardMaterial color={C.wall} roughness={0.82} />
-            </mesh>
-            <GableRoof w={bodyW} d={bodyD} wallH={bodyH} ridge={4} />
-            {/* Front windows */}
-            <mesh position={[-4, bodyH * 0.45, bodyD / 2 + 0.05]} material={winMat}>
-              <boxGeometry args={[4, 3.4, 0.3]} />
-            </mesh>
-            <mesh position={[4, bodyH * 0.4, bodyD / 2 + 0.05]} material={winMat}>
-              <boxGeometry args={[3, 4.4, 0.3]} />
-            </mesh>
-          </group>
-        </group>
-      )}
+      {/* ADU — scales up out of the ground during 'rise' (driven via ref) */}
+      <group ref={aduGroup} position={[6, 0, -4]} visible={false}>
+        <mesh position={[0, BODY_H / 2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[BODY_W, BODY_H, BODY_D]} />
+          <meshStandardMaterial color={C.wall} roughness={0.82} />
+        </mesh>
+        <GableRoof w={BODY_W} d={BODY_D} wallH={BODY_H} ridge={4} />
+        {/* Front windows — soft-emissive, intensity driven per frame via refs */}
+        <mesh position={[-4, BODY_H * 0.45, BODY_D / 2 + 0.05]}>
+          <boxGeometry args={[4, 3.4, 0.3]} />
+          <meshStandardMaterial
+            ref={win1}
+            color={C.window}
+            emissive={C.window}
+            emissiveIntensity={0}
+            roughness={0.25}
+            metalness={0.2}
+          />
+        </mesh>
+        <mesh position={[4, BODY_H * 0.4, BODY_D / 2 + 0.05]}>
+          <boxGeometry args={[3, 4.4, 0.3]} />
+          <meshStandardMaterial
+            ref={win2}
+            color={C.window}
+            emissive={C.window}
+            emissiveIntensity={0}
+            roughness={0.25}
+            metalness={0.2}
+          />
+        </mesh>
+      </group>
 
-      {/* Lighting — warm key + hemisphere fill + soft contact shadow */}
+      {/* Lighting — warm key + hemisphere fill + soft shadow */}
       <hemisphereLight args={[0xffffff, 0x46351f, 1.1]} />
       <directionalLight
         castShadow
