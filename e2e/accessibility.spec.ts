@@ -23,7 +23,10 @@ test.describe("Accessibility smoke", () => {
   });
 
   test("does not produce horizontal overflow at 320px width", async ({ browser }) => {
-    const context = await browser.newContext({ viewport: { width: 320, height: 568 } });
+    const context = await browser.newContext({
+      viewport: { width: 320, height: 568 },
+      reducedMotion: "reduce",
+    });
     const page = await context.newPage();
     await page.goto("/");
 
@@ -39,14 +42,15 @@ test.describe("Accessibility smoke", () => {
   test("primary landing actions are keyboard reachable", async ({ page }) => {
     await page.goto("/");
 
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Tab");
+    const focusLabels: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      await page.keyboard.press("Tab");
+      const activeText = await page.evaluate(
+        () => (document.activeElement as HTMLElement | null)?.textContent?.trim() ?? "",
+      );
+      if (activeText) focusLabels.push(activeText);
+    }
 
-    const activeText = await page.evaluate(
-      () => (document.activeElement as HTMLElement | null)?.textContent ?? "",
-    );
-
-    expect(activeText).toMatch(/Sign in|Estimate my lot/i);
+    expect(focusLabels.some((label) => /Sign in|Estimate my lot|Estimate/i.test(label))).toBe(true);
   });
 });

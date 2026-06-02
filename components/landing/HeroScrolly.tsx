@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useScroll } from "motion/react";
+import { useScroll, useSpring } from "motion/react";
 import { LotAduScene } from "./LotAduScene";
 import { StageCaptions } from "./StageCaptions";
 import { HeroStaticFrame } from "./HeroStory2D";
@@ -18,13 +18,19 @@ export default function HeroScrolly() {
     target: ref,
     offset: ["start start", "end end"],
   });
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 72,
+    damping: 28,
+    mass: 0.42,
+    restDelta: 0.001,
+  });
 
   return (
-    <section ref={ref} className="relative h-[320vh]">
-      <div className="sticky top-0 grid h-screen grid-cols-1 lg:grid-cols-2">
-        <StageCaptions progress={scrollYProgress} />
+    <section ref={ref} className="relative h-[360vh]">
+      <div className="sticky top-0 grid h-svh grid-cols-1 overflow-hidden lg:grid-cols-[0.92fr_1.08fr]">
+        <StageCaptions progress={smoothProgress} />
         <div className="relative h-full">
-          <LotAduScene progress={scrollYProgress} fallback={<HeroStaticFrame />} />
+          <LotAduScene progress={smoothProgress} fallback={<HeroStaticFrame />} />
         </div>
       </div>
     </section>

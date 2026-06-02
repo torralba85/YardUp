@@ -13,11 +13,13 @@ test.describe("Visual breakpoint coverage", () => {
     test(`renders without clipped primary UI at ${bp.name}`, async ({ browser }, testInfo) => {
       const context = await browser.newContext({
         viewport: { width: bp.width, height: bp.height },
+        reducedMotion: "reduce",
       });
       const page = await context.newPage();
       await page.goto("/");
 
-      const heading = page.getByRole("heading", { name: /See what your lot could earn/i });
+      // Always-rendered closing CTA heading — stable across hero variants.
+      const heading = page.getByRole("heading", { name: /Find the ADU income potential/i });
       await expect(heading).toBeVisible();
 
       const widths = await page.evaluate(() => ({

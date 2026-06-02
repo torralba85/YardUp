@@ -68,6 +68,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${outfit.variable} ${manrope.variable}`}
+      data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>

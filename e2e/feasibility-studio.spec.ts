@@ -15,11 +15,13 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/");
 
     await expect(page).toHaveTitle(/LotFoundry \| ADU Income Potential/);
+    // Reduced-motion renders the static hero frame: the income snapshot proof.
+    await expect(page.getByText("$2,350").first()).toBeVisible();
+    await expect(page.getByText(/estimated monthly rent/i).first()).toBeVisible();
+    // Always-rendered closing CTA heading (mode-independent).
     await expect(
-      page.getByRole("heading", { name: /See what your lot could earn/i }),
+      page.getByRole("heading", { name: /Find the ADU income potential/i }),
     ).toBeVisible();
-    await expect(page.getByText("ADU income snapshot", { exact: true })).toBeVisible();
-    await expect(page.getByText("$2,350")).toBeVisible();
     await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toHaveAttribute(
       "href",
       "/signup",
