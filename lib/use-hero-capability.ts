@@ -29,6 +29,10 @@ const MIN_3D_WIDTH = 1024;
 export function useHeroCapability(): HeroMode {
   const [mode, setMode] = useState<HeroMode>("static");
 
+  // Capability can only be read after mount (browser APIs + window size). We
+  // intentionally default to "static" for SSR/first paint, then upgrade once —
+  // the same on-mount detect-and-setState pattern as components/ParcelScene.tsx.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -44,6 +48,7 @@ export function useHeroCapability(): HeroMode {
       }),
     );
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return mode;
 }
