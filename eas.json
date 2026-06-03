@@ -14,7 +14,11 @@
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "distribution": "store",
+      "environment": "production",
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {

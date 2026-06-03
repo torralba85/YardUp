@@ -14,7 +14,14 @@
     "backend:test": "npm --prefix functions test",
     "backend:typecheck": "npm --prefix functions run typecheck",
     "firebase:check": "node scripts/firebase-config-check.mjs",
-    "release:check": "node scripts/release-check.mjs"
+    "release:check": "node scripts/release-check.mjs",
+    "store:check": "node scripts/store-rollout-check.mjs",
+    "rollout:check": "npm run release:check && npm run store:check",
+    "eas:version": "npx eas-cli@latest --version",
+    "build:preview": "npx eas-cli@latest build --profile preview --platform all",
+    "build:production": "npx eas-cli@latest build --profile production --platform all",
+    "submit:ios": "node scripts/eas-submit-from-env.mjs ios",
+    "submit:android": "node scripts/eas-submit-from-env.mjs android"
   },
   "dependencies": {
     "@expo-google-fonts/fraunces": "^0.4.1",
@@ -50,6 +57,10 @@
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.1.6"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "uuid": "^11.1.1"
   },
   "private": true
 }

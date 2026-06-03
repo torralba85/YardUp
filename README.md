@@ -49,6 +49,8 @@ npm run android
 npm run typecheck
 npm test
 npm run release:check
+npm run store:check
+npm run rollout:check
 ```
 
 ## Firebase Configuration
@@ -96,10 +98,13 @@ For deployment, confirm `.firebaserc` targets `yardup-2026`, provide the native 
 ## Builds
 
 ```bash
-npx eas build --profile preview --platform ios
-npx eas build --profile preview --platform android
-npx eas build --profile production --platform all
+npm run eas:version
+npm run build:preview
+npm run build:production
 ```
+
+`build:production` creates store-distribution artifacts for both platforms. Android production builds are explicit
+Google Play App Bundles (`.aab`), and EAS auto-increments native build numbers.
 
 ## Privacy Defaults
 
@@ -119,6 +124,27 @@ Production and preview native builds require these EAS **File** environment vari
 `GEMINI_API_KEY` belongs in Firebase Functions runtime config or Secret Manager, never in Expo client config.
 
 The app still runs offline when Firebase values are absent, but store review builds must use the production Firebase project so callable features can be reviewed.
+
+Store submission also requires account-owned values that are not safe to fake in source:
+
+- `EXPO_APPLE_ID`: Apple ID email for App Store Connect.
+- `EXPO_ASC_APP_ID`: numeric App Store Connect app ID for the YardUp listing.
+- `EXPO_APPLE_TEAM_ID`: Apple Developer Team ID.
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_PATH`: ignored local JSON key path, or an EAS secret reference such as `@secret:GOOGLE_PLAY_SERVICE_ACCOUNT`.
+
+`npm run store:check` verifies the production EAS build profile, Google Play App Bundle output, internal-track Android submission, store metadata, legal/review docs, and the account values above. `npm run rollout:check` runs both the code release gate and the store-submission gate.
+
+The submit scripts read the account values from the environment, temporarily write them into the production EAS submit profile required by EAS Submit, run the submission, and restore `eas.json` afterward. Do not run raw `eas submit` while `eas.json` still contains `REPLACE_WITH_*` values.
+
+After `npm run rollout:check` passes:
+
+```bash
+npm run build:production
+npm run submit:ios
+npm run submit:android
+```
+
+Submit Android to the internal track first and ship iOS through TestFlight before public review.
 
 Addresses outside sourced jurisdiction coverage enter a `local-review` state: earning potential remains available, while parcel facts, permit guidance, and builder matches require local verification. A recorded builder outreach submission is not delivery; a packet is commercially eligible only after the homeowner consents and a future verified delivery event is recorded. Local retries and pending submissions are not chargeable events.
 
