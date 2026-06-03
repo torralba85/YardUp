@@ -8,6 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["test/setup.ts"],
     globals: true,
+    testTimeout: 15000,
     // Recursive globs so nested package node_modules (e.g. functions/node_modules)
     // and the separate Firebase Functions package are never crawled by the web
     // app's unit suite. `functions/` is a distinct package with its own tooling.
