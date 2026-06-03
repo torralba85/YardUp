@@ -7,8 +7,12 @@ import { ArrowRight } from "lucide-react";
 export function FloatingNavBar() {
   const { scrollY } = useScroll();
 
-  // Map scroll position to different visual states
-  const width = useTransform(scrollY, [0, 100], ["100%", "850px"]);
+  // Map scroll position to different visual states.
+  // Width is kept at 100% (static) and maxWidth transitions from a large value
+  // to 850px — both values share the px unit so Framer Motion interpolates cleanly.
+  // Using ["100%","850px"] directly breaks because Framer Motion strips the "%"
+  // suffix and treats it as px, collapsing the bar to 100px at scroll 0.
+  const maxWidth = useTransform(scrollY, [0, 100], [9999, 850]);
   const paddingY = useTransform(scrollY, [0, 100], ["16px", "12px"]);
   const top = useTransform(scrollY, [0, 100], ["0px", "24px"]);
   const borderRadius = useTransform(scrollY, [0, 100], ["0px", "100px"]);
@@ -39,7 +43,8 @@ export function FloatingNavBar() {
     <div className="fixed left-0 right-0 top-0 z-50 flex justify-center pointer-events-none">
       <motion.header
         style={{
-          width,
+          width: "100%",
+          maxWidth,
           paddingTop: paddingY,
           paddingBottom: paddingY,
           marginTop: top,
