@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import {
@@ -23,11 +24,13 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
+type UserRole = "user" | "builder";
+
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string | null;
-  role: "user" | "builder";
+  role: UserRole;
   createdAt: Date | null;
 }
 
@@ -40,9 +43,9 @@ interface AuthContextType {
     email: string,
     password: string,
     displayName: string,
-    role: "user" | "builder",
+    role: UserRole,
   ) => Promise<UserCredential>;
-  signInWithGoogle: () => Promise<UserCredential>;
+  signInWithGoogle: (role?: UserRole) => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
 }
@@ -53,14 +56,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const pendingProfileRole = useRef<UserRole>("user");
 
   const fetchProfile = useCallback(async (u: User) => {
     const docRef = doc(db, "users", u.uid);
+    const role = pendingProfileRole.current;
     const fallbackProfile: UserProfile = {
       uid: u.uid,
       email: u.email || "",
       displayName: u.displayName || null,
-      role: "user",
+      role,
       createdAt: null,
     };
 
@@ -78,8 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         await setDoc(docRef, {
           displayName: u.displayName || null,
-          email: u.email || null,
-          role: "user",
+          email: u.email || "",
+          role,
           createdAt: serverTimestamp(),
         }, { merge: true });
         setProfile(fallbackProfile);
@@ -112,8 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     displayName: string,
-    role: "user" | "builder",
+    role: UserRole,
   ) => {
+    pendingProfileRole.current = role;
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName });
     await setDoc(doc(db, "users", cred.user.uid), {
@@ -122,12 +128,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       createdAt: serverTimestamp(),
     });
+    setProfile({
+      uid: cred.user.uid,
+      email,
+      displayName,
+      role,
+      createdAt: null,
+    });
     return cred;
   };
 
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async (role: UserRole = "user") => {
+    pendingProfileRole.current = role;
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    provider.setCustomParameters({ prompt: "select_account" });
+    const cred = await signInWithPopup(auth, provider);
+    const docRef = doc(db, "users", cred.user.uid);
+    const snap = await getDoc(docRef);
+
+    if (!snap.exists()) {
+      await setDoc(docRef, {
+        displayName: cred.user.displayName || null,
+        email: cred.user.email || "",
+        role,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    }
+
+    await fetchProfile(cred.user);
+    return cred;
   };
 
   const logout = () => signOut(auth);
