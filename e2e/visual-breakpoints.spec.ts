@@ -18,6 +18,7 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
+      await expect(page.getByRole("heading", { name: /Know what your lot could earn/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.
       const heading = page.getByRole("heading", { name: /Find the ADU income potential/i });
       await expect(heading).toBeVisible();

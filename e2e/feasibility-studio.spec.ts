@@ -15,6 +15,7 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/");
 
     await expect(page).toHaveTitle(/LotFoundry \| ADU Income Potential/);
+    await expect(page.getByRole("heading", { name: /Know what your lot could earn/i })).toBeVisible();
     // Reduced-motion renders the static hero frame: the income snapshot proof.
     await expect(page.getByText("$2,350").first()).toBeVisible();
     await expect(page.getByText(/estimated monthly rent/i).first()).toBeVisible();
@@ -82,4 +83,3 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: /Shed/i })).toHaveAttribute("aria-pressed", "true");
   });
 });
-
