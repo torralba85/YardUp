@@ -12,21 +12,27 @@ export function FloatingNavBar() {
   const paddingY = useTransform(scrollY, [0, 100], ["16px", "12px"]);
   const top = useTransform(scrollY, [0, 100], ["0px", "24px"]);
   const borderRadius = useTransform(scrollY, [0, 100], ["0px", "100px"]);
+  // scroll-0 was "rgba(242,229,213,1)" = lf-sand, identical to the body — the bar
+  // was invisible at the top (the "two boxes" bug). Starting at lf-card (slightly
+  // lighter/warmer) with a faint blur gives the pill a readable surface at rest.
   const background = useTransform(
     scrollY,
     [0, 100],
-    ["rgba(242, 229, 213, 1)", "rgba(251, 246, 238, 0.85)"] // lf-sand to lf-card
+    ["rgba(251, 246, 238, 0.92)", "rgba(251, 246, 238, 0.85)"]
   );
-  const backdropFilter = useTransform(scrollY, [0, 100], ["blur(0px)", "blur(12px)"]);
+  const backdropFilter = useTransform(scrollY, [0, 100], ["blur(4px)", "blur(12px)"]);
   const borderColor = useTransform(
     scrollY,
     [0, 100],
-    ["rgba(224, 205, 180, 0.5)", "rgba(224, 205, 180, 0.8)"] // border-lf-hairline
+    ["rgba(224, 205, 180, 0.6)", "rgba(224, 205, 180, 0.8)"]
   );
   const boxShadow = useTransform(
     scrollY,
     [0, 100],
-    ["none", "0 10px 40px -10px rgba(38, 19, 7, 0.1)"] // subtle espresso shadow
+    [
+      "0 2px 12px -4px rgba(38, 19, 7, 0.06)",
+      "0 10px 40px -10px rgba(38, 19, 7, 0.1)",
+    ]
   );
 
   return (

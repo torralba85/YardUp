@@ -34,7 +34,7 @@ function SceneOverlay({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div
-        className="absolute left-8 top-[42%] hidden w-56 rounded-md border border-lf-forest/25 bg-lf-forest px-4 py-3 text-lf-sand shadow-[0_24px_60px_-36px_rgba(38,19,7,0.8)] backdrop-blur lg:block"
+        className="absolute left-[14%] top-[52%] hidden w-56 rounded-md border border-lf-forest/25 bg-lf-forest px-4 py-3 text-lf-sand shadow-[0_24px_60px_-36px_rgba(38,19,7,0.8)] backdrop-blur lg:block"
         style={{ opacity: conceptOpacity, transform: `translateY(${(1 - conceptOpacity) * 14}px)` }}
       >
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] opacity-75">Concept fit</p>
@@ -84,6 +84,13 @@ export function LotAduScene({
           <HeroSceneContent progress={progress} />
         </Canvas>
       </SceneBoundary>
+      {/* Readability scrim: warm sand veil on the scene's left edge so headline
+          text overflowing from the caption column always sits on enough contrast,
+          and the render reads as midground behind the type. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-2/3 bg-[linear-gradient(90deg,#F2E5D5_0%,#F2E5D5_24%,rgba(242,229,213,0.78)_48%,rgba(242,229,213,0)_100%)]"
+      />
       <SceneOverlay progress={progress} />
     </div>
   );

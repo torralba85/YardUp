@@ -6,24 +6,46 @@ import Link from "next/link";
 import { clamp01, formatHeroNumber } from "@/lib/landing-stages";
 import { useStateFromMotionNumber } from "./use-motion-number";
 
-const FADE = 0.025;
+const FADE = 0.05;
 
+function smoothstep(t: number): number {
+  const x = clamp01(t);
+  return x * x * (3 - 2 * x);
+}
+
+// Eased crossfade for a stage occupying [start, end] of scroll progress. Stages
+// are contiguous (band N's end == band N+1's start) so the fade-out of one and
+// the fade-in of the next overlap into a clean handoff with no blank gap.
 function bandOpacity(p: number, start: number, end: number): number {
   if (p <= start - FADE || p > end) return 0;
-  if (p < start) return clamp01((p - (start - FADE)) / FADE);
+  if (p < start) return smoothstep((p - (start - FADE)) / FADE);
   if (p <= end - FADE) return 1;
-  return clamp01((end - p) / FADE);
+  return smoothstep((end - p) / FADE);
+}
+
+// Rise + settle + de-blur tied to the stage's own opacity, so headlines settle
+// into place instead of blinking. Mirrors the scene HUD cards' entrance motion.
+function bandStyle(op: number) {
+  const out = 1 - op;
+  return {
+    opacity: op,
+    transform: `translateY(${(out * 18).toFixed(2)}px)`,
+    filter: op > 0.999 ? "none" : `blur(${(out * 5).toFixed(2)}px)`,
+    willChange: "transform, opacity, filter",
+  };
 }
 
 export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
   const p = useStateFromMotionNumber(progress);
-  const rent = formatHeroNumber(2350, clamp01((p - 0.5) / 0.12), "currency");
+  // Count-up runs while the numbers stage is fully visible (~0.58 -> 0.71),
+  // not during its fade-in, so the figure is seen climbing.
+  const rent = formatHeroNumber(2350, clamp01((p - 0.58) / 0.13), "currency");
 
   return (
     <div className="pointer-events-none relative z-10 mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-6 py-10 md:px-10 lg:px-14">
-      <div className="absolute max-w-[34rem]" style={{ opacity: bandOpacity(p, 0, 0.3) }}>
+      <div className="absolute max-w-[27rem]" style={bandStyle(bandOpacity(p, 0, 0.3))}>
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">ADU income snapshot</p>
-        <h1 className="mt-3 font-display text-5xl font-black leading-[0.98] text-lf-espresso md:text-7xl">
+        <h1 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-7xl">
           Know what your lot could earn.
         </h1>
         <p className="mt-5 max-w-md text-lg leading-8 text-lf-muted">
@@ -60,9 +82,9 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         </div>
       </div>
 
-      <div className="absolute max-w-[32rem]" style={{ opacity: bandOpacity(p, 0.34, 0.56) }}>
+      <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.3, 0.56))}>
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Cast an ADU</p>
-        <h2 className="mt-3 font-display text-5xl font-black leading-none text-lf-espresso md:text-6xl">
+        <h2 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
           Place the concept inside the buildable envelope.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
@@ -70,9 +92,9 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         </p>
       </div>
 
-      <div className="absolute max-w-[32rem]" style={{ opacity: bandOpacity(p, 0.6, 0.78) }}>
+      <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.56, 0.8))}>
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">See the numbers</p>
-        <div className="mt-3 font-display text-7xl font-black tabular-nums leading-none text-lf-espresso md:text-8xl">
+        <div className="mt-3 font-display text-7xl font-black tabular-nums leading-[0.95] tracking-[-0.02em] text-lf-espresso md:text-8xl">
           {rent}
         </div>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
@@ -81,11 +103,11 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div
-        className="pointer-events-auto absolute max-w-[32rem]"
-        style={{ opacity: bandOpacity(p, 0.82, 1.1) }}
+        className="pointer-events-auto absolute max-w-[26rem]"
+        style={bandStyle(bandOpacity(p, 0.8, 1.12))}
       >
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Owner report ready</p>
-        <h2 className="mt-3 font-display text-5xl font-black leading-none text-lf-espresso md:text-6xl">
+        <h2 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
           Leave with a shareable next step.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">

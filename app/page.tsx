@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { AmbientBackdrop } from "@/components/landing/AmbientBackdrop";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { FeatureBand } from "@/components/landing/FeatureBand";
 import { FloatingNavBar } from "@/components/FloatingNavBar";
+import Link from "next/link";
 
 export default function LandingPage() {
   return (
