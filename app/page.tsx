@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { AmbientBackdrop } from "@/components/landing/AmbientBackdrop";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { FeatureBand } from "@/components/landing/FeatureBand";
