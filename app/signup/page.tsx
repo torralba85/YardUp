@@ -50,16 +50,18 @@ export default function SignupPage() {
 
   const handleGoogle = async () => {
     setError(null);
-    try {
-      await signInWithGoogle();
-      router.push("/studio");
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error && "code" in err
-          ? getAuthErrorMessage((err as { code: string }).code)
-          : "Something went wrong. Please try again.";
-      setError(message);
-    }
+    startTransition(async () => {
+      try {
+        await signInWithGoogle(role);
+        router.push(role === "builder" ? "/builder" : "/studio");
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error && "code" in err
+            ? getAuthErrorMessage((err as { code: string }).code)
+            : "Something went wrong. Please try again.";
+        setError(message);
+      }
+    });
   };
 
   return (
@@ -183,7 +185,8 @@ export default function SignupPage() {
 
       <button
         onClick={handleGoogle}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-lf-hairline bg-lf-card py-2.5 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
+        disabled={isPending}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-lf-hairline bg-lf-card py-2.5 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">
           <path
@@ -203,7 +206,7 @@ export default function SignupPage() {
             fill="#EA4335"
           />
         </svg>
-        Google
+        {isPending ? "Connecting..." : "Google"}
       </button>
 
       <p className="mt-6 text-center text-sm text-lf-muted">
@@ -255,6 +258,15 @@ function getAuthErrorMessage(code: string): string {
       return "Please enter a valid email address.";
     case "auth/weak-password":
       return "Password must be at least 6 characters.";
+    case "auth/popup-blocked":
+      return "Google sign-in popup was blocked. Allow popups and try again.";
+    case "auth/popup-closed-by-user":
+    case "auth/cancelled-popup-request":
+      return "Google sign-in was closed before it finished.";
+    case "auth/operation-not-allowed":
+      return "Google sign-in is not enabled for this Firebase project.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized for Firebase Google sign-in.";
     case "auth/network-request-failed":
       return "Network error. Check your connection.";
     default:
