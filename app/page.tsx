@@ -21,8 +21,8 @@ export default function LandingPage() {
             <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto" />
             <p className="text-sm text-lf-muted">A foundry for lots. Estimates, not guarantees.</p>
             <div className="flex items-center gap-4 text-sm text-lf-muted">
-              <Link href="/terms" className="transition-colors hover:text-lf-espresso">Terms</Link>
-              <Link href="/privacy" className="transition-colors hover:text-lf-espresso">Privacy</Link>
+              <Link href="/terms" className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso">Terms</Link>
+              <Link href="/privacy" className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso">Privacy</Link>
             </div>
           </div>
         </div>
