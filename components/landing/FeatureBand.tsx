@@ -39,7 +39,7 @@ export function FeatureBand() {
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-12 md:grid-cols-[1.1fr_1fr] md:items-center">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Why owners use it</p>
-            <h2 className="mt-3 max-w-2xl font-display text-4xl font-black leading-tight text-lf-espresso md:text-5xl">
+            <h2 className="mt-3 max-w-2xl font-display text-4xl font-extrabold leading-tight text-lf-espresso md:text-5xl">
               Make the ADU conversation specific before money changes hands.
             </h2>
           </div>
@@ -58,7 +58,7 @@ export function FeatureBand() {
         <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
           <div className="max-w-3xl">
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">How it works</p>
-            <h2 className="mt-3 font-display text-4xl font-black leading-tight text-lf-espresso md:text-5xl">
+            <h2 className="mt-3 font-display text-4xl font-extrabold leading-tight text-lf-espresso md:text-5xl">
               A complete owner flow, not a pretty rendering with no next step.
             </h2>
           </div>
@@ -78,7 +78,7 @@ export function FeatureBand() {
         <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-28">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-taupe">Owner report</p>
-            <h2 className="mt-3 font-display text-4xl font-black leading-tight md:text-5xl">
+            <h2 className="mt-3 font-display text-4xl font-extrabold leading-tight md:text-5xl">
               The output is built for the next conversation.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-lf-taupe">
@@ -100,7 +100,7 @@ export function FeatureBand() {
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-20 md:grid-cols-[1fr_auto] md:items-center md:py-24">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Ready when the owner is</p>
-            <h2 className="mt-3 max-w-3xl font-display text-4xl font-black leading-tight text-lf-espresso md:text-5xl">
+            <h2 className="mt-3 max-w-3xl font-display text-4xl font-extrabold leading-tight text-lf-espresso md:text-5xl">
               Find the ADU income potential in your lot.
             </h2>
           </div>

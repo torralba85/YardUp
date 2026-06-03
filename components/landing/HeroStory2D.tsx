@@ -34,7 +34,7 @@ export function HeroStory2D() {
     <section className="px-6 pt-10">
       <div className="mx-auto max-w-xl">
         <p className="lf-reveal font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">ADU income snapshot</p>
-        <h1 className="lf-reveal mt-3 font-display text-5xl font-black leading-[0.98] text-lf-espresso">
+        <h1 className="lf-reveal mt-3 font-display text-5xl font-extrabold leading-[0.98] text-lf-espresso">
           Know what your lot could earn.
         </h1>
         <p className="lf-reveal mt-5 text-lg leading-8 text-lf-muted">
