@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   type ReactNode,
@@ -42,7 +43,7 @@ interface AuthContextType {
     displayName: string,
     role: "user" | "builder",
   ) => Promise<UserCredential>;
-  signInWithGoogle: () => Promise<UserCredential>;
+  signInWithGoogle: (role?: "user" | "builder") => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
 }
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const pendingGoogleRole = useRef<"user" | "builder">("user");
 
   const fetchProfile = useCallback(async (u: User) => {
     const docRef = doc(db, "users", u.uid);
@@ -76,13 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: data.createdAt?.toDate?.() || null,
         });
       } else {
+        const role = pendingGoogleRole.current;
+        pendingGoogleRole.current = "user";
         await setDoc(docRef, {
           displayName: u.displayName || null,
           email: u.email || null,
-          role: "user",
+          role,
           createdAt: serverTimestamp(),
         }, { merge: true });
-        setProfile(fallbackProfile);
+        setProfile({ ...fallbackProfile, role });
       }
     } catch {
       setProfile(fallbackProfile);
@@ -125,7 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return cred;
   };
 
-  const signInWithGoogle = () => {
+  const signInWithGoogle = (role: "user" | "builder" = "user") => {
+    pendingGoogleRole.current = role;
     const provider = new GoogleAuthProvider();
     return signInWithPopup(auth, provider);
   };

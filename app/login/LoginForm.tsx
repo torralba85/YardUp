@@ -193,6 +193,10 @@ function getAuthErrorMessage(code: string): string {
       return "Too many failed attempts. Please try again later.";
     case "auth/network-request-failed":
       return "Network error. Check your connection.";
+    case "auth/popup-blocked":
+      return "Sign-in popup was blocked. Please allow popups for this site and try again.";
+    case "auth/popup-closed-by-user":
+      return "Sign-in popup was closed. Please try again.";
     default:
       return "Something went wrong. Please try again.";
   }

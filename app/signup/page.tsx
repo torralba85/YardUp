@@ -51,8 +51,8 @@ export default function SignupPage() {
   const handleGoogle = async () => {
     setError(null);
     try {
-      await signInWithGoogle();
-      router.push("/studio");
+      await signInWithGoogle(role);
+      router.push(role === "builder" ? "/builder" : "/studio");
     } catch (err: unknown) {
       const message =
         err instanceof Error && "code" in err
@@ -257,6 +257,10 @@ function getAuthErrorMessage(code: string): string {
       return "Password must be at least 6 characters.";
     case "auth/network-request-failed":
       return "Network error. Check your connection.";
+    case "auth/popup-blocked":
+      return "Sign-in popup was blocked. Please allow popups for this site and try again.";
+    case "auth/popup-closed-by-user":
+      return "Sign-in popup was closed. Please try again.";
     default:
       return "Something went wrong. Please try again.";
   }
