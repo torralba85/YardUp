@@ -10,26 +10,26 @@ const PROOF = [
 const STEPS = [
   {
     icon: MapPinned,
-    title: "Start with the parcel",
-    body: "Anchor the conversation in the lot, not a generic unit catalog.",
+    title: "Start with your address",
+    body: "Everything is based on your actual property — not a one-size-fits-all unit someone pulled from a catalog.",
   },
   {
     icon: Ruler,
-    title: "Show fit and constraints",
-    body: "Keep setbacks, coverage, and a proposed ADU massing visible at the same time.",
+    title: "See what fits — and what doesn't",
+    body: "Yard setbacks, size limits, and your ADU design stay on screen together so nothing sneaks up on you later.",
   },
   {
     icon: FileText,
-    title: "Package the assumptions",
-    body: "Save rent, cost, caveats, and scenario details in one owner-ready report.",
+    title: "Get a report you can actually use",
+    body: "Save your rent estimate, build cost range, and key assumptions in one tidy report you can share.",
   },
 ];
 
 const REPORT = [
-  "ADU size, finish, and placement assumptions",
-  "Estimated rent, NOI, payback, and coverage",
-  "Local-review caveats instead of false guarantees",
-  "Builder-ready notes for the next conversation",
+  "Your ADU's size, style, and placement",
+  "Estimated rent, income, payback, and lot coverage",
+  "Honest fine print instead of empty promises",
+  "Notes to share with your builder or contractor",
 ];
 
 export function FeatureBand() {
@@ -63,9 +63,12 @@ export function FeatureBand() {
             </h2>
           </div>
           <div className="mt-12 grid gap-0 border-y border-lf-hairline md:grid-cols-3 md:divide-x md:divide-lf-hairline">
-            {STEPS.map(({ icon: Icon, title, body }) => (
+            {STEPS.map(({ icon: Icon, title, body }, i) => (
               <div key={title} className="py-8 md:px-8">
-                <Icon className="h-7 w-7 text-lf-clay" aria-hidden="true" />
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs tabular-nums text-lf-clay">{String(i + 1).padStart(2, "0")}</span>
+                  <Icon className="h-7 w-7 text-lf-clay" aria-hidden="true" />
+                </div>
                 <h3 className="mt-5 font-display text-2xl font-bold text-lf-espresso">{title}</h3>
                 <p className="mt-3 max-w-sm leading-7 text-lf-muted">{body}</p>
               </div>
@@ -82,7 +85,7 @@ export function FeatureBand() {
               The output is built for the next conversation.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-lf-taupe">
-              The goal is not to pretend the estimate is a permit. It is to make the first builder, planner, or family conversation concrete enough to move forward.
+              This isn't a permit or a promise. It's a starting point — specific enough to have a real conversation with a builder, planner, or your family.
             </p>
           </div>
           <div className="grid gap-4">
@@ -101,7 +104,7 @@ export function FeatureBand() {
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Ready when the owner is</p>
             <h2 className="mt-3 max-w-3xl font-display text-4xl font-extrabold leading-tight text-lf-espresso md:text-5xl">
-              Find the ADU income potential in your lot.
+              Find out what your backyard is worth.
             </h2>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row md:flex-col">

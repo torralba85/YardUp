@@ -44,12 +44,12 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
   return (
     <div className="pointer-events-none relative z-10 mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-6 py-10 md:px-10 lg:px-14">
       <div className="absolute max-w-[27rem]" style={bandStyle(bandOpacity(p, 0, 0.3))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">ADU income snapshot</p>
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">What your backyard could earn</p>
         <h1 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-7xl">
           Know what your lot could earn.
         </h1>
         <p className="mt-5 max-w-md text-lg leading-8 text-lf-muted">
-          LotFoundry turns a backyard address into a visual ADU concept, rent estimate, and owner-ready report before you start calling builders.
+          LotFoundry turns your backyard address into a visual ADU concept, rent estimate, and a report you can share — before you start calling anyone.
         </p>
         <div className="pointer-events-auto mt-7 flex flex-col gap-3 sm:flex-row">
           <Link
@@ -83,12 +83,12 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.3, 0.56))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Cast an ADU</p>
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">See it in your yard</p>
         <h2 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
-          Place the concept inside the buildable envelope.
+          See exactly where an ADU fits on your lot.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          Setbacks, coverage, and a proposed ADU massing stay visible together, so the design story starts with constraints instead of guesswork.
+          Yard lines, size limits, and your ADU sit side by side — so you're working with real boundaries from the start, not wishful thinking.
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
           {rent}
         </div>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          estimated monthly rent, paired with NOI, payback, and the assumptions needed for a credible owner conversation.
+          estimated monthly rent — with projected income, build payback, and the honest assumptions behind every number.
         </p>
       </div>
 
@@ -108,10 +108,10 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
       >
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Owner report ready</p>
         <h2 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
-          Leave with a shareable next step.
+          Walk away with something to show people.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          Save the scenario, review the caveats, and bring one consistent packet to the people who can validate it locally.
+          Save your numbers, read the fine print, and share a clean summary with your builder, planner, or spouse before anyone spends a dime.
         </p>
         <Link
           href="/signup"
