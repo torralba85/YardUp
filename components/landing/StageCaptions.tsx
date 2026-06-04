@@ -61,7 +61,7 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
           </Link>
           <a
             href="#how-it-works"
-            className="inline-flex min-h-12 items-center justify-center rounded-md border border-lf-hairline bg-lf-card/65 px-6 text-base font-semibold text-lf-espresso backdrop-blur transition-colors hover:bg-lf-card"
+            className="inline-flex min-h-12 items-center justify-center rounded-md border border-lf-hairline bg-lf-card px-6 text-base font-semibold text-lf-espresso transition-colors hover:bg-lf-sand-2"
           >
             See the flow
           </a>
@@ -88,7 +88,7 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
           See exactly where an ADU fits on your lot.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          Yard lines, size limits, and your ADU sit side by side — so you&apos;re working with real boundaries from the start, not wishful thinking.
+          Yard lines, size limits, and your ADU sit side by side, so you are working with real boundaries from the start, not wishful thinking.
         </p>
       </div>
 

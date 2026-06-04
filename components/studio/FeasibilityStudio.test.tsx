@@ -58,12 +58,11 @@ describe("FeasibilityStudio", () => {
     expect(
       screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
     ).toBeInTheDocument();
-    // "Parcel Preset" is now a label (not h3) for the select element
     expect(
-      screen.getByRole("combobox", { name: "Parcel Preset" }),
+      screen.getByRole("combobox", { name: "Sample Property" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Generate Concept Report/i }),
+      screen.getByRole("button", { name: /Create my ADU report/i }),
     ).toBeInTheDocument();
     expect(screen.getByText("Build Cost Range")).toBeInTheDocument();
   });
@@ -72,7 +71,7 @@ describe("FeasibilityStudio", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.selectOptions(screen.getByLabelText("Parcel Preset"), "compact-lot");
+    await user.selectOptions(screen.getByLabelText("Sample Property"), "compact-lot");
 
     const sizeGroup = screen.getByRole("group", { name: /ADU footprint size/i });
     await user.click(within(sizeGroup).getByRole("button", { name: "1,000 sf" }));
@@ -95,7 +94,7 @@ describe("FeasibilityStudio", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getByRole("button", { name: /Generate Concept Report/i }));
+    await user.click(screen.getByRole("button", { name: /Create my ADU report/i }));
 
     expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();

@@ -283,7 +283,7 @@ export default function AerialView({
       {/* Fallback notice */}
       {parcel.source === "fallback" && (
         <div
-          className="pointer-events-none absolute bottom-4 left-4 right-4 rounded-md border border-lf-amber/40 bg-lf-mahogany/80 px-3 py-2 text-xs text-lf-sand backdrop-blur-sm"
+          className="pointer-events-none absolute bottom-4 left-4 right-4 rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           ⚠ Parcel boundary unavailable for this address — showing estimated defaults. Verify dimensions with your local jurisdiction.
