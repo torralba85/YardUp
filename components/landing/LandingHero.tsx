@@ -41,7 +41,7 @@ export function LandingHero() {
         preload="auto"
         aria-hidden="true"
       >
-        <source src="/hero/hero.webm" type="video/webm" />
+        {/* H.264 mp4 only — universally decodable. The VP9 webm errored in Chrome. */}
         <source src="/hero/hero.mp4" type="video/mp4" />
       </video>
 

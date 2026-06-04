@@ -44,9 +44,13 @@ describe("LandingHero video hero", () => {
     expect(video).not.toHaveAttribute("loop");
     expect((video as HTMLVideoElement).muted).toBe(true);
     expect(video).toHaveAttribute("playsinline");
+    // mp4 (H.264) only: the VP9 webm Remotion produced fails to decode in Chrome
+    // (PIPELINE_ERROR_DECODE), and <source> fallback does not recover from a
+    // mid-stream decode error — so we ship the universally-decodable H.264 mp4.
     const sources = container.querySelectorAll("source");
-    expect(sources[0]).toHaveAttribute("src", "/hero/hero.webm");
-    expect(sources[1]).toHaveAttribute("src", "/hero/hero.mp4");
+    expect(sources).toHaveLength(1);
+    expect(sources[0]).toHaveAttribute("src", "/hero/hero.mp4");
+    expect(sources[0]).toHaveAttribute("type", "video/mp4");
   });
 
   it("autoplays once when motion is allowed", () => {
