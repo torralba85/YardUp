@@ -387,7 +387,7 @@ function IncomeLens({
   isCompliant: boolean;
 }) {
   return (
-    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/20 bg-lf-espresso/[0.84] p-4 text-lf-sand-2 shadow-2xl backdrop-blur-md sm:left-5 sm:right-auto sm:min-w-[520px]">
+    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/20 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
