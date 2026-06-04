@@ -85,7 +85,7 @@ export function FeatureBand() {
               The output is built for the next conversation.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-lf-taupe">
-              This isn't a permit or a promise. It's a starting point — specific enough to have a real conversation with a builder, planner, or your family.
+              This isn&apos;t a permit or a promise. It&apos;s a starting point — specific enough to have a real conversation with a builder, planner, or your family.
             </p>
           </div>
           <div className="grid gap-4">
