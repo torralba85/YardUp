@@ -1,30 +1,78 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useHeroCapability } from "@/lib/use-hero-capability";
-import { HeroStory2D, HeroStaticFrame } from "./HeroStory2D";
-
-const HeroScrolly = dynamic(() => import("./HeroScrolly"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-[80vh] items-center justify-center" role="status" aria-label="Loading hero">
-      <HeroStaticFrame />
-    </div>
-  ),
-});
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 /**
- * Picks the hero variant from device capability:
- *  - "3d": full pinned scrollytelling (client-only, dynamically imported)
- *  - "2d": mobile / coarse-pointer animated story
- *  - "static": reduced-motion / SSR-safe non-WebGL story
- * Returns "static" during SSR + first paint (see useHeroCapability), so the
- * server never renders a WebGL canvas and the headline remains visible before
- * capability detection upgrades eligible clients to the 3D scene.
+ * Full-bleed hero. Plays a Remotion-rendered ~6s clip once and holds the final
+ * frame (which is also the poster, so the static/reduced-motion view still shows
+ * the rent answer). A fixed left editorial scrim guarantees headline/CTA contrast
+ * regardless of the playing frame.
  */
 export function LandingHero() {
-  const mode = useHeroCapability();
-  if (mode === "3d") return <HeroScrolly />;
-  if (mode === "2d") return <HeroStory2D />;
-  return <HeroStory2D />;
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const connection = (
+      navigator as Navigator & { connection?: { saveData?: boolean } }
+    ).connection;
+    const saveData = connection?.saveData === true;
+    if (reduce || saveData) return; // poster stays; do not autoplay
+    void video.play().catch(() => {
+      /* autoplay blocked (e.g. low-power mode) — poster remains, no error surfaced */
+    });
+  }, []);
+
+  return (
+    <section
+      className="relative flex items-center overflow-hidden"
+      style={{ minHeight: "clamp(560px, 80vh, 760px)" }}
+    >
+      <video
+        ref={videoRef}
+        className="absolute inset-0 h-full w-full object-cover"
+        poster="/hero/hero-poster.jpg"
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      >
+        <source src="/hero/hero.webm" type="video/webm" />
+        <source src="/hero/hero.mp4" type="video/mp4" />
+      </video>
+
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(38,19,7,0.92) 0%, rgba(38,19,7,0.55) 38%, rgba(38,19,7,0.12) 64%, rgba(38,19,7,0) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6">
+        <div className="max-w-xl">
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-sand/85">
+            From lot to income
+          </p>
+          <h1
+            className="mt-3 font-display text-5xl font-black leading-[0.98] tracking-[-0.03em] text-lf-sand md:text-7xl"
+            style={{ textShadow: "0 2px 24px rgba(38,19,7,0.45)" }}
+          >
+            See the rent your backyard is hiding.
+          </h1>
+          <Link
+            href="/signup"
+            className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
+          >
+            Estimate my lot
+            <ArrowRight className="h-5 w-5" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
 }
