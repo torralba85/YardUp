@@ -16,3 +16,6 @@ tmp/
 google-services.json
 GoogleService-Info.plist
 service-account*.json
+
+# Superpowers brainstorm visual-companion artifacts
+.superpowers/
