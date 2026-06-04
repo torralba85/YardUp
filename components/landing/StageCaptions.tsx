@@ -88,7 +88,7 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
           See exactly where an ADU fits on your lot.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          Yard lines, size limits, and your ADU sit side by side — so you're working with real boundaries from the start, not wishful thinking.
+          Yard lines, size limits, and your ADU sit side by side — so you&apos;re working with real boundaries from the start, not wishful thinking.
         </p>
       </div>
 
