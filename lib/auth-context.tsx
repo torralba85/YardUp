@@ -4,9 +4,9 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
-  useRef,
   type ReactNode,
 } from "react";
 import {
@@ -56,15 +56,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const pendingProfileRole = useRef<UserRole>("user");
+  const pendingAuthRoleRef = useRef<UserRole | null>(null);
 
-  const fetchProfile = useCallback(async (u: User) => {
+  const ensureProfile = useCallback(async (
+    u: User,
+    options: {
+      displayName?: string | null;
+      email?: string | null;
+      role?: UserRole;
+    } = {},
+  ) => {
     const docRef = doc(db, "users", u.uid);
-    const role = pendingProfileRole.current;
+    const email = options.email ?? u.email ?? "";
+    const displayName = options.displayName ?? u.displayName ?? null;
+    const role = options.role ?? "user";
     const fallbackProfile: UserProfile = {
       uid: u.uid,
-      email: u.email || "",
-      displayName: u.displayName || null,
+      email,
+      displayName,
       role,
       createdAt: null,
     };
@@ -73,17 +82,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const data = snap.data();
+        const existingRole = data.role || "user";
+        const nextDisplayName = displayName || data.displayName || null;
+        const nextEmail = email || data.email || "";
+
+        if (options.displayName !== undefined || options.email !== undefined) {
+          await setDoc(docRef, {
+            displayName: nextDisplayName,
+            email: nextEmail,
+            role: existingRole,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+        }
+
         setProfile({
           uid: u.uid,
-          email: u.email || "",
-          displayName: data.displayName || u.displayName || null,
-          role: data.role || "user",
+          email: nextEmail,
+          displayName: nextDisplayName,
+          role: existingRole,
           createdAt: data.createdAt?.toDate?.() || null,
         });
       } else {
         await setDoc(docRef, {
-          displayName: u.displayName || null,
-          email: u.email || "",
+          displayName,
+          email,
           role,
           createdAt: serverTimestamp(),
         }, { merge: true });
@@ -99,7 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(u);
       try {
         if (u) {
-          await fetchProfile(u);
+          await ensureProfile(u, {
+            role: pendingAuthRoleRef.current ?? undefined,
+          });
         } else {
           setProfile(null);
         }
@@ -108,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
     return unsubscribe;
-  }, [fetchProfile]);
+  }, [ensureProfile]);
 
   const signIn = (email: string, password: string) =>
     signInWithEmailAndPassword(auth, email, password);
@@ -119,44 +143,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName: string,
     role: UserRole,
   ) => {
-    pendingProfileRole.current = role;
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName });
-    await setDoc(doc(db, "users", cred.user.uid), {
-      displayName,
-      email,
-      role,
-      createdAt: serverTimestamp(),
-    });
-    setProfile({
-      uid: cred.user.uid,
-      email,
-      displayName,
-      role,
-      createdAt: null,
-    });
-    return cred;
+    pendingAuthRoleRef.current = role;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName });
+      await ensureProfile(cred.user, { displayName, email, role });
+      return cred;
+    } finally {
+      pendingAuthRoleRef.current = null;
+    }
   };
 
   const signInWithGoogle = async (role: UserRole = "user") => {
-    pendingProfileRole.current = role;
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
-    const cred = await signInWithPopup(auth, provider);
-    const docRef = doc(db, "users", cred.user.uid);
-    const snap = await getDoc(docRef);
-
-    if (!snap.exists()) {
-      await setDoc(docRef, {
-        displayName: cred.user.displayName || null,
-        email: cred.user.email || "",
-        role,
-        createdAt: serverTimestamp(),
-      }, { merge: true });
+    pendingAuthRoleRef.current = role;
+    try {
+      const cred = await signInWithPopup(auth, provider);
+      await ensureProfile(cred.user, { role });
+      return cred;
+    } finally {
+      pendingAuthRoleRef.current = null;
     }
-
-    await fetchProfile(cred.user);
-    return cred;
   };
 
   const logout = () => signOut(auth);

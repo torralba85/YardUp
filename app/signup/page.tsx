@@ -90,7 +90,7 @@ export default function SignupPage() {
             autoComplete="name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="Jane Doe"
           />
         </div>
@@ -109,7 +109,7 @@ export default function SignupPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="you@example.com"
           />
         </div>
@@ -128,7 +128,7 @@ export default function SignupPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="At least 8 characters"
           />
         </div>
@@ -267,8 +267,12 @@ function getAuthErrorMessage(code: string): string {
       return "Google sign-in is not enabled for this Firebase project.";
     case "auth/unauthorized-domain":
       return "This domain is not authorized for Firebase Google sign-in.";
+    case "auth/account-exists-with-different-credential":
+      return "An account already exists for this email using another sign-in method.";
     case "auth/network-request-failed":
       return "Network error. Check your connection.";
+    case "permission-denied":
+      return "Account created, but profile setup was blocked. Please try again.";
     default:
       return "Something went wrong. Please try again.";
   }
