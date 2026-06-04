@@ -52,7 +52,7 @@ function SceneOverlay({ progress }: { progress: MotionValue<number> }) {
         </div>
         <div className="flex items-center justify-between border-t border-lf-hairline pt-3 text-sm">
           <span>NOI</span>
-          <strong className="text-lf-espresso">$20.6k</strong>
+          <strong className="font-display tabular-nums text-lf-espresso">$20.6k</strong>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span>Report readiness</span>

@@ -29,7 +29,7 @@ test.describe("Public LotFoundry flows", () => {
     );
 
     await page.screenshot({
-      path: testInfo.snapshotPath("landing-page.png"),
+      path: testInfo.outputPath("landing-page.png"),
       fullPage: true,
     });
   });

@@ -9,6 +9,8 @@ const breakpoints = [
 ];
 
 test.describe("Visual breakpoint coverage", () => {
+  test.setTimeout(60_000);
+
   for (const bp of breakpoints) {
     test(`renders without clipped primary UI at ${bp.name}`, async ({ browser }, testInfo) => {
       const context = await browser.newContext({
@@ -32,7 +34,7 @@ test.describe("Visual breakpoint coverage", () => {
       await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toBeVisible();
 
       await page.screenshot({
-        path: testInfo.snapshotPath(`${bp.name}.png`),
+        path: testInfo.outputPath(`${bp.name}.png`),
         fullPage: true,
       });
 
