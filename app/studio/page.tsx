@@ -17,7 +17,7 @@ export default function StudioPage() {
 
   if (loading || !user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-lf-sand">
+      <div className="flex h-[100dvh] items-center justify-center bg-lf-sand">
         <div className="text-center">
           <div className="text-2xl font-display font-black text-lf-mahogany">
             LotFoundry

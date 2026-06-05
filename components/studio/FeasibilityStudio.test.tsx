@@ -58,6 +58,7 @@ describe("FeasibilityStudio", () => {
     expect(
       screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
     ).toBeInTheDocument();
+    // "Sample Property" is a label (not h3) for the preset select element
     expect(
       screen.getByRole("combobox", { name: "Sample Property" }),
     ).toBeInTheDocument();

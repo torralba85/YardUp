@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { CTAButton } from "./CTAButton";
 
 /**
  * Full-bleed hero. Plays a Remotion-rendered ~6s clip once and holds the final
@@ -64,13 +63,9 @@ export function LandingHero() {
           >
             See the rent your backyard is hiding.
           </h1>
-          <Link
-            href="/signup"
-            className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-          >
+          <CTAButton href="/signup" className="mt-7">
             Estimate my lot
-            <ArrowRight className="h-5 w-5" />
-          </Link>
+          </CTAButton>
         </div>
       </div>
     </section>

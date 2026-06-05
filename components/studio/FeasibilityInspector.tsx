@@ -58,7 +58,7 @@ export default function FeasibilityInspector({
   savingScenario = false,
   saveNotice,
 }: FeasibilityInspectorProps) {
-  const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, resetToPreset } = useParcel();
+  const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, searchByAddress, resetToPreset } = useParcel();
 
   // In preset mode, fall back to the preset lookup for compatibility
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
@@ -69,6 +69,10 @@ export default function FeasibilityInspector({
 
   function handleAddressSelect(result: AddressSearchResult) {
     searchParcel(result.lat, result.lng);
+  }
+
+  function handleAddressText(query: string) {
+    searchByAddress(query);
   }
 
   function handleResetToPreset() {
@@ -173,7 +177,19 @@ export default function FeasibilityInspector({
                 {/* Search prompt */}
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-lf-muted">Or search your address:</p>
-                  <AddressSearch onSelect={handleAddressSelect} />
+                  <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} />
+                  {/* Surface search errors here too; in preset mode the live
+                      branch's error block isn't rendered, so without this a
+                      failed lookup would vanish silently after the spinner. */}
+                  {parcelError && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+                    >
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                      {parcelError}
+                    </div>
+                  )}
                 </div>
               </>
             )}
