@@ -106,16 +106,17 @@ Set these secrets in your GitHub repository Settings → Secrets → Actions:
 
 | Secret | Purpose |
 |---|---|
-| `GOOGLE_MAPS_API_KEY` | Server-side Maps Static + Geocoding key |
-| `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places Autocomplete key (restricted by HTTP referrer in GCP Console) |
-| `REGRID_API_KEY` | Regrid Parcel API key |
+| `FIREBASE_SERVICE_ACCOUNT` | Service account JSON for Firebase deploy |
+| `GOOGLE_MAPS_API_KEY` | Server-side Maps Static, Geocoding, or related Google API key |
+| `GOOGLE_GEOCODING_KEY` | Server-side geocoding key when separate from Maps key |
+| `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places key restricted by HTTP referrer |
+| `REGRID_API_KEY` | Server-side Regrid parcel API key |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web API key |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app ID |
-| `FIREBASE_SERVICE_ACCOUNT` | JSON service account key for Firebase deploy |
 
 The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result. The service account must be able to deploy Firebase Hosting, Cloud Functions v2, and Firestore rules in `yardup-2026`; if Cloud Billing API access or required Firebase/GCP APIs are disabled, the dry-run step fails before the live deploy command.
 
@@ -149,6 +150,16 @@ After deployment, manually verify:
 - The Share Link button copies the current scenario URL.
 - `FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase` signs in, saves a scenario to Firestore, loads it, and deletes it.
 - (If API keys configured) Address search returns parcel data via `/api/parcel`.
+
+## Production Acceptance Criteria
+
+- Firebase deploy dry-run passes before live deploy.
+- Live deploy includes Hosting, Functions, and Firestore rules.
+- Firestore rules tests pass before deploy.
+- Dedicated Firebase smoke user can sign in, save a scenario, load it, and delete it.
+- Production URL loads `/`, `/privacy`, `/terms`, `/login`, `/signup`, `/studio`, and `/account`.
+- Browser console has no release-blocking errors during the estimate and save/load flows.
+- API keys are restricted in Google Cloud Console to the minimum required referrers or server contexts.
 
 ## Rollback
 
