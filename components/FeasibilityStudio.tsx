@@ -393,7 +393,7 @@ function IncomeLens({
           <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
             ADU income potential
           </p>
-          <h2 className="mt-1 font-display text-4xl font-semibold leading-[0.95] tracking-[-0.035em] text-lf-sand tabular-nums sm:text-5xl">
+          <h2 className="mt-1 font-display text-4xl font-semibold leading-[0.95] tracking-[-0.01em] text-lf-sand tabular-nums sm:text-5xl">
             {formatCurrency(result.monthlyRent)}
             <span className="ml-2 font-sans text-base font-medium tracking-normal text-lf-sand/70 pl-1.5">/ mo rent</span>
           </h2>

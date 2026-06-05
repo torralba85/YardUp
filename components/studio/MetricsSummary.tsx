@@ -18,7 +18,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       label: "Monthly Rent",
       value: formatCurrency(result.monthlyRent),
       detail: "Local demo estimate",
-      valueClass: "font-display font-semibold text-3xl tracking-[-0.03em] text-lf-espresso",
+      valueClass: "font-display font-semibold text-3xl tracking-[-0.01em] text-lf-espresso",
       tier: 1,
     },
     {
@@ -26,7 +26,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       label: "Annual NOI",
       value: formatCurrency(result.annualNoi),
       detail: "After expenses & vacancy",
-      valueClass: "font-display font-semibold text-3xl tracking-[-0.03em] text-lf-mahogany",
+      valueClass: "font-display font-semibold text-3xl tracking-[-0.01em] text-lf-mahogany",
       tier: 1,
     },
     {
