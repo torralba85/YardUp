@@ -22,7 +22,7 @@ export default function BuilderPage() {
     return (
       <div className="flex h-screen items-center justify-center bg-lf-sand">
         <div className="text-center">
-          <div className="text-2xl font-display font-black text-lf-mahogany">
+          <div className="text-2xl font-display font-semibold text-lf-mahogany">
             LotFoundry
           </div>
           <p className="mt-2 text-sm text-lf-muted">Loading builder dashboard...</p>

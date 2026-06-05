@@ -3,11 +3,14 @@ import {
   Cormorant_Garamond,
   EB_Garamond,
   DM_Sans,
+  Fraunces,
   IBM_Plex_Sans,
   Instrument_Serif,
   Libre_Baskerville,
   Libre_Franklin,
   Lora,
+  Manrope,
+  Outfit,
   Plus_Jakarta_Sans,
   Playfair_Display,
   Source_Sans_3,
@@ -15,6 +18,18 @@ import {
   Work_Sans,
 } from "next/font/google";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+
+// Recommended direction — now live as --font-display.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  axes: ["opsz", "SOFT"],
+  display: "swap",
+});
+// The previous baseline, kept here only for the before/after comparison.
+const outfit = Outfit({ subsets: ["latin"], display: "swap" });
+// The live UI/body face, unchanged by this exploration.
+const manrope = Manrope({ subsets: ["latin"], display: "swap" });
+const manropeSampleClass = manrope.className;
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -50,7 +65,33 @@ const dmSans = DM_Sans({ subsets: ["latin"], display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], display: "swap" });
 const workSans = Work_Sans({ subsets: ["latin"], display: "swap" });
 
-const samples = [
+type Sample = {
+  name: string;
+  tone: string;
+  display: string;
+  body: string;
+  displayClass: string;
+  bodyClass: string;
+  accent: string;
+  tint: string;
+  verdict: string;
+  recommended?: boolean;
+};
+
+const samples: Sample[] = [
+  {
+    name: "Recommended — now live",
+    tone: "Editorial foundry",
+    display: "Fraunces",
+    body: "Manrope (current body)",
+    displayClass: fraunces.className,
+    bodyClass: manropeSampleClass,
+    accent: "text-lf-clay",
+    tint: "bg-lf-amber-soft",
+    recommended: true,
+    verdict:
+      "Optically-sized old-style serif: warm and editorial, substantial enough for rent figures, and free of the boxy heaviness of the old Outfit Black. Pairs with the existing Manrope body, so only the display layer changes.",
+  },
   {
     name: "Premium A",
     tone: "Architecture atelier",
@@ -150,30 +191,78 @@ export default function TypeSamplesPage() {
         <div className="grid gap-8 py-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">
-              Current baseline: Outfit + Manrope
+              Now live: Fraunces + Manrope
             </p>
-            <h1 className="mt-3 max-w-3xl font-display text-5xl font-black leading-[0.96] tracking-tight text-lf-espresso sm:text-6xl">
+            <h1 className="mt-3 max-w-3xl font-display text-5xl font-medium leading-[1.0] tracking-[-0.01em] text-lf-espresso sm:text-6xl">
               Premium font directions for YardUp.
             </h1>
           </div>
           <p className="max-w-2xl text-lg leading-8 text-lf-muted">
-            These are more refined, serif-led specimens using real homepage copy, rent figures,
-            CTA labels, and report-card UI so the choice is based on product feel instead of
-            isolated alphabets.
+            The old Outfit Black display read boxy and too bold. These serif-led specimens use real
+            homepage copy, rent figures, CTA labels, and report-card UI so the choice is judged on
+            product feel, not isolated alphabets. The recommended direction is already applied
+            site-wide.
           </p>
+        </div>
+
+        {/* Before / after — the exact complaint, side by side */}
+        <div className="mb-10 grid gap-px overflow-hidden rounded-md border border-lf-hairline bg-lf-hairline sm:grid-cols-2">
+          <div className="bg-lf-card p-6 sm:p-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-muted">
+              Before · Outfit Black
+            </p>
+            <h2
+              className={`mt-3 text-4xl leading-[0.98] tracking-[-0.03em] text-lf-espresso sm:text-5xl ${outfit.className}`}
+              style={{ fontWeight: 900 }}
+            >
+              See the rent your backyard is hiding.
+            </h2>
+            <p className={`mt-4 text-5xl tracking-tight text-lf-muted ${outfit.className}`} style={{ fontWeight: 900 }}>
+              $2,350
+            </p>
+            <p className="mt-3 text-sm leading-6 text-lf-muted">
+              Geometric, blocky, heavy — more SaaS dashboard than premium advisory.
+            </p>
+          </div>
+          <div className="bg-lf-card p-6 sm:p-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-clay">
+              After · Fraunces Medium
+            </p>
+            <h2
+              className={`mt-3 text-4xl font-medium leading-[1.02] tracking-[-0.01em] text-lf-espresso sm:text-5xl ${fraunces.className}`}
+            >
+              See the rent your backyard is hiding.
+            </h2>
+            <p className={`mt-4 text-5xl font-semibold tracking-tight text-lf-clay ${fraunces.className}`}>
+              $2,350
+            </p>
+            <p className="mt-3 text-sm leading-6 text-lf-muted">
+              Warm, editorial, optically-sized — substantial figures without the boxy weight.
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-2">
           {samples.map((sample) => (
             <article
               key={sample.name}
-              className={`overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-sm ${sample.bodyClass}`}
+              className={`overflow-hidden rounded-md border bg-lf-card shadow-sm ${sample.bodyClass} ${
+                sample.recommended
+                  ? "border-lf-clay ring-2 ring-lf-clay/40 lg:col-span-2"
+                  : "border-lf-hairline"
+              }`}
             >
               <div className="border-b border-lf-hairline/80 px-5 py-4 sm:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-muted">
+                    <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-lf-muted">
                       {sample.name}
+                      {sample.recommended && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-lf-clay px-2 py-0.5 text-[9px] font-bold text-lf-sand">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Live
+                        </span>
+                      )}
                     </p>
                     <h2 className={`mt-1 text-2xl font-semibold ${sample.displayClass}`}>
                       {sample.display} + {sample.body}

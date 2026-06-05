@@ -59,7 +59,7 @@ export function LandingHero() {
             From lot to income
           </p>
           <h1
-            className="mt-3 font-display text-5xl font-black leading-[0.98] tracking-[-0.03em] text-lf-sand md:text-7xl"
+            className="mt-3 font-display text-5xl font-medium leading-[1.02] tracking-[-0.01em] text-lf-sand md:text-7xl"
             style={{ textShadow: "0 2px 24px rgba(38,19,7,0.45)" }}
           >
             See the rent your backyard is hiding.

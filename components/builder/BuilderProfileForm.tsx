@@ -76,7 +76,7 @@ export default function BuilderProfileForm({
       className="mt-6 grid gap-4 rounded-md border border-lf-hairline bg-lf-card p-4 md:grid-cols-2"
     >
       <div className="md:col-span-2">
-        <h2 className="font-display text-xl font-black">Builder profile</h2>
+        <h2 className="font-display text-xl font-semibold">Builder profile</h2>
         <p className="mt-1 text-sm text-lf-muted">
           Add your service coverage before receiving matched ADU snapshots.
         </p>

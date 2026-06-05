@@ -54,11 +54,13 @@ Three font families mapped to three distinct jobs:
 
 | Role | Family | Weights | Use |
 |---|---|---|---|
-| Display / money | **Outfit** | Black, ExtraBold, SemiBold | Hero revenue figures, screen titles, wordmark |
+| Display / money | **Fraunces** | Medium, SemiBold | Hero revenue figures, screen titles |
 | UI / body | **Manrope** | Regular, Medium, SemiBold, Bold | Paragraphs, labels, controls, cards |
 | Data / ranges | **Geist Mono** | Regular, Medium, SemiBold | Tabular numbers, dimensions, status, eyebrows |
 
-*Rules*: Tabular numbers are forced everywhere numeric data appears (`font-variant-numeric: tabular-nums`). UI chrome (tabs/eyebrows/badges) uses UPPERCASE Geist Mono with `0.16–0.18em` tracking. Prose uses sentence case Manrope. Money figures use Outfit Black/ExtraBold.
+*Display rationale*: Fraunces is an optically-sized "old style" serif — warm, editorial, and architectural without the boxy heaviness of a geometric sans. It replaces Outfit (which read too bold and blocky at display sizes). Optical sizing (`opsz`) lets large titles take the high-contrast display cut while small headings stay sturdy. Headlines sit at Medium (≈500); section titles and money figures at SemiBold (≈600) — never heavier, so the type stays refined.
+
+*Rules*: Tabular numbers are forced everywhere numeric data appears (`font-variant-numeric: tabular-nums`). UI chrome (tabs/eyebrows/badges) uses UPPERCASE Geist Mono with `0.16–0.18em` tracking. Prose uses sentence case Manrope. Money figures use Fraunces SemiBold. Live alternatives are auditable at `/type-samples`.
 
 ---
 
