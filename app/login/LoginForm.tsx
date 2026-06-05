@@ -79,7 +79,7 @@ export default function LoginForm() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+          className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
           placeholder="you@example.com"
         />
       </div>
@@ -106,7 +106,7 @@ export default function LoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+          className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
           placeholder="••••••••"
         />
       </div>
@@ -191,12 +191,20 @@ function getAuthErrorMessage(code: string): string {
       return "Invalid email or password.";
     case "auth/too-many-requests":
       return "Too many failed attempts. Please try again later.";
+    case "auth/operation-not-allowed":
+      return "Google sign-in is not enabled for this project yet.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized for Google sign-in.";
+    case "auth/popup-blocked":
+      return "Your browser blocked the Google sign-in popup.";
+    case "auth/popup-closed-by-user":
+      return "Google sign-in was closed before it finished.";
+    case "auth/account-exists-with-different-credential":
+      return "An account already exists for this email using another sign-in method.";
     case "auth/network-request-failed":
       return "Network error. Check your connection.";
-    case "auth/popup-blocked":
-      return "Sign-in popup was blocked. Please allow popups for this site and try again.";
-    case "auth/popup-closed-by-user":
-      return "Sign-in popup was closed. Please try again.";
+    case "permission-denied":
+      return "Signed in, but profile setup was blocked. Please try again.";
     default:
       return "Something went wrong. Please try again.";
   }

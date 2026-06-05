@@ -193,7 +193,7 @@ export default function AppShell({
         {/* Mobile bottom tab navigation */}
         <nav
           aria-label="Mobile navigation"
-          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-lf-hairline bg-lf-card/95 backdrop-blur-sm lg:hidden"
+          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-lf-hairline bg-lf-card lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           {navItems.map((item) => {

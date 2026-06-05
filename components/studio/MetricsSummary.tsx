@@ -25,7 +25,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       icon: BarChart3,
       label: "Annual NOI",
       value: formatCurrency(result.annualNoi),
-      detail: "After OpEx & vacancy",
+      detail: "After expenses & vacancy",
       valueClass: "font-display font-black text-3xl tracking-[-0.03em] text-lf-mahogany",
       tier: 1,
     },

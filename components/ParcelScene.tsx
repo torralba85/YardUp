@@ -91,7 +91,7 @@ function SceneCallout({
   return (
     <Html position={position} center distanceFactor={74} occlude>
       <div
-        className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] backdrop-blur xl:block ${toneClass}`}
+        className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] xl:block ${toneClass}`}
       >
         <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.12em] opacity-75">{eyebrow}</div>
         <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
@@ -929,7 +929,7 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
       </Canvas>
       </ErrorBoundary>
 
-      <div className="absolute bottom-24 right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card/90 p-1 shadow-sm backdrop-blur">
+      <div className="absolute bottom-24 right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -955,11 +955,11 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
         })}
       </div>
 
-      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
 
-      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/75 p-3 text-xs text-lf-sand-2 shadow-xl backdrop-blur">
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/90 p-3 text-xs text-lf-sand-2 shadow-lg">
         <div className="font-semibold text-lf-sand">{parcel.address}</div>
         <div className="mt-1 text-lf-taupe">
           {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}
@@ -998,12 +998,12 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
     >
       {/* 2D Mode Badge â€” hidden on mobile to match the 3D badge and avoid
           overlapping the income-potential overlay card on narrow screens. */}
-      <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
+      <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
         <span className="px-2 py-1 text-lf-muted">WebGL Fallback</span>
       </div>
 
-      <div className="absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
+      <div className="absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
 
@@ -1136,7 +1136,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
       </svg>
 
       {/* Info Card */}
-      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/75 p-3 text-xs text-lf-sand-2 shadow-xl backdrop-blur">
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/90 p-3 text-xs text-lf-sand-2 shadow-lg">
         <div className="font-semibold text-lf-sand">{parcel.address}</div>
         <div className="mt-1 text-lf-taupe">
           {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}

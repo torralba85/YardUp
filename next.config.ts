@@ -2,6 +2,7 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  allowedDevOrigins: ['127.0.0.1'],
   transpilePackages: ['motion'],
   // Firebase Hosting serves static assets; API routes go to Cloud Functions
   basePath: '',

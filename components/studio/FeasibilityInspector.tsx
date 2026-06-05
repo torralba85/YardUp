@@ -91,7 +91,7 @@ export default function FeasibilityInspector({
               Feasibility Studio
             </h2>
             <p className="mt-1 text-sm text-lf-muted">
-              Adjust parcel, size, and finish to see income potential.
+              Pick a property, size, and style — see what it could earn.
             </p>
           </div>
           <button
@@ -139,7 +139,7 @@ export default function FeasibilityInspector({
                     className="flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
                   >
                     <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber" />
-                    Parcel data unavailable — showing estimated defaults. Verify with your jurisdiction.
+                    Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
                   </div>
                 )}
 
@@ -156,7 +156,7 @@ export default function FeasibilityInspector({
               </>
             ) : (
               <>
-                <LabelRow label="Parcel Preset" htmlFor="parcel-preset" />
+                <LabelRow label="Sample Property" htmlFor="parcel-preset" />
                 <select
                   id="parcel-preset"
                   value={parcelId}
@@ -234,7 +234,7 @@ export default function FeasibilityInspector({
           </div>
 
           <div className="space-y-4">
-            <LabelRow label="Fine Tune Dimensions" />
+            <LabelRow label="Adjust the size" />
             <Slider
               label="Width"
               value={config.width}
@@ -360,7 +360,7 @@ export default function FeasibilityInspector({
             className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-mahogany text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <Sparkles size={17} />
-            Generate Concept Report
+            Create my ADU report
           </button>
           {onSaveScenario && (
             <button
@@ -370,7 +370,7 @@ export default function FeasibilityInspector({
               className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <BookmarkPlus size={16} />
-              {saveNotice ?? (savingScenario ? "Saving..." : "Save Concept")}
+              {saveNotice ?? (savingScenario ? "Saving..." : "Save this design")}
             </button>
           )}
           <button

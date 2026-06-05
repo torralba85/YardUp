@@ -16,7 +16,10 @@
     "smoke:firebase": "node scripts/firebase-scenario-smoke.mjs",
     "deploy": "firebase deploy --only hosting,functions,firestore:rules --project yardup-2026",
     "deploy:dry-run": "firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run",
-    "deploy:rules": "firebase deploy --only firestore:rules --project yardup-2026"
+    "deploy:rules": "firebase deploy --only firestore:rules --project yardup-2026",
+    "hero:mp4": "remotion render remotion/index.ts HeroLot public/hero/hero.mp4",
+    "hero:still": "remotion still remotion/index.ts HeroLot public/hero/hero-poster.jpg --frame=179",
+    "hero:render": "npm run hero:mp4 && npm run hero:still"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
@@ -35,6 +38,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@remotion/cli": "^4.0.471",
+    "@remotion/google-fonts": "^4.0.471",
     "@tailwindcss/postcss": "4.1.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -49,6 +54,7 @@
     "firebase-functions": "^7.2.5",
     "jsdom": "^29.1.1",
     "postcss": "^8.5.10",
+    "remotion": "^4.0.471",
     "tailwindcss": "4.1.11",
     "typescript": "5.9.3",
     "vitest": "^4.1.7"

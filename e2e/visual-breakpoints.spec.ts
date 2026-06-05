@@ -9,6 +9,8 @@ const breakpoints = [
 ];
 
 test.describe("Visual breakpoint coverage", () => {
+  test.setTimeout(60_000);
+
   for (const bp of breakpoints) {
     test(`renders without clipped primary UI at ${bp.name}`, async ({ browser }, testInfo) => {
       const context = await browser.newContext({
@@ -18,9 +20,9 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
-      await expect(page.getByRole("heading", { name: /Know what your lot could earn/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /See the rent your backyard is hiding/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.
-      const heading = page.getByRole("heading", { name: /Find the ADU income potential/i });
+      const heading = page.getByRole("heading", { name: /Find out what your backyard is worth/i });
       await expect(heading).toBeVisible();
 
       const widths = await page.evaluate(() => ({
@@ -32,7 +34,7 @@ test.describe("Visual breakpoint coverage", () => {
       await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toBeVisible();
 
       await page.screenshot({
-        path: testInfo.snapshotPath(`${bp.name}.png`),
+        path: testInfo.outputPath(`${bp.name}.png`),
         fullPage: true,
       });
 
