@@ -39,10 +39,10 @@ export async function GET(request: NextRequest) {
 
   const regridKey = process.env.REGRID_API_KEY;
   if (!regridKey) {
-    return NextResponse.json(
-      { error: "Parcel service not configured" },
-      { status: 500 },
-    );
+    // Keyless demo: no Regrid configured. Resolve to the nearest sample preset
+    // so a geocoded address still produces a visible parcel instead of
+    // dead-ending; the studio surfaces a "typical estimates" note.
+    return successWithFallback(lat, lng);
   }
 
   try {

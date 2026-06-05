@@ -11,6 +11,7 @@ import { useAuth } from "./auth-context";
 import type { LiveParcelData } from "./parcel-types";
 import type { ParcelPreset } from "./feasibility";
 import { fetchParcel, ParcelFetchError } from "./parcel-api";
+import { geocodeAddress, GeocodeError } from "./geocode-api";
 
 export type ParcelMode = "preset" | "live";
 export type AnyParcel = LiveParcelData | ParcelPreset;
@@ -22,6 +23,8 @@ interface ParcelContextValue {
   parcelError: string | null;
   /** Search an address by lat/lng — switches to live mode. */
   searchParcel: (lat: number, lng: number, address?: string) => Promise<void>;
+  /** Geocode a free-text address, then look up its parcel and switch to live mode. */
+  searchByAddress: (query: string) => Promise<void>;
   /** Return to demo preset mode and clear live parcel data. */
   resetToPreset: (preset: ParcelPreset) => void;
 }
@@ -71,6 +74,32 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     [user],
   );
 
+  const searchByAddress = useCallback(
+    async (query: string) => {
+      const q = query.trim();
+      if (!q) return;
+      setParcelLoading(true);
+      setParcelError(null);
+      try {
+        const idToken = await user?.getIdToken();
+        const { lat, lng } = await geocodeAddress(q, idToken);
+        const data = await fetchParcel(lat, lng, idToken);
+        setParcel(data);
+        setParcelMode("live");
+      } catch (err) {
+        if (err instanceof GeocodeError || err instanceof ParcelFetchError) {
+          setParcelError(err.userMessage);
+        } else {
+          setParcelError("An unexpected error occurred. Please try again.");
+        }
+        // Keep current parcel / mode on error
+      } finally {
+        setParcelLoading(false);
+      }
+    },
+    [user],
+  );
+
   const resetToPreset = useCallback((preset: ParcelPreset) => {
     setParcel(preset);
     setParcelMode("preset");
@@ -85,6 +114,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         parcelLoading,
         parcelError,
         searchParcel,
+        searchByAddress,
         resetToPreset,
       }}
     >

@@ -160,9 +160,14 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(res.status).toBe(400);
   });
 
-  it("500s when REGRID_API_KEY is not configured", async () => {
+  it("returns a preset fallback (not 500) when REGRID_API_KEY is unconfigured", async () => {
+    // Keyless demo: the route degrades to the nearest sample preset so a
+    // geocoded address still resolves to a visible parcel.
     vi.stubEnv("REGRID_API_KEY", "");
     const res = await GET(makeRequest(47.65, -122.31));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("fallback");
+    expect(data.zoning).toBe("R-1 (estimated)");
   });
 });
