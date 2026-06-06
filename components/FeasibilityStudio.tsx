@@ -295,10 +295,10 @@ function FeasibilityStudioInner() {
       onDeleteScenario={handleDeleteScenario}
       deleteNotice={deleteNotice}
     >
-      <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
+      <div className="flex flex-col lg:flex-row lg:flex-1 lg:min-h-0">
         <section
           aria-label="Parcel massing scene"
-          className="lf-entrance relative min-h-[440px] md:min-h-[480px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:min-h-0 xl:border-b-0 xl:border-r"
+          className="lf-entrance relative min-h-[440px] md:min-h-[480px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso lg:min-h-0 lg:border-b-0 lg:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
           {parcelMode === "live" && "lat" in activeParcel ? (

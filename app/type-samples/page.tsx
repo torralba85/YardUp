@@ -132,7 +132,7 @@ const samples = [
 
 export default function TypeSamplesPage() {
   return (
-    <main className="min-h-screen bg-lf-sand text-lf-espresso">
+    <main className="min-h-[100dvh] bg-lf-sand text-lf-espresso">
       <section className="mx-auto max-w-7xl px-5 py-6 sm:px-8 lg:px-10">
         <nav className="flex items-center justify-between gap-4">
           <Link

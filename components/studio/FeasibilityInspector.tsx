@@ -87,7 +87,7 @@ export default function FeasibilityInspector({
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden xl:w-[404px] xl:border-l"
+      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden lg:w-[404px] lg:border-l"
     >
       <div className="flex h-full flex-col lg:min-h-0">
         <div className="flex items-center justify-between border-b border-lf-hairline px-6 py-5">

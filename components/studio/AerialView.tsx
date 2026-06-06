@@ -257,7 +257,7 @@ export default function AerialView({
         />
         {/* Setback labels — side */}
         <SetbackLabel
-          x={24}
+          x={120}
           y={IMG_H / 2}
           text={`Side ${parcel.setbacks.side}.0 ft`}
           rotate={-90}

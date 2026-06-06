@@ -136,7 +136,7 @@ function SceneHud({
   const modeDetails = MODE_DETAILS[mode];
 
   return (
-    <div className="pointer-events-none absolute bottom-5 left-5 z-40 hidden xl:block w-[min(92vw,22rem)] rounded-xl border border-lf-taupe/20 bg-lf-espresso/92 p-4 text-lf-sand-2 shadow-lg backdrop-blur-sm">
+    <div className="pointer-events-none absolute bottom-5 left-5 z-40 hidden lg:block w-[min(92vw,22rem)] rounded-xl border border-lf-taupe/20 bg-lf-espresso/92 p-4 text-lf-sand-2 shadow-lg backdrop-blur-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-taupe">
@@ -1026,7 +1026,7 @@ export default function ParcelScene({
       </Canvas>
       </ErrorBoundary>
 
-      <div className="absolute bottom-4 right-4 xl:bottom-24 xl:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
+      <div className="absolute bottom-4 right-4 lg:bottom-24 lg:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -1050,6 +1050,10 @@ export default function ParcelScene({
             </button>
           );
         })}
+      </div>
+
+      <div className="pointer-events-none absolute bottom-4 left-4 z-40 rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
+        Drag ADU to move · Pinch to zoom
       </div>
 
       <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
