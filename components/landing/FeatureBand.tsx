@@ -36,6 +36,7 @@ const cardVariants = {
 export function FeatureBand() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
   const reducedMotion = useReducedMotion();
@@ -113,7 +114,7 @@ export function FeatureBand() {
                       <span className="font-mono text-xs text-lf-clay">02</span>
                       <Ruler className="h-7 w-7 text-lf-clay" />
                     </div>
-                    <h3 className="mt-6 font-display text-2xl font-bold text-lf-espresso">See what fits — and what doesn't</h3>
+                    <h3 className="mt-6 font-display text-2xl font-bold text-lf-espresso">See what fits — and what doesn&apos;t</h3>
                     <p className="mt-4 leading-7 text-lf-muted text-sm">
                       Yard setbacks, size limits, and your ADU design stay on screen together in a 3D lot builder so nothing catches you off guard.
                     </p>

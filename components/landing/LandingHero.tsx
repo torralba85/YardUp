@@ -21,6 +21,7 @@ export function LandingHero() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const video = videoRef.current;
     if (!video) return;
