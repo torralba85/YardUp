@@ -64,8 +64,12 @@ export default function FeasibilityInspector({
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
   const displayParcel = parcelMode === "live" ? parcel : presetParcel;
 
-  const selectedOption =
-    footprintOptions.find((item) => item.value === config.footprint) ?? footprintOptions[1];
+  const selectedOption = footprintOptions.find(
+    (item) =>
+      item.value === config.footprint &&
+      item.width === config.width &&
+      item.length === config.length
+  );
 
   function handleAddressSelect(result: AddressSearchResult) {
     searchParcel(result.lat, result.lng);
@@ -228,25 +232,33 @@ export default function FeasibilityInspector({
               aria-label="ADU footprint size"
               className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4"
             >
-              {footprintOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => onConfigChange(configForFootprint(option.value, config))}
-                  aria-pressed={config.footprint === option.value}
-                  className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    config.footprint === option.value
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+              {footprintOptions.map((option) => {
+                const isPressed =
+                  config.footprint === option.value &&
+                  config.width === option.width &&
+                  config.length === option.length;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onConfigChange(configForFootprint(option.value, config))}
+                    aria-pressed={isPressed}
+                    className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                      isPressed
+                        ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                        : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-xs text-lf-muted">
-              Selected: {selectedOption.label} ({selectedOption.summary})
-            </p>
+             <p className="text-xs text-lf-muted">
+               {selectedOption
+                 ? `Selected: ${selectedOption.label} (${selectedOption.summary})`
+                 : `Custom size: ${config.footprint.toLocaleString()} sf (${config.width}' x ${config.length}')`}
+             </p>
           </div>
 
           <div className="space-y-4">
@@ -373,10 +385,12 @@ export default function FeasibilityInspector({
           <button
             type="button"
             onClick={onGenerateReport}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-mahogany text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="group flex h-12 w-full items-center justify-between gap-4 rounded-full bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 active:scale-[0.98]"
           >
-            <Sparkles size={17} />
-            Create my ADU report
+            <span>Create my ADU report</span>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-lf-sand/15 transition-transform duration-300 group-hover:translate-x-0.5">
+              <Sparkles size={16} />
+            </span>
           </button>
           {onSaveScenario && (
             <button

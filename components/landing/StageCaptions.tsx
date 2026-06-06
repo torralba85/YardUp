@@ -1,10 +1,10 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { MotionValue } from "motion/react";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { clamp01, formatHeroNumber } from "@/lib/landing-stages";
 import { useStateFromMotionNumber } from "./use-motion-number";
+import { CTAButton } from "./CTAButton";
 
 const FADE = 0.05;
 
@@ -25,13 +25,16 @@ function bandOpacity(p: number, start: number, end: number): number {
 
 // Rise + settle + de-blur tied to the stage's own opacity, so headlines settle
 // into place instead of blinking. Mirrors the scene HUD cards' entrance motion.
-function bandStyle(op: number) {
+function bandStyle(op: number): CSSProperties {
   const out = 1 - op;
+  const isVisible = op > 0.01;
   return {
     opacity: op,
     transform: `translateY(${(out * 18).toFixed(2)}px)`,
     filter: op > 0.999 ? "none" : `blur(${(out * 5).toFixed(2)}px)`,
     willChange: "transform, opacity, filter",
+    pointerEvents: isVisible ? "auto" : "none",
+    visibility: isVisible ? "visible" : "hidden",
   };
 }
 
@@ -52,13 +55,7 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
           LotFoundry turns your backyard address into a visual ADU concept, rent estimate, and a report you can share — before you start calling anyone.
         </p>
         <div className="pointer-events-auto mt-7 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/signup"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-          >
-            Estimate my lot
-            <ArrowRight className="h-5 w-5" />
-          </Link>
+          <CTAButton href="/signup">Estimate my lot</CTAButton>
           <a
             href="#how-it-works"
             className="inline-flex min-h-12 items-center justify-center rounded-md border border-lf-hairline bg-lf-card px-6 text-base font-semibold text-lf-espresso transition-colors hover:bg-lf-sand-2"
@@ -113,13 +110,7 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
           Save your numbers, read the fine print, and share a clean summary with your builder, planner, or spouse before anyone spends a dime.
         </p>
-        <Link
-          href="/signup"
-          className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-        >
-          Estimate my lot
-          <ArrowRight className="h-5 w-5" />
-        </Link>
+        <CTAButton href="/signup" className="mt-7">Estimate my lot</CTAButton>
       </div>
     </div>
   );
