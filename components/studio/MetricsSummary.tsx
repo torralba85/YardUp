@@ -79,13 +79,13 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       aria-label="Feasibility metrics"
       className="grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6"
     >
-      {leads.map((metric) => (
-        <LeadCell key={metric.key} {...metric} />
+      {leads.map(({ key, ...metric }) => (
+        <LeadCell key={key} {...metric} />
       ))}
-      {support.map((metric) => {
+      {support.map(({ key, ...metric }) => {
         const Icon = metric.icon;
         return (
-          <div key={metric.key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+          <div key={key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
             <CellLabel icon={Icon} label={metric.label} />
             <div className={`mt-2 tabular-nums ${metric.valueClass}`}>{metric.value}</div>
             <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-mono" : ""}`}>
