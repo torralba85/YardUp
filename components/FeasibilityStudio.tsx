@@ -47,6 +47,7 @@ import type { FeasibilityResult } from "./studio/types";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { configForFootprint } from "@/lib/feasibility";
+import { useCountUp } from "./studio/use-count-up";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -307,7 +308,12 @@ function FeasibilityStudioInner() {
               isCompliant={isCompliant}
             />
           ) : (
-            <ParcelScene parcel={presetParcel} config={config} isCompliant={isCompliant} />
+            <ParcelScene
+              parcel={presetParcel}
+              config={config}
+              result={result}
+              isCompliant={isCompliant}
+            />
           )}
         </section>
 
@@ -386,22 +392,26 @@ function IncomeLens({
   result: FeasibilityResult;
   isCompliant: boolean;
 }) {
+  const rent = useCountUp(result.monthlyRent);
+  const noi = useCountUp(result.annualNoi);
   return (
-    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/20 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
+    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/25 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
             ADU income potential
           </p>
-          <h2 className="mt-1 font-display text-4xl font-bold leading-[0.95] tracking-[-0.035em] text-lf-sand tabular-nums sm:text-5xl">
-            {formatCurrency(result.monthlyRent)}
+          <h2 className="mt-1 font-display text-5xl font-semibold leading-[0.95] tracking-[-0.02em] text-lf-sand tabular-nums sm:text-6xl">
+            {formatCurrency(rent)}
             <span className="ml-2 font-sans text-base font-medium tracking-normal text-lf-sand/70 pl-1.5">/ mo rent</span>
           </h2>
+          {/* Gold-leaf value hairline mirrors the MetricsSummary lead cells. */}
+          <span aria-hidden className="mt-2 block h-px w-16 bg-lf-amber" />
         </div>
         <div
           className={`rounded-md border px-3 py-2 text-sm font-semibold ${
             isCompliant
-              ? "border-lf-mahogany bg-lf-mahogany text-lf-sand"
+              ? "border-lf-forest bg-lf-forest text-lf-sand"
               : "border-lf-clay bg-lf-clay text-lf-sand"
           }`}
         >
@@ -413,14 +423,14 @@ function IncomeLens({
         <LensFact
           icon={BadgeDollarSign}
           label="Annual NOI"
-          value={formatCurrency(result.annualNoi)}
-          fontClass="font-display text-white text-xl"
+          value={formatCurrency(noi)}
+          fontClass="font-display text-white text-2xl"
         />
         <LensFact
           icon={Clock3}
           label="Payback"
           value={`${result.paybackYears} yrs`}
-          fontClass="font-display text-white text-xl"
+          fontClass="font-display text-white text-2xl"
         />
         <LensFact
           icon={Hammer}

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
@@ -51,6 +51,23 @@ function TestWrapper({ children }: { children: ReactNode }) {
 describe("FeasibilityStudio", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
+    // Simulate reduced motion so useCountUp snaps synchronously to its final
+    // value, keeping assertions on count-up figures deterministic.
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({
+      matches: true,
+      media: "",
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as unknown as MediaQueryList));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("renders the complete feasibility workflow", () => {
@@ -99,5 +116,15 @@ describe("FeasibilityStudio", () => {
 
     expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();
+  });
+
+  it("marks the lead money figures with the investment-grade accent", () => {
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    const summary = document.getElementById("summary");
+    expect(summary).not.toBeNull();
+    const leads = summary!.querySelectorAll('[data-metric-lead="true"]');
+    // Exactly the two lead figures: Monthly Rent and Annual NOI.
+    expect(leads).toHaveLength(2);
+    leads.forEach((el) => expect(el).toHaveAttribute("data-accent", "amber"));
   });
 });
