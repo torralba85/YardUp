@@ -73,7 +73,7 @@ export function FeatureBand() {
             </h2>
           </div>
 
-          <div className="mt-16 grid gap-6 md:grid-cols-3" key={mounted ? "animated" : "static"}>
+          <div className="mt-16 grid gap-6 md:grid-cols-3" key={shouldAnimate ? "animated" : "static"}>
             {/* Card 1: Start with address */}
             <motion.div
               custom={0}

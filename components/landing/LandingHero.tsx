@@ -68,7 +68,7 @@ export function LandingHero() {
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6">
         <motion.div
-          key={mounted ? "animated" : "static"}
+          key={shouldAnimate ? "animated" : "static"}
           initial={shouldAnimate ? { opacity: 0, y: 16 } : false}
           animate={{ opacity: 1, y: 0 }}
           transition={transition}
