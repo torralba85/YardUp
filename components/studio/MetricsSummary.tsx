@@ -1,106 +1,139 @@
 import { BarChart3, CheckCircle2, Home, Layers3, Ruler, SlidersHorizontal } from "lucide-react";
-import {
-  formatCompactCurrency,
-  formatCurrency,
-} from "@/lib/feasibility";
+import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
+import { useCountUp } from "./use-count-up";
 
 export interface MetricsSummaryProps {
   result: FeasibilityResult;
 }
 
 export default function MetricsSummary({ result }: MetricsSummaryProps) {
-  // Tier 1: money figures lead — larger, heavier display weight.
-  // Tier 2: supporting figures sit visually quieter so hierarchy reads at a glance.
-  const metrics = [
+  // Lead tier: the two figures that carry the "this is the money" story.
+  // Serif display numerals, amber gold-leaf hairline, animated count-up.
+  const leads = [
     {
+      key: "monthly-rent",
       icon: Home,
       label: "Monthly Rent",
-      value: formatCurrency(result.monthlyRent),
+      value: result.monthlyRent,
+      format: formatCurrency,
       detail: "Local demo estimate",
-      valueClass: "font-display font-bold text-3xl tracking-[-0.03em] text-lf-espresso",
-      tier: 1,
     },
     {
+      key: "annual-noi",
       icon: BarChart3,
       label: "Annual NOI",
-      value: formatCurrency(result.annualNoi),
+      value: result.annualNoi,
+      format: formatCurrency,
       detail: "After expenses & vacancy",
-      valueClass: "font-display font-bold text-3xl tracking-[-0.03em] text-lf-mahogany",
-      tier: 1,
     },
+  ] as const;
+
+  // Supporting tier: the statement's fine print — quieter, mono-flavored.
+  const support = [
     {
+      key: "build-cost",
       icon: Ruler,
       label: "Build Cost Range",
       value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
       detail: `$${result.costPerSqftLow} - $${result.costPerSqftHigh} / sf`,
+      detailMono: true,
       valueClass: "font-display font-semibold text-xl tracking-tight text-lf-espresso",
-      detailClass: "font-mono",
-      tier: 2,
     },
     {
+      key: "payback",
       icon: SlidersHorizontal,
       label: "Payback",
       value: `${result.paybackYears} yrs`,
       detail: "At mid-range cost",
+      detailMono: false,
       valueClass: "font-display font-semibold text-xl tracking-tight text-lf-espresso",
-      tier: 2,
     },
     {
+      key: "lot-coverage",
       icon: Layers3,
       label: "Lot Coverage",
-      // Value and detail share one basis — lot coverage vs. the zoning cap —
-      // matching report.ts / ReportPreview ("X% of Y% max"). The previous
-      // "40% / 1,980 of 2,000 sf" mixed lot-coverage (%) with allowance-used
-      // (sf), so one cell told two stories. Turns clay once over the cap.
       value: `${Math.round(result.coveragePercent)}%`,
       detail: `of ${result.maxCoveragePercent}% max`,
+      detailMono: true,
       valueClass: `font-mono font-semibold text-xl ${
         result.remainingCapacity < 0 ? "text-lf-clay" : "text-lf-espresso"
       }`,
-      detailClass: "font-mono",
-      tier: 2,
     },
     {
+      key: "zoning-status",
       icon: CheckCircle2,
       label: "Zoning Status",
       value: result.zoningStatus,
-      detail:
-        result.zoningStatus === "Compliant" ? "ADU appears allowed" : "Needs review",
+      detail: result.zoningStatus === "Compliant" ? "ADU appears allowed" : "Needs review",
+      detailMono: false,
       valueClass: `font-sans font-semibold text-xl ${
-        result.zoningStatus === "Compliant" ? "text-lf-mahogany" : "text-lf-clay"
+        result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-clay"
       }`,
-      tier: 2,
     },
-  ];
+  ] as const;
 
   return (
     <section
       id="summary"
       aria-label="Feasibility metrics"
-      className="grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-card sm:grid-cols-3 lg:grid-cols-6"
+      className="grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6"
     >
-      {metrics.map((metric) => {
+      {leads.map(({ key, ...metric }) => (
+        <LeadCell key={key} {...metric} />
+      ))}
+      {support.map(({ key, ...metric }) => {
         const Icon = metric.icon;
-        const isLead = metric.tier === 1;
         return (
-          <div
-            key={metric.label}
-            className={`border-b border-lf-hairline px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5 lg:border-b-0 lg:border-r lg:border-lf-hairline last:lg:border-r-0 ${
-              isLead ? "bg-lf-sand-2/60" : ""
-            }`}
-          >
-            <div className="flex items-center gap-1.5 text-[10px] font-mono font-medium uppercase tracking-[0.12em] text-lf-muted sm:text-[11px]">
-              <Icon size={13} />
-              {metric.label}
-            </div>
-            <div className={`mt-2 ${metric.valueClass}`}>{metric.value}</div>
-            <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailClass ?? ""}`}>
+          <div key={key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+            <CellLabel icon={Icon} label={metric.label} />
+            <div className={`mt-2 tabular-nums ${metric.valueClass}`}>{metric.value}</div>
+            <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-mono" : ""}`}>
               {metric.detail}
             </div>
           </div>
         );
       })}
     </section>
+  );
+}
+
+function LeadCell({
+  icon: Icon,
+  label,
+  value,
+  format,
+  detail,
+}: {
+  icon: typeof Home;
+  label: string;
+  value: number;
+  format: (n: number) => string;
+  detail: string;
+}) {
+  const animated = useCountUp(value);
+  return (
+    <div className="bg-lf-sand-2 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+      <CellLabel icon={Icon} label={label} />
+      <div
+        data-metric-lead="true"
+        data-accent="amber"
+        className="mt-2 inline-block font-display text-3xl font-semibold leading-none tracking-[-0.02em] tabular-nums text-lf-espresso"
+      >
+        {format(animated)}
+        {/* Gold-leaf value hairline — the signature "this is the money" tell. */}
+        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lf-amber" />
+      </div>
+      <div className="mt-2 text-[11px] text-lf-muted">{detail}</div>
+    </div>
+  );
+}
+
+function CellLabel({ icon: Icon, label }: { icon: typeof Home; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-lf-muted sm:text-[11px]">
+      <Icon size={13} />
+      {label}
+    </div>
   );
 }
