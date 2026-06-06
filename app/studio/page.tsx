@@ -19,7 +19,7 @@ export default function StudioPage() {
     return (
       <div className="flex h-[100dvh] items-center justify-center bg-lf-sand">
         <div className="text-center">
-          <div className="text-2xl font-display font-black text-lf-mahogany">
+          <div className="text-2xl font-display font-bold text-lf-mahogany">
             LotFoundry
           </div>
           <p className="mt-2 text-sm text-lf-muted">Loading studio…</p>

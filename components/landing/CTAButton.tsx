@@ -11,8 +11,8 @@ interface CTAButtonProps {
 export function CTAButton({ href, children, size = "md", className }: CTAButtonProps) {
   const sizeClasses =
     size === "lg"
-      ? "min-h-14 gap-3 px-7 text-lg"
-      : "min-h-12 gap-3 px-5 text-base";
+      ? "min-h-14 gap-3 pl-7 pr-2.5 text-lg"
+      : "min-h-12 gap-3 pl-5 pr-2 text-base";
 
   return (
     <Link

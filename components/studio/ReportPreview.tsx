@@ -59,7 +59,7 @@ export default function ReportPreview({
             id="report-preview-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="font-display text-xl font-black tracking-tight text-lf-espresso focus:outline-none"
+            className="font-display text-xl font-bold tracking-tight text-lf-espresso focus:outline-none"
           >
             Concept Feasibility Report
           </h2>

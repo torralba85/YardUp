@@ -1,28 +1,19 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Cormorant_Garamond, Libre_Franklin } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
-const outfit = localFont({
-  src: [
-    { path: "../public/fonts/Outfit/static/Outfit-Regular.ttf", weight: "400", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-Medium.ttf", weight: "500", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-SemiBold.ttf", weight: "600", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-Bold.ttf", weight: "700", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-ExtraBold.ttf", weight: "800", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-Black.ttf", weight: "900", style: "normal" },
-  ],
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
   variable: "--font-display",
 });
 
-const manrope = localFont({
-  src: [
-    { path: "../public/fonts/Manrope/static/Manrope-Regular.ttf", weight: "400", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-Medium.ttf", weight: "500", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-SemiBold.ttf", weight: "600", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-Bold.ttf", weight: "700", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-ExtraBold.ttf", weight: "800", style: "normal" },
-  ],
+const libreFranklin = Libre_Franklin({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
   variable: "--font-sans",
 });
 
@@ -67,7 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${manrope.variable}`}
+      className={`${cormorant.variable} ${libreFranklin.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
