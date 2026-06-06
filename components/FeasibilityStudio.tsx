@@ -298,7 +298,7 @@ function FeasibilityStudioInner() {
       <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
         <section
           aria-label="Parcel massing scene"
-          className="lf-entrance relative min-h-[360px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:min-h-0 xl:border-b-0 xl:border-r lg:min-h-[420px]"
+          className="lf-entrance relative min-h-[440px] md:min-h-[480px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:min-h-0 xl:border-b-0 xl:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
           {parcelMode === "live" && "lat" in activeParcel ? (
@@ -395,13 +395,13 @@ function IncomeLens({
   const rent = useCountUp(result.monthlyRent);
   const noi = useCountUp(result.annualNoi);
   return (
-    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/25 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
+    <div className="pointer-events-none absolute left-4 right-16 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/25 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
             ADU income potential
           </p>
-          <h2 className="mt-1 font-display text-5xl font-semibold leading-[0.95] tracking-[-0.02em] text-lf-sand tabular-nums sm:text-6xl">
+          <h2 className="mt-1 font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-lf-sand tabular-nums sm:text-5xl sm:leading-[0.95] md:text-6xl">
             {formatCurrency(rent)}
             <span className="ml-2 font-sans text-base font-medium tracking-normal text-lf-sand/70 pl-1.5">/ mo rent</span>
           </h2>

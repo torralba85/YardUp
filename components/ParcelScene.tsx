@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
@@ -136,7 +136,7 @@ function SceneHud({
   const modeDetails = MODE_DETAILS[mode];
 
   return (
-    <div className="pointer-events-none absolute bottom-5 left-5 z-40 w-[min(92vw,22rem)] rounded-xl border border-lf-taupe/20 bg-lf-espresso/92 p-4 text-lf-sand-2 shadow-lg backdrop-blur-sm">
+    <div className="pointer-events-none absolute bottom-5 left-5 z-40 hidden xl:block w-[min(92vw,22rem)] rounded-xl border border-lf-taupe/20 bg-lf-espresso/92 p-4 text-lf-sand-2 shadow-lg backdrop-blur-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-taupe">
@@ -1026,7 +1026,7 @@ export default function ParcelScene({
       </Canvas>
       </ErrorBoundary>
 
-      <div className="absolute bottom-24 right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
+      <div className="absolute bottom-4 right-4 xl:bottom-24 xl:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
