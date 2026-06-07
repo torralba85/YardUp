@@ -66,19 +66,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </button>
 
         <div className="p-8">
-          <h2 className="text-2xl font-semibold text-lf-sand mb-2">
+          <h2 className="lf-panel-heading mb-2 text-lf-sand">
             {isSignUp ? "Create an account" : "Welcome back"}
           </h2>
-          <p className="text-sm text-lf-taupe mb-6">
+          <p className="lf-body-sm mb-6 text-lf-taupe">
             {isSignUp
-              ? "Sign up to save your lot analysis and scenarios."
-              : "Sign in to access your saved lot analysis and scenarios."}
+              ? "Create an account to save ADU estimates, reports, and builder-ready snapshots."
+              : "Sign in to access your saved ADU estimates, reports, and builder-ready snapshots."}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
-                <label className="block text-xs font-medium text-lf-taupe mb-1">
+                <label className="lf-caption mb-1 block font-medium text-lf-taupe">
                   Name
                 </label>
                 <div className="relative">
@@ -98,7 +98,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             )}
 
             <div>
-              <label className="block text-xs font-medium text-lf-taupe mb-1">
+              <label className="lf-caption mb-1 block font-medium text-lf-taupe">
                 Email
               </label>
               <div className="relative">
@@ -117,7 +117,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-lf-taupe mb-1">
+              <label className="lf-caption mb-1 block font-medium text-lf-taupe">
                 Password
               </label>
               <div className="relative">
@@ -136,7 +136,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             {error && (
-              <div className="text-sm text-red-400 bg-red-400/10 p-3 rounded border border-red-400/20">
+              <div className="lf-body-sm rounded border border-red-400/20 bg-red-400/10 p-3 text-red-400">
                 {error}
               </div>
             )}
@@ -155,7 +155,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>
               </div>
-              <div className="relative flex justify-center text-xs">
+              <div className="lf-caption relative flex justify-center">
                 <span className="bg-lf-mahogany px-2 text-lf-taupe">
                   Or continue with
                 </span>

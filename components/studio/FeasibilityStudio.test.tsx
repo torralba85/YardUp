@@ -114,8 +114,47 @@ describe("FeasibilityStudio", () => {
 
     await user.click(screen.getByRole("button", { name: /Create my ADU report/i }));
 
+    expect(
+      screen.getByText(/owner-facing summary of the selected adu concept/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();
+  });
+
+  it("opens the estimate summary from the navigation", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(screen.getAllByRole("button", { name: /Estimate Summary/i })[0]);
+
+    expect(
+      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Current feasibility snapshot for/i)).toBeInTheDocument();
+  });
+
+  it("routes every primary navigation item to a visible studio surface", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(screen.getAllByRole("button", { name: /Permit Guide/i })[0]);
+    expect(screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: /Inspiration Gallery/i })[0]);
+    expect(screen.getByRole("heading", { name: /Inspiration Gallery/i })).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: /Estimate Summary/i })[0]);
+    expect(
+      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: /Export Preview/i })[0]);
+    expect(screen.getByRole("heading", { name: "Concept Feasibility Report" })).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: /Feasibility Studio/i })[0]);
+    expect(
+      screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
+    ).toBeInTheDocument();
   });
 
   it("marks the lead money figures with the investment-grade accent", () => {

@@ -14,15 +14,12 @@ import {
   type ADUConfig,
   type FinancialAssumptions,
 } from "@/lib/feasibility";
-import { buildReportCsv, buildReportText, downloadBlob } from "@/lib/report";
+import { buildReportCsv, buildReportHtml, downloadBlob } from "@/lib/report";
 import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
-import {
-  createSavedScenarioStore,
-  type SavedScenario,
-} from "@/lib/saved-scenarios";
+import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { getMatchedBuilders } from "@/lib/marketplace";
 import {
@@ -40,6 +37,7 @@ import AerialView from "./studio/AerialView";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
+import EstimateSummaryPanel from "./studio/EstimateSummaryPanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
@@ -100,7 +98,8 @@ function FeasibilityStudioInner() {
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
 
-  // Load saved scenarios: Firestore for authenticated users, localStorage for guests
+  // Load saved scenarios only for authenticated users. Guests should never see
+  // or persist prior address state.
   useEffect(() => {
     let cancelled = false;
     if (user) {
@@ -109,11 +108,9 @@ function FeasibilityStudioInner() {
       }).catch(() => {
         if (!cancelled) setSavedScenarios([]);
       });
-    } else if (typeof window !== "undefined") {
+    } else {
       Promise.resolve().then(() => {
-        if (!cancelled) {
-          setSavedScenarios(createSavedScenarioStore(window.localStorage).list());
-        }
+        if (!cancelled) setSavedScenarios([]);
       });
     }
     return () => { cancelled = true; };
@@ -176,6 +173,11 @@ function FeasibilityStudioInner() {
   async function handleSaveScenario() {
     if (typeof window === "undefined") return;
     if (savingScenario) return;
+    if (!user) {
+      setSaveNotice("Sign in to save");
+      setTimeout(() => setSaveNotice(null), 2000);
+      return;
+    }
 
     const entry = {
       name: `${activeParcel.address} - ${config.footprint} sf`,
@@ -187,14 +189,8 @@ function FeasibilityStudioInner() {
     setSavingScenario(true);
     setSaveNotice(null);
     try {
-      if (user) {
-        const created = await saveSavedScenario(user.uid, entry);
-        setSavedScenarios((prev) => [created, ...prev]);
-      } else {
-        const store = createSavedScenarioStore(window.localStorage);
-        store.save(entry);
-        setSavedScenarios(store.list());
-      }
+      const created = await saveSavedScenario(user.uid, entry);
+      setSavedScenarios((prev) => [created, ...prev]);
       setSaveNotice("Saved");
     } catch {
       setSaveNotice("Save failed");
@@ -206,13 +202,8 @@ function FeasibilityStudioInner() {
 
   function handleLoadScenario(id: string) {
     if (typeof window === "undefined") return;
-    let scenario: SavedScenario | undefined;
-    if (user) {
-      scenario = savedScenarios.find((s) => s.id === id);
-    } else {
-      const store = createSavedScenarioStore(window.localStorage);
-      scenario = store.load(id);
-    }
+    if (!user) return;
+    const scenario = savedScenarios.find((s) => s.id === id);
     if (!scenario) return;
     setParcelId(scenario.parcelId);
     setConfig(scenario.config);
@@ -221,15 +212,10 @@ function FeasibilityStudioInner() {
 
   async function handleDeleteScenario(id: string) {
     if (typeof window === "undefined") return;
+    if (!user) return;
     try {
-      if (user) {
-        await deleteSavedScenario(user.uid, id);
-        setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
-      } else {
-        const store = createSavedScenarioStore(window.localStorage);
-        store.remove(id);
-        setSavedScenarios(store.list());
-      }
+      await deleteSavedScenario(user.uid, id);
+      setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
     } catch {
       setDeleteNotice("Delete failed");
       setTimeout(() => setDeleteNotice(null), 2000);
@@ -274,8 +260,8 @@ function FeasibilityStudioInner() {
   }
 
   function downloadReport() {
-    const text = buildReportText({ parcel: activeParcel, config, result });
-    downloadBlob("lotfoundry-concept-feasibility-report.txt", text, "text/plain");
+    const html = buildReportHtml({ parcel: activeParcel, config, result });
+    downloadBlob("lotfoundry-concept-feasibility-report.html", html, "text/html");
   }
 
   function exportCsv() {
@@ -331,6 +317,12 @@ function FeasibilityStudioInner() {
               });
               setActiveNav("studio");
             }}
+          />
+        ) : activeNav === "summary" ? (
+          <EstimateSummaryPanel
+            parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+            result={result}
+            onGenerateReport={handleGenerateReport}
           />
         ) : (
           <FeasibilityInspector

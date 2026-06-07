@@ -56,29 +56,30 @@ export function FloatingNavBar() {
           borderStyle: "solid",
           boxShadow,
         }}
-        className="pointer-events-auto px-6 max-w-7xl mx-auto flex items-center justify-between"
+        className="pointer-events-auto mx-auto box-border flex max-w-7xl items-center justify-between px-2 sm:px-6"
       >
-        <Link href="/" aria-label="LotFoundry home" className="flex items-center">
+        <Link href="/" aria-label="LotFoundry home" className="flex flex-shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/lotfoundry-lockup-horizontal.svg"
             alt="LotFoundry"
-            className="h-8 w-auto"
+            className="h-4 w-auto sm:h-7"
           />
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10"
+            className="inline-flex min-h-11 items-center rounded-md px-1.5 py-2 text-xs font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10 sm:px-4 sm:text-sm"
           >
             Sign in
           </Link>
           <Link
-            href="/signup"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md bg-lf-mahogany px-4 py-2 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-clay"
+            href="/studio"
+            className="inline-flex min-h-11 items-center gap-1 rounded-md bg-lf-mahogany px-2 py-2 text-xs font-medium text-lf-sand transition-colors hover:bg-lf-clay sm:gap-2 sm:px-4 sm:text-sm"
           >
-            Estimate my lot
-            <ArrowRight className="h-4 w-4" />
+            <span className="sm:hidden">Start</span>
+            <span className="hidden sm:inline">Check my address</span>
+            <ArrowRight className="hidden h-4 w-4 sm:block" />
           </Link>
         </div>
       </motion.header>

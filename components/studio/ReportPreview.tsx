@@ -44,14 +44,14 @@ export default function ReportPreview({
     >
       <div className="grid gap-6 lg:grid-cols-[140px_1fr_1fr_220px] xl:grid-cols-[150px_1fr_1fr_250px]">
         <div className="hidden rounded-md border border-lf-hairline bg-lf-sand-2 p-2.5 lg:block">
-          <div className="text-[9px] font-bold uppercase tracking-widest text-lf-mahogany">
+          <div className="lf-kicker-dense text-lf-mahogany">
             LotFoundry
           </div>
           <div className="mt-2 aspect-[3/2] rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
           <div className="mt-2 text-xs font-semibold text-lf-espresso">
             Concept Feasibility Report
           </div>
-          <div className="mt-1 text-[11px] text-lf-muted">{parcelName}</div>
+          <div className="lf-caption mt-1 text-lf-muted">{parcelName}</div>
         </div>
 
         <div>
@@ -59,13 +59,14 @@ export default function ReportPreview({
             id="report-preview-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="font-display text-xl font-bold tracking-tight text-lf-espresso focus:outline-none"
+            className="lf-panel-heading text-lf-espresso focus:outline-none"
           >
             Concept Feasibility Report
           </h2>
-          <p className="mt-1.5 max-w-xl text-sm leading-6 text-lf-muted">
-            A shareable investor-demo summary of the selected ADU concept, site assumptions,
-            estimated costs, rental upside, and zoning feasibility.
+          <p className="lf-body-sm mt-1.5 max-w-xl text-lf-muted">
+            An owner-facing summary of the selected ADU concept, site assumptions,
+            estimated costs, income range, and early feasibility signals. Final scope,
+            approvals, and performance still require local review.
           </p>
           <div className="mt-3 grid gap-2.5 text-sm text-lf-muted sm:grid-cols-2">
             <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
@@ -75,7 +76,7 @@ export default function ReportPreview({
             />
             <ReportFact
               icon={BarChart3}
-              text={`${formatCurrency(result.annualNoi)} annual NOI estimate`}
+              text={`${formatCurrency(result.annualNoi)} annual net income estimate`}
             />
             <ReportFact icon={CheckCircle2} text={`${result.zoningStatus} feasibility status`} />
           </div>
@@ -162,9 +163,10 @@ export default function ReportPreview({
               </button>
             )}
           </div>
-          <div className="rounded-md bg-lf-sand-2 p-2.5 text-[11px] leading-snug text-lf-muted border border-lf-hairline/40">
+          <div className="lf-caption rounded-md border border-lf-hairline/40 bg-lf-sand-2 p-2.5 text-lf-muted">
             Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
-            and market rents before investment decisions.
+            and market rents with local professionals before moving forward. No approval or
+            income outcome is guaranteed.
           </div>
         </div>
       </div>

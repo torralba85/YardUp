@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CTAButton } from "./CTAButton";
 import { motion, useReducedMotion } from "motion/react";
+import { CTAButton } from "./CTAButton";
 
 const HERO_PROOF = [
   { value: "$2,350/mo", label: "sample rent estimate" },
@@ -62,7 +62,6 @@ export function LandingHero() {
         preload="auto"
         aria-hidden="true"
       >
-        {/* H.264 mp4 only — universally decodable. The VP9 webm errored in Chrome. */}
         <source src="/hero/hero.mp4" type="video/mp4" />
       </video>
 
@@ -80,13 +79,13 @@ export function LandingHero() {
           initial={shouldAnimate ? { opacity: 0, y: 16 } : false}
           animate={{ opacity: 1, y: 0 }}
           transition={transition}
-          className="max-w-xl"
+          className="max-w-2xl"
         >
           <motion.p
             initial={shouldAnimate ? { opacity: 0 } : false}
             animate={{ opacity: 0.85 }}
             transition={{ ...transition, delay: 0.1 }}
-            className="font-mono text-xs uppercase tracking-[0.2em] text-lf-sand/85"
+            className="lf-kicker text-lf-sand/85"
           >
             From lot to income
           </motion.p>
@@ -94,20 +93,33 @@ export function LandingHero() {
             initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...transition, delay: 0.2 }}
-            className="mt-3 max-w-[11ch] font-display text-4xl font-bold leading-[0.95] tracking-[-0.03em] text-lf-sand sm:text-5xl md:text-7xl"
+            className="lf-display-hero mt-3 max-w-[13ch] text-lf-sand"
             style={{ textShadow: "0 2px 24px rgba(38,19,7,0.45)" }}
           >
-            See the rent your backyard is hiding.
+            Estimate the ADU income your lot could support.
           </motion.h1>
+
+          <motion.p
+            initial={shouldAnimate ? { opacity: 0, y: 10 } : false}
+            animate={{ opacity: 0.92, y: 0 }}
+            transition={{ ...transition, delay: 0.28 }}
+            className="lf-body-lg prose-width mt-5 text-lf-sand/86"
+          >
+            Enter an address to model site fit, rent, build range, payback, and a
+            shareable concept report before you call a builder.
+          </motion.p>
 
           <motion.div
             initial={shouldAnimate ? { opacity: 0, y: 8 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...transition, delay: 0.35 }}
+            className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
           >
-            <CTAButton href="/signup" className="mt-7">
-              Estimate my lot
-            </CTAButton>
+            <CTAButton href="/studio">Check my address</CTAButton>
+            <p className="lf-body-sm max-w-sm text-lf-sand/74">
+              Uses parcel data where available. Local review required before design,
+              permit, financing, or investment decisions.
+            </p>
           </motion.div>
 
           <motion.dl
@@ -118,10 +130,10 @@ export function LandingHero() {
           >
             {HERO_PROOF.map(({ value, label }) => (
               <div key={label} className="min-w-0">
-                <dt className="text-[10px] uppercase tracking-[0.2em] text-lf-sand/75">
+                <dt className="lf-kicker-dense text-lf-sand/75">
                   {label}
                 </dt>
-                <dd className="mt-1 font-display text-2xl font-bold leading-none text-lf-sand sm:text-[1.75rem]">
+                <dd className="mt-1 font-display text-2xl font-bold leading-none text-lf-sand sm:text-3xl">
                   {value}
                 </dd>
               </div>

@@ -20,9 +20,9 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
-      await expect(page.getByRole("heading", { name: /See the rent your backyard is hiding/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Estimate the ADU income your lot could support/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.
-      const heading = page.getByRole("heading", { name: /Find out what your backyard is worth/i });
+      const heading = page.getByRole("heading", { name: /Know what to ask before you spend on plans/i });
       await expect(heading).toBeVisible();
 
       const widths = await page.evaluate(() => ({
@@ -31,7 +31,7 @@ test.describe("Visual breakpoint coverage", () => {
       }));
       expect(widths.doc).toBeLessThanOrEqual(widths.win + 1);
 
-      await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toBeVisible();
+      await expect(page.getByRole("link", { name: /Check my address/i }).first()).toBeVisible();
 
       await page.screenshot({
         path: testInfo.outputPath(`${bp.name}.png`),
