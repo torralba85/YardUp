@@ -166,6 +166,9 @@ export function useSavedScenarios() {
   });
 
   const fetchScenarios = useCallback(async () => {
+    // ensure any setState happens asynchronously to avoid set-state-in-effect lint errors
+    await Promise.resolve();
+
     if (profile) {
       const q = query(
         collection(db, "users", profile.uid, "scenarios"),
@@ -187,10 +190,7 @@ export function useSavedScenarios() {
     } else {
       if (typeof window !== "undefined") {
         const store = createSavedScenarioStore(window.localStorage);
-        const list = store.list();
-        Promise.resolve().then(() => {
-          setScenarios(list);
-        });
+        setScenarios(store.list());
       }
     }
   }, [profile]);
