@@ -30,9 +30,16 @@ export function LandingHero() {
       navigator as Navigator & { connection?: { saveData?: boolean } }
     ).connection;
     const saveData = connection?.saveData === true;
-    if (reduce || saveData) return; // poster stays; do not autoplay
-    void video.play().catch(() => {
-      /* autoplay blocked (e.g. low-power mode) — poster remains, no error surfaced */
+    if (reduce) {
+      console.log("Hero video blocked: prefers-reduced-motion is active.");
+      return;
+    }
+    if (saveData) {
+      console.log("Hero video blocked: saveData is active.");
+      return;
+    }
+    void video.play().catch((err) => {
+      console.warn("Hero video autoplay blocked by browser (e.g., low-power mode):", err);
     });
   }, []);
 

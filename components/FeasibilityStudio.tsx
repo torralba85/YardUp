@@ -311,7 +311,6 @@ function FeasibilityStudioInner() {
             <ParcelScene
               parcel={presetParcel}
               config={config}
-              result={result}
               isCompliant={isCompliant}
             />
           )}

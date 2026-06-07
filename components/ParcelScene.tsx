@@ -6,8 +6,8 @@ import { Html, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import type { ADUConfig, FeasibilityResult, ParcelPreset } from "@/lib/feasibility";
-import { finishColors, formatCurrency } from "@/lib/feasibility";
+import type { ADUConfig, ParcelPreset } from "@/lib/feasibility";
+import { finishColors } from "@/lib/feasibility";
 
 /** Minimal error boundary that falls back to a render function. */
 class ErrorBoundary extends Component<
@@ -33,7 +33,6 @@ interface ParcelSceneProps {
   parcel: ParcelPreset;
   config: ADUConfig;
   isCompliant: boolean;
-  result: FeasibilityResult;
   aduPosition?: [number, number];
   onAduPositionChange?: (pos: [number, number]) => void;
 }
@@ -69,24 +68,6 @@ const SCENE = {
 const SCENE_BACKDROP =
   "linear-gradient(180deg, #a8d8ea 0%, #c8e0d0 30%, #e8dcc8 60%, #d4c8b0 100%)";
 
-const MODE_DETAILS: Record<ViewMode, { tag: string; title: string; detail: string }> = {
-  overview: {
-    tag: "Orbit",
-    title: "Overview mode",
-    detail: "Move the camera to read the lot, envelope, and massing together.",
-  },
-  adu: {
-    tag: "Drag",
-    title: "ADU placement mode",
-    detail: "Drag the proposed building to test fit inside the buildable area.",
-  },
-  setbacks: {
-    tag: "Review",
-    title: "Setback mode",
-    detail: "The dashed inner box shows the buildable envelope after setbacks.",
-  },
-};
-
 function SceneCallout({
   eyebrow,
   title,
@@ -120,76 +101,6 @@ function SceneCallout({
   );
 }
 
-function SceneHud({
-  parcel,
-  config,
-  result,
-  isCompliant,
-  mode,
-}: {
-  parcel: ParcelPreset;
-  config: ADUConfig;
-  result: FeasibilityResult;
-  isCompliant: boolean;
-  mode: ViewMode;
-}) {
-  const modeDetails = MODE_DETAILS[mode];
-
-  return (
-    <div className="pointer-events-none absolute bottom-5 left-5 z-40 hidden lg:block w-[min(92vw,22rem)] rounded-xl border border-lf-taupe/20 bg-lf-espresso/92 p-4 text-lf-sand-2 shadow-lg backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-lf-taupe">
-            Scene overview
-          </div>
-          <div className="mt-1 truncate text-sm font-semibold text-lf-sand">
-            {parcel.address}
-          </div>
-          <div className="mt-0.5 text-xs text-lf-taupe">
-            {parcel.lotWidth} ft x {parcel.lotLength} ft lot
-          </div>
-        </div>
-        <div
-          className={`shrink-0 rounded-md border px-2.5 py-1 text-[11px] font-semibold ${
-            isCompliant
-              ? "border-lf-forest/35 bg-lf-forest text-lf-sand"
-              : "border-lf-amber/40 bg-lf-amber text-lf-espresso"
-          }`}
-        >
-          {isCompliant ? "Compliant" : "Review needed"}
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <HudMetric label="ADU" value={`${config.width} x ${config.length} ft`} />
-        <HudMetric label="Rent" value={formatCurrency(result.monthlyRent)} />
-        <HudMetric label="Coverage" value={`${Math.round(result.coveragePercent)}%`} />
-        <HudMetric label="Payback" value={`${result.paybackYears} yrs`} />
-      </div>
-
-      <div className="mt-3 flex items-start gap-2 border-t border-lf-taupe/15 pt-3 text-xs leading-5 text-lf-taupe">
-        <span className="rounded-full border border-lf-taupe/25 bg-lf-sand/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-sand">
-          {modeDetails.tag}
-        </span>
-        <div>
-          <div className="font-semibold text-lf-sand">{modeDetails.title}</div>
-          <p className="mt-0.5">{modeDetails.detail}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HudMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-lf-taupe/15 bg-lf-sand-2/[0.08] px-2.5 py-2">
-      <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-taupe">
-        {label}
-      </div>
-      <div className="mt-1 text-sm font-semibold tracking-tight text-lf-sand">{value}</div>
-    </div>
-  );
-}
 
 function SceneCameraChoreography({
   mode,
@@ -482,7 +393,6 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
         <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
       </mesh>
 
-      <LabelSprite text="EXISTING HOUSE" position={[0, wallHeight + ridgeHeight + 2, 0]} scale={Math.max(width * 0.2, 6)} />
     </group>
   );
 }
@@ -541,13 +451,11 @@ function ProposedAdu({
   parcel,
   position: aduPos,
   onPositionChange,
-  showCallout = true,
 }: {
   config: ADUConfig;
   parcel: ParcelPreset;
   position: [number, number];
   onPositionChange?: (pos: [number, number]) => void;
-  showCallout?: boolean;
 }) {
   const finishColor = finishColors[config.finish];
   const y = config.height / 2;
@@ -714,16 +622,9 @@ function ProposedAdu({
           <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
         </mesh>
 
-        {/* Label */}
-        <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
-        {showCallout && (
-          <SceneCallout
-            eyebrow={isInsideSetback ? "Concept fit" : "Needs review"}
-            title={`${config.width} x ${config.length} ft ADU`}
-            detail={isHovered ? "Drag to reposition inside the buildable envelope." : `${config.finish} finish, ${config.roof} roof.`}
-            position={[config.width * 0.35, config.height + 7, -config.length / 2 - 3]}
-            tone={isInsideSetback ? "ok" : "warn"}
-          />
+        {/* Label — only surfaces on hover/drag so the scene stays quiet at rest */}
+        {(isHovered || isDraggingActive) && (
+          <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
         )}
 
         {/* Setback compliance indicator ring */}
@@ -744,7 +645,6 @@ function ProposedAdu({
 export default function ParcelScene({
   parcel,
   config,
-  result,
   isCompliant,
   aduPosition,
   onAduPositionChange,
@@ -924,7 +824,7 @@ export default function ParcelScene({
   }, []);
 
   if (!webglAvailable) {
-    return <Parcel2DScene parcel={parcel} config={config} isCompliant={isCompliant} result={result} />;
+    return <Parcel2DScene parcel={parcel} config={config} isCompliant={isCompliant} />;
   }
 
   return (
@@ -977,10 +877,13 @@ export default function ParcelScene({
             eyebrow="Buildable envelope"
             title={isCompliant ? "Within declared limits" : "Local review likely"}
             detail={`${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side setbacks.`}
+            // Anchored to the front-right of the lot (foreground/driveway) so the
+            // callout projects into empty screen space and never collides with the
+            // fixed income-summary card in the top-left.
             position={[
-              -parcel.lotWidth / 2 + parcel.setbacks.side + 12,
+              parcel.lotWidth / 2 - parcel.setbacks.side,
               6,
-              -parcel.lotLength / 2 + parcel.setbacks.rear + 18,
+              parcel.lotLength / 2 - parcel.setbacks.front - 10,
             ]}
             tone={isCompliant ? "ok" : "warn"}
           />
@@ -991,7 +894,6 @@ export default function ParcelScene({
           parcel={parcel}
           position={aduPos}
           onPositionChange={handleAduPosChange}
-          showCallout={viewMode === "overview"}
         />
 
         {/* Landscape elements */}
@@ -1059,13 +961,11 @@ export default function ParcelScene({
       <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
-
-      <SceneHud parcel={parcel} config={config} result={result} isCompliant={isCompliant} mode={viewMode} />
     </div>
   );
 }
 
-function Parcel2DScene({ parcel, config, result, isCompliant }: ParcelSceneProps) {
+function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
   const finishColor = finishColors[config.finish];
 
   // Calculate existing house dimensions
@@ -1229,9 +1129,6 @@ function Parcel2DScene({ parcel, config, result, isCompliant }: ParcelSceneProps
         <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#6b6f63" strokeWidth="0.5" />
         <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#6b6f63" />
       </svg>
-
-      {/* Info Card */}
-      <SceneHud parcel={parcel} config={config} result={result} isCompliant={isCompliant} mode="overview" />
     </div>
   );
 }

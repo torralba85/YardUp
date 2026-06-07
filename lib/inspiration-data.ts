@@ -12,6 +12,7 @@ export interface InspirationItem {
   tags: string[];
   summary: string;
   budgetBand: string;
+  imagePath: string;
 }
 
 export const inspirationItems: InspirationItem[] = [
@@ -27,6 +28,7 @@ export const inspirationItems: InspirationItem[] = [
     tags: ["studio", "courtyard", "daylight"],
     summary: "A compact detached layout with a private entry court and high daylight clerestory windows.",
     budgetBand: "$250k - $400k",
+    imagePath: "/inspiration/canyon-courtyard.png",
   },
   {
     id: "garage-laneway",
@@ -40,6 +42,7 @@ export const inspirationItems: InspirationItem[] = [
     tags: ["garage", "conversion", "compact"],
     summary: "A reuse-first concept for homeowners prioritizing speed, budget control, and rental utility.",
     budgetBand: "Under $250k",
+    imagePath: "/inspiration/garage-laneway.png",
   },
   {
     id: "bay-window",
@@ -53,6 +56,7 @@ export const inspirationItems: InspirationItem[] = [
     tags: ["one bedroom", "premium", "work nook"],
     summary: "A larger rental-ready layout with a defined living room, bay windows, and a small work alcove.",
     budgetBand: "Over $400k",
+    imagePath: "/inspiration/bay-window.png",
   },
   {
     id: "coastal-adu",
@@ -66,6 +70,7 @@ export const inspirationItems: InspirationItem[] = [
     tags: ["detached", "long lot", "beach style"],
     summary: "A narrow footprint designed to preserve outdoor living space on tighter seaside lots.",
     budgetBand: "$250k - $400k",
+    imagePath: "/inspiration/coastal-adu.png",
   },
   {
     id: "valley-jadu",
@@ -79,6 +84,7 @@ export const inspirationItems: InspirationItem[] = [
     tags: ["jadu", "conversion", "existing space"],
     summary: "A modest suite conversion for family flexibility with a lower construction footprint.",
     budgetBand: "Under $250k",
+    imagePath: "/inspiration/valley-jadu.png",
   },
   {
     id: "clean-gable",
@@ -92,5 +98,7 @@ export const inspirationItems: InspirationItem[] = [
     tags: ["one bedroom", "cottage", "gable"],
     summary: "A straightforward detached concept intended to align with permit-ready plan thinking.",
     budgetBand: "$250k - $400k",
+    imagePath: "/inspiration/clean-gable.png",
   },
 ];
+
