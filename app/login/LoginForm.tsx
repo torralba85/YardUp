@@ -60,7 +60,7 @@ export default function LoginForm() {
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-sm text-lf-brick">
+        <div className="lf-body-sm rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
           {error}
         </div>
       )}
@@ -68,7 +68,7 @@ export default function LoginForm() {
       <div>
         <label
           htmlFor="email"
-          className="mb-1.5 block text-sm font-medium text-lf-espresso"
+          className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
         >
           Email
         </label>
@@ -88,13 +88,13 @@ export default function LoginForm() {
         <div className="mb-1.5 flex items-center justify-between">
           <label
             htmlFor="password"
-            className="text-sm font-medium text-lf-espresso"
+            className="lf-body-sm font-medium text-lf-espresso"
           >
             Password
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm text-lf-clay transition-colors hover:text-lf-mahogany"
+            className="lf-body-sm text-lf-clay transition-colors hover:text-lf-mahogany"
           >
             Forgot password?
           </Link>
@@ -107,7 +107,7 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
-          placeholder="••••••••"
+          placeholder="Password"
         />
       </div>
 
@@ -116,7 +116,7 @@ export default function LoginForm() {
         disabled={isPending}
         className="w-full rounded-md bg-lf-mahogany py-2.5 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay disabled:opacity-50"
       >
-        {isPending ? "Signing in…" : "Sign in"}
+        {isPending ? "Signing in..." : "Sign in"}
       </button>
     </form>
 
@@ -124,7 +124,7 @@ export default function LoginForm() {
       <div className="absolute inset-0 flex items-center">
         <div className="w-full border-t border-lf-hairline" />
       </div>
-      <div className="relative flex justify-center text-xs">
+      <div className="lf-caption relative flex justify-center">
         <span className="bg-lf-card px-2 text-lf-muted">or continue with</span>
       </div>
     </div>
@@ -154,7 +154,7 @@ export default function LoginForm() {
       Google
     </button>
 
-    <p className="mt-6 text-center text-sm text-lf-muted">
+    <p className="lf-body-sm mt-6 text-center text-lf-muted">
       Don&apos;t have an account?{" "}
       <Link href="/signup" className="font-medium text-lf-clay hover:text-lf-mahogany">
         Sign up

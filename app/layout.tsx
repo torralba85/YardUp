@@ -19,9 +19,9 @@ const libreFranklin = Libre_Franklin({
 
 
 export const metadata: Metadata = {
-  title: "LotFoundry | ADU Income Potential",
+  title: "LotFoundry | ADU Feasibility & Income Estimates",
   description:
-    "Estimate your lot's ADU income potential with monthly rent, build range, payback, and site fit in minutes.",
+    "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
   manifest: "/manifest.json",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
   icons: {
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     apple: "/icon-180.png",
   },
   openGraph: {
-    title: "LotFoundry | ADU Income Potential",
+    title: "LotFoundry | ADU Feasibility & Income Estimates",
     description:
-      "Estimate your lot's ADU income potential with monthly rent, build range, payback, and site fit in minutes.",
+      "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
     images: [
       {
         url: "/lotfoundry-og.png",

@@ -137,6 +137,6 @@ describe("marketplace domain helpers", () => {
 
     expect(snapshot.parcelCity).toBe("Seattle");
     expect(snapshot.parcelState).toBe("WA");
-    expect(snapshot.reportText).toContain("LotFoundry - Concept Feasibility Report");
+    expect(snapshot.reportText).toContain("LotFoundry Concept Feasibility Report");
   });
 });

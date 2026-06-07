@@ -22,7 +22,7 @@ export default function StudioPage() {
           <div className="text-2xl font-display font-bold text-lf-mahogany">
             LotFoundry
           </div>
-          <p className="mt-2 text-sm text-lf-muted">Loading studio…</p>
+          <p className="mt-2 text-sm text-lf-muted">Loading studio...</p>
         </div>
       </div>
     );

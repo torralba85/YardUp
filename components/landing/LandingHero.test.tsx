@@ -27,13 +27,18 @@ describe("LandingHero video hero", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders the approved R1 copy and CTA to /signup", () => {
+  it("renders the address-first owner copy and CTA to /studio", () => {
     render(<LandingHero />);
     expect(screen.getByText(/from lot to income/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /see the rent your backyard is hiding/i }),
+      screen.getByRole("heading", {
+        name: /estimate the adu income your lot could support/i,
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /estimate my lot/i })).toHaveAttribute("href", "/signup");
+    expect(
+      screen.getByText(/enter an address to model site fit, rent, build range, payback/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /check my address/i })).toHaveAttribute("href", "/studio");
   });
 
   it("renders a stable, legible full-bleed video element", () => {

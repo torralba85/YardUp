@@ -67,11 +67,11 @@ export default function SignupPage() {
   return (
     <AuthLayout
       title="Create account"
-      subtitle="Estimate rent, payback, and site fit for your lot."
+      subtitle="Save ADU feasibility estimates and concept reports for your lot."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-sm text-lf-brick">
+          <div className="lf-body-sm rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -79,7 +79,7 @@ export default function SignupPage() {
         <div>
           <label
             htmlFor="displayName"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Full name
           </label>
@@ -98,7 +98,7 @@ export default function SignupPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Email
           </label>
@@ -117,7 +117,7 @@ export default function SignupPage() {
         <div>
           <label
             htmlFor="password"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Password
           </label>
@@ -134,7 +134,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-lf-espresso">
+          <label className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
             I am a...
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -153,7 +153,7 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <p className="text-xs text-lf-muted">
+        <p className="lf-caption text-lf-muted">
           By creating an account you agree to our{" "}
           <Link href="/terms" className="text-lf-clay hover:text-lf-mahogany">
             Terms of Service
@@ -178,7 +178,7 @@ export default function SignupPage() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-lf-hairline" />
         </div>
-        <div className="relative flex justify-center text-xs">
+        <div className="lf-caption relative flex justify-center">
           <span className="bg-lf-card px-2 text-lf-muted">or continue with</span>
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function SignupPage() {
         {isPending ? "Connecting..." : "Google"}
       </button>
 
-      <p className="mt-6 text-center text-sm text-lf-muted">
+      <p className="lf-body-sm mt-6 text-center text-lf-muted">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-lf-clay hover:text-lf-mahogany">
           Sign in
@@ -245,7 +245,7 @@ function RoleButton({
       >
         {label}
       </div>
-      <div className="text-xs text-lf-muted">{description}</div>
+      <div className="lf-caption text-lf-muted">{description}</div>
     </button>
   );
 }

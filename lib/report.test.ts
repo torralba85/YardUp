@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildReportCsv, buildReportText } from "./report";
+import { buildReportCsv, buildReportHtml, buildReportText } from "./report";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -15,7 +15,7 @@ function makeInput() {
 }
 
 describe("buildReportText", () => {
-  it("includes the address, ADU size, coverage, cost, NOI, and disclaimer", () => {
+  it("includes the address, ADU size, coverage, cost, income, and disclaimer", () => {
     const text = buildReportText(makeInput());
     expect(text).toMatch(/1234 Oak Street/);
     expect(text).toMatch(/600 sf/);
@@ -23,8 +23,21 @@ describe("buildReportText", () => {
     expect(text).toMatch(/Compliant/);
     expect(text).toMatch(/Estimated build cost/i);
     expect(text).toMatch(/Monthly rent estimate/i);
-    expect(text).toMatch(/Annual NOI estimate/i);
-    expect(text).toMatch(/Investor-demo estimate only/i);
+    expect(text).toMatch(/Annual net income estimate/i);
+    expect(text).toMatch(/Planning estimate only/i);
+  });
+});
+
+describe("buildReportHtml", () => {
+  it("builds a styled, printable HTML report", () => {
+    const html = buildReportHtml(makeInput());
+
+    expect(html).toMatch(/^<!doctype html>/i);
+    expect(html).toContain("<style>");
+    expect(html).toContain("Project Snapshot");
+    expect(html).toContain("Recommended Next Steps");
+    expect(html).toContain("1234 Oak Street");
+    expect(html).toContain("Annual net income");
   });
 });
 
@@ -39,6 +52,7 @@ describe("buildReportCsv", () => {
     expect(csv).toMatch(/Zoning Status/);
     expect(csv).toMatch(/Build Cost Low/);
     expect(csv).toMatch(/Monthly Rent/);
+    expect(csv).toMatch(/Annual Net Income/);
     expect(csv).toMatch(/Disclaimer/);
   });
 

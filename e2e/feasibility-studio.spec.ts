@@ -14,18 +14,18 @@ test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the income snapshot proof", async ({ page }, testInfo) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle(/LotFoundry \| ADU Income Potential/);
-    await expect(page.getByRole("heading", { name: /See the rent your backyard is hiding/i })).toBeVisible();
+    await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility & Income Estimates/);
+    await expect(page.getByRole("heading", { name: /Estimate the ADU income your lot could support/i })).toBeVisible();
     // Income snapshot proof — always rendered in the FeatureBand.
     await expect(page.getByText("$2,350").first()).toBeVisible();
     await expect(page.getByText(/sample rent estimate/i).first()).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
-      page.getByRole("heading", { name: /Find out what your backyard is worth/i }),
+      page.getByRole("heading", { name: /Know what to ask before you spend on plans/i }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /Check my address/i }).first()).toHaveAttribute(
       "href",
-      "/signup",
+      "/studio",
     );
 
     await page.screenshot({

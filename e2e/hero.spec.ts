@@ -8,15 +8,15 @@ test.describe("Landing hero video", () => {
     // (header, hero, closing section); we assert on the hero's specifically.
     const hero = page
       .locator("section")
-      .filter({ hasText: /see the rent your backyard is hiding/i });
+      .filter({ hasText: /estimate the adu income your lot could support/i });
 
     await expect(
-      hero.getByRole("heading", { name: /see the rent your backyard is hiding/i }),
+      hero.getByRole("heading", { name: /estimate the adu income your lot could support/i }),
     ).toBeVisible();
 
-    await expect(hero.getByRole("link", { name: /estimate my lot/i })).toHaveAttribute(
+    await expect(hero.getByRole("link", { name: /check my address/i })).toHaveAttribute(
       "href",
-      "/signup",
+      "/studio",
     );
 
     const video = hero.locator("video");
