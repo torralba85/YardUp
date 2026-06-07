@@ -8,7 +8,6 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
@@ -16,7 +15,6 @@ import { db } from "./firebase";
 import type {
   BuilderInboxItem,
   BuilderProfile,
-  BuilderResponse,
   BuilderResponseStatus,
   ConnectionRequest,
   ConnectionSnapshot,

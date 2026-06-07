@@ -1,6 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getDoc, getDocs } from "firebase/firestore";
+import { getDoc, getDocs, DocumentSnapshot, QuerySnapshot } from "firebase/firestore";
 import { fetchBuilderInbox } from "../lib/marketplace-firestore";
+import type { BuilderResponseStatus } from "../lib/marketplace-types";
+
+// Helper type to mock the document
+interface MockDocument {
+  id: string;
+  data: () => {
+    matchedBuilderIds: string[];
+    createdAt: string;
+    builderResponseStatuses?: Record<string, BuilderResponseStatus>;
+  };
+}
+
+class MockTimestamp {
+  static now() {
+    return new MockTimestamp();
+  }
+  toDate() {
+    return new Date();
+  }
+}
 
 vi.mock("firebase/firestore", async () => {
   return {
@@ -10,9 +30,7 @@ vi.mock("firebase/firestore", async () => {
     query: vi.fn(),
     where: vi.fn(),
     doc: vi.fn(),
-    Timestamp: {
-      now: vi.fn(),
-    },
+    Timestamp: MockTimestamp,
   };
 });
 
@@ -43,14 +61,14 @@ describe("fetchBuilderInbox Performance", () => {
           id: "req-3",
           data: () => ({ matchedBuilderIds: [builderId], createdAt: "2024-01-03T00:00:00.000Z" }),
         },
-      ],
-    } as any);
+      ] as MockDocument[],
+    } as unknown as QuerySnapshot);
 
     // Mock getDoc to return subcollection documents
     vi.mocked(getDoc).mockResolvedValue({
       exists: () => true,
       data: () => ({ builderId, status: "interested" }),
-    } as any);
+    } as unknown as DocumentSnapshot);
 
     await fetchBuilderInbox(builderId);
 
@@ -89,8 +107,8 @@ describe("fetchBuilderInbox Performance", () => {
             createdAt: "2024-01-03T00:00:00.000Z"
           }),
         },
-      ],
-    } as any);
+      ] as MockDocument[],
+    } as unknown as QuerySnapshot);
 
     await fetchBuilderInbox(builderId);
 
@@ -121,14 +139,14 @@ describe("fetchBuilderInbox Performance", () => {
           id: "req-leg-2",
           data: () => ({ matchedBuilderIds: [builderId], createdAt: "2024-01-03T00:00:00.000Z" }),
         },
-      ],
-    } as any);
+      ] as MockDocument[],
+    } as unknown as QuerySnapshot);
 
     // Mock getDoc to return subcollection documents
     vi.mocked(getDoc).mockResolvedValue({
       exists: () => true,
       data: () => ({ builderId, status: "new" }),
-    } as any);
+    } as unknown as DocumentSnapshot);
 
     await fetchBuilderInbox(builderId);
 
