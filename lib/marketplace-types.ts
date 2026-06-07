@@ -43,18 +43,19 @@ export interface ConnectionSnapshot {
   reportText: string;
 }
 
+export type BuilderResponseStatus = "new" | "interested" | "not-a-fit";
+
 export interface ConnectionRequest {
   id: string;
   ownerUid: string;
   ownerContact: OwnerContact;
   snapshot: ConnectionSnapshot;
   matchedBuilderIds: string[];
+  builderResponseStatuses?: Record<string, BuilderResponseStatus>;
   status: "submitted";
   createdAt: string | null;
   updatedAt: string | null;
 }
-
-export type BuilderResponseStatus = "new" | "interested" | "not-a-fit";
 
 export interface BuilderResponse {
   builderId: string;

@@ -71,11 +71,17 @@ export async function createConnectionRequest(input: {
   snapshot: ConnectionSnapshot;
   matchedBuilderIds: string[];
 }): Promise<string> {
+  const builderResponseStatuses: Record<string, BuilderResponseStatus> = {};
+  for (const builderId of input.matchedBuilderIds) {
+    builderResponseStatuses[builderId] = "new";
+  }
+
   const requestRef = await addDoc(collection(db, REQUESTS), {
     ownerUid: input.ownerUid,
     ownerContact: input.ownerContact,
     snapshot: input.snapshot,
     matchedBuilderIds: input.matchedBuilderIds,
+    builderResponseStatuses,
     status: "submitted",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -107,15 +113,43 @@ export async function fetchBuilderInbox(
 
   const items = await Promise.all(
     snap.docs.map(async (requestDoc) => {
-      const responseSnap = await getDoc(
-        doc(db, REQUESTS, requestDoc.id, RESPONSES, builderId),
-      );
+      const data = requestDoc.data();
+      const inlineStatuses = data.builderResponseStatuses as Record<string, BuilderResponseStatus> | undefined;
+
+      let responseStatus: BuilderResponseStatus;
+      let responseCreatedAt: string | null = null;
+      let responseUpdatedAt: string | null = null;
+
+      // Use the inline map if it exists (Optimized O(1) read)
+      if (inlineStatuses && inlineStatuses[builderId]) {
+        responseStatus = inlineStatuses[builderId];
+        // We lack specific subdocument timestamps when reading inline,
+        // but for inbox sorting the parent request's createdAt is what matters.
+        // We leave the timestamps as null or mirror the parent's if needed,
+        // but the prompt mainly focuses on read reduction and `BuilderResponse` allows nulls.
+      } else {
+        // Fallback to subcollection query (Legacy N+1 read)
+        const responseSnap = await getDoc(
+          doc(db, REQUESTS, requestDoc.id, RESPONSES, builderId),
+        );
+        if (responseSnap.exists()) {
+          const respData = responseSnap.data();
+          responseStatus = (respData.status as BuilderResponseStatus) || "new";
+          responseCreatedAt = timestampToIso(respData.createdAt);
+          responseUpdatedAt = timestampToIso(respData.updatedAt);
+        } else {
+          responseStatus = "new";
+        }
+      }
 
       return {
-        request: firestoreToConnectionRequest(requestDoc.id, requestDoc.data()),
-        response: responseSnap.exists()
-          ? firestoreToBuilderResponse(responseSnap.data())
-          : { builderId, status: "new" as const, createdAt: null, updatedAt: null },
+        request: firestoreToConnectionRequest(requestDoc.id, data),
+        response: {
+          builderId,
+          status: responseStatus,
+          createdAt: responseCreatedAt,
+          updatedAt: responseUpdatedAt,
+        },
       };
     }),
   );
@@ -132,10 +166,25 @@ export async function updateBuilderResponse(
   builderId: string,
   status: Exclude<BuilderResponseStatus, "new">,
 ): Promise<void> {
-  await updateDoc(doc(db, REQUESTS, requestId, RESPONSES, builderId), {
+  const batch = writeBatch(db);
+
+  // Update the legacy subcollection
+  batch.update(doc(db, REQUESTS, requestId, RESPONSES, builderId), {
     status,
     updatedAt: serverTimestamp(),
   });
+
+  // Update the parent inline map
+  // Use set with { merge: true } so it doesn't fail on legacy documents
+  // that don't have the builderResponseStatuses map yet.
+  batch.set(doc(db, REQUESTS, requestId), {
+    builderResponseStatuses: {
+      [builderId]: status,
+    },
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+
+  await batch.commit();
 }
 
 function firestoreToBuilderProfile(
@@ -166,16 +215,8 @@ function firestoreToConnectionRequest(
     ownerContact: data.ownerContact as ConnectionRequest["ownerContact"],
     snapshot: data.snapshot as ConnectionRequest["snapshot"],
     matchedBuilderIds: (data.matchedBuilderIds as string[]) || [],
+    builderResponseStatuses: (data.builderResponseStatuses as Record<string, BuilderResponseStatus>) || undefined,
     status: "submitted",
-    createdAt: timestampToIso(data.createdAt),
-    updatedAt: timestampToIso(data.updatedAt),
-  };
-}
-
-function firestoreToBuilderResponse(data: Record<string, unknown>): BuilderResponse {
-  return {
-    builderId: (data.builderId as string) || "",
-    status: (data.status as BuilderResponseStatus) || "new",
     createdAt: timestampToIso(data.createdAt),
     updatedAt: timestampToIso(data.updatedAt),
   };

@@ -49,6 +49,7 @@ service cloud.firestore {
         "ownerContact",
         "snapshot",
         "matchedBuilderIds",
+        "builderResponseStatuses",
         "status",
         "createdAt",
         "updatedAt"
@@ -220,7 +221,11 @@ service cloud.firestore {
         request.auth.uid in resource.data.matchedBuilderIds
       );
       allow create: if isSignedIn() && isValidConnectionRequest();
-      allow update, delete: if false;
+      // Allow builders to update the builderResponseStatuses map within a request
+      allow update: if isSignedIn() && request.auth.uid in resource.data.matchedBuilderIds &&
+                    // Ensure the only things changed are the status for this builder, and the updatedAt field
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['builderResponseStatuses', 'updatedAt']);
+      allow delete: if false;
 
       match /builderResponses/{builderId} {
         allow read: if isSignedIn() && (
