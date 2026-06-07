@@ -203,11 +203,8 @@ service cloud.firestore {
       allow create, update: if isOwner(userId) && isValidUserProfile(userId);
       allow delete: if false;
       
-      match /savedScenarios/{scenarioId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidNewScenario();
-        allow update: if false;
-        allow delete: if isOwner(userId);
+      match /scenarios/{document=**} {
+        allow read, write: if isOwner(userId);
       }
     }
 

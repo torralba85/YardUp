@@ -1,3 +1,7 @@
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { collection, doc, setDoc, getDocs, deleteDoc, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
 
 export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
@@ -145,4 +149,114 @@ function cryptoRandomId() {
     return crypto.randomUUID();
   }
   return `scn_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function useSavedScenarios() {
+  const { profile } = useAuth();
+  const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
+
+  const fetchScenarios = useCallback(async () => {
+    if (profile) {
+      const q = query(
+        collection(db, "users", profile.uid, "scenarios"),
+        orderBy("createdAt", "desc")
+      );
+      try {
+        const snapshot = await getDocs(q);
+        const fetched: SavedScenario[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (isValidSavedScenario(data)) {
+            fetched.push(data as SavedScenario);
+          }
+        });
+        setScenarios(fetched);
+      } catch (err) {
+        console.error("Failed to fetch scenarios from Firestore", err);
+      }
+    } else {
+      if (typeof window !== "undefined") {
+        const store = createSavedScenarioStore(window.localStorage);
+        setScenarios(store.list());
+      }
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    fetchScenarios();
+  }, [fetchScenarios]);
+
+  useEffect(() => {
+    if (profile && typeof window !== "undefined") {
+      const store = createSavedScenarioStore(window.localStorage);
+      const localScenarios = store.list();
+      if (localScenarios.length > 0) {
+        const migrate = async () => {
+          for (const scenario of localScenarios) {
+            const docRef = doc(db, "users", profile.uid, "scenarios", scenario.id);
+            try {
+              await setDoc(docRef, scenario);
+              store.remove(scenario.id);
+            } catch (err) {
+              console.error("Failed to migrate scenario", scenario.id, err);
+            }
+          }
+          fetchScenarios();
+        };
+        migrate();
+      }
+    }
+  }, [profile, fetchScenarios]);
+
+  const saveScenario = async (input: Omit<SavedScenario, "id" | "createdAt">) => {
+    const newScenario: SavedScenario = {
+      ...input,
+      id: cryptoRandomId(),
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!isValidSavedScenario(newScenario)) {
+      throw new Error("Saved scenario is missing required fields.");
+    }
+
+    if (profile) {
+      const docRef = doc(db, "users", profile.uid, "scenarios", newScenario.id);
+      await setDoc(docRef, newScenario);
+    } else {
+      if (typeof window !== "undefined") {
+        const store = createSavedScenarioStore(window.localStorage);
+        // store.save generates its own id and createdAt, so we use the raw writeAll or just let it generate.
+        // Wait, store.save takes Omit<SavedScenario, "id" | "createdAt">
+        store.save(input);
+      }
+    }
+    
+    await fetchScenarios();
+    return newScenario;
+  };
+
+  const removeScenario = async (id: string) => {
+    if (profile) {
+      const docRef = doc(db, "users", profile.uid, "scenarios", id);
+      await deleteDoc(docRef);
+    } else {
+      if (typeof window !== "undefined") {
+        const store = createSavedScenarioStore(window.localStorage);
+        store.remove(id);
+      }
+    }
+    await fetchScenarios();
+  };
+
+  const loadScenario = (id: string) => {
+    return scenarios.find((s) => s.id === id);
+  };
+
+  return {
+    scenarios,
+    saveScenario,
+    removeScenario,
+    loadScenario,
+    refresh: fetchScenarios,
+  };
 }
