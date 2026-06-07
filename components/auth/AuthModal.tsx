@@ -32,8 +32,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signIn(email, password);
       }
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Authentication failed. Please try again.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -45,8 +46,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       await signInWithGoogle();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Google sign-in failed. Please try again.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Google sign-in failed. Please try again.");
     } finally {
       setLoading(false);
     }

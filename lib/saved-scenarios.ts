@@ -153,7 +153,17 @@ function cryptoRandomId() {
 
 export function useSavedScenarios() {
   const { profile } = useAuth();
-  const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
+  const [scenarios, setScenarios] = useState<SavedScenario[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const store = createSavedScenarioStore(window.localStorage);
+        return store.list();
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   const fetchScenarios = useCallback(async () => {
     if (profile) {
@@ -177,14 +187,19 @@ export function useSavedScenarios() {
     } else {
       if (typeof window !== "undefined") {
         const store = createSavedScenarioStore(window.localStorage);
-        setScenarios(store.list());
+        const list = store.list();
+        Promise.resolve().then(() => {
+          setScenarios(list);
+        });
       }
     }
   }, [profile]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     fetchScenarios();
   }, [fetchScenarios]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (profile && typeof window !== "undefined") {
