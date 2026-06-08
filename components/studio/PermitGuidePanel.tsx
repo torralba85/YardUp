@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, BookOpen, ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react";
 import { inferJurisdiction, regulationGuides } from "@/lib/regulations-data";
+import { getSafeCitationHref } from "@/lib/safe-url";
 
 export interface PermitGuidePanelProps {
   address: string;
@@ -131,20 +132,34 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                 Local Resources
               </h4>
               <ul className="space-y-2">
-                {guide.citations.map((citation, idx) => (
-                  <li key={idx}>
-                    <a
-                      href={citation.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-clay hover:text-lf-mahogany transition"
-                    >
-                      <BookOpen size={14} />
-                      {citation.label}
-                      <ExternalLink size={12} className="opacity-70" />
-                    </a>
-                  </li>
-                ))}
+                {guide.citations.map((citation, idx) => {
+                  const safeHref = getSafeCitationHref(citation.url);
+                  return (
+                    <li key={idx}>
+                      {safeHref ? (
+                        <a
+                          href={safeHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-clay hover:text-lf-mahogany transition"
+                        >
+                          <BookOpen size={14} />
+                          {citation.label}
+                          <ExternalLink size={12} className="opacity-70" />
+                        </a>
+                      ) : (
+                        <span
+                          aria-disabled="true"
+                          title="Citation link unavailable"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-muted"
+                        >
+                          <BookOpen size={14} />
+                          {citation.label}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
