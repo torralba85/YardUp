@@ -13,14 +13,17 @@ interface MockDocument {
   };
 }
 
-class MockTimestamp {
-  static now() {
-    return new MockTimestamp();
+const mocks = vi.hoisted(() => {
+  class MockTimestamp {
+    static now() {
+      return new MockTimestamp();
+    }
+    toDate() {
+      return new Date();
+    }
   }
-  toDate() {
-    return new Date();
-  }
-}
+  return { MockTimestamp };
+});
 
 vi.mock("firebase/firestore", async () => {
   return {
@@ -30,7 +33,7 @@ vi.mock("firebase/firestore", async () => {
     query: vi.fn(),
     where: vi.fn(),
     doc: vi.fn(),
-    Timestamp: MockTimestamp,
+    Timestamp: mocks.MockTimestamp,
   };
 });
 
