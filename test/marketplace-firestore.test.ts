@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getDoc, getDocs, DocumentSnapshot, QuerySnapshot } from "firebase/firestore";
-import { fetchBuilderInbox } from "../lib/marketplace-firestore";
+import {
+  FieldPath,
+  getDoc,
+  getDocs,
+  DocumentSnapshot,
+  QuerySnapshot,
+  doc,
+  writeBatch,
+} from "firebase/firestore";
+import {
+  fetchBuilderInbox,
+  updateBuilderResponse,
+} from "../lib/marketplace-firestore";
 import type { BuilderResponseStatus } from "../lib/marketplace-types";
 
 // Helper type to mock the document
@@ -22,7 +33,16 @@ const mocks = vi.hoisted(() => {
       return new Date();
     }
   }
-  return { MockTimestamp };
+
+  class MockFieldPath {
+    segments: string[];
+
+    constructor(...segments: string[]) {
+      this.segments = segments;
+    }
+  }
+
+  return { MockTimestamp, MockFieldPath };
 });
 
 vi.mock("firebase/firestore", async () => {
@@ -32,8 +52,11 @@ vi.mock("firebase/firestore", async () => {
     collection: vi.fn(),
     query: vi.fn(),
     where: vi.fn(),
-    doc: vi.fn(),
+    doc: vi.fn((_, ...segments: string[]) => ({ path: segments.join("/") })),
+    writeBatch: vi.fn(),
+    serverTimestamp: vi.fn(() => "SERVER_TIMESTAMP"),
     Timestamp: mocks.MockTimestamp,
+    FieldPath: mocks.MockFieldPath,
   };
 });
 
@@ -156,5 +179,49 @@ describe("fetchBuilderInbox Performance", () => {
     // 1 getDocs call + 2 getDoc calls
     expect(getDocs).toHaveBeenCalledTimes(1);
     expect(getDoc).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("updateBuilderResponse", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("updates the parent inline status through a nested builder-specific field path", async () => {
+    const batch = {
+      update: vi.fn(),
+      set: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(writeBatch).mockReturnValue(batch as unknown as ReturnType<typeof writeBatch>);
+
+    await updateBuilderResponse("request-1", "builder.with.dot", "interested");
+
+    expect(batch.update).toHaveBeenCalledTimes(2);
+    expect(batch.set).not.toHaveBeenCalled();
+
+    expect(batch.update.mock.calls[0][0]).toEqual({
+      path: "connectionRequests/request-1/builderResponses/builder.with.dot",
+    });
+    expect(batch.update.mock.calls[0][1]).toMatchObject({
+      status: "interested",
+      updatedAt: "SERVER_TIMESTAMP",
+    });
+
+    const parentUpdate = batch.update.mock.calls[1];
+    expect(parentUpdate[0]).toEqual({ path: "connectionRequests/request-1" });
+    expect(parentUpdate[1]).toBeInstanceOf(FieldPath);
+    expect((parentUpdate[1] as unknown as { segments: string[] }).segments).toEqual([
+      "builderResponseStatuses",
+      "builder.with.dot",
+    ]);
+    expect(parentUpdate[2]).toBe("interested");
+    expect(parentUpdate[3]).toBe("updatedAt");
+    expect(parentUpdate[4]).toBe("SERVER_TIMESTAMP");
+    expect(doc).toHaveBeenCalledWith(
+      {},
+      "connectionRequests",
+      "request-1",
+    );
   });
 });

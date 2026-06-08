@@ -74,6 +74,35 @@ service cloud.firestore {
       request.resource.data.status in ["new", "interested", "not-a-fit"];
     }
 
+    function isBuilderResponseUpdateStatus(status) {
+      return status in ["interested", "not-a-fit"];
+    }
+
+    function isValidBuilderResponseStatusMapUpdate(builderId) {
+      return request.resource.data.builderResponseStatuses is map &&
+        isBuilderResponseUpdateStatus(request.resource.data.builderResponseStatuses[builderId]) &&
+        (
+          (
+            "builderResponseStatuses" in resource.data &&
+            request.resource.data.builderResponseStatuses
+              .diff(resource.data.builderResponseStatuses)
+              .affectedKeys()
+              .hasOnly([builderId])
+          ) ||
+          (
+            !("builderResponseStatuses" in resource.data) &&
+            request.resource.data.builderResponseStatuses.keys().hasOnly([builderId])
+          )
+        );
+    }
+
+    function isValidBuilderResponseDocumentUpdate(builderId) {
+      return isValidBuilderResponse(builderId) &&
+        isBuilderResponseUpdateStatus(request.resource.data.status) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"]) &&
+        request.resource.data.updatedAt == request.time;
+    }
+
     function isValidRole() {
       return request.resource.data.role in ["user", "builder"];
     }
@@ -221,10 +250,11 @@ service cloud.firestore {
         request.auth.uid in resource.data.matchedBuilderIds
       );
       allow create: if isSignedIn() && isValidConnectionRequest();
-      // Allow builders to update the builderResponseStatuses map within a request
+      // Allow builders to update only their own nested status within the inline map.
       allow update: if isSignedIn() && request.auth.uid in resource.data.matchedBuilderIds &&
-                    // Ensure the only things changed are the status for this builder, and the updatedAt field
-                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['builderResponseStatuses', 'updatedAt']);
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(["builderResponseStatuses", "updatedAt"]) &&
+                    request.resource.data.updatedAt == request.time &&
+                    isValidBuilderResponseStatusMapUpdate(request.auth.uid);
       allow delete: if false;
 
       match /builderResponses/{builderId} {
@@ -239,7 +269,7 @@ service cloud.firestore {
           request.resource.data.status == "new";
         allow update: if isBuilder(builderId) &&
           request.auth.uid in get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.matchedBuilderIds &&
-          isValidBuilderResponse(builderId);
+          isValidBuilderResponseDocumentUpdate(builderId);
         allow delete: if false;
       }
     }

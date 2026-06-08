@@ -1,4 +1,5 @@
 import {
+  FieldPath,
   Timestamp,
   addDoc,
   collection,
@@ -172,15 +173,13 @@ export async function updateBuilderResponse(
     updatedAt: serverTimestamp(),
   });
 
-  // Update the parent inline map
-  // Use set with { merge: true } so it doesn't fail on legacy documents
-  // that don't have the builderResponseStatuses map yet.
-  batch.set(doc(db, REQUESTS, requestId), {
-    builderResponseStatuses: {
-      [builderId]: status,
-    },
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  batch.update(
+    doc(db, REQUESTS, requestId),
+    new FieldPath("builderResponseStatuses", builderId),
+    status,
+    "updatedAt",
+    serverTimestamp(),
+  );
 
   await batch.commit();
 }
