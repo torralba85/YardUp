@@ -45,9 +45,11 @@ export default function AddressSearch({
   placeholder = "Search your property address…",
   disabled = false,
 }: AddressSearchProps) {
+  const hasPlacesKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [loading, setLoading] = useState(false);
+  const selectedValueRef = useRef("");
+  const [loading, setLoading] = useState(hasPlacesKey);
   const [ready, setReady] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
@@ -80,6 +82,7 @@ export default function AddressSearch({
           const lng = place.geometry.location.lng();
           const formattedAddress = place.formatted_address ?? inputRef.current?.value ?? "";
 
+          selectedValueRef.current = formattedAddress;
           setInputValue(formattedAddress);
           onSelect({ lat, lng, formattedAddress });
         });
@@ -107,10 +110,8 @@ export default function AddressSearch({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    // When the Places widget is active, it drives selection via place_changed
-    // (onSelect); don't also fire the free-text path and double-fetch.
-    if (ready) return;
     const query = inputValue.trim();
+    if (ready && query === selectedValueRef.current) return;
     if (query && onSubmitText) onSubmitText(query);
   }
 
@@ -158,21 +159,17 @@ export default function AddressSearch({
         ].join(" ")}
       />
 
-      {/* Submit button for the free-text path.
-          Hidden when the Places widget is driving (it selects on click/Enter). */}
-      {!ready && (
-        <button
-          type="submit"
-          disabled={isDisabled || !inputValue.trim()}
-          className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1 rounded px-2.5 text-xs font-semibold text-lf-sand transition disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-lf-mahogany enabled:hover:bg-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-1"
-        >
-          <MapPin size={13} aria-hidden="true" />
-          Search
-        </button>
-      )}
+      <button
+        type="submit"
+        disabled={isDisabled || !inputValue.trim()}
+        className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1 rounded px-2.5 text-xs font-semibold text-lf-sand transition disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-lf-mahogany enabled:hover:bg-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-1"
+      >
+        <MapPin size={13} aria-hidden="true" />
+        Search
+      </button>
 
       {/* Pin icon on the right when Places is active and a value is entered */}
-      {ready && inputValue && (
+      {ready && inputValue && !onSubmitText && (
         <span
           className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-lf-clay"
           aria-hidden="true"
@@ -181,7 +178,7 @@ export default function AddressSearch({
         </span>
       )}
 
-      {!ready && !loading && !process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY && (
+      {!ready && !loading && !hasPlacesKey && (
         <p className="mt-1.5 text-xs text-lf-muted" role="note">
           Type a full address (street, city, state) and press Search.
         </p>

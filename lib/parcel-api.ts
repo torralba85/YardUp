@@ -18,8 +18,16 @@ export async function fetchParcel(
   lat: number,
   lng: number,
   idToken?: string,
+  address?: string,
 ): Promise<LiveParcelData> {
-  const url = `/api/parcel?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+  });
+  if (address?.trim()) {
+    params.set("address", address.trim());
+  }
+  const url = `/api/parcel?${params.toString()}`;
 
   let res: Response;
   try {

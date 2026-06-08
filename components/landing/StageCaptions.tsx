@@ -47,8 +47,8 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
   return (
     <div className="pointer-events-none relative z-10 mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-6 py-10 md:px-10 lg:px-14">
       <div className="absolute max-w-[27rem]" style={bandStyle(bandOpacity(p, 0, 0.3))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">What your backyard could earn</p>
-        <h1 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-7xl">
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">What your backyard could earn</p>
+        <h1 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-normal text-lf-espresso md:text-7xl">
           Know what your lot could earn.
         </h1>
         <p className="mt-5 max-w-md text-lg leading-8 text-lf-muted">
@@ -80,8 +80,8 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.3, 0.56))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">See it in your yard</p>
-        <h2 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">See it in your yard</p>
+        <h2 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-normal text-lf-espresso md:text-6xl">
           See exactly where an ADU fits on your lot.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
@@ -90,8 +90,8 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.56, 0.8))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">See the numbers</p>
-        <div className="mt-3 font-display text-7xl font-bold tabular-nums leading-[0.95] tracking-[-0.02em] text-lf-espresso md:text-8xl">
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">See the numbers</p>
+        <div className="mt-3 font-display text-7xl font-bold tabular-nums leading-[0.95] tracking-normal text-lf-espresso md:text-8xl">
           {rent}
         </div>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
@@ -103,8 +103,8 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         className="pointer-events-auto absolute max-w-[26rem]"
         style={bandStyle(bandOpacity(p, 0.8, 1.12))}
       >
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Owner report ready</p>
-        <h2 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">Owner report ready</p>
+        <h2 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-normal text-lf-espresso md:text-6xl">
           Walk away with something to show people.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">

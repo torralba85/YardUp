@@ -71,6 +71,25 @@ describe("GET /api/geocode", () => {
     expect(fetchMock.mock.calls[0][0]).toContain("maps.googleapis.com");
   });
 
+  it("uses the documented GOOGLE_MAPS_API_KEY for Google Geocoding", async () => {
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "maps-key");
+    const fetchMock = vi.fn().mockResolvedValue(
+      googleResponse([
+        {
+          formatted_address: "456 Pine St, Denver, CO 80202, USA",
+          geometry: { location: { lat: 39.752, lng: -104.999 } },
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeRequest("456 Pine St, Denver"));
+    expect(res.status).toBe(200);
+    const [calledUrl] = fetchMock.mock.calls[0];
+    expect(calledUrl).toContain("maps.googleapis.com");
+    expect(calledUrl).toContain("key=maps-key");
+  });
+
   it("falls back to Nominatim when no Google key is set", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       nominatimResponse([
@@ -94,6 +113,25 @@ describe("GET /api/geocode", () => {
   it("404s when the provider returns no match", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([])));
     const res = await GET(makeRequest("asldkfjqwoeiruzzz"));
+    expect(res.status).toBe(404);
+  });
+
+  it("rejects keyless fallback matches outside the requested state", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "40.235",
+            lon: "-76.136",
+            display_name:
+              "456, Pine Street, Denver, Lancaster County, Pennsylvania, 17517, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("456 Pine St, Denver, CO"));
     expect(res.status).toBe(404);
   });
 

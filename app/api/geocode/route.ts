@@ -6,6 +6,59 @@ const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
 const TIMEOUT_MS = 5000;
 const MAX_QUERY_LEN = 200;
+const US_STATE_NAMES: Record<string, string> = {
+  AL: "Alabama",
+  AK: "Alaska",
+  AZ: "Arizona",
+  AR: "Arkansas",
+  CA: "California",
+  CO: "Colorado",
+  CT: "Connecticut",
+  DE: "Delaware",
+  DC: "District of Columbia",
+  FL: "Florida",
+  GA: "Georgia",
+  HI: "Hawaii",
+  ID: "Idaho",
+  IL: "Illinois",
+  IN: "Indiana",
+  IA: "Iowa",
+  KS: "Kansas",
+  KY: "Kentucky",
+  LA: "Louisiana",
+  ME: "Maine",
+  MD: "Maryland",
+  MA: "Massachusetts",
+  MI: "Michigan",
+  MN: "Minnesota",
+  MS: "Mississippi",
+  MO: "Missouri",
+  MT: "Montana",
+  NE: "Nebraska",
+  NV: "Nevada",
+  NH: "New Hampshire",
+  NJ: "New Jersey",
+  NM: "New Mexico",
+  NY: "New York",
+  NC: "North Carolina",
+  ND: "North Dakota",
+  OH: "Ohio",
+  OK: "Oklahoma",
+  OR: "Oregon",
+  PA: "Pennsylvania",
+  RI: "Rhode Island",
+  SC: "South Carolina",
+  SD: "South Dakota",
+  TN: "Tennessee",
+  TX: "Texas",
+  UT: "Utah",
+  VT: "Vermont",
+  VA: "Virginia",
+  WA: "Washington",
+  WV: "West Virginia",
+  WI: "Wisconsin",
+  WY: "Wyoming",
+};
 
 export const runtime = "nodejs";
 
@@ -19,10 +72,10 @@ export interface GeocodeResult {
  * GET /api/geocode?q={address}
  *
  * Resolves a free-text US address to coordinates so the studio can look up a
- * parcel without the client-side Google Places widget. Prefers the Google
- * Geocoding API when GOOGLE_GEOCODING_KEY is configured; otherwise (and as a
- * fallback if Google returns nothing) uses keyless Nominatim, so the demo
- * works with no API keys at all. Returns 404 when no provider can resolve it.
+ * parcel without the client-side Google Places widget. Prefers Google
+ * Geocoding when the server-side Maps key is configured; otherwise (and as a
+ * fallback if Google returns nothing) uses keyless Nominatim. Returns 404 when
+ * no provider can resolve it.
  */
 export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -45,7 +98,8 @@ export async function GET(request: NextRequest) {
   }
   const query = q.slice(0, MAX_QUERY_LEN);
 
-  const googleKey = process.env.GOOGLE_GEOCODING_KEY;
+  const googleKey =
+    process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_API_KEY;
   let result: GeocodeResult | null = null;
 
   if (googleKey) {
@@ -121,7 +175,12 @@ async function geocodeWithNominatim(
     const first = Array.isArray(json) ? json[0] : null;
     const lat = Number.parseFloat(first?.lat ?? "");
     const lng = Number.parseFloat(first?.lon ?? "");
-    if (!first || Number.isNaN(lat) || Number.isNaN(lng)) {
+    if (
+      !first ||
+      Number.isNaN(lat) ||
+      Number.isNaN(lng) ||
+      !matchesRequestedState(query, first.display_name)
+    ) {
       return null;
     }
     return {
@@ -133,6 +192,31 @@ async function geocodeWithNominatim(
     console.error("[/api/geocode] Nominatim geocode failed:", err);
     return null;
   }
+}
+
+function matchesRequestedState(query: string, displayName?: string): boolean {
+  const statePattern = /(?:^|[\s,])([A-Z]{2})(?=[\s,]|$)/gi;
+  let stateCode: string | undefined;
+  let match: RegExpExecArray | null;
+  while ((match = statePattern.exec(query)) !== null) {
+    const candidate = match[1].toUpperCase();
+    if (US_STATE_NAMES[candidate]) {
+      stateCode = candidate;
+      break;
+    }
+  }
+  if (!stateCode) return true;
+
+  const stateName = US_STATE_NAMES[stateCode];
+  if (!stateName || !displayName) return true;
+
+  const normalizedDisplay = displayName.toLowerCase();
+  return (
+    normalizedDisplay.includes(stateName.toLowerCase()) ||
+    new RegExp(`(?:^|[\\s,])${stateCode.toLowerCase()}(?:[\\s,]|$)`).test(
+      normalizedDisplay,
+    )
+  );
 }
 
 async function fetchJson(

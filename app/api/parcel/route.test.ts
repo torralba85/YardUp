@@ -17,10 +17,12 @@ import type { LiveParcelData } from "@/lib/parcel-types";
  * item #5, which needs a live REGRID_API_KEY.
  */
 
-function makeRequest(lat: number, lng: number): NextRequest {
-  return new NextRequest(
-    `http://localhost/api/parcel?lat=${lat}&lng=${lng}`,
-  );
+function makeRequest(lat: number, lng: number, address?: string): NextRequest {
+  const url = new URL("http://localhost/api/parcel");
+  url.searchParams.set("lat", String(lat));
+  url.searchParams.set("lng", String(lng));
+  if (address) url.searchParams.set("address", address);
+  return new NextRequest(url);
 }
 
 /** A Regrid feature with the fields the route requests. */
@@ -133,6 +135,22 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(res.status).toBe(200);
     const data = (await res.json()) as LiveParcelData;
     expect(data.source).toBe("fallback");
+  });
+
+  it("keeps the searched address visible when returning fallback estimates", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Network error")),
+    );
+
+    const res = await GET(
+      makeRequest(39.752, -104.999, "456 Pine St, Denver, CO 80202, USA"),
+    );
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("fallback");
+    expect(data.address).toBe("456 Pine St");
+    expect(data.city).toBe("Denver, CO 80202, USA");
   });
 
   it("returns 503 with Retry-After when Regrid rate-limits (429)", async () => {

@@ -74,7 +74,7 @@ export default function FeasibilityInspector({
   );
 
   function handleAddressSelect(result: AddressSearchResult) {
-    searchParcel(result.lat, result.lng);
+    searchParcel(result.lat, result.lng, result.formattedAddress);
   }
 
   function handleAddressText(query: string) {

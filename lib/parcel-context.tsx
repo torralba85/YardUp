@@ -52,12 +52,12 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   const [parcelError, setParcelError] = useState<string | null>(null);
 
   const searchParcel = useCallback(
-    async (lat: number, lng: number) => {
+    async (lat: number, lng: number, address?: string) => {
       setParcelLoading(true);
       setParcelError(null);
       try {
         const idToken = await user?.getIdToken();
-        const data = await fetchParcel(lat, lng, idToken);
+        const data = await fetchParcel(lat, lng, idToken, address);
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
@@ -83,7 +83,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       try {
         const idToken = await user?.getIdToken();
         const { lat, lng } = await geocodeAddress(q, idToken);
-        const data = await fetchParcel(lat, lng, idToken);
+        const data = await fetchParcel(lat, lng, idToken, q);
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
