@@ -53,4 +53,40 @@ describe("PermitGuidePanel component", () => {
       vi.restoreAllMocks();
     }
   });
+
+  it("renders malformed citation values without links or crashes", () => {
+    const originalGuides = regulationsData.regulationGuides;
+    const mockGuide = {
+      ...originalGuides["denver"],
+      citations: [
+        { label: "Number URL", url: 123 },
+        { label: "Malformed URL", url: "https://exa mple.com" },
+        { url: "https://example.com/no-label" },
+        null,
+      ],
+    };
+
+    vi.spyOn(regulationsData, "inferJurisdiction").mockReturnValue("denver");
+
+    const originalDenver = originalGuides["denver"];
+    originalGuides["denver"] = mockGuide as typeof originalDenver;
+
+    try {
+      render(<PermitGuidePanel address="123 Oak St, Denver, CO" />);
+
+      const fallbackLink = screen.getByText("Resource 3");
+      expect(fallbackLink.tagName).toBe("A");
+      expect(fallbackLink).toHaveAttribute("href", "https://example.com/no-label");
+
+      for (const label of ["Number URL", "Malformed URL", "Resource 4"]) {
+        const citation = screen.getByText(label);
+        expect(citation.tagName).toBe("SPAN");
+        expect(citation).not.toHaveAttribute("href");
+        expect(citation).toHaveAttribute("aria-disabled", "true");
+      }
+    } finally {
+      originalGuides["denver"] = originalDenver;
+      vi.restoreAllMocks();
+    }
+  });
 });

@@ -1,6 +1,8 @@
 const ALLOWED_CITATION_PROTOCOLS = new Set(["http:", "https:"]);
 
-export function getSafeCitationHref(value: string): string | null {
+export function getSafeCitationHref(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+
   const trimmed = value.trim();
 
   if (!trimmed) return null;

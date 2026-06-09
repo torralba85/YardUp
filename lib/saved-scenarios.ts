@@ -1,8 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { collection, doc, setDoc, getDocs, deleteDoc, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
+import type { LiveParcelData } from "./parcel-types";
 
 export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
 const ROOF_STYLES = ["shed", "gable", "flat"] as const;
@@ -14,6 +11,7 @@ export interface SavedScenario {
   name: string;
   createdAt: string;
   parcelId: string;
+  liveParcel?: LiveParcelData;
   config: ADUConfig;
   assumptions: FinancialAssumptions;
 }
@@ -80,6 +78,48 @@ export function isValidFinancialAssumptions(
   );
 }
 
+function isValidGeoJsonPolygon(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return value.type === "Polygon" && Array.isArray(value.coordinates);
+}
+
+export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
+  if (!isRecord(value) || !isRecord(value.setbacks)) return false;
+  return (
+    typeof value.address === "string" &&
+    value.address.trim().length > 0 &&
+    typeof value.city === "string" &&
+    value.city.trim().length > 0 &&
+    isFiniteNumber(value.lotArea) &&
+    value.lotArea > 0 &&
+    isFiniteNumber(value.lotWidth) &&
+    value.lotWidth > 0 &&
+    isFiniteNumber(value.lotLength) &&
+    value.lotLength > 0 &&
+    isFiniteNumber(value.existingHouseSqft) &&
+    value.existingHouseSqft >= 0 &&
+    isFiniteNumber(value.maxLotCoveragePercent) &&
+    value.maxLotCoveragePercent > 0 &&
+    value.maxLotCoveragePercent <= 100 &&
+    isFiniteNumber(value.setbacks.front) &&
+    value.setbacks.front >= 0 &&
+    isFiniteNumber(value.setbacks.rear) &&
+    value.setbacks.rear >= 0 &&
+    isFiniteNumber(value.setbacks.side) &&
+    value.setbacks.side >= 0 &&
+    typeof value.zoning === "string" &&
+    value.zoning.trim().length > 0 &&
+    (value.boundaryGeoJson === null || isValidGeoJsonPolygon(value.boundaryGeoJson)) &&
+    isFiniteNumber(value.lat) &&
+    value.lat >= -90 &&
+    value.lat <= 90 &&
+    isFiniteNumber(value.lng) &&
+    value.lng >= -180 &&
+    value.lng <= 180 &&
+    (value.source === "regrid" || value.source === "fallback")
+  );
+}
+
 export function isValidSavedScenario(value: unknown): value is SavedScenario {
   if (!isRecord(value)) return false;
   return (
@@ -92,6 +132,11 @@ export function isValidSavedScenario(value: unknown): value is SavedScenario {
     !Number.isNaN(Date.parse(value.createdAt)) &&
     typeof value.parcelId === "string" &&
     value.parcelId.length > 0 &&
+    (
+      !("liveParcel" in value) ||
+      value.liveParcel === undefined ||
+      isValidLiveParcelData(value.liveParcel)
+    ) &&
     isValidAduConfig(value.config) &&
     isValidFinancialAssumptions(value.assumptions)
   );
@@ -149,129 +194,4 @@ function cryptoRandomId() {
     return crypto.randomUUID();
   }
   return `scn_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-export function useSavedScenarios() {
-  const { profile } = useAuth();
-  const [scenarios, setScenarios] = useState<SavedScenario[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const store = createSavedScenarioStore(window.localStorage);
-        return store.list();
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
-
-  const fetchScenarios = useCallback(async () => {
-    // ensure any setState happens asynchronously to avoid set-state-in-effect lint errors
-    await Promise.resolve();
-
-    if (profile) {
-      const q = query(
-        collection(db, "users", profile.uid, "scenarios"),
-        orderBy("createdAt", "desc")
-      );
-      try {
-        const snapshot = await getDocs(q);
-        const fetched: SavedScenario[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (isValidSavedScenario(data)) {
-            fetched.push(data as SavedScenario);
-          }
-        });
-        setScenarios(fetched);
-      } catch (err) {
-        console.error("Failed to fetch scenarios from Firestore", err);
-      }
-    } else {
-      if (typeof window !== "undefined") {
-        const store = createSavedScenarioStore(window.localStorage);
-        setScenarios(store.list());
-      }
-    }
-  }, [profile]);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    fetchScenarios();
-  }, [fetchScenarios]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  useEffect(() => {
-    if (profile && typeof window !== "undefined") {
-      const store = createSavedScenarioStore(window.localStorage);
-      const localScenarios = store.list();
-      if (localScenarios.length > 0) {
-        const migrate = async () => {
-          for (const scenario of localScenarios) {
-            const docRef = doc(db, "users", profile.uid, "scenarios", scenario.id);
-            try {
-              await setDoc(docRef, scenario);
-              store.remove(scenario.id);
-            } catch (err) {
-              console.error("Failed to migrate scenario", scenario.id, err);
-            }
-          }
-          fetchScenarios();
-        };
-        migrate();
-      }
-    }
-  }, [profile, fetchScenarios]);
-
-  const saveScenario = async (input: Omit<SavedScenario, "id" | "createdAt">) => {
-    const newScenario: SavedScenario = {
-      ...input,
-      id: cryptoRandomId(),
-      createdAt: new Date().toISOString(),
-    };
-
-    if (!isValidSavedScenario(newScenario)) {
-      throw new Error("Saved scenario is missing required fields.");
-    }
-
-    if (profile) {
-      const docRef = doc(db, "users", profile.uid, "scenarios", newScenario.id);
-      await setDoc(docRef, newScenario);
-    } else {
-      if (typeof window !== "undefined") {
-        const store = createSavedScenarioStore(window.localStorage);
-        // store.save generates its own id and createdAt, so we use the raw writeAll or just let it generate.
-        // Wait, store.save takes Omit<SavedScenario, "id" | "createdAt">
-        store.save(input);
-      }
-    }
-    
-    await fetchScenarios();
-    return newScenario;
-  };
-
-  const removeScenario = async (id: string) => {
-    if (profile) {
-      const docRef = doc(db, "users", profile.uid, "scenarios", id);
-      await deleteDoc(docRef);
-    } else {
-      if (typeof window !== "undefined") {
-        const store = createSavedScenarioStore(window.localStorage);
-        store.remove(id);
-      }
-    }
-    await fetchScenarios();
-  };
-
-  const loadScenario = (id: string) => {
-    return scenarios.find((s) => s.id === id);
-  };
-
-  return {
-    scenarios,
-    saveScenario,
-    removeScenario,
-    loadScenario,
-    refresh: fetchScenarios,
-  };
 }

@@ -82,6 +82,10 @@ describe("FeasibilityStudio", () => {
     expect(
       screen.getByRole("button", { name: /Create my ADU report/i }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Property")).toBeInTheDocument();
+    expect(screen.getByText("ADU fit")).toBeInTheDocument();
+    expect(screen.getByText("Money model")).toBeInTheDocument();
+    expect(screen.getByText(/Search an address or keep the sample lot/i)).toBeInTheDocument();
     expect(screen.getByText("Build Cost Range")).toBeInTheDocument();
   });
 

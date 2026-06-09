@@ -25,6 +25,8 @@ interface ParcelContextValue {
   searchParcel: (lat: number, lng: number, address?: string) => Promise<void>;
   /** Geocode a free-text address, then look up its parcel and switch to live mode. */
   searchByAddress: (query: string) => Promise<void>;
+  /** Restore a previously saved live parcel without making a network request. */
+  restoreLiveParcel: (parcel: LiveParcelData) => void;
   /** Return to demo preset mode and clear live parcel data. */
   resetToPreset: (preset: ParcelPreset) => void;
 }
@@ -100,6 +102,12 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     [user],
   );
 
+  const restoreLiveParcel = useCallback((nextParcel: LiveParcelData) => {
+    setParcel(nextParcel);
+    setParcelMode("live");
+    setParcelError(null);
+  }, []);
+
   const resetToPreset = useCallback((preset: ParcelPreset) => {
     setParcel(preset);
     setParcelMode("preset");
@@ -115,6 +123,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         parcelError,
         searchParcel,
         searchByAddress,
+        restoreLiveParcel,
         resetToPreset,
       }}
     >

@@ -9,6 +9,28 @@ export interface PermitGuidePanelProps {
   address: string;
 }
 
+function getCitationLabel(citation: unknown, index: number) {
+  if (
+    citation &&
+    typeof citation === "object" &&
+    "label" in citation &&
+    typeof citation.label === "string" &&
+    citation.label.trim()
+  ) {
+    return citation.label;
+  }
+
+  return `Resource ${index + 1}`;
+}
+
+function getCitationUrl(citation: unknown) {
+  if (citation && typeof citation === "object" && "url" in citation) {
+    return citation.url;
+  }
+
+  return null;
+}
+
 export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
   const jurisdictionId = inferJurisdiction(address);
   const guide = regulationGuides[jurisdictionId];
@@ -133,7 +155,8 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
               </h4>
               <ul className="space-y-2">
                 {guide.citations.map((citation, idx) => {
-                  const safeHref = getSafeCitationHref(citation.url);
+                  const citationLabel = getCitationLabel(citation, idx);
+                  const safeHref = getSafeCitationHref(getCitationUrl(citation));
                   return (
                     <li key={idx}>
                       {safeHref ? (
@@ -144,7 +167,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-clay hover:text-lf-mahogany transition"
                         >
                           <BookOpen size={14} />
-                          {citation.label}
+                          {citationLabel}
                           <ExternalLink size={12} className="opacity-70" />
                         </a>
                       ) : (
@@ -154,7 +177,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-muted"
                         >
                           <BookOpen size={14} />
-                          {citation.label}
+                          {citationLabel}
                         </span>
                       )}
                     </li>

@@ -54,7 +54,12 @@ export default function AerialView({
             cache: "no-store",
           },
         );
-        if (!res.ok) throw new Error(`Aerial image returned ${res.status}`);
+        if (!res.ok) {
+          if (!cancelled) {
+            setAerialError(true);
+          }
+          return;
+        }
 
         const blob = await res.blob();
         objectUrl = URL.createObjectURL(blob);
@@ -63,10 +68,10 @@ export default function AerialView({
           return;
         }
         if (!cancelled) {
+          setAerialError(res.headers.get("X-Aerial-Fallback") === "true");
           setAerialSrc(objectUrl);
         }
-      } catch (err) {
-        console.error("[AerialView] Failed to load aerial image:", err);
+      } catch {
         if (!cancelled) {
           setAerialError(true);
         }
@@ -161,7 +166,11 @@ export default function AerialView({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={aerialSrc}
-            alt={`Satellite view of ${parcel.address}`}
+            alt={
+              aerialError
+                ? `Fallback parcel map for ${parcel.address}`
+                : `Satellite view of ${parcel.address}`
+            }
             className="absolute inset-0 h-full w-full object-cover"
             width={IMG_W}
             height={IMG_H}
@@ -281,6 +290,15 @@ export default function AerialView({
       </div>
 
       {/* Fallback notice */}
+      {aerialError && (
+        <div
+          className="pointer-events-none absolute left-4 top-4 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          role="note"
+        >
+          Aerial imagery unavailable - showing the parcel overlay without a satellite base.
+        </div>
+      )}
+
       {parcel.source === "fallback" && (
         <div
           className="pointer-events-none absolute bottom-4 left-4 right-4 rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"

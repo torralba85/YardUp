@@ -5,9 +5,9 @@ import { motion, useReducedMotion } from "motion/react";
 import { CTAButton } from "./CTAButton";
 
 const HERO_PROOF = [
-  { value: "$2,350/mo", label: "sample rent estimate" },
-  { value: "31%", label: "lot coverage model" },
-  { value: "9.8 yrs", label: "sample payback view" },
+  { value: "01", label: "Address", detail: "Start with the lot you own" },
+  { value: "02", label: "Fit", detail: "Check size, setbacks, and coverage" },
+  { value: "03", label: "Income", detail: "Compare rent, cost, and payback" },
 ];
 
 /**
@@ -85,7 +85,7 @@ export function LandingHero() {
             initial={shouldAnimate ? { opacity: 0 } : false}
             animate={{ opacity: 0.85 }}
             transition={{ ...transition, delay: 0.1 }}
-            className="lf-kicker text-lf-sand/85"
+            className="font-mono text-xs font-semibold uppercase leading-4 tracking-normal text-lf-sand/85"
           >
             From lot to income
           </motion.p>
@@ -93,7 +93,7 @@ export function LandingHero() {
             initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...transition, delay: 0.2 }}
-            className="lf-display-hero mt-3 max-w-[13ch] text-lf-sand"
+            className="mt-3 max-w-[13ch] font-display text-[2.5rem] font-bold leading-[0.98] text-lf-sand sm:text-5xl md:text-7xl"
             style={{ textShadow: "0 2px 24px rgba(38,19,7,0.45)" }}
           >
             Estimate the ADU income your lot could support.
@@ -103,10 +103,10 @@ export function LandingHero() {
             initial={shouldAnimate ? { opacity: 0, y: 10 } : false}
             animate={{ opacity: 0.92, y: 0 }}
             transition={{ ...transition, delay: 0.28 }}
-            className="lf-body-lg prose-width mt-5 text-lf-sand/86"
+            className="mt-5 max-w-[65ch] text-base leading-7 text-lf-sand/86 sm:text-lg sm:leading-8"
           >
-            Enter an address to model site fit, rent, build range, payback, and a
-            shareable concept report before you call a builder.
+            Start with an address, tune the ADU concept, and leave with a report
+            that explains site fit, rent, build range, and payback in plain terms.
           </motion.p>
 
           <motion.div
@@ -116,29 +116,32 @@ export function LandingHero() {
             className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
           >
             <CTAButton href="/studio">Check my address</CTAButton>
-            <p className="lf-body-sm max-w-sm text-lf-sand/74">
-              Uses parcel data where available. Local review required before design,
-              permit, financing, or investment decisions.
+            <p className="max-w-sm text-sm leading-6 text-lf-sand/74">
+              Uses parcel data where available. Local review is still required
+              before design, permit, financing, or investment decisions.
             </p>
           </motion.div>
 
-          <motion.dl
+          <motion.ol
             initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...transition, delay: 0.5 }}
-            className="mt-6 grid gap-3 rounded-2xl border border-lf-sand/20 bg-[#f8f0e41f] px-4 py-4 text-lf-sand shadow-[0_18px_40px_rgba(38,19,7,0.14)] backdrop-blur-sm sm:grid-cols-3 sm:gap-4 sm:px-5"
+            className="mt-8 grid gap-3 border-y border-lf-sand/20 py-4 text-lf-sand sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-lf-sand/20"
           >
-            {HERO_PROOF.map(({ value, label }) => (
-              <div key={label} className="min-w-0">
-                <dt className="lf-kicker-dense text-lf-sand/75">
-                  {label}
-                </dt>
-                <dd className="mt-1 font-display text-2xl font-bold leading-none text-lf-sand sm:text-3xl">
+            {HERO_PROOF.map(({ value, label, detail }) => (
+              <li key={label} className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 sm:px-4 first:sm:pl-0">
+                <span className="font-mono text-xs font-semibold text-lf-taupe">
                   {value}
-                </dd>
-              </div>
+                </span>
+                <span className="text-sm font-semibold text-lf-sand">
+                  {label}
+                </span>
+                <span className="col-start-2 text-xs leading-5 text-lf-sand/72">
+                  {detail}
+                </span>
+              </li>
             ))}
-          </motion.dl>
+          </motion.ol>
         </motion.div>
       </div>
     </section>

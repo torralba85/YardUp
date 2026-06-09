@@ -81,7 +81,7 @@ export default function FeasibilityStudio() {
 
 function FeasibilityStudioInner() {
   const { user } = useAuth();
-  const { parcel: liveParcel, parcelMode } = useParcel();
+  const { parcel: liveParcel, parcelMode, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
@@ -149,6 +149,7 @@ function FeasibilityStudioInner() {
   }, [assumptions, config, hydratedFromUrl, parcelId]);
 
   function resetScenario() {
+    resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
     setAssumptions(defaultFinancialAssumptions);
@@ -179,12 +180,15 @@ function FeasibilityStudioInner() {
       return;
     }
 
-    const entry = {
+    const entry: Omit<SavedScenario, "id" | "createdAt"> = {
       name: `${activeParcel.address} - ${config.footprint} sf`,
       parcelId,
       config,
       assumptions,
     };
+    if (parcelMode === "live" && "lat" in activeParcel) {
+      entry.liveParcel = activeParcel;
+    }
 
     setSavingScenario(true);
     setSaveNotice(null);
@@ -205,6 +209,12 @@ function FeasibilityStudioInner() {
     if (!user) return;
     const scenario = savedScenarios.find((s) => s.id === id);
     if (!scenario) return;
+    if (scenario.liveParcel) {
+      restoreLiveParcel(scenario.liveParcel);
+    } else {
+      const preset = getParcelById(scenario.parcelId);
+      resetToPreset(preset);
+    }
     setParcelId(scenario.parcelId);
     setConfig(scenario.config);
     setAssumptions(scenario.assumptions);

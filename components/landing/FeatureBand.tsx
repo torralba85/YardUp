@@ -8,9 +8,9 @@ import { Bezel } from "@/components/ui/Bezel";
 import { CTAButton } from "./CTAButton";
 
 const PROOF = [
-  ["$2,350/mo", "sample rent estimate"],
-  ["31%", "lot coverage model"],
-  ["9.8 yrs", "sample payback view"],
+  ["Address-first", "grounded in the parcel"],
+  ["Estimate-honest", "clear assumptions and caveats"],
+  ["Builder-ready", "shareable report output"],
 ];
 
 const REPORT = [
@@ -53,16 +53,18 @@ export function FeatureBand() {
               Why owners use it
             </p>
             <h2 className="lf-section-heading mt-3 max-w-2xl text-lf-espresso">
-              Check the lot before you pay for plans, outreach, or false starts.
+              See whether the lot, money, and next step line up before you spend on plans.
             </h2>
           </div>
-          <div className="grid grid-cols-3 divide-x divide-lf-hairline border-y border-lf-hairline py-5 text-center">
+          <div className="grid gap-0 divide-y divide-lf-hairline border-y border-lf-hairline py-1 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {PROOF.map(([value, label]) => (
-              <div key={label} className="px-3">
-                <strong className="block font-display text-2xl text-lf-espresso md:text-3xl">
+              <div key={label} className="px-3 py-4 text-left sm:text-center">
+                <strong className="block text-sm font-semibold text-lf-espresso">
                   {value}
                 </strong>
-                <span className="lf-caption mt-1 block text-lf-muted">{label}</span>
+                <span className="lf-caption mt-1 block text-lf-muted">
+                  {label}
+                </span>
               </div>
             ))}
           </div>
@@ -76,7 +78,7 @@ export function FeatureBand() {
               How it works
             </p>
             <h2 className="lf-section-heading mt-3 text-lf-espresso">
-              A complete owner flow, not a pretty rendering with no next step.
+              A complete owner path, not a rendering that leaves you guessing.
             </h2>
           </div>
 

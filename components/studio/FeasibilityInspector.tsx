@@ -26,6 +26,30 @@ const rentLabels: Record<RentScenario, string> = {
   optimistic: "Optimistic",
 };
 
+const journeySteps = [
+  {
+    step: 1,
+    title: "Property",
+    description: "Confirm the address or sample parcel.",
+  },
+  {
+    step: 2,
+    title: "ADU fit",
+    description: "Shape the unit and watch the lot update.",
+  },
+  {
+    step: 3,
+    title: "Money model",
+    description: "Check rent, payback, and review flags.",
+  },
+] as const;
+
+const nextActionByStep = {
+  1: "Search an address or keep the sample lot, then move to ADU fit.",
+  2: "Pick a footprint and finish that still works on the parcel.",
+  3: "Choose the rent scenario you trust, then create the report.",
+} as const;
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
@@ -61,7 +85,7 @@ export default function FeasibilityInspector({
 }: FeasibilityInspectorProps) {
   const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, searchByAddress, resetToPreset } = useParcel();
   const [openStep, setOpenStep] = useState<1 | 2 | 3>(1);
-  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]));
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
   const displayParcel = parcelMode === "live" ? parcel : presetParcel;
@@ -83,13 +107,36 @@ export default function FeasibilityInspector({
 
   function handleResetToPreset() {
     resetToPreset(presetParcel);
+    handleReset();
+  }
+
+  function handleReset() {
+    setOpenStep(1);
+    setCompletedSteps(new Set());
     onReset();
   }
 
   function toggleStep(step: 1 | 2 | 3) {
     if (openStep === step) return;
     setOpenStep(step);
-    setVisitedSteps((prev) => { const next = new Set(prev); next.add(step); return next; });
+  }
+
+  function completeStep(step: 1 | 2 | 3) {
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      next.add(step);
+      return next;
+    });
+  }
+
+  function handleNextStep(currentStep: 1 | 2, nextStep: 2 | 3) {
+    completeStep(currentStep);
+    toggleStep(nextStep);
+  }
+
+  function handleGenerateReportClick() {
+    completeStep(3);
+    onGenerateReport();
   }
 
   return (
@@ -109,18 +156,20 @@ export default function FeasibilityInspector({
               Feasibility Studio
             </h2>
             <p className="mt-1 text-sm text-lf-muted">
-              Pick a property, size, and style — see what it could earn.
+              Confirm the lot, shape the ADU, then test the income case.
             </p>
           </div>
           <button
             type="button"
-            onClick={onReset}
+            onClick={handleReset}
             className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
           </button>
         </div>
+
+        <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />
 
         {/* Accordion steps */}
         <div className="flex-1 overflow-y-auto divide-y divide-lf-hairline lg:min-h-0">
@@ -130,7 +179,7 @@ export default function FeasibilityInspector({
             step={1}
             title="Your Property"
             isOpen={openStep === 1}
-            isVisited={visitedSteps.has(1) && openStep !== 1}
+            isComplete={completedSteps.has(1) && openStep !== 1}
             onToggle={() => toggleStep(1)}
           >
             <div className="space-y-4">
@@ -233,7 +282,7 @@ export default function FeasibilityInspector({
 
               <button
                 type="button"
-                onClick={() => toggleStep(2)}
+                onClick={() => handleNextStep(1, 2)}
                 className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 Next: Design your ADU
@@ -247,7 +296,7 @@ export default function FeasibilityInspector({
             step={2}
             title="Design Your ADU"
             isOpen={openStep === 2}
-            isVisited={visitedSteps.has(2) && openStep !== 2}
+            isComplete={completedSteps.has(2) && openStep !== 2}
             onToggle={() => toggleStep(2)}
           >
             <div className="space-y-5">
@@ -377,7 +426,7 @@ export default function FeasibilityInspector({
 
               <button
                 type="button"
-                onClick={() => toggleStep(3)}
+                onClick={() => handleNextStep(2, 3)}
                 className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 Next: Run the numbers
@@ -391,7 +440,7 @@ export default function FeasibilityInspector({
             step={3}
             title="Run the Numbers"
             isOpen={openStep === 3}
-            isVisited={visitedSteps.has(3) && openStep !== 3}
+            isComplete={completedSteps.has(3) && openStep !== 3}
             onToggle={() => toggleStep(3)}
           >
             <div className="space-y-5">
@@ -439,9 +488,17 @@ export default function FeasibilityInspector({
 
         {/* Footer CTAs — always visible */}
         <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
+          <div className="rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2">
+            <div className="font-mono text-[10px] font-bold uppercase leading-4 tracking-[0.12em] text-lf-muted">
+              Next best action
+            </div>
+            <p className="mt-1 text-xs leading-5 text-lf-espresso">
+              {nextActionByStep[openStep]}
+            </p>
+          </div>
           <button
             type="button"
-            onClick={onGenerateReport}
+            onClick={handleGenerateReportClick}
             className="group flex h-12 w-full items-center justify-between gap-4 rounded-full bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 active:scale-[0.98]"
           >
             <span>Create my ADU report</span>
@@ -469,18 +526,64 @@ export default function FeasibilityInspector({
 
 // ─── Accordion step wrapper ───────────────────────────────────────────────────
 
+function JourneyProgress({
+  activeStep,
+  completedSteps,
+}: {
+  activeStep: 1 | 2 | 3;
+  completedSteps: Set<number>;
+}) {
+  return (
+    <div className="border-b border-lf-hairline bg-lf-sand-2/65 px-6 py-4">
+      <ol className="grid gap-3">
+        {journeySteps.map(({ step, title, description }) => {
+          const isActive = activeStep === step;
+          const isDone = completedSteps.has(step) && !isActive;
+          return (
+            <li key={step} className="grid grid-cols-[auto_1fr] gap-x-3">
+              <span
+                className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
+                  isActive
+                    ? "bg-lf-mahogany text-lf-sand"
+                    : isDone
+                    ? "bg-lf-forest-soft text-lf-forest"
+                    : "bg-lf-card text-lf-muted ring-1 ring-lf-hairline"
+                }`}
+              >
+                {isDone ? <Check size={12} /> : step}
+              </span>
+              <div className="min-w-0">
+                <div
+                  className={`text-sm font-semibold ${
+                    isActive ? "text-lf-espresso" : "text-lf-muted"
+                  }`}
+                >
+                  {title}
+                </div>
+                <p className="text-xs leading-5 text-lf-muted">
+                  {description}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 function AccordionStep({
   step,
   title,
   isOpen,
-  isVisited,
+  isComplete,
   onToggle,
   children,
 }: {
   step: number;
   title: string;
   isOpen: boolean;
-  isVisited: boolean;
+  isComplete: boolean;
   onToggle: () => void;
   children: React.ReactNode;
 }) {
@@ -497,12 +600,12 @@ function AccordionStep({
           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition ${
             isOpen
               ? "bg-lf-mahogany text-white"
-              : isVisited
+              : isComplete
               ? "bg-lf-clay/15 text-lf-clay"
               : "bg-lf-sand-2 text-lf-muted"
           }`}
         >
-          {isVisited && !isOpen ? <Check size={12} /> : step}
+          {isComplete && !isOpen ? <Check size={12} /> : step}
         </span>
         <span className={`flex-1 text-sm font-semibold ${isOpen ? "text-lf-espresso" : "text-lf-muted"}`}>
           {title}

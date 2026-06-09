@@ -12,6 +12,8 @@ tmp/
 .env.*
 !.env.example
 .gstack/
+.agents/
+skills-lock.json
 *firebase-adminsdk*.json
 google-services.json
 GoogleService-Info.plist

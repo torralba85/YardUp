@@ -36,8 +36,11 @@ describe("LandingHero video hero", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/enter an address to model site fit, rent, build range, payback/i),
+      screen.getByText(/start with an address, tune the adu concept/i),
     ).toBeInTheDocument();
+    expect(screen.getByText("Address")).toBeInTheDocument();
+    expect(screen.getByText("Fit")).toBeInTheDocument();
+    expect(screen.getByText("Income")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /check my address/i })).toHaveAttribute("href", "/studio");
   });
 
