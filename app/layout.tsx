@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Libre_Franklin } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -63,6 +64,7 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

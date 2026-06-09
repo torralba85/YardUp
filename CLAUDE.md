@@ -2,8 +2,6 @@
 
 ADU feasibility studio. Next.js 16 App Router + React 19 + Three.js (R3F) + Firebase Hosting/Functions. Firebase project: `yardup-2026`. Repo: `torralba85/YardUp`, branch `master`.
 
-> **Path note:** Claude Code sessions start in the sibling `urbanlens_-adu-ar-visualizer/` workspace. Actual code is here (`urbanlens-landing/`). Commit from this directory.
-
 ## Commands
 
 ```bash
