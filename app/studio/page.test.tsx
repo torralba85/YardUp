@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import StudioPage from "./page";
 
@@ -33,13 +33,20 @@ describe("StudioPage", () => {
     mocks.authState.user = null;
   });
 
-  it("redirects guests to login before rendering studio data", async () => {
+  it("renders the studio for guests without redirecting", () => {
+    render(<StudioPage />);
+
+    expect(screen.getByText("Feasibility Studio Mock")).toBeInTheDocument();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("shows the loading splash while auth state resolves", () => {
+    mocks.authState.loading = true;
+
     render(<StudioPage />);
 
     expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
-    await waitFor(() => {
-      expect(mocks.replace).toHaveBeenCalledWith("/login?next=/studio");
-    });
+    expect(screen.getByText("Loading studio...")).toBeInTheDocument();
   });
 
   it("renders the studio for signed-in users", () => {
@@ -48,6 +55,5 @@ describe("StudioPage", () => {
     render(<StudioPage />);
 
     expect(screen.getByText("Feasibility Studio Mock")).toBeInTheDocument();
-    expect(mocks.replace).not.toHaveBeenCalled();
   });
 });
