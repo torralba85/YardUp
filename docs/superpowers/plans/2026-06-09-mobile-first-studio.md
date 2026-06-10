@@ -1,4 +1,4 @@
-# Mobile-First Studio Implementation Plan
+﻿# Mobile-First Studio Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -38,7 +38,7 @@ npm run lint        # zero warnings
 **Files:**
 - Modify: `package.json`
 
-- [ ] **Step 1: Install vaul**
+- [x] **Step 1: Install vaul**
 
 ```bash
 npm install vaul
@@ -46,12 +46,12 @@ npm install vaul
 
 Expected: `vaul` appears in `package.json` dependencies (^1.x). Vaul is the Radix-based drawer with snap-point support; it supports React 19.
 
-- [ ] **Step 2: Verify the project still builds types**
+- [x] **Step 2: Verify the project still builds types**
 
 Run: `npx tsc --noEmit`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add package.json package-lock.json
@@ -68,7 +68,7 @@ git commit -m "feat(mobile): add vaul bottom-sheet dependency"
 
 `useSyncExternalStore`-based so the server snapshot is deterministic: during SSR/hydration it returns `serverDefault` (we pass `true` = desktop, preserving today's server HTML), then re-renders with the real `matchMedia` result after hydration. That switch unmounts the desktop tree before the mobile one mounts — no double WebGL canvas, no hydration mismatch.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // lib/use-media-query.test.ts
@@ -121,12 +121,12 @@ describe("useMediaQuery", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run lib/use-media-query.test.ts`
 Expected: FAIL — `Cannot find module './use-media-query'`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // lib/use-media-query.ts
@@ -158,12 +158,12 @@ export function useMediaQuery(query: string, serverDefault = false): boolean {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run lib/use-media-query.test.ts`
 Expected: 2 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/use-media-query.ts lib/use-media-query.test.ts
@@ -180,7 +180,7 @@ git commit -m "feat(mobile): add useMediaQuery hook for viewport tree split"
 
 Anonymous wizard users get a parcel built from the nearest demo preset by state (WA → `oak-street`, OR → `corner-lot`, TX → `compact-lot`, anything else → `oak-street`), re-addressed to their geocoded location. It deliberately has **no** `expectedRent`, so `calculateFeasibility` uses its lot-size rent heuristic.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // lib/estimated-parcel.test.ts
@@ -232,12 +232,12 @@ describe("buildEstimatedParcel", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run lib/estimated-parcel.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // lib/estimated-parcel.ts
@@ -296,12 +296,12 @@ export function buildEstimatedParcel(input: {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run lib/estimated-parcel.test.ts`
 Expected: 6 passed. (If `extractStateAbbrev` misses the `", WA 98115,"` form, fix the regex, not the test.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/estimated-parcel.ts lib/estimated-parcel.test.ts
@@ -316,7 +316,7 @@ git commit -m "feat(mobile): add estimated parcel builder for anonymous wizard"
 - Modify: `lib/parcel-context.tsx`
 - Test: `lib/parcel-context.test.tsx` (new)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // lib/parcel-context.test.tsx
@@ -373,12 +373,12 @@ describe("ParcelProvider estimated mode", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run lib/parcel-context.test.tsx`
 Expected: FAIL — `setEstimatedParcel` does not exist / type error.
 
-- [ ] **Step 3: Extend the context**
+- [x] **Step 3: Extend the context**
 
 In `lib/parcel-context.tsx`:
 
@@ -407,12 +407,12 @@ In `ParcelProvider`, add alongside `restoreLiveParcel`:
 
 …and add `setEstimatedParcel` to the provider `value={{ ... }}` object.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run lib/parcel-context.test.tsx && npx tsc --noEmit`
 Expected: 3 passed; no type errors. (`FeasibilityStudio.tsx` still compiles because `parcelMode === "live"` checks remain valid against the widened union.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/parcel-context.tsx lib/parcel-context.test.tsx
@@ -429,7 +429,7 @@ git commit -m "feat(mobile): add estimated parcel mode to ParcelProvider"
 
 Pure logic for step order and the show-once rule. The show decision is computed **on mount, before** `FeasibilityStudio`'s URL-write effect appends scenario params, so `hasUrlScenario` reflects an actually-shared link.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // lib/wizard-state.test.ts
@@ -496,12 +496,12 @@ describe("markWizardSeen", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run lib/wizard-state.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // lib/wizard-state.ts
@@ -546,12 +546,12 @@ export function markWizardSeen(storage: Pick<Storage, "setItem">): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run lib/wizard-state.test.ts`
 Expected: 7 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/wizard-state.ts lib/wizard-state.test.ts
@@ -568,7 +568,7 @@ git commit -m "feat(mobile): add wizard step and show-once logic"
 
 Per the spec amendment: the page-level login redirect goes away; guests get the demo/estimated studio. Live parcel data stays auth-gated server-side (`/api/parcel` already enforces this).
 
-- [ ] **Step 1: Update the test to the new contract**
+- [x] **Step 1: Update the test to the new contract**
 
 Replace the body of `app/studio/page.test.tsx`'s describe block (keep the existing mocks and imports):
 
@@ -608,12 +608,12 @@ describe("StudioPage", () => {
 
 Remove the now-unused `waitFor` import if ESLint flags it.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run app/studio/page.test.tsx`
 Expected: FAIL — guests are currently redirected, mock never renders.
 
-- [ ] **Step 3: Rewrite the page**
+- [x] **Step 3: Rewrite the page**
 
 ```tsx
 // app/studio/page.tsx
@@ -644,12 +644,12 @@ export default function StudioPage() {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run app/studio/page.test.tsx && npm run lint`
 Expected: 3 passed; lint clean (the `useRouter`/`useEffect` imports are gone).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/studio/page.tsx app/studio/page.test.tsx
@@ -666,7 +666,7 @@ git commit -m "feat(studio): open studio page to guests for wizard funnel"
 
 Vaul drawer, always open, non-modal (the scene stays interactive at peek), three snap points. Content scrolls only at full snap. A chevron button cycles snaps so E2E and keyboard users don't depend on drag gestures.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // components/studio/mobile/StudioSheet.test.tsx
@@ -741,12 +741,12 @@ describe("StudioSheet", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run components/studio/mobile/StudioSheet.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```tsx
 // components/studio/mobile/StudioSheet.tsx
@@ -824,12 +824,12 @@ export default function StudioSheet({ snap, onSnapChange, peek, controls, sectio
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run components/studio/mobile/StudioSheet.test.tsx`
 Expected: 2 passed. If Vaul throws on a missing jsdom API, stub that API in the test's `beforeAll` (same pattern as ResizeObserver) — do not mock Vaul itself.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/studio/mobile/StudioSheet.tsx components/studio/mobile/StudioSheet.test.tsx
@@ -847,7 +847,7 @@ git commit -m "feat(mobile): add vaul-based studio bottom sheet"
 
 Two small presentational pieces. `PeekMetrics` is the sheet's always-visible strip: rent / build range / payback, config chips, an "estimated" badge, and the live-fetch error + retry affordance from the spec.
 
-- [ ] **Step 1: Write the failing PeekMetrics test**
+- [x] **Step 1: Write the failing PeekMetrics test**
 
 ```tsx
 // components/studio/mobile/PeekMetrics.test.tsx
@@ -895,12 +895,12 @@ describe("PeekMetrics", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run components/studio/mobile/PeekMetrics.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write PeekMetrics**
+- [x] **Step 3: Write PeekMetrics**
 
 ```tsx
 // components/studio/mobile/PeekMetrics.tsx
@@ -971,7 +971,7 @@ function Chip({ children }: { children: React.ReactNode }) {
 }
 ```
 
-- [ ] **Step 4: Write MobileHeader (presentational, covered by E2E + MobileStudio render)**
+- [x] **Step 4: Write MobileHeader (presentational, covered by E2E + MobileStudio render)**
 
 ```tsx
 // components/studio/mobile/MobileHeader.tsx
@@ -1036,12 +1036,12 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
 
 Note: check `lib/auth-context.tsx` for the exact `logout` member name before using it (`AppShell.tsx` destructures `{ user, profile, logout }` — mirror that).
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run components/studio/mobile/PeekMetrics.test.tsx && npx tsc --noEmit`
 Expected: 3 passed; no type errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add components/studio/mobile/PeekMetrics.tsx components/studio/mobile/PeekMetrics.test.tsx components/studio/mobile/MobileHeader.tsx
@@ -1064,7 +1064,7 @@ Behavior contract:
 - Step "results": teaser from `calculateFeasibility(buildEstimatedParcel(address), configForFootprint(footprint, defaultAduConfig), defaultFinancialAssumptions)`. Rent shown rounded to $100 with "~"; build/payback/zoning blurred. "Create free account" opens `AuthModal`. When `user` becomes non-null on this step: `setEstimatedParcel(estimated)` → `searchParcel(lat, lng, address)` (live upgrade) → `onComplete(config)`.
 - "Skip — explore the demo lot" on every step: from results with an address chosen → `setEstimatedParcel(estimated)` + `onComplete(config)`; otherwise → `resetToPreset(parcelPresets[0])` + `onComplete()`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // components/studio/mobile/WizardFlow.test.tsx
@@ -1182,12 +1182,12 @@ describe("WizardFlow", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run components/studio/mobile/WizardFlow.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```tsx
 // components/studio/mobile/WizardFlow.tsx
@@ -1427,12 +1427,12 @@ function BlurredFact({ label, value }: { label: string; value: string }) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run components/studio/mobile/WizardFlow.test.tsx`
 Expected: 6 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/studio/mobile/WizardFlow.tsx components/studio/mobile/WizardFlow.test.tsx
@@ -1449,7 +1449,7 @@ git commit -m "feat(mobile): add first-run wizard with results teaser and auth u
 
 Slot-based composer: owns the sheet snap state, the scene pointer-events rule, tap-to-collapse, and one-time coach marks. It knows nothing about feasibility — parents pass rendered nodes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // components/studio/mobile/MobileStudio.test.tsx
@@ -1525,12 +1525,12 @@ describe("MobileStudio", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run components/studio/mobile/MobileStudio.test.tsx`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```tsx
 // components/studio/mobile/MobileStudio.tsx
@@ -1610,12 +1610,12 @@ export default function MobileStudio({ header, scene, peek, controls, sections }
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run components/studio/mobile/MobileStudio.test.tsx`
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/studio/mobile/MobileStudio.tsx components/studio/mobile/MobileStudio.test.tsx
@@ -1631,7 +1631,7 @@ git commit -m "feat(mobile): add mobile studio composer with sheet and coach mar
 
 This is the integration task — no new logic, only composition. Work inside `FeasibilityStudioInner`.
 
-- [ ] **Step 1: Add imports**
+- [x] **Step 1: Add imports**
 
 ```tsx
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -1648,7 +1648,7 @@ Also extend the existing `useParcel()` destructuring to pull what mobile needs:
 const { parcel: liveParcel, parcelMode, parcelError, searchParcel, resetToPreset, restoreLiveParcel } = useParcel();
 ```
 
-- [ ] **Step 2: Fix `activeParcel` for estimated mode**
+- [x] **Step 2: Fix `activeParcel` for estimated mode**
 
 Replace:
 
@@ -1674,7 +1674,7 @@ const sceneParcel =
 
 …and pass `sceneParcel` instead of `presetParcel` to `<ParcelScene parcel={...} />`.
 
-- [ ] **Step 3: Add the viewport split and wizard state**
+- [x] **Step 3: Add the viewport split and wizard state**
 
 ```tsx
 const isDesktop = useMediaQuery("(min-width: 1024px)", true);
@@ -1698,7 +1698,7 @@ function handleWizardComplete(nextConfig?: ADUConfig) {
 }
 ```
 
-- [ ] **Step 4: Extract the scene node so both trees share it**
+- [x] **Step 4: Extract the scene node so both trees share it**
 
 Pull the existing scene JSX (the `IncomeLens` + `AerialView`/`ParcelScene` conditional, currently inside the desktop `<section>`) into a variable above the return. Mobile omits `IncomeLens` (PeekMetrics is its mobile equivalent):
 
@@ -1717,7 +1717,7 @@ const sceneNode =
 
 The desktop `<section>` keeps `<IncomeLens …/>{sceneNode}`.
 
-- [ ] **Step 5: Build the mobile tree and branch the return**
+- [x] **Step 5: Build the mobile tree and branch the return**
 
 The shared modals (`ReportPreview`, `BuilderLeadPanel`) render in both branches with identical props. The mobile branch:
 
@@ -1821,18 +1821,18 @@ return ( /* existing AppShell desktop tree, unchanged apart from sceneNode */ );
 
 If `FeasibilityInspector` or the panels overflow the sheet width, wrap them in `<div className="[&>*]:!w-full">` rather than editing those components — desktop must not change.
 
-- [ ] **Step 6: Verify everything**
+- [x] **Step 6: Verify everything**
 
 Run: `npm run test && npx tsc --noEmit && npm run lint && npm run build`
 Expected: full unit suite green (the desktop tree and `lib/` engine are untouched — any existing failure means the split leaked), no type errors, zero lint warnings, build succeeds.
 
-- [ ] **Step 7: Manual smoke check**
+- [x] **Step 7: Manual smoke check**
 
 Run: `npm run dev`, open `http://localhost:3000/studio`:
 - Desktop window (≥1024px): existing dashboard, no wizard.
 - DevTools mobile emulation (390×844), fresh localStorage (`localStorage.clear()` then reload): wizard appears → "Skip — explore the demo lot" → scene + peek sheet with metrics; expand button reveals controls; full snap scrolls to permit guide/inspiration/export.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add components/FeasibilityStudio.tsx
@@ -1848,7 +1848,7 @@ git commit -m "feat(mobile): split studio into desktop and mobile trees with fir
 
 The `mobile-chromium` project (390×844) exercises the mobile spec; the `desktop-chromium` project (1440×900) exercises the regression spec. Both projects run every file, so each describe guards on viewport width.
 
-- [ ] **Step 1: Write the spec**
+- [x] **Step 1: Write the spec**
 
 ```ts
 // e2e/mobile-studio.spec.ts
@@ -1916,17 +1916,17 @@ test.describe("desktop studio regression", () => {
 
 Adjust the footprint-preset button name in test 2 to whatever `FeasibilityInspector` actually renders (check its footprint control labels — `footprintOptions` uses `"800 sf"`); the assertion strategy stays the same.
 
-- [ ] **Step 2: Run the suite**
+- [x] **Step 2: Run the suite**
 
 Run: `npx playwright test e2e/mobile-studio.spec.ts`
 Expected: mobile tests pass under `mobile-chromium` and skip under `desktop-chromium`; the regression test does the reverse. Fix selector drift by reading the rendered component, not by weakening assertions.
 
-- [ ] **Step 3: Run the whole E2E suite for regressions**
+- [x] **Step 3: Run the whole E2E suite for regressions**
 
 Run: `npm run test:e2e`
 Expected: existing specs (`feasibility-studio`, `accessibility`, `hero`, `visual-breakpoints`) still pass. **Watch for:** existing mobile-project specs that asserted the old squeezed-desktop studio layout — if any fail, update those assertions to the new mobile tree (that change is expected and in-scope), and clear the wizard flag first via `await page.addInitScript(() => localStorage.setItem("lf-wizard-seen", "1"))` where a spec needs the studio without the wizard. Visual-breakpoint snapshots that include the studio at mobile widths will need regenerating: `npx playwright test e2e/visual-breakpoints.spec.ts --update-snapshots`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add e2e/mobile-studio.spec.ts
@@ -1939,12 +1939,12 @@ git commit -m "test(e2e): cover mobile wizard funnel, sheet studio, and desktop 
 
 ### Task 13: Final verification
 
-- [ ] **Step 1: Full pre-commit gate**
+- [x] **Step 1: Full pre-commit gate**
 
 Run: `npm run lint && npm run test && npx tsc --noEmit && npm run build`
 Expected: all green, zero warnings.
 
-- [ ] **Step 2: Spec checklist sweep**
+- [x] **Step 2: Spec checklist sweep**
 
 Verify each spec requirement is implemented; fix anything missed before closing out:
 - Viewport split renders exactly one tree (no hidden second canvas) — check the DOM in both modes.
@@ -1954,7 +1954,7 @@ Verify each spec requirement is implemented; fix anything missed before closing 
 - Reduced motion: Vaul respects `prefers-reduced-motion`; verify the sheet still snaps with animations off (DevTools → Rendering → emulate reduced motion).
 - Desktop unchanged: diff check that `AppShell.tsx`, `FeasibilityInspector.tsx`, `MetricsSummary.tsx` and the desktop JSX branch have no behavioral edits.
 
-- [ ] **Step 3: Commit any remaining fixes and update the plan checkboxes**
+- [x] **Step 3: Commit any remaining fixes and update the plan checkboxes**
 
 ```bash
 git add -A
