@@ -331,6 +331,12 @@ function FeasibilityStudioInner() {
     );
 
   if (!isDesktop) {
+    // The wizard replaces the studio rather than overlaying it: the studio's
+    // always-open vaul sheet is a modal Radix dialog that would aria-hide and
+    // focus-trap anything rendered outside it (including the wizard).
+    if (wizardOpen) {
+      return <WizardFlow onComplete={handleWizardComplete} />;
+    }
     return (
       <>
         <MobileStudio
@@ -395,7 +401,6 @@ function FeasibilityStudioInner() {
             </>
           }
         />
-        {wizardOpen && <WizardFlow onComplete={handleWizardComplete} />}
         {reportOpen && (
           <ReportPreview
             parcelName={`${activeParcel.address}, ${activeParcel.city}`}
