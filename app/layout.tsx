@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Libre_Franklin } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
@@ -47,8 +47,11 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: "#F2E5D5",
+  // Extend behind the iOS notch/home indicator so env(safe-area-inset-*)
+  // paddings in the studio shell take effect in standalone PWA mode.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -17,7 +17,10 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
   const initial = (profile?.displayName || profile?.email || "U").slice(0, 1).toUpperCase();
 
   return (
-    <header className="flex items-center gap-2 border-b border-white/10 bg-lf-mahogany px-3 py-2 text-white">
+    <header
+      className="flex items-center gap-2 border-b border-white/10 bg-lf-mahogany px-3 py-2 text-white"
+      style={{ paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/lotfoundry-lockup-horizontal-inverse.svg" alt="LotFoundry" className="h-6 w-auto" />
       <span className="min-w-0 flex-1 truncate rounded-full bg-white/10 px-2.5 py-1 text-xs text-lf-sand">
@@ -37,7 +40,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           type="button"
           aria-label="Sign out"
           onClick={() => void logout()}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-white"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-white"
         >
           {initial}
         </button>

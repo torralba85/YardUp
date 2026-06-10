@@ -59,7 +59,10 @@ export default function StudioSheet({ snap, onSnapChange, peek, controls, sectio
             </button>
           </div>
           <div className="shrink-0 px-4 pb-2 pt-1">{peek}</div>
-          <div className={`min-h-0 flex-1 px-4 pb-8 ${isFull ? "overflow-y-auto" : "overflow-hidden"}`}>
+          <div
+            className={`min-h-0 flex-1 px-4 ${isFull ? "overflow-y-auto" : "overflow-hidden"}`}
+            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+          >
             <div className="flex flex-col gap-6">
               {controls}
               {sections}
