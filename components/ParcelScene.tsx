@@ -57,6 +57,8 @@ const SCENE = {
   gridLine: "#a8a294",
   fog: "#c8bfa8",
   tree: "#4a6e3a", // tree canopy green
+  treeLight: "#5b7d46", // sunlit canopy lobe
+  treeDark: "#3f6132", // shaded canopy lobe
   treeTrunk: "#5a4430", // bark brown
   fence: "#8a7e6e", // weathered wood fence
   driveway: "#9e9688", // gravel driveway
@@ -398,39 +400,56 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
 }
 
 
-/** Tree: trunk + canopy sphere, placed at lot edges. */
+/** Tree: trunk + clustered canopy lobes, placed at lot edges. */
 function Tree({ position, height = 8, radius = 3 }: { position: [number, number, number]; height?: number; radius?: number }) {
   return (
     <group position={position}>
       <mesh position={[0, height / 2, 0]} castShadow>
-        <cylinderGeometry args={[0.4, 0.6, height, 6]} />
+        <cylinderGeometry args={[0.4, 0.6, height, 8]} />
         <meshStandardMaterial color={SCENE.treeTrunk} roughness={0.9} />
       </mesh>
-      <mesh position={[0, height + radius * 0.6, 0]} castShadow>
-        <sphereGeometry args={[radius, 8, 6]} />
-        <meshStandardMaterial color={SCENE.tree} roughness={0.85} />
-      </mesh>
+      <group position={[0, height + radius * 0.45, 0]}>
+        <mesh position={[0, radius * 0.2, 0]} castShadow>
+          <sphereGeometry args={[radius, 14, 12]} />
+          <meshStandardMaterial color={SCENE.tree} roughness={0.85} />
+        </mesh>
+        <mesh position={[radius * 0.55, -radius * 0.12, radius * 0.28]} castShadow>
+          <sphereGeometry args={[radius * 0.66, 12, 10]} />
+          <meshStandardMaterial color={SCENE.treeLight} roughness={0.85} />
+        </mesh>
+        <mesh position={[-radius * 0.5, -radius * 0.06, -radius * 0.3]} castShadow>
+          <sphereGeometry args={[radius * 0.6, 12, 10]} />
+          <meshStandardMaterial color={SCENE.treeDark} roughness={0.85} />
+        </mesh>
+      </group>
     </group>
   );
 }
 
-/** Fence posts along a property line. */
+/** Fence along a property line: posts plus two horizontal rails. */
 function FenceLine({ start, end, postSpacing = 8, postHeight = 3 }: { start: [number, number, number]; end: [number, number, number]; postSpacing?: number; postHeight?: number }) {
-  const posts = useMemo(() => {
+  const { posts, rails } = useMemo(() => {
     const dx = end[0] - start[0];
     const dz = end[2] - start[2];
     const len = Math.sqrt(dx * dx + dz * dz);
     const count = Math.floor(len / postSpacing);
     const nx = dx / len;
     const nz = dz / len;
-    const result: { position: [number, number, number]; angle: number }[] = [];
+    const angle = Math.atan2(dx, dz);
+    const posts: { position: [number, number, number]; angle: number }[] = [];
     for (let i = 0; i <= count; i++) {
-      result.push({
+      posts.push({
         position: [start[0] + nx * postSpacing * i, postHeight / 2, start[2] + nz * postSpacing * i],
-        angle: Math.atan2(dx, dz),
+        angle,
       });
     }
-    return result;
+    const mid: [number, number] = [(start[0] + end[0]) / 2, (start[2] + end[2]) / 2];
+    const rails = [postHeight * 0.52, postHeight * 0.86].map((y) => ({
+      position: [mid[0], y, mid[1]] as [number, number, number],
+      angle,
+      length: len,
+    }));
+    return { posts, rails };
   }, [start, end, postSpacing, postHeight]);
 
   return (
@@ -438,6 +457,12 @@ function FenceLine({ start, end, postSpacing = 8, postHeight = 3 }: { start: [nu
       {posts.map((p, i) => (
         <mesh key={i} position={p.position} rotation={[0, p.angle, 0]} castShadow>
           <boxGeometry args={[0.3, postHeight, 0.3]} />
+          <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
+        </mesh>
+      ))}
+      {rails.map((r, i) => (
+        <mesh key={`rail-${i}`} position={r.position} rotation={[0, r.angle, 0]} castShadow>
+          <boxGeometry args={[0.12, 0.28, r.length]} />
           <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
         </mesh>
       ))}
@@ -585,19 +610,31 @@ function ProposedAdu({
           />
         </mesh>
 
-        {/* Roof */}
+        {/* Roof. Gable ridge runs along the ADU's length: GableRoof pitches
+            across its `depth`, so swap axes and rotate the group 90deg. */}
         {config.roof === "gable" ? (
-          <mesh position={[0, config.height + 1.1, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-            <coneGeometry args={[config.width / 1.35, config.length + 1.6, 4]} />
-            <meshStandardMaterial color={SCENE.roof} roughness={0.66} />
-          </mesh>
-        ) : (
+          <group rotation={[0, Math.PI / 2, 0]}>
+            <GableRoof
+              width={config.length}
+              depth={config.width}
+              wallHeight={config.height}
+              ridgeHeight={Math.min(Math.max(config.width * 0.18, 1.6), 4)}
+            />
+          </group>
+        ) : config.roof === "shed" ? (
+          // Sloped slab seated on the wall top: rear eave at wall height,
+          // rising 2.1ft toward the front, with a small overhang all around.
           <mesh
-            position={[0, config.height + 0.4, config.roof === "shed" ? -0.8 : 0]}
-            rotation={[config.roof === "shed" ? -0.08 : 0, 0, 0]}
+            position={[0, config.height + 1.05, 0]}
+            rotation={[-Math.atan2(2.1, config.length + 1.4), 0, 0]}
             castShadow
           >
-            <boxGeometry args={[config.width + 1.2, 0.8, config.length + 1.2]} />
+            <boxGeometry args={[config.width + 1.2, 0.5, Math.hypot(config.length + 1.4, 2.1)]} />
+            <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
+          </mesh>
+        ) : (
+          <mesh position={[0, config.height + 0.3, 0]} castShadow>
+            <boxGeometry args={[config.width + 1.2, 0.6, config.length + 1.2]} />
             <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
           </mesh>
         )}
@@ -611,7 +648,7 @@ function ProposedAdu({
             </mesh>
             <mesh position={[config.width * 0.18, -0.5, 0]}>
               <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
-              <meshStandardMaterial color={SCENE.roof} roughness={0.2} metalness={0.3} />
+              <meshStandardMaterial color="#5a3a20" roughness={0.55} />
             </mesh>
           </group>
         )}
