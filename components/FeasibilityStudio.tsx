@@ -46,6 +46,12 @@ import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { configForFootprint } from "@/lib/feasibility";
 import { useCountUp } from "./studio/use-count-up";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { markWizardSeen, shouldShowWizard } from "@/lib/wizard-state";
+import MobileStudio from "./studio/mobile/MobileStudio";
+import MobileHeader from "./studio/mobile/MobileHeader";
+import PeekMetrics from "./studio/mobile/PeekMetrics";
+import WizardFlow from "./studio/mobile/WizardFlow";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -81,7 +87,7 @@ export default function FeasibilityStudio() {
 
 function FeasibilityStudioInner() {
   const { user } = useAuth();
-  const { parcel: liveParcel, parcelMode, resetToPreset, restoreLiveParcel } = useParcel();
+  const { parcel: liveParcel, parcelMode, parcelError, searchParcel, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
@@ -117,8 +123,14 @@ function FeasibilityStudioInner() {
   }, [user]);
 
   const presetParcel = getParcelById(parcelId);
-  // Use live parcel data when available, otherwise the preset
-  const activeParcel = parcelMode === "live" ? liveParcel : presetParcel;
+  // Context parcel covers both live (Regrid) and estimated (wizard) modes.
+  const activeParcel = parcelMode === "preset" ? presetParcel : liveParcel;
+  // Estimated parcels have no 3D geometry of their own — render the base
+  // preset's lot in the scene while the metrics use the estimated parcel.
+  const sceneParcel =
+    parcelMode === "estimated" && "basePresetId" in activeParcel
+      ? getParcelById(activeParcel.basePresetId)
+      : presetParcel;
   const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
     () => calculateFeasibility(activeParcel, config, assumptions, expectedRent),
@@ -126,6 +138,26 @@ function FeasibilityStudioInner() {
     [assumptions, config, activeParcel],
   );
   const isCompliant = result.zoningStatus === "Compliant";
+
+  const isDesktop = useMediaQuery("(min-width: 1024px)", true);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  // First-run wizard decision — mount-only, before the URL-write effect adds
+  // scenario params, mirroring the existing post-hydration URL sync pattern.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) return; // desktop never sees the wizard
+    const hasUrlScenario = window.location.search.length > 1;
+    setWizardOpen(shouldShowWizard({ hasUrlScenario, storage: window.localStorage }));
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  function handleWizardComplete(nextConfig?: ADUConfig) {
+    if (nextConfig) setConfig(nextConfig);
+    markWizardSeen(window.localStorage);
+    setWizardOpen(false);
+  }
 
   // Deliberate post-hydration sync from URL: server renders defaults so the
   // static HTML matches first client paint; we then apply URL state once.
@@ -283,6 +315,118 @@ function FeasibilityStudioInner() {
     downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
   }
 
+  const sceneNode =
+    parcelMode === "live" && "lat" in activeParcel ? (
+      <AerialView
+        parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
+        config={config}
+        isCompliant={isCompliant}
+      />
+    ) : (
+      <ParcelScene
+        parcel={sceneParcel}
+        config={config}
+        isCompliant={isCompliant}
+      />
+    );
+
+  if (!isDesktop) {
+    return (
+      <>
+        <MobileStudio
+          header={
+            <MobileHeader
+              address={activeParcel.address}
+              estimated={parcelMode === "estimated"}
+              onReset={resetScenario}
+            />
+          }
+          scene={<div className="h-full">{sceneNode}</div>}
+          peek={
+            <PeekMetrics
+              result={result}
+              config={config}
+              estimated={parcelMode === "estimated"}
+              parcelError={parcelError}
+              onRetry={
+                "lat" in activeParcel
+                  ? () => void searchParcel(activeParcel.lat, activeParcel.lng, activeParcel.address)
+                  : undefined
+              }
+            />
+          }
+          controls={
+            <FeasibilityInspector
+              parcelId={parcelId}
+              config={config}
+              assumptions={assumptions}
+              result={result}
+              onParcelChange={setParcelId}
+              onConfigChange={setConfig}
+              onAssumptionsChange={setAssumptions}
+              onReset={resetScenario}
+              onGenerateReport={handleGenerateReport}
+              onSaveScenario={handleSaveScenario}
+              savingScenario={savingScenario}
+              saveNotice={saveNotice}
+            />
+          }
+          sections={
+            <>
+              <MetricsSummary result={result} />
+              <EstimateSummaryPanel
+                parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+                result={result}
+                onGenerateReport={handleGenerateReport}
+              />
+              <PermitGuidePanel address={activeParcel.address} />
+              <InspirationGalleryPanel
+                onApply={(item) => {
+                  const baseConfig = configForFootprint(item.sqft, config);
+                  setConfig({
+                    ...baseConfig,
+                    width: item.width,
+                    length: item.length,
+                    roof: item.roof,
+                    finish: item.finish,
+                  });
+                }}
+              />
+            </>
+          }
+        />
+        {wizardOpen && <WizardFlow onComplete={handleWizardComplete} />}
+        {reportOpen && (
+          <ReportPreview
+            parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+            result={result}
+            onClose={() => setReportOpen(false)}
+            onDownload={downloadReport}
+            onExportCsv={exportCsv}
+            onShare={handleShareLink}
+            onConnectBuilders={() => setBuilderLeadOpen(true)}
+            shareNotice={shareNotice}
+            autoFocus={reportAutoFocus}
+          />
+        )}
+        <BuilderLeadPanel
+          open={builderLeadOpen}
+          userDefaults={{
+            name: user?.displayName || "",
+            email: user?.email || "",
+          }}
+          parcelKey={parcelId}
+          parcel={activeParcel}
+          config={config}
+          assumptions={assumptions}
+          result={result}
+          onClose={() => setBuilderLeadOpen(false)}
+          onSubmit={handleBuilderLeadSubmit}
+        />
+      </>
+    );
+  }
+
   return (
     <AppShell
       activeNav={activeNav}
@@ -301,19 +445,7 @@ function FeasibilityStudioInner() {
           className="lf-entrance relative min-h-[440px] md:min-h-[480px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso lg:min-h-0 lg:border-b-0 lg:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
-          {parcelMode === "live" && "lat" in activeParcel ? (
-            <AerialView
-              parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
-              config={config}
-              isCompliant={isCompliant}
-            />
-          ) : (
-            <ParcelScene
-              parcel={presetParcel}
-              config={config}
-              isCompliant={isCompliant}
-            />
-          )}
+          {sceneNode}
         </section>
 
         {activeNav === "guide" ? (

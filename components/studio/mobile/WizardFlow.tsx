@@ -57,6 +57,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
 
   // Auth unlock: when the user signs in on the results step, apply the
   // estimated parcel immediately, then upgrade to live Regrid data.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!user || step !== "results" || !estimated) return;
     setAuthOpen(false);
@@ -65,6 +66,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
     complete(teaserConfig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleSkip() {
     if (step === "results" && estimated) {
