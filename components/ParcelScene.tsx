@@ -628,7 +628,7 @@ function ProposedAdu({
           // rising 2.1ft toward the front, with a small overhang all around.
           <mesh
             position={[0, config.height + 1.05, 0]}
-            rotation={[Math.atan2(2.1, config.length + 1.4), 0, 0]}
+            rotation={[-Math.atan2(2.1, config.length + 1.4), 0, 0]}
             castShadow
           >
             <boxGeometry args={[config.width + 1.2, 0.5, Math.hypot(config.length + 1.4, 2.1)]} />
