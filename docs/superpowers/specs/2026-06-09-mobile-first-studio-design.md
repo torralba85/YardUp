@@ -19,6 +19,7 @@ Give iOS/Android users (via the PWA) a touch-first studio experience: a guided f
 | Auth gate | Results teaser; rent shown rounded, cost/payback/zoning blurred until free sign-up unlocks live parcel data |
 | Secondary sections | Inside the fully-expanded sheet as one continuous scroll (no tabs, no separate pages) |
 | Desktop | Untouched; existing `AppShell` layout renders at `lg+` |
+| Guest access | `/studio` page-level login redirect is removed; guests get the wizard + demo/estimated studio on any device. Live parcel data and saved scenarios remain auth-gated (enforced server-side) |
 | Build approach | Parallel mobile composition — one state orchestrator, two layout trees |
 | New dependency | `vaul` (Radix-based drawer with snap points) |
 
