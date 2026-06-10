@@ -186,7 +186,11 @@ function FeasibilityStudioInner() {
       config,
       assumptions,
     };
-    if (parcelMode === "live" && "lat" in activeParcel) {
+    if (
+      parcelMode === "live" &&
+      "source" in activeParcel &&
+      (activeParcel.source === "regrid" || activeParcel.source === "fallback")
+    ) {
       entry.liveParcel = activeParcel;
     }
 
