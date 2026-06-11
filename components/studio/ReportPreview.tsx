@@ -43,15 +43,18 @@ export default function ReportPreview({
       className="border-t border-lf-hairline bg-lf-card px-6 py-4 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none max-h-[70dvh] overflow-y-auto lg:max-h-[40vh]"
     >
       <div className="grid gap-6 lg:grid-cols-[140px_1fr_1fr_220px] xl:grid-cols-[150px_1fr_1fr_250px]">
-        <div className="hidden rounded-md border border-lf-hairline bg-lf-sand-2 p-2.5 lg:block">
-          <div className="lf-kicker-dense text-lf-mahogany">
-            LotFoundry
+        <div className="hidden border-[1.5px] border-lf-espresso bg-lf-card p-1 lg:block">
+          <div className="border border-lf-taupe px-2.5 py-3 text-center">
+            <div className="lf-kicker-dense text-lf-clay">LotFoundry</div>
+            <div className="mt-1.5 font-display text-sm font-semibold leading-tight text-lf-espresso">
+              Certificate of Feasibility
+            </div>
+            <div className="mx-auto mt-2 h-px w-10 bg-lf-hairline" />
+            <div className="lf-caption mt-2 truncate text-lf-muted">{parcelName}</div>
+            <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.18em] text-lf-brick">
+              Concept
+            </div>
           </div>
-          <div className="mt-2 aspect-[3/2] rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
-          <div className="mt-2 text-xs font-semibold text-lf-espresso">
-            Concept Feasibility Report
-          </div>
-          <div className="lf-caption mt-1 text-lf-muted">{parcelName}</div>
         </div>
 
         <div>
@@ -61,12 +64,12 @@ export default function ReportPreview({
             tabIndex={-1}
             className="lf-panel-heading text-lf-espresso focus:outline-none"
           >
-            Concept Feasibility Report
+            Certificate of Feasibility
           </h2>
           <p className="lf-body-sm mt-1.5 max-w-xl text-lf-muted">
-            An owner-facing summary of the selected ADU concept, site assumptions,
-            estimated costs, income range, and early feasibility signals. Final scope,
-            approvals, and performance still require local review.
+            A recorded concept for this lot: the ADU, its site fit, estimated costs,
+            income ledger, and payback — typeset as a document you can print, share,
+            or bring to a builder. Final scope and approvals still require local review.
           </p>
           <div className="mt-3 grid gap-2.5 text-sm text-lf-muted sm:grid-cols-2">
             <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />

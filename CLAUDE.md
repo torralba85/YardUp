@@ -27,3 +27,10 @@ See [`docs/AGENTS.md`](docs/AGENTS.md) — architecture map, design tokens, API 
 - **`react-hooks/set-state-in-effect`** — suppress with `/* eslint-disable */` when URL hydration sync requires it
 - **Demo mode** — app works without API keys (3 presets: Seattle, Portland, Austin)
 - **`three` types** — import `ThreeEvent` from `@react-three/fiber`, not as a global
+
+## Design System
+
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.

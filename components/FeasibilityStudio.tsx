@@ -87,7 +87,7 @@ export default function FeasibilityStudio() {
 
 function FeasibilityStudioInner() {
   const { user } = useAuth();
-  const { parcel: liveParcel, parcelMode, parcelError, searchParcel, resetToPreset, restoreLiveParcel } = useParcel();
+  const { parcel: liveParcel, parcelMode, parcelError, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
@@ -169,7 +169,15 @@ function FeasibilityStudioInner() {
     if (parsed.parcelId) setParcelId(parsed.parcelId);
     if (parsed.config) setConfig(parsed.config);
     if (parsed.assumptions) setAssumptions(parsed.assumptions);
+    // Landing-hero handoff: ?q=<address> kicks off the same text-search path
+    // as the inspector's search field. The URL-write effect below replaces the
+    // query string with scenario params, so q is consumed exactly once.
+    const incomingAddress = params.get("q")?.trim();
+    if (incomingAddress) {
+      searchByAddress(incomingAddress);
+    }
     setHydratedFromUrl(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -307,7 +315,7 @@ function FeasibilityStudioInner() {
 
   function downloadReport() {
     const html = buildReportHtml({ parcel: activeParcel, config, result });
-    downloadBlob("lotfoundry-concept-feasibility-report.html", html, "text/html");
+    downloadBlob("lotfoundry-certificate-of-feasibility.html", html, "text/html");
   }
 
   function exportCsv() {

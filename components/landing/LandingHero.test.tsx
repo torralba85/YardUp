@@ -1,6 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LandingHero } from "./LandingHero";
+
+const pushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: pushMock }),
+}));
 
 function setMatchMedia(reduce: boolean) {
   window.matchMedia = (query: string) =>
@@ -16,32 +22,57 @@ function setMatchMedia(reduce: boolean) {
     }) as unknown as MediaQueryList;
 }
 
-describe("LandingHero video hero", () => {
+describe("LandingHero poster hero", () => {
   let playSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
     setMatchMedia(false);
+    pushMock.mockClear();
   });
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("renders the address-first owner copy and CTA to /studio", () => {
+  it("renders the asset headline, address instrument, and estimate-honest copy", () => {
     render(<LandingHero />);
     expect(screen.getByText(/from lot to income/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", {
-        name: /estimate the adu income your lot could support/i,
-      }),
+      screen.getByRole("heading", { name: /your backyard is an asset/i }),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/property address/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /run feasibility/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/start with an address, tune the adu concept/i),
+      screen.getByText(/local review is still required/i),
     ).toBeInTheDocument();
-    expect(screen.getByText("Address")).toBeInTheDocument();
-    expect(screen.getByText("Fit")).toBeInTheDocument();
-    expect(screen.getByText("Income")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /check my address/i })).toHaveAttribute("href", "/studio");
+  });
+
+  it("docks an instrument rail with engine-derived proof points", () => {
+    render(<LandingHero />);
+    expect(screen.getByText(/rent potential/i)).toBeInTheDocument();
+    expect(screen.getByText(/est\. net operating income/i)).toBeInTheDocument();
+    expect(screen.getByText(/payback estimate/i)).toBeInTheDocument();
+    // Engine values for the Seattle preset (conservative scenario) — the same
+    // numbers the studio money band shows, so landing and product never drift.
+    expect(screen.getByText(/\$2,050–2,650/)).toBeInTheDocument();
+    expect(screen.getByText(/\$16,605/)).toBeInTheDocument();
+    expect(screen.getByText("15.1")).toBeInTheDocument();
+    expect(screen.getByText(/sample lot · seattle/i)).toBeInTheDocument();
+  });
+
+  it("routes the typed address to the studio as ?q=", () => {
+    render(<LandingHero />);
+    fireEvent.change(screen.getByLabelText(/property address/i), {
+      target: { value: "456 Pine St, Denver, CO" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: /run feasibility/i }).closest("form")!);
+    expect(pushMock).toHaveBeenCalledWith("/studio?q=456%20Pine%20St%2C%20Denver%2C%20CO");
+  });
+
+  it("routes to the studio without a query when the field is empty", () => {
+    render(<LandingHero />);
+    fireEvent.submit(screen.getByRole("button", { name: /run feasibility/i }).closest("form")!);
+    expect(pushMock).toHaveBeenCalledWith("/studio");
   });
 
   it("renders a stable, legible full-bleed video element", () => {

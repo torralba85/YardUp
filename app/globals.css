@@ -17,6 +17,10 @@
   --color-lf-muted: #6B5B4D;
   --color-lf-hairline: #E0CDB4;
 
+  /* On-dark accents (money band, instrument rail) */
+  --color-lf-money-on-dark: #9DC4A8;
+  --color-lf-clay-strong: #6F3F28;
+
   /* Semantic colors */
   --color-lf-forest: #2F4A38;
   --color-lf-forest-soft: #2F4A381A;
