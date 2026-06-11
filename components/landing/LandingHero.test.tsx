@@ -2,7 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LandingHero } from "./LandingHero";
 
-const pushMock = vi.fn();
+// vi.hoisted runs before the hoisted vi.mock factory, so pushMock is never
+// read from the temporal dead zone during module mocking.
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),

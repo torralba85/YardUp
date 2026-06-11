@@ -53,7 +53,7 @@ export async function fetchParcel(
   if (res.status === 401) {
     throw new ParcelFetchError(
       `Parcel service authentication failed (${res.status})`,
-      "Please sign in again before searching another address.",
+      "Sign in to search a specific address — or keep exploring with a demo preset.",
     );
   }
 
