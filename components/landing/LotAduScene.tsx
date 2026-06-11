@@ -28,13 +28,13 @@ function SceneOverlay({ progress }: { progress: MotionValue<number> }) {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="absolute right-6 top-6 rounded-md border border-lf-hairline/80 bg-lf-card/80 px-4 py-3 text-sm text-lf-muted shadow-[0_18px_50px_-30px_rgba(38,19,7,0.65)] backdrop-blur">
+      <div className="absolute right-6 top-24 rounded-2xl border border-lf-hairline/80 bg-lf-card/80 px-4 py-3 text-sm text-lf-muted shadow-[0_18px_50px_-30px_rgba(38,19,7,0.65)] backdrop-blur">
         <span className="font-mono text-[10px] uppercase tracking-[0.16em]">Live concept</span>
         <strong className="mt-1 block font-display text-xl text-lf-espresso">Denver backyard sample</strong>
       </div>
 
       <div
-        className="absolute left-[14%] top-[52%] hidden w-56 rounded-md border border-lf-forest/25 bg-lf-forest px-4 py-3 text-lf-sand shadow-[0_24px_60px_-36px_rgba(38,19,7,0.8)] backdrop-blur lg:block"
+        className="absolute left-[14%] top-[52%] hidden w-56 rounded-2xl border border-lf-forest/25 bg-lf-forest px-4 py-3 text-lf-sand shadow-[0_24px_60px_-36px_rgba(38,19,7,0.8)] backdrop-blur lg:block"
         style={{ opacity: conceptOpacity, transform: `translateY(${(1 - conceptOpacity) * 14}px)` }}
       >
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] opacity-75">Concept fit</p>
@@ -43,7 +43,7 @@ function SceneOverlay({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div
-        className="absolute bottom-8 right-8 grid w-64 gap-3 rounded-md border border-lf-hairline bg-lf-card/88 p-4 text-lf-muted shadow-[0_24px_70px_-38px_rgba(38,19,7,0.85)] backdrop-blur"
+        className="absolute bottom-8 right-8 grid w-64 gap-3 rounded-2xl border border-lf-hairline bg-lf-card/88 p-4 text-lf-muted shadow-[0_24px_70px_-38px_rgba(38,19,7,0.85)] backdrop-blur"
         style={{ opacity: numbersOpacity, transform: `translateY(${(1 - numbersOpacity) * 12}px)` }}
       >
         <div className="flex items-baseline justify-between gap-4">

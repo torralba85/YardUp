@@ -60,7 +60,7 @@ export default function LoginForm() {
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-sm text-lf-brick">
+        <div className="rounded-xl border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-sm text-lf-brick">
           {error}
         </div>
       )}
@@ -79,7 +79,7 @@ export default function LoginForm() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+          className="w-full rounded-xl border border-lf-hairline bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
           placeholder="you@example.com"
         />
       </div>
@@ -106,7 +106,7 @@ export default function LoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+          className="w-full rounded-xl border border-lf-hairline bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
           placeholder="••••••••"
         />
       </div>
@@ -114,7 +114,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-md bg-lf-mahogany py-2.5 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay disabled:opacity-50"
+        className="w-full rounded-full bg-lf-mahogany py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay active:scale-[0.99] disabled:opacity-50"
       >
         {isPending ? "Signing in…" : "Sign in"}
       </button>
@@ -131,7 +131,7 @@ export default function LoginForm() {
 
     <button
       onClick={handleGoogle}
-      className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-lf-hairline bg-lf-card py-2.5 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
+      className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24">
         <path

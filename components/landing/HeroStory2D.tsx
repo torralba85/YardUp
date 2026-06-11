@@ -1,5 +1,4 @@
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { CTAButton } from "@/components/ui/CTAButton";
 
 export function HeroStaticFrame() {
   return (
@@ -115,7 +114,7 @@ const BEATS = [
 
 export function HeroStory2D() {
   return (
-    <section className="px-6 pb-16 pt-10 md:pb-20">
+    <section className="px-6 pb-16 pt-28 md:pb-20 md:pt-32">
       <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
           <p className="lf-reveal font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">ADU income snapshot</p>
@@ -125,13 +124,9 @@ export function HeroStory2D() {
           <p className="lf-reveal mt-5 max-w-lg text-lg leading-8 text-lf-muted">
             LotFoundry turns a backyard address into a visual ADU concept, rent estimate, and owner-ready report before you start calling builders.
           </p>
-          <Link
-            href="/signup"
-            className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-          >
+          <CTAButton href="/signup" className="mt-7">
             Estimate my lot
-            <ArrowRight className="h-5 w-5" />
-          </Link>
+          </CTAButton>
           <div className="mt-10 grid gap-6 sm:grid-cols-3 lg:grid-cols-1">
             {BEATS.map((b) => (
               <div key={b.title} className="lf-reveal border-l-2 border-lf-clay/40 pl-4">

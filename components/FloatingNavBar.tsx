@@ -63,22 +63,27 @@ export function FloatingNavBar() {
           <img
             src="/lotfoundry-lockup-horizontal.svg"
             alt="LotFoundry"
-            className="h-8 w-auto"
+            className="h-7 w-auto sm:h-8"
           />
         </Link>
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium sm:px-4 text-lf-espresso transition-colors hover:bg-lf-taupe/10"
           >
             Sign in
           </Link>
           <Link
             href="/signup"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md bg-lf-mahogany px-4 py-2 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-clay"
+            className="group inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-lf-mahogany py-1.5 pl-4 pr-1.5 text-sm font-medium text-lf-sand transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay active:scale-[0.98]"
           >
             Estimate my lot
-            <ArrowRight className="h-4 w-4" />
+            <span
+              aria-hidden="true"
+              className="grid h-7 w-7 place-items-center rounded-full bg-lf-sand/15 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
           </Link>
         </div>
       </motion.header>

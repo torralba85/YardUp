@@ -1,9 +1,8 @@
 "use client";
 
 import type { MotionValue } from "motion/react";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { clamp01, formatHeroNumber } from "@/lib/landing-stages";
+import { CTAButton } from "@/components/ui/CTAButton";
 import { useStateFromMotionNumber } from "./use-motion-number";
 
 const FADE = 0.05;
@@ -52,16 +51,10 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
           LotFoundry turns a backyard address into a visual ADU concept, rent estimate, and owner-ready report before you start calling builders.
         </p>
         <div className="pointer-events-auto mt-7 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/signup"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-          >
-            Estimate my lot
-            <ArrowRight className="h-5 w-5" />
-          </Link>
+          <CTAButton href="/signup">Estimate my lot</CTAButton>
           <a
             href="#how-it-works"
-            className="inline-flex min-h-12 items-center justify-center rounded-md border border-lf-hairline bg-lf-card/65 px-6 text-base font-semibold text-lf-espresso backdrop-blur transition-colors hover:bg-lf-card"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-lf-hairline bg-lf-card/65 px-6 text-base font-semibold text-lf-espresso backdrop-blur transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-lf-taupe hover:bg-lf-card active:scale-[0.98]"
           >
             See the flow
           </a>
@@ -113,13 +106,9 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
           Save the scenario, review the caveats, and bring one consistent packet to the people who can validate it locally.
         </p>
-        <Link
-          href="/signup"
-          className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-lf-mahogany px-6 text-base font-semibold text-lf-sand transition-colors hover:bg-lf-clay"
-        >
+        <CTAButton href="/signup" className="mt-7">
           Estimate my lot
-          <ArrowRight className="h-5 w-5" />
-        </Link>
+        </CTAButton>
       </div>
     </div>
   );
