@@ -20,7 +20,7 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
-      await expect(page.getByRole("heading", { name: /Estimate the ADU income your lot could support/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Your backyard is an asset/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.
       const heading = page.getByRole("heading", { name: /Know what to ask before you spend on plans/i });
       await expect(heading).toBeVisible();
@@ -31,7 +31,9 @@ test.describe("Visual breakpoint coverage", () => {
       }));
       expect(widths.doc).toBeLessThanOrEqual(widths.win + 1);
 
-      await expect(page.getByRole("link", { name: /Check my address/i }).first()).toBeVisible();
+      // Hero search instrument is the primary CTA at every breakpoint
+      // (the header link collapses to "Start" on small screens).
+      await expect(page.getByRole("button", { name: /Run feasibility/i })).toBeVisible();
 
       await page.screenshot({
         path: testInfo.outputPath(`${bp.name}.png`),
