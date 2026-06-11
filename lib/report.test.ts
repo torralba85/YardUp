@@ -53,6 +53,15 @@ describe("buildReportHtml", () => {
     expect(second).toContain(serial);
   });
 
+  it("guards the operating percentage when monthly rent is zero (no NaN)", () => {
+    const input = makeInput();
+    const zeroRent = { conservative: 0, market: 0, optimistic: 0 };
+    const result = calculateFeasibility(input.parcel, input.config, defaultFinancialAssumptions, zeroRent);
+    const html = buildReportHtml({ ...input, result });
+    expect(html).not.toContain("NaN");
+    expect(html).toContain("Operating allowance (0%)");
+  });
+
   it("keeps the ledger balanced: gross rent minus operating allowance equals NOI", () => {
     const input = makeInput();
     const html = buildReportHtml(input);

@@ -96,7 +96,8 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
   // balances: gross rent minus the operating allowance equals NOI exactly.
   const grossAnnualRent = result.monthlyRent * 12;
   const operatingAllowance = grossAnnualRent - result.annualNoi;
-  const operatingPct = Math.round((operatingAllowance / grossAnnualRent) * 1000) / 10;
+  const operatingPct =
+    grossAnnualRent > 0 ? Math.round((operatingAllowance / grossAnnualRent) * 1000) / 10 : 0;
 
   return `<!doctype html>
 <html lang="en">
