@@ -119,7 +119,7 @@ describe("FeasibilityStudio", () => {
     await user.click(screen.getByRole("button", { name: /Create my ADU report/i }));
 
     expect(
-      screen.getByText(/owner-facing summary of the selected adu concept/i),
+      screen.getByText(/recorded concept for this lot/i),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();
@@ -153,7 +153,7 @@ describe("FeasibilityStudio", () => {
     ).toBeInTheDocument();
 
     await user.click(screen.getAllByRole("button", { name: /Export Preview/i })[0]);
-    expect(screen.getByRole("heading", { name: "Concept Feasibility Report" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Certificate of Feasibility" })).toBeInTheDocument();
 
     await user.click(screen.getAllByRole("button", { name: /Feasibility Studio/i })[0]);
     expect(

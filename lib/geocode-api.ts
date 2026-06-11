@@ -48,7 +48,7 @@ export async function geocodeAddress(
   if (res.status === 401) {
     throw new GeocodeError(
       `Geocode authentication failed (${res.status})`,
-      "Please sign in again before searching an address.",
+      "Sign in to search a specific address — or keep exploring with a demo preset.",
     );
   }
 

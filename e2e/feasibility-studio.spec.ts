@@ -15,17 +15,16 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/");
 
     await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility & Income Estimates/);
-    await expect(page.getByRole("heading", { name: /Estimate the ADU income your lot could support/i })).toBeVisible();
-    // Owner-path proof — the address → fit → income steps list.
-    await expect(page.getByText(/Compare rent, cost, and payback/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Your backyard is an asset/i })).toBeVisible();
+    // Income-first proof — the instrument rail's engine-derived figures.
+    await expect(page.getByText(/Rent potential/i).first()).toBeVisible();
+    await expect(page.getByText(/Est\. net operating income/i).first()).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
       page.getByRole("heading", { name: /Know what to ask before you spend on plans/i }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /Check my address/i }).first()).toHaveAttribute(
-      "href",
-      "/studio",
-    );
+    // Survey-instrument search is the hero CTA.
+    await expect(page.getByRole("button", { name: /Run feasibility/i })).toBeVisible();
 
     await page.screenshot({
       path: testInfo.outputPath("landing-page.png"),

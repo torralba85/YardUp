@@ -1,28 +1,38 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Landing hero video", () => {
-  test("shows the headline, CTA, and a stable full-bleed video", async ({ page }) => {
+test.describe("Landing poster hero", () => {
+  test("shows the asset headline, address instrument, and a stable full-bleed video", async ({ page }) => {
     await page.goto("/");
 
-    // Scope to the hero section — the page has several "Estimate my lot" CTAs
-    // (header, hero, closing section); we assert on the hero's specifically.
+    // Scope to the hero section — other sections repeat CTAs; we assert on
+    // the poster hero specifically.
     const hero = page
       .locator("section")
-      .filter({ hasText: /estimate the adu income your lot could support/i });
+      .filter({ hasText: /your backyard is an asset/i });
 
     await expect(
-      hero.getByRole("heading", { name: /estimate the adu income your lot could support/i }),
+      hero.getByRole("heading", { name: /your backyard is an asset/i }),
     ).toBeVisible();
 
-    await expect(hero.getByRole("link", { name: /check my address/i })).toHaveAttribute(
-      "href",
-      "/studio",
-    );
+    // Survey-instrument address search.
+    await expect(hero.getByLabel(/property address/i)).toBeVisible();
+    await expect(hero.getByRole("button", { name: /run feasibility/i })).toBeVisible();
+
+    // Bottom-docked instrument rail with engine-derived proof points.
+    await expect(hero.getByText(/rent potential/i)).toBeVisible();
+    await expect(hero.getByText(/payback estimate/i)).toBeVisible();
 
     const video = hero.locator("video");
     await expect(video).toHaveAttribute("poster", "/hero/hero-poster.jpg");
     const box = await video.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThan(540); // explicit min-height → no collapse
+  });
+
+  test("routes the typed address to the studio", async ({ page }) => {
+    await page.goto("/");
+    await page.getByLabel(/property address/i).fill("456 Pine St, Denver, CO");
+    await page.getByRole("button", { name: /run feasibility/i }).click();
+    await expect(page).toHaveURL(/\/studio/);
   });
 
   test("poster asset is served", async ({ page }) => {
