@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Libre_Franklin } from "next/font/google";
+import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
@@ -16,6 +16,13 @@ const libreFranklin = Libre_Franklin({
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  variable: "--font-mono",
 });
 
 
@@ -62,7 +69,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${libreFranklin.variable}`}
+      className={`${cormorant.variable} ${libreFranklin.variable} ${ibmPlexMono.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
