@@ -17,10 +17,10 @@ import type { LiveParcelData } from "@/lib/parcel-types";
  * item #5, which needs a live REGRID_API_KEY.
  */
 
-function makeRequest(lat: number, lng: number): NextRequest {
-  return new NextRequest(
-    `http://localhost/api/parcel?lat=${lat}&lng=${lng}`,
-  );
+function makeRequest(lat: number, lng: number, address?: string): NextRequest {
+  const params = new URLSearchParams({ lat: String(lat), lng: String(lng) });
+  if (address) params.set("address", address);
+  return new NextRequest(`http://localhost/api/parcel?${params.toString()}`);
 }
 
 /** A Regrid feature with the fields the route requests. */
@@ -133,6 +133,64 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(res.status).toBe(200);
     const data = (await res.json()) as LiveParcelData;
     expect(data.source).toBe("fallback");
+  });
+
+  it("keeps the searched address in fallback responses instead of a preset's", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ results: { features: [] } }),
+      }),
+    );
+
+    // A San Jose address: the nearest preset center is Portland, which used to
+    // overwrite the user's location with "812 Linden Avenue, Portland, OR".
+    const res = await GET(
+      makeRequest(37.33, -121.89, "123 Main St, San Jose, CA 95110, USA"),
+    );
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("fallback");
+    expect(data.address).toBe("123 Main St");
+    expect(data.city).toBe("San Jose, CA 95110");
+  });
+
+  it("falls back to coordinates in fallback responses when no address is given", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ results: { features: [] } }),
+      }),
+    );
+
+    const res = await GET(makeRequest(37.33, -121.89));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("fallback");
+    expect(data.address).toBe("37.33000, -121.89000");
+    expect(data.city).toBe("");
+  });
+
+  it("uses the searched address when Regrid has no address fields", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({ ll_gisacre: 0.1, zoning: "R-2" }),
+      ),
+    );
+
+    const res = await GET(
+      makeRequest(37.33, -121.89, "123 Main St, San Jose, CA 95110, USA"),
+    );
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("regrid");
+    expect(data.address).toBe("123 Main St");
+    expect(data.city).toBe("San Jose, CA 95110");
   });
 
   it("returns 503 with Retry-After when Regrid rate-limits (429)", async () => {

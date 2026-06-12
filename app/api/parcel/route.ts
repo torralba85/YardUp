@@ -14,10 +14,12 @@ export const runtime = "nodejs";
 const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
 
 /**
- * GET /api/parcel?lat={lat}&lng={lng}
+ * GET /api/parcel?lat={lat}&lng={lng}&address={searched address}
  *
  * Looks up parcel data from Regrid by lat/lng. Returns a LiveParcelData object.
- * Falls back to the nearest preset if Regrid is unavailable or returns no data.
+ * Falls back to the nearest preset's lot stats if Regrid is unavailable or
+ * returns no data, keeping the searched address (when provided) so the user's
+ * location is never replaced by a preset's.
  * Responses are cached for 24 hours (parcel data doesn't change frequently).
  */
 export async function GET(request: NextRequest) {
@@ -36,6 +38,8 @@ export async function GET(request: NextRequest) {
   const coordinates = parseCoordinateParams(searchParams);
   if (coordinates instanceof NextResponse) return coordinates;
   const { lat, lng } = coordinates;
+
+  const searched = parseSearchedAddress(searchParams.get("address"));
 
   const regridKey = process.env.REGRID_API_KEY;
   if (!regridKey) {
@@ -80,7 +84,7 @@ export async function GET(request: NextRequest) {
     const json = await regridRes.json();
     const parcels = json?.results?.features ?? [];
     if (parcels.length === 0) {
-      return successWithFallback(lat, lng);
+      return successWithFallback(lat, lng, searched);
     }
 
     const feature = parcels[0];
@@ -103,8 +107,8 @@ export async function GET(request: NextRequest) {
     const setbacks = parseSetbacks(fields.zoning_setbacks);
 
     const parcelData: LiveParcelData = {
-      address: formatAddress(fields, lat, lng),
-      city: formatCity(fields),
+      address: formatAddress(fields, searched, lat, lng),
+      city: formatCity(fields) || (searched?.city ?? ""),
       lotArea: lotAreaSqft,
       lotWidth,
       lotLength,
@@ -124,7 +128,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("[/api/parcel] Regrid fetch failed:", err);
-    return successWithFallback(lat, lng);
+    return successWithFallback(lat, lng, searched);
   }
 }
 
@@ -132,11 +136,39 @@ export async function GET(request: NextRequest) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function successWithFallback(lat: number, lng: number): NextResponse {
+const MAX_ADDRESS_LENGTH = 200;
+
+interface SearchedAddress {
+  address: string;
+  city: string;
+}
+
+/**
+ * Splits the optional `address` query param (the address the user searched,
+ * e.g. Google's formatted_address "123 Main St, San Jose, CA 95110, USA")
+ * into street + city parts so fallback responses keep the user's real
+ * location instead of substituting a preset's.
+ */
+function parseSearchedAddress(raw: string | null): SearchedAddress | null {
+  const trimmed = raw?.trim().slice(0, MAX_ADDRESS_LENGTH);
+  if (!trimmed) return null;
+  const parts = trimmed.split(",").map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 0) return null;
+  const country = parts[parts.length - 1].toLowerCase();
+  if (country === "usa" || country === "united states") parts.pop();
+  if (parts.length === 0) return null;
+  return { address: parts[0], city: parts.slice(1).join(", ") };
+}
+
+function successWithFallback(
+  lat: number,
+  lng: number,
+  searched: SearchedAddress | null,
+): NextResponse {
   const preset = nearestPreset(lat, lng);
   const fallback: LiveParcelData = {
-    address: preset.address,
-    city: preset.city,
+    address: searched?.address ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+    city: searched?.city ?? "",
     lotArea: preset.lotArea,
     lotWidth: preset.lotWidth,
     lotLength: preset.lotLength,
@@ -224,13 +256,15 @@ function deriveMaxCoverage(zoning?: string): number {
 
 function formatAddress(
   fields: Record<string, string | number | undefined>,
+  searched: SearchedAddress | null,
   lat: number,
   lng: number,
 ): string {
   // Regrid returns the full street address in the `saddress` (Situs Address) or fallback `address` field.
-  // Fall back to coordinates only if it's missing.
+  // Fall back to the searched address, then to coordinates, if it's missing.
   const address = fields.saddress ?? fields.address;
   if (address) return String(address).trim();
+  if (searched) return searched.address;
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 

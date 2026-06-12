@@ -68,7 +68,7 @@ export default function FeasibilityInspector({
     footprintOptions.find((item) => item.value === config.footprint) ?? footprintOptions[1];
 
   function handleAddressSelect(result: AddressSearchResult) {
-    searchParcel(result.lat, result.lng);
+    searchParcel(result.lat, result.lng, result.formattedAddress);
   }
 
   function handleResetToPreset() {
