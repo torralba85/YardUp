@@ -170,7 +170,10 @@ p {
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.149 0 0 0 0 0.075 0 0 0 0 0.027 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
-.lf-grain > * {
+/* `:not(.fixed)` keeps viewport-fixed children (floating nav) out of this
+   rule — `position: relative` here would silently defeat their `fixed`
+   positioning since this rule comes later in the cascade. */
+.lf-grain > *:not(.fixed) {
   position: relative;
   z-index: 1;
 }

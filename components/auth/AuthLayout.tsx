@@ -11,8 +11,8 @@ export function AuthLayout({
   subtitle?: string;
 }) {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-lf-sand px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="lf-backdrop lf-grain flex min-h-[100dvh] items-center justify-center px-4 py-12">
+      <div className="lf-entrance w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}

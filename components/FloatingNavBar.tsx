@@ -69,17 +69,22 @@ export function FloatingNavBar() {
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center rounded-md px-1.5 py-2 text-xs font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10 sm:px-4 sm:text-sm"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-1.5 py-2 text-xs font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10 sm:px-4 sm:text-sm"
           >
             Sign in
           </Link>
           <Link
             href="/studio"
-            className="inline-flex min-h-11 items-center gap-1 rounded-md bg-lf-mahogany px-2 py-2 text-xs font-medium text-lf-sand transition-colors hover:bg-lf-clay sm:gap-2 sm:px-4 sm:text-sm"
+            className="group inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-full bg-lf-mahogany px-3 py-1.5 text-xs font-medium text-lf-sand transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay active:scale-[0.98] sm:gap-2 sm:pl-4 sm:pr-1.5 sm:text-sm"
           >
             <span className="sm:hidden">Start</span>
             <span className="hidden sm:inline">Check my address</span>
-            <ArrowRight className="hidden h-4 w-4 sm:block" />
+            <span
+              aria-hidden="true"
+              className="hidden h-7 w-7 place-items-center rounded-full bg-lf-sand/15 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 sm:grid"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
           </Link>
         </div>
       </motion.header>
