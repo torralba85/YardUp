@@ -2,27 +2,20 @@
 
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function StudioPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { loading } = useAuth();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login?next=/studio");
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
+  // Wait for auth to resolve so saved scenarios and live-parcel access are
+  // known before first render; guests proceed to the demo/estimated studio.
+  if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-lf-sand">
+      <div className="flex h-[100dvh] items-center justify-center bg-lf-sand">
         <div className="text-center">
-          <div className="text-2xl font-display font-black text-lf-mahogany">
+          <div className="text-2xl font-display font-bold text-lf-mahogany">
             LotFoundry
           </div>
-          <p className="mt-2 text-sm text-lf-muted">Loading studio…</p>
+          <p className="mt-2 text-sm text-lf-muted">Loading studio...</p>
         </div>
       </div>
     );

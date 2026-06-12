@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <AuthLayout title="Check your email" subtitle="Password reset instructions sent">
+      <AuthLayout title="Check your email" subtitle="Password reset instructions sent.">
         <div className="flex flex-col items-center gap-4 py-4 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lf-clay/10 text-lf-clay">
             <CheckCircle className="h-6 w-6" />
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Reset password"
-      subtitle="Enter your email and we'll send a reset link"
+      subtitle="Enter your email and we'll send a reset link."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="you@example.com"
           />
         </div>

@@ -1,43 +1,32 @@
-import { clsx } from "clsx";
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-/**
- * Double-bezel container: a soft outer shell with a hairline ring wrapping an
- * inner core that carries its own surface and a warm inset highlight — the
- * "machined hardware" depth the flat single-layer cards lack. Radii are
- * concentric (outer 1.75rem − 0.375rem padding ≈ inner 1.375rem).
- */
-export function Bezel({
-  children,
-  tone = "light",
-  className,
-  innerClassName,
-}: {
-  children: React.ReactNode;
-  tone?: "light" | "dark";
-  className?: string;
+export interface BezelProps extends React.ComponentPropsWithRef<"div"> {
   innerClassName?: string;
-}) {
-  return (
-    <div
-      className={clsx(
-        "rounded-[1.75rem] p-1.5",
-        tone === "light"
-          ? "border border-lf-hairline/70 bg-lf-taupe-soft"
-          : "border border-white/10 bg-white/5",
-        className
-      )}
-    >
-      <div
-        className={clsx(
-          "h-full rounded-[1.375rem]",
-          tone === "light"
-            ? "border border-lf-hairline/60 bg-lf-card shadow-[inset_0_1px_1px_rgba(255,250,240,0.6),0_1px_3px_rgba(38,19,7,0.05)]"
-            : "border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,250,240,0.08)]",
-          innerClassName
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  );
 }
+
+export const Bezel = React.forwardRef<HTMLDivElement, BezelProps>(
+  ({ children, className, innerClassName, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "flex flex-col rounded-[2rem] border border-lf-hairline/25 bg-lf-taupe-soft p-1.5",
+          className
+        )}
+        {...props}
+      >
+        <div
+          className={cn(
+            "flex flex-col flex-1 rounded-[1.625rem] bg-lf-card shadow-[inset_0_1px_2px_rgba(255,250,240,0.95),0_1px_3px_rgba(38,19,7,0.05)]",
+            innerClassName
+          )}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+);
+
+Bezel.displayName = "Bezel";

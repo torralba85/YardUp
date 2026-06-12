@@ -37,7 +37,7 @@ export default function BuilderInbox({
       <div className="rounded-md border border-lf-hairline bg-lf-card p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="font-display text-xl font-black">{profile.companyName}</h2>
+            <h2 className="font-display text-xl font-bold">{profile.companyName}</h2>
             <p className="mt-1 text-sm text-lf-muted">
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
@@ -70,7 +70,7 @@ export default function BuilderInbox({
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-lf-muted">
                     {statusLabel(item.response.status)}
                   </div>
-                  <h3 className="mt-1 font-display text-2xl font-black text-lf-espresso">
+                  <h3 className="mt-1 font-display text-2xl font-bold text-lf-espresso">
                     {item.request.snapshot.parcelAddress}
                   </h3>
                   <p className="mt-1 text-sm text-lf-muted">

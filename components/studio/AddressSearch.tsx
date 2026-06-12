@@ -12,6 +12,12 @@ export interface AddressSearchResult {
 
 export interface AddressSearchProps {
   onSelect: (result: AddressSearchResult) => void;
+  /**
+   * Called when the user submits free text (Enter / Search button) without
+   * picking a Places suggestion; the caller geocodes it server-side. This is
+   * the path that works with no Google Places key configured.
+   */
+  onSubmitText?: (query: string) => void;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -35,12 +41,15 @@ function initGoogleMaps(apiKey: string) {
  */
 export default function AddressSearch({
   onSelect,
+  onSubmitText,
   placeholder = "Search your property address…",
   disabled = false,
 }: AddressSearchProps) {
+  const hasPlacesKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [loading, setLoading] = useState(false);
+  const selectedValueRef = useRef("");
+  const [loading, setLoading] = useState(hasPlacesKey);
   const [ready, setReady] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
@@ -73,6 +82,7 @@ export default function AddressSearch({
           const lng = place.geometry.location.lng();
           const formattedAddress = place.formatted_address ?? inputRef.current?.value ?? "";
 
+          selectedValueRef.current = formattedAddress;
           setInputValue(formattedAddress);
           onSelect({ lat, lng, formattedAddress });
         });
@@ -98,8 +108,15 @@ export default function AddressSearch({
 
   const isDisabled = disabled;
 
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const query = inputValue.trim();
+    if (ready && query === selectedValueRef.current) return;
+    if (query && onSubmitText) onSubmitText(query);
+  }
+
   return (
-    <div className="relative w-full">
+    <form className="relative w-full" onSubmit={handleSubmit} role="search">
       <label htmlFor="address-search" className="sr-only">
         Search property address
       </label>
@@ -132,7 +149,7 @@ export default function AddressSearch({
         aria-label="Search property address"
         aria-busy={loading}
         className={[
-          "h-11 w-full rounded-md border pl-9 pr-9 text-sm",
+          "h-11 w-full rounded-md border pl-9 pr-20 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-taupe",
           "outline-none transition",
           "focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15",
@@ -142,8 +159,17 @@ export default function AddressSearch({
         ].join(" ")}
       />
 
-      {/* Pin icon on the right when a value is entered */}
-      {inputValue && (
+      <button
+        type="submit"
+        disabled={isDisabled || !inputValue.trim()}
+        className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1 rounded px-2.5 text-xs font-semibold text-lf-sand transition disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-lf-mahogany enabled:hover:bg-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-1"
+      >
+        <MapPin size={13} aria-hidden="true" />
+        Search
+      </button>
+
+      {/* Pin icon on the right when Places is active and a value is entered */}
+      {ready && inputValue && !onSubmitText && (
         <span
           className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-lf-clay"
           aria-hidden="true"
@@ -152,11 +178,11 @@ export default function AddressSearch({
         </span>
       )}
 
-      {!ready && !loading && !process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY && (
-        <p className="mt-1.5 text-xs text-lf-amber" role="note">
-          Address search requires a Google Places API key.
+      {!ready && !loading && !hasPlacesKey && (
+        <p className="mt-1.5 text-xs text-lf-muted" role="note">
+          Type a full address (street, city, state) and press Search.
         </p>
       )}
-    </div>
+    </form>
   );
 }

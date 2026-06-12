@@ -14,15 +14,12 @@ import {
   type ADUConfig,
   type FinancialAssumptions,
 } from "@/lib/feasibility";
-import { buildReportCsv, buildReportText, downloadBlob } from "@/lib/report";
+import { buildReportCsv, buildReportHtml, downloadBlob } from "@/lib/report";
 import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
-import {
-  createSavedScenarioStore,
-  type SavedScenario,
-} from "@/lib/saved-scenarios";
+import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { getMatchedBuilders } from "@/lib/marketplace";
 import {
@@ -40,6 +37,7 @@ import AerialView from "./studio/AerialView";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
+import EstimateSummaryPanel from "./studio/EstimateSummaryPanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
@@ -47,6 +45,13 @@ import type { FeasibilityResult } from "./studio/types";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { configForFootprint } from "@/lib/feasibility";
+import { useCountUp } from "./studio/use-count-up";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { markWizardSeen, shouldShowWizard } from "@/lib/wizard-state";
+import MobileStudio from "./studio/mobile/MobileStudio";
+import MobileHeader from "./studio/mobile/MobileHeader";
+import PeekMetrics from "./studio/mobile/PeekMetrics";
+import WizardFlow from "./studio/mobile/WizardFlow";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -81,14 +86,15 @@ export default function FeasibilityStudio() {
 }
 
 function FeasibilityStudioInner() {
-  const { user } = useAuth();
-  const { parcel: liveParcel, parcelMode } = useParcel();
+  const { user, loading: authLoading } = useAuth();
+  const { parcel: liveParcel, parcelMode, parcelError, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
     defaultFinancialAssumptions,
   );
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
+  const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("studio");
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
@@ -99,7 +105,8 @@ function FeasibilityStudioInner() {
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
 
-  // Load saved scenarios: Firestore for authenticated users, localStorage for guests
+  // Load saved scenarios only for authenticated users. Guests should never see
+  // or persist prior address state.
   useEffect(() => {
     let cancelled = false;
     if (user) {
@@ -108,19 +115,23 @@ function FeasibilityStudioInner() {
       }).catch(() => {
         if (!cancelled) setSavedScenarios([]);
       });
-    } else if (typeof window !== "undefined") {
+    } else {
       Promise.resolve().then(() => {
-        if (!cancelled) {
-          setSavedScenarios(createSavedScenarioStore(window.localStorage).list());
-        }
+        if (!cancelled) setSavedScenarios([]);
       });
     }
     return () => { cancelled = true; };
   }, [user]);
 
   const presetParcel = getParcelById(parcelId);
-  // Use live parcel data when available, otherwise the preset
-  const activeParcel = parcelMode === "live" ? liveParcel : presetParcel;
+  // Context parcel covers both live (Regrid) and estimated (wizard) modes.
+  const activeParcel = parcelMode === "preset" ? presetParcel : liveParcel;
+  // Estimated parcels have no 3D geometry of their own — render the base
+  // preset's lot in the scene while the metrics use the estimated parcel.
+  const sceneParcel =
+    parcelMode === "estimated" && "basePresetId" in activeParcel
+      ? getParcelById(activeParcel.basePresetId)
+      : presetParcel;
   const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
     () => calculateFeasibility(activeParcel, config, assumptions, expectedRent),
@@ -128,6 +139,26 @@ function FeasibilityStudioInner() {
     [assumptions, config, activeParcel],
   );
   const isCompliant = result.zoningStatus === "Compliant";
+
+  const isDesktop = useMediaQuery("(min-width: 1024px)", true);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  // First-run wizard decision — mount-only, before the URL-write effect adds
+  // scenario params, mirroring the existing post-hydration URL sync pattern.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) return; // desktop never sees the wizard
+    const hasUrlScenario = window.location.search.length > 1;
+    setWizardOpen(shouldShowWizard({ hasUrlScenario, storage: window.localStorage }));
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  function handleWizardComplete(nextConfig?: ADUConfig) {
+    if (nextConfig) setConfig(nextConfig);
+    markWizardSeen(window.localStorage);
+    setWizardOpen(false);
+  }
 
   // Deliberate post-hydration sync from URL: server renders defaults so the
   // static HTML matches first client paint; we then apply URL state once.
@@ -139,8 +170,26 @@ function FeasibilityStudioInner() {
     if (parsed.parcelId) setParcelId(parsed.parcelId);
     if (parsed.config) setConfig(parsed.config);
     if (parsed.assumptions) setAssumptions(parsed.assumptions);
+    // Landing-hero handoff: stash ?q=<address> for the effect below. The
+    // URL-write effect replaces the query string with scenario params, so q
+    // is consumed exactly once.
+    const incomingAddress = params.get("q")?.trim();
+    if (incomingAddress) {
+      setPendingAddressQuery(incomingAddress);
+    }
     setHydratedFromUrl(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Run the handed-off address search only after Firebase auth resolves —
+  // at mount `user` is still null even for signed-in users, so searching
+  // immediately would drop the ID token and 401 against the parcel APIs.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (authLoading || !pendingAddressQuery) return;
+    void searchByAddress(pendingAddressQuery);
+    setPendingAddressQuery(null);
+  }, [authLoading, pendingAddressQuery, searchByAddress]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
@@ -151,6 +200,7 @@ function FeasibilityStudioInner() {
   }, [assumptions, config, hydratedFromUrl, parcelId]);
 
   function resetScenario() {
+    resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
     setAssumptions(defaultFinancialAssumptions);
@@ -175,25 +225,31 @@ function FeasibilityStudioInner() {
   async function handleSaveScenario() {
     if (typeof window === "undefined") return;
     if (savingScenario) return;
+    if (!user) {
+      setSaveNotice("Sign in to save");
+      setTimeout(() => setSaveNotice(null), 2000);
+      return;
+    }
 
-    const entry = {
+    const entry: Omit<SavedScenario, "id" | "createdAt"> = {
       name: `${activeParcel.address} - ${config.footprint} sf`,
       parcelId,
       config,
       assumptions,
     };
+    if (
+      parcelMode === "live" &&
+      "source" in activeParcel &&
+      (activeParcel.source === "regrid" || activeParcel.source === "fallback")
+    ) {
+      entry.liveParcel = activeParcel;
+    }
 
     setSavingScenario(true);
     setSaveNotice(null);
     try {
-      if (user) {
-        const created = await saveSavedScenario(user.uid, entry);
-        setSavedScenarios((prev) => [created, ...prev]);
-      } else {
-        const store = createSavedScenarioStore(window.localStorage);
-        store.save(entry);
-        setSavedScenarios(store.list());
-      }
+      const created = await saveSavedScenario(user.uid, entry);
+      setSavedScenarios((prev) => [created, ...prev]);
       setSaveNotice("Saved");
     } catch {
       setSaveNotice("Save failed");
@@ -205,14 +261,15 @@ function FeasibilityStudioInner() {
 
   function handleLoadScenario(id: string) {
     if (typeof window === "undefined") return;
-    let scenario: SavedScenario | undefined;
-    if (user) {
-      scenario = savedScenarios.find((s) => s.id === id);
-    } else {
-      const store = createSavedScenarioStore(window.localStorage);
-      scenario = store.load(id);
-    }
+    if (!user) return;
+    const scenario = savedScenarios.find((s) => s.id === id);
     if (!scenario) return;
+    if (scenario.liveParcel) {
+      restoreLiveParcel(scenario.liveParcel);
+    } else {
+      const preset = getParcelById(scenario.parcelId);
+      resetToPreset(preset);
+    }
     setParcelId(scenario.parcelId);
     setConfig(scenario.config);
     setAssumptions(scenario.assumptions);
@@ -220,15 +277,10 @@ function FeasibilityStudioInner() {
 
   async function handleDeleteScenario(id: string) {
     if (typeof window === "undefined") return;
+    if (!user) return;
     try {
-      if (user) {
-        await deleteSavedScenario(user.uid, id);
-        setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
-      } else {
-        const store = createSavedScenarioStore(window.localStorage);
-        store.remove(id);
-        setSavedScenarios(store.list());
-      }
+      await deleteSavedScenario(user.uid, id);
+      setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
     } catch {
       setDeleteNotice("Delete failed");
       setTimeout(() => setDeleteNotice(null), 2000);
@@ -273,13 +325,130 @@ function FeasibilityStudioInner() {
   }
 
   function downloadReport() {
-    const text = buildReportText({ parcel: activeParcel, config, result });
-    downloadBlob("lotfoundry-concept-feasibility-report.txt", text, "text/plain");
+    const html = buildReportHtml({ parcel: activeParcel, config, result });
+    downloadBlob("lotfoundry-certificate-of-feasibility.html", html, "text/html");
   }
 
   function exportCsv() {
     const csv = buildReportCsv({ parcel: activeParcel, config, result });
     downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
+  }
+
+  const sceneNode =
+    parcelMode === "live" && "lat" in activeParcel ? (
+      <AerialView
+        parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
+        config={config}
+        isCompliant={isCompliant}
+      />
+    ) : (
+      <ParcelScene
+        parcel={sceneParcel}
+        config={config}
+        isCompliant={isCompliant}
+      />
+    );
+
+  if (!isDesktop) {
+    // The wizard replaces the studio rather than overlaying it: the studio's
+    // always-open vaul sheet is a modal Radix dialog that would aria-hide and
+    // focus-trap anything rendered outside it (including the wizard).
+    if (wizardOpen) {
+      return <WizardFlow onComplete={handleWizardComplete} />;
+    }
+    return (
+      <>
+        <MobileStudio
+          header={
+            <MobileHeader
+              address={activeParcel.address}
+              estimated={parcelMode === "estimated"}
+              onReset={resetScenario}
+            />
+          }
+          scene={<div className="h-full">{sceneNode}</div>}
+          peek={
+            <PeekMetrics
+              result={result}
+              config={config}
+              estimated={parcelMode === "estimated"}
+              parcelError={parcelError}
+              onRetry={
+                "lat" in activeParcel
+                  ? () => void searchParcel(activeParcel.lat, activeParcel.lng, activeParcel.address)
+                  : undefined
+              }
+            />
+          }
+          controls={
+            <FeasibilityInspector
+              parcelId={parcelId}
+              config={config}
+              assumptions={assumptions}
+              result={result}
+              onParcelChange={setParcelId}
+              onConfigChange={setConfig}
+              onAssumptionsChange={setAssumptions}
+              onReset={resetScenario}
+              onGenerateReport={handleGenerateReport}
+              onSaveScenario={handleSaveScenario}
+              savingScenario={savingScenario}
+              saveNotice={saveNotice}
+            />
+          }
+          sections={
+            <>
+              <MetricsSummary result={result} />
+              <EstimateSummaryPanel
+                parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+                result={result}
+                onGenerateReport={handleGenerateReport}
+              />
+              <PermitGuidePanel address={activeParcel.address} />
+              <InspirationGalleryPanel
+                onApply={(item) => {
+                  const baseConfig = configForFootprint(item.sqft, config);
+                  setConfig({
+                    ...baseConfig,
+                    width: item.width,
+                    length: item.length,
+                    roof: item.roof,
+                    finish: item.finish,
+                  });
+                }}
+              />
+            </>
+          }
+        />
+        {reportOpen && (
+          <ReportPreview
+            parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+            result={result}
+            onClose={() => setReportOpen(false)}
+            onDownload={downloadReport}
+            onExportCsv={exportCsv}
+            onShare={handleShareLink}
+            onConnectBuilders={() => setBuilderLeadOpen(true)}
+            shareNotice={shareNotice}
+            autoFocus={reportAutoFocus}
+          />
+        )}
+        <BuilderLeadPanel
+          open={builderLeadOpen}
+          userDefaults={{
+            name: user?.displayName || "",
+            email: user?.email || "",
+          }}
+          parcelKey={parcelId}
+          parcel={activeParcel}
+          config={config}
+          assumptions={assumptions}
+          result={result}
+          onClose={() => setBuilderLeadOpen(false)}
+          onSubmit={handleBuilderLeadSubmit}
+        />
+      </>
+    );
   }
 
   return (
@@ -294,21 +463,13 @@ function FeasibilityStudioInner() {
       onDeleteScenario={handleDeleteScenario}
       deleteNotice={deleteNotice}
     >
-      <div className="flex flex-col lg:flex-1 lg:min-h-0 xl:flex-row">
+      <div className="flex flex-col lg:flex-row lg:flex-1 lg:min-h-0">
         <section
           aria-label="Parcel massing scene"
-          className="lf-entrance relative min-h-[360px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso xl:min-h-0 xl:border-b-0 xl:border-r lg:min-h-[420px]"
+          className="lf-entrance relative min-h-[440px] md:min-h-[480px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso lg:min-h-0 lg:border-b-0 lg:border-r"
         >
           <IncomeLens result={result} isCompliant={isCompliant} />
-          {parcelMode === "live" && "lat" in activeParcel ? (
-            <AerialView
-              parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
-              config={config}
-              isCompliant={isCompliant}
-            />
-          ) : (
-            <ParcelScene parcel={presetParcel} config={config} isCompliant={isCompliant} />
-          )}
+          {sceneNode}
         </section>
 
         {activeNav === "guide" ? (
@@ -326,6 +487,12 @@ function FeasibilityStudioInner() {
               });
               setActiveNav("studio");
             }}
+          />
+        ) : activeNav === "summary" ? (
+          <EstimateSummaryPanel
+            parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+            result={result}
+            onGenerateReport={handleGenerateReport}
           />
         ) : (
           <FeasibilityInspector
@@ -386,22 +553,26 @@ function IncomeLens({
   result: FeasibilityResult;
   isCompliant: boolean;
 }) {
+  const rent = useCountUp(result.monthlyRent);
+  const noi = useCountUp(result.annualNoi);
   return (
-    <div className="pointer-events-none absolute left-4 right-4 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/20 bg-lf-espresso/[0.84] p-4 text-lf-sand-2 shadow-2xl backdrop-blur-md sm:left-5 sm:right-auto sm:min-w-[520px]">
+    <div className="pointer-events-none absolute left-4 right-16 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/25 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
             ADU income potential
           </p>
-          <h2 className="mt-1 font-display text-4xl font-black leading-[0.95] tracking-[-0.035em] text-lf-sand tabular-nums sm:text-5xl">
-            {formatCurrency(result.monthlyRent)}
+          <h2 className="mt-1 font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-lf-sand tabular-nums sm:text-5xl sm:leading-[0.95] md:text-6xl">
+            {formatCurrency(rent)}
             <span className="ml-2 font-sans text-base font-medium tracking-normal text-lf-sand/70 pl-1.5">/ mo rent</span>
           </h2>
+          {/* Gold-leaf value hairline mirrors the MetricsSummary lead cells. */}
+          <span aria-hidden className="mt-2 block h-px w-16 bg-lf-amber" />
         </div>
         <div
           className={`rounded-md border px-3 py-2 text-sm font-semibold ${
             isCompliant
-              ? "border-lf-mahogany bg-lf-mahogany text-lf-sand"
+              ? "border-lf-forest bg-lf-forest text-lf-sand"
               : "border-lf-clay bg-lf-clay text-lf-sand"
           }`}
         >
@@ -413,14 +584,14 @@ function IncomeLens({
         <LensFact
           icon={BadgeDollarSign}
           label="Annual NOI"
-          value={formatCurrency(result.annualNoi)}
-          fontClass="font-display text-white text-xl"
+          value={formatCurrency(noi)}
+          fontClass="font-display text-white text-2xl"
         />
         <LensFact
           icon={Clock3}
           label="Payback"
           value={`${result.paybackYears} yrs`}
-          fontClass="font-display text-white text-xl"
+          fontClass="font-display text-white text-2xl"
         />
         <LensFact
           icon={Hammer}

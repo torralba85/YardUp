@@ -50,26 +50,28 @@ export default function SignupPage() {
 
   const handleGoogle = async () => {
     setError(null);
-    try {
-      await signInWithGoogle();
-      router.push("/studio");
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error && "code" in err
-          ? getAuthErrorMessage((err as { code: string }).code)
-          : "Something went wrong. Please try again.";
-      setError(message);
-    }
+    startTransition(async () => {
+      try {
+        await signInWithGoogle(role);
+        router.push(role === "builder" ? "/builder" : "/studio");
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error && "code" in err
+            ? getAuthErrorMessage((err as { code: string }).code)
+            : "Something went wrong. Please try again.";
+        setError(message);
+      }
+    });
   };
 
   return (
     <AuthLayout
       title="Create account"
-      subtitle="Estimate rent, payback, and site fit for your lot."
+      subtitle="Save ADU feasibility estimates and concept reports for your lot."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-xl border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-sm text-lf-brick">
+          <div className="lf-body-sm rounded-xl border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -77,7 +79,7 @@ export default function SignupPage() {
         <div>
           <label
             htmlFor="displayName"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Full name
           </label>
@@ -88,7 +90,7 @@ export default function SignupPage() {
             autoComplete="name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-xl border border-lf-hairline bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-xl border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="Jane Doe"
           />
         </div>
@@ -96,7 +98,7 @@ export default function SignupPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Email
           </label>
@@ -107,7 +109,7 @@ export default function SignupPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-lf-hairline bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-xl border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="you@example.com"
           />
         </div>
@@ -115,7 +117,7 @@ export default function SignupPage() {
         <div>
           <label
             htmlFor="password"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Password
           </label>
@@ -126,13 +128,13 @@ export default function SignupPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-lf-hairline bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-xl border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="At least 8 characters"
           />
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-lf-espresso">
+          <label className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
             I am a...
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -151,7 +153,7 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <p className="text-xs text-lf-muted">
+        <p className="lf-caption text-lf-muted">
           By creating an account you agree to our{" "}
           <Link href="/terms" className="text-lf-clay hover:text-lf-mahogany">
             Terms of Service
@@ -176,14 +178,15 @@ export default function SignupPage() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-lf-hairline" />
         </div>
-        <div className="relative flex justify-center text-xs">
+        <div className="lf-caption relative flex justify-center">
           <span className="bg-lf-card px-2 text-lf-muted">or continue with</span>
         </div>
       </div>
 
       <button
         onClick={handleGoogle}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
+        disabled={isPending}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">
           <path
@@ -203,10 +206,10 @@ export default function SignupPage() {
             fill="#EA4335"
           />
         </svg>
-        Google
+        {isPending ? "Connecting..." : "Google"}
       </button>
 
-      <p className="mt-6 text-center text-sm text-lf-muted">
+      <p className="lf-body-sm mt-6 text-center text-lf-muted">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-lf-clay hover:text-lf-mahogany">
           Sign in
@@ -242,7 +245,7 @@ function RoleButton({
       >
         {label}
       </div>
-      <div className="text-xs text-lf-muted">{description}</div>
+      <div className="lf-caption text-lf-muted">{description}</div>
     </button>
   );
 }
@@ -255,8 +258,21 @@ function getAuthErrorMessage(code: string): string {
       return "Please enter a valid email address.";
     case "auth/weak-password":
       return "Password must be at least 6 characters.";
+    case "auth/popup-blocked":
+      return "Google sign-in popup was blocked. Allow popups and try again.";
+    case "auth/popup-closed-by-user":
+    case "auth/cancelled-popup-request":
+      return "Google sign-in was closed before it finished.";
+    case "auth/operation-not-allowed":
+      return "Google sign-in is not enabled for this Firebase project.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized for Firebase Google sign-in.";
+    case "auth/account-exists-with-different-credential":
+      return "An account already exists for this email using another sign-in method.";
     case "auth/network-request-failed":
       return "Network error. Check your connection.";
+    case "permission-denied":
+      return "Account created, but profile setup was blocked. Please try again.";
     default:
       return "Something went wrong. Please try again.";
   }

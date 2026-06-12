@@ -9,10 +9,10 @@ export interface InspirationItem {
   length: number;
   roof: RoofStyle;
   finish: ExteriorFinish;
-  imageUrl: string;
   tags: string[];
   summary: string;
   budgetBand: string;
+  imagePath: string;
 }
 
 export const inspirationItems: InspirationItem[] = [
@@ -25,10 +25,10 @@ export const inspirationItems: InspirationItem[] = [
     length: 32,
     roof: "shed",
     finish: "cedar",
-    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
     tags: ["studio", "courtyard", "daylight"],
     summary: "A compact detached layout with a private entry court and high daylight clerestory windows.",
     budgetBand: "$250k - $400k",
+    imagePath: "/inspiration/canyon-courtyard.png",
   },
   {
     id: "garage-laneway",
@@ -39,10 +39,10 @@ export const inspirationItems: InspirationItem[] = [
     length: 26,
     roof: "flat",
     finish: "board",
-    imageUrl: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=1200&q=80",
     tags: ["garage", "conversion", "compact"],
     summary: "A reuse-first concept for homeowners prioritizing speed, budget control, and rental utility.",
     budgetBand: "Under $250k",
+    imagePath: "/inspiration/garage-laneway.png",
   },
   {
     id: "bay-window",
@@ -53,10 +53,10 @@ export const inspirationItems: InspirationItem[] = [
     length: 32.5,
     roof: "gable",
     finish: "lap",
-    imageUrl: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80",
     tags: ["one bedroom", "premium", "work nook"],
     summary: "A larger rental-ready layout with a defined living room, bay windows, and a small work alcove.",
     budgetBand: "Over $400k",
+    imagePath: "/inspiration/bay-window.png",
   },
   {
     id: "coastal-adu",
@@ -67,10 +67,10 @@ export const inspirationItems: InspirationItem[] = [
     length: 44,
     roof: "flat",
     finish: "stucco",
-    imageUrl: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
     tags: ["detached", "long lot", "beach style"],
     summary: "A narrow footprint designed to preserve outdoor living space on tighter seaside lots.",
     budgetBand: "$250k - $400k",
+    imagePath: "/inspiration/coastal-adu.png",
   },
   {
     id: "valley-jadu",
@@ -81,10 +81,10 @@ export const inspirationItems: InspirationItem[] = [
     length: 20,
     roof: "flat",
     finish: "board",
-    imageUrl: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1200&q=80",
     tags: ["jadu", "conversion", "existing space"],
     summary: "A modest suite conversion for family flexibility with a lower construction footprint.",
     budgetBand: "Under $250k",
+    imagePath: "/inspiration/valley-jadu.png",
   },
   {
     id: "clean-gable",
@@ -95,9 +95,10 @@ export const inspirationItems: InspirationItem[] = [
     length: 30,
     roof: "gable",
     finish: "lap",
-    imageUrl: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80",
     tags: ["one bedroom", "cottage", "gable"],
     summary: "A straightforward detached concept intended to align with permit-ready plan thinking.",
     budgetBand: "$250k - $400k",
+    imagePath: "/inspiration/clean-gable.png",
   },
 ];
+

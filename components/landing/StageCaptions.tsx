@@ -1,9 +1,10 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { MotionValue } from "motion/react";
 import { clamp01, formatHeroNumber } from "@/lib/landing-stages";
-import { CTAButton } from "@/components/ui/CTAButton";
 import { useStateFromMotionNumber } from "./use-motion-number";
+import { CTAButton } from "./CTAButton";
 
 const FADE = 0.05;
 
@@ -24,13 +25,16 @@ function bandOpacity(p: number, start: number, end: number): number {
 
 // Rise + settle + de-blur tied to the stage's own opacity, so headlines settle
 // into place instead of blinking. Mirrors the scene HUD cards' entrance motion.
-function bandStyle(op: number) {
+function bandStyle(op: number): CSSProperties {
   const out = 1 - op;
+  const isVisible = op > 0.01;
   return {
     opacity: op,
     transform: `translateY(${(out * 18).toFixed(2)}px)`,
     filter: op > 0.999 ? "none" : `blur(${(out * 5).toFixed(2)}px)`,
     willChange: "transform, opacity, filter",
+    pointerEvents: isVisible ? "auto" : "none",
+    visibility: isVisible ? "visible" : "hidden",
   };
 }
 
@@ -43,18 +47,18 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
   return (
     <div className="pointer-events-none relative z-10 mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-6 py-10 md:px-10 lg:px-14">
       <div className="absolute max-w-[27rem]" style={bandStyle(bandOpacity(p, 0, 0.3))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">ADU income snapshot</p>
-        <h1 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-7xl">
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">What your backyard could earn</p>
+        <h1 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-normal text-lf-espresso md:text-7xl">
           Know what your lot could earn.
         </h1>
         <p className="mt-5 max-w-md text-lg leading-8 text-lf-muted">
-          LotFoundry turns a backyard address into a visual ADU concept, rent estimate, and owner-ready report before you start calling builders.
+          LotFoundry turns your backyard address into a visual ADU concept, rent estimate, and a report you can share — before you start calling anyone.
         </p>
         <div className="pointer-events-auto mt-7 flex flex-col gap-3 sm:flex-row">
           <CTAButton href="/signup">Estimate my lot</CTAButton>
           <a
             href="#how-it-works"
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-lf-hairline bg-lf-card/65 px-6 text-base font-semibold text-lf-espresso backdrop-blur transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-lf-taupe hover:bg-lf-card active:scale-[0.98]"
+            className="inline-flex min-h-12 items-center justify-center rounded-md border border-lf-hairline bg-lf-card px-6 text-base font-semibold text-lf-espresso transition-colors hover:bg-lf-sand-2"
           >
             See the flow
           </a>
@@ -76,22 +80,22 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
       </div>
 
       <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.3, 0.56))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Cast an ADU</p>
-        <h2 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
-          Place the concept inside the buildable envelope.
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">See it in your yard</p>
+        <h2 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-normal text-lf-espresso md:text-6xl">
+          See exactly where an ADU fits on your lot.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          Setbacks, coverage, and a proposed ADU massing stay visible together, so the design story starts with constraints instead of guesswork.
+          Yard lines, size limits, and your ADU sit side by side, so you are working with real boundaries from the start, not wishful thinking.
         </p>
       </div>
 
       <div className="absolute max-w-[26rem]" style={bandStyle(bandOpacity(p, 0.56, 0.8))}>
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">See the numbers</p>
-        <div className="mt-3 font-display text-7xl font-black tabular-nums leading-[0.95] tracking-[-0.02em] text-lf-espresso md:text-8xl">
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">See the numbers</p>
+        <div className="mt-3 font-display text-7xl font-bold tabular-nums leading-[0.95] tracking-normal text-lf-espresso md:text-8xl">
           {rent}
         </div>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          estimated monthly rent, paired with NOI, payback, and the assumptions needed for a credible owner conversation.
+          estimated monthly rent — with projected income, build payback, and the honest assumptions behind every number.
         </p>
       </div>
 
@@ -99,16 +103,14 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         className="pointer-events-auto absolute max-w-[26rem]"
         style={bandStyle(bandOpacity(p, 0.8, 1.12))}
       >
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-lf-muted">Owner report ready</p>
-        <h2 className="mt-3 font-display text-5xl font-extrabold leading-[1.03] tracking-[-0.02em] text-lf-espresso md:text-6xl">
-          Leave with a shareable next step.
+        <p className="font-mono text-xs uppercase tracking-normal text-lf-muted">Owner report ready</p>
+        <h2 className="mt-3 font-display text-5xl font-bold leading-[1.03] tracking-normal text-lf-espresso md:text-6xl">
+          Walk away with something to show people.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-8 text-lf-muted">
-          Save the scenario, review the caveats, and bring one consistent packet to the people who can validate it locally.
+          Save your numbers, read the fine print, and share a clean summary with your builder, planner, or spouse before anyone spends a dime.
         </p>
-        <CTAButton href="/signup" className="mt-7">
-          Estimate my lot
-        </CTAButton>
+        <CTAButton href="/signup" className="mt-7">Estimate my lot</CTAButton>
       </div>
     </div>
   );

@@ -8,11 +8,11 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-lf-sand text-lf-espresso">
+    <div className="min-h-[100dvh] bg-lf-sand text-lf-espresso">
       <header className="border-b border-lf-hairline/50">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-lf-mahogany font-display font-black text-xs text-lf-sand">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-lf-mahogany font-display font-bold text-xs text-lf-sand">
               LF
             </div>
             <span className="font-display font-semibold text-lf-mahogany">LotFoundry</span>
@@ -21,7 +21,7 @@ export default function TermsPage() {
       </header>
 
       <main className="mx-auto max-w-prose px-6 py-16">
-        <h1 className="font-display text-4xl font-black tracking-tight text-lf-espresso">
+        <h1 className="font-display text-4xl font-bold tracking-tight text-lf-espresso">
           Terms of Service
         </h1>
         <p className="mt-3 text-sm text-lf-muted">Last updated: May 31, 2026</p>

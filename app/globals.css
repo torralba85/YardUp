@@ -3,7 +3,7 @@
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-sans), sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* LotFoundry Warm Earth Palette */
   --color-lf-sand: #F2E5D5;
@@ -16,6 +16,10 @@
   --color-lf-espresso: #261307;
   --color-lf-muted: #6B5B4D;
   --color-lf-hairline: #E0CDB4;
+
+  /* On-dark accents (money band, instrument rail) */
+  --color-lf-money-on-dark: #9DC4A8;
+  --color-lf-clay-strong: #6F3F28;
 
   /* Semantic colors */
   --color-lf-forest: #2F4A38;
@@ -33,13 +37,122 @@
 html {
   background: var(--color-lf-sand);
   scroll-behavior: smooth;
+  font-size: 16px;
+  text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   background: var(--color-lf-sand);
   color: var(--color-lf-espresso);
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.prose-width {
+  max-width: 65ch;
+}
+
+.lf-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.lf-kicker-dense {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 0.875rem;
+  text-transform: uppercase;
+}
+
+.lf-display-hero {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 0.98;
+}
+
+.lf-section-heading {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.lf-card-heading {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.18;
+}
+
+.lf-panel-heading {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.lf-body-lg {
+  font-size: 1.0625rem;
+  line-height: 1.75rem;
+}
+
+.lf-body {
+  font-size: 1rem;
+  line-height: 1.625rem;
+}
+
+.lf-body-sm {
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.lf-caption {
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+}
+
+@media (min-width: 640px) {
+  .lf-display-hero {
+    font-size: 3rem;
+  }
+
+  .lf-body-lg {
+    font-size: 1.125rem;
+    line-height: 1.875rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .lf-display-hero {
+    font-size: 4.5rem;
+  }
+
+  .lf-section-heading {
+    font-size: 3rem;
+  }
 }
 
 /* Subtle grain overlay — breaks the flatness of warm cream surfaces */

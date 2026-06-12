@@ -1,149 +1,247 @@
-import { FileText, MapPinned, Ruler, ShieldCheck } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { FileText, MapPinned, Ruler, ShieldCheck, Users } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { Bezel } from "@/components/ui/Bezel";
-import { CTAButton } from "@/components/ui/CTAButton";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { Reveal } from "@/components/ui/Reveal";
+import { CTAButton } from "./CTAButton";
 
 const PROOF = [
-  ["$2,350/mo", "sample rent estimate", true],
-  ["31%", "lot coverage model", false],
-  ["9.8 yrs", "sample payback view", false],
-] as const;
-
-const STEPS = [
-  {
-    icon: MapPinned,
-    title: "Start with the parcel",
-    body: "Anchor the conversation in the lot, not a generic unit catalog.",
-  },
-  {
-    icon: Ruler,
-    title: "Show fit and constraints",
-    body: "Keep setbacks, coverage, and a proposed ADU massing visible at the same time.",
-  },
-  {
-    icon: FileText,
-    title: "Package the assumptions",
-    body: "Save rent, cost, caveats, and scenario details in one owner-ready report.",
-  },
+  ["Address-first", "grounded in the parcel"],
+  ["Estimate-honest", "clear assumptions and caveats"],
+  ["Builder-ready", "shareable report output"],
 ];
 
 const REPORT = [
-  "ADU size, finish, and placement assumptions",
-  "Estimated rent, NOI, payback, and coverage",
-  "Local-review caveats instead of false guarantees",
-  "Builder-ready notes for the next conversation",
+  "Your ADU's size, style, and placement",
+  "Estimated rent, income, payback, and lot coverage",
+  "Honest fine print instead of empty promises",
+  "Notes to share when you are ready for local review",
 ];
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.32, 0.72, 0, 1] as const,
+      delay: i * 0.08,
+    },
+  }),
+};
+
 export function FeatureBand() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  const reducedMotion = useReducedMotion();
+  const shouldAnimate = mounted && !reducedMotion;
+
   return (
     <>
       <section className="border-y border-lf-hairline/50 bg-lf-card/35">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-[1.1fr_1fr] md:items-center md:py-20">
-          <Reveal>
-            <Eyebrow>Why owners use it</Eyebrow>
-            <h2 className="mt-5 max-w-2xl font-display text-4xl font-extrabold leading-tight tracking-[-0.01em] text-lf-espresso md:text-5xl">
-              Make the ADU conversation specific before money changes hands.
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-20 md:grid-cols-[1.1fr_1fr] md:items-center md:py-24">
+          <div>
+            <p className="lf-kicker text-lf-muted">
+              Why owners use it
+            </p>
+            <h2 className="lf-section-heading mt-3 max-w-2xl text-lf-espresso">
+              See whether the lot, money, and next step line up before you spend on plans.
             </h2>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <Bezel innerClassName="grid grid-cols-3 divide-x divide-lf-hairline/70 px-2 py-6 text-center">
-              {PROOF.map(([value, label, isMoney]) => (
-                <div key={label} className="px-3">
-                  <strong
-                    className={`block font-display text-2xl font-extrabold md:text-3xl ${
-                      isMoney ? "text-lf-forest" : "text-lf-espresso"
-                    }`}
-                  >
-                    {value}
-                  </strong>
-                  <span className="mt-1.5 block text-sm leading-5 text-lf-muted">{label}</span>
-                </div>
-              ))}
-            </Bezel>
-          </Reveal>
-        </div>
-      </section>
-
-      <section id="how-it-works">
-        <div className="mx-auto max-w-7xl px-6 py-24 md:py-36">
-          <Reveal className="max-w-3xl">
-            <Eyebrow>How it works</Eyebrow>
-            <h2 className="mt-5 font-display text-4xl font-extrabold leading-tight tracking-[-0.01em] text-lf-espresso md:text-5xl">
-              A complete owner flow, not a pretty rendering with no next step.
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {STEPS.map(({ icon: Icon, title, body }, i) => (
-              <Reveal key={title} delay={i * 0.12} className="h-full">
-                <Bezel
-                  className="group h-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:shadow-[0_24px_48px_-24px_rgba(38,19,7,0.25)]"
-                  innerClassName="p-7"
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="grid h-12 w-12 place-items-center rounded-xl bg-lf-taupe-soft text-lf-clay transition-colors duration-500 group-hover:bg-lf-clay group-hover:text-lf-sand">
-                      <Icon className="h-5.5 w-5.5" aria-hidden="true" />
-                    </span>
-                    <span className="font-mono text-sm tracking-[0.16em] text-lf-taupe">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                  <h3 className="mt-6 font-display text-2xl font-bold text-lf-espresso">{title}</h3>
-                  <p className="mt-3 leading-7 text-lf-muted">{body}</p>
-                </Bezel>
-              </Reveal>
+          </div>
+          <div className="grid gap-0 divide-y divide-lf-hairline border-y border-lf-hairline py-1 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {PROOF.map(([value, label]) => (
+              <div key={label} className="px-3 py-4 text-left sm:text-center">
+                <strong className="block text-sm font-semibold text-lf-espresso">
+                  {value}
+                </strong>
+                <span className="lf-caption mt-1 block text-lf-muted">
+                  {label}
+                </span>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-6 pb-24 md:pb-36">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-lf-espresso via-lf-espresso to-lf-mahogany text-lf-sand">
-          <div className="grid gap-12 px-8 py-16 md:grid-cols-[0.92fr_1.08fr] md:items-center md:px-16 md:py-24">
-            <Reveal>
-              <Eyebrow tone="dark">Owner report</Eyebrow>
-              <h2 className="mt-5 font-display text-4xl font-extrabold leading-tight tracking-[-0.01em] md:text-5xl">
-                The output is built for the next conversation.
-              </h2>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-lf-taupe">
-                The goal is not to pretend the estimate is a permit. It is to make the first builder,
-                planner, or family conversation concrete enough to move forward.
-              </p>
-            </Reveal>
-            <Reveal delay={0.15}>
-              <Bezel tone="dark" innerClassName="divide-y divide-white/10 px-7 py-2">
-                {REPORT.map((item) => (
-                  <div key={item} className="flex items-start gap-4 py-5">
-                    <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-lf-amber" aria-hidden="true" />
-                    <span className="text-lg leading-7 text-lf-sand">{item}</span>
+      <section id="how-it-works">
+        <div className="mx-auto max-w-7xl px-6 py-32 md:py-40">
+          <div className="max-w-3xl">
+            <p className="lf-kicker text-lf-muted">
+              How it works
+            </p>
+            <h2 className="lf-section-heading mt-3 text-lf-espresso">
+              A complete owner path, not a rendering that leaves you guessing.
+            </h2>
+          </div>
+
+          <div
+            className="mt-16 grid gap-6 md:grid-cols-3"
+            key={shouldAnimate ? "animated" : "static"}
+          >
+            <motion.div
+              custom={0}
+              initial={shouldAnimate ? "hidden" : false}
+              whileInView={shouldAnimate ? "visible" : undefined}
+              viewport={{ once: true, margin: "-60px" }}
+              variants={cardVariants}
+              className="col-span-1"
+            >
+              <Bezel
+                className="h-full"
+                innerClassName="flex h-full min-h-[280px] flex-col justify-between p-8"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="lf-kicker-dense text-lf-clay">01</span>
+                    <MapPinned className="h-7 w-7 text-lf-clay" />
                   </div>
-                ))}
+                  <h3 className="lf-card-heading mt-6 text-lf-espresso">
+                    Start with your address
+                  </h3>
+                  <p className="lf-body-sm mt-4 text-lf-muted">
+                    Start with your actual property so the estimate reflects the lot
+                    you own, not a generic ADU example from a catalog.
+                  </p>
+                </div>
               </Bezel>
-            </Reveal>
+            </motion.div>
+
+            <motion.div
+              custom={1}
+              initial={shouldAnimate ? "hidden" : false}
+              whileInView={shouldAnimate ? "visible" : undefined}
+              viewport={{ once: true, margin: "-60px" }}
+              variants={cardVariants}
+              className="col-span-1 md:col-span-2"
+            >
+              <Bezel
+                className="h-full"
+                innerClassName="flex h-full min-h-[280px] flex-col justify-between p-8"
+              >
+                <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="lf-kicker-dense text-lf-clay">02</span>
+                      <Ruler className="h-7 w-7 text-lf-clay" />
+                    </div>
+                    <h3 className="lf-card-heading mt-6 text-lf-espresso">
+                      See what fits and what does not
+                    </h3>
+                    <p className="lf-body-sm mt-4 text-lf-muted">
+                      Yard setbacks, size limits, and your ADU design stay on screen
+                      together so you can spot obvious fit issues before you hire anyone.
+                    </p>
+                  </div>
+                  <div className="relative flex h-36 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-lf-hairline/60 bg-lf-sand-2/50 p-4 text-center">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-lf-mahogany/5 to-lf-espresso/10" />
+                    <div className="lf-kicker-dense text-lf-clay">
+                      3D Visual Studio
+                    </div>
+                    <div className="lf-caption mt-2 max-w-[20ch] text-lf-muted">
+                      Parcel lines, setbacks, driveways, and the proposed ADU stay
+                      visible together.
+                    </div>
+                  </div>
+                </div>
+              </Bezel>
+            </motion.div>
+
+            <motion.div
+              custom={2}
+              initial={shouldAnimate ? "hidden" : false}
+              whileInView={shouldAnimate ? "visible" : undefined}
+              viewport={{ once: true, margin: "-60px" }}
+              variants={cardVariants}
+              className="col-span-1 md:col-span-3"
+            >
+              <Bezel innerClassName="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between md:p-10">
+                <div className="max-w-2xl">
+                  <div className="flex items-center gap-3">
+                    <span className="lf-kicker-dense text-lf-clay">03</span>
+                    <FileText className="h-7 w-7 text-lf-clay" />
+                  </div>
+                  <h3 className="lf-card-heading mt-6 text-lf-espresso">
+                    Get a report you can actually use
+                  </h3>
+                  <p className="lf-body-sm mt-3 max-w-[62ch] text-lf-muted">
+                    Save rent, build range, payback, and key assumptions in one
+                    concept report you can review yourself or share when you are ready.
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <CTAButton href="/studio" size="md">
+                    Check my address
+                  </CTAButton>
+                </div>
+              </Bezel>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      <section id="start" className="px-6 pb-24 md:pb-32">
-        <Reveal className="mx-auto max-w-7xl">
-          <Bezel innerClassName="px-8 py-16 text-center md:px-16 md:py-24">
-            <Eyebrow>Ready when the owner is</Eyebrow>
-            <h2 className="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold leading-tight tracking-[-0.01em] text-lf-espresso md:text-6xl">
-              Find the ADU income potential in your lot.
-            </h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-lf-muted">
-              Estimates, not guarantees — a concrete starting point you can take to a builder.
+      <section className="bg-lf-espresso text-lf-sand">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-32 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-40">
+          <div>
+            <p className="lf-kicker text-lf-taupe">
+              Owner report
             </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <CTAButton href="/signup" size="lg">
-                Estimate my lot
-              </CTAButton>
-              <CTAButton href="/login" variant="outline" arrow={false}>
-                Sign in
-              </CTAButton>
-            </div>
-          </Bezel>
-        </Reveal>
+            <h2 className="lf-section-heading mt-3">
+              The output is built for the next conversation.
+            </h2>
+            <p className="lf-body-lg mt-5 max-w-xl text-lf-taupe">
+              This is not a permit approval or an investment guarantee. It is a
+              clear starting point for a real conversation with your family,
+              planner, lender, or builder.
+            </p>
+          </div>
+          <div className="grid gap-4">
+            {REPORT.map((item) => (
+              <div
+                key={item}
+                className="flex items-start gap-4 border-t border-lf-taupe/25 pt-4"
+              >
+                <ShieldCheck
+                  className="mt-1 h-5 w-5 shrink-0 text-lf-amber"
+                  aria-hidden="true"
+                />
+                <span className="lf-body-lg text-lf-sand">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="start">
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-32 md:grid-cols-[1fr_auto] md:items-center md:py-40">
+          <div>
+            <p className="lf-kicker text-lf-muted">
+              Ready when the owner is
+            </p>
+            <h2 className="lf-section-heading mt-3 max-w-3xl text-lf-espresso">
+              Know what to ask before you spend on plans.
+            </h2>
+          </div>
+          <div className="flex flex-col items-center gap-4 sm:flex-row md:flex-col">
+            <CTAButton href="/studio" size="lg">
+              Check my address
+            </CTAButton>
+            <Link
+              href="/login"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card/65 px-8 font-semibold text-lf-espresso transition-colors duration-300 hover:bg-lf-card hover:border-lf-taupe active:scale-[0.98]"
+            >
+              <Users className="h-5 w-5" aria-hidden="true" />
+              Sign in
+            </Link>
+          </div>
+        </div>
       </section>
     </>
   );
