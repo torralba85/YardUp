@@ -21,8 +21,10 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       className="flex items-center gap-2 border-b border-white/10 bg-lf-mahogany px-3 py-2 text-white"
       style={{ paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
     >
+      {/* Compact mark (not the full lockup): on phone widths the address pill
+          needs the horizontal space — see DESIGN.md "Visual Identity & Logo". */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/lotfoundry-lockup-horizontal-inverse.svg" alt="LotFoundry" className="h-6 w-auto" />
+      <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 shrink-0 rounded" />
       <span className="min-w-0 flex-1 truncate rounded-full bg-white/10 px-2.5 py-1 text-xs text-lf-sand">
         {address}
         {estimated && <span className="ml-1.5 font-mono text-[9px] uppercase tracking-[0.08em] text-lf-amber">est.</span>}

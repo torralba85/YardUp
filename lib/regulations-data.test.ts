@@ -13,6 +13,13 @@ describe("regulations data layers", () => {
     expect(inferJurisdiction("1200 Pine St, Boston, MA")).toBe("local-review");
   });
 
+  it("prefers the real city over demo street aliases", () => {
+    expect(inferJurisdiction("1 Oak Street, Los Angeles, CA")).toBe("los-angeles");
+    expect(inferJurisdiction("9 Linden Ave, Sacramento, CA")).toBe("sacramento");
+    // Preset addresses without a city still resolve via their street alias.
+    expect(inferJurisdiction("1234 Oak Street")).toBe("oak-street");
+  });
+
   it("checks regulation details structure", () => {
     const guide = regulationGuides["denver"];
     expect(guide.title).toContain("Denver");

@@ -404,7 +404,7 @@ function FeasibilityStudioInner() {
                 result={result}
                 onGenerateReport={handleGenerateReport}
               />
-              <PermitGuidePanel address={activeParcel.address} />
+              <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
               <InspirationGalleryPanel
                 onApply={(item) => {
                   const baseConfig = configForFootprint(item.sqft, config);
@@ -473,7 +473,7 @@ function FeasibilityStudioInner() {
         </section>
 
         {activeNav === "guide" ? (
-          <PermitGuidePanel address={activeParcel.address} />
+          <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
         ) : activeNav === "inspiration" ? (
           <InspirationGalleryPanel
             onApply={(item) => {
