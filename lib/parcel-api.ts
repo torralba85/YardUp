@@ -20,8 +20,13 @@ export async function fetchParcel(
   idToken?: string,
   address?: string,
 ): Promise<LiveParcelData> {
-  const params = new URLSearchParams({ lat: String(lat), lng: String(lng) });
-  if (address) params.set("address", address);
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+  });
+  if (address?.trim()) {
+    params.set("address", address.trim());
+  }
   const url = `/api/parcel?${params.toString()}`;
 
   let res: Response;
@@ -48,7 +53,7 @@ export async function fetchParcel(
   if (res.status === 401) {
     throw new ParcelFetchError(
       `Parcel service authentication failed (${res.status})`,
-      "Please sign in again before searching another address.",
+      "Sign in to search a specific address — or keep exploring with a demo preset.",
     );
   }
 

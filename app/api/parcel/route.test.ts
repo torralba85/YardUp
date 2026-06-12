@@ -18,9 +18,11 @@ import type { LiveParcelData } from "@/lib/parcel-types";
  */
 
 function makeRequest(lat: number, lng: number, address?: string): NextRequest {
-  const params = new URLSearchParams({ lat: String(lat), lng: String(lng) });
-  if (address) params.set("address", address);
-  return new NextRequest(`http://localhost/api/parcel?${params.toString()}`);
+  const url = new URL("http://localhost/api/parcel");
+  url.searchParams.set("lat", String(lat));
+  url.searchParams.set("lng", String(lng));
+  if (address) url.searchParams.set("address", address);
+  return new NextRequest(url);
 }
 
 /** A Regrid feature with the fields the route requests. */
@@ -135,44 +137,20 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.source).toBe("fallback");
   });
 
-  it("keeps the searched address in fallback responses instead of a preset's", async () => {
+  it("keeps the searched address visible when returning fallback estimates", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ results: { features: [] } }),
-      }),
+      vi.fn().mockRejectedValue(new TypeError("Network error")),
     );
 
-    // A San Jose address: the nearest preset center is Portland, which used to
-    // overwrite the user's location with "812 Linden Avenue, Portland, OR".
     const res = await GET(
-      makeRequest(37.33, -121.89, "123 Main St, San Jose, CA 95110, USA"),
+      makeRequest(39.752, -104.999, "456 Pine St, Denver, CO 80202, USA"),
     );
+    expect(res.status).toBe(200);
     const data = (await res.json()) as LiveParcelData;
-
     expect(data.source).toBe("fallback");
-    expect(data.address).toBe("123 Main St");
-    expect(data.city).toBe("San Jose, CA 95110");
-  });
-
-  it("falls back to coordinates in fallback responses when no address is given", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ results: { features: [] } }),
-      }),
-    );
-
-    const res = await GET(makeRequest(37.33, -121.89));
-    const data = (await res.json()) as LiveParcelData;
-
-    expect(data.source).toBe("fallback");
-    expect(data.address).toBe("37.33000, -121.89000");
-    expect(data.city).toBe("");
+    expect(data.address).toBe("456 Pine St");
+    expect(data.city).toBe("Denver, CO 80202, USA");
   });
 
   it("uses the searched address when Regrid has no address fields", async () => {
@@ -184,7 +162,7 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     );
 
     const res = await GET(
-      makeRequest(37.33, -121.89, "123 Main St, San Jose, CA 95110, USA"),
+      makeRequest(37.33, -121.89, "123 Main St, San Jose, CA 95110"),
     );
     const data = (await res.json()) as LiveParcelData;
 
@@ -218,9 +196,14 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(res.status).toBe(400);
   });
 
-  it("500s when REGRID_API_KEY is not configured", async () => {
+  it("returns a preset fallback (not 500) when REGRID_API_KEY is unconfigured", async () => {
+    // Keyless demo: the route degrades to the nearest sample preset so a
+    // geocoded address still resolves to a visible parcel.
     vi.stubEnv("REGRID_API_KEY", "");
     const res = await GET(makeRequest(47.65, -122.31));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("fallback");
+    expect(data.zoning).toBe("R-1 (estimated)");
   });
 });

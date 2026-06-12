@@ -40,18 +40,21 @@ export default function ReportPreview({
     <section
       id="export"
       aria-labelledby="report-preview-heading"
-      className="border-t border-lf-hairline bg-lf-card px-6 py-4 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none lg:max-h-[40vh] lg:overflow-y-auto"
+      className="border-t border-lf-hairline bg-lf-card px-6 py-4 shadow-[0_-18px_40px_rgba(38,19,7,0.05)] print:shadow-none max-h-[70dvh] overflow-y-auto lg:max-h-[40vh]"
     >
       <div className="grid gap-6 lg:grid-cols-[140px_1fr_1fr_220px] xl:grid-cols-[150px_1fr_1fr_250px]">
-        <div className="hidden rounded-md border border-lf-hairline bg-lf-sand-2 p-2.5 lg:block">
-          <div className="text-[9px] font-bold uppercase tracking-widest text-lf-mahogany">
-            LotFoundry
+        <div className="hidden border-[1.5px] border-lf-espresso bg-lf-card p-1 lg:block">
+          <div className="border border-lf-taupe px-2.5 py-3 text-center">
+            <div className="lf-kicker-dense text-lf-clay">LotFoundry</div>
+            <div className="mt-1.5 font-display text-sm font-semibold leading-tight text-lf-espresso">
+              Certificate of Feasibility
+            </div>
+            <div className="mx-auto mt-2 h-px w-10 bg-lf-hairline" />
+            <div className="lf-caption mt-2 truncate text-lf-muted">{parcelName}</div>
+            <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.18em] text-lf-brick">
+              Concept
+            </div>
           </div>
-          <div className="mt-2 aspect-[3/2] rounded bg-gradient-to-br from-lf-sand via-lf-taupe to-lf-mahogany" />
-          <div className="mt-2 text-xs font-semibold text-lf-espresso">
-            Concept Feasibility Report
-          </div>
-          <div className="mt-1 text-[11px] text-lf-muted">{parcelName}</div>
         </div>
 
         <div>
@@ -59,13 +62,14 @@ export default function ReportPreview({
             id="report-preview-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="font-display text-xl font-black tracking-tight text-lf-espresso focus:outline-none"
+            className="lf-panel-heading text-lf-espresso focus:outline-none"
           >
-            Concept Feasibility Report
+            Certificate of Feasibility
           </h2>
-          <p className="mt-1.5 max-w-xl text-sm leading-6 text-lf-muted">
-            A shareable investor-demo summary of the selected ADU concept, site assumptions,
-            estimated costs, rental upside, and zoning feasibility.
+          <p className="lf-body-sm mt-1.5 max-w-xl text-lf-muted">
+            A recorded concept for this lot: the ADU, its site fit, estimated costs,
+            income ledger, and payback — typeset as a document you can print, share,
+            or bring to a builder. Final scope and approvals still require local review.
           </p>
           <div className="mt-3 grid gap-2.5 text-sm text-lf-muted sm:grid-cols-2">
             <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
@@ -75,7 +79,7 @@ export default function ReportPreview({
             />
             <ReportFact
               icon={BarChart3}
-              text={`${formatCurrency(result.annualNoi)} annual NOI estimate`}
+              text={`${formatCurrency(result.annualNoi)} annual net income estimate`}
             />
             <ReportFact icon={CheckCircle2} text={`${result.zoningStatus} feasibility status`} />
           </div>
@@ -162,9 +166,10 @@ export default function ReportPreview({
               </button>
             )}
           </div>
-          <div className="rounded-md bg-lf-sand-2 p-2.5 text-[11px] leading-snug text-lf-muted border border-lf-hairline/40">
+          <div className="lf-caption rounded-md border border-lf-hairline/40 bg-lf-sand-2 p-2.5 text-lf-muted">
             Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
-            and market rents before investment decisions.
+            and market rents with local professionals before moving forward. No approval or
+            income outcome is guaranteed.
           </div>
         </div>
       </div>

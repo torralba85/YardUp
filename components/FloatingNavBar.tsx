@@ -56,29 +56,35 @@ export function FloatingNavBar() {
           borderStyle: "solid",
           boxShadow,
         }}
-        className="pointer-events-auto px-6 max-w-7xl mx-auto flex items-center justify-between"
+        className="pointer-events-auto mx-auto box-border flex max-w-7xl items-center justify-between px-2 sm:px-6"
       >
-        <Link href="/" aria-label="LotFoundry home" className="flex items-center">
+        <Link href="/" aria-label="LotFoundry home" className="flex flex-shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/lotfoundry-lockup-horizontal.svg"
             alt="LotFoundry"
-            className="h-8 w-auto"
+            className="h-4 w-auto sm:h-7"
           />
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-1.5 py-2 text-xs font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10 sm:px-4 sm:text-sm"
           >
             Sign in
           </Link>
           <Link
-            href="/signup"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md bg-lf-mahogany px-4 py-2 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-clay"
+            href="/studio"
+            className="group inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-full bg-lf-mahogany px-3 py-1.5 text-xs font-medium text-lf-sand transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay active:scale-[0.98] sm:gap-2 sm:pl-4 sm:pr-1.5 sm:text-sm"
           >
-            Estimate my lot
-            <ArrowRight className="h-4 w-4" />
+            <span className="sm:hidden">Start</span>
+            <span className="hidden sm:inline">Check my address</span>
+            <span
+              aria-hidden="true"
+              className="hidden h-7 w-7 place-items-center rounded-full bg-lf-sand/15 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 sm:grid"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
           </Link>
         </div>
       </motion.header>

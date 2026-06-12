@@ -1,36 +1,35 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
-const outfit = localFont({
-  src: [
-    { path: "../public/fonts/Outfit/static/Outfit-Regular.ttf", weight: "400", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-Medium.ttf", weight: "500", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-SemiBold.ttf", weight: "600", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-Bold.ttf", weight: "700", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-ExtraBold.ttf", weight: "800", style: "normal" },
-    { path: "../public/fonts/Outfit/static/Outfit-Black.ttf", weight: "900", style: "normal" },
-  ],
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
   variable: "--font-display",
 });
 
-const manrope = localFont({
-  src: [
-    { path: "../public/fonts/Manrope/static/Manrope-Regular.ttf", weight: "400", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-Medium.ttf", weight: "500", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-SemiBold.ttf", weight: "600", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-Bold.ttf", weight: "700", style: "normal" },
-    { path: "../public/fonts/Manrope/static/Manrope-ExtraBold.ttf", weight: "800", style: "normal" },
-  ],
+const libreFranklin = Libre_Franklin({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
   variable: "--font-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  variable: "--font-mono",
 });
 
 
 export const metadata: Metadata = {
-  title: "LotFoundry | ADU Income Potential",
+  title: "LotFoundry | ADU Feasibility & Income Estimates",
   description:
-    "Estimate your lot's ADU income potential with monthly rent, build range, payback, and site fit in minutes.",
+    "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
   manifest: "/manifest.json",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
   icons: {
@@ -40,9 +39,9 @@ export const metadata: Metadata = {
     apple: "/icon-180.png",
   },
   openGraph: {
-    title: "LotFoundry | ADU Income Potential",
+    title: "LotFoundry | ADU Feasibility & Income Estimates",
     description:
-      "Estimate your lot's ADU income potential with monthly rent, build range, payback, and site fit in minutes.",
+      "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
     images: [
       {
         url: "/lotfoundry-og.png",
@@ -55,8 +54,11 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: "#F2E5D5",
+  // Extend behind the iOS notch/home indicator so env(safe-area-inset-*)
+  // paddings in the studio shell take effect in standalone PWA mode.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -67,11 +69,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${manrope.variable}`}
+      className={`${cormorant.variable} ${libreFranklin.variable} ${ibmPlexMono.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

@@ -90,7 +90,7 @@ export default function BuilderLeadPanel({
         <div>
           <h2
             id="builder-lead-heading"
-            className="font-display text-xl font-black text-lf-espresso"
+            className="font-display text-xl font-bold text-lf-espresso"
           >
             Connect with local builders
           </h2>
