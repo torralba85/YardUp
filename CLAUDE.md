@@ -75,7 +75,7 @@ Project-specific design rules:
 - Clay is the interactive/action accent.
 - Amber signals permit risk or review-needed states.
 - Brick signals genuine blockers.
-- Use Outfit for display/hero numbers, Manrope for body/control text, and Geist Mono for tabular values.
+- Use Cormorant Garamond for display/hero numbers and dollar figures, Libre Franklin for body/control text, and IBM Plex Mono for tabular/recorded-fact values (APNs, dimensions, status chips). `DESIGN.md` is the source of truth — defer to it if it diverges.
 
 ## Environment
 
