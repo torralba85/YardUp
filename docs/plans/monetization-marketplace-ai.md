@@ -65,9 +65,14 @@ viral loop. Three workstreams:
 ## Feature 2: Builder Dashboard v2
 
 - Extends `BuilderDashboard.tsx` / `BuilderInbox.tsx` / `BuilderProfileForm.tsx`.
-- Sections: Lead inbox (new / unlocked / archived), profile & service
-  areas, billing history.
-- Lead statuses already modeled: `new` / `interested` / `not-a-fit`.
+- Sections: Lead inbox (tabs filter on TRIAGE), profile & service areas,
+  billing ledger.
+- **Two orthogonal axes (8A):** ACCESS = `locked` / `confirming` /
+  `unlocked` (card visual, derived from `leadUnlocks`); TRIAGE =
+  `new` / `interested` / `not-a-fit` (the shipped `BuilderResponseStatus`).
+  "Archived" is the `not-a-fit` view, NOT a stored status — no new enum
+  value, no migration. Inbox tabs: New (triage=new) · Interested · Archived
+  (triage=not-a-fit). Lock state never appears as a tab.
 
 ## Feature 3: AI Photo-to-ADU Style Match
 
@@ -106,13 +111,15 @@ Approved wireframes: `~/.gstack/projects/torralba85-YardUp/designs/builder-dashb
   billing live in the sidebar, never compete with the inbox.
 - **Decision 1A — ledger-slip cards, not a table.** Cards earn existence:
   the unlock decision is per-lead, and each card carries trust scaffolding
-  (freshness, owner-message excerpt, match reason) a table row cannot hold.
+  (freshness, structured match reasons, value band) a table row cannot hold.
   Constraint: cards stay instrument-grade — sharp corners, mono facts, no
   shadows, no hover-lift. Revisit a table view if builders exceed ~10
   leads/week (record as TODO, not drift).
 - **Card hierarchy (B2):** value band first (Cormorant 600, forest — green
   means it pays you), location + ADU config in mono second, metrics third,
-  CTA last. Serial `NO. LF-{APN}` + `RECORDED {date}` as the mono eyebrow.
+  CTA last. Preview serial `NO. LF-{hash}` (9A — random internal id, NEVER
+  the APN) + `RECORDED {date}` as the mono eyebrow. The real APN serial
+  returns only on the unlocked Certificate of Feasibility.
 
 ### Unlock surface (decision 3A)
 
@@ -147,11 +154,15 @@ all motion guarded by `prefers-reduced-motion`.
   not a mask over present data. Firestore rules + API shape change required.
 - **Free (locked) lead shows:** neighborhood + ZIP (`BALLARD · SEATTLE
   98107` in mono), lot sqft, ADU config, build-estimate band, rent band,
-  payback, owner-verified badge, freshness (`SUBMITTED 2 DAYS AGO`), match
-  reason (`MATCHED: SERVICE AREA — SEATTLE`), owner-message excerpt
-  (first ~80 chars, no names/contact).
+  payback, owner-verified badge, freshness (`SUBMITTED 2 DAYS AGO`),
+  structured match reasons (`MATCHED: SERVICE AREA — SEATTLE`,
+  `OWNER-VERIFIED`). Preview serial is a random `LF-{hash}`, not the APN.
+- **No free-form owner text on the preview (10A):** the homeowner's typed
+  message can contain a phone number or address ("I'm Maria on 24th Ave"),
+  so it is NEVER excerpted onto a locked card. The full message reveals
+  only after unlock. Trust scaffolding is system-generated facts only.
 - **Hidden until unlock:** owner name/email/phone, street address, exact
-  APN, full certificate.
+  APN, full certificate, full owner message.
 
 ### State table
 
@@ -212,8 +223,8 @@ Builder profile    | —                  | New builder: form with | Field-level
 STEP | BUILDER DOES              | FEELS                       | PLAN SUPPORTS IT WITH
 -----|---------------------------|-----------------------------|--------------------------------------------
 1    | Opens dashboard           | "Is this worth my time?"    | Money band: pipeline value of NEW leads
-2    | Scans a locked lead       | Skeptical — burned by       | Freshness, match reason, owner-message
-     |                           | lead vendors before         | excerpt, owner-verified badge — all free
+2    | Scans a locked lead       | Skeptical — burned by       | Freshness, structured match reasons,
+     |                           | lead vendors before         | owner-verified badge, value band — all free
 3    | Clicks Unlock             | "What exactly am I buying?" | Slip: exact field list, lot recap, ledger
      |                           |                             | price, bad-lead credit, exclusivity terms
 4    | Pays in Stripe Checkout   | Committed, slightly anxious | Stripe trust line; idempotent session
@@ -296,6 +307,102 @@ STEP | HOMEOWNER DOES            | FEELS                       | PLAN SUPPORTS I
 - `prefers-reduced-motion`: stamp/settle and count-up degrade to instant
   state change with no scale/translate.
 
+## Engineering Architecture (decided 2026-06-12, eng review)
+
+Cross-model note: Gemini Code Assist (security-medium) and Codex (P1) both
+independently flagged the paywall-bypass on PR #42, confirming decision 1A.
+
+### Delivery: two PRs (D2)
+
+- **PR-1 (revenue):** Plex Mono wiring, paywall data split, Stripe
+  Checkout + webhook, dashboard v2, billing, conformance, mobile, a11y.
+  Tasks T1–T5, T8–T10, T13–T16.
+- **PR-2 (AI):** Style Match upload, generation job pipeline, before/after
+  board, photo privacy. Tasks T6–T7, T11–T12.
+- Payments get an isolated, exhaustively-tested diff; the AI feature lands
+  on a QA'd base. The two PRs share almost no files.
+
+### Paywall data model (1A — the security model IS the data layout)
+
+```
+connectionRequests/{id}              ← PUBLIC PREVIEW (matched builders read)
+  ├── neighborhood, zip, lotSqft, aduConfig, buildBand, rentBand, payback
+  ├── ownerVerified, createdAt, matchReasons[]   ← structured, no PII
+  ├── previewSerial: "LF-{hash}"     ← 9A: random, NOT the APN
+  └── matchedBuilderIds[], headStartUntil        ← 19C
+      │
+      ├── private/contact            ← SUBCOLLECTION, gated
+      │     ownerContact, streetAddress, exactAPN, ownerMessage(full)
+      │     rule: read if isOwner OR exists(leadUnlocks/{uid}_{id})
+      │
+      └── builderResponses/{builderId}            ← triage (unchanged)
+
+leadUnlocks/{builderId}_{requestId}  ← deterministic id = idempotency (2A)
+  builderId, requestId, stripeSessionId, status, amount, createdAt
+  WRITE: admin SDK only (webhook). Client cannot self-grant.
+
+unlockReservations/{requestId}       ← 3A head-start race guard
+  builderId, expiresAt (30min TTL)
+```
+
+- **Firestore rule** on `private/contact`: `allow read: if isOwner(ownerUid)
+  || exists(/databases/$(db)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId))`.
+  The paywall enforces at the database layer; client SDK + realtime stay.
+- **Migration:** existing `connectionRequests` docs split — contact fields
+  moved to `private/contact`, preview fields redacted in place, `previewSerial`
+  backfilled. One-time script, idempotent. **REGRESSION RISK:** owner-submit
+  flow now writes two docs (batch) — regression test required.
+- **Split TypeScript types (7A):** `RedactedLead` (no contact fields exist
+  on the type) and `UnlockedLeadContact` (returned only by the gated fetch).
+  Rendering contact on a locked card becomes a compile error.
+
+### Payments (2A, 3A, 4A)
+
+- **Webhook (2A):** thin hand-rolled `/api/stripe/webhook` — verify signature
+  on the RAW body (`req.text()` before parse), read `builderId`+`requestId`
+  from session metadata, `set()` the grant on the deterministic id. Replays
+  and Stripe retries are no-ops by construction. Single event:
+  `checkout.session.completed`.
+- **Head-start race (3A):** `/api/stripe/checkout` claims `unlockReservations/
+  {requestId}` in a transaction (30min TTL) before creating the session —
+  a second builder sees "another builder is unlocking this lead" and never
+  reaches Stripe. Webhook settles reservation → grant in a transaction;
+  expired reservations free automatically; a straggler payment auto-credits.
+  Card states: locked · reserved · confirming · unlocked.
+- **Secrets (4A):** `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` via
+  Functions `defineSecret` (Secret Manager); publishable key as
+  `NEXT_PUBLIC_*`. No secrets in repo/config plaintext.
+- **Demo mode (4A):** unlock CTA runs the full state machine against a mock
+  grant, card stamps `DEMO`. Mock path gated server-side by env so it can
+  never grant in production. Preserves the zero-key demo rule (CLAUDE.md).
+
+### AI generation (5A — PR-2)
+
+- `styleMatchJobs/{id}` doc: `status: queued → casting → done | failed`,
+  client watches via `onSnapshot` (same realtime pattern as the unlock
+  reveal). Survives navigation/sleep; provider-agnostic (image model slots
+  behind the job processor). Stuck-job sweeper marks `casting > 90s` as
+  `failed`. EXIF/GPS stripped client-side before upload (21A).
+
+### DRY / quality
+
+- **Converter helper (8A):** extract one `docToEntity<T>` + timestamp helper
+  in `lib/marketplace-firestore.ts`; all old and new collections use it.
+  Kills the fifth copy of the per-collection converter idiom.
+
+### Performance (11A)
+
+- `fetchBuilderInbox` keeps its bounded per-lead fan-out at launch (3–5
+  leads). Denormalizing status+grant onto the lead (or a collection-group
+  query) is deferred to the same ~10-leads/week trigger as the table view.
+
+### Deferred (TODOs, not PR-1 scope)
+
+- **Server-side matching (6B):** `matchedBuilderIds` is computed client-side
+  today (`marketplace.ts:48`). Post-money this decides who may pay you —
+  move to `/api` at submit time. Low attacker payoff at launch; clean later
+  home with the matching-quality work.
+
 ## What already exists (reuse, don't reinvent)
 
 - Marketplace v1 data model: `BuilderProfile`, `ConnectionRequest` (with
@@ -340,6 +447,12 @@ STEP | HOMEOWNER DOES            | FEELS                       | PLAN SUPPORTS I
 
 HTML sources (same directory) are the buildable reference — exact tokens,
 spacing, and type scale.
+
+> **Eng-review corrections to apply when building from these wireframes:**
+> the locked-card serials shown as `NO. LF-{APN}` are illustrative — real
+> previews use a random `LF-{hash}` (9A); the APN serial appears only on the
+> unlocked certificate. No free-form owner-message excerpt on locked cards
+> (10A) — structured match reasons only.
 
 ## Implementation Tasks
 
@@ -445,11 +558,12 @@ P1 blocks ship; P2 lands same branch; P3 is a follow-up.
 | Review | Trigger | Why | Runs | Status | Findings |
 |--------|---------|-----|------|--------|----------|
 | CEO Review | `/plan-ceo-review` | Scope & strategy | 0 | — | — |
-| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | — |
-| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 0 | — | — |
+| Codex Review | `/codex review` | Independent 2nd opinion | 1 | ISSUES (addressed) | Gemini+Codex on PR #42: paywall split, APN leak, owner-text PII, archived status |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | CLEAN | 11 issues, 0 critical gaps, 0 unresolved; 2-PR split |
 | Design Review | `/plan-design-review` | UI/UX gaps | 1 | CLEAN | score: 2/10 → 9/10, 23 decisions |
 | DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
 
-- **CROSS-MODEL:** Design outside voices ran (Codex high-reasoning + independent Claude subagent, 2026-06-12). Consensus failures (no builder-side visual anchor, motion unspecified, paywall leak) all resolved into the plan; the one genuine disagreement (cards vs table inbox) was decided by the user (1A cards, table recorded as TODO with trigger).
-- **UNRESOLVED:** 0 design decisions deferred.
-- **VERDICT:** DESIGN CLEARED — eng review required before implementation (`/plan-eng-review`).
+- **CROSS-MODEL:** Two independent passes agree. Design outside voices (Codex high-reasoning + Claude subagent) and the PR #42 bot review (Gemini Code Assist security-medium + Codex P1) BOTH flagged the paywall bypass — confirming eng decision 1A (database-enforced split). Bot review additionally surfaced the APN-on-preview leak (resolved 9A) and owner-text PII (resolved 10A); both folded into the eng review and the plan.
+- **UNRESOLVED:** 0. All 23 design + 11 eng decisions resolved.
+- **CRITICAL GAPS:** 0. Two failure modes carry mandatory tests: owner-submit regression (2-doc split) and EXIF-strip privacy.
+- **VERDICT:** DESIGN + ENG CLEARED — ready to implement as two PRs (revenue first, AI second). Run `/ship` per PR when built.
