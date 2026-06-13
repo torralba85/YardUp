@@ -1,8 +1,7 @@
 import Link, { LinkProps } from "next/link";
 import { ArrowRight } from "lucide-react";
 
-// Extend native anchor properties and Next.js Link props, omitting conflicting motion/event handlers
-interface CTAButtonProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart">, LinkProps {
+interface CTAButtonProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>, LinkProps {
   children: React.ReactNode;
   size?: "md" | "lg";
   className?: string;
