@@ -53,7 +53,7 @@ Key entry points:
 - `components/studio/*` - inspector, metrics, report, mobile studio, builder lead panels
 - `lib/feasibility.ts` - core feasibility and financial calculations
 - `lib/parcel-context.tsx`, `lib/parcel-api.ts`, `lib/parcel-types.ts` - parcel state and API boundary
-- `app/api/parcel/route.ts`, `app/api/aerial/route.ts`, `app/api/geocode/route.ts` - server API routes
+- `app/api/parcel/route.ts`, `app/api/aerial/route.ts`, `app/api/geocode/route.ts`, `app/api/suggest/route.ts` - server API routes
 - `firebase.json`, `functions/index.js`, `scripts/prepare-firebase.js` - Firebase deployment path
 
 ## Required Reading

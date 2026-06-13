@@ -219,14 +219,20 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
 
 export function inferJurisdiction(address: string): JurisdictionId {
   const normalized = address.toLowerCase();
-  if (normalized.includes("seattle") || normalized.includes("oak street")) return "oak-street";
-  if (normalized.includes("portland") || normalized.includes("linden")) return "corner-lot";
-  if (normalized.includes("austin") || normalized.includes("mesa court")) return "compact-lot";
+  // Real city names first — the demo street aliases below must never shadow
+  // a searched address's actual jurisdiction (e.g. "1 Oak Street, Los Angeles").
+  if (normalized.includes("seattle")) return "oak-street";
+  if (normalized.includes("portland")) return "corner-lot";
+  if (normalized.includes("austin")) return "compact-lot";
   if (normalized.includes("los angeles")) return "los-angeles";
   if (normalized.includes("san diego")) return "san-diego";
   if (normalized.includes("san jose")) return "san-jose";
   if (normalized.includes("oakland")) return "oakland";
   if (normalized.includes("sacramento")) return "sacramento";
   if (normalized.includes("denver")) return "denver";
+  // Demo preset street aliases (preset `address` fields carry no city).
+  if (normalized.includes("oak street")) return "oak-street";
+  if (normalized.includes("linden")) return "corner-lot";
+  if (normalized.includes("mesa court")) return "compact-lot";
   return "local-review";
 }

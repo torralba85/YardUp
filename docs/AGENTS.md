@@ -184,6 +184,7 @@ See `DESIGN.md` for the full brand spec. Key rules:
 - **`three` types** — import `ThreeEvent` from `@react-three/fiber`, not as a global. Use `as unknown as { camera: THREE.Camera }` instead of `any`.
 - **Parcel positioning** — the house is positioned dynamically based on lot dimensions. Don't hardcode Z positions.
 - **Firebase Functions** — both `app` and `api` functions serve the same Next.js app via different rewrite rules. They share the same code path.
+- **Hydration-safe motion** - prefer CSS `motion-safe:` variants for link/button hover and tap transforms. Avoid `useReducedMotion()` or JS-driven motion wrappers when they can change server/client attributes during hydration.
 
 ### Git Workflow
 

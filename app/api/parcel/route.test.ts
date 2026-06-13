@@ -153,6 +153,24 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.city).toBe("Denver, CO 80202, USA");
   });
 
+  it("uses the searched address when Regrid has no address fields", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({ ll_gisacre: 0.1, zoning: "R-2" }),
+      ),
+    );
+
+    const res = await GET(
+      makeRequest(37.33, -121.89, "123 Main St, San Jose, CA 95110"),
+    );
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("regrid");
+    expect(data.address).toBe("123 Main St");
+    expect(data.city).toBe("San Jose, CA 95110");
+  });
+
   it("returns 503 with Retry-After when Regrid rate-limits (429)", async () => {
     vi.stubGlobal(
       "fetch",

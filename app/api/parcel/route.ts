@@ -103,8 +103,8 @@ export async function GET(request: NextRequest) {
     const setbacks = parseSetbacks(fields.zoning_setbacks);
 
     const parcelData: LiveParcelData = {
-      address: formatAddress(fields, lat, lng),
-      city: formatCity(fields),
+      address: formatAddress(fields, requestedAddress, lat, lng),
+      city: formatCity(fields) || cityFromRequestedAddress(requestedAddress),
       lotArea: lotAreaSqft,
       lotWidth,
       lotLength,
@@ -258,14 +258,26 @@ function deriveMaxCoverage(zoning?: string): number {
 
 function formatAddress(
   fields: Record<string, string | number | undefined>,
+  requestedAddress: string | undefined,
   lat: number,
   lng: number,
 ): string {
   // Regrid returns the full street address in the `saddress` (Situs Address) or fallback `address` field.
-  // Fall back to coordinates only if it's missing.
+  // Fall back to the searched address, then to coordinates, if it's missing.
   const address = fields.saddress ?? fields.address;
   if (address) return String(address).trim();
+  const street = requestedAddress?.split(",")[0]?.trim();
+  if (street) return street;
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+}
+
+function cityFromRequestedAddress(requestedAddress: string | undefined): string {
+  if (!requestedAddress) return "";
+  const parts = requestedAddress
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.slice(1).join(", ");
 }
 
 function formatCity(
