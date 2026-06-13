@@ -58,7 +58,7 @@ Key entry points:
 
 ## Required Reading
 
-- `AGENTS.md` - concise contributor rules for this repo.
+- `AGENTS.md` - the Codex-facing twin of this file (mirror); keep both in sync.
 - `docs/AGENTS.md` - full architecture map, current status, pitfalls, and next priorities.
 - `DESIGN.md` - mandatory before visual or UI decisions.
 - `README.md` - product scope, local setup, environment variables, verification, CI, deployment.
