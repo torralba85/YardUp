@@ -345,8 +345,12 @@ unlockReservations/{requestId}       ← 3A head-start race guard
   builderId, expiresAt (30min TTL)
 ```
 
-- **Firestore rule** on `private/contact`: `allow read: if isOwner(ownerUid)
-  || exists(/databases/$(db)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId))`.
+- **Firestore rule** on `private/contact` (subcollection of
+  `connectionRequests/{requestId}`, so `ownerUid` lives on the parent doc and
+  must be fetched with `get()`; `database` is the binding from
+  `match /databases/{database}/documents`):
+  `allow read: if isOwner(get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid)
+  || exists(/databases/$(database)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId))`.
   The paywall enforces at the database layer; client SDK + realtime stay.
 - **Migration:** existing `connectionRequests` docs split — contact fields
   moved to `private/contact`, preview fields redacted in place, `previewSerial`
