@@ -24,3 +24,7 @@ service-account*.json
 
 # Local preview screenshot artifacts
 preview-shots/
+
+# Dev-server log artifacts
+next-dev-*.log
+next-dev-*.err.log
