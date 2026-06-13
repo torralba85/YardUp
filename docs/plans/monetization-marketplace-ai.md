@@ -345,8 +345,12 @@ unlockReservations/{requestId}       ← 3A head-start race guard
   builderId, expiresAt (30min TTL)
 ```
 
-- **Firestore rule** on `private/contact`: `allow read: if isOwner(ownerUid)
-  || exists(/databases/$(db)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId))`.
+- **Firestore rule** on `private/contact` (subcollection of
+  `connectionRequests/{requestId}`, so `ownerUid` lives on the parent doc and
+  must be fetched with `get()`; `database` is the binding from
+  `match /databases/{database}/documents`):
+  `allow read: if isOwner(get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid)
+  || exists(/databases/$(database)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId))`.
   The paywall enforces at the database layer; client SDK + realtime stay.
 - **Migration:** existing `connectionRequests` docs split — contact fields
   moved to `private/contact`, preview fields redacted in place, `previewSerial`
@@ -361,17 +365,31 @@ unlockReservations/{requestId}       ← 3A head-start race guard
 - **Webhook (2A):** thin hand-rolled `/api/stripe/webhook` — verify signature
   on the RAW body (`req.text()` before parse), read `builderId`+`requestId`
   from session metadata, `set()` the grant on the deterministic id. Replays
-  and Stripe retries are no-ops by construction. Single event:
-  `checkout.session.completed`.
+  and Stripe retries are no-ops by construction. **Grant only on confirmed
+  payment:** restrict Checkout to immediate card payments and assert
+  `payment_status === "paid"` before writing `leadUnlocks`; if any delayed
+  method is ever enabled, fulfill on `checkout.session.async_payment_succeeded`
+  (and reverse on `async_payment_failed`) instead of `completed` — never reveal
+  contact during the processing window.
 - **Head-start race (3A):** `/api/stripe/checkout` claims `unlockReservations/
-  {requestId}` in a transaction (30min TTL) before creating the session —
-  a second builder sees "another builder is unlocking this lead" and never
-  reaches Stripe. Webhook settles reservation → grant in a transaction;
-  expired reservations free automatically; a straggler payment auto-credits.
-  Card states: locked · reserved · confirming · unlocked.
+  {requestId}` in a transaction (30min `expiresAt`) before creating the session.
+  **Do not treat the doc's existence as the lock** — Firestore TTL deletion is
+  not instantaneous (can lag ~24h), so the transaction compares `expiresAt` and
+  reclaims/overwrites a stale reservation itself; TTL is only space cleanup.
+  **Resumable retries:** persist the Stripe `sessionId` (or an idempotency key)
+  on the reservation *before* redirect, so a refresh/retry/failed-return resumes
+  the same Checkout Session instead of blocking or double-charging. A second
+  live builder sees "another builder is unlocking this lead" and never reaches
+  Stripe. Webhook settles reservation → grant in a transaction; a straggler
+  payment auto-credits. Card states: locked · reserved · confirming · unlocked.
 - **Secrets (4A):** `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` via
   Functions `defineSecret` (Secret Manager); publishable key as
-  `NEXT_PUBLIC_*`. No secrets in repo/config plaintext.
+  `NEXT_PUBLIC_*`. No secrets in repo/config plaintext. **Bind them at runtime:**
+  these routes execute inside the existing Firebase `api` HTTPS function, whose
+  `fnOpts` in `functions/index.js` currently has no `secrets` — add a `secrets`
+  binding for both keys there, or `process.env.STRIPE_*` is `undefined` after
+  deploy even when local `.env` works. `functions/index.js` is therefore in
+  PR-1's payment scope.
 - **Demo mode (4A):** unlock CTA runs the full state machine against a mock
   grant, card stamps `DEMO`. Mock path gated server-side by env so it can
   never grant in production. Preserves the zero-key demo rule (CLAUDE.md).
@@ -506,8 +524,15 @@ P1 blocks ship; P2 lands same branch; P3 is a follow-up.
   - Verify: disclosure copy exact per plan; attach never automatic
 - [ ] **T12 (P2, human: ~1d / CC: ~1.5h)** — privacy — Owner-only Storage rules + delete control (photo + derived renders)
   - Surfaced by: Pass 7 — 21A (makes 11A's promise true)
-  - Files: `storage.rules`, `StyleMatchPanel` delete action
-  - Verify: rules test: non-owner read denied; delete removes render set
+  - Files: `storage.rules`, **`firebase.json` (add a `storage` target)**,
+    **`package.json` deploy scripts (extend `--only ...` to include `storage`)**,
+    `StyleMatchPanel` delete action
+  - Note: `firebase.json` currently declares only hosting/functions/firestore and
+    the deploy script is `--only hosting,functions,firestore:rules` — writing
+    `storage.rules` alone leaves production Storage rules unchanged. Wire the
+    target + deploy coverage or T12 looks done locally but never ships.
+  - Verify: rules test: non-owner read denied; delete removes render set;
+    `npm run deploy:dry-run` shows the storage target
 - [ ] **T13 (P2, human: ~1d / CC: ~1h)** — conformance — Bring builder/inspiration components to DESIGN.md v2
   - Surfaced by: Pass 4 — 13A (rounded→sharp, gradient→scrim, mono ≥11px, no unicode-glyph icons)
   - Files: `BuilderInbox.tsx`, `BuilderDashboard.tsx`, `BuilderProfileForm.tsx`, `InspirationGalleryPanel.tsx`
