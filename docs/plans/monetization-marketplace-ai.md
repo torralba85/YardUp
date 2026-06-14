@@ -460,14 +460,15 @@ Synthesized from this review's findings. Each task derives from a specific
 finding above. Run with Claude Code or Codex; checkbox as you ship.
 P1 blocks ship; P2 lands same branch; P3 is a follow-up.
 
-- [ ] **T1 (P1, human: ~30min / CC: ~15min)** — typography — Wire IBM Plex Mono in `app/layout.tsx`
+- [x] **T1 (P1, human: ~30min / CC: ~15min)** — typography — Wire IBM Plex Mono in `app/layout.tsx` _(already wired: `layout.tsx` loads `IBM_Plex_Mono`→`--font-mono`; `globals.css` `@theme` maps it to the `font-mono` utility)_
   - Surfaced by: Pass 5 — 14A blocking prerequisite (DESIGN.md note + Codex)
   - Files: `app/layout.tsx`, `app/globals.css`
   - Verify: mono surfaces render Plex Mono, not system fallback; build passes
-- [ ] **T2 (P1, human: ~2d / CC: ~2h)** — paywall — Server-side withholding of `ownerContact` + precise address until unlock
+- [x] **T2 (P1, human: ~2d / CC: ~2h)** — paywall — Server-side withholding of `ownerContact` + precise address until unlock
   - Surfaced by: Pass 2 — 5A (subagent critical A1: blur paywall is a free paywall)
   - Files: `lib/marketplace-firestore.ts`, `lib/marketplace-types.ts` (redacted lead shape), `firestore.rules`
   - Verify: locked lead payload contains no contact/address fields (network tab + unit test)
+  - **Done:** split types `LeadPreview` (no PII) / `UnlockedLeadContact`; redacted root + gated `private/contact` subdoc (root committed first so rules `get()` sees it); `firestore.rules` adds the subcollection gate + `leadUnlocks` (admin-write-only); `fetchUnlockedContact` gated read. Tests: `marketplace.test.ts` redaction, `marketplace-firestore.test.ts` write-split regression, `BuilderDashboard.test.tsx` asserts PII absent. 180/180 unit, tsc + lint clean. _Migration of pre-existing `connectionRequests` deferred (pre-launch; no prod leads)._
 - [ ] **T3 (P1, human: ~3d / CC: ~4h)** — payments — Stripe Checkout + webhook + `leadUnlocks` grant with idempotency
   - Surfaced by: Plan Feature 1 + Pass 2 — 6A, 18A ($39–49 single price)
   - Files: `lib/stripe.ts` (new), `app/api/stripe/checkout/route.ts`, `app/api/stripe/webhook/route.ts`, Firestore `leadUnlocks`

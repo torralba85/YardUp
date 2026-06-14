@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, CircleSlash, Hammer, Mail, Phone } from "lucide-react";
+import { CheckCircle2, CircleSlash, Hammer, Lock } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 
@@ -67,14 +67,18 @@ export default function BuilderInbox({
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-lf-muted">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-lf-muted">
                     {statusLabel(item.response.status)}
+                    <span className="font-mono normal-case tracking-normal text-lf-taupe">
+                      {item.request.preview.previewSerial}
+                    </span>
                   </div>
                   <h3 className="mt-1 font-display text-2xl font-bold text-lf-espresso">
-                    {item.request.snapshot.parcelAddress}
+                    {item.request.preview.neighborhood}
                   </h3>
                   <p className="mt-1 text-sm text-lf-muted">
-                    {item.request.snapshot.parcelCity}, {item.request.snapshot.parcelState}
+                    {item.request.preview.zip ? `ZIP ${item.request.preview.zip} · ` : ""}
+                    {item.request.preview.lotSqft.toLocaleString()} sf lot
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -100,41 +104,39 @@ export default function BuilderInbox({
               </div>
 
               <div className="mt-4 grid gap-3 text-sm md:grid-cols-4">
-                <Metric label="ADU size" value={`${item.request.snapshot.result.aduSqft.toLocaleString()} sf`} />
+                <Metric label="ADU size" value={`${item.request.preview.aduSqft.toLocaleString()} sf`} />
                 <Metric
                   label="Build range"
-                  value={`${formatCompactCurrency(item.request.snapshot.result.costLow)}-${formatCompactCurrency(item.request.snapshot.result.costHigh)}`}
+                  value={`${formatCompactCurrency(item.request.preview.buildBandLow)}-${formatCompactCurrency(item.request.preview.buildBandHigh)}`}
                 />
-                <Metric label="Monthly rent" value={formatCurrency(item.request.snapshot.result.monthlyRent)} />
-                <Metric label="Zoning" value={item.request.snapshot.result.zoningStatus} />
+                <Metric label="Est. rent" value={`${formatCurrency(item.request.preview.rentBand)}/mo`} />
+                <Metric label="Zoning" value={item.request.preview.zoningStatus} />
               </div>
 
-              <div className="mt-4 grid gap-4 border-t border-lf-hairline pt-4 text-sm md:grid-cols-2">
-                <div>
-                  <div className="font-semibold text-lf-espresso">Owner contact</div>
-                  <div className="mt-2 space-y-1 text-lf-muted">
-                    <div>{item.request.ownerContact.name}</div>
-                    <div className="flex items-center gap-2">
-                      <Mail size={14} />
-                      {item.request.ownerContact.email}
-                    </div>
-                    {item.request.ownerContact.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone size={14} />
-                        {item.request.ownerContact.phone}
-                      </div>
-                    )}
-                  </div>
+              {item.request.preview.matchReasons.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {item.request.preview.matchReasons.map((reason) => (
+                    <li
+                      key={reason}
+                      className="rounded-md border border-lf-hairline bg-lf-sand-2 px-2 py-1 text-xs text-lf-muted"
+                    >
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Locked until unlock (T4 wires the paid slip). The owner's
+                  contact + exact address are not in this payload — the redacted
+                  preview never received them. */}
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-lf-hairline pt-4 text-sm">
+                <div className="flex items-center gap-2 text-lf-muted">
+                  <Lock size={15} />
+                  <span>Owner contact &amp; exact address locked</span>
                 </div>
-                <div>
-                  <div className="font-semibold text-lf-espresso">Project message</div>
-                  <p className="mt-2 text-lf-muted">
-                    {item.request.ownerContact.message || "No message submitted."}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-lf-muted">
-                    <Hammer size={14} />
-                    Status: {statusLabel(item.response.status)}
-                  </div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-lf-muted">
+                  <Hammer size={14} />
+                  Status: {statusLabel(item.response.status)}
                 </div>
               </div>
             </article>

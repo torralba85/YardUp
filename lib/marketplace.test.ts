@@ -5,7 +5,11 @@ import {
   parcelPresets,
 } from "./feasibility";
 import {
+  bucketBuildBand,
+  bucketRentBand,
   buildConnectionSnapshot,
+  buildLeadPreview,
+  extractZip,
   getMatchedBuilders,
   normalizeServiceArea,
   parseParcelCityState,
@@ -138,5 +142,66 @@ describe("marketplace domain helpers", () => {
     expect(snapshot.parcelCity).toBe("Seattle");
     expect(snapshot.parcelState).toBe("WA");
     expect(snapshot.reportText).toContain("LotFoundry Certificate of Feasibility");
+  });
+});
+
+describe("lead preview redaction (1A paywall split)", () => {
+  const result = {
+    aduSqft: 600,
+    totalFootprint: 1980,
+    allowedFootprint: 2000,
+    remainingCapacity: 20,
+    coveragePercent: 39.6,
+    maxCoveragePercent: 40,
+    zoningStatus: "Compliant" as const,
+    costLow: 218000,
+    costHigh: 271000,
+    costPerSqftLow: 363,
+    costPerSqftHigh: 452,
+    monthlyRent: 2080,
+    annualNoi: 16605,
+    paybackYears: 15.7,
+    warnings: [],
+  };
+
+  const snapshot = buildConnectionSnapshot({
+    parcelKey: "oak-street",
+    parcel: parcelPresets[0],
+    config: defaultAduConfig,
+    assumptions: defaultFinancialAssumptions,
+    result,
+  });
+
+  it("buckets the build range into $25k bands", () => {
+    expect(bucketBuildBand(218000, 271000)).toEqual({ low: 200000, high: 275000 });
+  });
+
+  it("never collapses a band to zero width", () => {
+    expect(bucketBuildBand(210000, 215000)).toEqual({ low: 200000, high: 225000 });
+  });
+
+  it("buckets rent to the nearest $250", () => {
+    expect(bucketRentBand(2080)).toBe(2000);
+    expect(bucketRentBand(2130)).toBe(2250);
+  });
+
+  it("extracts a 5-digit ZIP and ignores its absence", () => {
+    expect(extractZip("123 Maple St, Seattle, WA 98115, USA")).toBe("98115");
+    expect(extractZip("123 Maple St, Seattle, WA")).toBe("");
+  });
+
+  it("produces a preview with no contact or street fields", () => {
+    const preview = buildLeadPreview({ snapshot, previewSerial: "LF-abc123" });
+
+    expect(preview.neighborhood).toBe("Seattle, WA");
+    expect(preview.buildBandLow).toBe(200000);
+    expect(preview.buildBandHigh).toBe(275000);
+    expect(preview.rentBand).toBe(2000);
+    expect(preview.previewSerial).toBe("LF-abc123");
+
+    const serialized = JSON.stringify(preview);
+    expect(serialized).not.toContain(snapshot.parcelAddress);
+    expect(serialized).not.toContain("@");
+    expect(preview).not.toHaveProperty("ownerContact");
   });
 });

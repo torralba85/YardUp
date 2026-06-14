@@ -43,23 +43,48 @@ service cloud.firestore {
         request.resource.data.licenseNumber is string);
     }
 
+    // 1A: the redacted ROOT doc holds no contact info and no street address —
+    // only the banded preview. PII lives in the private/contact subcollection.
     function isValidConnectionRequest() {
       return request.resource.data.keys().hasOnly([
         "ownerUid",
-        "ownerContact",
-        "snapshot",
+        "preview",
         "matchedBuilderIds",
         "status",
+        "ownerVerified",
+        "headStartUntil",
         "createdAt",
         "updatedAt"
       ]) &&
       request.resource.data.ownerUid == request.auth.uid &&
-      request.resource.data.ownerContact is map &&
-      request.resource.data.snapshot is map &&
+      request.resource.data.preview is map &&
+      !("ownerContact" in request.resource.data) &&
+      !("snapshot" in request.resource.data) &&
       request.resource.data.matchedBuilderIds is list &&
       request.resource.data.matchedBuilderIds.size() > 0 &&
       request.resource.data.matchedBuilderIds.size() <= 25 &&
-      request.resource.data.status == "submitted";
+      request.resource.data.status == "submitted" &&
+      request.resource.data.ownerVerified == true &&
+      request.resource.data.headStartUntil == null;
+    }
+
+    // The gated PII payload. Only the owner may create it (at submit time);
+    // reads require ownership OR a leadUnlocks grant for this builder (T3).
+    function isValidContactSubdoc() {
+      return request.resource.data.keys().hasOnly([
+        "ownerContact",
+        "streetAddress",
+        "exactAPN",
+        "snapshot",
+        "createdAt"
+      ]) &&
+      request.resource.data.ownerContact is map &&
+      request.resource.data.streetAddress is string &&
+      request.resource.data.snapshot is map;
+    }
+
+    function hasUnlockGrant(requestId) {
+      return exists(/databases/$(database)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId));
     }
 
     function isValidBuilderResponse(builderId) {
@@ -312,6 +337,20 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidConnectionRequest();
       allow update, delete: if false;
 
+      // PII paywall (1A): the owner can read/create; a matched builder can read
+      // only after a leadUnlocks grant exists for them. No client can update or
+      // delete the contact payload.
+      match /private/{privateDoc} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
+          hasUnlockGrant(requestId)
+        );
+        allow create: if isSignedIn() &&
+          get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid &&
+          isValidContactSubdoc();
+        allow update, delete: if false;
+      }
+
       match /builderResponses/{builderId} {
         allow read: if isSignedIn() && (
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
@@ -327,6 +366,15 @@ service cloud.firestore {
           isValidBuilderResponse(builderId);
         allow delete: if false;
       }
+    }
+
+    // 2A: paid unlock grants. Doc id is the deterministic "{builderId}_{requestId}"
+    // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
+    // the webhook via the Admin SDK (which bypasses these rules); no client may
+    // self-grant. Reads are non-sensitive (no PII) and used by head-start UI.
+    match /leadUnlocks/{lockId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if false;
     }
   }
 }
