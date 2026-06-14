@@ -484,10 +484,11 @@ P1 blocks ship; P2 lands same branch; P3 is a follow-up.
   - Files: `components/builder/BuilderDashboard.tsx`, `BuilderInbox.tsx`, wireframe `builder-dashboard.html`
   - Verify: zero-ever vs zero-new empty states render; EXAMPLE card has no unlock CTA
   - **Done:** `lib/builder-metrics.ts` (pipeline value = sum of NEW-lead build midpoints per 2A; triage + unlock counts). `BuilderMoneyBand` (espresso band, on-dark money-green figures, leads with pipeline value). `BuilderInbox` adds **triage tabs All·New·Interested·Archived as `role="tab"` (8A — lock/access is never a tab; archived = `not-a-fit`)** + filtering, plus **7A empty states**: zero-ever (cause + lever + EXAMPLE card with **no unlock CTA**) and zero-filtered ("nothing archived yet"). Tests: metrics math, money-band rendering, tab counts + archived filter, zero-ever example-no-CTA. 218/218, tsc+lint clean. _Full mahogany sidebar nav + right rail (profile-standing meter) from the wireframe deferred — larger nav/routing shell beyond T5's verify; money band + tabs deliver the T5 value._
-- [ ] **T6 (P1, human: ~2d / CC: ~3h)** — studio AI — Upload flow: HEIC convert, downscale ~2048px, EXIF/GPS strip, preview confirm
+- [x] **T6 (P1, human: ~2d / CC: ~3h)** — studio AI — Upload flow: HEIC convert, downscale ~2048px, EXIF/GPS strip, preview confirm
   - Surfaced by: Pass 2 — 9A; Pass 7 — 21A
   - Files: new `components/studio/StyleMatchPanel.tsx`, `lib/` upload util
   - Verify: iPhone HEIC accepted; uploaded blob contains no EXIF (unit test)
+  - **Done:** `StyleMatchPanel` is pinned at the top of the inspiration rail with idle, preparing, preview-confirm, ready, and recoverable-error states. `lib/style-match-photo.ts` accepts JPG/PNG/WEBP/HEIC/HEIF, routes HEIC/HEIF through `heic2any`, downscales to a 2048px max edge, then canvas-encodes JPEG so EXIF/GPS metadata is stripped. Tests cover accepted formats, downscale math, HEIC conversion metadata, UI preview/confirm, and recoverable errors. Browser verified in Chrome desktop + mobile; real `.heic` fixture decoded, previewed, confirmed, and reported `2048 px` max edge with no console errors. _Generation, timeout states, before/after board, and gallery insertion remain T7._
 - [ ] **T7 (P1, human: ~2d / CC: ~3h)** — studio AI — Generation states + before/after drafting board + gallery insert
   - Surfaced by: Pass 1 — 4C; Pass 2 state table (A4); Pass 3 — 11A framing
   - Files: `components/studio/` (board overlay), `InspirationGalleryPanel.tsx`, wireframes `ai-style-match.html`, `before-after-board.html`
