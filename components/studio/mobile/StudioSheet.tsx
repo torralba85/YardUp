@@ -47,6 +47,10 @@ export default function StudioSheet({ snap, onSnapChange, peek, controls, sectio
           className="fixed bottom-0 left-0 right-0 z-40 flex h-[96dvh] flex-col rounded-t-2xl border-t border-lf-hairline bg-lf-card shadow-[0_-8px_28px_rgba(38,19,7,0.3)] outline-none"
         >
           <Drawer.Title className="sr-only">Feasibility controls</Drawer.Title>
+          <Drawer.Description className="sr-only">
+            Adjust ADU configuration controls, review feasibility metrics, and open detailed studio
+            sections.
+          </Drawer.Description>
           <div className="relative shrink-0 pt-2">
             <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-lf-taupe/40" />
             <button
