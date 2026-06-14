@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { CheckCircle2, Sparkles, Camera, Layers } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
+import StyleMatchPanel from "./StyleMatchPanel";
 
 export interface InspirationGalleryPanelProps {
   onApply: (item: InspirationItem) => void;
@@ -40,6 +41,8 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4 lg:min-h-0">
+          <StyleMatchPanel />
+
           {inspirationItems.map((item) => {
             const viewMode = getViewMode(item.id);
             return (
@@ -264,4 +267,3 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
     </svg>
   );
 }
-

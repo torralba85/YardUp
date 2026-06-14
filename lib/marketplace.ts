@@ -8,6 +8,7 @@ import type { Parcel } from "./parcel-types";
 import type {
   BuilderProfile,
   ConnectionSnapshot,
+  LeadPreview,
   OwnerContact,
   ServiceArea,
 } from "./marketplace-types";
@@ -109,6 +110,76 @@ export function buildConnectionSnapshot(input: {
       config: input.config,
       result: input.result,
     }),
+  };
+}
+
+/** Bucket an exact build range into $25k bands so the free preview never
+ * reveals the certificate-exact cost (2A). */
+export function bucketBuildBand(
+  low: number,
+  high: number,
+): { low: number; high: number } {
+  const STEP = 25000;
+  return {
+    low: Math.floor(low / STEP) * STEP,
+    high: Math.max(Math.ceil(high / STEP) * STEP, Math.floor(low / STEP) * STEP + STEP),
+  };
+}
+
+/** Bucket monthly rent to the nearest $250 band for the free preview. */
+export function bucketRentBand(rent: number): number {
+  return Math.round(rent / 250) * 250;
+}
+
+/** Pull a 5-digit ZIP out of a street address — coarse location that is safe
+ * to show on the redacted preview (the street itself is not). */
+export function extractZip(address: string): string {
+  const match = address.match(/\b(\d{5})(?:-\d{4})?\b/);
+  return match ? match[1] : "";
+}
+
+function defaultMatchReasons(snapshot: ConnectionSnapshot): string[] {
+  const reasons: string[] = [];
+  if (snapshot.parcelCity && snapshot.parcelState) {
+    reasons.push(`In your service area: ${snapshot.parcelCity}, ${snapshot.parcelState}`);
+  }
+  reasons.push(
+    `${snapshot.result.aduSqft.toLocaleString()} sf ADU · ${snapshot.result.zoningStatus} zoning`,
+  );
+  return reasons;
+}
+
+/**
+ * Derive the redacted lead preview from a full snapshot. The output contains
+ * no contact info and no street address — only banded money figures, ZIP, and
+ * city/state — so it is safe to write to the public `connectionRequests` root.
+ * `previewSerial` is supplied by the caller (random, not the APN — 9A).
+ */
+export function buildLeadPreview(input: {
+  snapshot: ConnectionSnapshot;
+  previewSerial: string;
+  matchReasons?: string[];
+}): LeadPreview {
+  const { snapshot, previewSerial } = input;
+  const band = bucketBuildBand(snapshot.result.costLow, snapshot.result.costHigh);
+  const neighborhood = [snapshot.parcelCity, snapshot.parcelState]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    neighborhood,
+    zip: extractZip(snapshot.parcelAddress),
+    state: snapshot.parcelState,
+    lotSqft: snapshot.parcel.lotArea,
+    config: snapshot.config,
+    aduSqft: snapshot.result.aduSqft,
+    buildBandLow: band.low,
+    buildBandHigh: band.high,
+    rentBand: bucketRentBand(snapshot.result.monthlyRent),
+    paybackYears: snapshot.result.paybackYears,
+    zoningStatus: snapshot.result.zoningStatus,
+    matchReasons: input.matchReasons ?? defaultMatchReasons(snapshot),
+    previewSerial,
   };
 }
 

@@ -478,30 +478,35 @@ Synthesized from this review's findings. Each task derives from a specific
 finding above. Run with Claude Code or Codex; checkbox as you ship.
 P1 blocks ship; P2 lands same branch; P3 is a follow-up.
 
-- [ ] **T1 (P1, human: ~30min / CC: ~15min)** — typography — Wire IBM Plex Mono in `app/layout.tsx`
+- [x] **T1 (P1, human: ~30min / CC: ~15min)** — typography — Wire IBM Plex Mono in `app/layout.tsx` _(already wired: `layout.tsx` loads `IBM_Plex_Mono`→`--font-mono`; `globals.css` `@theme` maps it to the `font-mono` utility)_
   - Surfaced by: Pass 5 — 14A blocking prerequisite (DESIGN.md note + Codex)
   - Files: `app/layout.tsx`, `app/globals.css`
   - Verify: mono surfaces render Plex Mono, not system fallback; build passes
-- [ ] **T2 (P1, human: ~2d / CC: ~2h)** — paywall — Server-side withholding of `ownerContact` + precise address until unlock
+- [x] **T2 (P1, human: ~2d / CC: ~2h)** — paywall — Server-side withholding of `ownerContact` + precise address until unlock
   - Surfaced by: Pass 2 — 5A (subagent critical A1: blur paywall is a free paywall)
   - Files: `lib/marketplace-firestore.ts`, `lib/marketplace-types.ts` (redacted lead shape), `firestore.rules`
   - Verify: locked lead payload contains no contact/address fields (network tab + unit test)
+  - **Done:** split types `LeadPreview` (no PII) / `UnlockedLeadContact`; redacted root + gated `private/contact` subdoc (root committed first so rules `get()` sees it); `firestore.rules` adds the subcollection gate + `leadUnlocks` (admin-write-only); `fetchUnlockedContact` gated read. Tests: `marketplace.test.ts` redaction, `marketplace-firestore.test.ts` write-split regression, `BuilderDashboard.test.tsx` asserts PII absent. 180/180 unit, tsc + lint clean. _Migration of pre-existing `connectionRequests` deferred (pre-launch; no prod leads)._
 - [ ] **T3 (P1, human: ~3d / CC: ~4h)** — payments — Stripe Checkout + webhook + `leadUnlocks` grant with idempotency
   - Surfaced by: Plan Feature 1 + Pass 2 — 6A, 18A ($39–49 single price)
   - Files: `lib/stripe.ts` (new), `app/api/stripe/checkout/route.ts`, `app/api/stripe/webhook/route.ts`, Firestore `leadUnlocks`
   - Verify: Stripe test mode end-to-end; duplicate unlock attempt resumes session, never double-charges
-- [ ] **T4 (P1, human: ~2d / CC: ~3h)** — builder UI — Lead card states (locked/confirming/unlocked) + unlock slip
+  - **Structure + demo done (live Stripe = the paused wall):** `lib/stripe.ts` (lazy SDK, `isStripeConfigured`, $49 default price), `lib/server/firebase-admin.ts` (Admin Firestore), `lib/server/lead-unlocks.ts` (`grantLeadUnlock` via `create()` → exact idempotency, deterministic `{builderId}_{requestId}` id). `/api/stripe/checkout` verifies matched-builder, idempotent on already-unlocked, **demo branch grants without keys (env-gated, never in prod)**, real branch builds a Checkout session w/ metadata. `/api/stripe/webhook` verifies sig on raw body, grants on `checkout.session.completed`. Tests: grant idempotency/replay, checkout demo+guards, webhook sig+grant (195/195, tsc+lint clean). ⏳ **Pending Stripe test keys:** live test-mode E2E (the only unverified piece).
+- [x] **T4 (P1, human: ~2d / CC: ~3h)** — builder UI — Lead card states (locked/confirming/unlocked) + unlock slip
   - Surfaced by: Pass 1 — 3A; Pass 2 — 6A; Pass 5 — 15A (price espresso)
   - Files: `components/builder/` (new LeadCard, UnlockSlip), wireframes `confirming-state.html`, `lead-unlock.html`
   - Verify: e2e through mock checkout return; aria-live announces state change
-- [ ] **T5 (P1, human: ~2d / CC: ~3h)** — builder UI — Dashboard v2: money band (new-lead pipeline value), triage tabs, empty states
+  - **Done:** `LeadCard` (locked/confirming/unlocked per 6A — stamp/settle reveal via `.lf-stamp`, never a flip; reduced-motion = instant swap); `UnlockSlip` (3A certificate slip: double-frame, serial, ledger, bad-lead-credit terms, Esc/focus). `BuilderInbox` rewired with the unlock flow (`startLeadUnlock` → demo: confirming→unlocked + gated `fetchUnlockedContact`; real: redirect to Stripe) + `aria-live` announcer. `lib/lead-unlock-api.ts` client; adapter exposes per-lead `unlocked`. **Unlock CTA matches the approved mockup** (forest button, sand price inside) per user decision — the earlier 15A espresso-price/clay-CTA reading was reverted. Tests: LeadCard 3 states, UnlockSlip, unlock-api, dashboard demo-unlock integration (209/209, tsc+lint clean). _Unlocked-state actions (View certificate / Report) render only when wired — deferred to T11/T9. Playwright E2E through real demo grant needs the Admin-credentialed backend — follow-up._
+- [x] **T5 (P1, human: ~2d / CC: ~3h)** — builder UI — Dashboard v2: money band (new-lead pipeline value), triage tabs, empty states
   - Surfaced by: Pass 1 — 1A/2A; Pass 2 — 7A/8A
   - Files: `components/builder/BuilderDashboard.tsx`, `BuilderInbox.tsx`, wireframe `builder-dashboard.html`
   - Verify: zero-ever vs zero-new empty states render; EXAMPLE card has no unlock CTA
-- [ ] **T6 (P1, human: ~2d / CC: ~3h)** — studio AI — Upload flow: HEIC convert, downscale ~2048px, EXIF/GPS strip, preview confirm
+  - **Done:** `lib/builder-metrics.ts` (pipeline value = sum of NEW-lead build midpoints per 2A; triage + unlock counts). `BuilderMoneyBand` (espresso band, on-dark money-green figures, leads with pipeline value). `BuilderInbox` adds **triage tabs All·New·Interested·Archived as `role="tab"` (8A — lock/access is never a tab; archived = `not-a-fit`)** + filtering, plus **7A empty states**: zero-ever (cause + lever + EXAMPLE card with **no unlock CTA**) and zero-filtered ("nothing archived yet"). Tests: metrics math, money-band rendering, tab counts + archived filter, zero-ever example-no-CTA. 218/218, tsc+lint clean. _Full mahogany sidebar nav + right rail (profile-standing meter) from the wireframe deferred — larger nav/routing shell beyond T5's verify; money band + tabs deliver the T5 value._
+- [x] **T6 (P1, human: ~2d / CC: ~3h)** — studio AI — Upload flow: HEIC convert, downscale ~2048px, EXIF/GPS strip, preview confirm
   - Surfaced by: Pass 2 — 9A; Pass 7 — 21A
   - Files: new `components/studio/StyleMatchPanel.tsx`, `lib/` upload util
   - Verify: iPhone HEIC accepted; uploaded blob contains no EXIF (unit test)
+  - **Done:** `StyleMatchPanel` is pinned at the top of the inspiration rail with idle, preparing, preview-confirm, ready, and recoverable-error states. `lib/style-match-photo.ts` accepts JPG/PNG/WEBP/HEIC/HEIF, routes HEIC/HEIF through `heic2any`, downscales to a 2048px max edge, then canvas-encodes JPEG so EXIF/GPS metadata is stripped. Tests cover accepted formats, downscale math, HEIC conversion metadata, UI preview/confirm, and recoverable errors. Browser verified in Chrome desktop + mobile; real `.heic` fixture decoded, previewed, confirmed, and reported `2048 px` max edge with no console errors. _Generation, timeout states, before/after board, and gallery insertion remain T7._
 - [ ] **T7 (P1, human: ~2d / CC: ~3h)** — studio AI — Generation states + before/after drafting board + gallery insert
   - Surfaced by: Pass 1 — 4C; Pass 2 state table (A4); Pass 3 — 11A framing
   - Files: `components/studio/` (board overlay), `InspirationGalleryPanel.tsx`, wireframes `ai-style-match.html`, `before-after-board.html`
