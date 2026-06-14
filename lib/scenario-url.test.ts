@@ -93,8 +93,8 @@ describe("mergeScenarioPartial", () => {
   it("uses provided parcelId and fills defaults for config and assumptions", () => {
     const result = mergeScenarioPartial({ parcelId: "corner-lot" });
     expect(result.parcelId).toBe("corner-lot");
-    expect(result.config).toEqual(defaultAduConfig);
-    expect(result.assumptions).toEqual(defaultFinancialAssumptions);
+    expect(result.config).toEqual(defaultScenarioState.config);
+    expect(result.assumptions).toEqual(defaultScenarioState.assumptions);
   });
 
   it("uses all provided fields when the partial is complete", () => {
@@ -106,16 +106,15 @@ describe("mergeScenarioPartial", () => {
       assumptions: customAssumptions,
     });
     expect(result.parcelId).toBe("compact-lot");
-    expect(result.config.footprint).toBe(800);
-    expect(result.config.roof).toBe("gable");
-    expect(result.assumptions.rentScenario).toBe("optimistic");
+    expect(result.config).toEqual(customConfig);
+    expect(result.assumptions).toEqual(customAssumptions);
   });
 
   it("uses provided config and falls back to default parcelId and assumptions", () => {
     const customConfig = { ...defaultAduConfig, finish: "board" as const };
     const result = mergeScenarioPartial({ config: customConfig });
     expect(result.parcelId).toBe(defaultScenarioState.parcelId);
-    expect(result.config.finish).toBe("board");
-    expect(result.assumptions).toEqual(defaultFinancialAssumptions);
+    expect(result.config).toEqual(customConfig);
+    expect(result.assumptions).toEqual(defaultScenarioState.assumptions);
   });
 });
