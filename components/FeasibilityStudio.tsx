@@ -16,6 +16,7 @@ import {
 } from "@/lib/feasibility";
 import { buildReportCsv, buildReportText, downloadBlob } from "@/lib/report";
 import {
+  mergeScenarioPartial,
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
@@ -135,10 +136,10 @@ function FeasibilityStudioInner() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const parsed = parseScenarioParams(params);
-    if (parsed.parcelId) setParcelId(parsed.parcelId);
-    if (parsed.config) setConfig(parsed.config);
-    if (parsed.assumptions) setAssumptions(parsed.assumptions);
+    const merged = mergeScenarioPartial(parseScenarioParams(params));
+    setParcelId(merged.parcelId);
+    setConfig(merged.config);
+    setAssumptions(merged.assumptions);
     setHydratedFromUrl(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */

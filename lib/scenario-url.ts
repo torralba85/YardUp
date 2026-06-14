@@ -63,7 +63,7 @@ export function parseScenarioParams(searchParams: URLSearchParams): Partial<Scen
       config = { ...config, finish: finishParam as ExteriorFinish };
     }
 
-    if (openingsParam !== null) {
+    if (openingsParam === "1" || openingsParam === "0") {
       config = { ...config, includeOpenings: openingsParam === "1" };
     }
 
