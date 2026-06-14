@@ -128,7 +128,7 @@ export default function UnlockSlip({
             type="button"
             onClick={onConfirm}
             disabled={pending}
-            className="mt-4 flex w-full items-center justify-between bg-lf-clay px-4 py-3.5 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-between bg-lf-forest px-4 py-3.5 text-sm font-semibold text-lf-sand transition hover:brightness-95 disabled:opacity-60"
           >
             <span>{pending ? "Recording unlock…" : "Pay with Stripe"}</span>
             <span className="font-display text-lg">{PRICE}</span>

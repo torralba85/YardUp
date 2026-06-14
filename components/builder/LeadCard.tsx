@@ -137,23 +137,14 @@ export default function LeadCard({
               <Lock size={13} />
               Contact locked — unlock to view
             </div>
-            <div className="mt-2.5 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={onUnlockClick}
-                className="bg-lf-clay px-4 py-2.5 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
-              >
-                Unlock lead
-              </button>
-              {/* 15A: the price is the builder's cost, so it reads in espresso
-                  ink — forest stays reserved for money flowing to the user. */}
-              <span className="font-display text-lg font-semibold text-lf-espresso tabular-nums">
-                $49
-              </span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-lf-muted">
-                one-time
-              </span>
-            </div>
+            <button
+              type="button"
+              onClick={onUnlockClick}
+              className="mt-2.5 inline-flex items-center gap-2 bg-lf-forest px-4 py-2.5 text-sm font-semibold text-lf-sand transition hover:brightness-95"
+            >
+              Unlock lead
+              <span className="font-display text-base font-semibold">$49</span>
+            </button>
           </div>
         )}
 
