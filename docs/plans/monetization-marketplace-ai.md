@@ -473,6 +473,7 @@ P1 blocks ship; P2 lands same branch; P3 is a follow-up.
   - Surfaced by: Plan Feature 1 + Pass 2 — 6A, 18A ($39–49 single price)
   - Files: `lib/stripe.ts` (new), `app/api/stripe/checkout/route.ts`, `app/api/stripe/webhook/route.ts`, Firestore `leadUnlocks`
   - Verify: Stripe test mode end-to-end; duplicate unlock attempt resumes session, never double-charges
+  - **Structure + demo done (live Stripe = the paused wall):** `lib/stripe.ts` (lazy SDK, `isStripeConfigured`, $49 default price), `lib/server/firebase-admin.ts` (Admin Firestore), `lib/server/lead-unlocks.ts` (`grantLeadUnlock` via `create()` → exact idempotency, deterministic `{builderId}_{requestId}` id). `/api/stripe/checkout` verifies matched-builder, idempotent on already-unlocked, **demo branch grants without keys (env-gated, never in prod)**, real branch builds a Checkout session w/ metadata. `/api/stripe/webhook` verifies sig on raw body, grants on `checkout.session.completed`. Tests: grant idempotency/replay, checkout demo+guards, webhook sig+grant (195/195, tsc+lint clean). ⏳ **Pending Stripe test keys:** live test-mode E2E (the only unverified piece).
 - [ ] **T4 (P1, human: ~2d / CC: ~3h)** — builder UI — Lead card states (locked/confirming/unlocked) + unlock slip
   - Surfaced by: Pass 1 — 3A; Pass 2 — 6A; Pass 5 — 15A (price espresso)
   - Files: `components/builder/` (new LeadCard, UnlockSlip), wireframes `confirming-state.html`, `lead-unlock.html`
