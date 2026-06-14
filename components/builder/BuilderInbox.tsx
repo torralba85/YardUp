@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { computeBuilderMetrics } from "@/lib/builder-metrics";
 import { startLeadUnlock } from "@/lib/lead-unlock-api";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
 import type {
@@ -9,8 +10,26 @@ import type {
   BuilderProfile,
   UnlockedLeadContact,
 } from "@/lib/marketplace-types";
+import BuilderMoneyBand from "./BuilderMoneyBand";
 import LeadCard, { type LeadAccess } from "./LeadCard";
 import UnlockSlip from "./UnlockSlip";
+
+const TABS = [
+  { key: "all", label: "All" },
+  { key: "new", label: "New" },
+  { key: "interested", label: "Interested" },
+  { key: "archived", label: "Archived" },
+] as const;
+
+type TabKey = (typeof TABS)[number]["key"];
+
+/** TRIAGE filter only (8A): the lock/access axis is never a tab. */
+function inTab(item: BuilderInboxItem, key: TabKey): boolean {
+  if (key === "all") return true;
+  if (key === "new") return item.response.status === "new";
+  if (key === "interested") return item.response.status === "interested";
+  return item.response.status === "not-a-fit"; // archived
+}
 
 export default function BuilderInbox({
   profile,
@@ -25,6 +44,7 @@ export default function BuilderInbox({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [tab, setTab] = useState<TabKey>("all");
 
   const [access, setAccess] = useState<Record<string, LeadAccess>>({});
   const [contacts, setContacts] = useState<Record<string, UnlockedLeadContact>>({});
@@ -57,6 +77,14 @@ export default function BuilderInbox({
     };
   }, [items]);
 
+  const metrics = computeBuilderMetrics(items);
+  const filtered = items.filter((item) => inTab(item, tab));
+  const tabCounts: Record<TabKey, number> = {
+    all: items.length,
+    new: metrics.newLeadCount,
+    interested: metrics.interestedCount,
+    archived: metrics.archivedCount,
+  };
   const slipItem = items.find((item) => item.request.id === slipId) ?? null;
 
   function respond(requestId: string, status: "interested" | "not-a-fit") {
@@ -123,6 +151,10 @@ export default function BuilderInbox({
         </div>
       </div>
 
+      <div className="mt-4 border border-lf-hairline">
+        <BuilderMoneyBand metrics={metrics} />
+      </div>
+
       <div aria-live="polite" className="sr-only">
         {announce}
       </div>
@@ -134,27 +166,54 @@ export default function BuilderInbox({
       )}
 
       {items.length === 0 ? (
-        <div className="mt-4 border border-lf-hairline bg-lf-card p-6 text-sm text-lf-muted">
-          No matched snapshots yet.
-        </div>
+        <ZeroEverEmptyState />
       ) : (
-        <div className="mt-4 grid gap-4">
-          {items.map((item) => (
-            <LeadCard
-              key={item.request.id}
-              item={item}
-              access={access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked")}
-              contact={contacts[item.request.id] ?? null}
-              demo={demoGrants[item.request.id]}
-              responding={isPending && pendingId === item.request.id}
-              onUnlockClick={() => {
-                setSlipId(item.request.id);
-                setSlipError(null);
-              }}
-              onRespond={(status) => respond(item.request.id, status)}
-            />
-          ))}
-        </div>
+        <>
+          <div role="tablist" aria-label="Filter leads by status" className="mt-5 flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.key}
+                onClick={() => setTab(t.key)}
+                className={`border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition ${
+                  tab === t.key
+                    ? "border-lf-espresso bg-lf-espresso text-lf-sand"
+                    : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+                }`}
+              >
+                {t.label} · {tabCounts[t.key]}
+              </button>
+            ))}
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="mt-4 border border-lf-hairline bg-lf-card p-6 text-sm text-lf-muted">
+              {tab === "archived"
+                ? "Nothing archived yet."
+                : `No ${tab} leads right now.`}
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-4">
+              {filtered.map((item) => (
+                <LeadCard
+                  key={item.request.id}
+                  item={item}
+                  access={access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked")}
+                  contact={contacts[item.request.id] ?? null}
+                  demo={demoGrants[item.request.id]}
+                  responding={isPending && pendingId === item.request.id}
+                  onUnlockClick={() => {
+                    setSlipId(item.request.id);
+                    setSlipError(null);
+                  }}
+                  onRespond={(status) => respond(item.request.id, status)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {slipItem && (
@@ -173,5 +232,61 @@ export default function BuilderInbox({
         />
       )}
     </section>
+  );
+}
+
+/**
+ * 7A zero-ever state: the cause (no matched leads), the lever (complete the
+ * profile / add areas to get matched first), and an EXAMPLE card so a builder
+ * with no leads still sees the shape of one. The example deliberately carries
+ * no unlock CTA — there is nothing real to unlock.
+ */
+function ZeroEverEmptyState() {
+  return (
+    <div className="mt-5">
+      <div className="border border-lf-hairline bg-lf-card p-6">
+        <h3 className="font-display text-xl font-semibold text-lf-espresso">No matched leads yet</h3>
+        <p className="mt-1.5 max-w-prose text-sm text-lf-muted">
+          A lead lands here when a homeowner in one of your service areas submits a feasibility
+          report. Complete your profile and add every area you build in — complete profiles get
+          matched first.
+        </p>
+      </div>
+
+      <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.16em] text-lf-muted">
+        Example · this is what a lead looks like
+      </p>
+      <article
+        aria-label="Example lead"
+        className="mt-2 border border-dashed border-lf-taupe bg-lf-card/70 p-5"
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+            NO. LF-EXAMPLE
+          </span>
+          <span className="rounded-full bg-lf-taupe-soft px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+            Example
+          </span>
+        </div>
+        <p className="mt-2 font-semibold text-lf-espresso">
+          Ballard, WA
+          <span className="ml-1.5 font-mono text-[10.5px] font-normal text-lf-muted">98107</span>
+        </p>
+        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+          <span>6,200 sqft</span>
+          <span>800 sf ADU</span>
+          <span>Compliant</span>
+        </p>
+        <p className="mt-2 font-display text-[26px] font-semibold leading-none text-lf-forest tabular-nums">
+          $2,500
+          <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+            /mo rent potential
+          </span>
+        </p>
+        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-lf-muted">
+          Owner contact unlocks for $49 — once you have real leads
+        </p>
+      </article>
+    </div>
   );
 }

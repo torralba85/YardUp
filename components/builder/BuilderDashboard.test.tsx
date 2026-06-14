@@ -151,4 +151,39 @@ describe("BuilderDashboard", () => {
     expect(screen.getByText(/access recorded · demo/i)).toBeInTheDocument();
     expect(unlockApi.startLeadUnlock).toHaveBeenCalledWith("request-1", "tok");
   });
+
+  it("renders the money band and triage tabs with counts", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    firestore.fetchBuilderInbox.mockResolvedValue([item]); // one NEW lead
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    expect(await screen.findByText("New leads")).toBeInTheDocument();
+    expect(screen.getByText(/pipeline value/i)).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /All · 1/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /New · 1/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Archived · 0/ })).toBeInTheDocument();
+  });
+
+  it("filters to an empty archived tab without showing the new lead", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    await userEvent.click(await screen.findByRole("tab", { name: /Archived · 0/ }));
+    expect(screen.getByText(/nothing archived yet/i)).toBeInTheDocument();
+    expect(screen.queryByText(/LF-AB12CD/)).not.toBeInTheDocument();
+  });
+
+  it("shows the zero-ever empty state with an example card and no unlock CTA", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    firestore.fetchBuilderInbox.mockResolvedValue([]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    expect(await screen.findByText(/no matched leads yet/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Example lead")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Unlock lead/i })).not.toBeInTheDocument();
+  });
 });
