@@ -9,9 +9,16 @@ const firestore = vi.hoisted(() => ({
   fetchBuilderProfile: vi.fn(),
   saveBuilderProfile: vi.fn(),
   updateBuilderResponse: vi.fn(),
+  fetchUnlockedContact: vi.fn(),
 }));
 
+const unlockApi = vi.hoisted(() => ({ startLeadUnlock: vi.fn() }));
+
 vi.mock("@/lib/marketplace-firestore", () => firestore);
+vi.mock("@/lib/lead-unlock-api", () => unlockApi);
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({ user: { uid: "builder-1", getIdToken: async () => "tok" } }),
+}));
 
 const profile: BuilderProfile = {
   id: "builder-1",
@@ -66,6 +73,7 @@ const item: BuilderInboxItem = {
     createdAt: null,
     updatedAt: null,
   },
+  unlocked: false,
 };
 
 describe("BuilderDashboard", () => {
@@ -89,10 +97,11 @@ describe("BuilderDashboard", () => {
 
     render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
 
-    // Redacted preview is visible: serial, neighborhood, banded values.
-    expect(await screen.findByText("LF-AB12CD")).toBeInTheDocument();
+    // Redacted preview is visible: serial, neighborhood, locked contact.
+    expect(await screen.findByText(/LF-AB12CD/)).toBeInTheDocument();
     expect(screen.getAllByText("Seattle, WA").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/contact & exact address locked/i)).toBeInTheDocument();
+    expect(screen.getByText(/contact locked/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Unlock lead/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Interested/i })).toBeInTheDocument();
 
     // PII the v1 card leaked must NOT be in the redacted payload's DOM.
@@ -115,6 +124,31 @@ describe("BuilderDashboard", () => {
       "builder-1",
       "interested",
     );
-    expect(await screen.findByText("Status: Interested")).toBeInTheDocument();
+    // The triage label now also reads "Interested" alongside the button.
+    expect((await screen.findAllByText("Interested")).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("unlocks a lead via the demo grant and reveals the owner contact", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+    unlockApi.startLeadUnlock.mockResolvedValue({ kind: "granted", demo: true });
+    firestore.fetchUnlockedContact.mockResolvedValue({
+      ownerContact: { name: "Jane Owner", email: "jane@example.com", phone: "555-0100", message: null },
+      streetAddress: "1234 Oak Street",
+      exactAPN: null,
+      snapshot: { reportText: "LotFoundry certificate" },
+    });
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Unlock lead/i }));
+    // The slip opens; confirm the purchase.
+    await userEvent.click(await screen.findByRole("button", { name: /Pay with Stripe/i }));
+
+    // Contact is revealed in place, stamped demo, with the street address.
+    expect(await screen.findByText("Jane Owner")).toBeInTheDocument();
+    expect(screen.getByText(/jane@example\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/access recorded · demo/i)).toBeInTheDocument();
+    expect(unlockApi.startLeadUnlock).toHaveBeenCalledWith("request-1", "tok");
   });
 });

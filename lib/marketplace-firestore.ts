@@ -31,6 +31,7 @@ const REQUESTS = "connectionRequests";
 const RESPONSES = "builderResponses";
 const PRIVATE = "private";
 const CONTACT = "contact";
+const LEAD_UNLOCKS = "leadUnlocks";
 
 export async function fetchBuilderProfile(
   uid: string,
@@ -137,15 +138,17 @@ export async function fetchBuilderInbox(
 
   const items = await Promise.all(
     snap.docs.map(async (requestDoc) => {
-      const responseSnap = await getDoc(
-        doc(db, REQUESTS, requestDoc.id, RESPONSES, builderId),
-      );
+      const [responseSnap, unlockSnap] = await Promise.all([
+        getDoc(doc(db, REQUESTS, requestDoc.id, RESPONSES, builderId)),
+        getDoc(doc(db, LEAD_UNLOCKS, `${builderId}_${requestDoc.id}`)),
+      ]);
 
       return {
         request: firestoreToConnectionRequest(requestDoc.id, requestDoc.data()),
         response: responseSnap.exists()
           ? firestoreToBuilderResponse(responseSnap.data())
           : { builderId, status: "new" as const, createdAt: null, updatedAt: null },
+        unlocked: unlockSnap.exists(),
       };
     }),
   );

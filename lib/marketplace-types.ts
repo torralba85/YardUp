@@ -118,4 +118,6 @@ export interface BuilderInboxItem {
   /** Redacted — no contact, no street address. */
   request: ConnectionRequest;
   response: BuilderResponse;
+  /** True if this builder already holds a `leadUnlocks` grant for the lead. */
+  unlocked: boolean;
 }
