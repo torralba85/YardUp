@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultScenarioState,
+  mergeScenarioPartial,
   parseScenarioParams,
   serializeScenarioParams,
 } from "./scenario-url";
@@ -47,6 +48,12 @@ describe("parseScenarioParams", () => {
     const result = parseScenarioParams(new URLSearchParams());
     expect(result).toEqual({});
   });
+
+  it("ignores an empty openings param even when other params are present", () => {
+    const params = new URLSearchParams("size=600&openings=");
+    const result = parseScenarioParams(params);
+    expect(result.config?.includeOpenings).toBe(defaultAduConfig.includeOpenings);
+  });
 });
 
 describe("serializeScenarioParams", () => {
@@ -80,5 +87,58 @@ describe("serializeScenarioParams", () => {
     expect(parsed.config?.finish).toBe("stucco");
     expect(parsed.config?.includeOpenings).toBe(false);
     expect(parsed.assumptions?.rentScenario).toBe("optimistic");
+  });
+});
+
+describe("mergeScenarioPartial", () => {
+  it("returns the full default state when given an empty partial", () => {
+    const result = mergeScenarioPartial({});
+    expect(result).toEqual(defaultScenarioState);
+  });
+
+  it("uses provided parcelId and fills defaults for config and assumptions", () => {
+    const result = mergeScenarioPartial({ parcelId: "corner-lot" });
+    expect(result.parcelId).toBe("corner-lot");
+    expect(result.config).toEqual(defaultScenarioState.config);
+    expect(result.assumptions).toEqual(defaultScenarioState.assumptions);
+  });
+
+  it("uses all provided fields when the partial is complete", () => {
+    const customConfig = { ...defaultAduConfig, footprint: 800, width: 25, length: 32, roof: "gable" as const };
+    const customAssumptions = {
+      costPerSqft: { cedar: 400, lap: 375, stucco: 390, board: 420 },
+      softCostMultiplier: 1.25,
+      operatingExpenseRatio: 0.4,
+      rentScenario: "optimistic" as const,
+    };
+    const result = mergeScenarioPartial({
+      parcelId: "compact-lot",
+      config: customConfig,
+      assumptions: customAssumptions,
+    });
+    expect(result.parcelId).toBe("compact-lot");
+    expect(result.config).toEqual(customConfig);
+    expect(result.assumptions).toEqual(customAssumptions);
+  });
+
+  it("uses provided config and falls back to default parcelId and assumptions", () => {
+    const customConfig = { ...defaultAduConfig, finish: "board" as const };
+    const result = mergeScenarioPartial({ config: customConfig });
+    expect(result.parcelId).toBe(defaultScenarioState.parcelId);
+    expect(result.config).toEqual(customConfig);
+    expect(result.assumptions).toEqual(defaultScenarioState.assumptions);
+  });
+
+  it("uses provided assumptions and falls back to default parcelId and config", () => {
+    const customAssumptions = {
+      costPerSqft: { cedar: 400, lap: 375, stucco: 390, board: 420 },
+      softCostMultiplier: 1.25,
+      operatingExpenseRatio: 0.4,
+      rentScenario: "market" as const,
+    };
+    const result = mergeScenarioPartial({ assumptions: customAssumptions });
+    expect(result.parcelId).toBe(defaultScenarioState.parcelId);
+    expect(result.config).toEqual(defaultScenarioState.config);
+    expect(result.assumptions).toEqual(customAssumptions);
   });
 });

@@ -16,6 +16,7 @@ import {
 } from "@/lib/feasibility";
 import { buildReportCsv, buildReportHtml, downloadBlob } from "@/lib/report";
 import {
+  mergeScenarioPartial,
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
@@ -166,10 +167,10 @@ function FeasibilityStudioInner() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const parsed = parseScenarioParams(params);
-    if (parsed.parcelId) setParcelId(parsed.parcelId);
-    if (parsed.config) setConfig(parsed.config);
-    if (parsed.assumptions) setAssumptions(parsed.assumptions);
+    const merged = mergeScenarioPartial(parseScenarioParams(params));
+    setParcelId(merged.parcelId);
+    setConfig(merged.config);
+    setAssumptions(merged.assumptions);
     // Landing-hero handoff: stash ?q=<address> for the effect below. The
     // URL-write effect replaces the query string with scenario params, so q
     // is consumed exactly once.
