@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultScenarioState,
+  mergeScenarioPartial,
   parseScenarioParams,
   serializeScenarioParams,
 } from "./scenario-url";
@@ -80,5 +81,41 @@ describe("serializeScenarioParams", () => {
     expect(parsed.config?.finish).toBe("stucco");
     expect(parsed.config?.includeOpenings).toBe(false);
     expect(parsed.assumptions?.rentScenario).toBe("optimistic");
+  });
+});
+
+describe("mergeScenarioPartial", () => {
+  it("returns the full default state when given an empty partial", () => {
+    const result = mergeScenarioPartial({});
+    expect(result).toEqual(defaultScenarioState);
+  });
+
+  it("uses provided parcelId and fills defaults for config and assumptions", () => {
+    const result = mergeScenarioPartial({ parcelId: "corner-lot" });
+    expect(result.parcelId).toBe("corner-lot");
+    expect(result.config).toEqual(defaultAduConfig);
+    expect(result.assumptions).toEqual(defaultFinancialAssumptions);
+  });
+
+  it("uses all provided fields when the partial is complete", () => {
+    const customConfig = { ...defaultAduConfig, footprint: 800, width: 25, length: 32, roof: "gable" as const };
+    const customAssumptions = { ...defaultFinancialAssumptions, rentScenario: "optimistic" as const };
+    const result = mergeScenarioPartial({
+      parcelId: "compact-lot",
+      config: customConfig,
+      assumptions: customAssumptions,
+    });
+    expect(result.parcelId).toBe("compact-lot");
+    expect(result.config.footprint).toBe(800);
+    expect(result.config.roof).toBe("gable");
+    expect(result.assumptions.rentScenario).toBe("optimistic");
+  });
+
+  it("uses provided config and falls back to default parcelId and assumptions", () => {
+    const customConfig = { ...defaultAduConfig, finish: "board" as const };
+    const result = mergeScenarioPartial({ config: customConfig });
+    expect(result.parcelId).toBe(defaultScenarioState.parcelId);
+    expect(result.config.finish).toBe("board");
+    expect(result.assumptions).toEqual(defaultFinancialAssumptions);
   });
 });
