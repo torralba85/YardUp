@@ -1,6 +1,6 @@
 # LotFoundry — Agent Guide
 
-**Last updated:** 2026-05-29 | **Repo:** `urbanlens_-adu-ar-visualizer` | **Project ID:** `yardup-2026`
+**Last updated:** 2026-06-08 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
 
 ---
 
@@ -13,7 +13,7 @@
 - **3D Scene:** `@react-three/fiber` + `@react-three/drei` + Three.js 0.164
 - **Backend API:** Firebase Cloud Functions (nodejs22) proxying Regrid parcel data and Google Maps Static aerial images
 - **Hosting:** Firebase Hosting + Cloud Functions
-- **Testing:** Vitest (34 unit tests) + Playwright (26 E2E tests)
+- **Testing:** Vitest (103 tests passing on 2026-06-08) + Playwright E2E coverage
 
 **What this app IS:**
 - Local-first investor-demo with optional live parcel data via API keys
@@ -22,8 +22,8 @@
 
 **What this app is NOT:**
 - Not a GIS platform, permitting system, or AR app
-- Not an auth-based SaaS (no user accounts yet)
-- Not a real estate marketplace (no builder routing yet)
+- Not a full SaaS platform; Firebase Auth and role-aware routes exist, but production account operations still need smoke coverage
+- Not a full real estate marketplace; builder dashboard/routing surfaces exist, but the partner network workflow is still early
 
 ---
 
@@ -184,6 +184,7 @@ See `DESIGN.md` for the full brand spec. Key rules:
 - **`three` types** — import `ThreeEvent` from `@react-three/fiber`, not as a global. Use `as unknown as { camera: THREE.Camera }` instead of `any`.
 - **Parcel positioning** — the house is positioned dynamically based on lot dimensions. Don't hardcode Z positions.
 - **Firebase Functions** — both `app` and `api` functions serve the same Next.js app via different rewrite rules. They share the same code path.
+- **Hydration-safe motion** - prefer CSS `motion-safe:` variants for link/button hover and tap transforms. Avoid `useReducedMotion()` or JS-driven motion wrappers when they can change server/client attributes during hydration.
 
 ### Git Workflow
 
@@ -202,10 +203,10 @@ See `DESIGN.md` for the full brand spec. Key rules:
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
 | Aerial View | ✅ Code written | Requires live API keys to render |
 | UI/UX Polish | ✅ Improved | Scroll containment, bento grid responsive |
-| Testing | ✅ 34 unit + 26 E2E | All passing |
+| Testing | ✅ 103 Vitest tests + E2E specs | `npm run lint` and `npm test -- --run` passing on 2026-06-08 |
 | Deployment | ✅ Configured | Firebase Hosting + Functions, CI pipeline active |
-| Auth / User Accounts | ❌ Not started | Planned: Firebase Auth |
-| Builder Routing | ❌ Not started | Planned: lead capture flow |
+| Auth / User Accounts | ✅ Implemented | Login, signup, password reset, Google sign-in, and role-aware redirects |
+| Builder Routing | ⚠️ In progress | Builder dashboard route exists; partner network workflow still needs hardening |
 
 ---
 
@@ -214,9 +215,9 @@ See `DESIGN.md` for the full brand spec. Key rules:
 1. **Solar simulation** — time-of-day slider with SunCalc + Three.js directional light
 2. **View mode selector** — aerial/layers/setbacks toggles on the scene
 3. **Aerial view polish** — tick marks, corner dots, better label positioning to match the design target
-4. **Firebase Auth** — user/builder registration and login
-5. **Builder routing** — lead capture, partner network, marketplace element
-6. **Server-side scenario persistence** — move saved scenarios from localStorage to Firestore
+4. **Auth smoke coverage** — verify email/password and Google sign-in against Firebase test users
+5. **Builder routing hardening** — lead capture, partner network, marketplace element
+6. **Server-side scenario persistence** — keep Firestore saves covered by smoke tests and CI-safe fixtures
 
 ---
 

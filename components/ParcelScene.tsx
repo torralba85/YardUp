@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
@@ -57,6 +57,8 @@ const SCENE = {
   gridLine: "#a8a294",
   fog: "#c8bfa8",
   tree: "#4a6e3a", // tree canopy green
+  treeLight: "#5b7d46", // sunlit canopy lobe
+  treeDark: "#3f6132", // shaded canopy lobe
   treeTrunk: "#5a4430", // bark brown
   fence: "#8a7e6e", // weathered wood fence
   driveway: "#9e9688", // gravel driveway
@@ -91,7 +93,7 @@ function SceneCallout({
   return (
     <Html position={position} center distanceFactor={74} occlude>
       <div
-        className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] backdrop-blur xl:block ${toneClass}`}
+        className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] xl:block ${toneClass}`}
       >
         <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.12em] opacity-75">{eyebrow}</div>
         <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
@@ -100,6 +102,7 @@ function SceneCallout({
     </Html>
   );
 }
+
 
 function SceneCameraChoreography({
   mode,
@@ -392,45 +395,61 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
         <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
       </mesh>
 
-      <LabelSprite text="EXISTING HOUSE" position={[0, wallHeight + ridgeHeight + 2, 0]} scale={Math.max(width * 0.2, 6)} />
     </group>
   );
 }
 
 
-/** Tree: trunk + canopy sphere, placed at lot edges. */
+/** Tree: trunk + clustered canopy lobes, placed at lot edges. */
 function Tree({ position, height = 8, radius = 3 }: { position: [number, number, number]; height?: number; radius?: number }) {
   return (
     <group position={position}>
       <mesh position={[0, height / 2, 0]} castShadow>
-        <cylinderGeometry args={[0.4, 0.6, height, 6]} />
+        <cylinderGeometry args={[0.4, 0.6, height, 8]} />
         <meshStandardMaterial color={SCENE.treeTrunk} roughness={0.9} />
       </mesh>
-      <mesh position={[0, height + radius * 0.6, 0]} castShadow>
-        <sphereGeometry args={[radius, 8, 6]} />
-        <meshStandardMaterial color={SCENE.tree} roughness={0.85} />
-      </mesh>
+      <group position={[0, height + radius * 0.45, 0]}>
+        <mesh position={[0, radius * 0.2, 0]} castShadow>
+          <sphereGeometry args={[radius, 14, 12]} />
+          <meshStandardMaterial color={SCENE.tree} roughness={0.85} />
+        </mesh>
+        <mesh position={[radius * 0.55, -radius * 0.12, radius * 0.28]} castShadow>
+          <sphereGeometry args={[radius * 0.66, 12, 10]} />
+          <meshStandardMaterial color={SCENE.treeLight} roughness={0.85} />
+        </mesh>
+        <mesh position={[-radius * 0.5, -radius * 0.06, -radius * 0.3]} castShadow>
+          <sphereGeometry args={[radius * 0.6, 12, 10]} />
+          <meshStandardMaterial color={SCENE.treeDark} roughness={0.85} />
+        </mesh>
+      </group>
     </group>
   );
 }
 
-/** Fence posts along a property line. */
+/** Fence along a property line: posts plus two horizontal rails. */
 function FenceLine({ start, end, postSpacing = 8, postHeight = 3 }: { start: [number, number, number]; end: [number, number, number]; postSpacing?: number; postHeight?: number }) {
-  const posts = useMemo(() => {
+  const { posts, rails } = useMemo(() => {
     const dx = end[0] - start[0];
     const dz = end[2] - start[2];
     const len = Math.sqrt(dx * dx + dz * dz);
     const count = Math.floor(len / postSpacing);
     const nx = dx / len;
     const nz = dz / len;
-    const result: { position: [number, number, number]; angle: number }[] = [];
+    const angle = Math.atan2(dx, dz);
+    const posts: { position: [number, number, number]; angle: number }[] = [];
     for (let i = 0; i <= count; i++) {
-      result.push({
+      posts.push({
         position: [start[0] + nx * postSpacing * i, postHeight / 2, start[2] + nz * postSpacing * i],
-        angle: Math.atan2(dx, dz),
+        angle,
       });
     }
-    return result;
+    const mid: [number, number] = [(start[0] + end[0]) / 2, (start[2] + end[2]) / 2];
+    const rails = [postHeight * 0.52, postHeight * 0.86].map((y) => ({
+      position: [mid[0], y, mid[1]] as [number, number, number],
+      angle,
+      length: len,
+    }));
+    return { posts, rails };
   }, [start, end, postSpacing, postHeight]);
 
   return (
@@ -438,6 +457,12 @@ function FenceLine({ start, end, postSpacing = 8, postHeight = 3 }: { start: [nu
       {posts.map((p, i) => (
         <mesh key={i} position={p.position} rotation={[0, p.angle, 0]} castShadow>
           <boxGeometry args={[0.3, postHeight, 0.3]} />
+          <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
+        </mesh>
+      ))}
+      {rails.map((r, i) => (
+        <mesh key={`rail-${i}`} position={r.position} rotation={[0, r.angle, 0]} castShadow>
+          <boxGeometry args={[0.12, 0.28, r.length]} />
           <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
         </mesh>
       ))}
@@ -451,13 +476,11 @@ function ProposedAdu({
   parcel,
   position: aduPos,
   onPositionChange,
-  showCallout = true,
 }: {
   config: ADUConfig;
   parcel: ParcelPreset;
   position: [number, number];
   onPositionChange?: (pos: [number, number]) => void;
-  showCallout?: boolean;
 }) {
   const finishColor = finishColors[config.finish];
   const y = config.height / 2;
@@ -587,19 +610,31 @@ function ProposedAdu({
           />
         </mesh>
 
-        {/* Roof */}
+        {/* Roof. Gable ridge runs along the ADU's length: GableRoof pitches
+            across its `depth`, so swap axes and rotate the group 90deg. */}
         {config.roof === "gable" ? (
-          <mesh position={[0, config.height + 1.1, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-            <coneGeometry args={[config.width / 1.35, config.length + 1.6, 4]} />
-            <meshStandardMaterial color={SCENE.roof} roughness={0.66} />
-          </mesh>
-        ) : (
+          <group rotation={[0, Math.PI / 2, 0]}>
+            <GableRoof
+              width={config.length}
+              depth={config.width}
+              wallHeight={config.height}
+              ridgeHeight={Math.min(Math.max(config.width * 0.18, 1.6), 4)}
+            />
+          </group>
+        ) : config.roof === "shed" ? (
+          // Sloped slab seated on the wall top: rear eave at wall height,
+          // rising 2.1ft toward the front, with a small overhang all around.
           <mesh
-            position={[0, config.height + 0.4, config.roof === "shed" ? -0.8 : 0]}
-            rotation={[config.roof === "shed" ? -0.08 : 0, 0, 0]}
+            position={[0, config.height + 1.05, 0]}
+            rotation={[-Math.atan2(2.1, config.length + 1.4), 0, 0]}
             castShadow
           >
-            <boxGeometry args={[config.width + 1.2, 0.8, config.length + 1.2]} />
+            <boxGeometry args={[config.width + 1.2, 0.5, Math.hypot(config.length + 1.4, 2.1)]} />
+            <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
+          </mesh>
+        ) : (
+          <mesh position={[0, config.height + 0.3, 0]} castShadow>
+            <boxGeometry args={[config.width + 1.2, 0.6, config.length + 1.2]} />
             <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
           </mesh>
         )}
@@ -613,7 +648,7 @@ function ProposedAdu({
             </mesh>
             <mesh position={[config.width * 0.18, -0.5, 0]}>
               <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
-              <meshStandardMaterial color={SCENE.roof} roughness={0.2} metalness={0.3} />
+              <meshStandardMaterial color="#5a3a20" roughness={0.55} />
             </mesh>
           </group>
         )}
@@ -624,16 +659,9 @@ function ProposedAdu({
           <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
         </mesh>
 
-        {/* Label */}
-        <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
-        {showCallout && (
-          <SceneCallout
-            eyebrow={isInsideSetback ? "Concept fit" : "Needs review"}
-            title={`${config.width} x ${config.length} ft ADU`}
-            detail={isHovered ? "Drag to reposition inside the buildable envelope." : `${config.finish} finish, ${config.roof} roof.`}
-            position={[config.width * 0.35, config.height + 7, -config.length / 2 - 3]}
-            tone={isInsideSetback ? "ok" : "warn"}
-          />
+        {/* Label — only surfaces on hover/drag so the scene stays quiet at rest */}
+        {(isHovered || isDraggingActive) && (
+          <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
         )}
 
         {/* Setback compliance indicator ring */}
@@ -651,7 +679,13 @@ function ProposedAdu({
   );
 }
 
-export default function ParcelScene({ parcel, config, isCompliant, aduPosition, onAduPositionChange }: ParcelSceneProps) {
+export default function ParcelScene({
+  parcel,
+  config,
+  isCompliant,
+  aduPosition,
+  onAduPositionChange,
+}: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
   const restoreTimer = useRef<number | null>(null);
@@ -880,10 +914,13 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
             eyebrow="Buildable envelope"
             title={isCompliant ? "Within declared limits" : "Local review likely"}
             detail={`${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side setbacks.`}
+            // Anchored to the front-right of the lot (foreground/driveway) so the
+            // callout projects into empty screen space and never collides with the
+            // fixed income-summary card in the top-left.
             position={[
-              -parcel.lotWidth / 2 + parcel.setbacks.side + 12,
+              parcel.lotWidth / 2 - parcel.setbacks.side,
               6,
-              -parcel.lotLength / 2 + parcel.setbacks.rear + 18,
+              parcel.lotLength / 2 - parcel.setbacks.front - 10,
             ]}
             tone={isCompliant ? "ok" : "warn"}
           />
@@ -894,7 +931,6 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
           parcel={parcel}
           position={aduPos}
           onPositionChange={handleAduPosChange}
-          showCallout={viewMode === "overview"}
         />
 
         {/* Landscape elements */}
@@ -929,7 +965,7 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
       </Canvas>
       </ErrorBoundary>
 
-      <div className="absolute bottom-24 right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card/90 p-1 shadow-sm backdrop-blur">
+      <div className="absolute bottom-4 right-4 lg:bottom-24 lg:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -955,16 +991,12 @@ export default function ParcelScene({ parcel, config, isCompliant, aduPosition, 
         })}
       </div>
 
-      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
-        N
+      <div className="pointer-events-none absolute bottom-4 left-4 z-40 rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
+        Drag ADU to move · Pinch to zoom
       </div>
 
-      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/75 p-3 text-xs text-lf-sand-2 shadow-xl backdrop-blur">
-        <div className="font-semibold text-lf-sand">{parcel.address}</div>
-        <div className="mt-1 text-lf-taupe">
-          {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}
-          {parcel.setbacks.side} ft side setbacks.
-        </div>
+      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+        N
       </div>
     </div>
   );
@@ -998,12 +1030,12 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
     >
       {/* 2D Mode Badge â€” hidden on mobile to match the 3D badge and avoid
           overlapping the income-potential overlay card on narrow screens. */}
-      <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card/90 p-2 text-xs font-medium text-lf-espresso shadow-sm backdrop-blur sm:flex">
+      <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
         <span className="px-2 py-1 text-lf-muted">WebGL Fallback</span>
       </div>
 
-      <div className="absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/75 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm backdrop-blur">
+      <div className="absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
 
@@ -1134,15 +1166,6 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
         <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#6b6f63" strokeWidth="0.5" />
         <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#6b6f63" />
       </svg>
-
-      {/* Info Card */}
-      <div className="pointer-events-none absolute bottom-5 left-5 z-40 max-w-xs rounded-md border border-lf-taupe/20 bg-lf-espresso/75 p-3 text-xs text-lf-sand-2 shadow-xl backdrop-blur">
-        <div className="font-semibold text-lf-sand">{parcel.address}</div>
-        <div className="mt-1 text-lf-taupe">
-          {parcel.lotWidth} ft x {parcel.lotLength} ft lot with {parcel.setbacks.front} ft front, {parcel.setbacks.rear} ft rear, and{" "}
-          {parcel.setbacks.side} ft side setbacks.
-        </div>
-      </div>
     </div>
   );
 }

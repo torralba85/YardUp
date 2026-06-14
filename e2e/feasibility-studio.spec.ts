@@ -14,22 +14,20 @@ test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the income snapshot proof", async ({ page }, testInfo) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle(/LotFoundry \| ADU Income Potential/);
-    await expect(page.getByRole("heading", { name: /Know what your lot could earn/i })).toBeVisible();
-    // Reduced-motion renders the static hero frame: the income snapshot proof.
-    await expect(page.getByText("$2,350").first()).toBeVisible();
-    await expect(page.getByText(/estimated monthly rent/i).first()).toBeVisible();
+    await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility & Income Estimates/);
+    await expect(page.getByRole("heading", { name: /Your backyard is an asset/i })).toBeVisible();
+    // Income-first proof — the instrument rail's engine-derived figures.
+    await expect(page.getByText(/Rent potential/i).first()).toBeVisible();
+    await expect(page.getByText(/Est\. net operating income/i).first()).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
-      page.getByRole("heading", { name: /Find the ADU income potential/i }),
+      page.getByRole("heading", { name: /Know what to ask before you spend on plans/i }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /Estimate my lot/i }).first()).toHaveAttribute(
-      "href",
-      "/signup",
-    );
+    // Survey-instrument search is the hero CTA.
+    await expect(page.getByRole("button", { name: /Run feasibility/i })).toBeVisible();
 
     await page.screenshot({
-      path: testInfo.snapshotPath("landing-page.png"),
+      path: testInfo.outputPath("landing-page.png"),
       fullPage: true,
     });
   });
@@ -44,11 +42,17 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: /Create account/i })).toBeVisible();
   });
 
-  test("studio requires sign in and preserves the next route", async ({ page }) => {
+  test("studio is open to guests for the wizard funnel", async ({ page, viewport }) => {
     await page.goto("/studio");
 
-    await expect(page).toHaveURL(/\/login\?next=\/studio$/);
-    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+    // Guests are no longer redirected — mobile gets the first-run wizard,
+    // desktop gets the dashboard.
+    await expect(page).toHaveURL(/\/studio/);
+    if (viewport && viewport.width < 1024) {
+      await expect(page.getByText(/could your backyard pay you rent/i)).toBeVisible();
+    } else {
+      await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
+    }
   });
 
   test("builder dashboard requires sign in and preserves the next route", async ({ page }) => {
@@ -58,18 +62,38 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 
-  test("user can navigate to Permit Guide and view local rules", async ({ page }) => {
+  test("user can navigate to Permit Guide and view local rules", async ({ page, viewport }) => {
+    const mobile = !!viewport && viewport.width < 1024;
+    // Mobile shows the first-run wizard on a fresh profile — skip it so the
+    // test lands in the sheet studio directly.
+    if (mobile) await page.addInitScript(() => localStorage.setItem("lf-wizard-seen", "1"));
     await signUpUser(page);
-    // Navigating via sidebar navigation button
-    await page.getByRole("button", { name: /Permit Guide/i }).click();
+    if (mobile) {
+      // Mobile renders the permit guide inside the bottom sheet's sections —
+      // expand to full snap (peek → half → full) to reach it.
+      await page.getByRole("button", { name: /expand panel/i }).click();
+      await page.getByRole("button", { name: /expand panel/i }).click();
+    } else {
+      // Navigating via sidebar navigation button
+      await page.getByRole("button", { name: /Permit Guide/i }).click();
+    }
     await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();
   });
 
-  test("user can browse Inspiration Gallery and apply a template", async ({ page }) => {
+  test("user can browse Inspiration Gallery and apply a template", async ({ page, viewport }) => {
+    const mobile = !!viewport && viewport.width < 1024;
+    if (mobile) await page.addInitScript(() => localStorage.setItem("lf-wizard-seen", "1"));
     await signUpUser(page);
-    // Navigating via sidebar navigation button
-    await page.getByRole("button", { name: /Inspiration Gallery/i }).click();
+    if (mobile) {
+      // Mobile renders the gallery inside the bottom sheet's sections —
+      // expand to full snap (peek → half → full) to reach it.
+      await page.getByRole("button", { name: /expand panel/i }).click();
+      await page.getByRole("button", { name: /expand panel/i }).click();
+    } else {
+      // Navigating via sidebar navigation button
+      await page.getByRole("button", { name: /Inspiration Gallery/i }).click();
+    }
     await expect(page.getByRole("heading", { name: /Inspiration Gallery/i })).toBeVisible();
     await expect(page.getByText(/Courtyard Studio with Clerestory Light/i)).toBeVisible();
 
@@ -77,7 +101,7 @@ test.describe("Public LotFoundry flows", () => {
     const applyButton = page.getByRole("button", { name: /Apply to Studio/i }).first();
     await applyButton.click();
 
-    // Assert that the page redirected back to the studio and updated the active ADU config
+    // The applied template updates the active ADU config in the studio.
     await expect(page.getByRole("heading", { name: "Feasibility Studio", level: 2 }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Cedar/i })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("button", { name: /Shed/i })).toHaveAttribute("aria-pressed", "true");

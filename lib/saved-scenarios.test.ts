@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createSavedScenarioStore, STORAGE_KEY } from "./saved-scenarios";
+import {
+  createSavedScenarioStore,
+  isValidSavedScenario,
+  STORAGE_KEY,
+} from "./saved-scenarios";
 import { defaultAduConfig, defaultFinancialAssumptions } from "./feasibility";
+import type { LiveParcelData } from "./parcel-types";
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -23,6 +28,25 @@ class MemoryStorage implements Storage {
     this.data.set(key, value);
   }
 }
+
+const liveParcel: LiveParcelData = {
+  address: "500 Cedar Ave",
+  city: "San Jose, CA",
+  lotArea: 5600,
+  lotWidth: 44,
+  lotLength: 127,
+  existingHouseSqft: 1420,
+  maxLotCoveragePercent: 42,
+  setbacks: { front: 20, rear: 20, side: 5 },
+  zoning: "R-1",
+  boundaryGeoJson: {
+    type: "Polygon",
+    coordinates: [[[-121.89, 37.33], [-121.88, 37.33], [-121.88, 37.34], [-121.89, 37.33]]],
+  },
+  lat: 37.335,
+  lng: -121.889,
+  source: "regrid",
+};
 
 describe("createSavedScenarioStore", () => {
   let storage: MemoryStorage;
@@ -63,6 +87,19 @@ describe("createSavedScenarioStore", () => {
     expect(store.load(saved.id)?.name).toBe("Oak Plan");
   });
 
+  it("preserves a valid live parcel snapshot", () => {
+    const store = createSavedScenarioStore(storage);
+    const saved = store.save({
+      name: "Cedar live parcel",
+      parcelId: "oak-street",
+      liveParcel,
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    expect(store.load(saved.id)?.liveParcel?.address).toBe("500 Cedar Ave");
+  });
+
   it("removes by id", () => {
     const store = createSavedScenarioStore(storage);
     const saved = store.save({
@@ -84,5 +121,19 @@ describe("createSavedScenarioStore", () => {
   it("returns an empty list when there are no saved scenarios", () => {
     const store = createSavedScenarioStore(storage);
     expect(store.list()).toEqual([]);
+  });
+
+  it("rejects malformed live parcel snapshots", () => {
+    expect(
+      isValidSavedScenario({
+        id: "scenario-1",
+        name: "Broken live parcel",
+        createdAt: new Date().toISOString(),
+        parcelId: "oak-street",
+        liveParcel: { ...liveParcel, lat: 120 },
+        config: defaultAduConfig,
+        assumptions: defaultFinancialAssumptions,
+      }),
+    ).toBe(false);
   });
 });

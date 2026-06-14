@@ -1,4 +1,5 @@
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
+import type { LiveParcelData } from "./parcel-types";
 
 export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
 const ROOF_STYLES = ["shed", "gable", "flat"] as const;
@@ -10,6 +11,7 @@ export interface SavedScenario {
   name: string;
   createdAt: string;
   parcelId: string;
+  liveParcel?: LiveParcelData;
   config: ADUConfig;
   assumptions: FinancialAssumptions;
 }
@@ -76,6 +78,48 @@ export function isValidFinancialAssumptions(
   );
 }
 
+function isValidGeoJsonPolygon(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return value.type === "Polygon" && Array.isArray(value.coordinates);
+}
+
+export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
+  if (!isRecord(value) || !isRecord(value.setbacks)) return false;
+  return (
+    typeof value.address === "string" &&
+    value.address.trim().length > 0 &&
+    typeof value.city === "string" &&
+    value.city.trim().length > 0 &&
+    isFiniteNumber(value.lotArea) &&
+    value.lotArea > 0 &&
+    isFiniteNumber(value.lotWidth) &&
+    value.lotWidth > 0 &&
+    isFiniteNumber(value.lotLength) &&
+    value.lotLength > 0 &&
+    isFiniteNumber(value.existingHouseSqft) &&
+    value.existingHouseSqft >= 0 &&
+    isFiniteNumber(value.maxLotCoveragePercent) &&
+    value.maxLotCoveragePercent > 0 &&
+    value.maxLotCoveragePercent <= 100 &&
+    isFiniteNumber(value.setbacks.front) &&
+    value.setbacks.front >= 0 &&
+    isFiniteNumber(value.setbacks.rear) &&
+    value.setbacks.rear >= 0 &&
+    isFiniteNumber(value.setbacks.side) &&
+    value.setbacks.side >= 0 &&
+    typeof value.zoning === "string" &&
+    value.zoning.trim().length > 0 &&
+    (value.boundaryGeoJson === null || isValidGeoJsonPolygon(value.boundaryGeoJson)) &&
+    isFiniteNumber(value.lat) &&
+    value.lat >= -90 &&
+    value.lat <= 90 &&
+    isFiniteNumber(value.lng) &&
+    value.lng >= -180 &&
+    value.lng <= 180 &&
+    (value.source === "regrid" || value.source === "fallback")
+  );
+}
+
 export function isValidSavedScenario(value: unknown): value is SavedScenario {
   if (!isRecord(value)) return false;
   return (
@@ -88,6 +132,11 @@ export function isValidSavedScenario(value: unknown): value is SavedScenario {
     !Number.isNaN(Date.parse(value.createdAt)) &&
     typeof value.parcelId === "string" &&
     value.parcelId.length > 0 &&
+    (
+      !("liveParcel" in value) ||
+      value.liveParcel === undefined ||
+      isValidLiveParcelData(value.liveParcel)
+    ) &&
     isValidAduConfig(value.config) &&
     isValidFinancialAssumptions(value.assumptions)
   );

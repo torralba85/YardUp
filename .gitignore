@@ -12,7 +12,19 @@ tmp/
 .env.*
 !.env.example
 .gstack/
+.agents/
+skills-lock.json
 *firebase-adminsdk*.json
 google-services.json
 GoogleService-Info.plist
 service-account*.json
+
+# Superpowers brainstorm visual-companion artifacts
+.superpowers/
+
+# Local preview screenshot artifacts
+preview-shots/
+
+# Dev-server log artifacts
+next-dev-*.log
+next-dev-*.err.log

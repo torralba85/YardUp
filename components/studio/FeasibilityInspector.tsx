@@ -1,6 +1,7 @@
 "use client";
 
-import { Bookmark, BookmarkPlus, Building2, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { Bookmark, BookmarkPlus, Building2, Check, ChevronDown, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   configForFootprint,
   finishColors,
@@ -24,6 +25,30 @@ const rentLabels: Record<RentScenario, string> = {
   market: "Market",
   optimistic: "Optimistic",
 };
+
+const journeySteps = [
+  {
+    step: 1,
+    title: "Property",
+    description: "Confirm the address or sample parcel.",
+  },
+  {
+    step: 2,
+    title: "ADU fit",
+    description: "Shape the unit and watch the lot update.",
+  },
+  {
+    step: 3,
+    title: "Money model",
+    description: "Check rent, payback, and review flags.",
+  },
+] as const;
+
+const nextActionByStep = {
+  1: "Search an address or keep the sample lot, then move to ADU fit.",
+  2: "Pick a footprint and finish that still works on the parcel.",
+  3: "Choose the rent scenario you trust, then create the report.",
+} as const;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -58,30 +83,70 @@ export default function FeasibilityInspector({
   savingScenario = false,
   saveNotice,
 }: FeasibilityInspectorProps) {
-  const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, resetToPreset } = useParcel();
+  const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, searchByAddress, resetToPreset } = useParcel();
+  const [openStep, setOpenStep] = useState<1 | 2 | 3>(1);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
-  // In preset mode, fall back to the preset lookup for compatibility
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
   const displayParcel = parcelMode === "live" ? parcel : presetParcel;
 
-  const selectedOption =
-    footprintOptions.find((item) => item.value === config.footprint) ?? footprintOptions[1];
+  const selectedOption = footprintOptions.find(
+    (item) =>
+      item.value === config.footprint &&
+      item.width === config.width &&
+      item.length === config.length
+  );
 
   function handleAddressSelect(result: AddressSearchResult) {
-    searchParcel(result.lat, result.lng);
+    searchParcel(result.lat, result.lng, result.formattedAddress);
+  }
+
+  function handleAddressText(query: string) {
+    searchByAddress(query);
   }
 
   function handleResetToPreset() {
     resetToPreset(presetParcel);
+    handleReset();
+  }
+
+  function handleReset() {
+    setOpenStep(1);
+    setCompletedSteps(new Set());
     onReset();
+  }
+
+  function toggleStep(step: 1 | 2 | 3) {
+    if (openStep === step) return;
+    setOpenStep(step);
+  }
+
+  function completeStep(step: 1 | 2 | 3) {
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      next.add(step);
+      return next;
+    });
+  }
+
+  function handleNextStep(currentStep: 1 | 2, nextStep: 2 | 3) {
+    completeStep(currentStep);
+    toggleStep(nextStep);
+  }
+
+  function handleGenerateReportClick() {
+    completeStep(3);
+    onGenerateReport();
   }
 
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden xl:w-[404px] xl:border-l"
+      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden lg:w-[404px] lg:border-l"
     >
       <div className="flex h-full flex-col lg:min-h-0">
+
+        {/* Panel header */}
         <div className="flex items-center justify-between border-b border-lf-hairline px-6 py-5">
           <div>
             <h2
@@ -91,12 +156,12 @@ export default function FeasibilityInspector({
               Feasibility Studio
             </h2>
             <p className="mt-1 text-sm text-lf-muted">
-              Adjust parcel, size, and finish to see income potential.
+              Confirm the lot, shape the ADU, then test the income case.
             </p>
           </div>
           <button
             type="button"
-            onClick={onReset}
+            onClick={handleReset}
             className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
@@ -104,263 +169,342 @@ export default function FeasibilityInspector({
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4 lg:min-h-0">
-          {/* Parcel source section: address search (live) vs preset selector (demo) */}
-          <div className="space-y-3" id="parcel">
-            {parcelMode === "live" ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <LabelRow label="Property" />
-                  <button
-                    type="button"
-                    onClick={handleResetToPreset}
-                    className="flex items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
-                  >
-                    <RefreshCcw size={12} />
-                    Demo mode
-                  </button>
-                </div>
+        <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />
 
-                {/* Live parcel address display */}
-                <div className="flex items-start gap-2 rounded-md border border-lf-hairline bg-lf-sand p-3">
-                  <MapPin size={15} className="mt-0.5 shrink-0 text-lf-clay" />
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-lf-espresso">
-                      {displayParcel.address}
+        {/* Accordion steps */}
+        <div className="flex-1 overflow-y-auto divide-y divide-lf-hairline lg:min-h-0">
+
+          {/* Step 1 — Your Property */}
+          <AccordionStep
+            step={1}
+            title="Your Property"
+            isOpen={openStep === 1}
+            isComplete={completedSteps.has(1) && openStep !== 1}
+            onToggle={() => toggleStep(1)}
+          >
+            <div className="space-y-4">
+              {parcelMode === "live" ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <LabelRow label="Property" />
+                    <button
+                      type="button"
+                      onClick={handleResetToPreset}
+                      className="flex items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    >
+                      <RefreshCcw size={12} />
+                      Demo mode
+                    </button>
+                  </div>
+
+                  <div className="flex items-start gap-2 rounded-md border border-lf-hairline bg-lf-sand p-3">
+                    <MapPin size={15} className="mt-0.5 shrink-0 text-lf-clay" />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-lf-espresso">
+                        {displayParcel.address}
+                      </div>
+                      <div className="mt-0.5 text-xs text-lf-muted">{displayParcel.city}</div>
                     </div>
-                    <div className="mt-0.5 text-xs text-lf-muted">{displayParcel.city}</div>
                   </div>
-                </div>
 
-                {/* Fallback warning */}
-                {"source" in displayParcel && displayParcel.source === "fallback" && (
-                  <div
-                    role="note"
-                    className="flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
+                  {"source" in displayParcel && displayParcel.source === "fallback" && (
+                    <div
+                      role="note"
+                      className="flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
+                    >
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber" />
+                      Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
+                    </div>
+                  )}
+
+                  {parcelError && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+                    >
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                      {parcelError}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <LabelRow label="Sample Property" htmlFor="parcel-preset" />
+                  <select
+                    id="parcel-preset"
+                    value={parcelId}
+                    onChange={(event) => onParcelChange(event.target.value)}
+                    className="h-11 w-full rounded-md border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
                   >
-                    <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber" />
-                    Parcel data unavailable — showing estimated defaults. Verify with your jurisdiction.
+                    {parcelPresets.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name} ({preset.lotArea.toLocaleString()} sf)
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-lf-muted">Or search your address:</p>
+                    <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} />
+                    {parcelError && (
+                      <div
+                        role="alert"
+                        className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+                      >
+                        <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                        {parcelError}
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {/* Parcel error */}
-                {parcelError && (
-                  <div
-                    role="alert"
-                    className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
-                  >
-                    <TriangleAlert size={14} className="mt-0.5 shrink-0" />
-                    {parcelError}
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <LabelRow label="Parcel Preset" htmlFor="parcel-preset" />
-                <select
-                  id="parcel-preset"
-                  value={parcelId}
-                  onChange={(event) => onParcelChange(event.target.value)}
-                  className="h-11 w-full rounded-md border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
-                >
-                  {parcelPresets.map((preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name} ({preset.lotArea.toLocaleString()} sf)
-                    </option>
-                  ))}
-                </select>
-
-                {/* Search prompt */}
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-lf-muted">Or search your address:</p>
-                  <AddressSearch onSelect={handleAddressSelect} />
-                </div>
-              </>
-            )}
-
-            {/* Loading overlay */}
-            {parcelLoading && (
-              <div className="flex items-center gap-2 rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-                <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
-                Looking up parcel data…
-              </div>
-            )}
-
-            {/* Parcel facts */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <Fact label="Lot Area" value={`${displayParcel.lotArea.toLocaleString()} sf`} />
-              <Fact label="Lot Dimensions" value={`${displayParcel.lotWidth}' x ${displayParcel.lotLength}'`} />
-              <Fact
-                label="Existing Footprint"
-                value={`${displayParcel.existingHouseSqft.toLocaleString()} sf`}
-              />
-              <Fact label="Max Coverage" value={`${displayParcel.maxLotCoveragePercent}%`} />
-              {"zoning" in displayParcel && (
-                <Fact label="Zoning" value={String((displayParcel as { zoning: string }).zoning)} />
+                </>
               )}
-              <Fact
-                label="Setbacks"
-                value={`${displayParcel.setbacks.front}/${displayParcel.setbacks.side}/${displayParcel.setbacks.rear} ft`}
-              />
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            <LabelRow label="ADU Size" value="Footprint" valueClass="font-sans text-lf-muted font-medium" />
-            <div
-              role="group"
-              aria-label="ADU footprint size"
-              className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4"
-            >
-              {footprintOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => onConfigChange(configForFootprint(option.value, config))}
-                  aria-pressed={config.footprint === option.value}
-                  className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    config.footprint === option.value
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                  }`}
+              {parcelLoading && (
+                <div className="flex items-center gap-2 rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+                  <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+                  Looking up parcel data…
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <Fact label="Lot Area" value={`${displayParcel.lotArea.toLocaleString()} sf`} />
+                <Fact label="Lot Dimensions" value={`${displayParcel.lotWidth}' x ${displayParcel.lotLength}'`} />
+                <Fact label="Existing Footprint" value={`${displayParcel.existingHouseSqft.toLocaleString()} sf`} />
+                <Fact label="Max Coverage" value={`${displayParcel.maxLotCoveragePercent}%`} />
+                {"zoning" in displayParcel && (
+                  <Fact label="Zoning" value={String((displayParcel as { zoning: string }).zoning)} />
+                )}
+                <Fact
+                  label="Setbacks"
+                  value={`${displayParcel.setbacks.front}/${displayParcel.setbacks.side}/${displayParcel.setbacks.rear} ft`}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleNextStep(1, 2)}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              >
+                Next: Design your ADU
+                <ChevronDown size={15} className="-rotate-90" />
+              </button>
+            </div>
+          </AccordionStep>
+
+          {/* Step 2 — Design Your ADU */}
+          <AccordionStep
+            step={2}
+            title="Design Your ADU"
+            isOpen={openStep === 2}
+            isComplete={completedSteps.has(2) && openStep !== 2}
+            onToggle={() => toggleStep(2)}
+          >
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <LabelRow label="ADU Size" value="Footprint" valueClass="font-sans text-lf-muted font-medium" />
+                <div
+                  role="group"
+                  aria-label="ADU footprint size"
+                  className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4"
                 >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-lf-muted">
-              Selected: {selectedOption.label} ({selectedOption.summary})
-            </p>
-          </div>
+                  {footprintOptions.map((option) => {
+                    const isPressed =
+                      config.footprint === option.value &&
+                      config.width === option.width &&
+                      config.length === option.length;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => onConfigChange(configForFootprint(option.value, config))}
+                        aria-pressed={isPressed}
+                        className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                          isPressed
+                            ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                            : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-lf-muted">
+                  {selectedOption
+                    ? `Selected: ${selectedOption.label} (${selectedOption.summary})`
+                    : `Custom size: ${config.footprint.toLocaleString()} sf (${config.width}' x ${config.length}')`}
+                </p>
+              </div>
 
-          <div className="space-y-4">
-            <LabelRow label="Fine Tune Dimensions" />
-            <Slider
-              label="Width"
-              value={config.width}
-              min={16}
-              max={32}
-              suffix="ft"
-              onChange={(value) =>
-                onConfigChange({
-                  ...config,
-                  width: value,
-                  footprint: value * config.length,
-                })
-              }
-            />
-            <Slider
-              label="Length"
-              value={config.length}
-              min={20}
-              max={44}
-              suffix="ft"
-              onChange={(value) =>
-                onConfigChange({
-                  ...config,
-                  length: value,
-                  footprint: config.width * value,
-                })
-              }
-            />
-          </div>
-
-          <div className="space-y-3">
-            <LabelRow label="Roof Style" />
-            <div role="group" aria-label="Roof style" className="grid grid-cols-3 gap-3">
-              {Object.entries(roofLabels).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
-                  aria-pressed={config.roof === key}
-                  className={`flex h-16 flex-col items-center justify-center gap-1 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    config.roof === key
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                  }`}
-                >
-                  <Building2 size={22} />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <LabelRow label="Exterior Finish" />
-            <div role="group" aria-label="Exterior finish" className="grid grid-cols-2 gap-3">
-              {Object.entries(finishLabels).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() =>
-                    onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
+              <div className="space-y-4">
+                <LabelRow label="Fine-tune dimensions" />
+                <Slider
+                  label="Width"
+                  value={config.width}
+                  min={16}
+                  max={32}
+                  suffix="ft"
+                  onChange={(value) =>
+                    onConfigChange({ ...config, width: value, footprint: value * config.length })
                   }
-                  aria-pressed={config.finish === key}
-                  className={`rounded-md border p-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    config.finish === key
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                  }`}
-                >
-                  <span
-                    className="mb-2 block h-8 rounded-sm"
-                    style={{ background: finishColors[key as ADUConfig["finish"]] }}
-                  />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <LabelRow label="Rental Estimate" value={formatCurrency(result.monthlyRent)} />
-            <div role="group" aria-label="Rental estimate" className="grid grid-cols-3 gap-2">
-              {(Object.keys(rentLabels) as RentScenario[]).map((scenario) => (
-                <button
-                  key={scenario}
-                  type="button"
-                  onClick={() =>
-                    onAssumptionsChange({ ...assumptions, rentScenario: scenario })
+                />
+                <Slider
+                  label="Length"
+                  value={config.length}
+                  min={20}
+                  max={44}
+                  suffix="ft"
+                  onChange={(value) =>
+                    onConfigChange({ ...config, length: value, footprint: config.width * value })
                   }
-                  aria-pressed={assumptions.rentScenario === scenario}
-                  className={`h-10 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    assumptions.rentScenario === scenario
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                  }`}
-                >
-                  {rentLabels[scenario]}
-                </button>
-              ))}
-            </div>
-          </div>
+                />
+              </div>
 
-          {result.warnings.length > 0 && (
-            <div
-              role="alert"
-              className="rounded-md border border-lf-clay/40 bg-lf-clay/10 p-3 text-sm text-lf-clay"
-            >
-              <div className="flex items-start gap-2">
-                <TriangleAlert className="mt-0.5 shrink-0" size={17} />
-                <div>
-                  <div className="font-semibold">Review needed</div>
-                  <p className="mt-1 text-xs leading-5">{result.warnings[0]}</p>
+              <div className="space-y-3">
+                <LabelRow label="Roof Style" />
+                <div role="group" aria-label="Roof style" className="grid grid-cols-3 gap-3">
+                  {Object.entries(roofLabels).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
+                      aria-pressed={config.roof === key}
+                      className={`flex h-16 flex-col items-center justify-center gap-1 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                        config.roof === key
+                          ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                          : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                      }`}
+                    >
+                      <Building2 size={22} />
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              <div className="space-y-3">
+                <LabelRow label="Exterior Finish" />
+                <div role="group" aria-label="Exterior finish" className="grid grid-cols-2 gap-3">
+                  {Object.entries(finishLabels).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() =>
+                        onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
+                      }
+                      aria-pressed={config.finish === key}
+                      className={`rounded-md border p-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                        config.finish === key
+                          ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                          : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                      }`}
+                    >
+                      <span
+                        className="mb-2 block h-8 rounded-sm"
+                        style={{ background: finishColors[key as ADUConfig["finish"]] }}
+                      />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Openings toggle — moved from footer */}
+              <button
+                type="button"
+                onClick={() => onConfigChange({ ...config, includeOpenings: !config.includeOpenings })}
+                aria-pressed={config.includeOpenings}
+                className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                  config.includeOpenings
+                    ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                    : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                }`}
+              >
+                <Bookmark size={16} />
+                {config.includeOpenings ? "Remove Entry & Windows" : "Add Entry & Windows"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleNextStep(2, 3)}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              >
+                Next: Run the numbers
+                <ChevronDown size={15} className="-rotate-90" />
+              </button>
             </div>
-          )}
+          </AccordionStep>
+
+          {/* Step 3 — Run the Numbers */}
+          <AccordionStep
+            step={3}
+            title="Run the Numbers"
+            isOpen={openStep === 3}
+            isComplete={completedSteps.has(3) && openStep !== 3}
+            onToggle={() => toggleStep(3)}
+          >
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <LabelRow label="Rental Estimate" value={formatCurrency(result.monthlyRent)} />
+                <div role="group" aria-label="Rental estimate" className="grid grid-cols-3 gap-2">
+                  {(Object.keys(rentLabels) as RentScenario[]).map((scenario) => (
+                    <button
+                      key={scenario}
+                      type="button"
+                      onClick={() =>
+                        onAssumptionsChange({ ...assumptions, rentScenario: scenario })
+                      }
+                      aria-pressed={assumptions.rentScenario === scenario}
+                      className={`h-10 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                        assumptions.rentScenario === scenario
+                          ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                          : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                      }`}
+                    >
+                      {rentLabels[scenario]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {result.warnings.length > 0 && (
+                <div
+                  role="alert"
+                  className="rounded-md border border-lf-clay/40 bg-lf-clay/10 p-3 text-sm text-lf-clay"
+                >
+                  <div className="flex items-start gap-2">
+                    <TriangleAlert className="mt-0.5 shrink-0" size={17} />
+                    <div>
+                      <div className="font-semibold">Review needed</div>
+                      <p className="mt-1 text-xs leading-5">{result.warnings[0]}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </AccordionStep>
+
         </div>
 
+        {/* Footer CTAs — always visible */}
         <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
+          <div className="rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2">
+            <div className="font-mono text-[10px] font-bold uppercase leading-4 tracking-[0.12em] text-lf-muted">
+              Next best action
+            </div>
+            <p className="mt-1 text-xs leading-5 text-lf-espresso">
+              {nextActionByStep[openStep]}
+            </p>
+          </div>
           <button
             type="button"
-            onClick={onGenerateReport}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-mahogany text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            onClick={handleGenerateReportClick}
+            className="group flex h-12 w-full items-center justify-between gap-4 rounded-full bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 active:scale-[0.98]"
           >
-            <Sparkles size={17} />
-            Generate Concept Report
+            <span>Create my ADU report</span>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-lf-sand/15 transition-transform duration-300 group-hover:translate-x-0.5">
+              <Sparkles size={16} />
+            </span>
           </button>
           {onSaveScenario && (
             <button
@@ -370,25 +514,144 @@ export default function FeasibilityInspector({
               className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <BookmarkPlus size={16} />
-              {saveNotice ?? (savingScenario ? "Saving..." : "Save Concept")}
+              {saveNotice ?? (savingScenario ? "Saving..." : "Save this design")}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() =>
-              onConfigChange({ ...config, includeOpenings: !config.includeOpenings })
-            }
-            aria-pressed={config.includeOpenings}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
-          >
-            <Bookmark size={16} />
-            {config.includeOpenings ? "Remove Openings" : "Add Entry / Windows"}
-          </button>
         </div>
+
       </div>
     </section>
   );
 }
+
+// ─── Accordion step wrapper ───────────────────────────────────────────────────
+
+function JourneyProgress({
+  activeStep,
+  completedSteps,
+}: {
+  activeStep: 1 | 2 | 3;
+  completedSteps: Set<number>;
+}) {
+  return (
+    <div className="border-b border-lf-hairline bg-lf-sand-2/65 px-6 py-4">
+      <ol className="grid gap-3">
+        {journeySteps.map(({ step, title, description }) => {
+          const isActive = activeStep === step;
+          const isDone = completedSteps.has(step) && !isActive;
+          return (
+            <li key={step} className="grid grid-cols-[auto_1fr] gap-x-3">
+              <span
+                className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
+                  isActive
+                    ? "bg-lf-mahogany text-lf-sand"
+                    : isDone
+                    ? "bg-lf-forest-soft text-lf-forest"
+                    : "bg-lf-card text-lf-muted ring-1 ring-lf-hairline"
+                }`}
+              >
+                {isDone ? <Check size={12} /> : step}
+              </span>
+              <div className="min-w-0">
+                <div
+                  className={`text-sm font-semibold ${
+                    isActive ? "text-lf-espresso" : "text-lf-muted"
+                  }`}
+                >
+                  {title}
+                </div>
+                <p className="text-xs leading-5 text-lf-muted">
+                  {description}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function AccordionStep({
+  step,
+  title,
+  isOpen,
+  isComplete,
+  onToggle,
+  children,
+}: {
+  step: number;
+  title: string;
+  isOpen: boolean;
+  isComplete: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  const reduceMotion = usePrefersReducedMotion();
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="flex w-full items-center gap-3 px-6 py-4 text-left transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay"
+      >
+        <span
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition ${
+            isOpen
+              ? "bg-lf-mahogany text-white"
+              : isComplete
+              ? "bg-lf-clay/15 text-lf-clay"
+              : "bg-lf-sand-2 text-lf-muted"
+          }`}
+        >
+          {isComplete && !isOpen ? <Check size={12} /> : step}
+        </span>
+        <span className={`flex-1 text-sm font-semibold ${isOpen ? "text-lf-espresso" : "text-lf-muted"}`}>
+          {title}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-lf-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* Animated reveal: grid-template-rows 0fr→1fr gives a smooth height
+          transition without measuring. Values are set inline because this
+          project's Tailwind build does not emit the arbitrary grid-rows/
+          transition-property utilities. `inert` keeps collapsed content out
+          of the tab order and the a11y tree. */}
+      <div
+        className="grid"
+        style={{
+          gridTemplateRows: isOpen ? "1fr" : "0fr",
+          transition: reduceMotion ? undefined : "grid-template-rows 300ms ease-out",
+        }}
+      >
+        <div className="overflow-hidden">
+          <div className="px-6 pb-6 pt-1" inert={!isOpen}>
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** True when the user has requested reduced motion; updates live. */
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return reduced;
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function LabelRow({
   label,

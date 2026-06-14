@@ -17,7 +17,7 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  * GET /api/parcel?lat={lat}&lng={lng}
  *
  * Looks up parcel data from Regrid by lat/lng. Returns a LiveParcelData object.
- * Falls back to the nearest preset if Regrid is unavailable or returns no data.
+ * Falls back to typical estimates if Regrid is unavailable or returns no data.
  * Responses are cached for 24 hours (parcel data doesn't change frequently).
  */
 export async function GET(request: NextRequest) {
@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
   const coordinates = parseCoordinateParams(searchParams);
   if (coordinates instanceof NextResponse) return coordinates;
   const { lat, lng } = coordinates;
+  const requestedAddress = sanitizeAddress(searchParams.get("address"));
 
   const regridKey = process.env.REGRID_API_KEY;
   if (!regridKey) {
-    return NextResponse.json(
-      { error: "Parcel service not configured" },
-      { status: 500 },
-    );
+    // Keyless demo: no Regrid configured. Keep the searched address visible
+    // while using the nearest preset's typical dimensions/assumptions.
+    return successWithFallback(lat, lng, requestedAddress);
   }
 
   try {
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     const json = await regridRes.json();
     const parcels = json?.results?.features ?? [];
     if (parcels.length === 0) {
-      return successWithFallback(lat, lng);
+      return successWithFallback(lat, lng, requestedAddress);
     }
 
     const feature = parcels[0];
@@ -103,8 +103,8 @@ export async function GET(request: NextRequest) {
     const setbacks = parseSetbacks(fields.zoning_setbacks);
 
     const parcelData: LiveParcelData = {
-      address: formatAddress(fields, lat, lng),
-      city: formatCity(fields),
+      address: formatAddress(fields, requestedAddress, lat, lng),
+      city: formatCity(fields) || cityFromRequestedAddress(requestedAddress),
       lotArea: lotAreaSqft,
       lotWidth,
       lotLength,
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("[/api/parcel] Regrid fetch failed:", err);
-    return successWithFallback(lat, lng);
+    return successWithFallback(lat, lng, requestedAddress);
   }
 }
 
@@ -132,11 +132,16 @@ export async function GET(request: NextRequest) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function successWithFallback(lat: number, lng: number): NextResponse {
+function successWithFallback(
+  lat: number,
+  lng: number,
+  requestedAddress?: string,
+): NextResponse {
   const preset = nearestPreset(lat, lng);
+  const location = formatFallbackLocation(requestedAddress, preset);
   const fallback: LiveParcelData = {
-    address: preset.address,
-    city: preset.city,
+    address: location.address,
+    city: location.city,
     lotArea: preset.lotArea,
     lotWidth: preset.lotWidth,
     lotLength: preset.lotLength,
@@ -152,6 +157,35 @@ function successWithFallback(lat: number, lng: number): NextResponse {
   return NextResponse.json(fallback, {
     headers: { "Cache-Control": "public, max-age=300" },
   });
+}
+
+function sanitizeAddress(value: string | null): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  return trimmed.slice(0, 240);
+}
+
+function formatFallbackLocation(
+  requestedAddress: string | undefined,
+  preset: (typeof parcelPresets)[number],
+): { address: string; city: string } {
+  if (!requestedAddress) {
+    return { address: preset.address, city: preset.city };
+  }
+
+  const [street, ...rest] = requestedAddress
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (!street) {
+    return { address: requestedAddress, city: preset.city };
+  }
+
+  return {
+    address: street,
+    city: rest.join(", ") || preset.city,
+  };
 }
 
 /**
@@ -224,14 +258,26 @@ function deriveMaxCoverage(zoning?: string): number {
 
 function formatAddress(
   fields: Record<string, string | number | undefined>,
+  requestedAddress: string | undefined,
   lat: number,
   lng: number,
 ): string {
   // Regrid returns the full street address in the `saddress` (Situs Address) or fallback `address` field.
-  // Fall back to coordinates only if it's missing.
+  // Fall back to the searched address, then to coordinates, if it's missing.
   const address = fields.saddress ?? fields.address;
   if (address) return String(address).trim();
+  const street = requestedAddress?.split(",")[0]?.trim();
+  if (street) return street;
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+}
+
+function cityFromRequestedAddress(requestedAddress: string | undefined): string {
+  if (!requestedAddress) return "";
+  const parts = requestedAddress
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.slice(1).join(", ");
 }
 
 function formatCity(

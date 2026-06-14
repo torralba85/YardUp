@@ -13,6 +13,7 @@ import { db } from "./firebase";
 import {
   isValidAduConfig,
   isValidFinancialAssumptions,
+  isValidLiveParcelData,
   isValidSavedScenario,
   type SavedScenario,
 } from "./saved-scenarios";
@@ -53,6 +54,7 @@ function firestoreToScenario(
         ? data.createdAt.toDate().toISOString()
         : (data.createdAt as string) || new Date().toISOString(),
     parcelId: (data.parcelId as string) || "",
+    liveParcel: isValidLiveParcelData(data.liveParcel) ? data.liveParcel : undefined,
     config: migrateLegacyConfig(data.config),
     assumptions: data.assumptions,
   };
@@ -82,10 +84,17 @@ export async function saveSavedScenario(
   }
 
   const ref = userScenariosRef(uid);
-  const docRef = await addDoc(ref, {
-    ...input,
+  const payload = {
+    name: input.name,
+    parcelId: input.parcelId,
+    config: input.config,
+    assumptions: input.assumptions,
+    ...(input.liveParcel ? { liveParcel: input.liveParcel } : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+  };
+  const docRef = await addDoc(ref, {
+    ...payload,
   });
   return {
     ...input,

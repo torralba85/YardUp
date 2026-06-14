@@ -38,6 +38,22 @@ describe("fetchParcel", () => {
     expect(result.source).toBe("regrid");
   });
 
+  it("includes the searched address when provided", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockParcel,
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchParcel(39.752, -104.999, undefined, "456 Pine St, Denver, CO");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/parcel?lat=39.752&lng=-104.999&address=456+Pine+St%2C+Denver%2C+CO",
+      expect.any(Object),
+    );
+  });
+
   it("throws ParcelFetchError on 503 (rate limit)", async () => {
     vi.stubGlobal(
       "fetch",

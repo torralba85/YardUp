@@ -43,23 +43,48 @@ service cloud.firestore {
         request.resource.data.licenseNumber is string);
     }
 
+    // 1A: the redacted ROOT doc holds no contact info and no street address —
+    // only the banded preview. PII lives in the private/contact subcollection.
     function isValidConnectionRequest() {
       return request.resource.data.keys().hasOnly([
         "ownerUid",
-        "ownerContact",
-        "snapshot",
+        "preview",
         "matchedBuilderIds",
         "status",
+        "ownerVerified",
+        "headStartUntil",
         "createdAt",
         "updatedAt"
       ]) &&
       request.resource.data.ownerUid == request.auth.uid &&
-      request.resource.data.ownerContact is map &&
-      request.resource.data.snapshot is map &&
+      request.resource.data.preview is map &&
+      !("ownerContact" in request.resource.data) &&
+      !("snapshot" in request.resource.data) &&
       request.resource.data.matchedBuilderIds is list &&
       request.resource.data.matchedBuilderIds.size() > 0 &&
       request.resource.data.matchedBuilderIds.size() <= 25 &&
-      request.resource.data.status == "submitted";
+      request.resource.data.status == "submitted" &&
+      request.resource.data.ownerVerified == true &&
+      request.resource.data.headStartUntil == null;
+    }
+
+    // The gated PII payload. Only the owner may create it (at submit time);
+    // reads require ownership OR a leadUnlocks grant for this builder (T3).
+    function isValidContactSubdoc() {
+      return request.resource.data.keys().hasOnly([
+        "ownerContact",
+        "streetAddress",
+        "exactAPN",
+        "snapshot",
+        "createdAt"
+      ]) &&
+      request.resource.data.ownerContact is map &&
+      request.resource.data.streetAddress is string &&
+      request.resource.data.snapshot is map;
+    }
+
+    function hasUnlockGrant(requestId) {
+      return exists(/databases/$(database)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId));
     }
 
     function isValidBuilderResponse(builderId) {
@@ -178,10 +203,95 @@ service cloud.firestore {
         assumptions.rentScenario in ["conservative", "market", "optimistic"];
     }
 
+    function isValidSetbacks(setbacks) {
+      return setbacks is map &&
+        setbacks.keys().hasOnly(["front", "rear", "side"]) &&
+        setbacks.keys().hasAll(["front", "rear", "side"]) &&
+        setbacks.front is number &&
+        setbacks.front >= 0 &&
+        setbacks.rear is number &&
+        setbacks.rear >= 0 &&
+        setbacks.side is number &&
+        setbacks.side >= 0;
+    }
+
+    function isValidBoundaryGeoJson(boundary) {
+      return boundary == null || (
+        boundary is map &&
+        boundary.keys().hasOnly(["type", "coordinates"]) &&
+        boundary.type == "Polygon" &&
+        boundary.coordinates is list
+      );
+    }
+
+    function isValidLiveParcel(parcel) {
+      return parcel is map &&
+        parcel.keys().hasOnly([
+          "address",
+          "city",
+          "lotArea",
+          "lotWidth",
+          "lotLength",
+          "existingHouseSqft",
+          "maxLotCoveragePercent",
+          "setbacks",
+          "zoning",
+          "boundaryGeoJson",
+          "lat",
+          "lng",
+          "source"
+        ]) &&
+        parcel.keys().hasAll([
+          "address",
+          "city",
+          "lotArea",
+          "lotWidth",
+          "lotLength",
+          "existingHouseSqft",
+          "maxLotCoveragePercent",
+          "setbacks",
+          "zoning",
+          "boundaryGeoJson",
+          "lat",
+          "lng",
+          "source"
+        ]) &&
+        parcel.address is string &&
+        parcel.address.size() > 0 &&
+        parcel.address.size() <= 200 &&
+        parcel.city is string &&
+        parcel.city.size() > 0 &&
+        parcel.city.size() <= 120 &&
+        parcel.lotArea is number &&
+        parcel.lotArea > 0 &&
+        parcel.lotWidth is number &&
+        parcel.lotWidth > 0 &&
+        parcel.lotLength is number &&
+        parcel.lotLength > 0 &&
+        parcel.existingHouseSqft is number &&
+        parcel.existingHouseSqft >= 0 &&
+        parcel.maxLotCoveragePercent is number &&
+        parcel.maxLotCoveragePercent > 0 &&
+        parcel.maxLotCoveragePercent <= 100 &&
+        isValidSetbacks(parcel.setbacks) &&
+        parcel.zoning is string &&
+        parcel.zoning.size() > 0 &&
+        parcel.zoning.size() <= 80 &&
+        isValidBoundaryGeoJson(parcel.boundaryGeoJson) &&
+        parcel.lat is number &&
+        parcel.lat >= -90 &&
+        parcel.lat <= 90 &&
+        parcel.lng is number &&
+        parcel.lng >= -180 &&
+        parcel.lng <= 180 &&
+        parcel.source in ["regrid", "fallback"];
+    }
+
     function isValidNewScenario() {
       return request.resource.data.keys().hasOnly([
         "name",
         "parcelId",
+        "liveParcel",
         "config",
         "assumptions",
         "createdAt",
@@ -192,6 +302,8 @@ service cloud.firestore {
       request.resource.data.name.size() <= 160 &&
       request.resource.data.parcelId is string &&
       request.resource.data.parcelId.size() > 0 &&
+      (!("liveParcel" in request.resource.data) ||
+        isValidLiveParcel(request.resource.data.liveParcel)) &&
       isValidAduConfig(request.resource.data.config) &&
       isValidFinancialAssumptions(request.resource.data.assumptions) &&
       request.resource.data.createdAt == request.time &&
@@ -225,6 +337,20 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidConnectionRequest();
       allow update, delete: if false;
 
+      // PII paywall (1A): the owner can read/create; a matched builder can read
+      // only after a leadUnlocks grant exists for them. No client can update or
+      // delete the contact payload.
+      match /private/{privateDoc} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
+          hasUnlockGrant(requestId)
+        );
+        allow create: if isSignedIn() &&
+          get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid &&
+          isValidContactSubdoc();
+        allow update, delete: if false;
+      }
+
       match /builderResponses/{builderId} {
         allow read: if isSignedIn() && (
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
@@ -240,6 +366,15 @@ service cloud.firestore {
           isValidBuilderResponse(builderId);
         allow delete: if false;
       }
+    }
+
+    // 2A: paid unlock grants. Doc id is the deterministic "{builderId}_{requestId}"
+    // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
+    // the webhook via the Admin SDK (which bypasses these rules); no client may
+    // self-grant. Reads are non-sensitive (no PII) and used by head-start UI.
+    match /leadUnlocks/{lockId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if false;
     }
   }
 }

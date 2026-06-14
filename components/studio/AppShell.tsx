@@ -1,9 +1,11 @@
 "use client";
 
-import { BarChart3, Box, FileText, LogOut, Sparkles, Share2, Trash2 } from "lucide-react";
+import { BarChart3, Box, ChevronDown, FileText, LogOut, Sparkles, Share2, Trash2 } from "lucide-react";
+import { useState } from "react";
 import type { NavItem } from "./types";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 export const navItems: NavItem[] = [
   { id: "studio", label: "Feasibility Studio", icon: Box },
@@ -38,7 +40,9 @@ export default function AppShell({
   deleteNotice,
   children,
 }: AppShellProps) {
-  const { profile, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
+  const [scenariosOpen, setScenariosOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const displayName = profile?.displayName || profile?.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
@@ -88,7 +92,7 @@ export default function AppShell({
           </nav>
 
           <div className="mt-auto space-y-4">
-            <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
+            <div className="rounded-md border border-white/[0.07] bg-white/[0.02] p-3">
               <div className="flex gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -112,62 +116,93 @@ export default function AppShell({
             </div>
 
             {savedScenarios.length > 0 && (
-              <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-lf-taupe">
-                  Saved Concepts
-                </div>
-                <ul className="space-y-1">
-                  {savedScenarios.slice(0, 5).map((scenario) => (
-                    <li
-                      key={scenario.id}
-                      className="flex items-center gap-2 rounded px-1 py-1 text-xs hover:bg-white/5"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => onLoadScenario?.(scenario.id)}
-                        className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
-                      >
-                        {scenario.name}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDeleteScenario?.(scenario.id)}
-                        aria-label={`Delete saved concept ${scenario.name}`}
-                        className="rounded p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                {deleteNotice && (
-                  <p role="status" className="mt-2 text-[11px] text-lf-brick">
-                    {deleteNotice}
-                  </p>
+              <div className="rounded-md border border-white/[0.07] bg-white/[0.02]">
+                <button
+                  type="button"
+                  onClick={() => setScenariosOpen((o) => !o)}
+                  aria-expanded={scenariosOpen}
+                  className="flex w-full items-center justify-between px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset"
+                >
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-lf-taupe">
+                    Saved Concepts
+                    <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-lf-taupe">
+                      {savedScenarios.length}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    className={`text-lf-taupe/60 transition-transform duration-200 ${scenariosOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {scenariosOpen && (
+                  <div className="border-t border-white/[0.07] px-3 pb-3 pt-1">
+                    <ul className="space-y-1">
+                      {savedScenarios.slice(0, 5).map((scenario) => (
+                        <li
+                          key={scenario.id}
+                          className="flex items-center gap-2 rounded px-1 py-1 text-xs hover:bg-white/5"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => onLoadScenario?.(scenario.id)}
+                            className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                          >
+                            {scenario.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDeleteScenario?.(scenario.id)}
+                            aria-label={`Delete saved concept ${scenario.name}`}
+                            className="rounded p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    {deleteNotice && (
+                      <p role="status" className="mt-2 text-[11px] text-lf-brick">
+                        {deleteNotice}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
 
-            <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
-                {initials}
+            {user ? (
+              <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
+                  <div className="text-xs text-lf-taupe">{roleLabel}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  aria-label="Sign out"
+                  className="rounded p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
+                  <LogOut size={14} />
+                </button>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
-                <div className="text-xs text-lf-taupe">{roleLabel}</div>
-              </div>
+            ) : (
               <button
                 type="button"
-                onClick={logout}
-                aria-label="Sign out"
-                className="rounded p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
-                <LogOut size={14} />
+                Sign In
               </button>
-            </div>
+            )}
           </div>
         </div>
       </aside>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
       <main className="lf-grain flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lf-sand pb-16 lg:min-h-0 lg:h-dvh lg:overflow-hidden lg:pb-0">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
@@ -193,7 +228,7 @@ export default function AppShell({
         {/* Mobile bottom tab navigation */}
         <nav
           aria-label="Mobile navigation"
-          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-lf-hairline bg-lf-card/95 backdrop-blur-sm lg:hidden"
+          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-lf-hairline bg-lf-card lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           {navItems.map((item) => {

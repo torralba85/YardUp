@@ -1,0 +1,105 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+
+const mocks = vi.hoisted(() => ({
+  uid: "b1",
+  leadDoc: {
+    exists: true,
+    data: () => ({ matchedBuilderIds: ["b1"], preview: { previewSerial: "LF-X" } }),
+  } as { exists: boolean; data: () => Record<string, unknown> },
+  unlocked: false,
+  stripe: null as null | { checkout: { sessions: { create: ReturnType<typeof vi.fn> } } },
+  grant: vi.fn(),
+}));
+
+vi.mock("@/lib/server/api-auth", () => ({
+  requireApiAuth: async () => ({ uid: mocks.uid }),
+}));
+
+vi.mock("@/lib/server/firebase-admin", () => ({
+  getAdminDb: () => ({
+    collection: () => ({ doc: () => ({ get: async () => mocks.leadDoc }) }),
+  }),
+}));
+
+vi.mock("@/lib/server/lead-unlocks", () => ({
+  grantLeadUnlock: (...args: unknown[]) => mocks.grant(...args),
+  isLeadUnlocked: async () => mocks.unlocked,
+}));
+
+vi.mock("@/lib/stripe", () => ({
+  getStripe: async () => mocks.stripe,
+  LEAD_UNLOCK_PRICE_CENTS: 4900,
+}));
+
+import { POST } from "./route";
+
+function postRequest(body: unknown): NextRequest {
+  return new NextRequest("http://localhost/api/stripe/checkout", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: { "content-type": "application/json", origin: "http://localhost" },
+  });
+}
+
+beforeEach(() => {
+  mocks.uid = "b1";
+  mocks.unlocked = false;
+  mocks.stripe = null;
+  mocks.leadDoc = {
+    exists: true,
+    data: () => ({ matchedBuilderIds: ["b1"], preview: { previewSerial: "LF-X" } }),
+  };
+  mocks.grant.mockClear();
+});
+
+describe("POST /api/stripe/checkout", () => {
+  it("400s without a requestId", async () => {
+    const res = await POST(postRequest({}));
+    expect(res.status).toBe(400);
+  });
+
+  it("404s when the lead does not exist", async () => {
+    mocks.leadDoc = { exists: false, data: () => ({}) };
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(res.status).toBe(404);
+  });
+
+  it("403s when the builder is not matched to the lead", async () => {
+    mocks.leadDoc = { exists: true, data: () => ({ matchedBuilderIds: ["someone-else"] }) };
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(res.status).toBe(403);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("grants immediately in demo mode (no Stripe key)", async () => {
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ status: "granted", demo: true });
+    expect(mocks.grant).toHaveBeenCalledWith(
+      expect.objectContaining({ builderId: "b1", requestId: "r1", demo: true }),
+    );
+  });
+
+  it("returns a Stripe Checkout URL when configured (no grant yet)", async () => {
+    mocks.stripe = {
+      checkout: {
+        sessions: { create: vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" }) },
+      },
+    };
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/x" });
+    expect(mocks.grant).not.toHaveBeenCalled();
+    expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: { builderId: "b1", requestId: "r1" } }),
+    );
+  });
+
+  it("is an idempotent success when already unlocked", async () => {
+    mocks.unlocked = true;
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(await res.json()).toMatchObject({ status: "granted", alreadyUnlocked: true });
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+});
