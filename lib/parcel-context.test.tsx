@@ -1,18 +1,52 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
+import type { LiveParcelData } from "./parcel-types";
 
 vi.mock("./auth-context", () => ({
   useAuth: () => ({ user: null }),
 }));
 
+vi.mock("./geocode-api", () => ({
+  GeocodeError: class GeocodeError extends Error {
+    constructor(
+      message: string,
+      public readonly userMessage: string,
+    ) {
+      super(message);
+      this.name = "GeocodeError";
+    }
+  },
+  geocodeAddress: vi.fn(),
+}));
+
+vi.mock("./parcel-api", () => ({
+  ParcelFetchError: class ParcelFetchError extends Error {
+    constructor(
+      message: string,
+      public readonly userMessage: string,
+    ) {
+      super(message);
+      this.name = "ParcelFetchError";
+    }
+  },
+  fetchParcel: vi.fn(),
+}));
+
 import { ParcelProvider, useParcel } from "./parcel-context";
 import { parcelPresets } from "./feasibility";
 import { buildEstimatedParcel } from "./estimated-parcel";
+import { geocodeAddress } from "./geocode-api";
+import { fetchParcel } from "./parcel-api";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <ParcelProvider initialPreset={parcelPresets[0]}>{children}</ParcelProvider>
 );
+
+beforeEach(() => {
+  vi.mocked(geocodeAddress).mockReset();
+  vi.mocked(fetchParcel).mockReset();
+});
 
 describe("ParcelProvider estimated mode", () => {
   it("starts in preset mode", () => {
@@ -47,5 +81,46 @@ describe("ParcelProvider estimated mode", () => {
     act(() => result.current.resetToPreset(parcelPresets[0]));
 
     expect(result.current.parcelMode).toBe("preset");
+  });
+
+  it("uses the geocoder formatted address for parcel lookup", async () => {
+    const formattedAddress = "100 Main St, Los Angeles, CA 90012, USA";
+    const liveParcel: LiveParcelData = {
+      address: "100 Main St",
+      city: "Los Angeles, CA 90012",
+      lotArea: 5000,
+      lotWidth: 40,
+      lotLength: 125,
+      existingHouseSqft: 1200,
+      maxLotCoveragePercent: 40,
+      setbacks: { front: 20, rear: 20, side: 5 },
+      zoning: "R-1 (estimated)",
+      boundaryGeoJson: null,
+      lat: 34.05,
+      lng: -118.25,
+      source: "fallback",
+    };
+
+    vi.mocked(geocodeAddress).mockResolvedValueOnce({
+      lat: 34.05,
+      lng: -118.25,
+      formattedAddress,
+    });
+    vi.mocked(fetchParcel).mockResolvedValueOnce(liveParcel);
+
+    const { result } = renderHook(() => useParcel(), { wrapper });
+
+    await act(async () => {
+      await result.current.searchByAddress("100 Main Los Angeles");
+    });
+
+    expect(fetchParcel).toHaveBeenCalledWith(
+      34.05,
+      -118.25,
+      undefined,
+      formattedAddress,
+    );
+    expect(result.current.parcelMode).toBe("live");
+    expect(result.current.parcel).toBe(liveParcel);
   });
 });
