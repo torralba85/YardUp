@@ -373,15 +373,14 @@ service cloud.firestore {
     // the webhook via the Admin SDK (which bypasses these rules); no client may
     // self-grant.
     match /leadUnlocks/{lockId} {
-      // A builder may read only their own grant. Doc id is "{uid}_{requestId}";
-      // verify the uid prefix + "_" separator on the doc PATH (not resource.data)
-      // via slicing, so a read of a not-yet-created grant still resolves to a
-      // clean "not found" rather than a permission error. The PII paywall uses
-      // exists() (hasUnlockGrant), not this read rule, so it is unaffected.
-      allow read: if isSignedIn()
-        && lockId.size() > request.auth.uid.size()
-        && lockId[0:request.auth.uid.size()] == request.auth.uid
-        && lockId[request.auth.uid.size()] == '_';
+      // A builder may read only their own grant. Check the stored builderId
+      // field (not the doc-id path) so uids containing "_" are handled correctly
+      // and one builder's id can't be a prefix of another's. resource == null
+      // allows the dashboard's read of a not-yet-created grant to resolve to a
+      // clean "not found" instead of erroring. The PII paywall uses exists()
+      // (hasUnlockGrant), not this read rule, so it is unaffected.
+      allow read: if isSignedIn() &&
+        (resource == null || resource.data.builderId == request.auth.uid);
       allow create, update, delete: if false;
     }
   }

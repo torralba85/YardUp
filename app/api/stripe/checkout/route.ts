@@ -90,6 +90,10 @@ export async function POST(request: NextRequest) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      // Card (incl. wallets) is immediate, so checkout.session.completed always
+      // means paid — the webhook needs no async-payment fulfilment. Enabling a
+      // delayed method would require handling async_payment_succeeded/failed.
+      payment_method_types: ["card"],
       line_items: [
         {
           quantity: 1,
