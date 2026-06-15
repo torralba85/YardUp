@@ -371,9 +371,14 @@ service cloud.firestore {
     // 2A: paid unlock grants. Doc id is the deterministic "{builderId}_{requestId}"
     // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
     // the webhook via the Admin SDK (which bypasses these rules); no client may
-    // self-grant. Reads are non-sensitive (no PII) and used by head-start UI.
+    // self-grant.
     match /leadUnlocks/{lockId} {
-      allow read: if isSignedIn();
+      // A builder may read only their own grant. The check is on the doc PATH
+      // (builderId is the uid, which contains no underscore) so a not-yet-created
+      // grant still resolves to a clean "not found" for the owning builder rather
+      // than a permission error. The PII paywall uses exists() (hasUnlockGrant),
+      // not this read rule, so tightening reads does not affect it.
+      allow read: if isSignedIn() && lockId.split('_')[0] == request.auth.uid;
       allow create, update, delete: if false;
     }
   }

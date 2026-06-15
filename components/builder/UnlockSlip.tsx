@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { formatCurrency } from "@/lib/feasibility";
+import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
 import type { BuilderInboxItem } from "@/lib/marketplace-types";
 
 export interface UnlockSlipProps {
@@ -13,8 +14,6 @@ export interface UnlockSlipProps {
   onConfirm: () => void;
   onClose: () => void;
 }
-
-const PRICE = "$49";
 
 /**
  * Certificate-style purchase slip (3A). Lists exactly what the unlock buys,
@@ -31,6 +30,8 @@ export default function UnlockSlip({
   onClose,
 }: UnlockSlipProps) {
   const { preview } = item.request;
+  const price = formatUnlockPrice();
+  const priceWithCents = formatUnlockPrice({ cents: true });
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -110,11 +111,11 @@ export default function UnlockSlip({
             <div className="mb-2 text-[9.5px] uppercase tracking-[0.16em] text-lf-muted">This purchase</div>
             <div className="flex justify-between border-b border-dashed border-lf-hairline py-1.5">
               <span className="text-lf-muted">LEAD UNLOCK · {preview.previewSerial}</span>
-              <span className="text-lf-espresso">$49.00</span>
+              <span className="text-lf-espresso">{priceWithCents}</span>
             </div>
             <div className="mt-1 flex justify-between border-t-4 border-double border-lf-espresso pt-2.5 font-semibold text-[13px] text-lf-espresso">
               <span>DUE NOW</span>
-              <span>$49.00</span>
+              <span>{priceWithCents}</span>
             </div>
           </div>
 
@@ -131,7 +132,7 @@ export default function UnlockSlip({
             className="mt-4 flex w-full items-center justify-between bg-lf-forest px-4 py-3.5 text-sm font-semibold text-lf-sand transition hover:brightness-95 disabled:opacity-60"
           >
             <span>{pending ? "Recording unlock…" : "Pay with Stripe"}</span>
-            <span className="font-display text-lg">{PRICE}</span>
+            <span className="font-display text-lg">{price}</span>
           </button>
           <div className="mt-3 flex justify-center gap-3.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-lf-muted">
             <span>Receipt emailed</span>

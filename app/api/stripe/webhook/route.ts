@@ -34,7 +34,11 @@ export async function POST(request: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const builderId = session.metadata?.builderId;
     const requestId = session.metadata?.requestId;
-    if (builderId && requestId) {
+    // Grant only on confirmed payment. Card checkout is always "paid" by the
+    // time this fires; the guard stops a delayed payment method from revealing
+    // contact during its processing window (fulfil on async_payment_succeeded
+    // instead if one is ever enabled).
+    if (session.payment_status === "paid" && builderId && requestId) {
       await grantLeadUnlock({
         builderId,
         requestId,
@@ -43,6 +47,10 @@ export async function POST(request: NextRequest) {
       });
     }
   }
+
+  // Refunds / bad-lead credits are handled manually in the Stripe Dashboard for
+  // now; there is intentionally no charge.refunded handler, so a refund does not
+  // auto-revoke the leadUnlocks grant.
 
   return NextResponse.json({ received: true });
 }

@@ -1,5 +1,15 @@
 const { onRequest } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
 const path = require("path");
+
+// Stripe keys live in Secret Manager and are injected as process.env.* only in
+// the function they are bound to. Without this binding `process.env.STRIPE_*` is
+// undefined at runtime — even when functions/.env works locally — so checkout
+// and the webhook silently 503. Set them with:
+//   firebase functions:secrets:set STRIPE_SECRET_KEY
+//   firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
+const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 // Resolved from functions/node_modules, which Firebase installs server-side
 // from functions/package.json at deploy time. (Firebase strips all bundled
 // node_modules on upload — including the standalone build's own copy — so the
@@ -35,7 +45,12 @@ exports.app = onRequest(fnOpts, async (req, res) => {
   return handle(req, res);
 });
 
-exports.api = onRequest(fnOpts, async (req, res) => {
-  await ready();
-  return handle(req, res);
-});
+// The /api/** rewrite (firebase.json) sends the Stripe checkout + webhook
+// routes here, so the Stripe secrets are bound to this function only.
+exports.api = onRequest(
+  { ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] },
+  async (req, res) => {
+    await ready();
+    return handle(req, res);
+  },
+);

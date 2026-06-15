@@ -1,12 +1,8 @@
 import type Stripe from "stripe";
 
-/**
- * Flat lead-unlock price in cents (18A: $39–49, single price object). Override
- * with STRIPE_LEAD_PRICE_CENTS once a live price is created.
- */
-export const LEAD_UNLOCK_PRICE_CENTS = Number(
-  process.env.STRIPE_LEAD_PRICE_CENTS ?? 4900,
-);
+// Re-exported so server callers can keep importing the price from "@/lib/stripe".
+// The definition lives in a client-safe module so the UI shares one source.
+export { LEAD_UNLOCK_PRICE_CENTS } from "./lead-unlock-pricing";
 
 /** True once a secret key is present — the seam between the real Stripe path
  * and the zero-key demo/mock grant path (4A). */
