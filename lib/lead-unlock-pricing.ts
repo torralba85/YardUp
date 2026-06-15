@@ -1,16 +1,17 @@
 /**
- * Single source of truth for the flat lead-unlock price. Safe to import from
- * client components (no Stripe SDK, no server-only secrets) so the purchase slip
- * quotes exactly what the checkout route bills — the two can never drift.
+ * Single source of truth for the flat lead-unlock price, shared by the server
+ * (checkout/webhook) and the client purchase slip so the quoted price can never
+ * drift from the amount billed.
  *
- * Override the price with STRIPE_LEAD_PRICE_CENTS server-side. (The override is
- * not exposed to the browser, so client-rendered prices use the default unless
- * it is also surfaced as a NEXT_PUBLIC_* value.)
+ * Read from NEXT_PUBLIC_LEAD_UNLOCK_PRICE_CENTS so the value is inlined at build
+ * time and is byte-identical on the server and in the browser — a non-public env
+ * var would be undefined client-side and cause a React hydration mismatch.
+ * Changing the price therefore requires a rebuild. Defaults to 4900 ($49).
  */
-const parsedPriceCents = Number(process.env.STRIPE_LEAD_PRICE_CENTS);
+const parsedPriceCents = Number(process.env.NEXT_PUBLIC_LEAD_UNLOCK_PRICE_CENTS);
 
 /** Flat lead-unlock price in cents (18A: $39–49, single price object). Falls
- * back to 4900 if the override is missing or not a positive number. */
+ * back to 4900 if unset or not a positive number. */
 export const LEAD_UNLOCK_PRICE_CENTS =
   Number.isFinite(parsedPriceCents) && parsedPriceCents > 0
     ? parsedPriceCents

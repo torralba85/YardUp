@@ -66,8 +66,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", demo: true });
   }
 
-  const origin =
-    request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "";
+  // Strip any trailing slash so `${origin}/builder` never doubles up (Stripe
+  // rejects malformed return URLs).
+  const origin = (
+    request.headers.get("origin") ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    ""
+  ).replace(/\/+$/, "");
   if (!origin) {
     // Stripe requires absolute success/cancel URLs. With no Origin header and no
     // NEXT_PUBLIC_APP_URL we would send a relative one and Stripe would reject the
