@@ -87,8 +87,8 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       setParcelError(null);
       try {
         const idToken = await user?.getIdToken();
-        const { lat, lng } = await geocodeAddress(q, idToken);
-        const data = await fetchParcel(lat, lng, idToken, q);
+        const { lat, lng, formattedAddress } = await geocodeAddress(q, idToken);
+        const data = await fetchParcel(lat, lng, idToken, formattedAddress.trim() || q);
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
