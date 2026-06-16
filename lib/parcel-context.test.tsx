@@ -3,49 +3,42 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import type { LiveParcelData } from "./parcel-types";
 
+const mocks = vi.hoisted(() => ({
+  geocodeAddress: vi.fn(),
+  fetchParcel: vi.fn(),
+}));
+
 vi.mock("./auth-context", () => ({
   useAuth: () => ({ user: null }),
 }));
 
-vi.mock("./geocode-api", () => ({
-  GeocodeError: class GeocodeError extends Error {
-    constructor(
-      message: string,
-      public readonly userMessage: string,
-    ) {
-      super(message);
-      this.name = "GeocodeError";
-    }
-  },
-  geocodeAddress: vi.fn(),
-}));
+vi.mock("./geocode-api", async () => {
+  const actual = await vi.importActual<typeof import("./geocode-api")>("./geocode-api");
+  return {
+    ...actual,
+    geocodeAddress: mocks.geocodeAddress,
+  };
+});
 
-vi.mock("./parcel-api", () => ({
-  ParcelFetchError: class ParcelFetchError extends Error {
-    constructor(
-      message: string,
-      public readonly userMessage: string,
-    ) {
-      super(message);
-      this.name = "ParcelFetchError";
-    }
-  },
-  fetchParcel: vi.fn(),
-}));
+vi.mock("./parcel-api", async () => {
+  const actual = await vi.importActual<typeof import("./parcel-api")>("./parcel-api");
+  return {
+    ...actual,
+    fetchParcel: mocks.fetchParcel,
+  };
+});
 
 import { ParcelProvider, useParcel } from "./parcel-context";
 import { parcelPresets } from "./feasibility";
 import { buildEstimatedParcel } from "./estimated-parcel";
-import { geocodeAddress } from "./geocode-api";
-import { fetchParcel } from "./parcel-api";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <ParcelProvider initialPreset={parcelPresets[0]}>{children}</ParcelProvider>
 );
 
 beforeEach(() => {
-  vi.mocked(geocodeAddress).mockReset();
-  vi.mocked(fetchParcel).mockReset();
+  mocks.geocodeAddress.mockReset();
+  mocks.fetchParcel.mockReset();
 });
 
 describe("ParcelProvider estimated mode", () => {
@@ -101,12 +94,12 @@ describe("ParcelProvider estimated mode", () => {
       source: "fallback",
     };
 
-    vi.mocked(geocodeAddress).mockResolvedValueOnce({
+    mocks.geocodeAddress.mockResolvedValueOnce({
       lat: 34.05,
       lng: -118.25,
       formattedAddress,
     });
-    vi.mocked(fetchParcel).mockResolvedValueOnce(liveParcel);
+    mocks.fetchParcel.mockResolvedValueOnce(liveParcel);
 
     const { result } = renderHook(() => useParcel(), { wrapper });
 
@@ -114,7 +107,7 @@ describe("ParcelProvider estimated mode", () => {
       await result.current.searchByAddress("100 Main Los Angeles");
     });
 
-    expect(fetchParcel).toHaveBeenCalledWith(
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(
       34.05,
       -118.25,
       undefined,
