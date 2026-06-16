@@ -66,11 +66,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", demo: true });
   }
 
-  // Strip any trailing slash so `${origin}/builder` never doubles up (Stripe
-  // rejects malformed return URLs).
+  // Prefer the server-configured URL over the client-supplied Origin header (a
+  // caller can spoof it) to avoid an open redirect via the Stripe return URLs;
+  // fall back to Origin for local dev. Trailing slash stripped so
+  // `${origin}/builder` never doubles up.
   const origin = (
-    request.headers.get("origin") ||
     process.env.NEXT_PUBLIC_APP_URL ||
+    request.headers.get("origin") ||
     ""
   ).replace(/\/+$/, "");
   if (!origin) {
