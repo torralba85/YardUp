@@ -56,6 +56,26 @@ describe("StudioSheet", () => {
     expect(screen.getByText("deep-sections")).toBeInTheDocument();
   });
 
+  it("describes the always-open drawer content for assistive technology", () => {
+    render(
+      <StudioSheet
+        snap={PEEK_SNAP}
+        onSnapChange={() => {}}
+        peek={<div>peek-metrics</div>}
+        controls={<div>config-controls</div>}
+        sections={<div>deep-sections</div>}
+      />,
+    );
+
+    const sheet = screen.getByTestId("studio-sheet");
+    const descriptionId = sheet.getAttribute("aria-describedby");
+
+    expect(descriptionId).toBeTruthy();
+    expect(document.getElementById(descriptionId as string)).toHaveTextContent(
+      /adjust adu configuration controls/i,
+    );
+  });
+
   it("expand button advances peek → half → full, then collapses back to peek", async () => {
     const user = userEvent.setup();
     const onSnapChange = vi.fn();
