@@ -96,6 +96,6 @@ export function mergeScenarioPartial(partial: Partial<ScenarioState>): ScenarioS
   return {
     parcelId: partial.parcelId ?? defaultScenarioState.parcelId,
     config: partial.config ?? { ...defaultScenarioState.config },
-    assumptions: partial.assumptions ?? { ...defaultScenarioState.assumptions },
+    assumptions: partial.assumptions ?? { ...defaultScenarioState.assumptions, costPerSqft: { ...defaultScenarioState.assumptions.costPerSqft } },
   };
 }
