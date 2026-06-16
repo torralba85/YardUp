@@ -103,6 +103,14 @@ describe("mergeScenarioPartial", () => {
     expect(result.assumptions).toEqual(defaultScenarioState.assumptions);
   });
 
+  it("does not return a reference to the shared default config/assumptions", () => {
+    const result = mergeScenarioPartial({});
+    result.config.footprint = 99999;
+    result.assumptions.rentScenario = "optimistic";
+    expect(defaultAduConfig.footprint).not.toBe(99999);
+    expect(defaultFinancialAssumptions.rentScenario).not.toBe("optimistic");
+  });
+
   it("uses all provided fields when the partial is complete", () => {
     const customConfig = { ...defaultAduConfig, footprint: 800, width: 25, length: 32, roof: "gable" as const };
     const customAssumptions = {
