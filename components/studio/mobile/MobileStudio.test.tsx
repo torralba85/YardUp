@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import MobileStudio, { COACH_SEEN_KEY } from "./MobileStudio";
 
@@ -50,22 +49,24 @@ describe("MobileStudio", () => {
     }
   });
 
-  it("shows coach marks on first run and persists dismissal", async () => {
+  it("shows coach marks on first run and persists dismissal", () => {
     vi.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    renderStudio();
+    try {
+      renderStudio();
 
-    const note = screen.getByRole("note");
-    expect(note).toHaveTextContent(/drag your adu/i);
+      const note = screen.getByRole("note");
+      expect(note).toHaveTextContent(/drag your adu/i);
 
-    await user.click(screen.getByRole("button", { name: /got it/i }));
-    expect(screen.queryByRole("note")).not.toBeInTheDocument();
-    expect(window.localStorage.getItem(COACH_SEEN_KEY)).toBe("1");
+      fireEvent.click(screen.getByRole("button", { name: /got it/i }));
+      expect(screen.queryByRole("note")).not.toBeInTheDocument();
+      expect(window.localStorage.getItem(COACH_SEEN_KEY)).toBe("1");
 
-    // Flush Radix UI FocusScope's deferred dispatchEvent before RTL cleanup
-    // tears down the DOM, otherwise jsdom throws an uncaught TypeError.
-    vi.runAllTimers();
-    vi.useRealTimers();
+      // Flush Radix UI FocusScope's deferred dispatchEvent before RTL cleanup
+      // tears down the DOM, otherwise jsdom throws an uncaught TypeError.
+      vi.runAllTimers();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("hides coach marks when already seen", () => {
