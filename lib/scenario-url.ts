@@ -95,7 +95,7 @@ export function serializeScenarioParams(state: ScenarioState): string {
 export function mergeScenarioPartial(partial: Partial<ScenarioState>): ScenarioState {
   return {
     parcelId: partial.parcelId ?? defaultScenarioState.parcelId,
-    config: partial.config ?? defaultScenarioState.config,
-    assumptions: partial.assumptions ?? defaultScenarioState.assumptions,
+    config: partial.config ?? { ...defaultScenarioState.config },
+    assumptions: partial.assumptions ?? { ...defaultScenarioState.assumptions, costPerSqft: { ...defaultScenarioState.assumptions.costPerSqft } },
   };
 }
