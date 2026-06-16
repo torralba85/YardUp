@@ -11,6 +11,10 @@
     ],
     "rewrites": [
       {
+        "source": "/api/stripe/**",
+        "function": "apiStripe"
+      },
+      {
         "source": "/api/**",
         "function": "api"
       },

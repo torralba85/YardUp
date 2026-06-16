@@ -66,27 +66,58 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", demo: true });
   }
 
-  const origin =
-    request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "";
+  // Prefer the server-configured URL over the client-supplied Origin header (a
+  // caller can spoof it) to avoid an open redirect via the Stripe return URLs;
+  // fall back to Origin for local dev. Trailing slash stripped so
+  // `${origin}/builder` never doubles up.
+  const origin = (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    request.headers.get("origin") ||
+    ""
+  ).replace(/\/+$/, "");
+  if (!origin) {
+    // Stripe requires absolute success/cancel URLs. With no Origin header and no
+    // NEXT_PUBLIC_APP_URL we would send a relative one and Stripe would reject the
+    // session — fail cleanly instead of throwing an opaque 500.
+    console.error(
+      "[stripe/checkout] No request Origin and NEXT_PUBLIC_APP_URL is unset; cannot build return URLs.",
+    );
+    return NextResponse.json(
+      { error: "Payments are temporarily unavailable." },
+      { status: 500 },
+    );
+  }
   const previewSerial = reqSnap.data()?.preview?.previewSerial ?? requestId;
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "usd",
-          unit_amount: LEAD_UNLOCK_PRICE_CENTS,
-          product_data: { name: `LotFoundry lead unlock — ${previewSerial}` },
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      // Card (incl. wallets) is immediate, so checkout.session.completed always
+      // means paid — the webhook needs no async-payment fulfilment. Enabling a
+      // delayed method would require handling async_payment_succeeded/failed.
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: LEAD_UNLOCK_PRICE_CENTS,
+            product_data: { name: `LotFoundry lead unlock — ${previewSerial}` },
+          },
         },
-      },
-    ],
-    // The webhook reads these back to write the grant (2A).
-    metadata: { builderId, requestId },
-    success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
-    cancel_url: `${origin}/builder?lead=${requestId}`,
-  });
+      ],
+      // The webhook reads these back to write the grant (2A).
+      metadata: { builderId, requestId },
+      success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
+      cancel_url: `${origin}/builder?lead=${requestId}`,
+    });
 
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error("[stripe/checkout] Failed to create Checkout session:", err);
+    return NextResponse.json(
+      { error: "Could not start checkout. Please try again." },
+      { status: 502 },
+    );
+  }
 }

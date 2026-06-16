@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { computeBuilderMetrics } from "@/lib/builder-metrics";
 import { startLeadUnlock } from "@/lib/lead-unlock-api";
+import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
 import type {
   BuilderInboxItem,
@@ -284,7 +285,7 @@ function ZeroEverEmptyState() {
           </span>
         </p>
         <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-lf-muted">
-          Owner contact unlocks for $49 — once you have real leads
+          Owner contact unlocks for {formatUnlockPrice()} — once you have real leads
         </p>
       </article>
     </div>

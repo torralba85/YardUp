@@ -371,9 +371,16 @@ service cloud.firestore {
     // 2A: paid unlock grants. Doc id is the deterministic "{builderId}_{requestId}"
     // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
     // the webhook via the Admin SDK (which bypasses these rules); no client may
-    // self-grant. Reads are non-sensitive (no PII) and used by head-start UI.
+    // self-grant.
     match /leadUnlocks/{lockId} {
-      allow read: if isSignedIn();
+      // A builder may read a grant only when it exists AND belongs to them. A
+      // missing grant is denied (not a clean 404), so no signed-in user can probe
+      // whether another builder has unlocked a lead. fetchBuilderInbox reads its
+      // own deterministic id and treats the denial as "not unlocked". The PII
+      // paywall uses exists() (hasUnlockGrant), which is unaffected.
+      allow read: if isSignedIn()
+        && resource != null
+        && resource.data.builderId == request.auth.uid;
       allow create, update, delete: if false;
     }
   }

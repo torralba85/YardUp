@@ -140,7 +140,18 @@ export async function fetchBuilderInbox(
     snap.docs.map(async (requestDoc) => {
       const [responseSnap, unlockSnap] = await Promise.all([
         getDoc(doc(db, REQUESTS, requestDoc.id, RESPONSES, builderId)),
-        getDoc(doc(db, LEAD_UNLOCKS, `${builderId}_${requestDoc.id}`)),
+        // The leadUnlocks rule denies reads of a grant that doesn't exist (so no
+        // one can probe other builders' unlocks), so a locked lead rejects with
+        // permission-denied — treat that as "not unlocked" rather than failing
+        // the whole inbox load.
+        getDoc(doc(db, LEAD_UNLOCKS, `${builderId}_${requestDoc.id}`)).catch(
+          (err: unknown) => {
+            if ((err as { code?: string })?.code === "permission-denied") {
+              return null;
+            }
+            throw err;
+          },
+        ),
       ]);
 
       return {
@@ -148,7 +159,7 @@ export async function fetchBuilderInbox(
         response: responseSnap.exists()
           ? firestoreToBuilderResponse(responseSnap.data())
           : { builderId, status: "new" as const, createdAt: null, updatedAt: null },
-        unlocked: unlockSnap.exists(),
+        unlocked: unlockSnap?.exists() ?? false,
       };
     }),
   );

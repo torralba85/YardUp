@@ -65,6 +65,7 @@ describe("POST /api/stripe/webhook", () => {
           data: {
             object: {
               id: "sess_1",
+              payment_status: "paid",
               amount_total: 4900,
               metadata: { builderId: "b1", requestId: "r1" },
             },
@@ -78,6 +79,29 @@ describe("POST /api/stripe/webhook", () => {
     expect(mocks.grant).toHaveBeenCalledWith(
       expect.objectContaining({ builderId: "b1", requestId: "r1", stripeSessionId: "sess_1" }),
     );
+  });
+
+  it("does not grant when the completed session is not paid", async () => {
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    mocks.stripe = {
+      webhooks: {
+        constructEvent: vi.fn(() => ({
+          type: "checkout.session.completed",
+          data: {
+            object: {
+              id: "sess_1",
+              payment_status: "unpaid",
+              amount_total: 4900,
+              metadata: { builderId: "b1", requestId: "r1" },
+            },
+          },
+        })),
+      },
+    };
+
+    const res = await POST(webhookRequest());
+    expect(res.status).toBe(200);
+    expect(mocks.grant).not.toHaveBeenCalled();
   });
 
   it("ignores unrelated event types", async () => {

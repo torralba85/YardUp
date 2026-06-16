@@ -2,6 +2,7 @@
 
 import { CheckCircle2, CircleSlash, FileText, Flag, Lock } from "lucide-react";
 import { finishLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
 import type {
   BuilderInboxItem,
   BuilderResponseStatus,
@@ -143,7 +144,7 @@ export default function LeadCard({
               className="mt-2.5 inline-flex items-center gap-2 bg-lf-forest px-4 py-2.5 text-sm font-semibold text-lf-sand transition hover:brightness-95"
             >
               Unlock lead
-              <span className="font-display text-base font-semibold">$49</span>
+              <span className="font-display text-base font-semibold">{formatUnlockPrice()}</span>
             </button>
           </div>
         )}
