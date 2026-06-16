@@ -38,16 +38,26 @@ const fnOpts = {
   region: "us-central1",
 };
 
-// One Next request handler backs both exports. firebase.json rewrites /api/**
-// to `api` and everything else to `app`; both resolve to the same handler.
+// One Next request handler backs all three exports. firebase.json routes
+// /api/stripe/** to `apiStripe`, the rest of /api/** to `api`, and everything
+// else to `app`; all resolve to the same handler and differ only in which
+// secrets are bound to the process.
 exports.app = onRequest(fnOpts, async (req, res) => {
   await ready();
   return handle(req, res);
 });
 
-// The /api/** rewrite (firebase.json) sends the Stripe checkout + webhook
-// routes here, so the Stripe secrets are bound to this function only.
-exports.api = onRequest(
+// Non-payment API routes (parcel/geocode/suggest/aerial). No Stripe secrets in
+// this process.
+exports.api = onRequest(fnOpts, async (req, res) => {
+  await ready();
+  return handle(req, res);
+});
+
+// Stripe checkout + webhook only. firebase.json routes /api/stripe/** here so
+// the payment secrets are bound to this function alone (least privilege) and
+// never reach the other API handlers.
+exports.apiStripe = onRequest(
   { ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] },
   async (req, res) => {
     await ready();

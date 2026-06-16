@@ -1,7 +1,8 @@
+import { LEAD_UNLOCK_PRICE_CENTS } from "./lead-unlock-pricing";
 import type { BuilderInboxItem } from "./marketplace-types";
 
-/** Flat unlock price in dollars (mirrors lib/stripe LEAD_UNLOCK_PRICE_CENTS). */
-const UNLOCK_PRICE = 49;
+/** Flat unlock price in dollars, derived from the shared cents constant. */
+const UNLOCK_PRICE = LEAD_UNLOCK_PRICE_CENTS / 100;
 
 export interface BuilderMetrics {
   total: number;
