@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { requireApiAuth } from "@/lib/server/api-auth";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -78,9 +77,6 @@ export interface GeocodeResult {
  * no provider can resolve it.
  */
 export async function GET(request: NextRequest) {
-  const auth = await requireApiAuth(request);
-  if (auth instanceof NextResponse) return auth;
-
   const limited = checkRateLimit(request, {
     limit: 30,
     namespace: "geocode",

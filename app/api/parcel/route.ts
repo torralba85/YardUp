@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { parcelPresets } from "@/lib/feasibility";
-import { requireApiAuth } from "@/lib/server/api-auth";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
@@ -22,9 +21,6 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-
-  const auth = await requireApiAuth(request);
-  if (auth instanceof NextResponse) return auth;
 
   const limited = checkRateLimit(request, {
     limit: 60,

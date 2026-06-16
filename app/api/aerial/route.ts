@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { requireApiAuth } from "@/lib/server/api-auth";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
@@ -56,9 +55,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const wStr = searchParams.get("w") ?? "800";
   const hStr = searchParams.get("h") ?? "540";
-
-  const auth = await requireApiAuth(request);
-  if (auth instanceof NextResponse) return auth;
 
   const limited = checkRateLimit(request, {
     limit: 120,

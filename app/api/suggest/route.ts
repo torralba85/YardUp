@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { requireApiAuth } from "@/lib/server/api-auth";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
 const GOOGLE_AUTOCOMPLETE_API =
@@ -25,9 +24,6 @@ export interface AddressSuggestions {
  * the input then falls back to plain submit-to-search.
  */
 export async function GET(request: NextRequest) {
-  const auth = await requireApiAuth(request);
-  if (auth instanceof NextResponse) return auth;
-
   const limited = checkRateLimit(request, {
     limit: 120,
     namespace: "suggest",
