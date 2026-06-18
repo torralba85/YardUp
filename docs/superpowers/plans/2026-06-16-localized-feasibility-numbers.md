@@ -479,19 +479,27 @@ function parseCsv(file) {
   const [header, ...rows] = text.split(/\r?\n/);
   const cols = header.split(",").map((c) => c.trim());
   return rows.map((line) => {
-    const cells = line.split(",");
+    // Split on commas only when outside double quotes (HUD area/county names
+    // like "King County, WA" are quoted), then strip the surrounding quotes.
+    const cells = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
     const rec = {};
-    cols.forEach((c, i) => (rec[c] = (cells[i] ?? "").trim()));
+    cols.forEach((c, i) => {
+      rec[c] = (cells[i] ?? "").replace(/^"|"$/g, "").trim();
+    });
     return rec;
   });
 }
 
 function row(rec) {
-  return {
-    studio: Number(rec.fmr_0),
-    "1br": Number(rec.fmr_1),
-    "2br": Number(rec.fmr_2),
-  };
+  const studio = Number(rec.fmr_0);
+  const oneBr = Number(rec.fmr_1);
+  const twoBr = Number(rec.fmr_2);
+  // Guard NaN/Infinity: JSON.stringify turns NaN into null, which violates the
+  // MarketData type (Record<BedroomClass, number>) and breaks the client.
+  if (![studio, oneBr, twoBr].every((n) => Number.isFinite(n))) {
+    throw new Error(`Invalid FMR values in row: ${JSON.stringify(rec)}`);
+  }
+  return { studio, "1br": oneBr, "2br": twoBr };
 }
 
 function main() {
@@ -501,11 +509,13 @@ function main() {
 
   for (const rec of parseCsv(path.join(SRC, "fmr-county.csv"))) {
     const st = rec.state_alpha;
+    if (!st || !rec.countyname) continue; // skip rows missing critical fields
     const county = rec.countyname.replace(/\s+County$/i, "");
     counties[`${st}/${county}`] = row(rec);
     if (!states[st]) states[st] = row(rec);
   }
   for (const rec of parseCsv(path.join(SRC, "fmr-zip.csv"))) {
+    if (!rec.zip_code) continue; // skip rows missing the ZIP key
     zips[rec.zip_code] = { area: rec.area_name || `ZIP ${rec.zip_code}`, ...row(rec) };
   }
 
