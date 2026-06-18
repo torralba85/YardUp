@@ -1,0 +1,7 @@
+# Default owners for everything in the repo, unless a later match takes precedence.
+* @torralba85 @andrewtorralba-collab
+
+# Deployment-sensitive paths: require the admin owner's eyes before merge.
+/firebase.json @torralba85
+/firestore.rules @torralba85
+/.github/workflows/ @torralba85
