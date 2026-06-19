@@ -4,6 +4,14 @@ All notable changes to LotFoundry are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/) and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Replaced the landing-page hero video with an interactive daylight ADU scene
+  that deconstructs into five feasibility layers as the user scrolls.
+- Added responsive layer navigation, a no-WebGL illustration fallback, and an
+  explicit daylight palette regression guard.
+
 ## [1.0.1] - 2026-06-10
 
 ### Fixed

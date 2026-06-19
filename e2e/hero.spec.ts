@@ -1,31 +1,35 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Landing poster hero", () => {
-  test("shows the asset headline, address instrument, and a stable full-bleed video", async ({ page }) => {
+test.describe("Landing daylight deconstruction hero", () => {
+  test("shows the cast headline, address instrument, and daylight scene", async ({ page }) => {
     await page.goto("/");
 
-    // Scope to the hero section — other sections repeat CTAs; we assert on
-    // the poster hero specifically.
-    const hero = page
-      .locator("section")
-      .filter({ hasText: /your backyard is an asset/i });
-
+    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
     await expect(
-      hero.getByRole("heading", { name: /your backyard is an asset/i }),
+      hero.getByRole("heading", { name: /your backyard, cast into an asset/i }),
     ).toBeVisible();
-
-    // Survey-instrument address search.
     await expect(hero.getByLabel(/property address/i)).toBeVisible();
     await expect(hero.getByRole("button", { name: /run feasibility/i })).toBeVisible();
+    await expect(hero.getByRole("button", { name: /jump to zoning envelope/i })).toBeVisible();
+    await expect(hero.locator('[data-scene-palette="daylight"]')).toBeVisible();
+    await expect(hero.locator("video")).toHaveCount(0);
 
-    // Bottom-docked instrument rail with engine-derived proof points.
-    await expect(hero.getByText(/rent potential/i)).toBeVisible();
-    await expect(hero.getByText(/payback estimate/i)).toBeVisible();
+    const box = await hero.locator(".sticky").boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThan(540);
+  });
 
-    const video = hero.locator("video");
-    await expect(video).toHaveAttribute("poster", "/hero/hero-poster.jpg");
-    const box = await video.boundingBox();
-    expect(box?.height ?? 0).toBeGreaterThan(540); // explicit min-height → no collapse
+  test("scrolls through the feasibility layers", async ({ page }) => {
+    await page.goto("/");
+    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
+    await hero.evaluate((element) => {
+      const top = window.scrollY + element.getBoundingClientRect().top;
+      const travel = element.clientHeight - window.innerHeight;
+      window.scrollTo(0, top + travel * 0.78);
+    });
+
+    await expect(
+      hero.getByRole("button", { name: /jump to finished value/i }),
+    ).toHaveAttribute("aria-current", "step");
   });
 
   test("routes the typed address to the studio", async ({ page }) => {
@@ -35,17 +39,12 @@ test.describe("Landing poster hero", () => {
     await expect(page).toHaveURL(/\/studio/);
   });
 
-  test("poster asset is served", async ({ page }) => {
-    const resp = await page.request.get("/hero/hero-poster.jpg");
-    expect(resp.status()).toBe(200);
-  });
-
-  test("does not autoplay under reduced motion", async ({ browser }) => {
+  test("keeps the daylight scene under reduced motion", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
-    const paused = await page.locator("video").first().evaluate((v: HTMLVideoElement) => v.paused);
-    expect(paused).toBe(true);
+    await expect(page.locator('[data-scene-palette="daylight"]')).toBeVisible();
+    await expect(page.locator("video")).toHaveCount(0);
     await context.close();
   });
 });
