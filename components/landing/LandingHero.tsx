@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
 import { BlueprintScene } from "./BlueprintScene";
 
 const FEASIBILITY_LAYERS = [
@@ -93,12 +93,7 @@ export function LandingHero() {
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.76)_34%,rgba(248,240,228,0.12)_61%,rgba(248,240,228,0)_100%)] max-sm:bg-[linear-gradient(180deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.5)_52%,rgba(248,240,228,0.88)_100%)]"
         />
 
-        <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.32, 0.72, 0, 1] }}
-          className="pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] max-sm:top-24 max-sm:w-[calc(100%-40px)]"
-        >
+        <div className="pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] max-sm:top-24 max-sm:w-[calc(100%-40px)]">
           <p className="mb-3 flex items-center gap-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.24em] text-lf-clay sm:text-xs">
             <span aria-hidden="true" className="h-px w-6 bg-lf-clay/70" />
             LotFoundry / feasibility studio
@@ -148,7 +143,7 @@ export function LandingHero() {
           <p className="mt-2 max-w-md text-[10px] leading-4 text-lf-muted sm:text-[11px]">
             Early estimate only. Local review is still required before design, permitting, financing, or investment decisions.
           </p>
-        </motion.div>
+        </div>
 
         <aside
           aria-label="Feasibility stack"

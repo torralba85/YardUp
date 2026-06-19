@@ -11,14 +11,14 @@ async function signUpUser(page: Page) {
 }
 
 test.describe("Public LotFoundry flows", () => {
-  test("loads the landing page with the income snapshot proof", async ({ page }, testInfo) => {
+  test("loads the landing page with the daylight feasibility hero", async ({ page }, testInfo) => {
     await page.goto("/");
 
     await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility & Income Estimates/);
-    await expect(page.getByRole("heading", { name: /Your backyard is an asset/i })).toBeVisible();
-    // Income-first proof — the instrument rail's engine-derived figures.
-    await expect(page.getByText(/Rent potential/i).first()).toBeVisible();
-    await expect(page.getByText(/Est\. net operating income/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Your backyard, cast into an asset/i })).toBeVisible();
+    // The scroll rail exposes the feasibility layers directly in the hero.
+    await expect(page.getByRole("complementary", { name: /Feasibility stack/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Jump to foundation/i })).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
       page.getByRole("heading", { name: /Know what to ask before you spend on plans/i }),

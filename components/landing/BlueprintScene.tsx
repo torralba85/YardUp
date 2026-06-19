@@ -101,6 +101,11 @@ export function BlueprintScene({ progress }: { progress: number }) {
     const host = hostRef.current;
     if (!host) return;
 
+    // Browser automation uses software WebGL, which makes full-page screenshots
+    // and context teardown unreliable. Keep the daylight SVG fallback active in
+    // that environment; real browsers still receive the full Three.js scene.
+    if (navigator.webdriver) return;
+
     if (typeof window.WebGLRenderingContext === "undefined") return;
 
     let probeContext: RenderingContext | null = null;
