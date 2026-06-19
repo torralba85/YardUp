@@ -3,85 +3,65 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
-import {
-  calculateFeasibility,
-  defaultAduConfig,
-  defaultFinancialAssumptions,
-  formatCurrency,
-  parcelPresets,
-} from "@/lib/feasibility";
+import { BlueprintScene } from "./BlueprintScene";
 
-// Instrument rail proof points come from the real engine on the Seattle
-// preset, so the landing page and the studio can never disagree.
-const SAMPLE_PARCEL = parcelPresets[0];
-const SAMPLE_RESULT = calculateFeasibility(
-  SAMPLE_PARCEL,
-  defaultAduConfig,
-  defaultFinancialAssumptions,
-);
+const FEASIBILITY_LAYERS = [
+  { id: "zoning", name: "Zoning envelope", detail: "parcel / setbacks", value: false },
+  { id: "foundation", name: "Foundation", detail: "slab / bearing", value: false },
+  { id: "structure", name: "Structure", detail: "framing / rafters", value: false },
+  { id: "shell", name: "Shell & glazing", detail: "walls / deck / glass", value: false },
+  { id: "roof", name: "Finished value", detail: "rentable asset", value: true },
+] as const;
 
-const RAIL_CELLS = [
-  {
-    label: "Rent potential",
-    value: `${formatCurrency(SAMPLE_PARCEL.expectedRent.conservative)}–${formatCurrency(
-      SAMPLE_PARCEL.expectedRent.optimistic,
-    ).replace("$", "")}`,
-    unit: "/mo",
-    money: true,
-  },
-  {
-    label: "Est. net operating income",
-    value: formatCurrency(SAMPLE_RESULT.annualNoi),
-    unit: "/yr",
-    money: true,
-  },
-  {
-    label: "Payback estimate",
-    value: SAMPLE_RESULT.paybackYears.toFixed(1),
-    unit: "yrs",
-    money: false,
-  },
-];
-
-/**
- * Poster hero (DESIGN.md v2). Full-bleed Remotion clip plays once and holds the
- * final frame; a left editorial scrim guarantees contrast. The headline sits
- * left and low, the address search is a survey instrument, and a financial
- * instrument rail docks to the bottom edge — value before features.
- */
-export function LandingHero() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [query, setQuery] = useState("");
-  const router = useRouter();
+function useHeroScrollProgress(ref: React.RefObject<HTMLElement | null>) {
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-    const video = videoRef.current;
-    if (!video) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const connection = (
-      navigator as Navigator & { connection?: { saveData?: boolean } }
-    ).connection;
-    const saveData = connection?.saveData === true;
-    if (reduce) {
-      console.log("Hero video blocked: prefers-reduced-motion is active.");
-      return;
-    }
-    if (saveData) {
-      console.log("Hero video blocked: saveData is active.");
-      return;
-    }
-    void video.play().catch((err) => {
-      console.warn("Hero video autoplay blocked by browser (e.g., low-power mode):", err);
-    });
-  }, []);
+    let frame = 0;
 
+    const measure = () => {
+      frame = 0;
+      const element = ref.current;
+      if (!element) return;
+      const rect = element.getBoundingClientRect();
+      const travel = Math.max(1, element.offsetHeight - window.innerHeight);
+      setProgress(Math.max(0, Math.min(1, -rect.top / travel)));
+    };
+
+    const queueMeasure = () => {
+      if (!frame) frame = window.requestAnimationFrame(measure);
+    };
+
+    queueMeasure();
+    window.addEventListener("scroll", queueMeasure, { passive: true });
+    window.addEventListener("resize", queueMeasure);
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", queueMeasure);
+      window.removeEventListener("resize", queueMeasure);
+    };
+  }, [ref]);
+
+  return progress;
+}
+
+/**
+ * Scroll-driven ADU deconstruction hero, ported from the supplied standalone
+ * LotFoundry prototype. The model stays pinned while its feasibility layers
+ * separate, with a keyboard-accessible rail for direct navigation.
+ */
+export function LandingHero() {
+  const trackRef = useRef<HTMLElement>(null);
+  const [query, setQuery] = useState("");
+  const router = useRouter();
   const reducedMotion = useReducedMotion();
-  const shouldAnimate = mounted && !reducedMotion;
-
-  const transition = { duration: 0.8, ease: [0.32, 0.72, 0, 1] as const };
+  const progress = useHeroScrollProgress(trackRef);
+  const activeLayer = Math.min(
+    FEASIBILITY_LAYERS.length - 1,
+    Math.floor(progress * FEASIBILITY_LAYERS.length + 0.15),
+  );
+  const percent = Math.round(progress * 100);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,78 +69,62 @@ export function LandingHero() {
     router.push(trimmed ? `/studio?q=${encodeURIComponent(trimmed)}` : "/studio");
   }
 
+  function jumpToLayer(index: number) {
+    const track = trackRef.current;
+    if (!track) return;
+    const targetProgress = (index + 0.6) / FEASIBILITY_LAYERS.length;
+    const trackTop = window.scrollY + track.getBoundingClientRect().top;
+    const travel = Math.max(1, track.offsetHeight - window.innerHeight);
+    window.scrollTo({
+      top: trackTop + targetProgress * travel,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  }
+
   return (
-    <section
-      className="relative flex items-end overflow-hidden"
-      style={{ minHeight: "clamp(620px, 92vh, 860px)" }}
-    >
-      <video
-        ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
-        poster="/hero/hero-poster.jpg"
-        muted
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-      >
-        <source src="/hero/hero.mp4" type="video/mp4" />
-      </video>
+    <section ref={trackRef} className="relative h-[340svh] bg-lf-sand-2" aria-label="ADU feasibility deconstruction">
+      <div className="sticky top-0 h-svh min-h-[620px] overflow-hidden bg-lf-sand-2 text-lf-espresso">
+        <div className="absolute inset-0">
+          <BlueprintScene progress={progress} />
+        </div>
 
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(38,19,7,0.92) 0%, rgba(38,19,7,0.55) 38%, rgba(38,19,7,0.12) 64%, rgba(38,19,7,0) 100%)",
-        }}
-      />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.76)_34%,rgba(248,240,228,0.12)_61%,rgba(248,240,228,0)_100%)] max-sm:bg-[linear-gradient(180deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.5)_52%,rgba(248,240,228,0.88)_100%)]"
+        />
 
-      {/* Headline block: left and low, clear of the bottom-docked rail. */}
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-80 pt-28 sm:pb-40">
         <motion.div
-          key={shouldAnimate ? "animated" : "static"}
-          initial={shouldAnimate ? { opacity: 0, y: 16 } : false}
+          initial={reducedMotion ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={transition}
-          className="max-w-2xl"
+          transition={{ duration: 0.8, ease: [0.32, 0.72, 0, 1] }}
+          className="pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] max-sm:top-24 max-sm:w-[calc(100%-40px)]"
         >
-          <motion.p
-            initial={shouldAnimate ? { opacity: 0 } : false}
-            animate={{ opacity: 0.85 }}
-            transition={{ ...transition, delay: 0.1 }}
-            className="font-mono text-xs font-semibold uppercase leading-4 tracking-normal text-lf-sand/85"
-          >
-            From lot to income
-          </motion.p>
+          <p className="mb-3 flex items-center gap-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.24em] text-lf-clay sm:text-xs">
+            <span aria-hidden="true" className="h-px w-6 bg-lf-clay/70" />
+            LotFoundry / feasibility studio
+          </p>
 
-          <motion.h1
-            initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...transition, delay: 0.2 }}
-            className="mt-3 max-w-[12ch] font-display text-5xl font-semibold leading-[1.02] text-lf-sand sm:text-6xl md:text-7xl lg:text-8xl"
-            style={{ textShadow: "0 2px 24px rgba(38,19,7,0.45)" }}
+          <h1
+            aria-label="Your backyard, cast into an asset."
+            className="font-display text-[clamp(3rem,5.3vw,4.75rem)] font-bold leading-[0.91] tracking-[-0.04em] text-lf-espresso"
           >
-            Your backyard is{" "}
-            <em className="italic text-lf-money-on-dark">an asset.</em>
-          </motion.h1>
+            Your backyard,
+            <br />
+            <span className="text-lf-clay">cast</span> into an asset.
+          </h1>
 
-          <motion.p
-            initial={shouldAnimate ? { opacity: 0, y: 10 } : false}
-            animate={{ opacity: 0.92, y: 0 }}
-            transition={{ ...transition, delay: 0.28 }}
-            className="mt-5 max-w-[52ch] text-base leading-7 text-lf-sand/86 sm:text-lg sm:leading-8"
-          >
-            Search your address and leave with a feasibility concept: site fit,
-            rent, build range, and payback in plain terms.
-          </motion.p>
+          <div className="relative mt-4 min-h-12 max-w-[32rem] text-sm leading-6 text-lf-espresso/65 sm:text-base sm:leading-7">
+            <p className={`absolute inset-0 transition-opacity duration-300 ${progress < 0.12 ? "opacity-100" : "opacity-0"}`}>
+              Scroll to break the build down to its layers.
+            </p>
+            <p className={`absolute inset-0 transition-opacity duration-300 ${progress < 0.12 ? "opacity-0" : "opacity-100"}`}>
+              Zoning, slab, structure, shell - assembled into rentable value.
+            </p>
+          </div>
 
-          {/* Survey-instrument address search. */}
-          <motion.form
-            initial={shouldAnimate ? { opacity: 0, y: 8 } : false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...transition, delay: 0.35 }}
+          <form
             onSubmit={handleSubmit}
-            className="mt-7 flex max-w-md items-stretch border-[1.5px] border-lf-espresso bg-lf-card"
-            style={{ boxShadow: "4px 4px 0 rgba(38,19,7,0.35)" }}
+            className="pointer-events-auto mt-5 flex max-w-md items-stretch overflow-hidden rounded-sm border border-lf-hairline bg-lf-card/95 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md"
           >
             <label htmlFor="hero-address" className="sr-only">
               Property address
@@ -172,61 +136,83 @@ export function LandingHero() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Enter your property address"
               autoComplete="street-address"
-              className="min-h-11 w-full flex-1 bg-transparent px-4 font-mono text-sm text-lf-espresso placeholder:text-lf-muted focus:outline-none"
+              className="min-h-11 min-w-0 flex-1 bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay sm:px-4 sm:text-xs"
             />
             <button
               type="submit"
-              className="min-h-11 shrink-0 bg-lf-forest px-5 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-forest/90"
+              className="min-h-11 shrink-0 bg-lf-forest px-3 text-xs font-semibold text-lf-sand transition-colors hover:bg-lf-mahogany focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-forest sm:px-5 sm:text-sm"
             >
               Run feasibility
             </button>
-          </motion.form>
-
-          <motion.p
-            initial={shouldAnimate ? { opacity: 0 } : false}
-            animate={{ opacity: 0.74 }}
-            transition={{ ...transition, delay: 0.42 }}
-            className="mt-3 max-w-md text-xs leading-5 text-lf-sand/74"
-          >
-            Uses parcel data where available. Local review is still required
-            before design, permit, financing, or investment decisions.
-          </motion.p>
+          </form>
+          <p className="mt-2 max-w-md text-[10px] leading-4 text-lf-muted sm:text-[11px]">
+            Early estimate only. Local review is still required before design, permitting, financing, or investment decisions.
+          </p>
         </motion.div>
-      </div>
 
-      {/* Financial instrument rail, docked to the bottom edge. */}
-      <motion.dl
-        initial={shouldAnimate ? { opacity: 0, y: 14 } : false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...transition, delay: 0.5 }}
-        className="absolute inset-x-0 bottom-0 z-10 grid grid-cols-1 border-t border-lf-taupe/35 bg-lf-espresso/95 sm:grid-cols-3"
-      >
-        {RAIL_CELLS.map(({ label, value, unit, money }) => (
-          <div
-            key={label}
-            className="border-b border-lf-taupe/20 px-6 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:py-5 sm:last:border-r-0"
-          >
-            <dt className="font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-lf-taupe">
-              {label}
-            </dt>
-            <dd
-              className={`mt-1 whitespace-nowrap font-display text-2xl font-semibold leading-none sm:text-[1.7rem] lg:text-3xl ${
-                money ? "text-lf-money-on-dark" : "text-lf-sand"
-              }`}
-            >
-              {value}
-              <span className="ml-1.5 font-mono text-xs font-normal text-lf-taupe">
-                {unit}
-              </span>
-            </dd>
+        <aside
+          aria-label="Feasibility stack"
+          className="absolute right-[clamp(18px,3.5vw,48px)] top-1/2 z-20 w-[min(300px,42vw)] -translate-y-1/2 rounded-2xl border border-lf-hairline bg-lf-card/80 p-3 font-mono shadow-[0_12px_40px_rgba(38,19,7,0.12)] backdrop-blur-xl max-sm:inset-x-3 max-sm:bottom-4 max-sm:top-auto max-sm:w-auto max-sm:translate-y-0 max-sm:p-2"
+        >
+          <div className="mb-3 flex items-baseline justify-between px-0.5 text-[10px] uppercase tracking-[0.16em] text-lf-muted max-sm:mb-2">
+            <span>Feasibility stack</span>
+            <b className="font-medium text-lf-clay">{percent}%</b>
           </div>
-        ))}
-        <div className="pointer-events-none absolute right-6 top-0 hidden -translate-y-1/2 sm:block">
-          <span className="border border-lf-taupe/40 bg-lf-espresso px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.17em] text-lf-taupe">
-            Sample lot · {SAMPLE_PARCEL.city}
-          </span>
+
+          <div className="space-y-1 max-sm:grid max-sm:grid-cols-5 max-sm:gap-1 max-sm:space-y-0">
+            {FEASIBILITY_LAYERS.map((layer, index) => {
+              const active = index === activeLayer;
+              return (
+                <button
+                  key={layer.id}
+                  type="button"
+                  aria-current={active ? "step" : undefined}
+                  aria-label={`Jump to ${layer.name}: ${layer.detail}`}
+                  onClick={() => jumpToLayer(index)}
+                  className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:p-1 ${
+                    active
+                      ? layer.value
+                        ? "border-lf-forest/40 bg-lf-forest-soft"
+                        : "border-lf-clay/35 bg-lf-clay/10"
+                      : "border-transparent hover:bg-lf-card/60"
+                  }`}
+                >
+                  <span
+                    className={`grid h-[30px] place-items-center rounded-lg border text-[11px] transition-colors ${
+                      active
+                        ? layer.value
+                          ? "border-lf-forest bg-lf-forest text-lf-sand"
+                          : "border-lf-clay bg-lf-clay text-lf-sand"
+                        : "border-lf-taupe/45 text-lf-muted"
+                    }`}
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="max-sm:hidden">
+                    <span className={`block text-[13px] ${active ? "text-lf-espresso" : "text-lf-muted"}`}>{layer.name}</span>
+                    <span className="mt-0.5 block text-[10px] text-lf-muted/70">{layer.detail}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mx-0.5 mt-4 h-0.5 overflow-hidden rounded-full bg-lf-hairline max-sm:mt-2">
+            <div
+              className="h-full bg-gradient-to-r from-lf-clay to-lf-forest transition-[width] duration-100"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </aside>
+
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
+        >
+          <span className="relative h-7 w-[18px] rounded-full border border-lf-muted/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-lf-clay" />
+          Scroll to deconstruct
         </div>
-      </motion.dl>
+      </div>
     </section>
   );
 }
