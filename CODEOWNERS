@@ -1,0 +1,10 @@
+# Default owners for everything in the repo, unless a later match takes precedence.
+*                           @torralba85 @andrewtorralba-collab
+
+# CI deploys straight to production Firebase on every push to master.
+# Keep deploy-path changes reviewed by the admin owner.
+/firebase.json              @torralba85
+/firestore.rules            @torralba85
+/firestore.indexes.json     @torralba85
+/.github/workflows/         @torralba85
+/scripts/prepare-firebase.js @torralba85
