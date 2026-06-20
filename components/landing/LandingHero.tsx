@@ -62,6 +62,7 @@ export function LandingHero() {
     Math.floor(progress * FEASIBILITY_LAYERS.length + 0.15),
   );
   const percent = Math.round(progress * 100);
+  const mobileSceneFocused = progress >= 0.1;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,17 +84,20 @@ export function LandingHero() {
 
   return (
     <section ref={trackRef} className="relative h-[340svh] bg-lf-sand-2" aria-label="ADU feasibility deconstruction">
-      <div className="sticky top-0 h-svh min-h-[620px] overflow-hidden bg-lf-sand-2 text-lf-espresso">
+      <div className="sticky top-0 h-svh min-h-[568px] overflow-hidden bg-lf-sand-2 text-lf-espresso sm:min-h-[620px]">
         <div className="absolute inset-0">
           <BlueprintScene progress={progress} />
         </div>
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.76)_34%,rgba(248,240,228,0.12)_61%,rgba(248,240,228,0)_100%)] max-sm:bg-[linear-gradient(180deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.5)_52%,rgba(248,240,228,0.88)_100%)]"
+          className={`pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.76)_34%,rgba(248,240,228,0.12)_61%,rgba(248,240,228,0)_100%)] transition-opacity duration-300 max-sm:bg-[linear-gradient(180deg,rgba(248,240,228,0.98)_0%,rgba(248,240,228,0.5)_52%,rgba(248,240,228,0.88)_100%)] ${mobileSceneFocused ? "max-sm:opacity-25" : "opacity-100"}`}
         />
 
-        <div className="pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] max-sm:top-24 max-sm:w-[calc(100%-40px)]">
+        <div
+          data-testid="hero-copy"
+          className={`pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] transition-[opacity,transform] duration-300 max-sm:top-24 max-sm:w-[calc(100%-40px)] ${mobileSceneFocused ? "max-sm:-translate-y-4 max-sm:opacity-0" : "max-sm:opacity-100"}`}
+        >
           <p className="mb-3 flex items-center gap-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.24em] text-lf-clay sm:text-xs">
             <span aria-hidden="true" className="h-px w-6 bg-lf-clay/70" />
             LotFoundry / feasibility studio
@@ -101,7 +105,7 @@ export function LandingHero() {
 
           <h1
             aria-label="Your backyard, cast into an asset."
-            className="font-display text-[clamp(3rem,5.3vw,4.75rem)] font-bold leading-[0.91] tracking-[-0.04em] text-lf-espresso"
+            className="font-display text-[clamp(2.6rem,13vw,3.2rem)] font-bold leading-[0.91] tracking-[-0.04em] text-lf-espresso sm:text-[clamp(3rem,5.3vw,4.75rem)]"
           >
             Your backyard,
             <br />

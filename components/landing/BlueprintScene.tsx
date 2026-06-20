@@ -45,6 +45,21 @@ type ScenePart = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> & 
 
 type LabelSprite = THREE.Sprite & { userData: { layer: LayerId } };
 
+export function getSceneViewportProfile(width: number) {
+  const mobile = width < 820;
+  return {
+    mobile,
+    antialias: !mobile,
+    maxPixelRatio: mobile ? 1.25 : 1.75,
+    shadows: !mobile,
+    rootScale: mobile ? 0.86 : 1,
+    rootY: mobile ? -0.18 : 0,
+    cameraRadius: mobile ? ([12.2, 17.8] as const) : ([8.8, 13.5] as const),
+    cameraHeight: mobile ? ([3.7, 7.5] as const) : ([2.6, 6.2] as const),
+    cameraTargetY: mobile ? ([0.45, 2.1] as const) : ([0.5, 1.9] as const),
+  };
+}
+
 const W = 5.2;
 const D = 3.4;
 const SLOPE = 0.14;
@@ -101,43 +116,42 @@ export function BlueprintScene({ progress }: { progress: number }) {
     const host = hostRef.current;
     if (!host) return;
 
+    host.dataset.rendererState = "initializing";
+
     // Browser automation uses software WebGL, which makes full-page screenshots
     // and context teardown unreliable. Keep the daylight SVG fallback active in
     // that environment; real browsers still receive the full Three.js scene.
-    if (navigator.webdriver) return;
-
-    if (typeof window.WebGLRenderingContext === "undefined") return;
-
-    let probeContext: RenderingContext | null = null;
-    try {
-      const probe = document.createElement("canvas");
-      probeContext =
-        probe.getContext("webgl2") ??
-        probe.getContext("webgl") ??
-        probe.getContext("experimental-webgl");
-    } catch {
+    if (navigator.webdriver) {
+      host.dataset.rendererState = "fallback";
       return;
     }
-    if (!probeContext) return;
+
+    if (typeof window.WebGLRenderingContext === "undefined") {
+      host.dataset.rendererState = "fallback";
+      return;
+    }
+
+    let viewportProfile = getSceneViewportProfile(host.clientWidth || window.innerWidth);
 
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: true,
+        antialias: viewportProfile.antialias,
         alpha: true,
-        powerPreference: "high-performance",
+        powerPreference: viewportProfile.mobile ? "default" : "high-performance",
       });
     } catch {
+      host.dataset.rendererState = "fallback";
       return;
     }
 
     renderer.domElement.className = "absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500";
     renderer.domElement.setAttribute("aria-hidden", "true");
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, viewportProfile.maxPixelRatio));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.98;
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = viewportProfile.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     host.appendChild(renderer.domElement);
 
@@ -153,10 +167,12 @@ export function BlueprintScene({ progress }: { progress: number }) {
     const root = new THREE.Group();
     scene.add(root);
 
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.12, 0.55, 1));
-    composer.addPass(new OutputPass());
+    const composer = viewportProfile.mobile ? null : new EffectComposer(renderer);
+    if (composer) {
+      composer.addPass(new RenderPass(scene, camera));
+      composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.12, 0.55, 1));
+      composer.addPass(new OutputPass());
+    }
 
     scene.add(
       new THREE.HemisphereLight(
@@ -168,7 +184,8 @@ export function BlueprintScene({ progress }: { progress: number }) {
     const key = new THREE.DirectionalLight(0xfff6e9, 2.1);
     key.position.set(5, 8.5, 7);
     key.castShadow = true;
-    key.shadow.mapSize.set(1536, 1536);
+    const shadowMapSize = viewportProfile.mobile ? 768 : 1536;
+    key.shadow.mapSize.set(shadowMapSize, shadowMapSize);
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 30;
     key.shadow.camera.left = -7;
@@ -559,21 +576,25 @@ export function BlueprintScene({ progress }: { progress: number }) {
     const resize = () => {
       const width = Math.max(1, host.clientWidth);
       const height = Math.max(1, host.clientHeight);
+      viewportProfile = getSceneViewportProfile(width);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, viewportProfile.maxPixelRatio));
+      renderer.shadowMap.enabled = viewportProfile.shadows;
       renderer.setSize(width, height, false);
-      composer.setSize(width, height);
+      composer?.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      const mobile = width < 820;
-      root.scale.setScalar(mobile ? 0.76 : 1);
-      root.position.set(mobile ? 0.15 : 0, mobile ? -0.35 : 0, 0);
+      root.scale.setScalar(viewportProfile.rootScale);
+      root.position.set(0, viewportProfile.rootY, 0);
     };
 
     const onContextLost = (event: Event) => {
       event.preventDefault();
       renderer.domElement.style.opacity = "0";
+      host.dataset.rendererState = "lost";
     };
     const onContextRestored = () => {
       renderer.domElement.style.opacity = "1";
+      host.dataset.rendererState = "ready";
     };
     renderer.domElement.addEventListener("webglcontextlost", onContextLost);
     renderer.domElement.addEventListener("webglcontextrestored", onContextRestored);
@@ -610,20 +631,29 @@ export function BlueprintScene({ progress }: { progress: number }) {
       });
 
       const azimuth = lerp(0.6, 0.9, exploded);
-      const radius = lerp(8.8, 13.5, exploded);
-      const height = lerp(2.6, 6.2, exploded);
+      const radius = lerp(viewportProfile.cameraRadius[0], viewportProfile.cameraRadius[1], exploded);
+      const height = lerp(viewportProfile.cameraHeight[0], viewportProfile.cameraHeight[1], exploded);
       const idle = reduceMotion ? 0 : Math.sin(performance.now() * 0.00018) * 0.05 * (1 - exploded);
       camera.position.set(
         Math.sin(azimuth + idle) * radius,
         height,
         Math.cos(azimuth + idle) * radius,
       );
-      camera.lookAt(0, lerp(0.5, 1.9, exploded), 0.4);
+      camera.lookAt(
+        0,
+        lerp(viewportProfile.cameraTargetY[0], viewportProfile.cameraTargetY[1], exploded),
+        0.4,
+      );
       emberLight.intensity = reduceMotion ? 0.7 : 0.7 + Math.sin(performance.now() * 0.0021) * 0.08;
 
-      composer.render();
+      if (composer && !viewportProfile.mobile) {
+        composer.render();
+      } else {
+        renderer.render(scene, camera);
+      }
       if (firstFrame) {
         renderer.domElement.style.opacity = "1";
+        host.dataset.rendererState = "ready";
         firstFrame = false;
       }
       frame = window.requestAnimationFrame(renderFrame);
@@ -663,7 +693,7 @@ export function BlueprintScene({ progress }: { progress: number }) {
       environment.dispose();
       environmentScene.dispose();
       pmrem.dispose();
-      composer.dispose();
+      composer?.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();
@@ -673,6 +703,8 @@ export function BlueprintScene({ progress }: { progress: number }) {
   return (
     <div
       ref={hostRef}
+      data-testid="blueprint-scene"
+      data-renderer-state="fallback"
       data-scene-palette={HERO_SCENE_PALETTE.mode}
       className="relative h-full w-full overflow-hidden bg-lf-sand-2"
     >
