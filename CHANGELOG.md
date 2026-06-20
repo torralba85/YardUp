@@ -12,6 +12,10 @@ All notable changes to LotFoundry are documented here. Format follows
 - Added responsive layer navigation, a no-WebGL illustration fallback, and an
   explicit daylight palette regression guard.
 
+### Fixed
+- Kept the landing ADU fully framed and unobstructed on narrow screens while
+  reducing mobile WebGL load to avoid silent renderer failures.
+
 ## [1.0.1] - 2026-06-10
 
 ### Fixed

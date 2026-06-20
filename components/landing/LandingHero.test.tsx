@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LandingHero } from "./LandingHero";
-import { HERO_SCENE_PALETTE } from "./BlueprintScene";
+import { getSceneViewportProfile, HERO_SCENE_PALETTE } from "./BlueprintScene";
 
 const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
 
@@ -73,6 +73,7 @@ describe("LandingHero deconstruction hero", () => {
     const { container } = render(<LandingHero />);
     expect(container.querySelector("svg")).not.toBeNull();
     expect(container.querySelector('[data-scene-palette="daylight"]')).not.toBeNull();
+    expect(container.querySelector('[data-renderer-state="fallback"]')).not.toBeNull();
   });
 
   it("locks the 3D scene to LotFoundry's daylight palette", () => {
@@ -82,6 +83,26 @@ describe("LandingHero deconstruction hero", () => {
       skyLight: 0xeaf4f6,
       groundLight: 0xbfa58e,
       groundStops: ["#9aa27b", "#7f8c69", "#eadfce"],
+    });
+  });
+
+  it("uses a lighter, wider camera profile on mobile", () => {
+    const mobile = getSceneViewportProfile(390);
+    const desktop = getSceneViewportProfile(1440);
+
+    expect(mobile).toMatchObject({
+      mobile: true,
+      antialias: false,
+      maxPixelRatio: 1.25,
+      shadows: false,
+      cameraRadius: [12.2, 17.8],
+    });
+    expect(desktop).toMatchObject({
+      mobile: false,
+      antialias: true,
+      maxPixelRatio: 1.75,
+      shadows: true,
+      cameraRadius: [8.8, 13.5],
     });
   });
 

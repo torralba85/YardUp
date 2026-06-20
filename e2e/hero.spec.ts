@@ -11,11 +11,31 @@ test.describe("Landing daylight deconstruction hero", () => {
     await expect(hero.getByLabel(/property address/i)).toBeVisible();
     await expect(hero.getByRole("button", { name: /run feasibility/i })).toBeVisible();
     await expect(hero.getByRole("button", { name: /jump to zoning envelope/i })).toBeVisible();
-    await expect(hero.locator('[data-scene-palette="daylight"]')).toBeVisible();
+    const scene = hero.getByTestId("blueprint-scene");
+    await expect(scene).toBeVisible();
+    await expect(scene).toHaveAttribute("data-renderer-state", "fallback");
     await expect(hero.locator("video")).toHaveCount(0);
 
     const box = await hero.locator(".sticky").boundingBox();
     expect(box?.height ?? 0).toBeGreaterThan(540);
+  });
+
+  test("clears the copy to keep the scene readable during mobile scroll", async ({
+    page,
+    viewport,
+  }) => {
+    test.skip(!viewport || viewport.width >= 640, "mobile-only regression");
+    await page.goto("/");
+
+    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
+    await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.7)));
+    await expect(hero.getByTestId("hero-copy")).toHaveCSS("opacity", "0");
+
+    const scene = hero.getByTestId("blueprint-scene");
+    await expect(scene).toBeVisible();
+    const box = await scene.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(viewport!.width);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(viewport!.height);
   });
 
   test("scrolls through the feasibility layers", async ({ page }) => {
