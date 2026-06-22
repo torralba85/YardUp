@@ -2,13 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { BadgeDollarSign, CircleCheck, Clock3, Hammer } from "lucide-react";
 import {
   calculateFeasibility,
   defaultAduConfig,
   defaultFinancialAssumptions,
-  formatCompactCurrency,
-  formatCurrency,
   getParcelById,
   parcelPresets,
   type ADUConfig,
@@ -42,17 +39,19 @@ import EstimateSummaryPanel from "./studio/EstimateSummaryPanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
-import type { FeasibilityResult } from "./studio/types";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { configForFootprint } from "@/lib/feasibility";
-import { useCountUp } from "./studio/use-count-up";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { markWizardSeen, shouldShowWizard } from "@/lib/wizard-state";
 import MobileStudio from "./studio/mobile/MobileStudio";
 import MobileHeader from "./studio/mobile/MobileHeader";
 import PeekMetrics from "./studio/mobile/PeekMetrics";
 import WizardFlow from "./studio/mobile/WizardFlow";
+// ── Redesign: feasibility-verdict-led studio ────────────────────────────────
+import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
+import ConstraintsPanel from "./studio/ConstraintsPanel";
+import StudioTabBar, { type StudioTab } from "./studio/StudioTabBar";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -98,6 +97,8 @@ function FeasibilityStudioInner() {
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("studio");
+  // Redesign: in-studio tabs (Feasibility / Massing / Certificate).
+  const [studioTab, setStudioTab] = useState<StudioTab>("feasibility");
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
@@ -208,6 +209,7 @@ function FeasibilityStudioInner() {
     setReportOpen(false);
     setBuilderLeadOpen(false);
     setActiveNav("studio");
+    setStudioTab("feasibility");
     setReportAutoFocus(false);
   }
 
@@ -452,6 +454,11 @@ function FeasibilityStudioInner() {
     );
   }
 
+  const parcelName = `${activeParcel.address}, ${activeParcel.city}`;
+  // Hide the metrics strip only on the Certificate tab, which carries its own
+  // summary. Every other view keeps it (matches prior behavior).
+  const showMetrics = !(activeNav === "studio" && studioTab === "certificate");
+
   return (
     <AppShell
       activeNav={activeNav}
@@ -464,18 +471,14 @@ function FeasibilityStudioInner() {
       onDeleteScenario={handleDeleteScenario}
       deleteNotice={deleteNotice}
     >
-      <div className="flex flex-col lg:flex-row lg:flex-1 lg:min-h-0">
-        <section
-          aria-label="Parcel massing scene"
-          className="lf-entrance relative min-h-[440px] md:min-h-[480px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso lg:min-h-0 lg:border-b-0 lg:border-r"
-        >
-          <IncomeLens result={result} isCompliant={isCompliant} />
-          {sceneNode}
-        </section>
-
-        {activeNav === "guide" ? (
-          <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
-        ) : activeNav === "inspiration" ? (
+      {activeNav === "guide" ? (
+        <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
+          <SceneSection sceneNode={sceneNode} />
+          <PermitGuidePanel address={parcelName} />
+        </div>
+      ) : activeNav === "inspiration" ? (
+        <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
+          <SceneSection sceneNode={sceneNode} />
           <InspirationGalleryPanel
             onApply={(item) => {
               const baseConfig = configForFootprint(item.sqft, config);
@@ -489,36 +492,69 @@ function FeasibilityStudioInner() {
               setActiveNav("studio");
             }}
           />
-        ) : activeNav === "summary" ? (
+        </div>
+      ) : activeNav === "summary" ? (
+        <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
+          <SceneSection sceneNode={sceneNode} />
           <EstimateSummaryPanel
-            parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+            parcelName={parcelName}
             result={result}
             onGenerateReport={handleGenerateReport}
           />
-        ) : (
-          <FeasibilityInspector
-            parcelId={parcelId}
-            config={config}
-            assumptions={assumptions}
-            result={result}
-            onParcelChange={setParcelId}
-            onConfigChange={setConfig}
-            onAssumptionsChange={setAssumptions}
-            onReset={resetScenario}
-            onGenerateReport={handleGenerateReport}
-            onSaveScenario={handleSaveScenario}
-            savingScenario={savingScenario}
-            saveNotice={saveNotice}
-          />
-        )}
-      </div>
+        </div>
+      ) : (
+        // ── Redesigned "Feasibility Studio" view ────────────────────────────
+        <div className="flex min-h-0 flex-1 flex-col">
+          <FeasibilityVerdictBand parcel={activeParcel} result={result} />
+          <StudioTabBar active={studioTab} onChange={setStudioTab} />
 
-      <div className="lf-entrance lf-entrance-delay-1">
-        <MetricsSummary result={result} />
-      </div>
+          {studioTab === "certificate" ? (
+            <EstimateSummaryPanel
+              parcelName={parcelName}
+              result={result}
+              onGenerateReport={handleGenerateReport}
+            />
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+              <SceneSection sceneNode={sceneNode} />
+              {studioTab === "massing" ? (
+                <FeasibilityInspector
+                  parcelId={parcelId}
+                  config={config}
+                  assumptions={assumptions}
+                  result={result}
+                  onParcelChange={setParcelId}
+                  onConfigChange={setConfig}
+                  onAssumptionsChange={setAssumptions}
+                  onReset={resetScenario}
+                  onGenerateReport={handleGenerateReport}
+                  onSaveScenario={handleSaveScenario}
+                  savingScenario={savingScenario}
+                  saveNotice={saveNotice}
+                />
+              ) : (
+                <ConstraintsPanel
+                  parcel={activeParcel}
+                  result={result}
+                  onGenerateReport={() => {
+                    setStudioTab("certificate");
+                    handleGenerateReport();
+                  }}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showMetrics && (
+        <div className="lf-entrance lf-entrance-delay-1">
+          <MetricsSummary result={result} />
+        </div>
+      )}
       {reportOpen && (
         <ReportPreview
-          parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+          parcelName={parcelName}
           result={result}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
@@ -547,87 +583,14 @@ function FeasibilityStudioInner() {
   );
 }
 
-function IncomeLens({
-  result,
-  isCompliant,
-}: {
-  result: FeasibilityResult;
-  isCompliant: boolean;
-}) {
-  const rent = useCountUp(result.monthlyRent);
-  const noi = useCountUp(result.annualNoi);
+/** Shared parcel-scene panel used by every desktop view. */
+function SceneSection({ sceneNode }: { sceneNode: React.ReactNode }) {
   return (
-    <div className="pointer-events-none absolute left-4 right-16 top-4 z-30 max-w-[760px] rounded-md border border-lf-taupe/25 bg-lf-espresso/90 p-4 text-lf-sand-2 shadow-lg sm:left-5 sm:right-auto sm:min-w-[520px]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-lf-taupe">
-            ADU income potential
-          </p>
-          <h2 className="mt-1 font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-lf-sand tabular-nums sm:text-5xl sm:leading-[0.95] md:text-6xl">
-            {formatCurrency(rent)}
-            <span className="ml-2 font-sans text-base font-medium tracking-normal text-lf-sand/70 pl-1.5">/ mo rent</span>
-          </h2>
-          {/* Gold-leaf value hairline mirrors the MetricsSummary lead cells. */}
-          <span aria-hidden className="mt-2 block h-px w-16 bg-lf-amber" />
-        </div>
-        <div
-          className={`rounded-md border px-3 py-2 text-sm font-semibold ${
-            isCompliant
-              ? "border-lf-forest bg-lf-forest text-lf-sand"
-              : "border-lf-clay bg-lf-clay text-lf-sand"
-          }`}
-        >
-          {result.zoningStatus}
-        </div>
-      </div>
-
-      <div className="mt-4 hidden sm:grid sm:gap-2 sm:grid-cols-3">
-        <LensFact
-          icon={BadgeDollarSign}
-          label="Annual NOI"
-          value={formatCurrency(noi)}
-          fontClass="font-display text-white text-2xl"
-        />
-        <LensFact
-          icon={Clock3}
-          label="Payback"
-          value={`${result.paybackYears} yrs`}
-          fontClass="font-display text-white text-2xl"
-        />
-        <LensFact
-          icon={Hammer}
-          label="Build range"
-          value={`${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`}
-          fontClass="font-mono text-base mt-1.5 text-lf-sand-2"
-        />
-      </div>
-
-      <div className="mt-3 hidden items-start gap-2 text-xs leading-5 text-lf-taupe sm:flex">
-        <CircleCheck size={15} className="mt-0.5 shrink-0 text-lf-clay" />
-        Estimate updates as you change parcel, size, finish, and rent assumptions.
-      </div>
-    </div>
-  );
-}
-
-function LensFact({
-  icon: Icon,
-  label,
-  value,
-  fontClass = "font-display text-white text-xl",
-}: {
-  icon: typeof BadgeDollarSign;
-  label: string;
-  value: string;
-  fontClass?: string;
-}) {
-  return (
-    <div className="rounded-md border border-lf-taupe/15 bg-lf-sand-2/[0.08] px-3 py-2">
-      <div className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-lf-taupe">
-        <Icon size={14} />
-        {label}
-      </div>
-      <div className={`mt-1 font-semibold tracking-tight ${fontClass}`}>{value}</div>
-    </div>
+    <section
+      aria-label="Parcel massing scene"
+      className="lf-entrance relative min-h-[440px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
+    >
+      {sceneNode}
+    </section>
   );
 }
