@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Check, Layers, RefreshCcw, X, XCircle } from "lucide-react";
 
 /** Props for {@link BeforeAfterBoard}. */
@@ -59,6 +59,8 @@ export default function BeforeAfterBoard({
   serialNo = "SM-E8D2C9",
   dateStr,
 }: BeforeAfterBoardProps) {
+  const [mountedDateStr, setMountedDateStr] = useState("");
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -74,6 +76,12 @@ export default function BeforeAfterBoard({
     };
   }, [isOpen, onClose]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setMountedDateStr(new Date().toISOString().split("T")[0] + " UTC");
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   if (!isOpen) return null;
 
   const handleScrimClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -82,7 +90,7 @@ export default function BeforeAfterBoard({
     }
   };
 
-  const finalDateStr = dateStr || new Date().toISOString().split("T")[0] + " UTC";
+  const finalDateStr = dateStr || mountedDateStr;
 
   return (
     <div
