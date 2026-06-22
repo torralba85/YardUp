@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
   try {
     const bytes = Buffer.from(await image.arrayBuffer());
     const imageUrl = `data:${image.type};base64,${bytes.toString("base64")}`;
-    const textModel = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
-    const imageModel = process.env.OPENAI_IMAGE_MODEL || textModel;
+const textModel = process.env.OPENAI_TEXT_MODEL || "gpt-4o-mini";
+const imageModel = process.env.OPENAI_IMAGE_MODEL || "dall-e-3";
 
     const styleResponse = await createOpenAIResponse({
       model: textModel,
