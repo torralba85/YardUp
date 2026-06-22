@@ -7,6 +7,8 @@ A production-grade ADU feasibility studio. Search a real property address to pul
 - **Live parcel search:** Enter any US residential address → Regrid parcel API returns actual lot dimensions, setbacks, and zoning
 - **Aerial visualization:** Google Maps Static satellite view with parcel boundary + ADU footprint overlay
 - **Feasibility engine:** Instant NOI, payback, build cost ranges, and zoning compliance
+- **AI property insights:** Server-side OpenAI route explains the active parcel, ADU fit, risks, and next steps
+- **AI style-matched concepts:** Upload a home photo and generate a conceptual ADU mockup that matches visible exterior style cues
 - **Demo mode:** Three hardcoded presets (Seattle, Portland, Austin) for offline / API-less use
 - **Scenario persistence:** Authenticated users save scenarios to Firebase; guest users keep local browser saves; shareable deep-link URLs
 - **Concept report:** Printable / downloadable PDF-quality summary
@@ -22,13 +24,16 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-### Environment Variables (optional — enables live parcel data)
+### Environment Variables (optional — enables live parcel data and AI)
 
 Create `.env.local`:
 ```
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
+OPENAI_API_KEY=<server-side OpenAI API key>
+OPENAI_TEXT_MODEL=gpt-5.5
+OPENAI_IMAGE_MODEL=gpt-5.5
 NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
@@ -38,6 +43,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 ```
 
 Without parcel API keys the app runs in demo mode with the three built-in presets.
+Without `OPENAI_API_KEY`, the AI panels stay visible but return a setup message instead of generating content.
 Without Firebase overrides the app uses the checked-in `yardup-2026` web app config.
 
 ## Verification Commands
@@ -70,9 +76,10 @@ CI runs on every push to `main`/`master` and on every pull request via `.github/
 
 ## Deployment
 
-The app deploys to Firebase Hosting + Cloud Functions. Set the three environment variables in the Firebase Functions config. See `docs/deployment.md` for the full deployment guide, including CI setup, post-deploy smoke checks, and rollback steps.
+The app deploys to Firebase Hosting + Cloud Functions. Set the required server-side variables in the Firebase Functions config. See `docs/deployment.md` for the full deployment guide, including CI setup, post-deploy smoke checks, and rollback steps.
 
 ## Scope Notes
 
 - Feasibility and financial outputs are estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents with local professionals before investing.
 - Parcel data is sourced from Regrid and may not reflect recent changes. Always verify with your local jurisdiction.
+- AI property insights and style-matched ADU images are conceptual aids, not permit approvals, construction documents, or architectural advice.
