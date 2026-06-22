@@ -71,6 +71,7 @@ Key entry points:
 - `docs/deployment.md` - Firebase deploy flow, CI secrets, rollback, deployment troubleshooting.
 - `docs/release-checklist.md` - manual and automated release checks.
 - `docs/feasibility-engine-interface.md` - calculation/data contract details.
+- `docs/repo-governance.md` - issue triage, bisecting/repro, branch strategy, release/maintenance cadence, and the `.github/` templates they support.
 
 ## Design System
 
