@@ -59,11 +59,16 @@ const US_STATE_NAMES: Record<string, string> = {
   WY: "Wyoming",
 };
 
+/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
+/** Shape of a successful `/api/geocode` response. */
 export interface GeocodeResult {
+  /** Latitude in decimal degrees. */
   lat: number;
+  /** Longitude in decimal degrees. */
   lng: number;
+  /** The provider's normalized, human-readable address. */
   formattedAddress: string;
 }
 

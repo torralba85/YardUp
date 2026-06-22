@@ -4,12 +4,22 @@ import { BarChart3, CheckCircle2, FileText, Home, Ruler, SlidersHorizontal } fro
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 
+/** Props for {@link EstimateSummaryPanel}. */
 export interface EstimateSummaryPanelProps {
+  /** Display name of the parcel being summarized. */
   parcelName: string;
+  /** The feasibility result whose figures are summarized. */
   result: FeasibilityResult;
+  /** Called when the user requests report generation. */
   onGenerateReport: () => void;
 }
 
+/**
+ * The "Estimate Summary" section: a consolidated metrics grid (rent, net
+ * income, build range, payback) with a call to generate the feasibility report.
+ *
+ * @param props - The {@link EstimateSummaryPanelProps}.
+ */
 export default function EstimateSummaryPanel({
   parcelName,
   result,

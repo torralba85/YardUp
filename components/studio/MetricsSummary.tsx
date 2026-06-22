@@ -3,10 +3,19 @@ import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 import { useCountUp } from "./use-count-up";
 
+/** Props for {@link MetricsSummary}. */
 export interface MetricsSummaryProps {
+  /** The feasibility result whose figures are displayed. */
   result: FeasibilityResult;
 }
 
+/**
+ * The studio's headline metrics block: a lead tier (monthly rent, annual NOI)
+ * with animated count-up display numerals, plus a supporting tier (build cost
+ * range, payback, etc.) styled per `DESIGN.md`.
+ *
+ * @param props - The {@link MetricsSummaryProps}.
+ */
 export default function MetricsSummary({ result }: MetricsSummaryProps) {
   // Lead tier: the two figures that carry the "this is the money" story.
   // Serif display numerals, amber gold-leaf hairline, animated count-up.

@@ -9,11 +9,17 @@ export function unlockId(builderId: string, requestId: string): string {
   return `${builderId}_${requestId}`;
 }
 
+/** Fields needed to record a paid lead-unlock grant. */
 export interface GrantLeadUnlockInput {
+  /** The builder receiving the unlock. */
   builderId: string;
+  /** The connection request being unlocked. */
   requestId: string;
+  /** The Stripe Checkout session id that paid for the unlock. */
   stripeSessionId: string;
+  /** Amount paid, in cents. */
   amount: number;
+  /** Whether this is a demo (non-paid) grant. */
   demo?: boolean;
 }
 
@@ -48,6 +54,13 @@ export async function grantLeadUnlock(
   }
 }
 
+/**
+ * Check whether a builder already holds an unlock grant for a lead.
+ *
+ * @param builderId - The builder's id.
+ * @param requestId - The connection request id.
+ * @returns `true` if a grant document exists.
+ */
 export async function isLeadUnlocked(
   builderId: string,
   requestId: string,

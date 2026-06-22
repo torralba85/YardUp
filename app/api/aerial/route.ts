@@ -5,6 +5,7 @@ import { parseCoordinateParams } from "@/lib/server/request-validation";
 const MAPS_STATIC_API = "https://maps.googleapis.com/maps/api/staticmap";
 const TIMEOUT_MS = 5000;
 
+/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
 function aerialFallbackResponse(reason: "unconfigured" | "upstream") {

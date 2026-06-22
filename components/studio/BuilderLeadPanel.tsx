@@ -11,11 +11,23 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 
+/** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
+  /** The validated owner contact details. */
   contact: OwnerContact;
+  /** The full feasibility snapshot to attach to the lead. */
   snapshot: ConnectionSnapshot;
 }
 
+/**
+ * Slide-over form that lets a homeowner share their feasibility study with
+ * matched builders. Collects and validates contact details, assembles a
+ * {@link ConnectionSnapshot} from the current parcel/config/result, and emits
+ * a {@link BuilderLeadSubmitInput} on submit.
+ *
+ * @param props - Open state, prefilled defaults, the parcel/config/result to
+ *   snapshot, and the `onClose`/`onSubmit` handlers.
+ */
 export default function BuilderLeadPanel({
   open,
   userDefaults,

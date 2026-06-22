@@ -16,6 +16,7 @@ const LAYERS = {
   roof: { base: 1.4, explode: 2.8 },
 } as const;
 
+/** Daylight color palette (fog, lights, ground gradient) for the hero scene. */
 export const HERO_SCENE_PALETTE = {
   mode: "daylight",
   fog: 0xeadfce,
@@ -45,6 +46,13 @@ type ScenePart = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> & 
 
 type LabelSprite = THREE.Sprite & { userData: { layer: LayerId } };
 
+/**
+ * Compute responsive camera/layout parameters for the hero scene from the
+ * viewport width (e.g. a `mobile` flag below 820px and the associated framing).
+ *
+ * @param width - The current viewport width in pixels.
+ * @returns A profile object of viewport-dependent scene settings.
+ */
 export function getSceneViewportProfile(width: number) {
   const mobile = width < 820;
   return {
@@ -121,7 +129,9 @@ export function BlueprintScene({ progress }: { progress: number }) {
     // Browser automation uses software WebGL, which makes full-page screenshots
     // and context teardown unreliable. Keep the daylight SVG fallback active in
     // that environment; real browsers still receive the full Three.js scene.
-    if (navigator.webdriver) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const force3d = urlParams.get("force_3d") === "true";
+    if (navigator.webdriver && !force3d) {
       host.dataset.rendererState = "fallback";
       return;
     }

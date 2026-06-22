@@ -33,6 +33,10 @@ const cardVariants = {
   }),
 };
 
+/**
+ * Landing "what you get" section: animated proof points and a report-contents
+ * card, with a closing CTA. Honors reduced-motion preferences.
+ */
 export function FeatureBand() {
   const [mounted, setMounted] = useState(false);
 
@@ -47,11 +51,11 @@ export function FeatureBand() {
   return (
     <>
       <section className="border-y border-lf-hairline/50 bg-lf-card/35">
-        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-20 md:grid-cols-[1.1fr_1fr] md:items-center md:py-24">
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-24 md:grid-cols-[1.1fr_1fr] md:items-center md:py-32">
           <div>
-            <p className="lf-kicker text-lf-muted">
+            <span className="inline-flex items-center rounded-full bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
               Why owners use it
-            </p>
+            </span>
             <h2 className="lf-section-heading mt-3 max-w-2xl text-lf-espresso">
               See whether the lot, money, and next step line up before you spend on plans.
             </h2>
@@ -74,9 +78,9 @@ export function FeatureBand() {
       <section id="how-it-works">
         <div className="mx-auto max-w-7xl px-6 py-32 md:py-40">
           <div className="max-w-3xl">
-            <p className="lf-kicker text-lf-muted">
+            <span className="inline-flex items-center rounded-full bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
               How it works
-            </p>
+            </span>
             <h2 className="lf-section-heading mt-3 text-lf-espresso">
               A complete owner path, not a rendering that leaves you guessing.
             </h2>
@@ -190,9 +194,9 @@ export function FeatureBand() {
       <section className="bg-lf-espresso text-lf-sand">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 py-32 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-40">
           <div>
-            <p className="lf-kicker text-lf-taupe">
+            <span className="inline-flex items-center rounded-full bg-lf-taupe/15 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-taupe">
               Owner report
-            </p>
+            </span>
             <h2 className="lf-section-heading mt-3">
               The output is built for the next conversation.
             </h2>
@@ -219,12 +223,12 @@ export function FeatureBand() {
         </div>
       </section>
 
-      <section id="start">
-        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-32 md:grid-cols-[1fr_auto] md:items-center md:py-40">
+      <section id="start" className="mx-auto max-w-7xl px-6 py-24 md:py-32">
+        <Bezel innerClassName="grid gap-8 p-8 md:grid-cols-[1fr_auto] md:items-center md:p-12">
           <div>
-            <p className="lf-kicker text-lf-muted">
+            <span className="inline-flex items-center rounded-full bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
               Ready when the owner is
-            </p>
+            </span>
             <h2 className="lf-section-heading mt-3 max-w-3xl text-lf-espresso">
               Know what to ask before you spend on plans.
             </h2>
@@ -241,7 +245,7 @@ export function FeatureBand() {
               Sign in
             </Link>
           </div>
-        </div>
+        </Bezel>
       </section>
     </>
   );

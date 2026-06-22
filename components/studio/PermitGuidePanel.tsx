@@ -5,7 +5,9 @@ import { AlertTriangle, BookOpen, ExternalLink, ShieldCheck, ShieldAlert } from 
 import { inferJurisdiction, regulationGuides } from "@/lib/regulations-data";
 import { getSafeCitationHref } from "@/lib/safe-url";
 
+/** Props for {@link PermitGuidePanel}. */
 export interface PermitGuidePanelProps {
+  /** The parcel address used to infer the jurisdiction's permit guide. */
   address: string;
 }
 
@@ -31,6 +33,13 @@ function getCitationUrl(citation: unknown) {
   return null;
 }
 
+/**
+ * Renders the jurisdiction-specific permit guide for a parcel: summary, an
+ * interactive (locally-tracked) permit-step checklist, blockers, and cited
+ * sources, with citation links sanitized via {@link getSafeCitationHref}.
+ *
+ * @param props - The {@link PermitGuidePanelProps}.
+ */
 export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
   const jurisdictionId = inferJurisdiction(address);
   const guide = regulationGuides[jurisdictionId];

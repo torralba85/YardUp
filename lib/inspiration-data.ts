@@ -1,20 +1,48 @@
 import type { ExteriorFinish, RoofStyle } from "./feasibility";
 
+/**
+ * A single ADU concept shown in the inspiration gallery. The optional
+ * `isStyleMatched`/`photoUrl`/`matchPercentage`/`traits` fields are populated
+ * only for AI style-match results synthesized from a user's uploaded photo.
+ */
 export interface InspirationItem {
+  /** Stable identifier for the concept. */
   id: string;
+  /** Display title. */
   title: string;
+  /** Architectural style label (e.g. "Warm Modern"). */
   style: string;
+  /** Floor area in square feet. */
   sqft: number;
+  /** Footprint width in feet. */
   width: number;
+  /** Footprint length in feet. */
   length: number;
+  /** Roof geometry. */
   roof: RoofStyle;
+  /** Exterior finish. */
   finish: ExteriorFinish;
+  /** Free-form descriptive tags for filtering/search. */
   tags: string[];
+  /** One-sentence description. */
   summary: string;
+  /** Rough budget range label (e.g. "$250k - $400k"). */
   budgetBand: string;
+  /** Path to the concept's preview image under `/public`. */
   imagePath: string;
+  /** True when this item was produced by the AI style-match flow. */
+  isStyleMatched?: boolean;
+  /** URL of the user's uploaded reference photo (style-match only). */
+  photoUrl?: string;
+  /** Match confidence as a percentage (style-match only). */
+  matchPercentage?: number;
+  /** Notable matched design traits (style-match only). */
+  traits?: string[];
+  /** Whether the concept is an attached (vs. detached) unit. */
+  isAttached?: boolean;
 }
 
+/** The curated set of ADU concepts shown in the inspiration gallery. */
 export const inspirationItems: InspirationItem[] = [
   {
     id: "canyon-courtyard",

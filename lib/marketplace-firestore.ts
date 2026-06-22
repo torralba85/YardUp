@@ -33,6 +33,12 @@ const PRIVATE = "private";
 const CONTACT = "contact";
 const LEAD_UNLOCKS = "leadUnlocks";
 
+/**
+ * Fetch a builder's profile by uid.
+ *
+ * @param uid - The builder account's uid (also the profile doc id).
+ * @returns The profile, or `null` if none exists.
+ */
 export async function fetchBuilderProfile(
   uid: string,
 ): Promise<BuilderProfile | null> {
@@ -40,6 +46,14 @@ export async function fetchBuilderProfile(
   return snap.exists() ? firestoreToBuilderProfile(snap.id, snap.data()) : null;
 }
 
+/**
+ * Create or update a builder profile, preserving the original `createdAt` on
+ * updates and stamping a fresh `updatedAt`.
+ *
+ * @param uid - The builder account's uid (used as the doc id and `ownerUid`).
+ * @param input - Profile fields (id/ownerUid/timestamps are managed here).
+ * @returns The saved profile.
+ */
 export async function saveBuilderProfile(
   uid: string,
   input: Omit<BuilderProfile, "id" | "ownerUid" | "createdAt" | "updatedAt">,
@@ -63,6 +77,11 @@ export async function saveBuilderProfile(
   };
 }
 
+/**
+ * Fetch all active builder profiles (used for lead matching).
+ *
+ * @returns The list of profiles with `active === true`.
+ */
 export async function fetchActiveBuilders(): Promise<BuilderProfile[]> {
   const snap = await getDocs(
     query(collection(db, BUILDERS), where("active", "==", true)),
@@ -126,6 +145,17 @@ export async function createConnectionRequest(input: {
   return requestRef.id;
 }
 
+/**
+ * Load a builder's inbox: every lead matched to them, each annotated with this
+ * builder's response status and whether they hold an unlock grant.
+ *
+ * A locked lead's unlock doc rejects with `permission-denied` by design; that
+ * is treated as "not unlocked" rather than failing the whole load. Results are
+ * sorted newest-first.
+ *
+ * @param builderId - The builder profile id to load the inbox for.
+ * @returns The builder's inbox items, newest first.
+ */
 export async function fetchBuilderInbox(
   builderId: string,
 ): Promise<BuilderInboxItem[]> {
@@ -192,6 +222,13 @@ export async function fetchUnlockedContact(
   };
 }
 
+/**
+ * Update a builder's triage status for a lead (e.g. `interested`/`not-a-fit`).
+ *
+ * @param requestId - The connection request id.
+ * @param builderId - The responding builder's id.
+ * @param status - The new status (anything except the initial `new`).
+ */
 export async function updateBuilderResponse(
   requestId: string,
   builderId: string,

@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
+/**
+ * Email/password and Google sign-in form. On success, redirects to the
+ * validated `next` path (falling back to a safe default) via
+ * {@link safeRedirectPath}.
+ */
 export default function LoginForm() {
   const { signIn, signInWithGoogle, user } = useAuth();
   const router = useRouter();

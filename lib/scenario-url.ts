@@ -11,9 +11,16 @@ import {
   type RoofStyle,
 } from "./feasibility";
 
+/**
+ * The minimal scenario state that can be encoded in, and restored from, the
+ * studio URL's query string. This makes a configured study shareable via link.
+ */
 export interface ScenarioState {
+  /** Id of the selected parcel preset. */
   parcelId: string;
+  /** The ADU design configuration. */
   config: ADUConfig;
+  /** The financial assumptions (only `rentScenario` is round-tripped via URL). */
   assumptions: FinancialAssumptions;
 }
 
@@ -24,12 +31,21 @@ const validRents: RentScenario[] = ["conservative", "market", "optimistic"];
 const validParcelIds = new Set(parcelPresets.map((preset) => preset.id));
 const validFootprints = new Set(footprintOptions.map((option) => option.value));
 
+/** The baseline scenario state used when no URL params are present. */
 export const defaultScenarioState: ScenarioState = {
   parcelId: parcelPresets[0].id,
   config: defaultAduConfig,
   assumptions: defaultFinancialAssumptions,
 };
 
+/**
+ * Parse a URL query string into a partial scenario state, accepting only
+ * values that pass validation against the known parcels, footprints, roofs,
+ * finishes, and rent scenarios. Unknown or malformed params are ignored.
+ *
+ * @param searchParams - The query parameters to read (e.g. from `useSearchParams`).
+ * @returns A partial state containing only the fields that were validly provided.
+ */
 export function parseScenarioParams(searchParams: URLSearchParams): Partial<ScenarioState> {
   const partial: Partial<ScenarioState> = {};
 
@@ -81,6 +97,12 @@ export function parseScenarioParams(searchParams: URLSearchParams): Partial<Scen
   return partial;
 }
 
+/**
+ * Encode a scenario state into a URL query string for sharing or deep-linking.
+ *
+ * @param state - The complete scenario state to serialize.
+ * @returns A query string (without leading `?`), e.g. `"parcel=oak-street&size=600&..."`.
+ */
 export function serializeScenarioParams(state: ScenarioState): string {
   const params = new URLSearchParams();
   params.set("parcel", state.parcelId);
@@ -92,6 +114,15 @@ export function serializeScenarioParams(state: ScenarioState): string {
   return params.toString();
 }
 
+/**
+ * Fill a partial scenario state with defaults to produce a complete state.
+ *
+ * Missing `config`/`assumptions` are deep-cloned from the defaults so callers
+ * can safely mutate the result without affecting the shared default objects.
+ *
+ * @param partial - The partial state (typically from {@link parseScenarioParams}).
+ * @returns A complete {@link ScenarioState}.
+ */
 export function mergeScenarioPartial(partial: Partial<ScenarioState>): ScenarioState {
   return {
     parcelId: partial.parcelId ?? defaultScenarioState.parcelId,

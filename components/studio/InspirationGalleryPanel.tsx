@@ -6,11 +6,40 @@ import { CheckCircle2, Sparkles, Camera, Layers } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
 import StyleMatchPanel from "./StyleMatchPanel";
 
+/** Props for {@link InspirationGalleryPanel}. */
 export interface InspirationGalleryPanelProps {
+  /** Called when the user applies a concept's config to the studio. */
   onApply: (item: InspirationItem) => void;
+  /** AI style-match concepts to show alongside the curated gallery. */
+  generatedConcepts?: InspirationItem[];
+  /** Called when a style-match generation completes with its result. */
+  onGenerationComplete?: (concept: {
+    photoUrl: string;
+    conceptUrl: string;
+    styleName: string;
+    matchPercentage: number;
+    traits: string[];
+  }) => void;
+  /** Called to open the before/after comparison for a concept. */
+  onViewComparison?: (item: InspirationItem) => void;
+  /** Key that, when changed, resets the embedded style-match panel. */
+  styleMatchKey?: number | string;
 }
 
-export default function InspirationGalleryPanel({ onApply }: InspirationGalleryPanelProps) {
+/**
+ * The inspiration gallery: a grid of curated ADU concepts plus any AI
+ * style-matched concepts, with actions to apply a concept to the studio or open
+ * its before/after comparison. Embeds the {@link StyleMatchPanel} uploader.
+ *
+ * @param props - The {@link InspirationGalleryPanelProps}.
+ */
+export default function InspirationGalleryPanel({
+  onApply,
+  generatedConcepts = [],
+  onGenerationComplete,
+  onViewComparison,
+  styleMatchKey,
+}: InspirationGalleryPanelProps) {
   const [appliedId, setAppliedId] = useState<string | null>(null);
   const [viewModes, setViewModes] = useState<Record<string, "image" | "diagram">>({});
 
@@ -24,6 +53,8 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
   const setCardView = (id: string, mode: "image" | "diagram") => {
     setViewModes((prev) => ({ ...prev, [id]: mode }));
   };
+
+  const allItems = [...generatedConcepts, ...inspirationItems];
 
   return (
     <section
@@ -41,9 +72,12 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4 lg:min-h-0">
-          <StyleMatchPanel />
+          <StyleMatchPanel
+            key={styleMatchKey}
+            onGenerationComplete={onGenerationComplete}
+          />
 
-          {inspirationItems.map((item) => {
+          {allItems.map((item) => {
             const viewMode = getViewMode(item.id);
             return (
               <div
@@ -68,6 +102,14 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
                   </div>
+
+                  {item.isStyleMatched && (
+                    <div className="absolute top-3 left-3 z-20 bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-md">
+                      <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-lf-sand">
+                        Style-Matched
+                      </span>
+                    </div>
+                  )}
 
 
                   {/* 3D Massing View (SVG) */}
@@ -137,10 +179,24 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
                     ))}
                   </div>
 
-                  <div className="mt-1 flex items-center justify-between border-t border-lf-hairline pt-3">
-                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-lf-muted">
-                      {item.budgetBand}
-                    </span>
+                  <div className="mt-1 flex items-center justify-between border-t border-lf-hairline pt-3 gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-lf-muted">
+                        {item.budgetBand}
+                      </span>
+                      {item.isStyleMatched && onViewComparison && (
+                        <>
+                          <span className="text-lf-hairline">|</span>
+                          <button
+                            type="button"
+                            onClick={() => onViewComparison(item)}
+                            className="flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wider text-lf-clay hover:text-lf-espresso transition-colors cursor-pointer"
+                          >
+                            Compare
+                          </button>
+                        </>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleApply(item)}

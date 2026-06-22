@@ -130,6 +130,10 @@ const samples = [
   },
 ];
 
+/**
+ * Internal typography specimen page (`/type-samples`): renders candidate font
+ * pairings and scale samples used while designing the brand type system.
+ */
 export default function TypeSamplesPage() {
   return (
     <main className="min-h-[100dvh] bg-lf-sand text-lf-espresso">

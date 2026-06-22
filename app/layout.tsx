@@ -26,6 +26,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 
+/** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
 export const metadata: Metadata = {
   title: "LotFoundry | ADU Feasibility & Income Estimates",
   description:
@@ -54,6 +55,7 @@ export const metadata: Metadata = {
   },
 };
 
+/** Viewport config: theme color and `viewport-fit: cover` for PWA safe areas. */
 export const viewport: Viewport = {
   themeColor: "#F2E5D5",
   // Extend behind the iOS notch/home indicator so env(safe-area-inset-*)
@@ -61,6 +63,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Root layout for the App Router. Loads the brand fonts as CSS variables, wraps
+ * the app in {@link AuthProvider}, and registers the service worker.
+ *
+ * @param props.children - The routed page content.
+ */
 export default function RootLayout({
   children,
 }: {

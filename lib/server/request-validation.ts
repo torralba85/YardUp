@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 
+/**
+ * Parse and validate `lat`/`lng` query params for a geospatial API route.
+ *
+ * @param searchParams - The request's query parameters.
+ * @returns `{ lat, lng }` when both are present and within valid ranges, or a
+ *   400 {@link NextResponse} the route should return when they are missing or
+ *   out of range.
+ */
 export function parseCoordinateParams(searchParams: URLSearchParams):
   | { lat: number; lng: number }
   | NextResponse {

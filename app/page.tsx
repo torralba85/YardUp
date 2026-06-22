@@ -4,6 +4,10 @@ import { FeatureBand } from "@/components/landing/FeatureBand";
 import { FloatingNavBar } from "@/components/FloatingNavBar";
 import Link from "next/link";
 
+/**
+ * Marketing landing page (`/`): the scroll-driven hero, feature band, floating
+ * nav, and footer.
+ */
 export default function LandingPage() {
   return (
     <AmbientBackdrop>

@@ -7,6 +7,7 @@ import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 
+/** The studio's primary navigation sections, in display order. */
 export const navItems: NavItem[] = [
   { id: "studio", label: "Feasibility Studio", icon: Box },
   { id: "guide", label: "Permit Guide", icon: FileText },
@@ -15,19 +16,37 @@ export const navItems: NavItem[] = [
   { id: "export", label: "Export Preview", icon: Share2 },
 ];
 
+/** Props for {@link AppShell}. */
 export interface AppShellProps {
+  /** Id of the currently active nav section. */
   activeNav: string;
+  /** Active parcel's street address (shown in the sidebar). */
   parcelAddress: string;
+  /** Active parcel's city line. */
   parcelCity: string;
+  /** Called when a nav item is selected. */
   onNavigate: (id: string) => void;
+  /** Called to reset the project back to defaults. */
   onReset: () => void;
+  /** Saved scenarios shown in the sidebar list. */
   savedScenarios?: SavedScenario[];
+  /** Called to load a saved scenario by id. */
   onLoadScenario?: (id: string) => void;
+  /** Called to delete a saved scenario by id. */
   onDeleteScenario?: (id: string) => void;
+  /** Transient status message shown after a delete. */
   deleteNotice?: string | null;
+  /** The main studio content. */
   children: React.ReactNode;
 }
 
+/**
+ * Studio chrome: the desktop sidebar (logo, primary nav, active parcel, saved
+ * concepts, and the auth/account block) plus the mobile header and bottom tab
+ * bar. Renders `children` as the main content area and owns the sign-in modal.
+ *
+ * @param props - The {@link AppShellProps}.
+ */
 export default function AppShell({
   activeNav,
   parcelAddress,

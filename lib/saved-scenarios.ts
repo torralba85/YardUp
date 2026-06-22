@@ -1,25 +1,50 @@
+/**
+ * Persistence and validation for user-saved feasibility scenarios.
+ *
+ * Scenarios are stored in the browser's `localStorage` as a JSON array under
+ * {@link STORAGE_KEY}. Because that data is untrusted on read-back, every
+ * exported `isValid*` guard re-validates the shape and bounds of each field
+ * before it is accepted, and {@link createSavedScenarioStore} wraps a `Storage`
+ * instance with safe list/save/remove/load operations.
+ *
+ * @module saved-scenarios
+ */
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
 import type { LiveParcelData } from "./parcel-types";
 
+/** `localStorage` key under which the saved-scenario array is persisted. */
 export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
 const ROOF_STYLES = ["shed", "gable", "flat"] as const;
 const EXTERIOR_FINISHES = ["cedar", "lap", "stucco", "board"] as const;
 const RENT_SCENARIOS = ["conservative", "market", "optimistic"] as const;
 
+/** A persisted feasibility scenario: the parcel, design, and assumptions. */
 export interface SavedScenario {
+  /** Unique id assigned at save time. */
   id: string;
+  /** User-provided name (1–160 characters). */
   name: string;
+  /** ISO-8601 timestamp of when the scenario was saved. */
   createdAt: string;
+  /** Id of the parcel preset (or live-parcel marker) the scenario is based on. */
   parcelId: string;
+  /** Snapshot of live parcel data, present only for non-preset parcels. */
   liveParcel?: LiveParcelData;
+  /** The saved ADU design configuration. */
   config: ADUConfig;
+  /** The saved financial assumptions. */
   assumptions: FinancialAssumptions;
 }
 
+/** A storage-backed CRUD interface over {@link SavedScenario} records. */
 export interface SavedScenarioStore {
+  /** Return all scenarios, newest first. */
   list: () => SavedScenario[];
+  /** Persist a new scenario (id and timestamp are generated) and return it. */
   save: (input: Omit<SavedScenario, "id" | "createdAt">) => SavedScenario;
+  /** Delete the scenario with the given id, if present. */
   remove: (id: string) => void;
+  /** Return the scenario with the given id, or `undefined` if not found. */
   load: (id: string) => SavedScenario | undefined;
 }
 
@@ -31,6 +56,13 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+/**
+ * Type guard verifying an unknown value is a well-formed {@link ADUConfig}
+ * with all dimensions within sane bounds.
+ *
+ * @param value - The candidate value (typically parsed from storage).
+ * @returns `true` if `value` is a valid ADU configuration.
+ */
 export function isValidAduConfig(value: unknown): value is ADUConfig {
   if (!isRecord(value)) return false;
   return (
@@ -54,6 +86,13 @@ export function isValidAduConfig(value: unknown): value is ADUConfig {
   );
 }
 
+/**
+ * Type guard verifying an unknown value is a well-formed
+ * {@link FinancialAssumptions}, including per-finish cost bounds.
+ *
+ * @param value - The candidate value.
+ * @returns `true` if `value` is a valid set of financial assumptions.
+ */
 export function isValidFinancialAssumptions(
   value: unknown,
 ): value is FinancialAssumptions {
@@ -83,6 +122,14 @@ function isValidGeoJsonPolygon(value: unknown): boolean {
   return value.type === "Polygon" && Array.isArray(value.coordinates);
 }
 
+/**
+ * Type guard verifying an unknown value is well-formed {@link LiveParcelData},
+ * checking address fields, positive dimensions, coverage/setback ranges,
+ * lat/lng bounds, an optional GeoJSON polygon boundary, and a known source.
+ *
+ * @param value - The candidate value.
+ * @returns `true` if `value` is valid live parcel data.
+ */
 export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
   if (!isRecord(value) || !isRecord(value.setbacks)) return false;
   return (
@@ -120,6 +167,14 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
   );
 }
 
+/**
+ * Type guard verifying an unknown value is a complete {@link SavedScenario},
+ * delegating to the field-level guards for its nested config, assumptions, and
+ * optional live parcel data.
+ *
+ * @param value - The candidate value.
+ * @returns `true` if `value` is a fully valid saved scenario.
+ */
 export function isValidSavedScenario(value: unknown): value is SavedScenario {
   if (!isRecord(value)) return false;
   return (
@@ -158,6 +213,18 @@ function writeAll(storage: Storage, entries: SavedScenario[]) {
   storage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
+/**
+ * Create a {@link SavedScenarioStore} backed by a `Storage` instance
+ * (e.g. `window.localStorage`).
+ *
+ * Reads are defensive: malformed or invalid entries are silently filtered out,
+ * so the store never throws on corrupted data. `save` generates the id and
+ * timestamp and throws only if the resulting record fails validation.
+ *
+ * @param storage - The Web Storage instance to read from and write to.
+ * @returns A store exposing `list`, `save`, `remove`, and `load`.
+ * @throws {Error} From `save` if the constructed scenario is missing required fields.
+ */
 export function createSavedScenarioStore(storage: Storage): SavedScenarioStore {
   return {
     list() {

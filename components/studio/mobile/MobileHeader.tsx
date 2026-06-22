@@ -5,12 +5,22 @@ import { RotateCcw, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 
+/** Props for {@link MobileHeader}. */
 export interface MobileHeaderProps {
+  /** Active parcel address shown in the header pill. */
   address: string;
+  /** Whether the parcel is an estimate (shows an "est." marker). */
   estimated: boolean;
+  /** Called to reset the project. */
   onReset: () => void;
 }
 
+/**
+ * Compact mobile header: the LotFoundry mark, the active address pill, a reset
+ * control, and the account/sign-in affordance (opens the auth modal).
+ *
+ * @param props - The {@link MobileHeaderProps}.
+ */
 export default function MobileHeader({ address, estimated, onReset }: MobileHeaderProps) {
   const { user, profile, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);

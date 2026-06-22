@@ -1,13 +1,25 @@
 import { finishLabels, formatCompactCurrency, formatCurrency, type ADUConfig, type FeasibilityResult } from "@/lib/feasibility";
 
+/** Props for {@link PeekMetrics}. */
 export interface PeekMetricsProps {
+  /** The feasibility result whose headline figures are shown. */
   result: FeasibilityResult;
+  /** The ADU config whose footprint/finish chips are shown. */
   config: ADUConfig;
+  /** Whether the parcel is an estimate (shows an "estimated" marker). */
   estimated: boolean;
+  /** Optional parcel-fetch error message to surface. */
   parcelError?: string | null;
+  /** Optional retry handler shown when there's an error. */
   onRetry?: () => void;
 }
 
+/**
+ * The always-visible peek strip for the mobile bottom sheet: three headline
+ * metrics (rent, build range, payback) plus config chips and any parcel error.
+ *
+ * @param props - The {@link PeekMetricsProps}.
+ */
 export default function PeekMetrics({ result, config, estimated, parcelError, onRetry }: PeekMetricsProps) {
   return (
     <div>

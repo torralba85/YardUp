@@ -7,12 +7,19 @@ interface CTAButtonProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorEleme
   className?: string;
 }
 
-export function CTAButton({ 
-  href, 
-  children, 
-  size = "md", 
+/**
+ * Pill-shaped primary call-to-action link with a trailing arrow and motion-safe
+ * hover/active transforms. Wraps Next.js `Link`, so it accepts all link props
+ * plus a `size` ("md" | "lg").
+ *
+ * @param props - Link props plus `size` and `className`.
+ */
+export function CTAButton({
+  href,
+  children,
+  size = "md",
   className,
-  ...props 
+  ...props
 }: CTAButtonProps) {
   const sizeClasses =
     size === "lg"

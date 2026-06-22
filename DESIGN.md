@@ -35,9 +35,9 @@ Three families, three jobs. The serif carries authority and money; the sans does
 - **Display / Money:** **Cormorant Garamond** (600–700) — hero headlines, screen titles, and every large dollar figure. High-contrast serif reads "asset discovery," not "wedding invitation," when set heavy and large.
 - **Body / UI:** **Libre Franklin** (400–700) — paragraphs, labels, controls, nav, dense studio UI. Deliberately plain so the serif and mono do the talking.
 - **Data / Recorded Fact:** **IBM Plex Mono** (400–600) — APNs, lot dimensions, zoning codes, setbacks, status chips, eyebrows, table figures. Mono is the typographic signal of "this is recorded fact."
-- **Loading:** `next/font/google` — `Cormorant_Garamond` (`--font-display`), `Libre_Franklin` (`--font-sans`), `IBM_Plex_Mono` (`--font-mono`). *Implementation note: Plex Mono is not yet wired in `app/layout.tsx`; until it is, mono falls back to system. Wire it before any new data-UI work.*
+- **Loading:** `next/font/google` — `Cormorant_Garamond` (`--font-display`), `Libre_Franklin` (`--font-sans`), `IBM_Plex_Mono` (`--font-mono`). *Implementation note (2026-06-20): all families are now wired in `app/layout.tsx` via `next/font/google` — Cormorant, Libre Franklin, and IBM Plex Mono. The mono "recorded fact" layer is live. A legacy `--font-hero` (Outfit 800/900) is also wired but unused everywhere — remove it.*
 - **Scale:**
-  - Hero display: `clamp(48px, 7vw, 88px)` / 1.02
+  - Hero display (as shipped in `LandingHero`): mobile `clamp(2.6rem, 13vw, 3.2rem)`, `sm:clamp(3rem, 5.3vw, 4.75rem)` (≈48–76px), line-height `0.91`, tracking `-0.04em`, set in `font-display` (Cormorant). *The `.lf-display-hero` utility (48–72px) is currently unused — wire the hero to it or remove it. Original v2 target was `clamp(48px, 7vw, 88px)` / 1.02.*
   - Money figure (band): 52px / 1 · Money figure (specimen/report): 64–76px / 1
   - Section title: 44px / 1.1 · Card title: 24px / 1.2
   - Body: 15px / 1.55 · Small: 13px / 1.5
@@ -131,3 +131,10 @@ Lead with money, feasibility, and a credible next step.
 | 2026-06-10 | Risk: Certificate of Feasibility report | From outside-voice synthesis ("The Deed"): certificate-not-dashboard makes the shareable artifact the viral loop; ledger T-account replaces charts. |
 | 2026-06-10 | Risk: poster hero + bottom instrument rail | Codex signature move; competitive research showed entire category leads with permission/cost forms — value-before-features is ownable. |
 | 2026-06-10 | Memorable thing: "Your backyard is an asset" | Income framing vs. category fear framing — confirmed by user; logged as eureka. |
+| 2026-06-20 | Mono layer now wired (sync) | `IBM_Plex_Mono` loaded via `next/font` in `app/layout.tsx`; resolves the prior "not yet wired" note. |
+| 2026-06-20 | Hero scale reconciled to shipped values | `LandingHero` uses inline clamp (≈48–76px, lh 0.91, -0.04em) in Cormorant; doc scale updated to match. `.lf-display-hero` is unused — wire or remove. |
+| 2026-06-20 | Eyebrow tracking inconsistent — unify | `.lf-kicker` (used by `FeatureBand`) ships `letter-spacing: 0`; the hero uses `tracking-[0.24em]` inline; v2 spec said 0.14–0.18em. Pick one tracked value and fix the classes. |
+| 2026-06-20 | Remove dead `--font-hero` (Outfit) | Wired in `layout.tsx` but zero references; contradicts the v2 serif hero direction and adds an unused font payload. |
+| 2026-06-20 | Prune dead hero-motion CSS | `lf-hero-float` / `lf-hero-glow` / `lf-hero-shimmer` / `lf-hero-rise` / `lf-reveal` are defined-but-unused since the scroll-hero rewrite (`lf-stamp` is still used by LeadCard + StyleMatchPanel — keep it). |
+| 2026-06-20 | `--lf-money-on-dark` unused | Defined for money figures on dark surfaces but has zero references; confirm the money band's dark-surface treatment or remove the token. |
+| 2026-06-20 | FLAG — forest used for hero progress + active layer | Scroll progress bar (`from-lf-clay to-lf-forest`) and the active deconstruction step use forest, but the rule reserves green for money/readiness/CTA. Confirm whether the "assembles into rentable value → turns green" payoff is a sanctioned use; otherwise refactor to clay/neutral. |

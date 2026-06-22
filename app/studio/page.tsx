@@ -3,6 +3,11 @@
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import { useAuth } from "@/lib/auth-context";
 
+/**
+ * Studio route (`/studio`). Waits for auth to resolve (so saved scenarios and
+ * live-parcel access are known) before rendering {@link FeasibilityStudio};
+ * guests fall through to the demo/estimated studio.
+ */
 export default function StudioPage() {
   const { loading } = useAuth();
 

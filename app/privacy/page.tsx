@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+/** Page metadata for the privacy policy route. */
 export const metadata: Metadata = {
   title: "Privacy Policy | LotFoundry",
   description: "How LotFoundry collects, uses, and protects your information.",
 };
 
+/** Static privacy policy page (`/privacy`). */
 export default function PrivacyPage() {
   return (
     <div className="min-h-[100dvh] bg-lf-sand text-lf-espresso">

@@ -17,6 +17,7 @@ import { nextStep, type WizardStep } from "@/lib/wizard-state";
 import AddressSearch, { type AddressSearchResult } from "@/components/studio/AddressSearch";
 import { AuthModal } from "@/components/auth/AuthModal";
 
+/** Props for {@link WizardFlow}. */
 export interface WizardFlowProps {
   /** Wizard finished (unlock, skip, or demo). Parent hides the wizard and
    * applies the config when one was chosen. */
@@ -29,6 +30,14 @@ const SIZE_OPTIONS = [
   { footprint: 800, title: "2 Bedroom", blurb: "800 ft² · max rent" },
 ] as const;
 
+/**
+ * First-run mobile onboarding wizard: collects an address (geocoded into an
+ * estimated parcel for anonymous users), lets the user pick an ADU size, and
+ * shows a quick feasibility teaser before completing into the studio. Bridges
+ * anonymous estimates to live parcels on sign-in via {@link useParcel}.
+ *
+ * @param props - The {@link WizardFlowProps}.
+ */
 export default function WizardFlow({ onComplete }: WizardFlowProps) {
   const { user } = useAuth();
   const { resetToPreset, setEstimatedParcel, searchParcel } = useParcel();

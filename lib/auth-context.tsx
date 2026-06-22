@@ -26,11 +26,17 @@ import { auth, db } from "./firebase";
 
 type UserRole = "user" | "builder";
 
+/** The app-level user profile mirrored from the `users` Firestore collection. */
 export interface UserProfile {
+  /** Firebase Auth user id. */
   uid: string;
+  /** User's email address. */
   email: string;
+  /** Display name, or `null` if not set. */
   displayName: string | null;
+  /** Whether the account is a homeowner (`user`) or a `builder`. */
   role: UserRole;
+  /** Account creation time, or `null` if unknown/pending. */
   createdAt: Date | null;
 }
 
@@ -52,6 +58,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Provide Firebase Authentication state and actions to the app.
+ *
+ * Subscribes to auth state changes, and on sign-in ensures a matching
+ * `users/{uid}` Firestore profile exists (creating it with the pending role
+ * for new accounts, or reading the existing role otherwise). Profile reads
+ * fall back to an in-memory profile if Firestore is unavailable, so auth never
+ * blocks on a failed profile fetch.
+ *
+ * @param props.children - The subtree that can consume {@link useAuth}.
+ * @returns The auth context provider.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -181,6 +199,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Access the current auth state (`user`, `profile`, `loading`) and actions
+ * (`signIn`, `signUp`, `signInWithGoogle`, `logout`, `sendPasswordReset`).
+ *
+ * @returns The auth context value.
+ * @throws {Error} If called outside an {@link AuthProvider}.
+ */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (ctx === undefined) {

@@ -23,6 +23,17 @@ function clientKey(request: NextRequest, namespace: string): string {
   return `${namespace}:${ip}`;
 }
 
+/**
+ * Apply a fixed-window, in-memory rate limit keyed by client IP and namespace.
+ *
+ * Note: state is per-process, so limits are approximate across multiple
+ * serverless instances. Suitable as a lightweight abuse guard, not a hard quota.
+ *
+ * @param request - The incoming request (its client IP forms the key).
+ * @param options - The `limit`, `namespace`, and `windowMs` for this limiter.
+ * @returns `null` if the request is allowed, or a 429 {@link NextResponse} (with
+ *   a `Retry-After` header) the route should return when the limit is exceeded.
+ */
 export function checkRateLimit(
   request: NextRequest,
   options: RateLimitOptions,

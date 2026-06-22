@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Camera,
   CheckCircle2,
   ImagePlus,
@@ -16,27 +17,72 @@ import {
   type PreparedStyleMatchPhoto,
 } from "@/lib/style-match-photo";
 
+/** Props for {@link StyleMatchPanel}. */
 export interface StyleMatchPanelProps {
+  /** Called with the prepared photo once the user confirms their upload. */
   onConfirm?: (photo: PreparedStyleMatchPhoto) => void;
+  /** Called when concept generation finishes, with the synthesized result. */
+  onGenerationComplete?: (concept: {
+    photoUrl: string;
+    conceptUrl: string;
+    styleName: string;
+    matchPercentage: number;
+    traits: string[];
+  }) => void;
+  /** Injectable photo-preparation function (overridden in tests). */
   preparePhoto?: typeof prepareStyleMatchPhoto;
 }
 
-type PanelStatus = "idle" | "preparing" | "preview" | "ready" | "error";
+type PanelStatus = "idle" | "preparing" | "preview" | "generating" | "ready" | "error" | "timeout";
 
+const GENERATING_STEPS = [
+  "Reading materials & roofline",
+  "Matching siding + trim palette",
+  "Casting 2BD/1BA DADU concept",
+];
+
+const getStepState = (index: number, progress: number): "completed" | "current" | "pending" => {
+  if (index === 0) {
+    return progress >= 30 ? "completed" : "current";
+  }
+  if (index === 1) {
+    if (progress < 30) return "pending";
+    return progress >= 60 ? "completed" : "current";
+  }
+  if (index === 2) {
+    if (progress < 60) return "pending";
+    return progress >= 100 ? "completed" : "current";
+  }
+  return "pending";
+};
+
+/**
+ * Photo uploader for the AI style-match flow: accepts a reference photo,
+ * prepares it client-side (downscale, JPEG re-encode, metadata strip) via
+ * {@link prepareStyleMatchPhoto}, validates it, and drives concept generation,
+ * surfacing progress and any errors.
+ *
+ * @param props - The {@link StyleMatchPanelProps}.
+ */
 export default function StyleMatchPanel({
   onConfirm,
+  onGenerationComplete,
   preparePhoto = prepareStyleMatchPhoto,
 }: StyleMatchPanelProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const previewUrlRef = useRef<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const [status, setStatus] = useState<PanelStatus>("idle");
   const [prepared, setPrepared] = useState<PreparedStyleMatchPhoto | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [generatingProgress, setGeneratingProgress] = useState(0);
 
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
@@ -47,6 +93,10 @@ export default function StyleMatchPanel({
     setError(null);
     setPrepared(null);
     replacePreviewUrl(null);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     try {
       const next = await preparePhoto(file);
@@ -61,10 +111,62 @@ export default function StyleMatchPanel({
     }
   }
 
-  function handleConfirm() {
-    if (!prepared) return;
+  function triggerSuccess() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     setStatus("ready");
+    if (previewUrl) {
+      onGenerationComplete?.({
+        photoUrl: previewUrl,
+        conceptUrl: "/inspiration/clean-gable.png",
+        styleName: "Craftsman",
+        matchPercentage: 91,
+        traits: ["Cedar lap siding", "Low-pitch gable", "White trim", "Espresso door"],
+      });
+    }
+  }
+
+  function triggerError() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setError("We couldn't read enough of the house from this photo. Try a daylight shot.");
+    setStatus("error");
+  }
+
+  function triggerTimeout() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setError("Casting timed out (>90s). Try again or check connection.");
+    setStatus("timeout");
+  }
+
+  function handleConfirm() {
+    if (!prepared || !previewUrl) return;
+    setStatus("generating");
+    setError(null);
+    setGeneratingProgress(0);
     onConfirm?.(prepared);
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    let progress = 0;
+    timerRef.current = setInterval(() => {
+      progress += 5;
+      const nextProgress = Math.min(progress, 100);
+      setGeneratingProgress(nextProgress);
+
+      if (nextProgress >= 100) {
+        triggerSuccess();
+      }
+    }, 500);
   }
 
   function handleReset() {
@@ -72,6 +174,11 @@ export default function StyleMatchPanel({
     setPrepared(null);
     setError(null);
     replacePreviewUrl(null);
+    setGeneratingProgress(0);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -138,6 +245,92 @@ export default function StyleMatchPanel({
           </div>
         )}
 
+        {status === "generating" && (
+          <div className="flex flex-col min-h-32 border border-lf-hairline bg-lf-card p-4 text-lf-espresso">
+            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted mb-3">
+              <span>Casting concept…</span>
+            </div>
+            
+            <div className="relative aspect-[4/3] w-full border border-lf-hairline overflow-hidden mb-3">
+              {previewUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="Uploading house" className="h-full w-full object-cover opacity-60" />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center bg-lf-espresso/10">
+                <Loader2 className="animate-spin text-lf-clay" size={24} />
+              </div>
+            </div>
+
+            <div className="space-y-2 border-t border-dashed border-lf-hairline pt-3">
+              {GENERATING_STEPS.map((stepText, idx) => {
+                const state = getStepState(idx, generatingProgress);
+                let icon = null;
+                let textColor = "text-lf-muted";
+                
+                if (state === "completed") {
+                  icon = <CheckCircle2 size={16} className="text-lf-forest shrink-0" aria-hidden="true" />;
+                  textColor = "text-lf-forest font-semibold";
+                } else if (state === "current") {
+                  icon = <Loader2 size={16} className="animate-spin text-lf-clay shrink-0" aria-hidden="true" />;
+                  textColor = "text-lf-espresso font-semibold";
+                } else {
+                  icon = (
+                    <div className="h-4 w-4 rounded-full border border-lf-hairline flex items-center justify-center shrink-0" aria-hidden="true">
+                      <div className="h-1.5 w-1.5 rounded-full bg-lf-muted" />
+                    </div>
+                  );
+                  textColor = "text-lf-muted";
+                }
+
+                return (
+                  <div key={idx} className={`flex items-center gap-2.5 text-[11px] font-mono leading-none ${textColor}`}>
+                    {icon}
+                    <span>{stepText}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="h-1.5 w-full bg-lf-taupe-soft mt-4 overflow-hidden rounded-full">
+              <div className="h-full bg-lf-clay transition-all duration-300 animate-pulse" style={{ width: `${generatingProgress}%` }} />
+            </div>
+
+            <p className="mt-3 text-[11px] text-lf-muted leading-normal">
+              Usually under a minute. You can keep adjusting the plan — we will settle it into the gallery when it is ready.
+            </p>
+
+            {/* Developer Test Helpers */}
+            <div className="mt-4 border border-dashed border-lf-hairline p-2 flex flex-col gap-1.5 bg-lf-sand-2">
+              <div className="font-mono text-[9px] uppercase text-lf-clay text-center font-bold">
+                Dev Test Bypass
+              </div>
+              <div className="flex gap-1 justify-center">
+                <button
+                  type="button"
+                  onClick={triggerSuccess}
+                  className="bg-lf-forest text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                >
+                  [Success]
+                </button>
+                <button
+                  type="button"
+                  onClick={triggerError}
+                  className="bg-lf-brick text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                >
+                  [Error]
+                </button>
+                <button
+                  type="button"
+                  onClick={triggerTimeout}
+                  className="bg-lf-amber text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                >
+                  [Timeout]
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {(status === "preview" || status === "ready") && prepared && previewUrl && (
           <div className="space-y-4">
             <div className="overflow-hidden border border-lf-hairline bg-lf-card">
@@ -171,7 +364,7 @@ export default function StyleMatchPanel({
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2"
+                  className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2 cursor-pointer"
                 >
                   <CheckCircle2 size={16} aria-hidden="true" />
                   Use this photo
@@ -179,7 +372,7 @@ export default function StyleMatchPanel({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex min-h-11 items-center justify-center border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2"
+                  className="flex min-h-11 items-center justify-center border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2 cursor-pointer"
                   aria-label="Choose another photo"
                 >
                   <RotateCcw size={16} aria-hidden="true" />
@@ -189,21 +382,42 @@ export default function StyleMatchPanel({
           </div>
         )}
 
-        {status === "error" && (
+        {(status === "error" || status === "timeout") && (
           <div className="space-y-3">
-            <div className="border border-lf-brick bg-lf-brick-soft px-3 py-3">
-              <div className="flex items-start gap-2 text-sm leading-6 text-lf-brick">
-                <XCircle size={17} className="mt-1 shrink-0" aria-hidden="true" />
+            <div
+              className={`border px-3 py-3 ${
+                status === "error"
+                  ? "border-lf-brick bg-lf-brick-soft text-lf-brick"
+                  : "border-lf-amber bg-lf-amber-soft text-lf-amber"
+              }`}
+            >
+              <div className="flex items-start gap-2 text-sm leading-6">
+                {status === "error" ? (
+                  <XCircle size={17} className="mt-1 shrink-0" aria-hidden="true" />
+                ) : (
+                  <AlertTriangle size={17} className="mt-1 shrink-0" aria-hidden="true" />
+                )}
                 <p>{error}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="w-full border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2"
-            >
-              Choose another photo
-            </button>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2 cursor-pointer"
+              >
+                <RotateCcw size={16} aria-hidden="true" />
+                Retry
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex min-h-11 flex-1 items-center justify-center border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2 cursor-pointer"
+              >
+                Choose another photo
+              </button>
+            </div>
           </div>
         )}
 

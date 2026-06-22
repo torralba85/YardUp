@@ -38,6 +38,13 @@ function bandStyle(op: number): CSSProperties {
   };
 }
 
+/**
+ * Scroll-synced caption overlay for the landing hero. Cross-fades each stage's
+ * headline and count-up numbers in step with the hero's scroll `progress`,
+ * using contiguous eased bands for seamless handoffs between stages.
+ *
+ * @param props.progress - The hero's normalized scroll progress as a `MotionValue`.
+ */
 export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
   const p = useStateFromMotionNumber(progress);
   // Count-up runs while the numbers stage is fully visible (~0.58 -> 0.71),

@@ -13,18 +13,33 @@ import type {
   ServiceArea,
 } from "./marketplace-types";
 
+/** Raw owner contact form values, prior to validation/normalization. */
 export interface OwnerContactFormInput {
+  /** Owner's name. */
   name: string;
+  /** Owner's email. */
   email: string;
+  /** Owner's phone (may be blank). */
   phone: string;
+  /** Optional message to builders (may be blank). */
   message: string;
+  /** Whether the owner consented to sharing details with builders. */
   consent: boolean;
 }
 
+/** Result of validating an owner contact form: either a contact or an error. */
 export type OwnerContactValidation =
   | { ok: true; contact: OwnerContact }
   | { ok: false; error: string };
 
+/**
+ * Normalize a free-form city and state into a {@link ServiceArea} with a stable
+ * lookup key (title-cased city, two-letter uppercase state).
+ *
+ * @param city - The city name.
+ * @param state - The state (first two letters are used).
+ * @returns The normalized service area.
+ */
 export function normalizeServiceArea(city: string, state: string): ServiceArea {
   const normalizedCity = city.trim().replace(/\s+/g, " ");
   const normalizedState = state.trim().slice(0, 2).toUpperCase();
@@ -36,6 +51,13 @@ export function normalizeServiceArea(city: string, state: string): ServiceArea {
   };
 }
 
+/**
+ * Parse a `"City, ST ..."` string (e.g. a parcel's `city` field) into a
+ * normalized {@link ServiceArea}.
+ *
+ * @param value - The combined city/state string.
+ * @returns The normalized service area, or `null` if it can't be parsed.
+ */
 export function parseParcelCityState(value: string): ServiceArea | null {
   const [cityPart, statePart] = value.split(",");
   if (!cityPart || !statePart) return null;
@@ -46,6 +68,13 @@ export function parseParcelCityState(value: string): ServiceArea | null {
   return normalizeServiceArea(cityPart, state);
 }
 
+/**
+ * Find active builders whose service areas include a parcel's city/state.
+ *
+ * @param builders - Candidate builder profiles.
+ * @param parcelCity - The parcel's `"City, ST"` string.
+ * @returns Matching active builders; empty if the location can't be parsed.
+ */
 export function getMatchedBuilders(
   builders: BuilderProfile[],
   parcelCity: string,
@@ -60,6 +89,14 @@ export function getMatchedBuilders(
   );
 }
 
+/**
+ * Validate and normalize owner contact form input, requiring a name, a
+ * well-formed email, and explicit consent.
+ *
+ * @param input - The raw form values.
+ * @returns `{ ok: true, contact }` on success, or `{ ok: false, error }` with
+ *   a user-facing message.
+ */
 export function validateOwnerContact(
   input: OwnerContactFormInput,
 ): OwnerContactValidation {
@@ -87,6 +124,14 @@ export function validateOwnerContact(
   };
 }
 
+/**
+ * Assemble a full {@link ConnectionSnapshot} (the PII-bearing, gated payload)
+ * from a parcel, config, assumptions, and result, including a rendered
+ * certificate `reportText`.
+ *
+ * @param input - The parcel key, parcel, config, assumptions, and result.
+ * @returns The complete connection snapshot.
+ */
 export function buildConnectionSnapshot(input: {
   parcelKey: string;
   parcel: Parcel;
@@ -154,6 +199,28 @@ function defaultMatchReasons(snapshot: ConnectionSnapshot): string[] {
  * no contact info and no street address — only banded money figures, ZIP, and
  * city/state — so it is safe to write to the public `connectionRequests` root.
  * `previewSerial` is supplied by the caller (random, not the APN — 9A).
+ *
+ * @param input.snapshot - The full (PII-bearing) connection snapshot to redact.
+ * @param input.previewSerial - Caller-supplied random serial (never PII-derived).
+ * @param input.matchReasons - Optional override for the "why this matched" lines;
+ *   defaults to a service-area + size/zoning summary.
+ * @returns A {@link LeadPreview} safe to expose on the public root document.
+ *
+ * @remarks
+ * The redaction is enforced by the return type, not by trust: {@link LeadPreview}
+ * has no `ownerContact` or `streetAddress` field, so a locked card physically
+ * cannot render them. Money figures are bucketed — build cost to $25k bands via
+ * {@link bucketBuildBand} and rent to $250 bands via {@link bucketRentBand} — so
+ * the free preview never leaks the certificate-exact numbers.
+ *
+ * @example
+ * const preview = buildLeadPreview({ snapshot, previewSerial: "LF-AB12CD" });
+ * preview.neighborhood; // "Seattle, WA" — city/state only, never the street
+ * preview.zip;          // "98115" — a coarse signal, not the address
+ * preview.buildBandLow; // bucketed to $25k, e.g. 225000
+ * preview.rentBand;     // bucketed to $250, e.g. 2000
+ *
+ * @see buildConnectionSnapshot — produces the snapshot this redacts.
  */
 export function buildLeadPreview(input: {
   snapshot: ConnectionSnapshot;
