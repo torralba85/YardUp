@@ -78,6 +78,7 @@ export default function AIStyleMatchPanel({
       </label>
 
       {previewUrl && !concept && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={previewUrl}
           alt="Uploaded home preview"
@@ -104,6 +105,7 @@ export default function AIStyleMatchPanel({
 
       {concept && (
         <div className="space-y-3 rounded-md border border-lf-hairline bg-lf-sand-2 p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={concept.imageDataUrl}
             alt="AI-generated matching ADU concept"
