@@ -91,7 +91,7 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
 
-  it("uses Dev Test Bypass [Success] button to transition state immediately", async () => {
+  it("uses Dev Test Controls [Success] button to transition state immediately", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
     const onConfirm = vi.fn();
     const onGenerationComplete = vi.fn();
@@ -116,7 +116,6 @@ describe("StyleMatchPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText("Casting concept…")).toBeInTheDocument();
 
-    // Click Success bypass button
     fireEvent.click(screen.getByRole("button", { name: "[Success]" }));
 
     vi.useRealTimers();
@@ -130,7 +129,7 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByText(/Photo sealed for style match/i)).toBeInTheDocument();
   });
 
-  it("uses Dev Test Bypass [Error] button and allows Retry", async () => {
+  it("uses Dev Test Controls [Error] button and allows Retry without reconfirming", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
     const onConfirm = vi.fn();
 
@@ -148,19 +147,18 @@ describe("StyleMatchPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText("Casting concept…")).toBeInTheDocument();
 
-    // Click Error bypass button
     fireEvent.click(screen.getByRole("button", { name: "[Error]" }));
 
     expect(
       screen.getByText(/We couldn't read enough of the house from this photo/i)
     ).toBeInTheDocument();
 
-    // Click Retry
     fireEvent.click(screen.getByRole("button", { name: /Retry/i }));
     expect(screen.getByText("Casting concept…")).toBeInTheDocument();
+    expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it("uses Dev Test Bypass [Timeout] button and allows Choose Another", async () => {
+  it("uses Dev Test Controls [Timeout] button and allows Choose Another", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
 
     render(<StyleMatchPanel preparePhoto={preparePhoto} />);
@@ -177,14 +175,12 @@ describe("StyleMatchPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText("Casting concept…")).toBeInTheDocument();
 
-    // Click Timeout bypass button
     fireEvent.click(screen.getByRole("button", { name: "[Timeout]" }));
 
     expect(screen.getByText(/Casting timed out/i)).toBeInTheDocument();
 
     vi.useRealTimers();
 
-    // Click Choose Another
     fireEvent.click(screen.getByRole("button", { name: /Choose another photo/i }));
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
