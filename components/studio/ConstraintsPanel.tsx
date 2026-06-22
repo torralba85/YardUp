@@ -30,6 +30,8 @@ import {
   type ConstraintItem,
   type ConstraintStatus,
 } from "@/lib/feasibility-verdict";
+import AIPropertyInsightsPanel from "./AIPropertyInsightsPanel";
+import AIStyleMatchPanel from "./AIStyleMatchPanel";
 
 const STATUS_ICON: Record<ConstraintStatus, typeof CheckCircle2> = {
   clear: CheckCircle2,
@@ -45,9 +47,9 @@ const GROUP_ORDER: ConstraintGroup[] = [
 ];
 
 export interface ConstraintsPanelProps {
-  parcel: Parcel;
+  parcel: Parcel & { zoning?: string; source?: string };
   result: FeasibilityResult;
-  config: Pick<ADUConfig, "width" | "length">;
+  config: ADUConfig;
   onViewCertificate: () => void;
 }
 
@@ -92,6 +94,14 @@ export default function ConstraintsPanel({
             </div>
           );
         })}
+
+        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
+          <AIPropertyInsightsPanel parcel={parcel} result={result} config={config} />
+        </div>
+
+        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
+          <AIStyleMatchPanel parcel={parcel} config={config} />
+        </div>
       </div>
 
       {/* Verdict-reason strip */}
