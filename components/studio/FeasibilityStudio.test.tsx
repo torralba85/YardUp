@@ -70,11 +70,22 @@ describe("FeasibilityStudio", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders the complete feasibility workflow", () => {
+  it("renders the verdict-led workflow and exposes massing controls from its tab", async () => {
+    const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
       screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Feasibility" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
+    expect(screen.getByText("Feasibility verdict")).toBeInTheDocument();
+    expect(screen.getByText("Readiness")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /Massing/i }));
+
     // "Sample Property" is a label (not h3) for the preset select element
     expect(
       screen.getByRole("combobox", { name: "Sample Property" }),
@@ -93,6 +104,8 @@ describe("FeasibilityStudio", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
+    await user.click(screen.getByRole("tab", { name: /Massing/i }));
+
     await user.selectOptions(screen.getByLabelText("Sample Property"), "compact-lot");
 
     const sizeGroup = screen.getByRole("group", { name: /ADU footprint size/i });
@@ -105,6 +118,8 @@ describe("FeasibilityStudio", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
+    await user.click(screen.getByRole("tab", { name: /Massing/i }));
+
     const rentGroup = screen.getByRole("group", { name: /Rental estimate/i });
     await user.click(within(rentGroup).getByRole("button", { name: "Market" }));
 
@@ -116,7 +131,8 @@ describe("FeasibilityStudio", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getByRole("button", { name: /Create my ADU report/i }));
+    await user.click(screen.getByRole("tab", { name: "Certificate" }));
+    await user.click(screen.getByRole("button", { name: /Create report/i }));
 
     expect(
       screen.getByText(/recorded concept for this lot/i),
@@ -135,6 +151,37 @@ describe("FeasibilityStudio", () => {
       screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Current feasibility snapshot for/i)).toBeInTheDocument();
+  });
+
+  it("switches among feasibility, massing, and certificate surfaces", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(screen.getByRole("tab", { name: /Massing/i }));
+    expect(screen.getByRole("combobox", { name: "Sample Property" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Certificate" }));
+    expect(
+      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Feasibility" }));
+    expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
+  });
+
+  it("opens the certificate tab without also opening the report preview", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(screen.getByRole("button", { name: "View certificate" }));
+
+    expect(screen.getByRole("tab", { name: "Certificate" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.queryByRole("heading", { name: "Certificate of Feasibility" }),
+    ).not.toBeInTheDocument();
   });
 
   it("routes every primary navigation item to a visible studio surface", async () => {
@@ -159,6 +206,10 @@ describe("FeasibilityStudio", () => {
     expect(
       screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Feasibility" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("marks the lead money figures with the investment-grade accent", () => {
