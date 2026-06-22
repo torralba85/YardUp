@@ -21,7 +21,7 @@ import {
   Stamp,
   XCircle,
 } from "lucide-react";
-import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
+import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
 import {
   summarizeFeasibility,
   statusTone,
@@ -47,15 +47,17 @@ const GROUP_ORDER: ConstraintGroup[] = [
 export interface ConstraintsPanelProps {
   parcel: Parcel;
   result: FeasibilityResult;
-  onGenerateReport: () => void;
+  config: Pick<ADUConfig, "width" | "length">;
+  onViewCertificate: () => void;
 }
 
 export default function ConstraintsPanel({
   parcel,
   result,
-  onGenerateReport,
+  config,
+  onViewCertificate,
 }: ConstraintsPanelProps) {
-  const summary = summarizeFeasibility(parcel, result);
+  const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
 
   return (
@@ -100,14 +102,14 @@ export default function ConstraintsPanel({
         <p className="text-[13px] leading-[1.5] text-lf-espresso">
           <strong style={{ color: tone.color }}>{summary.verdict}.</strong>{" "}
           {summary.clearedCount} of {summary.constraints.filter((c) => c.status !== "info").length}{" "}
-          checks clear, with {summary.openCount} to confirm before permitting.
+          checks clear, with {summary.openCount}{" "}to confirm before permitting.
           Utility capacity and easements aren&rsquo;t in this estimate.
         </p>
       </div>
       <div className="px-[22px] pb-4">
         <button
           type="button"
-          onClick={onGenerateReport}
+          onClick={onViewCertificate}
           className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-forest text-[13px] font-semibold text-lf-sand transition hover:bg-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
         >
           <Stamp size={15} />
@@ -169,7 +171,11 @@ function RowTrailing({
   return (
     <span
       className="inline-flex h-[22px] items-center rounded-full border px-[9px] font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em]"
-      style={{ backgroundColor: tone.soft, color: tone.color, borderColor: tone.color + "55" }}
+      style={{
+        backgroundColor: tone.soft,
+        color: tone.color,
+        borderColor: `color-mix(in srgb, ${tone.color} 33%, transparent)`,
+      }}
     >
       {chipLabel}
     </span>

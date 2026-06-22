@@ -17,6 +17,7 @@
 import {
   formatCompactCurrency,
   formatCurrency,
+  type ADUConfig,
   type FeasibilityResult,
   type Parcel,
 } from "./feasibility";
@@ -79,19 +80,19 @@ export interface VerdictTone {
 
 const VERDICT_TONE: Record<VerdictLevel, VerdictTone> = {
   "Likely Feasible": {
-    color: "var(--lf-forest)",
-    onDark: "var(--lf-money-on-dark)",
-    soft: "var(--lf-forest-soft)",
+    color: "var(--color-lf-forest)",
+    onDark: "var(--color-lf-money-on-dark)",
+    soft: "var(--color-lf-forest-soft)",
   },
   "Needs Review": {
-    color: "var(--lf-amber)",
+    color: "var(--color-lf-amber)",
     onDark: "#E0B463",
-    soft: "var(--lf-amber-soft)",
+    soft: "var(--color-lf-amber-soft)",
   },
   Unlikely: {
-    color: "var(--lf-brick)",
+    color: "var(--color-lf-brick)",
     onDark: "#D98A77",
-    soft: "var(--lf-brick-soft)",
+    soft: "var(--color-lf-brick-soft)",
   },
 };
 
@@ -103,25 +104,47 @@ export function verdictTone(level: VerdictLevel): VerdictTone {
 export function statusTone(status: ConstraintStatus): VerdictTone {
   switch (status) {
     case "clear":
-      return { color: "var(--lf-forest)", onDark: "var(--lf-money-on-dark)", soft: "var(--lf-forest-soft)" };
+      return { color: "var(--color-lf-forest)", onDark: "var(--color-lf-money-on-dark)", soft: "var(--color-lf-forest-soft)" };
     case "review":
-      return { color: "var(--lf-amber)", onDark: "#E0B463", soft: "var(--lf-amber-soft)" };
+      return { color: "var(--color-lf-amber)", onDark: "#E0B463", soft: "var(--color-lf-amber-soft)" };
     case "blocked":
-      return { color: "var(--lf-brick)", onDark: "#D98A77", soft: "var(--lf-brick-soft)" };
+      return { color: "var(--color-lf-brick)", onDark: "#D98A77", soft: "var(--color-lf-brick-soft)" };
     default:
-      return { color: "var(--lf-muted)", onDark: "var(--lf-taupe)", soft: "var(--lf-taupe-soft)" };
+      return { color: "var(--color-lf-muted)", onDark: "var(--color-lf-taupe)", soft: "var(--color-lf-taupe-soft)" };
   }
+}
+
+function fitsWithinEnvelope(
+  parcel: Parcel,
+  footprint: Pick<ADUConfig, "width" | "length">,
+): boolean {
+  const usableWidth = Math.max(0, parcel.lotWidth - parcel.setbacks.side * 2);
+  const usableDepth = Math.max(
+    0,
+    parcel.lotLength - parcel.setbacks.front - parcel.setbacks.rear,
+  );
+  return (
+    (footprint.width <= usableWidth && footprint.length <= usableDepth) ||
+    (footprint.length <= usableWidth && footprint.width <= usableDepth)
+  );
 }
 
 export function summarizeFeasibility(
   parcel: Parcel,
   result: FeasibilityResult,
+  config?: Pick<ADUConfig, "width" | "length">,
 ): FeasibilitySummary {
   const buildableSqft = buildableArea(parcel);
   const compliant = result.zoningStatus === "Compliant";
-  const coverageOk = result.coveragePercent <= result.maxCoveragePercent;
   const hasCapacity = result.remainingCapacity >= 0;
-  const envelopeFits = buildableSqft >= result.aduSqft;
+  // remainingCapacity is the engine's canonical coverage signal and also
+  // drives zoningStatus. Reuse it everywhere so the verdict and rows cannot
+  // disagree because allowedFootprint is rounded while coveragePercent is not.
+  const coverageOk = hasCapacity;
+  const envelopeFits = config
+    ? fitsWithinEnvelope(parcel, config)
+    : buildableSqft >= result.aduSqft;
+  const minimumEnvelopeFits = fitsWithinEnvelope(parcel, { width: 20, length: 20 });
 
   // Live parcels carry a raw zoning code; presets don't.
   const zoneCode = "zoning" in parcel ? String((parcel as { zoning: string }).zoning) : undefined;
@@ -199,16 +222,20 @@ export function summarizeFeasibility(
   const cleared = constraints.filter((c) => c.status === "clear").length;
 
   // Verdict derives from distinct real signals — NOT a naive status count.
-  // Coverage-over-max and negative remaining-capacity are the same engine
-  // signal, so they must count once. The two always-verify items (utilities,
-  // easements) are open until the engine can resolve them.
-  const overCoverage = result.remainingCapacity < 0; // === !coverageOk
-  const envelopeTooSmall = buildableSqft < 400; // lot physically can't host a minimal unit
+  // Coverage and zoning normally describe the same engine result, so count
+  // them once. Keep a distinct zoning-review path for future data sources that
+  // can flag zoning independently. A selected concept that misses the setback
+  // envelope is reviewable; only failure to fit the minimum 20x20 unit makes
+  // the lot itself unlikely.
+  const overCoverage = !coverageOk;
+  const zoningReview = !compliant && !overCoverage;
+  const envelopeTooSmall = !minimumEnvelopeFits;
+  const envelopeReview = !envelopeTooSmall && !envelopeFits;
   const verifyOpen = 2;
 
   let verdict: VerdictLevel;
   if (envelopeTooSmall) verdict = "Unlikely";
-  else if (overCoverage || !compliant) verdict = "Needs Review";
+  else if (overCoverage || zoningReview || envelopeReview) verdict = "Needs Review";
   else verdict = "Likely Feasible";
 
   // Readiness — 100 minus weighted penalties. Default preset (compliant, the
@@ -217,11 +244,21 @@ export function summarizeFeasibility(
     0,
     Math.min(
       100,
-      100 - (envelopeTooSmall ? 55 : 0) - (overCoverage ? 25 : 0) - verifyOpen * 9,
+      100 -
+        (envelopeTooSmall ? 55 : 0) -
+        (overCoverage ? 25 : 0) -
+        (zoningReview ? 9 : 0) -
+        (envelopeReview ? 15 : 0) -
+        verifyOpen * 9,
     ),
   );
 
-  const open = (envelopeTooSmall ? 1 : 0) + (overCoverage ? 1 : 0) + verifyOpen;
+  const open =
+    (envelopeTooSmall ? 1 : 0) +
+    (overCoverage ? 1 : 0) +
+    (zoningReview ? 1 : 0) +
+    (envelopeReview ? 1 : 0) +
+    verifyOpen;
 
   const reviewNote =
     open === 0

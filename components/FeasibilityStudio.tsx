@@ -490,6 +490,7 @@ function FeasibilityStudioInner() {
                 finish: item.finish,
               });
               setActiveNav("studio");
+              setStudioTab("massing");
             }}
           />
         </div>
@@ -505,7 +506,13 @@ function FeasibilityStudioInner() {
       ) : (
         // ── Redesigned "Feasibility Studio" view ────────────────────────────
         <div className="flex min-h-0 flex-1 flex-col">
-          <FeasibilityVerdictBand parcel={activeParcel} result={result} />
+          <h2 className="sr-only">Feasibility Studio</h2>
+          <FeasibilityVerdictBand
+            parcel={activeParcel}
+            result={result}
+            config={config}
+            eyebrow={activeParcel.city}
+          />
           <StudioTabBar active={studioTab} onChange={setStudioTab} />
 
           {studioTab === "certificate" ? (
@@ -536,10 +543,8 @@ function FeasibilityStudioInner() {
                 <ConstraintsPanel
                   parcel={activeParcel}
                   result={result}
-                  onGenerateReport={() => {
-                    setStudioTab("certificate");
-                    handleGenerateReport();
-                  }}
+                  config={config}
+                  onViewCertificate={() => setStudioTab("certificate")}
                 />
               )}
             </div>

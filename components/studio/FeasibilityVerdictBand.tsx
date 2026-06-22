@@ -11,7 +11,7 @@
  */
 
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
-import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
+import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
 import {
   summarizeFeasibility,
   verdictTone,
@@ -29,6 +29,7 @@ const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
 export interface FeasibilityVerdictBandProps {
   parcel: Parcel;
   result: FeasibilityResult;
+  config: Pick<ADUConfig, "width" | "length">;
   /** APN / zone eyebrow line, e.g. "APN 061-244-018 · R-1". */
   eyebrow?: string;
 }
@@ -36,9 +37,10 @@ export interface FeasibilityVerdictBandProps {
 export default function FeasibilityVerdictBand({
   parcel,
   result,
+  config,
   eyebrow,
 }: FeasibilityVerdictBandProps) {
-  const summary = summarizeFeasibility(parcel, result);
+  const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
   const readiness = useCountUp(summary.readiness);
@@ -49,9 +51,11 @@ export default function FeasibilityVerdictBand({
   return (
     <div className="flex flex-wrap items-center justify-between gap-6 gap-y-3.5 bg-lf-espresso px-7 py-[18px] text-lf-sand">
       <div className="min-w-0">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
-          {eyebrow ?? `${parcel.address}`}
-        </p>
+        {eyebrow && (
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+            {eyebrow}
+          </p>
+        )}
         <h2 className="mt-[3px] font-display text-[32px] font-semibold leading-[1.08] text-lf-sand">
           {parcel.address}
         </h2>
