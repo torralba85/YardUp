@@ -152,7 +152,7 @@ export default function BeforeAfterBoard({
               />
               {/* Rotated Concept Stamp */}
               <div
-                className="absolute right-4 bottom-4 transform rotate-[5deg] border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-90 select-none shadow-sm"
+                className="absolute right-4 bottom-4 border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-90 select-none shadow-sm"
                 style={{ transform: "rotate(5deg)" }}
               >
                 Concept · not a permit
