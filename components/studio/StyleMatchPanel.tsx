@@ -41,6 +41,8 @@ const GENERATING_STEPS = [
   "Casting 2BD/1BA DADU concept",
 ];
 
+const showDeveloperTestControls = process.env.NODE_ENV !== "production";
+
 const getStepState = (index: number, progress: number): "completed" | "current" | "pending" => {
   if (index === 0) {
     return progress >= 30 ? "completed" : "current";
@@ -72,12 +74,17 @@ export default function StyleMatchPanel({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const previewUrlRef = useRef<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onGenerationCompleteRef = useRef(onGenerationComplete);
 
   const [status, setStatus] = useState<PanelStatus>("idle");
   const [prepared, setPrepared] = useState<PreparedStyleMatchPhoto | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generatingProgress, setGeneratingProgress] = useState(0);
+
+  useEffect(() => {
+    onGenerationCompleteRef.current = onGenerationComplete;
+  }, [onGenerationComplete]);
 
   useEffect(() => {
     return () => {
@@ -117,9 +124,11 @@ export default function StyleMatchPanel({
       timerRef.current = null;
     }
     setStatus("ready");
-    if (previewUrl) {
-      onGenerationComplete?.({
-        photoUrl: previewUrl,
+    const currentPreviewUrl = previewUrlRef.current;
+    if (currentPreviewUrl) {
+      // TODO: Replace this deterministic fixture with the real style-match API response.
+      onGenerationCompleteRef.current?.({
+        photoUrl: currentPreviewUrl,
         conceptUrl: "/inspiration/clean-gable.png",
         styleName: "Craftsman",
         matchPercentage: 91,
@@ -146,12 +155,11 @@ export default function StyleMatchPanel({
     setStatus("timeout");
   }
 
-  function handleConfirm() {
-    if (!prepared || !previewUrl) return;
+  function startGeneration() {
+    if (!prepared || !previewUrlRef.current) return;
     setStatus("generating");
     setError(null);
     setGeneratingProgress(0);
-    onConfirm?.(prepared);
 
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -167,6 +175,12 @@ export default function StyleMatchPanel({
         triggerSuccess();
       }
     }, 500);
+  }
+
+  function handleConfirm() {
+    if (!prepared || !previewUrlRef.current) return;
+    onConfirm?.(prepared);
+    startGeneration();
   }
 
   function handleReset() {
@@ -299,35 +313,36 @@ export default function StyleMatchPanel({
               Usually under a minute. You can keep adjusting the plan — we will settle it into the gallery when it is ready.
             </p>
 
-            {/* Developer Test Helpers */}
-            <div className="mt-4 border border-dashed border-lf-hairline p-2 flex flex-col gap-1.5 bg-lf-sand-2">
-              <div className="font-mono text-[9px] uppercase text-lf-clay text-center font-bold">
-                Dev Test Bypass
+            {showDeveloperTestControls && (
+              <div className="mt-4 border border-dashed border-lf-hairline p-2 flex flex-col gap-1.5 bg-lf-sand-2">
+                <div className="font-mono text-[9px] uppercase text-lf-clay text-center font-bold">
+                  Dev Test Controls
+                </div>
+                <div className="flex gap-1 justify-center">
+                  <button
+                    type="button"
+                    onClick={triggerSuccess}
+                    className="bg-lf-forest text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                  >
+                    [Success]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={triggerError}
+                    className="bg-lf-brick text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                  >
+                    [Error]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={triggerTimeout}
+                    className="bg-lf-amber text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                  >
+                    [Timeout]
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-1 justify-center">
-                <button
-                  type="button"
-                  onClick={triggerSuccess}
-                  className="bg-lf-forest text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
-                >
-                  [Success]
-                </button>
-                <button
-                  type="button"
-                  onClick={triggerError}
-                  className="bg-lf-brick text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
-                >
-                  [Error]
-                </button>
-                <button
-                  type="button"
-                  onClick={triggerTimeout}
-                  className="bg-lf-amber text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
-                >
-                  [Timeout]
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -404,7 +419,7 @@ export default function StyleMatchPanel({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={handleConfirm}
+                onClick={startGeneration}
                 className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2 cursor-pointer"
               >
                 <RotateCcw size={16} aria-hidden="true" />
