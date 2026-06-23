@@ -76,8 +76,8 @@ export default function BuilderProfileForm({
       className="mt-6 grid gap-4 rounded-md border border-lf-hairline bg-lf-card p-4 md:grid-cols-2"
     >
       <div className="md:col-span-2">
-        <h2 className="font-display text-xl font-bold">Builder profile</h2>
-        <p className="mt-1 text-sm text-lf-muted">
+        <h2 className="lf-panel-heading">Builder profile</h2>
+        <p className="lf-body-sm mt-1 text-lf-muted">
           Add your service coverage before receiving matched ADU snapshots.
         </p>
       </div>
@@ -86,7 +86,7 @@ export default function BuilderProfileForm({
           {error}
         </div>
       )}
-      <label className="text-sm font-medium text-lf-espresso">
+      <label className="lf-body-sm font-medium text-lf-espresso">
         Company name
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
@@ -94,7 +94,7 @@ export default function BuilderProfileForm({
           onChange={(event) => setCompanyName(event.target.value)}
         />
       </label>
-      <label className="text-sm font-medium text-lf-espresso">
+      <label className="lf-body-sm font-medium text-lf-espresso">
         Contact email
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
@@ -102,7 +102,7 @@ export default function BuilderProfileForm({
           onChange={(event) => setContactEmail(event.target.value)}
         />
       </label>
-      <label className="text-sm font-medium text-lf-espresso">
+      <label className="lf-body-sm font-medium text-lf-espresso">
         Phone optional
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
@@ -110,7 +110,7 @@ export default function BuilderProfileForm({
           onChange={(event) => setPhone(event.target.value)}
         />
       </label>
-      <label className="text-sm font-medium text-lf-espresso">
+      <label className="lf-body-sm font-medium text-lf-espresso">
         License number optional
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
@@ -118,7 +118,7 @@ export default function BuilderProfileForm({
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
       </label>
-      <label className="text-sm font-medium text-lf-espresso md:col-span-2">
+      <label className="lf-body-sm font-medium text-lf-espresso md:col-span-2">
         Service areas
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"

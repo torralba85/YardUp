@@ -130,7 +130,7 @@ export default function InspirationGalleryPanel({ onApply }: InspirationGalleryP
                     {item.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full bg-lf-taupe-soft px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-lf-clay"
+                        className="rounded-full bg-lf-taupe-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-lf-clay"
                       >
                         {tag}
                       </span>

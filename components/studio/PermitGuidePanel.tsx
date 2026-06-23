@@ -78,18 +78,18 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
     >
       <div className="flex h-full flex-col lg:min-h-0">
         <div className="border-b border-lf-hairline px-6 py-5">
-          <h2 className="text-2xl font-semibold tracking-tight text-lf-espresso">
+          <h2 className="lf-panel-heading text-lf-espresso">
             Permit Guide
           </h2>
-          <p className="mt-1 text-sm text-lf-muted">
+          <p className="lf-body-sm mt-1 text-lf-muted">
             Sourced local rules and permit review guides.
           </p>
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4 lg:min-h-0">
           <div>
-            <h3 className="text-lg font-bold text-lf-espresso">{guide.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-lf-muted">{guide.summary}</p>
+            <h3 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{guide.title}</h3>
+            <p className="lf-body-sm mt-2 text-lf-muted">{guide.summary}</p>
           </div>
 
           {/* Risk Level Badge */}
@@ -105,7 +105,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
 
           {/* Permit Steps Checklist */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-lf-muted">
+            <h4 className="lf-kicker-dense text-lf-muted">
               Permitting Steps
             </h4>
             <div className="space-y-2.5">
@@ -131,7 +131,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
           {/* Blockers / Warnings */}
           {guide.blockers.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-lf-muted">
+              <h4 className="lf-kicker-dense text-lf-muted">
                 Potential Blockers
               </h4>
               <div className="rounded-md border border-lf-brick/30 bg-lf-brick-soft p-3.5 text-xs text-lf-brick">
@@ -150,7 +150,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
           {/* Sourced Citations */}
           {guide.citations.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-lf-muted">
+              <h4 className="lf-kicker-dense text-lf-muted">
                 Local Resources
               </h4>
               <ul className="space-y-2">

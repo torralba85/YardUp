@@ -98,14 +98,14 @@ export function LandingHero() {
           data-testid="hero-copy"
           className={`pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] transition-[opacity,transform] duration-300 max-sm:top-24 max-sm:w-[calc(100%-40px)] ${mobileSceneFocused ? "max-sm:-translate-y-4 max-sm:opacity-0" : "max-sm:opacity-100"}`}
         >
-          <p className="mb-3 flex items-center gap-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.24em] text-lf-clay sm:text-xs">
+          <p className="lf-kicker mb-3 flex items-center gap-2.5 text-lf-clay">
             <span aria-hidden="true" className="h-px w-6 bg-lf-clay/70" />
             LotFoundry / feasibility studio
           </p>
 
           <h1
             aria-label="Your backyard, cast into an asset."
-            className="font-display text-[clamp(2.6rem,13vw,3.2rem)] font-bold leading-[0.91] tracking-[-0.04em] text-lf-espresso sm:text-[clamp(3rem,5.3vw,4.75rem)]"
+            className="lf-display-hero text-lf-espresso"
           >
             Your backyard,
             <br />
@@ -135,7 +135,7 @@ export function LandingHero() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Enter your property address"
               autoComplete="street-address"
-              className="min-h-11 min-w-0 flex-1 bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay sm:px-4 sm:text-xs"
+              className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-xs text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay sm:px-4 sm:text-sm"
             />
             <button
               type="submit"
@@ -144,7 +144,7 @@ export function LandingHero() {
               Run feasibility
             </button>
           </form>
-          <p className="mt-2 max-w-md text-[10px] leading-4 text-lf-muted sm:text-[11px]">
+          <p className="lf-caption mt-2 max-w-md text-lf-muted">
             Early estimate only. Local review is still required before design, permitting, financing, or investment decisions.
           </p>
         </div>
@@ -153,7 +153,7 @@ export function LandingHero() {
           aria-label="Feasibility stack"
           className="absolute right-[clamp(18px,3.5vw,48px)] top-1/2 z-20 w-[min(300px,42vw)] -translate-y-1/2 rounded-2xl border border-lf-hairline bg-lf-card/80 p-3 font-mono shadow-[0_12px_40px_rgba(38,19,7,0.12)] backdrop-blur-xl max-sm:inset-x-3 max-sm:bottom-4 max-sm:top-auto max-sm:w-auto max-sm:translate-y-0 max-sm:p-2"
         >
-          <div className="mb-3 flex items-baseline justify-between px-0.5 text-[10px] uppercase tracking-[0.16em] text-lf-muted max-sm:mb-2">
+          <div className="lf-kicker-dense mb-3 flex items-baseline justify-between px-0.5 text-lf-muted max-sm:mb-2">
             <span>Feasibility stack</span>
             <b className="font-medium text-lf-clay">{percent}%</b>
           </div>
@@ -206,7 +206,7 @@ export function LandingHero() {
 
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
+          className={`lf-kicker-dense pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
         >
           <span className="relative h-7 w-[18px] rounded-full border border-lf-muted/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-lf-clay" />
           Scroll to deconstruct

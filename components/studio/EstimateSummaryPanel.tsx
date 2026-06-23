@@ -50,11 +50,11 @@ export default function EstimateSummaryPanel({
       <div className="border-b border-lf-hairline px-6 py-5">
         <h2
           id="estimate-summary-heading"
-          className="text-2xl font-semibold tracking-tight text-lf-espresso"
+          className="lf-panel-heading text-lf-espresso"
         >
           Estimate Summary
         </h2>
-        <p className="mt-1 text-sm leading-6 text-lf-muted">
+        <p className="lf-body-sm mt-1 text-lf-muted">
           Current feasibility snapshot for {parcelName}.
         </p>
       </div>

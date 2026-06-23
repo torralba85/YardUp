@@ -12,19 +12,19 @@ export default function TermsPage() {
       <header className="border-b border-lf-hairline/50">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-lf-mahogany font-display font-bold text-xs text-lf-sand">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-lf-mahogany font-sans text-xs font-bold text-lf-sand">
               LF
             </div>
-            <span className="font-display font-semibold text-lf-mahogany">LotFoundry</span>
+            <span className="font-sans font-bold tracking-tight text-lf-mahogany">LotFoundry</span>
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-prose px-6 py-16">
-        <h1 className="font-display text-4xl font-bold tracking-tight text-lf-espresso">
+        <h1 className="lf-section-heading text-lf-espresso">
           Terms of Service
         </h1>
-        <p className="mt-3 text-sm text-lf-muted">Last updated: May 31, 2026</p>
+        <p className="lf-kicker mt-3 text-lf-muted">Last updated: May 31, 2026</p>
 
         <div className="mt-10 space-y-8">
           <Section title="1. Acceptance of Terms">
@@ -53,7 +53,7 @@ export default function TermsPage() {
               You must provide accurate information when creating an account. You are responsible
               for maintaining the confidentiality of your credentials and for all activity under
               your account. Notify us immediately at{" "}
-              <a href="mailto:support@lotfoundry.com" className="text-lf-clay hover:text-lf-mahogany">
+              <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany">
                 support@lotfoundry.com
               </a>{" "}
               if you suspect unauthorized access.
@@ -111,7 +111,7 @@ export default function TermsPage() {
           <Section title="12. Contact">
             <>
               Questions about these Terms? Email us at{" "}
-              <a href="mailto:legal@lotfoundry.com" className="text-lf-clay hover:text-lf-mahogany">
+              <a href="mailto:legal@lotfoundry.com" className="font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany">
                 legal@lotfoundry.com
               </a>.
             </>
@@ -120,7 +120,7 @@ export default function TermsPage() {
       </main>
 
       <footer className="border-t border-lf-hairline/50">
-        <div className="mx-auto max-w-4xl px-6 py-8 text-center text-sm text-lf-muted">
+        <div className="lf-caption mx-auto max-w-4xl px-6 py-8 text-center text-lf-muted">
           <Link href="/" className="hover:text-lf-espresso">LotFoundry</Link>
           {" · "}
           <Link href="/terms" className="hover:text-lf-espresso">Terms</Link>
@@ -135,8 +135,8 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="font-display text-xl font-bold text-lf-espresso">{title}</h2>
-      <div className="mt-3 leading-relaxed text-lf-muted">{children}</div>
+      <h2 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{title}</h2>
+      <div className="lf-body mt-3 text-lf-muted">{children}</div>
     </div>
   );
 }

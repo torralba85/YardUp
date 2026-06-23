@@ -141,8 +141,8 @@ export default function BuilderInbox({
       <div className="border border-lf-hairline bg-lf-card p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="font-display text-xl font-bold">{profile.companyName}</h2>
-            <p className="mt-1 text-sm text-lf-muted">
+            <h2 className="lf-panel-heading">{profile.companyName}</h2>
+            <p className="lf-body-sm mt-1 text-lf-muted">
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
@@ -246,8 +246,8 @@ function ZeroEverEmptyState() {
   return (
     <div className="mt-5">
       <div className="border border-lf-hairline bg-lf-card p-6">
-        <h3 className="font-display text-xl font-semibold text-lf-espresso">No matched leads yet</h3>
-        <p className="mt-1.5 max-w-prose text-sm text-lf-muted">
+        <h3 className="lf-card-heading text-lf-espresso">No matched leads yet</h3>
+        <p className="lf-body-sm mt-1.5 max-w-prose text-lf-muted">
           A lead lands here when a homeowner in one of your service areas submits a feasibility
           report. Complete your profile and add every area you build in — complete profiles get
           matched first.
