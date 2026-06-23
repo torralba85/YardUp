@@ -50,13 +50,13 @@ export default function ForgotPasswordPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lf-clay/10 text-lf-clay">
             <CheckCircle className="h-6 w-6" />
           </div>
-          <p className="text-sm text-lf-muted">
+          <p className="lf-body-sm text-lf-muted">
             If <strong className="text-lf-espresso">{email}</strong> is registered,
             you&apos;ll receive a reset link shortly. Check your spam folder if it doesn&apos;t arrive.
           </p>
           <Link
             href="/login"
-            className="mt-2 text-sm font-medium text-lf-clay hover:text-lf-mahogany"
+            className="lf-body-sm mt-2 font-medium text-lf-clay hover:text-lf-mahogany"
           >
             Back to sign in
           </Link>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-sm text-lf-brick">
+          <div className="lf-body-sm rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
           >
             Email
           </label>
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-lf-muted">
+      <p className="lf-body-sm mt-6 text-center text-lf-muted">
         Remembered it?{" "}
         <Link href="/login" className="font-medium text-lf-clay hover:text-lf-mahogany">
           Back to sign in

@@ -89,8 +89,8 @@ export default function BuilderDashboard({
   return (
     <main className="min-h-dvh bg-lf-sand p-4 text-lf-espresso lg:p-8">
       <div className="mx-auto max-w-6xl">
-        <h1 className="font-display text-3xl font-bold">Builder dashboard</h1>
-        <p className="mt-2 text-sm text-lf-muted">
+        <h1 className="lf-section-heading">Builder dashboard</h1>
+        <p className="lf-body-sm mt-2 text-lf-muted">
           Review consented ADU feasibility snapshots matched to your service area.
         </p>
         {loadError && (

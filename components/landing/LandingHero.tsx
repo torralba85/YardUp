@@ -136,7 +136,7 @@ export function LandingHero() {
         >
           <motion.p
             variants={itemVariants}
-            className="mb-3 flex items-center gap-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.24em] text-lf-clay sm:text-xs"
+            className="lf-kicker mb-3 flex items-center gap-2.5 text-lf-clay"
           >
             <span aria-hidden="true" className="h-px w-6 bg-lf-clay/70" />
             LotFoundry / feasibility studio
@@ -145,7 +145,7 @@ export function LandingHero() {
           <motion.h1
             variants={itemVariants}
             aria-label="Your backyard, cast into an asset."
-            className="font-display text-[clamp(2.6rem,13vw,3.2rem)] font-bold leading-[0.91] tracking-[-0.04em] text-lf-espresso sm:text-[clamp(3rem,5.3vw,4.75rem)]"
+            className="lf-display-hero text-lf-espresso"
           >
             Your backyard,
             <br />
@@ -179,7 +179,7 @@ export function LandingHero() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Enter your property address"
               autoComplete="street-address"
-              className="min-h-10 min-w-0 flex-1 bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none sm:px-4 sm:text-xs"
+              className="min-h-10 min-w-0 flex-1 bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay sm:px-4 sm:text-xs"
             />
             <button
               type="submit"
@@ -190,7 +190,7 @@ export function LandingHero() {
           </motion.form>
           <motion.p
             variants={itemVariants}
-            className="mt-2 max-w-md text-[10px] leading-4 text-lf-muted sm:text-[11px]"
+            className="lf-caption mt-2 max-w-md text-lf-muted"
           >
             Early estimate only. Local review is still required before design, permitting, financing, or investment decisions.
           </motion.p>
@@ -204,7 +204,7 @@ export function LandingHero() {
             className="border-lf-hairline/30 bg-lf-taupe-soft/20 shadow-[0_12px_40px_rgba(38,19,7,0.12)] backdrop-blur-xl"
             innerClassName="bg-lf-card/85 p-3 max-sm:p-2"
           >
-            <div className="mb-3 flex items-baseline justify-between px-0.5 text-[10px] uppercase tracking-[0.16em] text-lf-muted max-sm:mb-2">
+            <div className="lf-kicker-dense mb-3 flex items-baseline justify-between px-0.5 text-lf-muted max-sm:mb-2">
               <span>Feasibility stack</span>
               <b className="font-medium text-lf-clay">{percent}%</b>
             </div>
@@ -258,7 +258,7 @@ export function LandingHero() {
 
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
+          className={`lf-kicker-dense pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
         >
           <span className="relative h-7 w-[18px] rounded-full border border-lf-muted/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-lf-clay" />
           Scroll to deconstruct
