@@ -13,7 +13,14 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
-function clientKey(request: NextRequest, namespace: string): string {
+/**
+ * Builds the stable per-client bucket key from proxy headers and route namespace.
+ *
+ * @param request - Incoming request with forwarding headers from Hosting/Functions.
+ * @param namespace - Route-specific namespace to avoid sharing buckets.
+ * @returns A namespace-prefixed client key.
+ */
+export function getRateLimitClientKey(request: NextRequest, namespace: string): string {
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0];
   const ip =
     forwardedFor?.trim() ||
@@ -21,6 +28,22 @@ function clientKey(request: NextRequest, namespace: string): string {
     request.headers.get("cf-connecting-ip") ||
     "unknown";
   return `${namespace}:${ip}`;
+}
+
+/**
+ * Creates the common 429 response returned by rate limiters.
+ *
+ * @param retryAfter - Seconds until the current bucket resets.
+ * @returns A JSON 429 response with a `Retry-After` header.
+ */
+export function createRateLimitResponse(retryAfter: number): NextResponse {
+  return NextResponse.json(
+    { error: "Too many requests. Please try again shortly." },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfter) },
+    },
+  );
 }
 
 /**
@@ -39,7 +62,7 @@ export function checkRateLimit(
   options: RateLimitOptions,
 ): NextResponse | null {
   const now = Date.now();
-  const key = clientKey(request, options.namespace);
+  const key = getRateLimitClientKey(request, options.namespace);
   const bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {
@@ -54,13 +77,7 @@ export function checkRateLimit(
   }
 
   const retryAfter = Math.ceil((bucket.resetAt - now) / 1000);
-  return NextResponse.json(
-    { error: "Too many requests. Please try again shortly." },
-    {
-      status: 429,
-      headers: { "Retry-After": String(retryAfter) },
-    },
-  );
+  return createRateLimitResponse(retryAfter);
 }
 
 function cleanupBuckets(now: number) {

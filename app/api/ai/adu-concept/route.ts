@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { AIADUConcept } from "@/lib/ai-types";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkAIRateLimit } from "@/lib/server/ai-rate-limit";
+import { createAIRouteErrorResponse } from "@/lib/server/ai-route-errors";
 import {
   createOpenAIResponse,
   extractGeneratedImageBase64,
   extractResponseText,
-  OpenAIConfigError,
   OpenAIProviderError,
 } from "@/lib/server/openai";
 
@@ -13,6 +13,8 @@ export const runtime = "nodejs";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-5.5";
 
 interface StyleAnalysis {
   architecturalStyle: string;
@@ -61,7 +63,7 @@ const STYLE_SCHEMA = {
 };
 
 export async function POST(request: NextRequest) {
-  const limited = checkRateLimit(request, {
+  const limited = await checkAIRateLimit(request, {
     limit: 10,
     namespace: "ai-adu-concept",
     windowMs: 60_000,
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
   }
 
   const image = formData.get("image");
-  if (!(image instanceof File)) {
+  if (!isUploadedFile(image)) {
     return NextResponse.json({ error: "A home photo is required." }, { status: 400 });
   }
   if (!SUPPORTED_IMAGE_TYPES.has(image.type)) {
@@ -104,11 +106,9 @@ export async function POST(request: NextRequest) {
   try {
     const bytes = Buffer.from(await image.arrayBuffer());
     const imageUrl = `data:${image.type};base64,${bytes.toString("base64")}`;
-const textModel = process.env.OPENAI_TEXT_MODEL || "gpt-4o-mini";
-const imageModel = process.env.OPENAI_IMAGE_MODEL || "dall-e-3";
 
     const styleResponse = await createOpenAIResponse({
-      model: textModel,
+      model: TEXT_MODEL,
       max_output_tokens: 900,
       input: [
         {
@@ -143,7 +143,7 @@ const imageModel = process.env.OPENAI_IMAGE_MODEL || "dall-e-3";
 
     const imageResponse = await createOpenAIResponse(
       {
-        model: imageModel,
+        model: IMAGE_MODEL,
         input: [
           {
             role: "user",
@@ -179,6 +179,16 @@ const imageModel = process.env.OPENAI_IMAGE_MODEL || "dall-e-3";
   }
 }
 
+function isUploadedFile(value: FormDataEntryValue | null): value is File {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof value.type === "string" &&
+    typeof value.size === "number" &&
+    typeof value.arrayBuffer === "function"
+  );
+}
+
 function readJsonField(formData: FormData, key: string): unknown | null {
   const raw = formData.get(key);
   if (typeof raw !== "string") return null;
@@ -190,30 +200,10 @@ function readJsonField(formData: FormData, key: string): unknown | null {
 }
 
 function handleAIError(err: unknown) {
-  if (err instanceof OpenAIConfigError) {
-    return NextResponse.json(
-      { error: "AI is not configured yet. Add OPENAI_API_KEY on the server." },
-      { status: 501 },
-    );
-  }
-
-  if (err instanceof SyntaxError) {
-    return NextResponse.json(
-      { error: "AI returned an unreadable style analysis. Please try again." },
-      { status: 502 },
-    );
-  }
-
-  if (err instanceof OpenAIProviderError) {
-    return NextResponse.json(
-      { error: "AI concept generation failed. Please try another photo." },
-      { status: 502 },
-    );
-  }
-
-  console.error("[/api/ai/adu-concept] Unexpected error:", err);
-  return NextResponse.json(
-    { error: "AI is unavailable right now. Please try again." },
-    { status: 500 },
-  );
+  return createAIRouteErrorResponse(err, "/api/ai/adu-concept", {
+    config: "AI is not configured yet. Add OPENAI_API_KEY on the server.",
+    provider: "AI concept generation failed. Please try another photo.",
+    syntax: "AI returned an unreadable style analysis. Please try again.",
+    unavailable: "AI is unavailable right now. Please try again.",
+  });
 }
