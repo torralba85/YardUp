@@ -1,6 +1,6 @@
 # YardUp / LotFoundry - CLAUDE.md
 
-YardUp repo: `torralba85/YardUp`. Product/app: LotFoundry, an ADU feasibility studio. Stack: Next.js 16 App Router, React 19, TypeScript 5, Tailwind CSS 4, Three.js/R3F, Firebase Hosting + Cloud Functions. Firebase project: `yardup-2026`. Default branch: `master`; always check the current worktree branch before committing.
+YardUp repo: `torralba85/YardUp`. Product/app: LotFoundry, an ADU feasibility studio. Stack: Next.js 16 App Router, React 19, TypeScript 5, Tailwind CSS 4, Three.js/R3F, Firebase Hosting + Cloud Functions, Firebase Auth + Firestore, Stripe payments, and OpenAI-backed AI panels. Firebase project: `yardup-2026`. Default branch: `master`; always check the current worktree branch before committing.
 
 ## Commands
 
@@ -11,10 +11,13 @@ npm run build                       # production Next.js build
 npm run build:firebase              # build + prepare Firebase output
 npm run lint                        # ESLint, zero warnings required
 npm run test                        # Vitest unit tests
-npm run test:e2e                    # Playwright E2E tests
+npm run test:coverage               # Vitest with coverage output
+npm run test:e2e                    # Playwright E2E tests (desktop + mobile Chromium)
 npx tsc --noEmit                    # type-check
 npm run deploy:dry-run              # validate Firebase deploy config
 npm run deploy                      # deploy Hosting + Functions + Firestore rules
+npm run deploy:rules                # deploy Firestore rules only
+npm run hero:render                 # render the Remotion hero MP4 + poster into public/hero/
 FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
 ```
 
@@ -28,32 +31,44 @@ Use `.claude/launch.json` for Claude launch configs: `lotfoundry-dev` on port 30
 - State assumptions when a task has more than one plausible interpretation. Ask before editing if the ambiguity affects user-visible behavior, data, deployment, or security.
 - Keep changes surgical. Do not refactor, reformat, or "improve" adjacent code unless it directly supports the task.
 - Match local style: TypeScript, strict mode, React function components, two-space indentation, double-quoted imports, and `@/*` repo-root imports.
+- Naming: React components and component files in `PascalCase` (e.g. `FeasibilityInspector.tsx`); utilities in `kebab-case` or domain-specific lower-case files (e.g. `scenario-url.ts`).
 - Remove imports, variables, files, or tests made unused by your own change. Mention unrelated dead code; do not delete it unless asked.
 - For multi-step work, define success criteria and verify them. A bug fix should usually get a reproducing test before the fix.
-- Do not commit secrets. Keep `.env.local` and `functions/.env` local.
+- Do not commit secrets. Keep `.env.local` and `functions/.env` local. Treat feasibility outputs as estimates.
 
 ## Repo Map
 
 ```text
-app/          Next.js routes, layouts, global CSS, and API route handlers
-components/   landing, studio, auth, builder, and shared UI components
-lib/          feasibility engine, parcel utilities, Firebase/auth, reports, tests
+app/          Next.js routes, layouts, global CSS, and API route handlers (incl. api/ai/*, api/stripe/*)
+components/   landing, studio (incl. mobile), auth, builder, and shared ui components
+lib/          feasibility engine, parcel/market utilities, AI + Stripe clients, Firebase/auth, server helpers, reports
+lib/server/   server-only helpers: OpenAI client, rate limits, API auth, Firebase Admin, lead-unlock ledger
 e2e/          Playwright specs and snapshots
 functions/    Firebase Functions package and Next.js function entrypoints
-scripts/      Firebase/build helper scripts
+scripts/      Firebase/build/preview helper scripts
 remotion/     hero video sources
 public/       static assets
-docs/         full agent guide, deployment docs, release checklist, specs
+docs/         full agent guide, deployment docs, release checklist, plans, specs (docs/superpowers/*)
+brand/        brand plate render + source script
+firestore.rules, firestore.indexes.json   Firestore security rules and indexes
 ```
 
 Key entry points:
-- `app/page.tsx` and `app/studio/page.tsx` - primary product surfaces
+- `app/page.tsx` and `app/studio/page.tsx` - primary product surfaces; `app/builder/page.tsx` - builder dashboard
+- `app/login`, `app/signup`, `app/forgot-password`, `app/privacy`, `app/terms` - auth + legal pages
 - `components/FeasibilityStudio.tsx` - studio orchestrator
 - `components/ParcelScene.tsx` - 3D scene and ADU placement
-- `components/studio/*` - inspector, metrics, report, mobile studio, builder lead panels
-- `lib/feasibility.ts` - core feasibility and financial calculations
+- `components/studio/*` - inspector, metrics, report, AI panels, mobile studio, builder lead panels
+- `components/builder/*` - builder dashboard, inbox, lead cards, unlock slips
+- `lib/feasibility.ts`, `lib/feasibility-verdict.ts` - core feasibility/financial calc and verdict logic
 - `lib/parcel-context.tsx`, `lib/parcel-api.ts`, `lib/parcel-types.ts` - parcel state and API boundary
-- `app/api/parcel/route.ts`, `app/api/aerial/route.ts`, `app/api/geocode/route.ts`, `app/api/suggest/route.ts` - server API routes
+- `lib/market/*` - localized feasibility numbers (market basis, bedroom mix)
+- `lib/ai-api.ts`, `lib/ai-types.ts`, `lib/style-match-photo.ts`, `lib/server/openai.ts` - AI panels (parcel insights, style-matched ADU concepts)
+- `lib/stripe.ts`, `lib/lead-unlock-*.ts`, `lib/marketplace*.ts`, `lib/server/lead-unlocks.ts` - payments + builder lead-unlock marketplace
+- `lib/saved-scenarios.ts`, `lib/scenarios-firestore.ts`, `lib/scenario-url.ts` - scenario persistence and sharing
+- `app/api/parcel|aerial|geocode|suggest/route.ts` - parcel/data server routes
+- `app/api/ai/parcel-insights|adu-concept/route.ts` - AI server routes (auth + rate-limited)
+- `app/api/stripe/checkout|webhook/route.ts` - Stripe checkout session + webhook handler
 - `firebase.json`, `functions/index.js`, `scripts/prepare-firebase.js` - Firebase deployment path
 
 ## Required Reading
@@ -65,6 +80,9 @@ Key entry points:
 - `docs/deployment.md` - Firebase deploy flow, CI secrets, rollback, deployment troubleshooting.
 - `docs/release-checklist.md` - manual and automated release checks.
 - `docs/feasibility-engine-interface.md` - calculation/data contract details.
+- `docs/ai-integration-plan.md` - AI panel architecture, prompts, and OpenAI integration.
+- `docs/plans/monetization-marketplace-ai.md` - Stripe/lead-unlock marketplace + monetization design.
+- `docs/superpowers/plans/*` and `docs/superpowers/specs/*` - dated per-feature plans and design specs.
 
 ## Design System
 
@@ -83,8 +101,16 @@ Local live-data variables usually live in `.env.local` and/or `functions/.env`:
 
 ```bash
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
+GOOGLE_GEOCODING_KEY=<optional dedicated server-side Geocoding key>
+GOOGLE_PLACES_SERVER_KEY=<optional server-side Places key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
+OPENAI_API_KEY=<server-side OpenAI API key>
+OPENAI_TEXT_MODEL=<text model, e.g. gpt-5.5>
+OPENAI_IMAGE_MODEL=<image model for ADU concepts>
+STRIPE_SECRET_KEY=<server-side Stripe secret key>
+STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
+NEXT_PUBLIC_APP_URL=<canonical app URL for Stripe redirect callbacks>
 NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
@@ -93,7 +119,9 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
 NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 ```
 
-Without parcel API keys, the app must still run in demo mode with Seattle, Portland, and Austin presets. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
+Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit store selection). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.
+
+Without parcel API keys, the app must still run in demo mode with Seattle, Portland, and Austin presets. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
 
 ## Critical Gotchas
 
@@ -104,6 +132,9 @@ Without parcel API keys, the app must still run in demo mode with Seattle, Portl
 - Hydration-safe motion: prefer CSS `motion-safe:` variants for hover/tap transforms. Avoid JS motion wrappers that change server/client attributes when CSS can do it.
 - Firebase Functions: `app` and `api` functions serve the same Next.js app through different rewrites. Keep `firebase.json`, `functions/index.js`, and `scripts/prepare-firebase.js` aligned.
 - Audit warning: do not run `npm audit fix --force`; it may force a breaking Next.js downgrade. Track upstream fixes instead.
+- AI routes: `app/api/ai/*` require auth and are rate-limited via `lib/server/ai-rate-limit.ts` + `lib/server/api-auth.ts`. Keep the OpenAI client server-only (`lib/server/openai.ts`); never import it into client bundles.
+- Stripe: the webhook (`app/api/stripe/webhook/route.ts`) must verify signatures with `STRIPE_WEBHOOK_SECRET` and read the raw request body; lead unlocks are granted through `lib/server/lead-unlocks.ts`, gated by Firestore rules.
+- Firestore: data access is constrained by `firestore.rules`; update and `npm run deploy:rules` (or include in deploy) when adding collections. Server reads/writes go through `lib/server/firebase-admin.ts`.
 - Worktree location: commit from the repo worktree, not the outer `C:\Users\torra\Downloads\Repos\AR ADU` container.
 
 ## Testing Guidance
@@ -120,6 +151,7 @@ Without parcel API keys, the app must still run in demo mode with Seattle, Portl
 - Use Conventional Commits such as `fix(landing): ...`, `feat(parcel): ...`, `style(studio): ...`, `chore(ci): ...`.
 - Keep commits focused to one logical change.
 - Pull requests should describe behavior, list verification commands, link issues when relevant, and include screenshots/recordings for landing, studio, or responsive UI changes.
+- CI (`.github/workflows/ci.yml`) runs lint, Vitest, `tsc --noEmit`, build, and Playwright; on `master` it then writes env from secrets and deploys Hosting + Functions + Firestore rules. `ai-maintainer.yml` runs scheduled AI maintenance.
 - Do not merge with failing CI.
 
 ## Obsidian Second Brain
