@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, ImagePlus, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
 import type { AIADUConcept } from "@/lib/ai-types";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
@@ -19,14 +19,17 @@ export default function AIStyleMatchPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   function handleFileChange(nextFile: File | null) {
     setFile(nextFile);
     setConcept(null);
     setError(null);
-    setPreviewUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return nextFile ? URL.createObjectURL(nextFile) : null;
-    });
+    setPreviewUrl(nextFile ? URL.createObjectURL(nextFile) : null);
   }
 
   async function generateConcept() {
@@ -90,7 +93,7 @@ export default function AIStyleMatchPanel({
         type="button"
         onClick={generateConcept}
         disabled={loading || !file}
-        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md bg-lf-forest text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md bg-lf-clay text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
       >
         <Sparkles size={14} />
         {loading ? "Generating concept" : "Generate matching ADU"}

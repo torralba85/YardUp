@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { AIParcelInsights, AIParcelInsightsInput } from "@/lib/ai-types";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkAIRateLimit } from "@/lib/server/ai-rate-limit";
+import { createAIRouteErrorResponse } from "@/lib/server/ai-route-errors";
 import {
   createOpenAIResponse,
   extractResponseText,
-  OpenAIConfigError,
   OpenAIProviderError,
 } from "@/lib/server/openai";
 
@@ -53,7 +53,7 @@ const INSIGHTS_SCHEMA = {
 };
 
 export async function POST(request: NextRequest) {
-  const limited = checkRateLimit(request, {
+  const limited = await checkAIRateLimit(request, {
     limit: 20,
     namespace: "ai-parcel-insights",
     windowMs: 60_000,
@@ -109,30 +109,10 @@ export async function POST(request: NextRequest) {
 }
 
 function handleAIError(err: unknown) {
-  if (err instanceof OpenAIConfigError) {
-    return NextResponse.json(
-      { error: "AI is not configured yet. Add OPENAI_API_KEY on the server." },
-      { status: 501 },
-    );
-  }
-
-  if (err instanceof SyntaxError) {
-    return NextResponse.json(
-      { error: "AI returned an unreadable response. Please try again." },
-      { status: 502 },
-    );
-  }
-
-  if (err instanceof OpenAIProviderError) {
-    return NextResponse.json(
-      { error: "AI request failed. Please try again." },
-      { status: 502 },
-    );
-  }
-
-  console.error("[/api/ai/parcel-insights] Unexpected error:", err);
-  return NextResponse.json(
-    { error: "AI is unavailable right now. Please try again." },
-    { status: 500 },
-  );
+  return createAIRouteErrorResponse(err, "/api/ai/parcel-insights", {
+    config: "AI is not configured yet. Add OPENAI_API_KEY on the server.",
+    provider: "AI request failed. Please try again.",
+    syntax: "AI returned an unreadable response. Please try again.",
+    unavailable: "AI is unavailable right now. Please try again.",
+  });
 }
