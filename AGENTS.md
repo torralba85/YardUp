@@ -69,9 +69,9 @@ Key entry points:
 - `lib/ai-api.ts`, `lib/ai-types.ts`, `lib/style-match-photo.ts`, `lib/server/openai.ts` - AI panels (parcel insights, style-matched ADU concepts)
 - `lib/stripe.ts`, `lib/lead-unlock-*.ts`, `lib/marketplace*.ts`, `lib/server/lead-unlocks.ts` - payments + builder lead-unlock marketplace
 - `lib/saved-scenarios.ts`, `lib/scenarios-firestore.ts`, `lib/scenario-url.ts` - scenario persistence and sharing
-- `app/api/parcel|aerial|geocode|suggest/route.ts` - parcel/data server routes
-- `app/api/ai/parcel-insights|adu-concept/route.ts` - AI server routes (auth + rate-limited)
-- `app/api/stripe/checkout|webhook/route.ts` - Stripe checkout session + webhook handler
+- `app/api/{parcel,aerial,geocode,suggest}/route.ts` - parcel/data server routes
+- `app/api/ai/{parcel-insights,adu-concept}/route.ts` - AI server routes (auth + rate-limited)
+- `app/api/stripe/{checkout,webhook}/route.ts` - Stripe checkout session + webhook handler
 - `firebase.json`, `functions/index.js`, `scripts/prepare-firebase.js` - Firebase deployment path
 
 ## Required Reading
@@ -122,7 +122,7 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
 NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 ```
 
-Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit store selection). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.
+Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit storage backend selection: in-memory vs Firestore). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.
 
 Without parcel API keys, the app must still run in demo mode with Seattle, Portland, and Austin presets. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
 
