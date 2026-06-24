@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Layers, RefreshCcw, X, XCircle } from "lucide-react";
+
+const FOCUSABLE_SELECTOR =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Props for {@link BeforeAfterBoard}. */
 export interface BeforeAfterBoardProps {
@@ -60,6 +63,8 @@ export default function BeforeAfterBoard({
   dateStr,
 }: BeforeAfterBoardProps) {
   const [mountedDateStr, setMountedDateStr] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,6 +72,30 @@ export default function BeforeAfterBoard({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusable = getFocusableElements(dialogRef.current);
+        if (focusable.length === 0) {
+          event.preventDefault();
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+
+        if (event.shiftKey && active === first) {
+          event.preventDefault();
+          last.focus();
+          return;
+        }
+
+        if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
@@ -75,6 +104,18 @@ export default function BeforeAfterBoard({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+
+    return () => {
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -94,6 +135,7 @@ export default function BeforeAfterBoard({
 
   return (
     <div
+      ref={dialogRef}
       onClick={handleScrimClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-lf-espresso/90 p-4 md:p-8 overflow-y-auto backdrop-blur-sm"
       role="dialog"
@@ -103,6 +145,7 @@ export default function BeforeAfterBoard({
       <div className="w-full max-w-5xl border-[1.5px] border-lf-espresso bg-lf-card p-6 md:p-8 text-lf-espresso relative font-sans shadow-2xl lf-stamp select-text">
         {/* Close Button */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           className="absolute right-4 top-4 rounded-none p-1.5 text-lf-muted hover:bg-lf-sand-2 hover:text-lf-espresso transition-colors focus:outline-none focus:ring-2 focus:ring-lf-clay"
           aria-label="Close dialog"
@@ -242,5 +285,13 @@ export default function BeforeAfterBoard({
         </div>
       </div>
     </div>
+  );
+}
+
+function getFocusableElements(container: HTMLElement | null): HTMLElement[] {
+  if (!container) return [];
+
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1,
   );
 }

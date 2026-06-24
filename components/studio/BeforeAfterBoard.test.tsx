@@ -66,6 +66,26 @@ describe("BeforeAfterBoard", () => {
     expect(screen.getByRole("button", { name: /Applied/i })).toBeInTheDocument();
   });
 
+  it("moves focus to the close button when opened", () => {
+    render(<BeforeAfterBoard {...defaultProps} />);
+
+    expect(screen.getByLabelText("Close dialog")).toHaveFocus();
+  });
+
+  it("traps keyboard tab focus inside the dialog", () => {
+    render(<BeforeAfterBoard {...defaultProps} />);
+
+    const closeButton = screen.getByLabelText("Close dialog");
+    const deleteButton = screen.getByRole("button", { name: /Delete photo & renders/i });
+
+    closeButton.focus();
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+    expect(deleteButton).toHaveFocus();
+
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(closeButton).toHaveFocus();
+  });
+
   it("dispatches correct callbacks when actions are clicked", () => {
     const onToggleAttach = vi.fn();
     const onRecast = vi.fn();

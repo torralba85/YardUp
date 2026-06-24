@@ -128,6 +128,7 @@ export function LandingHero() {
         />
 
         <motion.div
+          key={shouldAnimate ? "animated" : "static"}
           data-testid="hero-copy"
           variants={containerVariants}
           initial={shouldAnimate ? "hidden" : false}
@@ -144,10 +145,9 @@ export function LandingHero() {
 
           <motion.h1
             variants={itemVariants}
-            aria-label="Your backyard, cast into an asset."
             className="lf-display-hero text-lf-espresso"
           >
-            Your backyard,
+            Your backyard,{" "}
             <br />
             <span className="text-lf-clay">cast</span> into an asset.
           </motion.h1>
