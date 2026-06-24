@@ -13,7 +13,7 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
-function clientKey(request: NextRequest, namespace: string): string {
+export function getRateLimitClientKey(request: NextRequest, namespace: string): string {
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0];
   const ip =
     forwardedFor?.trim() ||
@@ -23,12 +23,22 @@ function clientKey(request: NextRequest, namespace: string): string {
   return `${namespace}:${ip}`;
 }
 
+export function createRateLimitResponse(retryAfter: number): NextResponse {
+  return NextResponse.json(
+    { error: "Too many requests. Please try again shortly." },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfter) },
+    },
+  );
+}
+
 export function checkRateLimit(
   request: NextRequest,
   options: RateLimitOptions,
 ): NextResponse | null {
   const now = Date.now();
-  const key = clientKey(request, options.namespace);
+  const key = getRateLimitClientKey(request, options.namespace);
   const bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {
@@ -43,13 +53,7 @@ export function checkRateLimit(
   }
 
   const retryAfter = Math.ceil((bucket.resetAt - now) / 1000);
-  return NextResponse.json(
-    { error: "Too many requests. Please try again shortly." },
-    {
-      status: 429,
-      headers: { "Retry-After": String(retryAfter) },
-    },
-  );
+  return createRateLimitResponse(retryAfter);
 }
 
 function cleanupBuckets(now: number) {
