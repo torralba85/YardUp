@@ -41,6 +41,8 @@ import BuilderLeadPanel, {
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
+import BeforeAfterBoard from "./studio/BeforeAfterBoard";
+import type { InspirationItem } from "@/lib/inspiration-data";
 import { configForFootprint } from "@/lib/feasibility";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { markWizardSeen, shouldShowWizard } from "@/lib/wizard-state";
@@ -76,6 +78,13 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ),
 });
 
+/**
+ * Top-level studio orchestrator. Owns the active parcel/config/assumptions
+ * state, keeps it in sync with the shareable URL ({@link parseScenarioParams} /
+ * {@link serializeScenarioParams}), runs {@link calculateFeasibility} on every
+ * change, and wires up reports, saved scenarios, and the connect-with-builders
+ * flow. Renders the desktop {@link AppShell} or the mobile studio shell.
+ */
 export default function FeasibilityStudio() {
   const initialPreset = parcelPresets[0];
   return (
@@ -106,6 +115,70 @@ function FeasibilityStudioInner() {
   const [savingScenario, setSavingScenario] = useState(false);
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
+
+  const [generatedConcepts, setGeneratedConcepts] = useState<InspirationItem[]>([]);
+  const [activeConcept, setActiveConcept] = useState<InspirationItem | null>(null);
+  const [isBoardOpen, setIsBoardOpen] = useState(false);
+  const [styleMatchKey, setStyleMatchKey] = useState(0);
+
+  const handleGenerationComplete = (concept: {
+    photoUrl: string;
+    conceptUrl: string;
+    styleName: string;
+    matchPercentage: number;
+    traits: string[];
+  }) => {
+    const newConcept: InspirationItem = {
+      id: `style-match-${Date.now()}`,
+      title: `Matched ${concept.styleName} Concept`,
+      style: concept.styleName,
+      sqft: 600,
+      width: 20,
+      length: 30,
+      roof: "gable",
+      finish: "lap",
+      tags: ["style-matched", concept.styleName.toLowerCase()],
+      summary: `A custom ADU concept style-matched to your home (${concept.matchPercentage}% match).`,
+      budgetBand: "$250k - $400k",
+      imagePath: concept.conceptUrl,
+      isStyleMatched: true,
+      photoUrl: concept.photoUrl,
+      matchPercentage: concept.matchPercentage,
+      traits: concept.traits,
+      isAttached: false,
+    };
+    setGeneratedConcepts((prev) => [newConcept, ...prev]);
+    setActiveConcept(newConcept);
+    setIsBoardOpen(true);
+  };
+
+  const handleToggleAttach = (id: string) => {
+    setGeneratedConcepts((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, isAttached: !c.isAttached } : c))
+    );
+    setActiveConcept((prev) =>
+      prev && prev.id === id ? { ...prev, isAttached: !prev.isAttached } : prev
+    );
+  };
+
+  const handleRecast = () => {
+    setIsBoardOpen(false);
+    setStyleMatchKey((prev) => prev + 1);
+  };
+
+  const handleDeleteConcept = (id: string) => {
+    setGeneratedConcepts((prev) => prev.filter((c) => c.id !== id));
+    if (activeConcept?.id === id) {
+      setActiveConcept(null);
+      setIsBoardOpen(false);
+    }
+    setStyleMatchKey((prev) => prev + 1);
+  };
+
+  const handleViewComparison = (item: InspirationItem) => {
+    setActiveConcept(item);
+    setIsBoardOpen(true);
+  };
 
   // Load saved scenarios only for authenticated users. Guests should never see
   // or persist prior address state.
@@ -409,6 +482,10 @@ function FeasibilityStudioInner() {
               />
               <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
               <InspirationGalleryPanel
+                generatedConcepts={generatedConcepts}
+                onGenerationComplete={handleGenerationComplete}
+                onViewComparison={handleViewComparison}
+                styleMatchKey={styleMatchKey}
                 onApply={(item) => {
                   const baseConfig = configForFootprint(item.sqft, config);
                   setConfig({
@@ -480,6 +557,10 @@ function FeasibilityStudioInner() {
         <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
           <SceneSection sceneNode={sceneNode} />
           <InspirationGalleryPanel
+            generatedConcepts={generatedConcepts}
+            onGenerationComplete={handleGenerationComplete}
+            onViewComparison={handleViewComparison}
+            styleMatchKey={styleMatchKey}
             onApply={(item) => {
               const baseConfig = configForFootprint(item.sqft, config);
               setConfig({
@@ -584,6 +665,22 @@ function FeasibilityStudioInner() {
         onClose={() => setBuilderLeadOpen(false)}
         onSubmit={handleBuilderLeadSubmit}
       />
+      {activeConcept && (
+        <BeforeAfterBoard
+          isOpen={isBoardOpen}
+          onClose={() => setIsBoardOpen(false)}
+          beforePhotoUrl={activeConcept.photoUrl || ""}
+          afterConceptUrl={activeConcept.imagePath}
+          styleName={activeConcept.style}
+          matchPercentage={activeConcept.matchPercentage || 91}
+          styleTraits={activeConcept.traits || []}
+          lotSizeInfo={`${activeParcel.lotArea ? activeParcel.lotArea.toLocaleString() : "5,200"} sf lot`}
+          isAttached={!!activeConcept.isAttached}
+          onToggleAttach={() => handleToggleAttach(activeConcept.id)}
+          onRecast={handleRecast}
+          onDelete={() => handleDeleteConcept(activeConcept.id)}
+        />
+      )}
     </AppShell>
   );
 }

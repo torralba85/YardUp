@@ -4,11 +4,17 @@ import type { BuilderInboxItem } from "./marketplace-types";
 /** Flat unlock price in dollars, derived from the shared cents constant. */
 const UNLOCK_PRICE = LEAD_UNLOCK_PRICE_CENTS / 100;
 
+/** Aggregated figures shown on the builder dashboard (money band + tab counts). */
 export interface BuilderMetrics {
+  /** Total number of inbox leads. */
   total: number;
+  /** Leads with status `new`. */
   newLeadCount: number;
+  /** Leads marked `interested`. */
   interestedCount: number;
+  /** Leads marked `not-a-fit` (archived). */
   archivedCount: number;
+  /** Leads that have been unlocked (paid for). */
   unlockedCount: number;
   /** Sum of build-band midpoints across NEW leads — the money-band figure (2A). */
   pipelineValue: number;

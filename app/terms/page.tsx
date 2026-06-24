@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+/** Page metadata for the terms of service route. */
 export const metadata: Metadata = {
   title: "Terms of Service | LotFoundry",
   description: "Terms governing your use of LotFoundry.",
 };
 
+/** Static terms of service page (`/terms`). */
 export default function TermsPage() {
   return (
     <div className="min-h-[100dvh] bg-lf-sand text-lf-espresso">

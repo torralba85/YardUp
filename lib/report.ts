@@ -7,9 +7,13 @@ import {
 } from "./feasibility";
 import type { Parcel } from "./parcel-types";
 
+/** Inputs needed to render any of the feasibility report formats. */
 export interface ReportInput {
+  /** The parcel the report describes. */
   parcel: Parcel;
+  /** The ADU configuration. */
   config: ADUConfig;
+  /** The computed feasibility result. */
   result: FeasibilityResult;
   /** Recorded date shown on the certificate; defaults to now. Injectable for tests. */
   recordedAt?: Date;
@@ -40,6 +44,12 @@ function formatRecordedDate(date: Date): string {
     .toUpperCase();
 }
 
+/**
+ * Build a plain-text Certificate of Feasibility suitable for a `.txt` download.
+ *
+ * @param input - The {@link ReportInput} (parcel, config, result, optional date).
+ * @returns The report as newline-joined text.
+ */
 export function buildReportText({ parcel, config, result, recordedAt }: ReportInput): string {
   const lines = [
     "LotFoundry Certificate of Feasibility",
@@ -75,6 +85,14 @@ export function buildReportText({ parcel, config, result, recordedAt }: ReportIn
   return lines.join("\n");
 }
 
+/**
+ * Build a fully self-contained HTML Certificate of Feasibility, styled per
+ * `DESIGN.md` (engraved instrument with a balancing annual T-account ledger).
+ * All interpolated values are HTML-escaped.
+ *
+ * @param input - The {@link ReportInput} (parcel, config, result, optional date).
+ * @returns A complete HTML document string (printable / saveable).
+ */
 export function buildReportHtml({ parcel, config, result, recordedAt }: ReportInput): string {
   const rows: Array<[string, string]> = [
     ["Property", `${parcel.address}, ${parcel.city}`],
@@ -338,6 +356,13 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
 </html>`;
 }
 
+/**
+ * Build a two-column (Field, Value) CSV summary of the feasibility report,
+ * with values escaped for safe CSV embedding.
+ *
+ * @param input - The {@link ReportInput} (parcel, config, result).
+ * @returns The report as CSV text.
+ */
 export function buildReportCsv({ parcel, config, result }: ReportInput): string {
   const rows: Array<[string, string]> = [
     ["Field", "Value"],
@@ -378,6 +403,14 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Trigger a client-side file download of string content via a temporary
+ * object URL. No-op when run outside the browser (SSR-safe).
+ *
+ * @param filename - Suggested download filename.
+ * @param content - The file contents.
+ * @param mimeType - The content MIME type (charset `utf-8` is appended).
+ */
 export function downloadBlob(filename: string, content: string, mimeType: string) {
   if (typeof window === "undefined") return;
   const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });

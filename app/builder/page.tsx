@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import BuilderDashboard from "@/components/builder/BuilderDashboard";
 import { useAuth } from "@/lib/auth-context";
 
+/**
+ * Builder route (`/builder`). Guards access by auth and role: redirects guests
+ * to login and non-builders to the studio, then renders the
+ * {@link BuilderDashboard} for signed-in builders.
+ */
 export default function BuilderPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();

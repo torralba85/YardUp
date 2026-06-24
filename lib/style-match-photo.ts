@@ -1,3 +1,13 @@
+/**
+ * Client-side preparation of user-uploaded photos for the AI style-match
+ * feature. Photos are decoded (including HEIC/HEIF via a lazy `heic2any`
+ * import), downscaled to a maximum edge, re-encoded to JPEG, and re-drawn
+ * through a canvas — which also strips EXIF and other metadata.
+ *
+ * @module style-match-photo
+ */
+
+/** MIME types accepted for style-match uploads. */
 export const STYLE_MATCH_ACCEPTED_TYPES = [
   "image/jpeg",
   "image/png",
@@ -7,6 +17,7 @@ export const STYLE_MATCH_ACCEPTED_TYPES = [
 ] as const;
 
 const ACCEPTED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
+/** Comma-joined accept list (MIME types + extensions) for a file `<input>`. */
 export const STYLE_MATCH_ACCEPT = [
   ...STYLE_MATCH_ACCEPTED_TYPES,
   ...ACCEPTED_EXTENSIONS,
@@ -15,34 +26,61 @@ const OUTPUT_TYPE = "image/jpeg";
 const DEFAULT_MAX_EDGE = 2048;
 const DEFAULT_QUALITY = 0.88;
 
+/** The processed photo plus metadata describing what was done to it. */
 export interface PreparedStyleMatchPhoto {
+  /** The re-encoded JPEG image data. */
   blob: Blob;
+  /** Suggested filename with a `.jpg` extension. */
   filename: string;
+  /** The original MIME type (or one inferred from the filename). */
   originalType: string;
+  /** The output MIME type (always JPEG). */
   outputType: typeof OUTPUT_TYPE;
+  /** Decoded width of the original image in pixels. */
   originalWidth: number;
+  /** Decoded height of the original image in pixels. */
   originalHeight: number;
+  /** Final width after any downscaling. */
   width: number;
+  /** Final height after any downscaling. */
   height: number;
+  /** Byte size of the output blob. */
   sizeBytes: number;
+  /** Whether the source was a non-JPEG format that was converted. */
   wasConverted: boolean;
+  /** Whether the image was scaled down to fit the max edge. */
   wasDownscaled: boolean;
+  /** Always `true`: re-drawing through a canvas drops embedded metadata. */
   strippedMetadata: true;
 }
 
+/**
+ * A decoded image abstraction that can paint itself onto a 2D canvas context,
+ * decoupling decode (bitmap, `<img>`, or HEIC) from encode.
+ */
 export interface DecodedStyleMatchImage {
+  /** Intrinsic width of the decoded image. */
   width: number;
+  /** Intrinsic height of the decoded image. */
   height: number;
+  /** Draw the image into `context`, scaled to the given width/height. */
   draw: (
     context: CanvasRenderingContext2D,
     width: number,
     height: number,
   ) => void;
+  /** Optional cleanup (e.g. release a bitmap or revoke an object URL). */
   close?: () => void;
 }
 
+/**
+ * Injectable decode/encode hooks, primarily so tests can supply deterministic
+ * implementations instead of relying on browser canvas APIs.
+ */
 export interface StyleMatchPhotoRuntime {
+  /** Override the default browser image decoder. */
   decodeImage?: (file: File) => Promise<DecodedStyleMatchImage>;
+  /** Override the default canvas-based encoder. */
   encodeImage?: (
     image: DecodedStyleMatchImage,
     target: { width: number; height: number },
@@ -51,12 +89,26 @@ export interface StyleMatchPhotoRuntime {
   ) => Promise<Blob>;
 }
 
+/** Options controlling photo preparation. */
 export interface PrepareStyleMatchPhotoOptions {
+  /** Maximum width/height in pixels before downscaling (default 2048). */
   maxEdge?: number;
+  /** JPEG encode quality, 0–1 (default 0.88). */
   quality?: number;
+  /** Optional runtime overrides for decode/encode (used in tests). */
   runtime?: StyleMatchPhotoRuntime;
 }
 
+/**
+ * Decode, downscale, and re-encode an uploaded photo to a metadata-stripped
+ * JPEG suitable for upload.
+ *
+ * @param file - The user-selected image file.
+ * @param options - Optional max edge, quality, and runtime overrides.
+ * @returns A {@link PreparedStyleMatchPhoto} describing the processed image.
+ * @throws {Error} If the file type is unsupported, cannot be measured/decoded,
+ *   or encoding fails.
+ */
 export async function prepareStyleMatchPhoto(
   file: File,
   options: PrepareStyleMatchPhotoOptions = {},
@@ -96,6 +148,13 @@ export async function prepareStyleMatchPhoto(
   }
 }
 
+/**
+ * Check whether a file is an accepted style-match photo, by MIME type or,
+ * failing that, by filename extension.
+ *
+ * @param file - The file to test.
+ * @returns `true` if the file is an accepted image type.
+ */
 export function isAcceptedStyleMatchPhoto(file: File): boolean {
   const type = file.type.toLowerCase();
   if ((STYLE_MATCH_ACCEPTED_TYPES as readonly string[]).includes(type)) return true;
@@ -104,6 +163,16 @@ export function isAcceptedStyleMatchPhoto(file: File): boolean {
   return ACCEPTED_EXTENSIONS.some((extension) => lowerName.endsWith(extension));
 }
 
+/**
+ * Compute target dimensions that fit within `maxEdge` while preserving aspect
+ * ratio. Images already within the limit are returned unscaled (never upscaled).
+ *
+ * @param width - Source width in pixels.
+ * @param height - Source height in pixels.
+ * @param maxEdge - Maximum allowed width or height (default 2048).
+ * @returns The fitted `{ width, height }`, each at least 1px.
+ * @throws {Error} If dimensions are non-finite/non-positive or `maxEdge` is invalid.
+ */
 export function fitImageWithin(
   width: number,
   height: number,

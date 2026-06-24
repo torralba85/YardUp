@@ -5,13 +5,19 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { MapPin, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
+/** A selected address with its resolved coordinates. */
 export interface AddressSearchResult {
+  /** Latitude in decimal degrees. */
   lat: number;
+  /** Longitude in decimal degrees. */
   lng: number;
+  /** The normalized, human-readable address. */
   formattedAddress: string;
 }
 
+/** Props for {@link AddressSearch}. */
 export interface AddressSearchProps {
+  /** Called when the user picks a resolved address from Places. */
   onSelect: (result: AddressSearchResult) => void;
   /**
    * Called when the user submits free text (Enter / Search button) without
@@ -19,7 +25,9 @@ export interface AddressSearchProps {
    * the path that works with no Google Places key configured.
    */
   onSubmitText?: (query: string) => void;
+  /** Placeholder text for the input. */
   placeholder?: string;
+  /** Whether the input is disabled. */
   disabled?: boolean;
 }
 

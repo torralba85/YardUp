@@ -2,6 +2,10 @@ import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
+/**
+ * Login route (`/login`). Renders the {@link LoginForm} inside the shared
+ * {@link AuthLayout}, with a Suspense boundary for the search-params hook.
+ */
 export default function LoginPage() {
   return (
     <AuthLayout

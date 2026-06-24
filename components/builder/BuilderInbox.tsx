@@ -32,6 +32,12 @@ function inTab(item: BuilderInboxItem, key: TabKey): boolean {
   return item.response.status === "not-a-fit"; // archived
 }
 
+/**
+ * The builder's lead inbox: a money band of headline metrics, triage tabs
+ * (all / new / interested / archived), and a list of {@link LeadCard}s. Drives
+ * the unlock flow ({@link UnlockSlip} → Stripe/demo grant) and reveals contact
+ * via {@link fetchUnlockedContact} once a lead is unlocked.
+ */
 export default function BuilderInbox({
   profile,
   items,

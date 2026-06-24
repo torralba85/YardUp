@@ -7,6 +7,10 @@ import { useAuth } from "@/lib/auth-context";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { CheckCircle } from "lucide-react";
 
+/**
+ * Forgot-password route (`/forgot-password`). Sends a Firebase password-reset
+ * email via {@link useAuth} and shows a confirmation once sent.
+ */
 export default function ForgotPasswordPage() {
   const { sendPasswordReset, user } = useAuth();
   const router = useRouter();

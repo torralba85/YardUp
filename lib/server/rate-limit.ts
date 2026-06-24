@@ -13,6 +13,13 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
+/**
+ * Builds the stable per-client bucket key from proxy headers and route namespace.
+ *
+ * @param request - Incoming request with forwarding headers from Hosting/Functions.
+ * @param namespace - Route-specific namespace to avoid sharing buckets.
+ * @returns A namespace-prefixed client key.
+ */
 export function getRateLimitClientKey(request: NextRequest, namespace: string): string {
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0];
   const ip =
@@ -23,6 +30,12 @@ export function getRateLimitClientKey(request: NextRequest, namespace: string): 
   return `${namespace}:${ip}`;
 }
 
+/**
+ * Creates the common 429 response returned by rate limiters.
+ *
+ * @param retryAfter - Seconds until the current bucket resets.
+ * @returns A JSON 429 response with a `Retry-After` header.
+ */
 export function createRateLimitResponse(retryAfter: number): NextResponse {
   return NextResponse.json(
     { error: "Too many requests. Please try again shortly." },
@@ -33,6 +46,17 @@ export function createRateLimitResponse(retryAfter: number): NextResponse {
   );
 }
 
+/**
+ * Apply a fixed-window, in-memory rate limit keyed by client IP and namespace.
+ *
+ * Note: state is per-process, so limits are approximate across multiple
+ * serverless instances. Suitable as a lightweight abuse guard, not a hard quota.
+ *
+ * @param request - The incoming request (its client IP forms the key).
+ * @param options - The `limit`, `namespace`, and `windowMs` for this limiter.
+ * @returns `null` if the request is allowed, or a 429 {@link NextResponse} (with
+ *   a `Retry-After` header) the route should return when the limit is exceeded.
+ */
 export function checkRateLimit(
   request: NextRequest,
   options: RateLimitOptions,

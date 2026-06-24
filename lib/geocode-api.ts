@@ -1,10 +1,22 @@
+/** A resolved geocode: coordinates plus the canonical formatted address. */
 export interface GeocodeResult {
+  /** Latitude in decimal degrees. */
   lat: number;
+  /** Longitude in decimal degrees. */
   lng: number;
+  /** The provider's normalized, human-readable address. */
   formattedAddress: string;
 }
 
+/**
+ * Error thrown by {@link geocodeAddress} when address resolution fails,
+ * including the "no match" case. Carries a user-facing message for display.
+ */
 export class GeocodeError extends Error {
+  /**
+   * @param message - Developer-facing message (logged/inspected).
+   * @param userMessage - Friendly message safe to show end users.
+   */
   constructor(
     message: string,
     public readonly userMessage: string,

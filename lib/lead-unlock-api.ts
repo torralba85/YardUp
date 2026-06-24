@@ -1,4 +1,9 @@
+/**
+ * Error thrown by {@link startLeadUnlock} when the unlock flow fails; its
+ * message is user-facing.
+ */
 export class LeadUnlockError extends Error {
+  /** @param message - User-facing failure message. */
   constructor(message: string) {
     super(message);
     this.name = "LeadUnlockError";

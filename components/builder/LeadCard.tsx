@@ -9,17 +9,26 @@ import type {
   UnlockedLeadContact,
 } from "@/lib/marketplace-types";
 
+/** A lead card's reveal state: paywalled, mid-unlock, or revealed. */
 export type LeadAccess = "locked" | "confirming" | "unlocked";
 
+/** Props for {@link LeadCard}. */
 export interface LeadCardProps {
+  /** The inbox item (redacted lead + this builder's response state). */
   item: BuilderInboxItem;
+  /** Current reveal state of the card. */
   access: LeadAccess;
+  /** The unlocked contact payload, present only when `access` is `unlocked`. */
   contact: UnlockedLeadContact | null;
   /** Grant came from the zero-key demo path — stamp the reveal DEMO. */
   demo?: boolean;
+  /** Whether a respond action is in flight (disables the buttons). */
   responding?: boolean;
+  /** Called when the builder starts the unlock/checkout flow. */
   onUnlockClick: () => void;
+  /** Called when the builder triages the lead. */
   onRespond: (status: "interested" | "not-a-fit") => void;
+  /** Optional handler to view the unlocked certificate. */
   onViewCertificate?: () => void;
   /** Wired by T9 (report-this-lead / bad-lead credit). */
   onReport?: () => void;
@@ -31,6 +40,14 @@ const ACCESS_CHIP: Record<LeadAccess, { label: string; cls: string }> = {
   unlocked: { label: "Unlocked", cls: "bg-lf-forest-soft text-lf-forest" },
 };
 
+/**
+ * A single lead in the builder inbox. When locked it shows only the redacted
+ * preview (banded figures, neighborhood) with an unlock CTA; once unlocked it
+ * reveals the owner contact and exact details. Also exposes triage
+ * (interested / not-a-fit) and optional certificate-view and report actions.
+ *
+ * @param props - The {@link LeadCardProps}.
+ */
 export default function LeadCard({
   item,
   access,
@@ -44,6 +61,7 @@ export default function LeadCard({
 }: LeadCardProps) {
   const { preview } = item.request;
   const chip = ACCESS_CHIP[access];
+  const recorded = formatRecorded(item.request.createdAt);
   const headline =
     access === "unlocked" && contact ? contact.streetAddress : preview.neighborhood;
 
@@ -52,6 +70,7 @@ export default function LeadCard({
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
           NO. {preview.previewSerial}
+          {recorded ? ` · RECORDED ${recorded}` : ""}
         </span>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${chip.cls}`}
@@ -61,7 +80,15 @@ export default function LeadCard({
         </span>
       </div>
 
-      <div className="mt-2">
+      {/* Value band first (B2): green is the money this lead pays the builder. */}
+      <p className="mt-3 font-display text-[26px] font-semibold leading-none text-lf-forest tabular-nums">
+        {formatCurrency(preview.rentBand)}
+        <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+          /mo rent potential
+        </span>
+      </p>
+
+      <div className="mt-2.5">
         <p className="font-semibold text-lf-espresso">
           {headline}
           {preview.zip && (
@@ -76,13 +103,6 @@ export default function LeadCard({
           <span>{finishLabels[preview.config.finish]}</span>
         </p>
       </div>
-
-      <p className="mt-2 font-display text-[26px] font-semibold leading-none text-lf-forest tabular-nums">
-        {formatCurrency(preview.rentBand)}
-        <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
-          /mo rent potential
-        </span>
-      </p>
 
       <p className="mt-2 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
         <span>
@@ -209,4 +229,23 @@ function statusLabel(status: BuilderResponseStatus): string {
   if (status === "interested") return "Interested";
   if (status === "not-a-fit") return "Not a fit";
   return "New";
+}
+
+/**
+ * Recorded date for the card eyebrow, mirroring the certificate's RECORDED
+ * stamp (lib/report.ts). Pinned to UTC because `createdAt` is an ISO instant —
+ * keeps the rendered day stable across the builder's timezone.
+ */
+function formatRecorded(iso: string | null): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date
+    .toLocaleDateString("en-US", {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    })
+    .toUpperCase();
 }

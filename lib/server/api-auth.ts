@@ -25,6 +25,17 @@ function getAdminAuth() {
   return getAuth();
 }
 
+/**
+ * Require a valid Firebase ID token on an API request.
+ *
+ * In test mode or when `LOTFOUNDRY_ALLOW_PUBLIC_API` is set, returns a stub
+ * `local-dev` uid without verification. Otherwise it reads the `Bearer` token
+ * from the `Authorization` header and verifies it with the Firebase Admin SDK.
+ *
+ * @param request - The incoming Next.js request.
+ * @returns `{ uid }` on success, or a 401 {@link NextResponse} the route should
+ *   return as-is when authentication is missing or invalid.
+ */
 export async function requireApiAuth(
   request: NextRequest,
 ): Promise<AuthResult | NextResponse> {

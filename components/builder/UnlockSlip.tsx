@@ -5,13 +5,19 @@ import { formatCurrency } from "@/lib/feasibility";
 import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
 import type { BuilderInboxItem } from "@/lib/marketplace-types";
 
+/** Props for {@link UnlockSlip}. */
 export interface UnlockSlipProps {
+  /** The lead being unlocked. */
   item: BuilderInboxItem;
+  /** The builder's company name, shown on the slip. */
   companyName: string;
   /** Payment/grant request in flight. */
   pending: boolean;
+  /** Error message to display, or `null`. */
   error: string | null;
+  /** Called when the builder confirms the unlock purchase. */
   onConfirm: () => void;
+  /** Called to dismiss the slip. */
   onClose: () => void;
 }
 

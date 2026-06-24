@@ -3,16 +3,30 @@
 import { useState, type ReactNode } from "react";
 import StudioSheet, { PEEK_SNAP, type SheetSnap } from "./StudioSheet";
 
+/** `localStorage` key marking that the mobile coach marks have been seen. */
 export const COACH_SEEN_KEY = "lf-coach-seen";
 
+/** Props for {@link MobileStudio}. */
 export interface MobileStudioProps {
+  /** The mobile header bar. */
   header: ReactNode;
+  /** The 3D scene rendered behind the sheet. */
   scene: ReactNode;
+  /** Peek-strip content for the bottom sheet. */
   peek: ReactNode;
+  /** ADU configuration controls for the half-open sheet. */
   controls: ReactNode;
+  /** Detailed sections for the full-height sheet. */
   sections: ReactNode;
 }
 
+/**
+ * Mobile studio layout: a full-screen 3D scene with a header overlay and the
+ * {@link StudioSheet} bottom drawer. Shows one-time coach marks on first visit,
+ * tracked via {@link COACH_SEEN_KEY}.
+ *
+ * @param props - The {@link MobileStudioProps}.
+ */
 export default function MobileStudio({ header, scene, peek, controls, sections }: MobileStudioProps) {
   const [snap, setSnap] = useState<SheetSnap | null>(PEEK_SNAP);
   const [coachVisible, setCoachVisible] = useState(() => {

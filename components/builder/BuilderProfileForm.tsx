@@ -9,6 +9,14 @@ type BuilderProfileInput = Omit<
   "id" | "ownerUid" | "createdAt" | "updatedAt"
 >;
 
+/**
+ * Form for creating/editing a builder's marketplace profile: company name,
+ * contact email, phone, license, comma-separated service areas (normalized via
+ * {@link normalizeServiceArea}), and active status.
+ *
+ * @param props.defaults - Prefilled company name and contact email.
+ * @param props.onSave - Persists the validated profile input.
+ */
 export default function BuilderProfileForm({
   defaults,
   onSave,

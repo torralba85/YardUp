@@ -4,6 +4,11 @@ import { motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+/**
+ * The landing page's floating top navigation. As the user scrolls, it animates
+ * from a full-width bar into a centered, rounded "pill" (width, padding, offset,
+ * radius, background, and blur all interpolated from scroll position).
+ */
 export function FloatingNavBar() {
   const { scrollY } = useScroll();
 

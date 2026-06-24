@@ -4,6 +4,7 @@ import { getAdminDb } from "@/lib/server/firebase-admin";
 import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 
+/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
 /**

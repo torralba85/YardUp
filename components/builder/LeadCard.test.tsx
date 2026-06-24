@@ -86,4 +86,23 @@ describe("LeadCard", () => {
     screen.getByRole("button", { name: /Not a fit/i }).click();
     expect(onRespond).toHaveBeenCalledWith("not-a-fit");
   });
+
+  it("eyebrow records the preview serial and the recorded date in mono", () => {
+    render(<LeadCard item={item} access="locked" contact={null} onUnlockClick={noop} onRespond={noop} />);
+
+    const eyebrow = screen.getByText(/NO\. LF-0482XY/);
+    // Recorded date is the createdAt (UTC) rendered like the certificate: JUN 10, 2026.
+    expect(eyebrow).toHaveTextContent(/RECORDED JUN 10, 2026/);
+  });
+
+  it("orders the forest value band ahead of the location and config (B2 hierarchy)", () => {
+    render(<LeadCard item={item} access="locked" contact={null} onUnlockClick={noop} onRespond={noop} />);
+
+    const valueBand = screen.getByText(/\$2,500/);
+    const location = screen.getByText("Ballard, WA");
+    // value band first, location second → location FOLLOWS the value band in the DOM.
+    expect(
+      valueBand.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });

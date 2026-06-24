@@ -5,18 +5,34 @@ import { BarChart3, CheckCircle2, Download, FileSpreadsheet, FileText, Hammer, P
 import { formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityResult } from "./types";
 
+/** Props for {@link ReportPreview}. */
 export interface ReportPreviewProps {
+  /** Display name of the parcel shown in the report header. */
   parcelName: string;
+  /** The feasibility result rendered into the report. */
   result: FeasibilityResult;
+  /** Called to dismiss the preview. */
   onClose: () => void;
+  /** Called to download the report (e.g. text/HTML certificate). */
   onDownload: () => void;
+  /** Optional handler to export the report as CSV. */
   onExportCsv?: () => void;
+  /** Optional handler to copy/share a link. */
   onShare?: () => void;
+  /** Optional handler to start the connect-with-builders flow. */
   onConnectBuilders?: () => void;
+  /** Transient status message shown after a share action. */
   shareNotice?: string | null;
+  /** Whether to move focus into the dialog on mount. */
   autoFocus?: boolean;
 }
 
+/**
+ * Modal preview of the feasibility report/certificate with actions to print,
+ * download, export CSV, share, and connect with builders.
+ *
+ * @param props - The {@link ReportPreviewProps}.
+ */
 export default function ReportPreview({
   parcelName,
   result,

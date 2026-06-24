@@ -8,9 +8,12 @@ const MAX_QUERY_LEN = 200;
 const MIN_QUERY_LEN = 3;
 const MAX_SUGGESTIONS = 5;
 
+/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
+/** Shape of an `/api/suggest` response. */
 export interface AddressSuggestions {
+  /** Up to five US address prediction strings (empty when unavailable). */
   suggestions: string[];
 }
 

@@ -26,6 +26,15 @@ export function extractStateAbbrev(formattedAddress: string): string | null {
   return match ? match[1] : null;
 }
 
+/**
+ * Build an {@link EstimatedParcel} for an anonymous user from a geocoded
+ * address. The lot dimensions are borrowed from the demo preset that best
+ * matches the address's state (falling back to the first preset), while the
+ * street/city are taken from the geocoded address.
+ *
+ * @param input - The geocoded `lat`, `lng`, and `formattedAddress`.
+ * @returns An estimated parcel re-addressed to the user's location.
+ */
 export function buildEstimatedParcel(input: {
   lat: number;
   lng: number;

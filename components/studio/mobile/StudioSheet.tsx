@@ -4,14 +4,21 @@ import type { ReactNode } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer } from "vaul";
 
+/** Collapsed snap height: a fixed peek strip. */
 export const PEEK_SNAP = "148px";
+/** Half-open snap point (fraction of viewport height). */
 export const HALF_SNAP = 0.5;
+/** Fully-open snap point (fraction of viewport height). */
 export const FULL_SNAP = 0.96;
 
+/** A drawer snap point: a pixel string (e.g. `"148px"`) or a 0–1 fraction. */
 export type SheetSnap = number | string;
 
+/** Props for {@link StudioSheet}. */
 export interface StudioSheetProps {
+  /** The active snap point, or `null` for the default (peek). */
   snap: SheetSnap | null;
+  /** Called when the active snap point changes. */
   onSnapChange: (snap: SheetSnap | null) => void;
   /** Always-visible strip: headline metrics + config chips. */
   peek: ReactNode;
@@ -21,6 +28,13 @@ export interface StudioSheetProps {
   sections: ReactNode;
 }
 
+/**
+ * The mobile studio's bottom drawer. Built on `vaul`, it snaps between a peek
+ * strip, a half-open controls view, and a full-height scrollable sheet, and
+ * exposes a button that cycles through those snap points.
+ *
+ * @param props - The {@link StudioSheetProps}.
+ */
 export default function StudioSheet({ snap, onSnapChange, peek, controls, sections }: StudioSheetProps) {
   const isFull = snap === FULL_SNAP;
   const isPeek = snap === PEEK_SNAP || snap === null;

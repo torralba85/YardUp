@@ -1,3 +1,15 @@
+/**
+ * Curated ADU permit guidance keyed by jurisdiction.
+ *
+ * The first three ids (`oak-street`, `corner-lot`, `compact-lot`) double as the
+ * demo parcel presets, mapping to Seattle, Portland, and Austin respectively;
+ * the remainder are real city jurisdictions. `local-review` is the fallback for
+ * addresses that aren't mapped yet.
+ *
+ * @module regulations-data
+ */
+
+/** Identifier for a jurisdiction with curated permit guidance. */
 export type JurisdictionId =
   | "oak-street"      // Seattle (preset mapping)
   | "corner-lot"      // Portland (preset mapping)
@@ -10,22 +22,35 @@ export type JurisdictionId =
   | "denver"
   | "local-review";
 
+/** A labeled link to an authoritative source backing a regulation guide. */
 export interface Citation {
+  /** Display text for the link. */
   label: string;
+  /** Destination URL of the source. */
   url: string;
 }
 
+/** Permit guidance for a single jurisdiction. */
 export interface RegulationGuide {
+  /** The jurisdiction this guide applies to. */
   jurisdiction: JurisdictionId;
+  /** Short title shown as the guide heading. */
   title: string;
+  /** One-paragraph overview of the local ADU rules. */
   summary: string;
+  /** Ordered checklist of permitting steps. */
   permitSteps: string[];
+  /** Conditions that may block or complicate an ADU on a given lot. */
   blockers: string[];
+  /** ISO date (`YYYY-MM-DD`) the guidance was last verified. */
   verifiedAt: string;
+  /** Confidence in the guidance's currency and accuracy. */
   confidence: "high" | "medium" | "low";
+  /** Source citations backing the guidance. */
   citations: Citation[];
 }
 
+/** The full set of permit guides, indexed by {@link JurisdictionId}. */
 export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
   "oak-street": {
     jurisdiction: "oak-street",
@@ -217,6 +242,17 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
   },
 };
 
+/**
+ * Infer the best-matching jurisdiction from a free-form address string.
+ *
+ * Real city names are matched first so that a searched address always wins over
+ * the demo street aliases (e.g. "1 Oak Street, Los Angeles" resolves to
+ * `los-angeles`, not the Seattle `oak-street` preset). Returns `local-review`
+ * when nothing matches.
+ *
+ * @param address - The address or city text to classify (case-insensitive).
+ * @returns The matched {@link JurisdictionId}, or `"local-review"` as fallback.
+ */
 export function inferJurisdiction(address: string): JurisdictionId {
   const normalized = address.toLowerCase();
   // Real city names first — the demo street aliases below must never shadow

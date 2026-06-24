@@ -11,6 +11,16 @@ import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 
+/**
+ * Top-level builder dashboard. Loads the signed-in builder's profile and lead
+ * inbox from Firestore, then renders either the {@link BuilderProfileForm}
+ * (until a profile exists) or the {@link BuilderInbox}, handling loading and
+ * error states.
+ *
+ * @param props.uid - The builder account's uid.
+ * @param props.email - The builder's email (prefills the profile form).
+ * @param props.displayName - The builder's display name, or `null`.
+ */
 export default function BuilderDashboard({
   uid,
   email,

@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { Bezel } from "@/components/ui/Bezel";
 
+/**
+ * Shared chrome for the auth pages (login, signup, forgot password): centered
+ * card with the LotFoundry logo, a title, and an optional subtitle.
+ *
+ * @param props.children - The form content.
+ * @param props.title - The heading shown above the form.
+ * @param props.subtitle - Optional supporting line under the title.
+ */
 export function AuthLayout({
   children,
   title,

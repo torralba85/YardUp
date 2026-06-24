@@ -54,21 +54,42 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+/** Props for {@link FeasibilityInspector}. */
 export interface FeasibilityInspectorProps {
+  /** Id of the active parcel preset. */
   parcelId: string;
+  /** Current ADU design configuration. */
   config: ADUConfig;
+  /** Current financial assumptions. */
   assumptions: FinancialAssumptions;
+  /** Computed feasibility result for the current inputs. */
   result: FeasibilityResult;
+  /** Called when the user selects a different parcel preset. */
   onParcelChange: (parcelId: string) => void;
+  /** Called when the ADU configuration changes. */
   onConfigChange: (config: ADUConfig) => void;
+  /** Called when the financial assumptions change. */
   onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
+  /** Called to reset the inspector to defaults. */
   onReset: () => void;
+  /** Called to generate the feasibility report. */
   onGenerateReport: () => void;
+  /** Optional handler to save the current scenario. */
   onSaveScenario?: () => Promise<void> | void;
+  /** Whether a save is in progress (disables the control). */
   savingScenario?: boolean;
+  /** Transient status message shown after a save attempt. */
   saveNotice?: string | null;
 }
 
+/**
+ * The main left-hand inspector: address/parcel selection, ADU design controls
+ * (footprint, roof, finish, openings), financial assumption dials, and the
+ * actions to reset, save a scenario, and generate the report. Reads and mutates
+ * parcel state via {@link useParcel} and surfaces the guided journey steps.
+ *
+ * @param props - The {@link FeasibilityInspectorProps}.
+ */
 export default function FeasibilityInspector({
   parcelId,
   config,

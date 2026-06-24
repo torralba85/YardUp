@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
+/**
+ * Sign-up route (`/signup`). Collects name, email, and password (plus Google
+ * sign-up) to create an account via {@link useAuth}, then routes the new user
+ * onward based on their role.
+ */
 export default function SignupPage() {
   const { signUp, signInWithGoogle, user, profile } = useAuth();
   const router = useRouter();

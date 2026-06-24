@@ -7,6 +7,7 @@ import { parseCoordinateParams } from "@/lib/server/request-validation";
 const REGRID_API = "https://app.regrid.com/api/v2/query.json";
 const TIMEOUT_MS = 5000;
 
+/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
 /** Rough R-1 fallback setbacks used when Regrid has no zoning data. */

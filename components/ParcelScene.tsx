@@ -679,6 +679,15 @@ function ProposedAdu({
   );
 }
 
+/**
+ * Interactive 3D scene of the lot with the existing house and a draggable ADU
+ * massing, derived from the parcel's dimensions and setbacks. Built on R3F with
+ * an {@link ErrorBoundary} and a WebGL-availability check so it degrades
+ * gracefully when 3D is unavailable. ADU placement is reported via
+ * `onAduPositionChange`; positions are derived, never hardcoded.
+ *
+ * @param props - Parcel, ADU config, compliance flag, and ADU position state.
+ */
 export default function ParcelScene({
   parcel,
   config,

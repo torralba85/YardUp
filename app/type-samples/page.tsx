@@ -10,6 +10,10 @@ const TYPE_SCALE = [
   ["Recorded fact", "10-12 px", "IBM Plex Mono 400-600"],
 ] as const;
 
+/**
+ * Internal typography specimen page (`/type-samples`): renders candidate font
+ * pairings and scale samples used while designing the brand type system.
+ */
 export default function TypeSamplesPage() {
   return (
     <main className="min-h-[100dvh] bg-lf-sand text-lf-espresso">

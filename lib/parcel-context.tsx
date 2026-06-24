@@ -14,7 +14,12 @@ import type { EstimatedParcel } from "./estimated-parcel";
 import { fetchParcel, ParcelFetchError } from "./parcel-api";
 import { geocodeAddress, GeocodeError } from "./geocode-api";
 
+/**
+ * Which kind of parcel is currently active: a built-in demo `preset`, an
+ * anonymous wizard `estimated` parcel, or a `live` parcel fetched by address.
+ */
 export type ParcelMode = "preset" | "estimated" | "live";
+/** Any parcel shape the studio can render, regardless of {@link ParcelMode}. */
 export type AnyParcel = LiveParcelData | ParcelPreset | EstimatedParcel;
 
 interface ParcelContextValue {
@@ -36,6 +41,12 @@ interface ParcelContextValue {
 
 const ParcelContext = createContext<ParcelContextValue | null>(null);
 
+/**
+ * Access the active parcel and its mutation actions.
+ *
+ * @returns The current {@link ParcelContextValue}.
+ * @throws {Error} If called outside a {@link ParcelProvider}.
+ */
 export function useParcel(): ParcelContextValue {
   const ctx = useContext(ParcelContext);
   if (!ctx) {
@@ -49,6 +60,18 @@ interface ParcelProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Provide parcel state to the studio subtree.
+ *
+ * Holds the active parcel, mode, loading, and error state, and exposes actions
+ * to search by coordinates or address (which fetch live data and require an
+ * auth token when available), restore a saved live parcel, apply an estimated
+ * parcel, or reset to a demo preset. On fetch errors the current parcel and
+ * mode are preserved and a user-facing message is surfaced via `parcelError`.
+ *
+ * @param props - {@link ParcelProviderProps} with the initial preset and children.
+ * @returns The context provider wrapping `children`.
+ */
 export function ParcelProvider({ initialPreset, children }: ParcelProviderProps) {
   const { user } = useAuth();
   const [parcel, setParcel] = useState<AnyParcel>(initialPreset);

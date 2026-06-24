@@ -27,6 +27,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+/** The Firebase Authentication instance for the client app. */
 export const auth = getAuth(app);
+/** The Firestore database instance for the client app. */
 export const db = getFirestore(app);
 export { app };

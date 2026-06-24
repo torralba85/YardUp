@@ -19,6 +19,11 @@ export function getAdminApp(): App {
   return initializeApp({ projectId: PROJECT_ID });
 }
 
+/**
+ * Get the Admin Firestore instance for the shared {@link getAdminApp} app.
+ *
+ * @returns The Admin SDK {@link Firestore} (writes bypass security rules).
+ */
 export function getAdminDb(): Firestore {
   return getFirestore(getAdminApp());
 }

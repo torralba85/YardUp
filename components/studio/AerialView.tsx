@@ -11,9 +11,13 @@ const IMG_H = 540;
 const ZOOM = 19;
 const SCALE = 2; // retina — matches /api/aerial
 
+/** Props for {@link AerialView}. */
 export interface AerialViewProps {
+  /** The live parcel whose boundary and location drive the overlay. */
   parcel: LiveParcelData;
+  /** The ADU configuration whose footprint is drawn on the image. */
   config: ADUConfig;
+  /** Whether the current design is zoning-compliant (affects overlay styling). */
   isCompliant: boolean;
 }
 

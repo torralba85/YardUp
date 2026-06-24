@@ -1,6 +1,14 @@
 import type { LiveParcelData } from "./parcel-types";
 
+/**
+ * Error thrown by {@link fetchParcel} when the parcel lookup fails. Carries a
+ * separate user-facing message suitable for display in the UI.
+ */
 export class ParcelFetchError extends Error {
+  /**
+   * @param message - Developer-facing message (logged/inspected).
+   * @param userMessage - Friendly message safe to show end users.
+   */
   constructor(
     message: string,
     public readonly userMessage: string,

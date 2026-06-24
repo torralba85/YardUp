@@ -4,11 +4,20 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { X, Mail, Lock, User as UserIcon } from "lucide-react";
 
+/** Props for {@link AuthModal}. */
 export interface AuthModalProps {
+  /** Whether the modal is shown. */
   isOpen: boolean;
+  /** Called to dismiss the modal. */
   onClose: () => void;
 }
 
+/**
+ * Modal that toggles between sign-in and sign-up, supporting email/password
+ * and Google sign-in via {@link useAuth}. Renders nothing when closed.
+ *
+ * @param props - The {@link AuthModalProps}.
+ */
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
