@@ -7,7 +7,8 @@ LotFoundry ships as a Next.js 16 app deployed to **Firebase Hosting + Cloud Func
 | Layer | Firebase Service | Purpose |
 |---|---|---|
 | Static assets & SPA | Firebase Hosting | Serves the Next.js standalone build, fonts, icons, manifest |
-| API routes (`/api/*`) | Cloud Functions (nodejs22) | Proxies Regrid parcel data and Google Maps Static aerial images |
+| AI API routes (`/api/ai/*`) | Cloud Functions (nodejs22) | Runs OpenAI-backed parcel insights and style-matched ADU concepts |
+| Other API routes (`/api/*`) | Cloud Functions (nodejs22) | Proxies Regrid parcel data and Google Maps Static aerial images |
 
 ## Prerequisites
 
@@ -54,7 +55,7 @@ const nextConfig: NextConfig = {
 ### `firebase.json`
 
 - `hosting.public`: `dist` — the prepared static + standalone output.
-- `hosting.rewrites`: `/api/**` routes to the `api` Cloud Function; all other routes serve `index.html` for SPA client-side routing.
+- `hosting.rewrites`: `/api/ai/**` routes to the longer-timeout `apiAi` Cloud Function, `/api/**` routes to the generic `api` Cloud Function, and all other routes serve the Next.js app function.
 - `functions.source`: `functions` — the Node.js function directory.
 - `functions.runtime`: `nodejs22`.
 
@@ -64,9 +65,11 @@ Sets the default Firebase project ID to `yardup-2026`.
 
 ### `functions/index.js`
 
-Two Firebase Functions v2 HTTPS functions:
+Firebase Functions v2 HTTPS functions:
 - **`app`** — serves all Next.js SSR pages and static assets
-- **`api`** — serves `/api/parcel` and `/api/aerial` proxy routes
+- **`apiAi`** — serves `/api/ai/*` routes with a longer timeout for OpenAI image generation
+- **`api`** — serves generic non-payment API routes such as `/api/parcel` and `/api/aerial`
+- **`apiStripe`** — serves Stripe checkout and webhook routes with Stripe Secret Manager bindings
 
 ## CI/CD (GitHub Actions)
 
@@ -90,6 +93,7 @@ Create `functions/.env` (copied from `functions/.env.example`):
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
+OPENAI_API_KEY=<server-side OpenAI API key>
 NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
@@ -111,6 +115,7 @@ Set these secrets in your GitHub repository Settings → Secrets → Actions:
 | `GOOGLE_GEOCODING_KEY` | Server-side geocoding key when separate from Maps key |
 | `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places key restricted by HTTP referrer |
 | `REGRID_API_KEY` | Server-side Regrid parcel API key |
+| `OPENAI_API_KEY` | Server-side OpenAI API key for AI parcel insights and style-matched ADU concepts |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web API key |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |

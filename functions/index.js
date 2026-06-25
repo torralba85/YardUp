@@ -38,11 +38,23 @@ const fnOpts = {
   region: "us-central1",
 };
 
-// One Next request handler backs all three exports. firebase.json routes
-// /api/stripe/** to `apiStripe`, the rest of /api/** to `api`, and everything
-// else to `app`; all resolve to the same handler and differ only in which
-// secrets are bound to the process.
+const aiFnOpts = {
+  ...fnOpts,
+  // Style-matched ADU concepts make a vision call, then an image-generation
+  // call. Keep the platform timeout above the route's 90s provider timeout.
+  timeoutSeconds: 120,
+};
+
+// One Next request handler backs all four exports. firebase.json routes
+// /api/ai/** to `apiAi`, /api/stripe/** to `apiStripe`, the rest of /api/** to
+// `api`, and everything else to `app`; all resolve to the same handler and
+// differ only in which secrets are bound to the process.
 exports.app = onRequest(fnOpts, async (req, res) => {
+  await ready();
+  return handle(req, res);
+});
+
+exports.apiAi = onRequest(aiFnOpts, async (req, res) => {
   await ready();
   return handle(req, res);
 });
