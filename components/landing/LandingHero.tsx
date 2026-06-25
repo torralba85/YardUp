@@ -183,7 +183,7 @@ export function LandingHero() {
             />
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-none bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 items-center justify-center rounded-none bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               Run feasibility
             </button>
