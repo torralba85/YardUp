@@ -268,11 +268,13 @@ export default function AerialView({
           y={40}
           text={`Rear Setback ${parcel.setbacks.rear}.0 ft`}
         />
-        {/* Setback labels — side. Inset to ~20% of the width so the label
+        {/* Setback labels — side. Inset to ~35% of the width so the label
             survives the `xMidYMid slice` horizontal crop on portrait phone
-            viewports, where the outer edges of the image are cut off. */}
+            viewports: the visible X window is 400 ± 270·R (R = viewport
+            aspect), i.e. as narrow as [275, 525] on tall phones, so a smaller
+            inset would still be cropped. Stays left of the ADU footprint. */}
         <SetbackLabel
-          x={IMG_W * 0.2}
+          x={IMG_W * 0.35}
           y={IMG_H / 2}
           text={`Side ${parcel.setbacks.side}.0 ft`}
           rotate={-90}
