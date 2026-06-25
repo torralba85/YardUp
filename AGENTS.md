@@ -86,6 +86,7 @@ Key entry points:
 - `docs/ai-integration-plan.md` - AI panel architecture, prompts, and OpenAI integration.
 - `docs/plans/monetization-marketplace-ai.md` - Stripe/lead-unlock marketplace + monetization design.
 - `docs/superpowers/plans/*` and `docs/superpowers/specs/*` - dated per-feature plans and design specs.
+- `docs/repository-governance.md` - branch strategy, debugging/bisect methodology, and the repo health routine.
 
 ## Design System
 
