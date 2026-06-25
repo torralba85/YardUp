@@ -8,7 +8,7 @@ interface CTAButtonProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorEleme
 }
 
 /**
- * Pill-shaped primary call-to-action link with a trailing arrow and motion-safe
+ * Sharp-cornered primary call-to-action link with a trailing arrow and motion-safe
  * hover/active transforms. Wraps Next.js `Link`, so it accepts all link props
  * plus a `size` ("md" | "lg").
  *

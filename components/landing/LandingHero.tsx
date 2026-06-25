@@ -167,7 +167,7 @@ export function LandingHero() {
           <motion.form
             variants={itemVariants}
             onSubmit={handleSubmit}
-            className="pointer-events-auto mt-5 flex max-w-md items-center justify-between rounded-none border border-lf-hairline bg-lf-card/95 p-1.5 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md transition-all duration-300 focus-within:border-lf-clay/50"
+            className="pointer-events-auto mt-5 flex max-w-md items-center justify-between rounded-none border-[1.5px] border-lf-espresso bg-lf-card/95 p-1.5 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md transition-all duration-300 focus-within:border-lf-clay/50"
           >
             <label htmlFor="hero-address" className="sr-only">
               Property address
