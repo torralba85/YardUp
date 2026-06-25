@@ -167,7 +167,7 @@ export function LandingHero() {
           <motion.form
             variants={itemVariants}
             onSubmit={handleSubmit}
-            className="pointer-events-auto mt-5 flex max-w-md items-center justify-between rounded-full border border-lf-hairline bg-lf-card/95 p-1.5 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md transition-all duration-300 focus-within:border-lf-clay/50"
+            className="pointer-events-auto mt-5 flex max-w-md max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 items-center justify-between rounded-none border-[1.5px] border-lf-espresso bg-lf-card/95 p-1.5 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md transition-all duration-300 focus-within:border-lf-clay/50"
           >
             <label htmlFor="hero-address" className="sr-only">
               Property address
@@ -179,11 +179,11 @@ export function LandingHero() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Enter your property address"
               autoComplete="street-address"
-              className="min-h-10 min-w-0 flex-1 bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay sm:px-4 sm:text-xs"
+              className="min-h-11 min-w-0 flex-1 bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay sm:px-4 sm:text-xs"
             />
             <button
               type="submit"
-              className="inline-flex min-h-10 items-center justify-center rounded-full bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 max-sm:w-full items-center justify-center rounded-none bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               Run feasibility
             </button>
@@ -219,7 +219,7 @@ export function LandingHero() {
                     aria-current={active ? "step" : undefined}
                     aria-label={`Jump to ${layer.name}: ${layer.detail}`}
                     onClick={() => jumpToLayer(index)}
-                    className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:p-1 ${
+                    className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-none border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:p-1 ${
                       active
                         ? layer.value
                           ? "border-lf-forest/40 bg-lf-forest-soft"
@@ -228,7 +228,7 @@ export function LandingHero() {
                     }`}
                   >
                     <span
-                      className={`grid h-[30px] place-items-center rounded-lg border text-[11px] transition-colors ${
+                      className={`grid h-[30px] place-items-center rounded-none border text-[11px] transition-colors ${
                         active
                           ? layer.value
                             ? "border-lf-forest bg-lf-forest text-lf-sand"
@@ -249,7 +249,7 @@ export function LandingHero() {
 
             <div className="mx-0.5 mt-4 h-0.5 overflow-hidden rounded-full bg-lf-hairline max-sm:mt-2">
               <div
-                className="h-full bg-gradient-to-r from-lf-clay to-lf-forest transition-[width] duration-100"
+                className="h-full bg-lf-clay transition-[width] duration-100"
                 style={{ width: `${percent}%` }}
               />
             </div>

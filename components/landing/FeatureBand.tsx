@@ -144,7 +144,7 @@ export function FeatureBand() {
                       together so you can spot obvious fit issues before you hire anyone.
                     </p>
                   </div>
-                  <div className="relative flex h-36 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-lf-hairline/60 bg-lf-sand-2/50 p-4 text-center">
+                  <div className="relative flex h-36 flex-col items-center justify-center overflow-hidden rounded-none border border-dashed border-lf-hairline/60 bg-lf-sand-2/50 p-4 text-center">
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-lf-mahogany/5 to-lf-espresso/10" />
                     <div className="lf-kicker-dense text-lf-clay">
                       3D Visual Studio
@@ -213,7 +213,7 @@ export function FeatureBand() {
                 className="flex items-start gap-4 border-t border-lf-taupe/25 pt-4"
               >
                 <ShieldCheck
-                  className="mt-1 h-5 w-5 shrink-0 text-lf-amber"
+                  className="mt-1 h-5 w-5 shrink-0 text-lf-taupe"
                   aria-hidden="true"
                 />
                 <span className="lf-body-lg text-lf-sand">{item}</span>
@@ -239,7 +239,7 @@ export function FeatureBand() {
             </CTAButton>
             <Link
               href="/login"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card/65 px-8 font-semibold text-lf-espresso transition-colors duration-300 hover:bg-lf-card hover:border-lf-taupe active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-none border border-lf-hairline bg-lf-card/65 px-8 font-semibold text-lf-espresso transition-colors duration-300 hover:bg-lf-card hover:border-lf-taupe active:scale-[0.98]"
             >
               <Users className="h-5 w-5" aria-hidden="true" />
               Sign in
