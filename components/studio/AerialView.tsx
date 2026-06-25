@@ -268,9 +268,11 @@ export default function AerialView({
           y={40}
           text={`Rear Setback ${parcel.setbacks.rear}.0 ft`}
         />
-        {/* Setback labels — side */}
+        {/* Setback labels — side. Inset to ~20% of the width so the label
+            survives the `xMidYMid slice` horizontal crop on portrait phone
+            viewports, where the outer edges of the image are cut off. */}
         <SetbackLabel
-          x={120}
+          x={IMG_W * 0.2}
           y={IMG_H / 2}
           text={`Side ${parcel.setbacks.side}.0 ft`}
           rotate={-90}

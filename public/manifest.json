@@ -1,12 +1,17 @@
 {
-  "name": "LotFoundry",
+  "id": "/",
+  "name": "LotFoundry — ADU Feasibility Studio",
   "short_name": "LotFoundry",
   "description": "ADU Feasibility Studio — evaluate your lot's earning potential",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#F2E5D5",
   "theme_color": "#F2E5D5",
   "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "finance", "productivity", "utilities"],
   "icons": [
     {
       "src": "/icon-192.png",

@@ -25,7 +25,7 @@ export default function BuilderPage() {
 
   if (loading || !user || !profile || profile.role !== "builder") {
     return (
-      <div className="flex h-screen items-center justify-center bg-lf-sand">
+      <div className="flex h-[100dvh] items-center justify-center bg-lf-sand">
         <div className="text-center">
           <div className="font-sans text-2xl font-bold tracking-tight text-lf-mahogany">
             LotFoundry

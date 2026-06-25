@@ -33,6 +33,13 @@ export const metadata: Metadata = {
     "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
   manifest: "/manifest.json",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
+  appleWebApp: {
+    // Run as a standalone iOS PWA (no Safari chrome) with a translucent status
+    // bar so the espresso studio header reaches the top edge under the notch.
+    capable: true,
+    title: "LotFoundry",
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
