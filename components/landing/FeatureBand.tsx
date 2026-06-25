@@ -213,7 +213,7 @@ export function FeatureBand() {
                 className="flex items-start gap-4 border-t border-lf-taupe/25 pt-4"
               >
                 <ShieldCheck
-                  className="mt-1 h-5 w-5 shrink-0 text-lf-amber"
+                  className="mt-1 h-5 w-5 shrink-0 text-lf-taupe"
                   aria-hidden="true"
                 />
                 <span className="lf-body-lg text-lf-sand">{item}</span>
