@@ -10,6 +10,7 @@ import {
 import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -63,7 +64,24 @@ export default function BuilderDashboard({
   }, [uid]);
 
   if (loading) {
-    return <main className="min-h-dvh bg-lf-sand p-6">Loading...</main>;
+    return (
+      <main className="min-h-dvh bg-lf-sand p-4 text-lf-espresso lg:p-8" aria-busy="true">
+        <div
+          role="status"
+          aria-label="Loading the builder dashboard"
+          className="mx-auto max-w-6xl"
+        >
+          <Skeleton className="h-9 w-64 max-w-full" />
+          <Skeleton className="mt-3 h-4 w-[28rem] max-w-full" />
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-40" />
+            ))}
+          </div>
+          <span className="sr-only">Loading…</span>
+        </div>
+      </main>
+    );
   }
 
   async function handleSaveProfile(input: Parameters<typeof saveBuilderProfile>[1]) {

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 /**
  * Login route (`/login`). Renders the {@link LoginForm} inside the shared
@@ -14,7 +15,12 @@ export default function LoginPage() {
     >
       <Suspense
         fallback={
-          <div className="text-center text-sm text-lf-muted">Loading...</div>
+          <div role="status" aria-label="Loading the sign-in form" className="space-y-4">
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <span className="sr-only">Loading…</span>
+          </div>
         }
       >
         <LoginForm />
