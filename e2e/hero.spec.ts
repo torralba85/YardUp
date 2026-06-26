@@ -38,6 +38,25 @@ test.describe("Landing daylight deconstruction hero", () => {
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(viewport!.height);
   });
 
+  test("leads the first viewport with the docked income instrument rail", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
+    const rail = hero.getByRole("complementary", {
+      name: /typical earning potential/i,
+    });
+    await expect(rail).toBeVisible();
+    await expect(rail.getByText(/\$2,100/)).toBeVisible();
+    await expect(rail.getByText(/supported markets/i)).toBeVisible();
+
+    // Docked to the bottom edge, money on screen without scrolling.
+    const box = await rail.boundingBox();
+    const height = page.viewportSize()?.height ?? 0;
+    expect(box).not.toBeNull();
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(height + 2);
+  });
+
   test("scrolls through the feasibility layers", async ({ page }) => {
     await page.goto("/");
     const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
@@ -52,11 +71,13 @@ test.describe("Landing daylight deconstruction hero", () => {
     ).toHaveAttribute("aria-current", "step");
   });
 
-  test("routes the typed address to the studio", async ({ page }) => {
+  test("routes the typed address to the studio without persisting it in the URL", async ({ page }) => {
     await page.goto("/");
     await page.getByLabel(/property address/i).fill("456 Pine St, Denver, CO");
     await page.getByRole("button", { name: /run feasibility/i }).click();
     await expect(page).toHaveURL(/\/studio/);
+    // Privacy rule: a guest's typed address must never land in the URL/history.
+    expect(page.url()).not.toMatch(/456|Pine|Denver|[?&]q=/i);
   });
 
   test("keeps the daylight scene under reduced motion", async ({ browser }) => {
