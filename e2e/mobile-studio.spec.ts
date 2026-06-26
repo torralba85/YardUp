@@ -11,7 +11,7 @@ test.describe("mobile studio", () => {
     await page.getByRole("button", { name: /skip — explore the demo lot/i }).click();
 
     await expect(page.getByTestId("studio-sheet")).toBeVisible();
-    await expect(page.getByText("Rent / mo")).toBeVisible();
+    await expect(page.getByText("Rent potential / mo")).toBeVisible();
     // Coach marks appear once on a fresh profile. The inspector renders its
     // own role="note" hint, so filter to the coach mark.
     await expect(page.getByRole("note").filter({ hasText: /drag your adu/i })).toBeVisible();

@@ -15,8 +15,9 @@ export interface PeekMetricsProps {
 }
 
 /**
- * The always-visible peek strip for the mobile bottom sheet: three headline
- * metrics (rent, build range, payback) plus config chips and any parcel error.
+ * The always-visible peek strip for the mobile bottom sheet: a full-width rent
+ * lead (income framing) followed by a secondary two-up row (build range,
+ * payback), config chips, and any parcel error.
  *
  * @param props - The {@link PeekMetricsProps}.
  */
@@ -26,8 +27,8 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
       {/* Rent leads — money in forest (DESIGN.md: the figure leads every screen,
           and forest is reserved for money). Build cost and payback are secondary,
           not co-equal to income. */}
-      <div className="rounded-lg border border-lf-hairline bg-lf-card px-3 py-2">
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-lf-taupe">
+      <div className="border border-lf-hairline bg-lf-card px-3 py-2">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
           Rent potential / mo
         </p>
         <p className="mt-0.5 font-display text-[26px] font-semibold leading-none tabular-nums text-lf-forest">
@@ -45,7 +46,7 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
         <Chip>{config.footprint} ft²</Chip>
         <Chip>{finishLabels[config.finish]}</Chip>
         {estimated && (
-          <span className="rounded-full bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-espresso">
+          <span className="rounded-full bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-espresso">
             estimated
           </span>
         )}
@@ -70,7 +71,7 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-lf-hairline bg-lf-card px-2.5 py-1.5">
+    <div className="border border-lf-hairline bg-lf-card px-2.5 py-1.5">
       <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-lf-taupe">{label}</p>
       <p className="font-display text-base font-semibold tabular-nums text-lf-espresso">{value}</p>
     </div>
@@ -79,7 +80,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-lf-hairline bg-lf-card px-2 py-0.5 text-[11px] text-lf-espresso">
+    <span className="rounded-full border border-lf-hairline bg-lf-card px-2 py-0.5 font-mono text-[11px] text-lf-espresso">
       {children}
     </span>
   );
