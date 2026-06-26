@@ -327,7 +327,18 @@ export function LandingHero() {
 
             <button
               type="button"
-              onClick={() => addressInputRef.current?.focus()}
+              onClick={() => {
+                // On mobile the copy block (with the input) scrolls/fades off
+                // once the user is into the hero; bring the hero back to the top
+                // so the field is visible, then focus it. preventScroll avoids
+                // fighting the sticky container.
+                const track = trackRef.current;
+                if (track) {
+                  const top = window.scrollY + track.getBoundingClientRect().top;
+                  window.scrollTo({ top, behavior: reducedMotion ? "auto" : "smooth" });
+                }
+                addressInputRef.current?.focus({ preventScroll: true });
+              }}
               className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-none px-1 font-mono text-xs font-semibold text-lf-sand underline-offset-4 transition-colors hover:text-lf-taupe hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay"
             >
               <span className="sm:hidden">Run your address</span>

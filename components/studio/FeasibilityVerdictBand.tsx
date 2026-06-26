@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * FeasibilityVerdictBand — the redesigned studio's lead element.
+ * FeasibilityVerdictBand — the studio's income-led lead element.
  *
- * Replaces the income-led `IncomeLens` framing: the espresso band now leads
- * with the *feasibility verdict* and a readiness score; the income figure is
- * demoted to a secondary line. Mounts full-width above the parcel scene.
+ * The espresso band leads with the monthly rent figure (first and largest —
+ * income-led north star per DESIGN.md), followed by the feasibility verdict and
+ * a readiness score. Mounts full-width above the parcel scene.
  *
  * Derived entirely from real engine output via `summarizeFeasibility`.
  */
@@ -77,7 +77,7 @@ export default function FeasibilityVerdictBand({
           </div>
         </div>
 
-        <div className="self-stretch border-l border-lf-taupe/25" />
+        <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
 
         <div>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">

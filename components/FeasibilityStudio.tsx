@@ -248,9 +248,10 @@ function FeasibilityStudioInner() {
     setAssumptions(merged.assumptions);
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the
-    // Referer header, and analytics). Consume it once here; the auth-gated
-    // effect below runs the actual search.
-    const incomingAddress = consumeAddressQuery();
+    // Referer header, and analytics). Consume it once here; fall back to a
+    // ?q= param so direct /studio?q=<address> links still trigger a search.
+    // The auth-gated effect below runs the actual search.
+    const incomingAddress = consumeAddressQuery() ?? params.get("q")?.trim();
     if (incomingAddress) {
       setPendingAddressQuery(incomingAddress);
     }
