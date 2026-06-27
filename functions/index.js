@@ -1,6 +1,7 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const path = require("path");
+const { requestForNext } = require("./request-replay");
 
 // Stripe keys live in Secret Manager and are injected as process.env.* only in
 // the function they are bound to. Without this binding `process.env.STRIPE_*` is
@@ -36,6 +37,7 @@ const fnOpts = {
   memory: "1GiB",
   timeoutSeconds: 60,
   region: "us-central1",
+  invoker: "public",
 };
 
 const aiFnOpts = {
@@ -51,19 +53,19 @@ const aiFnOpts = {
 // differ only in which secrets are bound to the process.
 exports.app = onRequest(fnOpts, async (req, res) => {
   await ready();
-  return handle(req, res);
+  return handle(requestForNext(req), res);
 });
 
 exports.apiAi = onRequest(aiFnOpts, async (req, res) => {
   await ready();
-  return handle(req, res);
+  return handle(requestForNext(req), res);
 });
 
 // Non-payment API routes (parcel/geocode/suggest/aerial). No Stripe secrets in
 // this process.
 exports.api = onRequest(fnOpts, async (req, res) => {
   await ready();
-  return handle(req, res);
+  return handle(requestForNext(req), res);
 });
 
 // Stripe checkout + webhook only. firebase.json routes /api/stripe/** here so
@@ -73,6 +75,6 @@ exports.apiStripe = onRequest(
   { ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] },
   async (req, res) => {
     await ready();
-    return handle(req, res);
+    return handle(requestForNext(req), res);
   },
 );

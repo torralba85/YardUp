@@ -21,6 +21,10 @@ describe("Firebase AI API routing", () => {
     resolve(process.cwd(), "functions/index.js"),
     "utf8",
   );
+  const requestReplaySource = readFileSync(
+    resolve(process.cwd(), "functions/request-replay.js"),
+    "utf8",
+  );
   const ciWorkflow = readFileSync(
     resolve(process.cwd(), ".github/workflows/ci.yml"),
     "utf8",
@@ -41,6 +45,18 @@ describe("Firebase AI API routing", () => {
     expect(rewrites[aiRewriteIndex].function).toBe("apiAi");
     expect(functionsSource).toContain("exports.apiAi = onRequest");
     expect(functionsSource).toContain("timeoutSeconds: 120");
+    expect(functionsSource).toContain('invoker: "public"');
     expect(ciWorkflow).toContain('OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"');
+  });
+
+  it("serializes production Firebase deploys so hosting rewrites cannot race", () => {
+    expect(ciWorkflow).toContain("group: firebase-production-${{ github.ref }}");
+    expect(ciWorkflow).toContain("cancel-in-progress: false");
+  });
+
+  it("replays Firebase raw request bodies before handing API POSTs to Next", () => {
+    expect(functionsSource).toContain("requestForNext(req)");
+    expect(requestReplaySource).toContain("Buffer.isBuffer(req.rawBody)");
+    expect(requestReplaySource).toContain("replay.end(req.rawBody)");
   });
 });

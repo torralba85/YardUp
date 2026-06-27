@@ -39,6 +39,9 @@ jobs:
     needs: verify
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    concurrency:
+      group: firebase-production-${{ github.ref }}
+      cancel-in-progress: false
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
