@@ -21,7 +21,7 @@ import {
   Stamp,
   XCircle,
 } from "lucide-react";
-import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
+import { formatCurrency, type ADUConfig, type FeasibilityResult, type FinancialAssumptions, type Parcel, type RentScenario } from "@/lib/feasibility";
 import {
   summarizeFeasibility,
   statusTone,
@@ -32,6 +32,8 @@ import {
 } from "@/lib/feasibility-verdict";
 import AIPropertyInsightsPanel from "./AIPropertyInsightsPanel";
 import AIStyleMatchPanel from "./AIStyleMatchPanel";
+import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
+import { useParcel } from "@/lib/parcel-context";
 
 const STATUS_ICON: Record<ConstraintStatus, typeof CheckCircle2> = {
   clear: CheckCircle2,
@@ -46,27 +48,75 @@ const GROUP_ORDER: ConstraintGroup[] = [
   "Economics",
 ];
 
+const RENT_SCENARIO_LABELS: Record<RentScenario, string> = {
+  conservative: "Conservative",
+  market: "Market",
+  optimistic: "Optimistic",
+};
+
 export interface ConstraintsPanelProps {
   parcel: Parcel & { zoning?: string; source?: string };
   result: FeasibilityResult;
   config: ADUConfig;
+  assumptions: FinancialAssumptions;
+  onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
   onViewCertificate: () => void;
+  /** Bumped by an outside "Change address" action to focus the search field. */
+  addressFocusSignal?: number;
 }
 
 export default function ConstraintsPanel({
   parcel,
   result,
   config,
+  assumptions,
+  onAssumptionsChange,
   onViewCertificate,
+  addressFocusSignal,
 }: ConstraintsPanelProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
+  // Address entry lives here too. Previously the only search was inside the
+  // Massing tab's inspector, so a user on the default Feasibility view had no
+  // way to make the studio about their own lot. Self-wire to parcel context
+  // exactly as FeasibilityInspector does.
+  const { parcelLoading, parcelError, searchParcel, searchByAddress } = useParcel();
+
+  function handleAddressSelect(found: AddressSearchResult) {
+    searchParcel(found.lat, found.lng, found.formattedAddress);
+  }
+
+  function handleAddressText(query: string) {
+    searchByAddress(query);
+  }
 
   return (
     <aside
       aria-label="Property constraints"
       className="flex w-full shrink-0 flex-col border-t border-lf-hairline bg-lf-card lg:w-[384px] lg:border-l lg:border-t-0"
     >
+      <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
+        <p className="pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+          Your property
+        </p>
+        <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} autoFocusSignal={addressFocusSignal} />
+        {parcelLoading && (
+          <div className="mt-2 flex items-center gap-2 rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+            <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+            Looking up parcel data…
+          </div>
+        )}
+        {parcelError && (
+          <div
+            role="alert"
+            className="mt-2 flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+          >
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            {parcelError}
+          </div>
+        )}
+      </div>
+
       <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
         <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
           Property constraints
@@ -94,6 +144,40 @@ export default function ConstraintsPanel({
             </div>
           );
         })}
+
+        {/* Rent scenario — drives the headline $/mo. Lives on the Feasibility
+            tab so the income figure is adjustable without opening Massing. */}
+        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
+          <div className="flex items-center justify-between pb-2">
+            <p className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
+              Rent estimate
+            </p>
+            <span className="font-display text-sm font-semibold tabular-nums text-lf-mahogany">
+              {formatCurrency(result.monthlyRent)}
+              <span className="font-mono text-[10px] text-lf-muted">/mo</span>
+            </span>
+          </div>
+          <div role="group" aria-label="Rent estimate basis" className="grid grid-cols-3 gap-2">
+            {(Object.keys(RENT_SCENARIO_LABELS) as RentScenario[]).map((scenario) => {
+              const isActive = assumptions.rentScenario === scenario;
+              return (
+                <button
+                  key={scenario}
+                  type="button"
+                  onClick={() => onAssumptionsChange({ ...assumptions, rentScenario: scenario })}
+                  aria-pressed={isActive}
+                  className={`h-9 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                    isActive
+                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
+                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
+                  }`}
+                >
+                  {RENT_SCENARIO_LABELS[scenario]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
           <AIPropertyInsightsPanel parcel={parcel} result={result} config={config} />

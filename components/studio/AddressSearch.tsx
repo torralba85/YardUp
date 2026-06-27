@@ -29,6 +29,12 @@ export interface AddressSearchProps {
   placeholder?: string;
   /** Whether the input is disabled. */
   disabled?: boolean;
+  /**
+   * Bump this to imperatively focus the input (e.g. a "Change address" action
+   * elsewhere routes here). Ignored on the initial 0 value so the field never
+   * steals focus on first paint.
+   */
+  autoFocusSignal?: number;
 }
 
 let initialized = false;
@@ -53,6 +59,7 @@ export default function AddressSearch({
   onSubmitText,
   placeholder = "Search your property address…",
   disabled = false,
+  autoFocusSignal,
 }: AddressSearchProps) {
   const hasPlacesKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const { user } = useAuth();
@@ -65,6 +72,12 @@ export default function AddressSearch({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+
+  // Imperative focus when an outside action (e.g. sidebar "Change address")
+  // routes the user to this field. Guarded so the initial 0 never auto-focuses.
+  useEffect(() => {
+    if (autoFocusSignal) inputRef.current?.focus();
+  }, [autoFocusSignal]);
 
   // Server-backed predictions when the browser Places widget isn't available:
   // debounce keystrokes against /api/suggest and offer a pick-from-list.

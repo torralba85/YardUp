@@ -109,6 +109,8 @@ function FeasibilityStudioInner() {
   const [activeNav, setActiveNav] = useState("studio");
   // Redesign: in-studio tabs (Feasibility / Massing / Certificate).
   const [studioTab, setStudioTab] = useState<StudioTab>("feasibility");
+  // Bumped by the sidebar "Change address" action to focus the studio search.
+  const [addressFocusSignal, setAddressFocusSignal] = useState(0);
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
@@ -294,6 +296,14 @@ function FeasibilityStudioInner() {
     if (id === "export") {
       setReportOpen(true);
     }
+  }
+
+  // Route to the address search from anywhere in the shell: land on the
+  // Feasibility tab (where the search lives) and focus it.
+  function handleChangeAddress() {
+    setActiveNav("studio");
+    setStudioTab("feasibility");
+    setAddressFocusSignal((n) => n + 1);
   }
 
   function handleGenerateReport() {
@@ -546,6 +556,7 @@ function FeasibilityStudioInner() {
       parcelCity={activeParcel.city}
       onNavigate={handleNavigate}
       onReset={resetScenario}
+      onChangeAddress={handleChangeAddress}
       savedScenarios={savedScenarios}
       onLoadScenario={handleLoadScenario}
       onDeleteScenario={handleDeleteScenario}
@@ -628,7 +639,10 @@ function FeasibilityStudioInner() {
                   parcel={activeParcel}
                   result={result}
                   config={config}
+                  assumptions={assumptions}
+                  onAssumptionsChange={setAssumptions}
                   onViewCertificate={() => setStudioTab("certificate")}
+                  addressFocusSignal={addressFocusSignal}
                 />
               )}
             </div>
