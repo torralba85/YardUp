@@ -68,6 +68,7 @@ Warm by default, never white. Sand is the world, clay is the hand you click with
   --lf-forest-soft: #2F4A381A;
   --lf-amber:       #C8922A; /* Permit risk, review needed, unverified */
   --lf-amber-soft:  #C8922A1A;
+  --lf-amber-ink:   #8E6109; /* Amber for text/icons on LIGHT surfaces (WCAG AA) */
   --lf-brick:       #A23B26; /* Blockers only: prohibition, failed validation */
   --lf-brick-soft:  #A23B261A;
 
@@ -143,3 +144,4 @@ Lead with money, feasibility, and a credible next step.
 | 2026-06-25 | Realign to income-led framing | Audit found the landing and studio had drifted to verdict/readiness-led, contradicting the north star. Fix: a bottom-docked income rail on the landing first viewport; the studio verdict band re-promotes `$/mo` to the first/largest cell. Spec: `docs/superpowers/specs/2026-06-25-landing-income-rail-design.md`. |
 | 2026-06-25 | Focus ring is clay, not amber | The global `a/button:focus-visible` ring used amber, colliding with amber's "review needed" semantic. Switched to clay (the interactive accent), unifying with the component-level `ring-lf-clay` styles. |
 | 2026-06-25 | Radius policy = hybrid | Replaces the strict "radius 0 everywhere." Instrument-grade surfaces stay sharp; the soft `Bezel` panels/cards and the floating nav pill are sanctioned. The ~100 `rounded-md+` usages are no longer treated as violations. |
+| 2026-06-27 | Added `--lf-amber-ink` for amber on light | Base amber `#C8922A` is a fill hue that only reaches ~2.6:1 on sand/card — fails WCAG AA (1.4.3 as text, 1.4.11 as an icon). New `--color-lf-amber-ink` (`#8E6109`) clears 4.5:1 on sand/sand-2/card, stays in the gold family, and is wired into the `review`/`Needs Review` tone's on-light `color` (constraints chips + verdict strip) and the inspector fallback-note icon. Dark surfaces are unchanged — they use the lighter `onDark` values / `text-lf-amber` at ~6:1 on espresso. Tradeoff: deep enough that it sits nearer clay's value than vivid amber did; separated by hue, open to a tweak. |

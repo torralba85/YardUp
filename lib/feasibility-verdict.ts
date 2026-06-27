@@ -85,7 +85,7 @@ const VERDICT_TONE: Record<VerdictLevel, VerdictTone> = {
     soft: "var(--color-lf-forest-soft)",
   },
   "Needs Review": {
-    color: "var(--color-lf-amber)",
+    color: "var(--color-lf-amber-ink)",
     onDark: "#E0B463",
     soft: "var(--color-lf-amber-soft)",
   },
@@ -106,7 +106,7 @@ export function statusTone(status: ConstraintStatus): VerdictTone {
     case "clear":
       return { color: "var(--color-lf-forest)", onDark: "var(--color-lf-money-on-dark)", soft: "var(--color-lf-forest-soft)" };
     case "review":
-      return { color: "var(--color-lf-amber)", onDark: "#E0B463", soft: "var(--color-lf-amber-soft)" };
+      return { color: "var(--color-lf-amber-ink)", onDark: "#E0B463", soft: "var(--color-lf-amber-soft)" };
     case "blocked":
       return { color: "var(--color-lf-brick)", onDark: "#D98A77", soft: "var(--color-lf-brick-soft)" };
     default:

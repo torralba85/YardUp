@@ -233,7 +233,7 @@ export default function FeasibilityInspector({
                       role="note"
                       className="flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
                     >
-                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber" />
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-ink" />
                       Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
                     </div>
                   )}
