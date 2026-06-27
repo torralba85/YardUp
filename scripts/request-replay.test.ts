@@ -18,22 +18,26 @@ describe("requestForNext", () => {
   });
 
   it("replays Firebase rawBody as a fresh request stream", async () => {
+    const consumedBodySymbol = Symbol("consumed-body");
     const req = new PassThrough() as PassThrough & {
       method: string;
       url: string;
       headers: Record<string, string>;
       rawBody: Buffer;
+      [consumedBodySymbol]?: boolean;
     };
     req.method = "POST";
     req.url = "/api/ai/parcel-insights";
     req.headers = { "content-type": "application/json" };
     req.rawBody = Buffer.from('{"parcel":true}');
+    req[consumedBodySymbol] = true;
 
     const replay = requestForNext(req);
 
     expect(replay).not.toBe(req);
     expect(replay.method).toBe("POST");
     expect(replay.url).toBe("/api/ai/parcel-insights");
+    expect(Object.getOwnPropertySymbols(replay)).not.toContain(consumedBodySymbol);
     await expect(readStream(replay)).resolves.toBe('{"parcel":true}');
   });
 });

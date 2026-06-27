@@ -12,8 +12,11 @@ function shouldReplayRawBody(req) {
 function requestForNext(req) {
   if (!shouldReplayRawBody(req)) return req;
 
+  const rawBody = req.rawBody;
   const replay = new PassThrough();
-  replay.end(req.rawBody);
+  process.nextTick(() => {
+    replay.end(rawBody);
+  });
 
   replay.method = req.method;
   replay.url = req.url;
@@ -25,12 +28,7 @@ function requestForNext(req) {
   replay.httpVersionMinor = req.httpVersionMinor;
   replay.socket = req.socket;
   replay.connection = req.connection;
-  replay.rawBody = req.rawBody;
-
-  for (const symbol of Object.getOwnPropertySymbols(req)) {
-    const descriptor = Object.getOwnPropertyDescriptor(req, symbol);
-    if (descriptor) Object.defineProperty(replay, symbol, descriptor);
-  }
+  replay.rawBody = rawBody;
 
   return replay;
 }
