@@ -179,7 +179,11 @@ textarea {
 
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid var(--color-lf-amber);
+  /* Clay is the interactive accent ("the hand you click with"). Focus rings
+     must not use amber — amber is reserved for "review needed / permit risk"
+     status, so an amber focus ring collides with a meaning-bearing color.
+     This also unifies with the component-level `ring-lf-clay` focus styles. */
+  outline: 2px solid var(--color-lf-clay);
   outline-offset: 3px;
 }
 
