@@ -40,4 +40,23 @@ describe("requestForNext", () => {
     expect(Object.getOwnPropertySymbols(replay)).not.toContain(consumedBodySymbol);
     await expect(readStream(replay)).resolves.toBe('{"parcel":true}');
   });
+
+  it("replays parsed JSON bodies when Firebase rawBody is unavailable", async () => {
+    const req = new PassThrough() as PassThrough & {
+      method: string;
+      url: string;
+      headers: Record<string, string>;
+      body: Record<string, boolean>;
+    };
+    req.method = "POST";
+    req.url = "/api/ai/parcel-insights";
+    req.headers = { "content-type": "application/json" };
+    req.body = { parcel: true };
+
+    const replay = requestForNext(req);
+
+    expect(replay).not.toBe(req);
+    expect(replay.rawBody).toEqual(Buffer.from('{"parcel":true}'));
+    await expect(readStream(replay)).resolves.toBe('{"parcel":true}');
+  });
 });

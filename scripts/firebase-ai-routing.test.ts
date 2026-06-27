@@ -57,7 +57,8 @@ describe("Firebase AI API routing", () => {
   it("replays Firebase raw request bodies before handing API POSTs to Next", () => {
     expect(functionsSource).toContain("requestForNext(req)");
     expect(requestReplaySource).toContain("Buffer.isBuffer(req.rawBody)");
-    expect(requestReplaySource).toContain("replay.end(rawBody)");
+    expect(requestReplaySource).toContain("replay.end(body)");
+    expect(requestReplaySource).toContain("JSON.stringify(req.body)");
     expect(requestReplaySource).not.toContain("getOwnPropertySymbols(req)");
   });
 });
