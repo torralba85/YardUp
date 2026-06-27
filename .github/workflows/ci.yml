@@ -42,7 +42,7 @@ jobs:
     concurrency:
       group: firebase-production-${{ github.ref }}
       cancel-in-progress: false
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -80,12 +80,16 @@ jobs:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
       - name: Firebase deploy dry run
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
-      - name: Deploy to Firebase Hosting + Functions + Firestore Rules
+      - name: Deploy Firebase Hosting + Firestore Rules
+        run: firebase deploy --only hosting,firestore:rules --project yardup-2026
+      - name: Deploy Firebase Functions
         run: |
           set -o pipefail
-          deploy_log="$(mktemp)"
-          firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 2>&1 | tee "$deploy_log"
-          if grep -E "(failed to update function|HTTP Error: 409|unable to queue the operation)" "$deploy_log"; then
-            echo "::error::Firebase reported a function update failure during deploy."
-            exit 1
-          fi
+          for target in functions:app functions:api functions:apiAi functions:apiStripe; do
+            deploy_log="$(mktemp)"
+            firebase deploy --only "$target" --project yardup-2026 2>&1 | tee "$deploy_log"
+            if grep -E "(failed to update function|HTTP Error: 409|unable to queue the operation)" "$deploy_log"; then
+              echo "::error::Firebase reported a function update failure while deploying $target."
+              exit 1
+            fi
+          done
