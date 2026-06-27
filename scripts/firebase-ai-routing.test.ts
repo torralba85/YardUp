@@ -59,6 +59,8 @@ describe("Firebase AI API routing", () => {
     expect(requestReplaySource).toContain("Buffer.isBuffer(req.rawBody)");
     expect(requestReplaySource).toContain("replay.end(body)");
     expect(requestReplaySource).toContain("JSON.stringify(req.body)");
+    expect(requestReplaySource).toContain("new NodeNextRequest(replay)");
+    expect(requestReplaySource).toContain("Readable.toWeb(Readable.from([body]))");
     expect(requestReplaySource).not.toContain("getOwnPropertySymbols(req)");
   });
 });

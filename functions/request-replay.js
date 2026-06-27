@@ -1,4 +1,5 @@
-const { PassThrough } = require("stream");
+const { PassThrough, Readable } = require("stream");
+const { NodeNextRequest } = require("next/dist/server/base-http/node");
 
 function bodyBufferForReplay(req) {
   if (Buffer.isBuffer(req.rawBody) && req.rawBody.length > 0) {
@@ -47,7 +48,10 @@ function requestForNext(req) {
   replay.connection = req.connection;
   replay.rawBody = body;
 
-  return replay;
+  const nextRequest = new NodeNextRequest(replay);
+  nextRequest.body = Readable.toWeb(Readable.from([body]));
+
+  return nextRequest;
 }
 
 module.exports = { requestForNext };
