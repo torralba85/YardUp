@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { BlueprintScene } from "./BlueprintScene";
 import { Bezel } from "@/components/ui/Bezel";
+import { stashAddressQuery } from "@/lib/address-handoff";
 
 const containerVariants = {
   hidden: {},
@@ -34,6 +35,19 @@ const FEASIBILITY_LAYERS = [
   { id: "shell", name: "Shell & glazing", detail: "walls / deck / glass", value: false },
   { id: "roof", name: "Finished value", detail: "rentable asset", value: true },
 ] as const;
+
+/**
+ * Representative earning potential for the income instrument rail. The landing
+ * page has no entered address, so these are *typical supported-market* midpoints
+ * (not a parcel-specific or guaranteed figure) — the `Typical · supported
+ * markets` eyebrow carries that estimate-honesty contract. A single source of
+ * truth so the headline number can be tuned in one place.
+ */
+const TYPICAL_MARKET = {
+  rentBand: "$2,100–$2,600",
+  noi: "$22,400",
+  paybackYears: "12",
+} as const;
 
 function useHeroScrollProgress(ref: React.RefObject<HTMLElement | null>) {
   const [progress, setProgress] = useState(0);
@@ -75,6 +89,7 @@ function useHeroScrollProgress(ref: React.RefObject<HTMLElement | null>) {
  */
 export function LandingHero() {
   const trackRef = useRef<HTMLElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -99,8 +114,11 @@ export function LandingHero() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const trimmed = query.trim();
-    router.push(trimmed ? `/studio?q=${encodeURIComponent(trimmed)}` : "/studio");
+    // Privacy: hand the address to the studio via session storage instead of the
+    // URL, so a guest's typed address never lands in browser history, the
+    // Referer header, or analytics. The studio consumes it once on mount.
+    stashAddressQuery(query);
+    router.push("/studio");
   }
 
   function jumpToLayer(index: number) {
@@ -174,6 +192,7 @@ export function LandingHero() {
             </label>
             <input
               id="hero-address"
+              ref={addressInputRef}
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -198,7 +217,7 @@ export function LandingHero() {
 
         <aside
           aria-label="Feasibility stack"
-          className="absolute right-[clamp(18px,3.5vw,48px)] top-1/2 z-20 w-[min(300px,42vw)] -translate-y-1/2 font-mono max-sm:inset-x-3 max-sm:bottom-4 max-sm:top-auto max-sm:w-auto max-sm:translate-y-0"
+          className="absolute right-[clamp(18px,3.5vw,48px)] top-[42%] z-20 w-[min(300px,42vw)] -translate-y-1/2 font-mono max-sm:inset-x-3 max-sm:bottom-[120px] max-sm:top-auto max-sm:w-auto max-sm:translate-y-0"
         >
           <Bezel
             className="border-lf-hairline/30 bg-lf-taupe-soft/20 shadow-[0_12px_40px_rgba(38,19,7,0.12)] backdrop-blur-xl"
@@ -258,11 +277,76 @@ export function LandingHero() {
 
         <div
           aria-hidden="true"
-          className={`lf-kicker-dense pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
+          className={`lf-kicker-dense pointer-events-none absolute bottom-[84px] left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2.5 text-lf-muted transition-opacity duration-300 sm:flex ${progress < 0.05 ? "opacity-100" : "opacity-0"}`}
         >
           <span className="relative h-7 w-[18px] rounded-full border border-lf-muted/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-lf-clay" />
           Scroll to deconstruct
         </div>
+
+        {/* Income instrument rail — docked to the bottom edge so a money figure
+            leads the first viewport (DESIGN.md: value before features). Figures
+            are typical supported-market midpoints, not parcel-specific. */}
+        <aside
+          aria-label="Typical earning potential"
+          className="absolute inset-x-0 bottom-0 z-30 border-t-[1.5px] border-lf-clay bg-lf-espresso text-lf-sand"
+        >
+          <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-5 gap-y-2 px-[clamp(20px,4vw,48px)] py-2.5 sm:py-3">
+            <p className="lf-kicker basis-full shrink-0 text-lf-taupe sm:basis-auto">
+              Typical · supported markets
+            </p>
+
+            <div className="flex flex-1 flex-nowrap items-end gap-x-5 whitespace-nowrap">
+              <div>
+                <p className="lf-kicker-dense text-lf-taupe">Rent potential</p>
+                <p className="mt-0.5 font-display text-[22px] font-semibold leading-none tabular-nums sm:text-[28px]">
+                  <span className="text-lf-money-on-dark">{TYPICAL_MARKET.rentBand}</span>
+                  <span className="ml-1 font-mono text-xs text-lf-taupe">/mo</span>
+                </p>
+              </div>
+
+              <div className="hidden self-stretch border-l border-lf-taupe/25 lg:block" />
+
+              <div className="hidden lg:block">
+                <p className="lf-kicker-dense text-lf-taupe">Net operating income</p>
+                <p className="mt-0.5 font-display text-[26px] font-semibold leading-none tabular-nums sm:text-[28px]">
+                  <span className="text-lf-money-on-dark">{TYPICAL_MARKET.noi}</span>
+                  <span className="ml-1 font-mono text-xs text-lf-taupe">/yr</span>
+                </p>
+              </div>
+
+              <div className="hidden self-stretch border-l border-lf-taupe/25 lg:block" />
+
+              <div className="hidden lg:block">
+                <p className="lf-kicker-dense text-lf-taupe">Simple payback</p>
+                <p className="mt-0.5 font-display text-[26px] font-semibold leading-none tabular-nums text-lf-sand sm:text-[28px]">
+                  ~{TYPICAL_MARKET.paybackYears}
+                  <span className="ml-1 font-mono text-xs text-lf-taupe">yrs</span>
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                // On mobile the copy block (with the input) scrolls/fades off
+                // once the user is into the hero; bring the hero back to the top
+                // so the field is visible, then focus it. preventScroll avoids
+                // fighting the sticky container.
+                const track = trackRef.current;
+                if (track) {
+                  const top = window.scrollY + track.getBoundingClientRect().top;
+                  window.scrollTo({ top, behavior: reducedMotion ? "auto" : "smooth" });
+                }
+                addressInputRef.current?.focus({ preventScroll: true });
+              }}
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-none px-1 font-mono text-xs font-semibold text-lf-sand underline-offset-4 transition-colors hover:text-lf-taupe hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay"
+            >
+              <span className="sm:hidden">Run your address</span>
+              <span className="hidden sm:inline">Run your address for your number</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </aside>
       </div>
     </section>
   );

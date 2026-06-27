@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * FeasibilityVerdictBand — the redesigned studio's lead element.
+ * FeasibilityVerdictBand — the studio's income-led lead element.
  *
- * Replaces the income-led `IncomeLens` framing: the espresso band now leads
- * with the *feasibility verdict* and a readiness score; the income figure is
- * demoted to a secondary line. Mounts full-width above the parcel scene.
+ * The espresso band leads with the monthly rent figure (first and largest —
+ * income-led north star per DESIGN.md), followed by the feasibility verdict and
+ * a readiness score. Mounts full-width above the parcel scene.
  *
  * Derived entirely from real engine output via `summarizeFeasibility`.
  */
@@ -62,15 +62,31 @@ export default function FeasibilityVerdictBand({
         <p className="mt-[5px] font-mono text-[11px] text-lf-taupe">{lotLine}</p>
       </div>
 
-      <div className="flex flex-shrink-0 items-center gap-[22px]">
+      <div className="flex flex-shrink-0 flex-wrap items-center gap-x-[22px] gap-y-3">
+        {/* Income leads the band: the money figure is the first and largest
+            thing on every screen (DESIGN.md income-led north star). It was
+            previously hidden below `xl` — re-promoted here so the asset value
+            never drops off the studio's lead element. */}
+        <div>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+            If built
+          </p>
+          <div className="mt-1 font-display text-[44px] font-semibold leading-none tabular-nums text-lf-money-on-dark">
+            {formatCurrency(rent)}
+            <span className="ml-1 font-mono text-sm text-lf-taupe">/mo</span>
+          </div>
+        </div>
+
+        <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
+
         <div>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
             Feasibility verdict
           </p>
           <div className="mt-1 flex items-center gap-2.5">
-            <Icon size={26} style={{ color: tone.onDark }} />
+            <Icon size={24} style={{ color: tone.onDark }} />
             <span
-              className="whitespace-nowrap font-display text-[36px] font-semibold leading-none tracking-[-0.01em]"
+              className="whitespace-nowrap font-display text-[30px] font-semibold leading-none tracking-[-0.01em]"
               style={{ color: tone.onDark }}
             >
               {summary.verdict}
@@ -82,13 +98,13 @@ export default function FeasibilityVerdictBand({
           </div>
         </div>
 
-        <div className="self-stretch border-l border-lf-taupe/25" />
+        <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
 
-        <div className="text-center">
+        <div className="hidden text-center sm:block">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
             Readiness
           </p>
-          <div className="mt-0.5 font-display text-[48px] font-semibold leading-none text-lf-sand tabular-nums">
+          <div className="mt-0.5 font-display text-[40px] font-semibold leading-none text-lf-sand tabular-nums">
             {readiness}
             <span className="font-mono text-sm text-lf-taupe"> /100</span>
           </div>
@@ -97,16 +113,6 @@ export default function FeasibilityVerdictBand({
               className="h-full rounded-full transition-[width] duration-500"
               style={{ width: `${summary.readiness}%`, backgroundColor: tone.onDark }}
             />
-          </div>
-        </div>
-
-        <div className="hidden border-l border-lf-taupe/25 pl-[22px] xl:block">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
-            If built
-          </p>
-          <div className="mt-1 font-display text-[28px] font-semibold leading-none tabular-nums text-lf-money-on-dark">
-            {formatCurrency(rent)}
-            <span className="font-mono text-xs text-lf-taupe">/mo</span>
           </div>
         </div>
       </div>

@@ -1,12 +1,19 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LandingHero } from "./LandingHero";
 import { getSceneViewportProfile, HERO_SCENE_PALETTE } from "./BlueprintScene";
 
-const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
+const { pushMock, stashMock } = vi.hoisted(() => ({
+  pushMock: vi.fn(),
+  stashMock: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
+}));
+
+vi.mock("@/lib/address-handoff", () => ({
+  stashAddressQuery: stashMock,
 }));
 
 function setMatchMedia(reduce: boolean) {
@@ -27,6 +34,7 @@ describe("LandingHero deconstruction hero", () => {
   beforeEach(() => {
     setMatchMedia(false);
     pushMock.mockClear();
+    stashMock.mockClear();
   });
 
   afterEach(() => {
@@ -54,18 +62,46 @@ describe("LandingHero deconstruction hero", () => {
     expect(screen.getByRole("button", { name: /jump to finished value/i })).toBeInTheDocument();
   });
 
-  it("routes the typed address to the studio as ?q=", () => {
+  it("leads the first viewport with a typical earning-potential figure", () => {
+    render(<LandingHero />);
+    const rail = screen.getByRole("complementary", {
+      name: /typical earning potential/i,
+    });
+    expect(within(rail).getByText(/\$2,100/)).toBeInTheDocument();
+    expect(within(rail).getByText(/\$2,600/)).toBeInTheDocument();
+    expect(within(rail).getByText(/\/mo/)).toBeInTheDocument();
+  });
+
+  it("frames the landing figure as a typical estimate, not a parcel-specific guarantee", () => {
+    render(<LandingHero />);
+    const rail = screen.getByRole("complementary", {
+      name: /typical earning potential/i,
+    });
+    expect(within(rail).getByText(/supported markets/i)).toBeInTheDocument();
+  });
+
+  it("invites the owner to run their own address for a personalized number", () => {
+    render(<LandingHero />);
+    expect(
+      screen.getByRole("button", { name: /run your address for your number/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("hands the typed address to the studio without exposing it in the URL", () => {
     render(<LandingHero />);
     fireEvent.change(screen.getByLabelText(/property address/i), {
       target: { value: "456 Pine St, Denver, CO" },
     });
     fireEvent.submit(screen.getByRole("button", { name: /run feasibility/i }).closest("form")!);
-    expect(pushMock).toHaveBeenCalledWith("/studio?q=456%20Pine%20St%2C%20Denver%2C%20CO");
+    expect(stashMock).toHaveBeenCalledWith("456 Pine St, Denver, CO");
+    expect(pushMock).toHaveBeenCalledWith("/studio");
+    expect(pushMock).not.toHaveBeenCalledWith(expect.stringContaining("?"));
   });
 
-  it("routes to the studio without a query when the field is empty", () => {
+  it("routes to the studio and clears any stale address when the field is empty", () => {
     render(<LandingHero />);
     fireEvent.submit(screen.getByRole("button", { name: /run feasibility/i }).closest("form")!);
+    expect(stashMock).toHaveBeenCalledWith("");
     expect(pushMock).toHaveBeenCalledWith("/studio");
   });
 

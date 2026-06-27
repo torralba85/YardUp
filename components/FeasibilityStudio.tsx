@@ -30,6 +30,7 @@ import {
   deleteSavedScenario,
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
+import { consumeAddressQuery } from "@/lib/address-handoff";
 import AppShell from "./studio/AppShell";
 import AerialView from "./studio/AerialView";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
@@ -245,10 +246,12 @@ function FeasibilityStudioInner() {
     setParcelId(merged.parcelId);
     setConfig(merged.config);
     setAssumptions(merged.assumptions);
-    // Landing-hero handoff: stash ?q=<address> for the effect below. The
-    // URL-write effect replaces the query string with scenario params, so q
-    // is consumed exactly once.
-    const incomingAddress = params.get("q")?.trim();
+    // Landing-hero handoff: the hero stashes the typed address in session
+    // storage (never the URL, to keep a guest's address out of history, the
+    // Referer header, and analytics). Consume it once here; fall back to a
+    // ?q= param so direct /studio?q=<address> links still trigger a search.
+    // The auth-gated effect below runs the actual search.
+    const incomingAddress = consumeAddressQuery() ?? params.get("q")?.trim();
     if (incomingAddress) {
       setPendingAddressQuery(incomingAddress);
     }
