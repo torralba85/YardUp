@@ -81,7 +81,16 @@ jobs:
       - name: Firebase deploy dry run
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
       - name: Deploy Firebase Hosting + Firestore Rules
-        run: firebase deploy --only hosting,firestore:rules --project yardup-2026
+        run: |
+          set -o pipefail
+          deploy_log="$(mktemp)"
+          firebase deploy --only hosting,firestore:rules --project yardup-2026 2>&1 | tee "$deploy_log" || {
+            if grep -F "is the current active version" "$deploy_log"; then
+              echo "::notice::Firebase Hosting version is already active; continuing."
+            else
+              exit 1
+            fi
+          }
       - name: Deploy Firebase Functions
         run: |
           set -o pipefail
