@@ -81,4 +81,11 @@ jobs:
       - name: Firebase deploy dry run
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
       - name: Deploy to Firebase Hosting + Functions + Firestore Rules
-        run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026
+        run: |
+          set -o pipefail
+          deploy_log="$(mktemp)"
+          firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 2>&1 | tee "$deploy_log"
+          if grep -E "(failed to update function|HTTP Error: 409|unable to queue the operation)" "$deploy_log"; then
+            echo "::error::Firebase reported a function update failure during deploy."
+            exit 1
+          fi
