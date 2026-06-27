@@ -49,7 +49,7 @@ export default function StudioTabBar({ active, onChange }: StudioTabBarProps) {
             <Icon size={16} className={isActive ? "text-lf-clay" : ""} />
             {tab.label}
             {tab.optional ? (
-              <span className="rounded border border-lf-hairline px-[5px] py-px font-mono text-[9px] uppercase tracking-[0.08em] text-lf-muted">
+              <span className="rounded-md border border-lf-hairline px-[5px] py-px font-mono text-[9px] uppercase tracking-[0.08em] text-lf-muted">
                 optional
               </span>
             ) : null}

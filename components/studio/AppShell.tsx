@@ -100,7 +100,7 @@ export default function AppShell({
                   type="button"
                   onClick={() => onNavigate(item.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex h-12 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany ${
+                  className={`flex h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany ${
                     isActive
                       ? "bg-lf-espresso/45 text-white ring-1 ring-lf-taupe/20"
                       : "text-lf-taupe hover:bg-white/5 hover:text-lf-sand"
@@ -114,7 +114,7 @@ export default function AppShell({
           </nav>
 
           <div className="mt-auto space-y-4">
-            <div className="rounded-md border border-white/[0.07] bg-white/[0.02] p-3">
+            <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
               <div className="flex gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -132,7 +132,7 @@ export default function AppShell({
                 <button
                   type="button"
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   <MapPin size={13} />
                   Change address
@@ -141,14 +141,14 @@ export default function AppShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-9 w-full rounded border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="mt-3 h-9 w-full rounded-lg border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
             </div>
 
             {savedScenarios.length > 0 && (
-              <div className="rounded-md border border-white/[0.07] bg-white/[0.02]">
+              <div className="rounded-lg border border-white/[0.07] bg-white/[0.02]">
                 <button
                   type="button"
                   onClick={() => setScenariosOpen((o) => !o)}
@@ -157,7 +157,7 @@ export default function AppShell({
                 >
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-lf-taupe">
                     Saved Concepts
-                    <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-lf-taupe">
+                    <span className="ml-1.5 rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-lf-taupe">
                       {savedScenarios.length}
                     </span>
                   </span>
@@ -173,7 +173,7 @@ export default function AppShell({
                       {savedScenarios.slice(0, 5).map((scenario) => (
                         <li
                           key={scenario.id}
-                          className="flex items-center gap-2 rounded px-1 py-1 text-xs hover:bg-white/5"
+                          className="flex items-center gap-2 rounded-md px-1 py-1 text-xs hover:bg-white/5"
                         >
                           <button
                             type="button"
@@ -186,7 +186,7 @@ export default function AppShell({
                             type="button"
                             onClick={() => onDeleteScenario?.(scenario.id)}
                             aria-label={`Delete saved concept ${scenario.name}`}
-                            className="rounded p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                            className="rounded-md p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -204,7 +204,7 @@ export default function AppShell({
             )}
 
             {user ? (
-              <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
                   {initials}
                 </div>
@@ -216,7 +216,7 @@ export default function AppShell({
                   type="button"
                   onClick={logout}
                   aria-label="Sign out"
-                  className="rounded p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="rounded-md p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lf-clay focus-visible:ring-offset-lf-mahogany"
                 >
                   <LogOut size={14} />
                 </button>
@@ -225,7 +225,7 @@ export default function AppShell({
               <button
                 type="button"
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-md bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Sign In
               </button>
@@ -250,7 +250,7 @@ export default function AppShell({
           <button
             type="button"
             onClick={onReset}
-            className="h-9 rounded-md border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="h-9 rounded-lg border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             Reset
           </button>

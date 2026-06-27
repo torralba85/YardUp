@@ -254,7 +254,7 @@ export default function AddressSearch({
           activeIndex >= 0 ? `address-suggestion-${activeIndex}` : undefined
         }
         className={[
-          "h-11 w-full rounded-md border pl-9 pr-20 text-sm",
+          "h-11 w-full rounded-lg border pl-9 pr-20 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-taupe",
           "outline-none transition",
           "focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15",
@@ -267,7 +267,7 @@ export default function AddressSearch({
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1 rounded px-2.5 text-xs font-semibold text-lf-sand transition disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-lf-mahogany enabled:hover:bg-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-1"
+        className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1 rounded-md px-2.5 text-xs font-semibold text-lf-sand transition disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-lf-mahogany enabled:hover:bg-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search
@@ -278,7 +278,7 @@ export default function AddressSearch({
           id="address-suggestions"
           role="listbox"
           aria-label="Address suggestions"
-          className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-lg"
+          className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-lg border border-lf-hairline bg-lf-card shadow-lg"
         >
           {suggestions.map((suggestion, index) => (
             <li

@@ -64,7 +64,7 @@ export default function AIStyleMatchPanel({
         </h3>
       </div>
 
-      <label className="block cursor-pointer rounded-md border border-dashed border-lf-hairline bg-lf-sand-2 p-3 transition hover:border-lf-taupe">
+      <label className="block cursor-pointer rounded-lg border border-dashed border-lf-hairline bg-lf-sand-2 p-3 transition hover:border-lf-taupe">
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -85,7 +85,7 @@ export default function AIStyleMatchPanel({
         <img
           src={previewUrl}
           alt="Uploaded home preview"
-          className="aspect-[4/3] w-full rounded-md border border-lf-hairline object-cover"
+          className="aspect-[4/3] w-full rounded-lg border border-lf-hairline object-cover"
         />
       )}
 
@@ -93,26 +93,26 @@ export default function AIStyleMatchPanel({
         type="button"
         onClick={generateConcept}
         disabled={loading || !file}
-        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md bg-lf-clay text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-lf-clay text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
       >
         <Sparkles size={14} />
         {loading ? "Generating concept" : "Generate matching ADU"}
       </button>
 
       {error && (
-        <div className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs leading-5 text-lf-brick">
+        <div className="flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs leading-5 text-lf-brick">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           {error}
         </div>
       )}
 
       {concept && (
-        <div className="space-y-3 rounded-md border border-lf-hairline bg-lf-sand-2 p-3">
+        <div className="space-y-3 rounded-lg border border-lf-hairline bg-lf-sand-2 p-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={concept.imageDataUrl}
             alt="AI-generated matching ADU concept"
-            className="aspect-[4/3] w-full rounded-md border border-lf-hairline object-cover"
+            className="aspect-[4/3] w-full rounded-lg border border-lf-hairline object-cover"
           />
           <div>
             <div className="text-sm font-semibold text-lf-espresso">
@@ -124,7 +124,7 @@ export default function AIStyleMatchPanel({
             {concept.matchedElements.map((element) => (
               <span
                 key={element}
-                className="rounded-full border border-lf-hairline bg-lf-card px-2 py-1 text-[10px] font-medium text-lf-muted"
+                className="rounded-md border border-lf-hairline bg-lf-card px-2 py-1 text-[10px] font-medium text-lf-muted"
               >
                 {element}
               </span>

@@ -163,9 +163,9 @@ export default function FeasibilityInspector({
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden lg:w-[404px] lg:border-l"
+      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-y-auto lg:w-[404px] lg:border-l"
     >
-      <div className="flex h-full flex-col lg:min-h-0">
+      <div className="flex min-h-full flex-col">
 
         {/* Panel header */}
         <div className="flex items-center justify-between border-b border-lf-hairline px-6 py-5">
@@ -183,7 +183,7 @@ export default function FeasibilityInspector({
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
@@ -193,7 +193,7 @@ export default function FeasibilityInspector({
         <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />
 
         {/* Accordion steps */}
-        <div className="flex-1 overflow-y-auto divide-y divide-lf-hairline lg:min-h-0">
+        <div className="flex-1 divide-y divide-lf-hairline">
 
           {/* Step 1 — Your Property */}
           <AccordionStep
@@ -218,7 +218,7 @@ export default function FeasibilityInspector({
                     </button>
                   </div>
 
-                  <div className="flex items-start gap-2 rounded-md border border-lf-hairline bg-lf-sand p-3">
+                  <div className="flex items-start gap-2 rounded-lg border border-lf-hairline bg-lf-sand p-3">
                     <MapPin size={15} className="mt-0.5 shrink-0 text-lf-clay" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-lf-espresso">
@@ -231,7 +231,7 @@ export default function FeasibilityInspector({
                   {"source" in displayParcel && displayParcel.source === "fallback" && (
                     <div
                       role="note"
-                      className="flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
+                      className="flex items-start gap-2 rounded-lg border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
                     >
                       <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-ink" />
                       Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
@@ -241,7 +241,7 @@ export default function FeasibilityInspector({
                   {parcelError && (
                     <div
                       role="alert"
-                      className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+                      className="flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
                     >
                       <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                       {parcelError}
@@ -255,7 +255,7 @@ export default function FeasibilityInspector({
                     id="parcel-preset"
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
-                    className="h-11 w-full rounded-md border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
+                    className="h-11 w-full rounded-lg border border-lf-hairline bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
                   >
                     {parcelPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
@@ -270,7 +270,7 @@ export default function FeasibilityInspector({
                     {parcelError && (
                       <div
                         role="alert"
-                        className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+                        className="flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
                       >
                         <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                         {parcelError}
@@ -281,7 +281,7 @@ export default function FeasibilityInspector({
               )}
 
               {parcelLoading && (
-                <div className="flex items-center gap-2 rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+                <div className="flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
                   <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
                   Looking up parcel data…
                 </div>
@@ -304,7 +304,7 @@ export default function FeasibilityInspector({
               <button
                 type="button"
                 onClick={() => handleNextStep(1, 2)}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 Next: Design your ADU
                 <ChevronDown size={15} className="-rotate-90" />
@@ -339,7 +339,7 @@ export default function FeasibilityInspector({
                         type="button"
                         onClick={() => onConfigChange(configForFootprint(option.value, config))}
                         aria-pressed={isPressed}
-                        className={`h-10 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                        className={`h-10 rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                           isPressed
                             ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                             : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -390,7 +390,7 @@ export default function FeasibilityInspector({
                       type="button"
                       onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
                       aria-pressed={config.roof === key}
-                      className={`flex h-16 flex-col items-center justify-center gap-1 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                      className={`flex h-16 flex-col items-center justify-center gap-1 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                         config.roof === key
                           ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                           : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -414,7 +414,7 @@ export default function FeasibilityInspector({
                         onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
                       }
                       aria-pressed={config.finish === key}
-                      className={`rounded-md border p-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                      className={`rounded-lg border p-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                         config.finish === key
                           ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                           : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -435,7 +435,7 @@ export default function FeasibilityInspector({
                 type="button"
                 onClick={() => onConfigChange({ ...config, includeOpenings: !config.includeOpenings })}
                 aria-pressed={config.includeOpenings}
-                className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                className={`flex h-10 w-full items-center justify-center gap-2 rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                   config.includeOpenings
                     ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                     : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -448,7 +448,7 @@ export default function FeasibilityInspector({
               <button
                 type="button"
                 onClick={() => handleNextStep(2, 3)}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 Next: Run the numbers
                 <ChevronDown size={15} className="-rotate-90" />
@@ -476,7 +476,7 @@ export default function FeasibilityInspector({
                         onAssumptionsChange({ ...assumptions, rentScenario: scenario })
                       }
                       aria-pressed={assumptions.rentScenario === scenario}
-                      className={`h-10 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                      className={`h-10 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                         assumptions.rentScenario === scenario
                           ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                           : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -491,7 +491,7 @@ export default function FeasibilityInspector({
               {result.warnings.length > 0 && (
                 <div
                   role="alert"
-                  className="rounded-md border border-lf-clay/40 bg-lf-clay/10 p-3 text-sm text-lf-clay"
+                  className="rounded-lg border border-lf-clay/40 bg-lf-clay/10 p-3 text-sm text-lf-clay"
                 >
                   <div className="flex items-start gap-2">
                     <TriangleAlert className="mt-0.5 shrink-0" size={17} />
@@ -507,9 +507,9 @@ export default function FeasibilityInspector({
 
         </div>
 
-        {/* Footer CTAs — always visible */}
+        {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
         <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
-          <div className="rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2">
+          <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2">
             <div className="font-mono text-[10px] font-bold uppercase leading-4 tracking-[0.12em] text-lf-muted">
               Next best action
             </div>
@@ -520,10 +520,10 @@ export default function FeasibilityInspector({
           <button
             type="button"
             onClick={handleGenerateReportClick}
-            className="group flex h-12 w-full items-center justify-between gap-4 rounded-full bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 active:scale-[0.98]"
+            className="group flex h-12 w-full items-center justify-between gap-4 rounded-lg bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 active:scale-[0.98]"
           >
             <span>Create my ADU report</span>
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-lf-sand/15 transition-transform duration-300 group-hover:translate-x-0.5">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-lf-sand/15 transition-transform duration-300 group-hover:translate-x-0.5">
               <Sparkles size={16} />
             </span>
           </button>
@@ -532,7 +532,7 @@ export default function FeasibilityInspector({
               type="button"
               onClick={onSaveScenario}
               disabled={savingScenario}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <BookmarkPlus size={16} />
               {saveNotice ?? (savingScenario ? "Saving..." : "Save this design")}

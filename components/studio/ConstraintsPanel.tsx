@@ -11,7 +11,7 @@
  * certificate.
  *
  * Mirrors the production rail conventions: 384px, lf-card surface, hairline
- * dividers, mono eyebrows, sharp corners.
+ * dividers, mono eyebrows, and softened rectangular controls.
  */
 
 import {
@@ -101,7 +101,7 @@ export default function ConstraintsPanel({
         </p>
         <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} autoFocusSignal={addressFocusSignal} />
         {parcelLoading && (
-          <div className="mt-2 flex items-center gap-2 rounded-md border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+          <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
             <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
             Looking up parcel data…
           </div>
@@ -109,7 +109,7 @@ export default function ConstraintsPanel({
         {parcelError && (
           <div
             role="alert"
-            className="mt-2 flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+            className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
           >
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             {parcelError}
@@ -166,7 +166,7 @@ export default function ConstraintsPanel({
                   type="button"
                   onClick={() => onAssumptionsChange({ ...assumptions, rentScenario: scenario })}
                   aria-pressed={isActive}
-                  className={`h-9 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                  className={`h-9 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                     isActive
                       ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                       : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -204,7 +204,7 @@ export default function ConstraintsPanel({
         <button
           type="button"
           onClick={onViewCertificate}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lf-forest text-[13px] font-semibold text-lf-sand transition hover:bg-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-lf-forest text-[13px] font-semibold text-lf-sand transition hover:bg-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
         >
           <Stamp size={15} />
           View certificate
@@ -264,7 +264,7 @@ function RowTrailing({
     item.status === "clear" ? "Clear" : item.status === "blocked" ? "Blocked" : "Review";
   return (
     <span
-      className="inline-flex h-[22px] items-center rounded-full border px-[9px] font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em]"
+      className="inline-flex h-[22px] items-center rounded-md border px-[9px] font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em]"
       style={{
         backgroundColor: tone.soft,
         color: tone.color,

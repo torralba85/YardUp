@@ -62,7 +62,7 @@ export default function AIPropertyInsightsPanel({
           type="button"
           onClick={generateInsights}
           disabled={loading}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-lf-espresso px-3 text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-lf-espresso px-3 text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
         >
           <Sparkles size={13} />
           {loading ? "Reading" : "Generate"}
@@ -70,20 +70,20 @@ export default function AIPropertyInsightsPanel({
       </div>
 
       {!insights && !error && (
-        <p className="rounded-md border border-lf-hairline bg-lf-sand-2 p-3 text-xs leading-5 text-lf-muted">
+        <p className="rounded-lg border border-lf-hairline bg-lf-sand-2 p-3 text-xs leading-5 text-lf-muted">
           Generate a plain-English readout using the parcel and feasibility numbers already on screen.
         </p>
       )}
 
       {error && (
-        <div className="flex items-start gap-2 rounded-md border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs leading-5 text-lf-brick">
+        <div className="flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs leading-5 text-lf-brick">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           {error}
         </div>
       )}
 
       {insights && (
-        <div className="space-y-3 rounded-md border border-lf-hairline bg-lf-sand-2 p-3">
+        <div className="space-y-3 rounded-lg border border-lf-hairline bg-lf-sand-2 p-3">
           <div>
             <div className="text-sm font-semibold text-lf-espresso">{insights.headline}</div>
             <p className="mt-1 text-xs leading-5 text-lf-muted">{insights.summary}</p>
@@ -96,7 +96,7 @@ export default function AIPropertyInsightsPanel({
           </div>
           <div className="space-y-2">
             {insights.risks.map((risk) => (
-              <div key={`${risk.label}-${risk.level}`} className="rounded border border-lf-hairline bg-lf-card p-2">
+              <div key={`${risk.label}-${risk.level}`} className="rounded-md border border-lf-hairline bg-lf-card p-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold text-lf-espresso">{risk.label}</span>
                   <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-lf-muted">
