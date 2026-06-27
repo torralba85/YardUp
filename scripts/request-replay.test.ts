@@ -5,8 +5,10 @@ import { describe, expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 const { requestForNext } = require("../functions/request-replay");
 
-async function readReplayBody(replay: { body?: BodyInit | null }) {
-  return new Response(replay.body).text();
+async function readStream(stream: NodeJS.ReadableStream) {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 describe("requestForNext", () => {
@@ -35,10 +37,8 @@ describe("requestForNext", () => {
     expect(replay).not.toBe(req);
     expect(replay.method).toBe("POST");
     expect(replay.url).toBe("/api/ai/parcel-insights");
-    expect(Object.getOwnPropertySymbols(replay.originalRequest)).not.toContain(
-      consumedBodySymbol,
-    );
-    await expect(readReplayBody(replay)).resolves.toBe('{"parcel":true}');
+    expect(Object.getOwnPropertySymbols(replay)).not.toContain(consumedBodySymbol);
+    await expect(readStream(replay)).resolves.toBe('{"parcel":true}');
   });
 
   it("replays parsed JSON bodies when Firebase rawBody is unavailable", async () => {
@@ -56,7 +56,7 @@ describe("requestForNext", () => {
     const replay = requestForNext(req);
 
     expect(replay).not.toBe(req);
-    expect(replay.originalRequest.rawBody).toEqual(Buffer.from('{"parcel":true}'));
-    await expect(readReplayBody(replay)).resolves.toBe('{"parcel":true}');
+    expect(replay.rawBody).toEqual(Buffer.from('{"parcel":true}'));
+    await expect(readStream(replay)).resolves.toBe('{"parcel":true}');
   });
 });

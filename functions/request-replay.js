@@ -1,9 +1,16 @@
-const { PassThrough, Readable } = require("stream");
-const { NodeNextRequest } = require("next/dist/server/base-http/node");
+const { Readable } = require("stream");
 
 function bodyBufferForReplay(req) {
   if (Buffer.isBuffer(req.rawBody) && req.rawBody.length > 0) {
     return req.rawBody;
+  }
+
+  if (req.rawBody instanceof Uint8Array && req.rawBody.byteLength > 0) {
+    return Buffer.from(req.rawBody);
+  }
+
+  if (req.rawBody instanceof ArrayBuffer && req.rawBody.byteLength > 0) {
+    return Buffer.from(req.rawBody);
   }
 
   if (Buffer.isBuffer(req.body) && req.body.length > 0) {
@@ -31,10 +38,7 @@ function requestForNext(req) {
   const body = bodyBufferForReplay(req);
   if (!body) return req;
 
-  const replay = new PassThrough();
-  process.nextTick(() => {
-    replay.end(body);
-  });
+  const replay = Readable.from([body], { objectMode: false });
 
   replay.method = req.method;
   replay.url = req.url;
@@ -48,10 +52,7 @@ function requestForNext(req) {
   replay.connection = req.connection;
   replay.rawBody = body;
 
-  const nextRequest = new NodeNextRequest(replay);
-  nextRequest.body = Readable.toWeb(Readable.from([body]));
-
-  return nextRequest;
+  return replay;
 }
 
 module.exports = { requestForNext };
