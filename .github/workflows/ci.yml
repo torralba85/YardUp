@@ -95,10 +95,34 @@ jobs:
         run: |
           set -o pipefail
           for target in functions:app functions:api functions:apiAi functions:apiStripe; do
-            deploy_log="$(mktemp)"
-            firebase deploy --only "$target" --project yardup-2026 2>&1 | tee "$deploy_log"
-            if grep -E "(failed to update function|HTTP Error: 409|unable to queue the operation)" "$deploy_log"; then
-              echo "::error::Firebase reported a function update failure while deploying $target."
-              exit 1
-            fi
+            for attempt in 1 2 3; do
+              deploy_log="$(mktemp)"
+              if firebase deploy --only "$target" --project yardup-2026 2>&1 | tee "$deploy_log"; then
+                deploy_status=0
+              else
+                deploy_status=$?
+              fi
+
+              if grep -E "(HTTP Error: 409|unable to queue the operation)" "$deploy_log"; then
+                if [ "$attempt" -lt 3 ]; then
+                  echo "::notice::Firebase queue conflict while deploying $target; retrying in 120 seconds."
+                  sleep 120
+                  continue
+                fi
+                echo "::error::Firebase queue conflict persisted while deploying $target."
+                exit 1
+              fi
+
+              if grep -E "failed to update function" "$deploy_log"; then
+                echo "::error::Firebase reported a function update failure while deploying $target."
+                exit 1
+              fi
+
+              if [ "$deploy_status" -ne 0 ]; then
+                echo "::error::Firebase deploy failed while deploying $target."
+                exit "$deploy_status"
+              fi
+
+              break
+            done
           done
