@@ -238,7 +238,7 @@ export function LandingHero() {
                     aria-current={active ? "step" : undefined}
                     aria-label={`Jump to ${layer.name}: ${layer.detail}`}
                     onClick={() => jumpToLayer(index)}
-                    className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-full border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:rounded-full max-sm:p-1 ${
+                    className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-full border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:rounded-xl max-sm:p-1 ${
                       active
                         ? layer.value
                           ? "border-lf-forest/40 bg-lf-forest-soft"
