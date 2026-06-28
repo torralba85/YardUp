@@ -1,0 +1,62 @@
+import { type NextRequest, NextResponse } from "next/server";
+import { getAuth } from "firebase-admin/auth";
+import { requireApiAuth } from "@/lib/server/api-auth";
+import { getAdminApp, getAdminDb } from "@/lib/server/firebase-admin";
+
+/** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
+export const runtime = "nodejs";
+
+const SCENARIO_BATCH = 400;
+
+/**
+ * Permanently delete the authenticated user's account and personal data.
+ *
+ * Uses the Admin SDK (which bypasses Firestore rules — the `users/{uid}`
+ * document is `delete: if false` for clients) to remove the user's saved
+ * scenarios, any builder profile, the profile document, and the Firebase Auth
+ * identity itself. On Firebase infra the `api` function's Application Default
+ * Credentials supply the admin identity; locally without ADC the Auth deletion
+ * step has no credentials, so this route is exercised in production/CI.
+ *
+ * Marketplace connection requests are intentionally NOT removed here: they are
+ * shared business records a builder may have paid to unlock, and their PII
+ * retention is a separate policy decision (see docs/store-listing-copy.md).
+ */
+export async function POST(request: NextRequest) {
+  const auth = await requireApiAuth(request);
+  if (auth instanceof NextResponse) return auth;
+  const { uid } = auth;
+
+  try {
+    const db = getAdminDb();
+    const userRef = db.collection("users").doc(uid);
+
+    // Delete the savedScenarios subcollection in bounded batches.
+    const scenarios = await userRef.collection("savedScenarios").get();
+    for (let i = 0; i < scenarios.docs.length; i += SCENARIO_BATCH) {
+      const batch = db.batch();
+      for (const docSnap of scenarios.docs.slice(i, i + SCENARIO_BATCH)) {
+        batch.delete(docSnap.ref);
+      }
+      await batch.commit();
+    }
+
+    // Remove the builder profile if this account had one, then the profile doc.
+    await db.collection("builders").doc(uid).delete();
+    await userRef.delete();
+
+    // Delete the Auth identity. Skip the dev/test stub uid, which is not a real
+    // Firebase user.
+    if (uid !== "local-dev") {
+      await getAuth(getAdminApp()).deleteUser(uid);
+    }
+
+    return NextResponse.json({ deleted: true });
+  } catch (err) {
+    console.error("[account/delete] failed for uid", uid, err);
+    return NextResponse.json(
+      { error: "Account deletion failed. Please try again." },
+      { status: 500 },
+    );
+  }
+}

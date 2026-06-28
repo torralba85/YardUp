@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-28
 **App:** LotFoundry — ADU Feasibility Studio · package `com.lotfoundry.app`
-**Status:** DRAFT for review. Privacy answers are grounded in the current codebase (no analytics/tracking SDKs; Firebase Auth incl. Google sign-in; Regrid/Google/OpenAI/Stripe as processors). Confirm the two ⚠️ items before submitting.
+**Status:** DRAFT for review. Privacy answers are grounded in the current codebase (no analytics/tracking SDKs; Firebase Auth incl. Google sign-in; Regrid/Google/OpenAI/Stripe as processors). The two earlier open items (photo retention, in-app deletion path) are now resolved — see section A.
 
 ---
 
@@ -26,9 +26,9 @@
 
 **Third parties data is shared with (as processors, not for their own ads):** Google (Maps/Geocoding/Places, Firebase), Regrid (parcel lookup by address), OpenAI (address context + uploaded photo for AI concepts), Stripe (payments).
 
-⚠️ **Confirm before submitting:**
-1. Whether the uploaded style-match **photo is persisted** server-side or only transited to OpenAI and discarded. Adjust the "Photos" retention answer accordingly.
-2. A **data-deletion path** exists (Play requires a URL or in-app route; account deletion + scenario deletion). If none, add one before submitting.
+✅ **Resolved (2026-06-28):**
+1. **Photo retention — NOT persisted.** `app/api/ai/adu-concept/route.ts` reads the upload into memory, base64-encodes it inline to OpenAI, and returns the result — no Firestore/Storage/disk write. The client (`lib/style-match-photo.ts`) also strips EXIF before upload. So the photo is transient; OpenAI is the only third party that receives it (as an API processor). Declare Photos as *collected → App Functionality*, **not stored** by LotFoundry.
+2. **In-app data-deletion path — built.** `POST /api/account/delete` (Admin SDK) deletes the user's saved scenarios, builder profile, `users/{uid}` profile doc, and the Firebase Auth identity. Reachable in-app from the studio account block (desktop sidebar + mobile account menu) via "Delete account" with a two-step confirm. Individual scenarios are also deletable. Use this as the Play "data deletion" answer (in-app route). **Note:** marketplace `connectionRequests` (homeowner leads a builder may have paid to unlock) are intentionally retained as shared business records — decide their PII retention policy separately before launch.
 
 ---
 
@@ -64,7 +64,7 @@ In App Store Connect → App Privacy. For every type below: **Linked to You = Ye
 
 **Does your app collect or share user data?** Yes.
 **Is all data encrypted in transit?** Yes (HTTPS).
-**Do you provide a way to request data deletion?** ⚠️ Yes — link the account/data-deletion route (see A-2).
+**Do you provide a way to request data deletion?** Yes — in-app account deletion ("Delete account" in the studio account menu → `POST /api/account/delete`). See section A-2.
 
 | Play category → type | Collected | Shared | Processing | Purpose |
 |---|---|---|---|---|
@@ -130,7 +130,8 @@ LotFoundry is a feasibility and estimation tool. Outputs are early estimates onl
 
 ## E. Pre-submission checklist
 - [ ] Add `NEXT_PUBLIC_GOOGLE_PLACES_KEY` + set `NEXT_PUBLIC_APP_URL` (see store-deployment-readiness.md).
-- [ ] Confirm photo retention (A-1) and wire a data-deletion path (A-2).
+- [x] Confirm photo retention (A-1 — not persisted) and wire a data-deletion path (A-2 — `POST /api/account/delete` + in-app UI).
+- [ ] Decide retention policy for marketplace `connectionRequests` PII (shared lead records).
 - [ ] Generate packages in PWABuilder; paste Play signing SHA-256 into `public/.well-known/assetlinks.json`.
 - [ ] Capture device screenshots; export 1024² / 512² icons + feature graphic.
 - [ ] Fill App Privacy (B) and Data Safety (C) exactly as above.

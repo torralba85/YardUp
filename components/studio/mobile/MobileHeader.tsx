@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcw, UserRound } from "lucide-react";
+import { LogOut, RotateCcw, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { DeleteAccountButton } from "../DeleteAccountButton";
 
 /** Props for {@link MobileHeader}. */
 export interface MobileHeaderProps {
@@ -24,7 +25,10 @@ export interface MobileHeaderProps {
 export default function MobileHeader({ address, estimated, onReset }: MobileHeaderProps) {
   const { user, profile, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const initial = (profile?.displayName || profile?.email || "U").slice(0, 1).toUpperCase();
+  const displayName = profile?.displayName || profile?.email || "Account";
+  const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
 
   return (
     <header
@@ -48,14 +52,47 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
         <RotateCcw size={17} />
       </button>
       {user ? (
-        <button
-          type="button"
-          aria-label="Sign out"
-          onClick={() => void logout()}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-white"
-        >
-          {initial}
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            aria-label="Account menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-white"
+          >
+            {initial}
+          </button>
+          {menuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                aria-hidden
+                onClick={() => setMenuOpen(false)}
+              />
+              <div
+                role="menu"
+                className="absolute right-0 top-12 z-50 w-60 space-y-2 rounded-lg border border-white/10 bg-lf-mahogany p-3 text-left shadow-xl"
+              >
+                <div className="px-1">
+                  <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
+                  <div className="text-xs text-lf-taupe">{roleLabel}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void logout();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-sm text-lf-sand transition hover:bg-lf-espresso/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
+                  <LogOut size={14} /> Sign out
+                </button>
+                <DeleteAccountButton />
+              </div>
+            </>
+          )}
+        </div>
       ) : (
         <button
           type="button"
