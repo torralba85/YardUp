@@ -66,7 +66,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
         return {
           label: "Active Zoning Check (Moderate Risk)",
           icon: ShieldCheck,
-          colorClass: "bg-lf-amber-soft text-lf-amber border-lf-amber/20",
+          colorClass: "bg-lf-amber-soft text-lf-amber-ink border-lf-amber-ink/25",
         };
       default:
         return {

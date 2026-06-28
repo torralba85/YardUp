@@ -1,6 +1,6 @@
 # LotFoundry — Agent Guide
 
-**Last updated:** 2026-06-08 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
+**Last updated:** 2026-06-27 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
 
 ---
 
@@ -141,25 +141,32 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 
 ## Design System
 
-See `DESIGN.md` for the full brand spec. Key rules:
+See `DESIGN.md` for the full brand spec and use it as the source of truth before visual or UI changes. Key rules:
 
 ### Colors
 - **Forest green** (`--lf-forest`) = positive financial value only
 - **Clay** (`--lf-clay`) = interactive accent, actions
 - **Mahogany** (`--lf-mahogany`) = dark panels, rails
 - **Amber** (`--lf-amber`) = permit risk, review needed
+- **Amber ink** (`--lf-amber-ink`) = amber text/icons on light surfaces
+- **Amber on dark** (`--lf-amber-on-dark`) = amber text/icons on mahogany or espresso
 - **Brick** (`--lf-brick`) = genuine blockers
 
 ### Typography
-- **Outfit** = display/hero numbers (money figures, titles)
-- **Manrope** = body text, labels, controls
-- **Geist Mono** = tabular data, dimensions, status values, eyebrows
+- **Cormorant Garamond** = display, hero headlines, and money figures
+- **Libre Franklin** = body text, labels, controls, nav, and dense UI
+- **IBM Plex Mono** = APNs, dimensions, zoning codes, status chips, eyebrows, and tabular recorded facts
 
 ### Layout
-- Desktop: 238px dark sidebar + scrollable main content
-- Mobile: header bar + stacked sections
-- Metrics strip: 6-column responsive bento grid at bottom
-- Report: expandable drawer, max 40vh on desktop
+- Landing first viewport is a poster, not a centered hero stack: warm parcel composition, oversized serif headline left/low, address search as a survey instrument, and an income rail docked to the bottom edge.
+- Studio uses a mahogany sidebar, espresso money band, dominant map/3D scene, calibrated right rail, and metric cards below.
+- Grid: 12 columns on desktop, 4 columns on mobile, max content width 1180px.
+
+### Radius
+- Text-bearing controls, search fields, data inputs, and studio cards use the 2026-06-27 soft instrument system: softened rectangles (`rounded-lg`, about 8px).
+- Compact badges/chips use `rounded-md`.
+- Reserve `rounded-full` for true circles such as avatars, step dots, progress markers, and tiny handles.
+- Do not mix pill CTAs with boxy outlined inputs or sharp inner text boxes inside softened controls.
 
 ---
 

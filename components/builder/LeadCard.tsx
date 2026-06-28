@@ -36,7 +36,7 @@ export interface LeadCardProps {
 
 const ACCESS_CHIP: Record<LeadAccess, { label: string; cls: string }> = {
   locked: { label: "Locked", cls: "bg-lf-taupe-soft text-lf-muted" },
-  confirming: { label: "Confirming", cls: "bg-lf-amber-soft text-lf-amber" },
+  confirming: { label: "Confirming", cls: "bg-lf-amber-soft text-lf-amber-ink" },
   unlocked: { label: "Unlocked", cls: "bg-lf-forest-soft text-lf-forest" },
 };
 
@@ -170,9 +170,9 @@ export default function LeadCard({
         )}
 
         {access === "confirming" && (
-          <div className="border border-lf-amber bg-lf-amber-soft px-3.5 py-3">
-            <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-amber">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber" />
+          <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3">
+            <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-amber-ink">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber-ink" />
               Payment received · recording unlock…
             </div>
             <p className="mt-1.5 text-xs text-lf-espresso">

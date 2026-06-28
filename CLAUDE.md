@@ -92,8 +92,10 @@ Project-specific design rules:
 - Forest green is for positive financial value only.
 - Clay is the interactive/action accent.
 - Amber signals permit risk or review-needed states.
+- Use base amber for fills/accents, `lf-amber-ink` for warning text/icons on light surfaces, and `lf-amber-on-dark` for warning text/icons on mahogany or espresso.
 - Brick signals genuine blockers.
 - Use Cormorant Garamond for display/hero numbers and dollar figures, Libre Franklin for body/control text, and IBM Plex Mono for tabular/recorded-fact values (APNs, dimensions, status chips). `DESIGN.md` is the source of truth — defer to it if it diverges.
+- Use the 2026-06-27 soft instrument radius system: text-bearing controls, search fields, data inputs, and studio cards use softened rectangles (`rounded-lg`, about 8px); compact badges/chips use `rounded-md`; reserve `rounded-full` for true circles such as avatars, step dots, progress markers, and tiny handles. Do not mix pill CTAs with boxy outlined inputs or sharp inner text boxes.
 
 ## Environment
 

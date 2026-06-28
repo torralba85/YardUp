@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 /**
  * The landing page's floating top navigation. As the user scrolls, it animates
- * from a full-width bar into a centered, rounded "pill" (width, padding, offset,
+ * from a full-width bar into a centered, softened instrument bar (width, padding, offset,
  * radius, background, and blur all interpolated from scroll position).
  */
 export function FloatingNavBar() {
@@ -20,7 +20,7 @@ export function FloatingNavBar() {
   const maxWidth = useTransform(scrollY, [0, 100], [9999, 850]);
   const paddingY = useTransform(scrollY, [0, 100], ["16px", "12px"]);
   const top = useTransform(scrollY, [0, 100], ["0px", "24px"]);
-  const borderRadius = useTransform(scrollY, [0, 100], ["0px", "100px"]);
+  const borderRadius = useTransform(scrollY, [0, 100], ["0px", "12px"]);
   // scroll-0 was "rgba(242,229,213,1)" = lf-sand, identical to the body — the bar
   // was invisible at the top (the "two boxes" bug). Starting at lf-card (slightly
   // lighter/warmer) with a faint blur gives the pill a readable surface at rest.
@@ -74,13 +74,13 @@ export function FloatingNavBar() {
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-none px-1.5 py-2 text-xs font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10 sm:px-4 sm:text-sm"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-1.5 py-2 text-xs font-medium text-lf-espresso transition-colors hover:bg-lf-taupe/10 sm:px-4 sm:text-sm"
           >
             Sign in
           </Link>
           <Link
             href="/studio"
-            className="group inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-none bg-lf-mahogany px-3 py-1.5 text-xs font-medium text-lf-sand transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay active:scale-[0.98] sm:gap-2 sm:pl-4 sm:pr-1.5 sm:text-sm"
+            className="group inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-md bg-lf-mahogany px-3 py-1.5 text-xs font-medium text-lf-sand transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay active:scale-[0.98] sm:gap-2 sm:pl-4 sm:pr-1.5 sm:text-sm"
           >
             <span className="sm:hidden">Start</span>
             <span className="hidden sm:inline">Check my address</span>

@@ -336,7 +336,7 @@ export default function StyleMatchPanel({
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="bg-lf-amber text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                    className="bg-lf-amber text-lf-espresso text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
                   >
                     [Timeout]
                   </button>
@@ -403,7 +403,7 @@ export default function StyleMatchPanel({
               className={`border px-3 py-3 ${
                 status === "error"
                   ? "border-lf-brick bg-lf-brick-soft text-lf-brick"
-                  : "border-lf-amber bg-lf-amber-soft text-lf-amber"
+                  : "border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink"
               }`}
             >
               <div className="flex items-start gap-2 text-sm leading-6">
@@ -420,7 +420,7 @@ export default function StyleMatchPanel({
               <button
                 type="button"
                 onClick={startGeneration}
-                className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-amber focus-visible:ring-offset-2 cursor-pointer"
+                className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
               >
                 <RotateCcw size={16} aria-hidden="true" />
                 Retry

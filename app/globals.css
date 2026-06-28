@@ -29,10 +29,10 @@
   /* Amber tuned for text/icons on LIGHT surfaces. The base --color-lf-amber
      (#C8922A) is a fill/accent hue that only reaches ~2.6:1 on sand/card and
      fails WCAG AA (1.4.3 as text, 1.4.11 as an icon). This deepened amber
-     clears 4.5:1 on sand, sand-2, and card while staying in the gold family.
-     Dark surfaces keep their own lighter values (verdict-tone `onDark` /
-     `text-lf-amber` at ~6:1 on espresso), so this is light-surface only. */
-  --color-lf-amber-ink: #8E6109;
+     clears 5:1 on sand, sand-2, and card while staying in the gold family.
+     Dark surfaces use --color-lf-amber-on-dark instead. */
+  --color-lf-amber-ink: #745A00;
+  --color-lf-amber-on-dark: #D9AA4A;
   --color-lf-brick: #A23B26;
   --color-lf-brick-soft: #A23B261A;
 }

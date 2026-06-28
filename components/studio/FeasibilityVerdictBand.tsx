@@ -92,7 +92,7 @@ export default function FeasibilityVerdictBand({
               {summary.verdict}
             </span>
           </div>
-          <div className="mt-[7px] flex items-center gap-1.5 font-mono text-[11px] text-lf-amber">
+          <div className="mt-[7px] flex items-center gap-1.5 font-mono text-[11px] text-lf-amber-on-dark">
             <AlertTriangle size={13} />
             {summary.reviewNote}
           </div>

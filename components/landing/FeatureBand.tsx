@@ -53,7 +53,7 @@ export function FeatureBand() {
       <section className="border-y border-lf-hairline/50 bg-lf-card/35">
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-24 md:grid-cols-[1.1fr_1fr] md:items-center md:py-32">
           <div>
-            <span className="inline-flex items-center rounded-full bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
+            <span className="inline-flex items-center rounded-md bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
               Why owners use it
             </span>
             <h2 className="lf-section-heading mt-3 max-w-2xl text-lf-espresso">
@@ -78,7 +78,7 @@ export function FeatureBand() {
       <section id="how-it-works">
         <div className="mx-auto max-w-7xl px-6 py-32 md:py-40">
           <div className="max-w-3xl">
-            <span className="inline-flex items-center rounded-full bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
+            <span className="inline-flex items-center rounded-md bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
               How it works
             </span>
             <h2 className="lf-section-heading mt-3 text-lf-espresso">
@@ -144,7 +144,7 @@ export function FeatureBand() {
                       together so you can spot obvious fit issues before you hire anyone.
                     </p>
                   </div>
-                  <div className="relative flex h-36 flex-col items-center justify-center overflow-hidden rounded-none border border-dashed border-lf-hairline/60 bg-lf-sand-2/50 p-4 text-center">
+                  <div className="relative flex h-36 flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-lf-hairline/60 bg-lf-sand-2/50 p-4 text-center">
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-lf-mahogany/5 to-lf-espresso/10" />
                     <div className="lf-kicker-dense text-lf-clay">
                       3D Visual Studio
@@ -194,7 +194,7 @@ export function FeatureBand() {
       <section className="bg-lf-espresso text-lf-sand">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 py-32 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-40">
           <div>
-            <span className="inline-flex items-center rounded-full bg-lf-taupe/15 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-taupe">
+            <span className="inline-flex items-center rounded-md bg-lf-taupe/15 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-taupe">
               Owner report
             </span>
             <h2 className="lf-section-heading mt-3">
@@ -226,7 +226,7 @@ export function FeatureBand() {
       <section id="start" className="mx-auto max-w-7xl px-6 py-24 md:py-32">
         <Bezel innerClassName="grid gap-8 p-8 md:grid-cols-[1fr_auto] md:items-center md:p-12">
           <div>
-            <span className="inline-flex items-center rounded-full bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
+            <span className="inline-flex items-center rounded-md bg-lf-clay/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-clay">
               Ready when the owner is
             </span>
             <h2 className="lf-section-heading mt-3 max-w-3xl text-lf-espresso">
@@ -239,7 +239,7 @@ export function FeatureBand() {
             </CTAButton>
             <Link
               href="/login"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-none border border-lf-hairline bg-lf-card/65 px-8 font-semibold text-lf-espresso transition-colors duration-300 hover:bg-lf-card hover:border-lf-taupe active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-lf-hairline bg-lf-card/65 px-8 font-semibold text-lf-espresso transition-colors duration-300 hover:border-lf-taupe hover:bg-lf-card active:scale-[0.98]"
             >
               <Users className="h-5 w-5" aria-hidden="true" />
               Sign in

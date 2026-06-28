@@ -68,7 +68,8 @@ Warm by default, never white. Sand is the world, clay is the hand you click with
   --lf-forest-soft: #2F4A381A;
   --lf-amber:       #C8922A; /* Permit risk, review needed, unverified */
   --lf-amber-soft:  #C8922A1A;
-  --lf-amber-ink:   #8E6109; /* Amber for text/icons on LIGHT surfaces (WCAG AA) */
+  --lf-amber-ink:   #745A00; /* Amber for text/icons on LIGHT surfaces (WCAG AA) */
+  --lf-amber-on-dark: #D9AA4A; /* Amber for text/icons on mahogany/espresso */
   --lf-brick:       #A23B26; /* Blockers only: prohibition, failed validation */
   --lf-brick-soft:  #A23B261A;
 
@@ -78,7 +79,7 @@ Warm by default, never white. Sand is the world, clay is the hand you click with
 ```
 
 - **Approach:** Restrained-warm. One interactive accent (clay), one meaning-bearing color (forest), two alert colors used sparingly.
-- **Rules:** Forest green is reserved exclusively for money, readiness, and the primary CTA — when a user sees green, it pays them. Amber defaults for unknowns; brick only for genuine blockers. Never encode status by color alone (label + icon always). Dark surfaces use `--lf-money-on-dark` for figures, taupe for labels.
+- **Rules:** Forest green is reserved exclusively for money, readiness, and the primary CTA — when a user sees green, it pays them. Amber defaults for unknowns; brick only for genuine blockers. Use base amber for fills and accents, `--lf-amber-ink` for warning text/icons on light surfaces, and `--lf-amber-on-dark` for warning text/icons on mahogany or espresso. Never encode status by color alone (label + icon always). Dark surfaces use `--lf-money-on-dark` for figures, taupe for labels.
 - **Dark mode:** Dark surfaces are mahogany-family (`#1E120A` bg, `#2A1A10` surface), not gray. Ink flips to sand. Reduce accent saturation ~15%; forest lightens to `#4A6B54`.
 
 ## Spacing
@@ -144,5 +145,5 @@ Lead with money, feasibility, and a credible next step.
 | 2026-06-25 | Realign to income-led framing | Audit found the landing and studio had drifted to verdict/readiness-led, contradicting the north star. Fix: a bottom-docked income rail on the landing first viewport; the studio verdict band re-promotes `$/mo` to the first/largest cell. Spec: `docs/superpowers/specs/2026-06-25-landing-income-rail-design.md`. |
 | 2026-06-25 | Focus ring is clay, not amber | The global `a/button:focus-visible` ring used amber, colliding with amber's "review needed" semantic. Switched to clay (the interactive accent), unifying with the component-level `ring-lf-clay` styles. |
 | 2026-06-25 | Radius policy = hybrid | Replaced the strict "radius 0 everywhere." Instrument-grade surfaces stayed sharp; the soft `Bezel` panels/cards and the floating nav pill were sanctioned. The ~100 `rounded-md+` usages were no longer treated as violations. Superseded by the 2026-06-27 soft instrument revision. |
-| 2026-06-27 | Added `--lf-amber-ink` for amber on light | Base amber `#C8922A` is a fill hue that only reaches ~2.6:1 on sand/card — fails WCAG AA (1.4.3 as text, 1.4.11 as an icon). New `--color-lf-amber-ink` (`#8E6109`) clears 4.5:1 on sand/sand-2/card, stays in the gold family, and is wired into the `review`/`Needs Review` tone's on-light `color` (constraints chips + verdict strip) and the inspector fallback-note icon. Dark surfaces are unchanged — they use the lighter `onDark` values / `text-lf-amber` at ~6:1 on espresso. Tradeoff: deep enough that it sits nearer clay's value than vivid amber did; separated by hue, open to a tweak. |
+| 2026-06-27 | Rebalanced amber text tokens | Base amber `#C8922A` is a fill hue that only reaches ~2.2-2.6:1 on sand/card and 4.31:1 on mahogany, so it is not a safe small-text color. `--color-lf-amber-ink` moved to a darker gold (`#745A00`, 5.29:1 on sand, 6.09:1 on card) for warning text/icons on light surfaces, and `--color-lf-amber-on-dark` (`#D9AA4A`, 5.56:1 on mahogany, 8.31:1 on espresso) handles warning text/icons on dark surfaces. Base amber remains the softer fill/accent hue. |
 | 2026-06-27 | Studio radius reset | User review found pill-shaped CTAs and chips clashing with outlined text fields. Revised the active studio rule to softened rectangles for text-bearing controls (`rounded-lg`), compact squared badges (`rounded-md`), and circles only for non-text indicators/avatars. |
