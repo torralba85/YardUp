@@ -185,7 +185,7 @@ export function LandingHero() {
           <motion.form
             variants={itemVariants}
             onSubmit={handleSubmit}
-            className="pointer-events-auto mt-5 flex max-w-md items-center justify-between rounded-lg border-[1.5px] border-lf-espresso bg-lf-card/95 p-1.5 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md transition-all duration-300 focus-within:border-lf-clay focus-within:shadow-[0_0_0_3px_rgba(140,91,63,0.18),0_16px_50px_rgba(38,19,7,0.12)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5"
+            className="pointer-events-auto mt-5 flex max-w-md items-center justify-between rounded-full border-[1.5px] border-lf-espresso bg-lf-card/95 p-1.5 shadow-[0_16px_50px_rgba(38,19,7,0.12)] backdrop-blur-md transition-all duration-300 focus-within:border-lf-clay focus-within:shadow-[0_0_0_3px_rgba(140,91,63,0.18),0_16px_50px_rgba(38,19,7,0.12)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl"
           >
             <label htmlFor="hero-address" className="sr-only">
               Property address
@@ -198,11 +198,11 @@ export function LandingHero() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Enter your property address"
               autoComplete="street-address"
-              className="min-h-11 min-w-0 flex-1 rounded-md bg-transparent px-3 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none sm:px-4 sm:text-xs"
+              className="min-h-11 min-w-0 flex-1 rounded-full bg-transparent px-4 font-mono text-[11px] text-lf-espresso placeholder:text-lf-muted/70 focus:outline-none sm:px-5 sm:text-xs"
             />
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-md bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 max-sm:w-full"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 max-sm:w-full"
             >
               Run feasibility
             </button>
@@ -238,7 +238,7 @@ export function LandingHero() {
                     aria-current={active ? "step" : undefined}
                     aria-label={`Jump to ${layer.name}: ${layer.detail}`}
                     onClick={() => jumpToLayer(index)}
-                    className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:p-1 ${
+                    className={`grid min-h-11 w-full grid-cols-[34px_1fr] items-center gap-3 rounded-full border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay max-sm:flex max-sm:justify-center max-sm:rounded-full max-sm:p-1 ${
                       active
                         ? layer.value
                           ? "border-lf-forest/40 bg-lf-forest-soft"
@@ -247,7 +247,7 @@ export function LandingHero() {
                     }`}
                   >
                     <span
-                      className={`grid h-[30px] place-items-center rounded-md border text-[11px] transition-colors ${
+                      className={`grid h-[30px] w-[30px] place-items-center rounded-full border text-[11px] transition-colors ${
                         active
                           ? layer.value
                             ? "border-lf-forest bg-lf-forest text-lf-sand"
@@ -339,7 +339,7 @@ export function LandingHero() {
                 }
                 addressInputRef.current?.focus({ preventScroll: true });
               }}
-              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-1 font-mono text-xs font-semibold text-lf-sand underline-offset-4 transition-colors hover:text-lf-taupe hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-1 font-mono text-xs font-semibold text-lf-sand underline-offset-4 transition-colors hover:text-lf-taupe hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay"
             >
               <span className="sm:hidden">Run your address</span>
               <span className="hidden sm:inline">Run your address for your number</span>
