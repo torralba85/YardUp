@@ -95,7 +95,7 @@ Project-specific design rules:
 - Use base amber for fills/accents, `lf-amber-ink` for warning text/icons on light surfaces, and `lf-amber-on-dark` for warning text/icons on mahogany or espresso.
 - Brick signals genuine blockers.
 - Use Cormorant Garamond for display/hero numbers and dollar figures, Libre Franklin for body/control text, and IBM Plex Mono for tabular/recorded-fact values (APNs, dimensions, status chips). `DESIGN.md` is the source of truth — defer to it if it diverges.
-- Use the 2026-06-27 soft instrument radius system: text-bearing controls, search fields, data inputs, and studio cards use softened rectangles (`rounded-lg`, about 8px); compact badges/chips use `rounded-md`; reserve `rounded-full` for true circles such as avatars, step dots, progress markers, and tiny handles. Do not mix pill CTAs with boxy outlined inputs or sharp inner text boxes.
+- Use the 2026-06-27 pill-radius system: clickable controls, CTAs, nav links, and search instruments (including their inputs) use `rounded-full`; tabular data chips and read-only content frames (dashed placeholders, suggestion dropdowns, risk banners) stay rectangular (`rounded-lg`/`rounded-md`). Circle-shaped indicators (avatars, step dots, progress markers, numbered badges) must have equal explicit width and height so they render as true circles, not ovals. On stacked mobile layouts where a full pill would render as an oblong stadium, scale the radius down instead of forcing `rounded-full`.
 
 ## Environment
 

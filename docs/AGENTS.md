@@ -163,10 +163,10 @@ See `DESIGN.md` for the full brand spec and use it as the source of truth before
 - Grid: 12 columns on desktop, 4 columns on mobile, max content width 1180px.
 
 ### Radius
-- Text-bearing controls, search fields, data inputs, and studio cards use the 2026-06-27 soft instrument system: softened rectangles (`rounded-lg`, about 8px).
-- Compact badges/chips use `rounded-md`.
-- Reserve `rounded-full` for true circles such as avatars, step dots, progress markers, and tiny handles.
-- Do not mix pill CTAs with boxy outlined inputs or sharp inner text boxes inside softened controls.
+- 2026-06-27 pill-radius system (final): clickable controls, CTAs, nav links, and search instruments (field + button together) use `rounded-full`.
+- Tabular data chips and read-only content frames (dashed placeholders, suggestion dropdowns, risk banners) stay rectangular (`rounded-lg`/`rounded-md`).
+- Circle indicators (avatars, step dots, progress markers, numbered badges) need explicit equal width/height so they render as true circles, not ovals.
+- On stacked mobile layouts where a full pill would render as an oblong stadium, scale the radius down rather than forcing `rounded-full`.
 
 ---
 
