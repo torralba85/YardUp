@@ -1,13 +1,19 @@
 // LotFoundry service worker.
-// - Precaches a minimal app shell so a cold launch works offline (PWABuilder /
-//   store wrappers need a credible offline story; Apple Guideline 4.2).
-// - Navigations: network-first, fall back to the cached offline page.
+// - Precaches the app shell (start URL + offline page + icons) so a cold launch
+//   works offline. Store wrappers (PWABuilder TWA / iOS) need a credible offline
+//   story; Apple Guideline 4.2 scrutinizes thin web wrappers.
+// - Navigations: network-first; on failure fall back to the last-seen page for
+//   that URL, then the cached start URL ("/"), then the static offline page.
 // - Same-origin static assets (/_next/static, icons, fonts): cache-first, since
 //   Next.js fingerprints them and they are immutable.
 // - API and cross-origin requests are never cached.
-const CACHE_NAME = "lotfoundry-v2";
+const VERSION = "v3";
+const PRECACHE = `lotfoundry-precache-${VERSION}`;
+const RUNTIME = `lotfoundry-runtime-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
+const START_URL = "/";
 const PRECACHE_URLS = [
+  START_URL,
   OFFLINE_URL,
   "/manifest.json",
   "/favicon.svg",
@@ -18,13 +24,11 @@ const PRECACHE_URLS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
+    caches.open(PRECACHE).then((cache) =>
       // addAll is atomic; a single 404 would reject install, so add each
       // resource independently and tolerate individual misses.
       Promise.all(
-        PRECACHE_URLS.map((url) =>
-          cache.add(url).catch(() => undefined)
-        )
+        PRECACHE_URLS.map((url) => cache.add(url).catch(() => undefined))
       )
     )
   );
@@ -32,12 +36,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  const keep = new Set([PRECACHE, RUNTIME]);
   event.waitUntil(
     caches
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+          keys.filter((key) => !keep.has(key)).map((key) => caches.delete(key))
         )
       )
       .then(() => self.clients.claim())
@@ -52,19 +57,34 @@ function isCacheableAsset(request) {
   return ["image", "style", "font", "script"].includes(request.destination);
 }
 
+async function handleNavigation(request) {
+  try {
+    const response = await fetch(request);
+    // Cache successful page loads so the same URL works on a later offline visit.
+    if (response && response.ok) {
+      const copy = response.clone();
+      caches.open(RUNTIME).then((cache) => cache.put(request, copy));
+    }
+    return response;
+  } catch {
+    return (
+      (await caches.match(request)) ||
+      (await caches.match(START_URL)) ||
+      (await caches.match(OFFLINE_URL)) ||
+      Response.error()
+    );
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
-  // App shell: try the network, fall back to the offline page when offline.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(OFFLINE_URL))
-    );
+    event.respondWith(handleNavigation(request));
     return;
   }
 
-  // Immutable static assets: serve from cache, populate on first hit.
   if (isCacheableAsset(request)) {
     event.respondWith(
       caches.match(request).then(
@@ -73,7 +93,7 @@ self.addEventListener("fetch", (event) => {
           fetch(request).then((response) => {
             if (response && response.ok) {
               const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+              caches.open(PRECACHE).then((cache) => cache.put(request, copy));
             }
             return response;
           })
