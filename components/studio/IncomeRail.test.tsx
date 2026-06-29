@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import IncomeRail from "./IncomeRail";
 
@@ -16,6 +16,10 @@ describe("IncomeRail", () => {
         dispatchEvent: vi.fn(),
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("shows the monthly income figure and the verdict", () => {
