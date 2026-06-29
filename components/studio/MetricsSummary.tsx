@@ -86,7 +86,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
     <section
       id="summary"
       aria-label="Feasibility metrics"
-      className="grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6"
+      className="lf-stagger grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6"
     >
       {leads.map(({ key, ...metric }) => (
         <LeadCell key={key} {...metric} />

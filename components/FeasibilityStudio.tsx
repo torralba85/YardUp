@@ -54,7 +54,7 @@ import WizardFlow from "./studio/mobile/WizardFlow";
 // ── Redesign: feasibility-verdict-led studio ────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
-import StudioTabBar, { type StudioTab } from "./studio/StudioTabBar";
+import StudioTabBar, { tabId, tabPanelId, type StudioTab } from "./studio/StudioTabBar";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -611,13 +611,25 @@ function FeasibilityStudioInner() {
           <StudioTabBar active={studioTab} onChange={setStudioTab} />
 
           {studioTab === "certificate" ? (
-            <EstimateSummaryPanel
-              parcelName={parcelName}
-              result={result}
-              onGenerateReport={handleGenerateReport}
-            />
+            <div
+              role="tabpanel"
+              id={tabPanelId("certificate")}
+              aria-labelledby={tabId("certificate")}
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              <EstimateSummaryPanel
+                parcelName={parcelName}
+                result={result}
+                onGenerateReport={handleGenerateReport}
+              />
+            </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+            <div
+              role="tabpanel"
+              id={tabPanelId(studioTab)}
+              aria-labelledby={tabId(studioTab)}
+              className="flex min-h-0 flex-1 flex-col lg:flex-row"
+            >
               <SceneSection sceneNode={sceneNode} />
               {studioTab === "massing" ? (
                 <FeasibilityInspector
@@ -650,11 +662,7 @@ function FeasibilityStudioInner() {
         </div>
       )}
 
-      {showMetrics && (
-        <div className="lf-entrance lf-entrance-delay-1">
-          <MetricsSummary result={result} />
-        </div>
-      )}
+      {showMetrics && <MetricsSummary result={result} />}
       {reportOpen && (
         <ReportPreview
           parcelName={parcelName}

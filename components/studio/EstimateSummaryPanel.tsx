@@ -120,7 +120,7 @@ export default function EstimateSummaryPanel({
         <button
           type="button"
           onClick={onGenerateReport}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-mahogany text-sm font-semibold text-lf-sand-2 transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-lf-mahogany text-sm font-semibold text-lf-sand-2 transition hover:bg-lf-espresso motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
         >
           <FileText size={16} />
           Create report
