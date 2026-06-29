@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-28
 **Baseline health:** `lint` clean, `tsc --noEmit` clean, **291/291 Vitest pass**, last `master` CI run green.
-**Verdict:** The web app is production-healthy, but **not yet shippable to either store** — there is no native/store wrapper, one production API key is missing, and several PWA-correctness items need fixing.
+**Verdict:** The web app is production-healthy, but **not yet shippable to either store** — there is no native/store wrapper, one production API key is missing, and several store-packaging items need fixing.
 
 ---
 
@@ -55,10 +55,10 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ---
 
 ## 3. PWA-correctness bugs found
-- **Mislabeled icons:** `public/icon-180.png` and `public/icon-192.png` are both actually **512×512**. The manifest declares `192×192` and the Apple touch icon expects `180×180` → Lighthouse/PWABuilder flag a size mismatch and the maskable-icon test. Regenerate at true sizes; add a maskable variant with safe-zone padding.
+- ~~**Mislabeled icons:** `public/icon-180.png` and `public/icon-192.png` are both actually **512×512**. The manifest declares `192×192` and the Apple touch icon expects `180×180` → Lighthouse/PWABuilder flag a size mismatch and the maskable-icon test. Regenerate at true sizes; add a maskable variant with safe-zone padding.~~ ✅ fixed 2026-06-28.
 - **No store screenshots:** `manifest.json` has no `screenshots` array (Play listing wants narrow + wide).
 - **No `/.well-known/assetlinks.json`** for the Android TWA.
-- **Service worker is fallback-only:** `sw.js` serves `offline.html` on navigation failure but does not precache the app shell — a stronger offline story also helps the Apple 4.2 case.
+- ~~**Service worker is fallback-only:** `sw.js` serves `offline.html` on navigation failure but does not precache the app shell — a stronger offline story also helps the Apple 4.2 case.~~ ✅ fixed 2026-06-28.
 
 ---
 
@@ -67,7 +67,7 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ### P0 — Launch blockers
 1. **Add `NEXT_PUBLIC_GOOGLE_PLACES_KEY`** GitHub secret (browser Places key, referrer-restricted). Without it autocomplete is dead.
 2. **Decide native-wrapper strategy** (PWABuilder TWA+iOS vs Capacitor) — drives the entire packaging path. *(user decision)*
-3. **Regenerate `icon-180.png` (180²) and `icon-192.png` (192²)** at true sizes + a maskable-padded variant.
+3. ~~**Regenerate `icon-180.png` (180²) and `icon-192.png` (192²)** at true sizes + a maskable-padded variant.~~ ✅ done 2026-06-28.
 4. **Set `NEXT_PUBLIC_APP_URL`** to the production custom domain (Stripe redirects).
 5. **Verify `GOOGLE_MAPS_API_KEY`** has Static + Geocoding + Places enabled and is server-safe (not referrer-locked).
 
@@ -81,14 +81,14 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ### P2 — Functional / UX hardening
 11. Verify Stripe webhook registered + secret matches; run a live test checkout.
 12. **Real-device responsive QA** (iPhone SE/Pro, Pixel, iPad) — capture the store screenshots from this pass.
-13. Strengthen the service worker to precache the app shell (real offline launch).
+13. ~~Strengthen the service worker to precache the app shell (real offline launch).~~ ✅ done 2026-06-28.
 14. Run the Firebase smoke test with a dedicated user before promotion.
 15. ~~Add `OPENAI_API_KEY` to `functions/.env.example`~~ ✅ done 2026-06-28.
 
 ---
 
 ## 5. Recommended sequence
-1. Land P0-1, P0-3, P0-4, P0-5 (config + icons — fast, no architecture change).
+1. Land P0-1, P0-4, P0-5 (config — fast, no architecture change).
 2. Get the P0-2 wrapper decision, then execute P1 packaging on that path.
 3. Run P2 device QA → use those screenshots for both store listings.
 4. Re-run the full release gate (`lint && test && tsc --noEmit && build`) + Firebase smoke, then submit.
