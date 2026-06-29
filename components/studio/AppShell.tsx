@@ -6,6 +6,7 @@ import type { NavItem } from "./types";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { DeleteAccountButton } from "./DeleteAccountButton";
 
 /** The studio's primary navigation sections, in display order. */
 export const navItems: NavItem[] = [
@@ -204,22 +205,25 @@ export default function AppShell({
             )}
 
             {user ? (
-              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
-                  {initials}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
+                    {initials}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
+                    <div className="text-xs text-lf-taupe">{roleLabel}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    aria-label="Sign out"
+                    className="rounded-md p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lf-clay focus-visible:ring-offset-lf-mahogany"
+                  >
+                    <LogOut size={14} />
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
-                  <div className="text-xs text-lf-taupe">{roleLabel}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={logout}
-                  aria-label="Sign out"
-                  className="rounded-md p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lf-clay focus-visible:ring-offset-lf-mahogany"
-                >
-                  <LogOut size={14} />
-                </button>
+                <DeleteAccountButton />
               </div>
             ) : (
               <button

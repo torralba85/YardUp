@@ -162,7 +162,7 @@ After deployment, manually verify:
 - Live deploy includes Hosting, Functions, and Firestore rules.
 - Firestore rules tests pass before deploy.
 - Dedicated Firebase smoke user can sign in, save a scenario, load it, and delete it.
-- Production URL loads `/`, `/privacy`, `/terms`, `/login`, `/signup`, `/studio`, and `/account`.
+- Production URL loads `/`, `/privacy`, `/terms`, `/login`, `/signup`, `/studio`, and `/builder` (account management lives inside the studio AppShell, not a standalone `/account` route).
 - Browser console has no release-blocking errors during the estimate and save/load flows.
 - API keys are restricted in Google Cloud Console to the minimum required referrers or server contexts.
 

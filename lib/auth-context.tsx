@@ -54,6 +54,7 @@ interface AuthContextType {
   signInWithGoogle: (role?: UserRole) => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -190,9 +191,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendPasswordReset = (email: string) =>
     sendPasswordResetEmail(auth, email);
 
+  /**
+   * Permanently delete the signed-in user's account and personal data.
+   *
+   * Calls the server route, which uses the Admin SDK to remove the user's
+   * saved scenarios, profile document (rules forbid a client delete of
+   * `users/{uid}`), any builder profile, and the Firebase Auth identity itself.
+   * On success the local session is cleared. The server-side Auth deletion
+   * avoids the `auth/requires-recent-login` re-auth prompt a client-side
+   * `deleteUser` would hit.
+   *
+   * @throws {Error} If no user is signed in or the server reports a failure.
+   */
+  const deleteAccount = async () => {
+    const current = auth.currentUser;
+    if (!current) throw new Error("You must be signed in to delete your account.");
+
+    const token = await current.getIdToken();
+    const res = await fetch("/api/account/delete", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error || "Account deletion failed. Please try again.");
+    }
+
+    // The Auth user is gone server-side; drop any lingering local session.
+    await signOut(auth).catch(() => undefined);
+    setUser(null);
+    setProfile(null);
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signInWithGoogle, logout, sendPasswordReset }}
+      value={{ user, profile, loading, signIn, signUp, signInWithGoogle, logout, sendPasswordReset, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>
