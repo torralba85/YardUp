@@ -250,7 +250,7 @@ export default function AppShell({
           <button
             type="button"
             onClick={onReset}
-            className="h-9 rounded-lg border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="h-9 rounded-full border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             Reset
           </button>
