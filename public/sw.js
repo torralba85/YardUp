@@ -7,7 +7,7 @@
 // - Same-origin static assets (/_next/static, icons, fonts): cache-first, since
 //   Next.js fingerprints them and they are immutable.
 // - API and cross-origin requests are never cached.
-const VERSION = "v3";
+const VERSION = "v4";
 const PRECACHE = `lotfoundry-precache-${VERSION}`;
 const RUNTIME = `lotfoundry-runtime-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -17,20 +17,60 @@ const PRECACHE_URLS = [
   OFFLINE_URL,
   "/manifest.json",
   "/favicon.svg",
+  "/icon-180.png",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-512.png",
 ];
+const BUILD_ASSET_RE = /\b(?:href|src)=["']([^"']*\/_next\/static\/[^"']+)["']/g;
+
+function normalizeSameOriginUrl(value) {
+  try {
+    const url = new URL(value.replace(/&amp;/g, "&"), self.location.origin);
+    if (url.origin !== self.location.origin) return null;
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return null;
+  }
+}
+
+function extractBuildAssetUrls(html) {
+  const urls = new Set();
+  for (const match of html.matchAll(BUILD_ASSET_RE)) {
+    const url = normalizeSameOriginUrl(match[1]);
+    if (url) urls.add(url);
+  }
+  return Array.from(urls);
+}
+
+async function precacheBuildAssets(cache) {
+  const shell = await cache.match(START_URL);
+  if (!shell) return;
+
+  const urls = extractBuildAssetUrls(await shell.clone().text());
+  await Promise.all(urls.map((url) => cache.add(url).catch(() => undefined)));
+}
+
+function cacheResponse(cacheName, request, response) {
+  if (!response || response.status !== 200) return undefined;
+
+  const copy = response.clone();
+  return caches
+    .open(cacheName)
+    .then((cache) => cache.put(request, copy))
+    .catch(() => undefined);
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(PRECACHE).then((cache) =>
+    caches.open(PRECACHE).then(async (cache) => {
       // addAll is atomic; a single 404 would reject install, so add each
       // resource independently and tolerate individual misses.
-      Promise.all(
+      await Promise.all(
         PRECACHE_URLS.map((url) => cache.add(url).catch(() => undefined))
-      )
-    )
+      );
+      await precacheBuildAssets(cache);
+    })
   );
   self.skipWaiting();
 });
@@ -57,14 +97,12 @@ function isCacheableAsset(request) {
   return ["image", "style", "font", "script"].includes(request.destination);
 }
 
-async function handleNavigation(request) {
+async function handleNavigation(request, event) {
   try {
     const response = await fetch(request);
     // Cache successful page loads so the same URL works on a later offline visit.
-    if (response && response.ok) {
-      const copy = response.clone();
-      caches.open(RUNTIME).then((cache) => cache.put(request, copy));
-    }
+    const cacheWrite = cacheResponse(RUNTIME, request, response);
+    if (cacheWrite) event.waitUntil(cacheWrite);
     return response;
   } catch {
     return (
@@ -81,7 +119,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   if (request.mode === "navigate") {
-    event.respondWith(handleNavigation(request));
+    event.respondWith(handleNavigation(request, event));
     return;
   }
 
@@ -91,10 +129,8 @@ self.addEventListener("fetch", (event) => {
         (cached) =>
           cached ||
           fetch(request).then((response) => {
-            if (response && response.ok) {
-              const copy = response.clone();
-              caches.open(PRECACHE).then((cache) => cache.put(request, copy));
-            }
+            const cacheWrite = cacheResponse(RUNTIME, request, response);
+            if (cacheWrite) event.waitUntil(cacheWrite);
             return response;
           })
       )
