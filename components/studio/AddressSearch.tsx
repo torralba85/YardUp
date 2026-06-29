@@ -211,7 +211,16 @@ export default function AddressSearch({
     if (suggestion.prediction) {
       try {
         const place = suggestion.prediction.toPlace();
-        await place.fetchFields({ fields: ["location", "formattedAddress"] });
+        await place.fetchFields({
+          fields: ["location", "formattedAddress"],
+          // Close the Autocomplete session on this Place Details call so it bills
+          // as part of the cheaper session bundle rather than a standalone
+          // request. `sessionToken` is accepted at runtime but missing from the
+          // TS typings (https://issuetracker.google.com/issues/395640965), so we
+          // spread it in to bypass excess-property checking. Verified live: the
+          // call resolves cleanly with the token present.
+          ...(sessionTokenRef.current ? { sessionToken: sessionTokenRef.current } : {}),
+        });
         // fetchFields concludes the session; start a fresh token next time.
         sessionTokenRef.current = null;
         if (place.location) {
