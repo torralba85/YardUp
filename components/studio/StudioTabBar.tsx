@@ -87,7 +87,11 @@ export default function StudioTabBar({ active, onChange }: StudioTabBarProps) {
             role="tab"
             id={tabId(tab.id)}
             aria-selected={isActive}
-            aria-controls={tabPanelId(tab.id)}
+            // Only the active panel is rendered (the studio shares one 3D scene
+            // across the feasibility/massing panels, so all panels can't be in
+            // the DOM at once). Point aria-controls only at the live panel so it
+            // never dangles to a missing id.
+            aria-controls={isActive ? tabPanelId(tab.id) : undefined}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
