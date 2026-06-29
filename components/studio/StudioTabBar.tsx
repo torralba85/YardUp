@@ -47,7 +47,7 @@ export default function StudioTabBar({ active, onChange }: StudioTabBarProps) {
   }
 
   function handleKeyDown(event: React.KeyboardEvent, index: number) {
-    let nextIndex: number | null = null;
+    let nextIndex = index;
     switch (event.key) {
       case "ArrowRight":
         nextIndex = (index + 1) % TABS.length;
