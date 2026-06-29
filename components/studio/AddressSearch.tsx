@@ -78,7 +78,12 @@ export default function AddressSearch({
   const hasPlacesKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
+  // Suppresses the dropdown from re-opening on the just-picked text.
   const selectedValueRef = useRef("");
+  // Set only after a Google prediction fully resolves to coordinates. Gates the
+  // "don't resubmit" guard in handleSubmit so server picks — and Google picks
+  // whose resolve failed — stay retryable.
+  const resolvedValueRef = useRef("");
   // One Autocomplete session spans several keystrokes + one fetchFields call,
   // for correct session-based billing; renewed after each selection.
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -136,6 +141,10 @@ export default function AddressSearch({
     }
 
     const controller = new AbortController();
+    // The Places (New) API takes no AbortSignal, so a slow Google response can
+    // resolve after a newer keystroke (or unmount). This flag lets us drop those
+    // stale results instead of letting them overwrite the current list.
+    let active = true;
     const timer = setTimeout(async () => {
       try {
         let next: AddressSuggestion[] = [];
@@ -147,9 +156,16 @@ export default function AddressSearch({
           const { suggestions: predictions } =
             await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
               input: query,
-              includedRegionCodes: ["us"],
+              includedRegionCodes: ["US"],
+              // Geocoded addresses only (no establishments/POIs) — the parcel
+              // lookup needs a property address, not a business whose pin sits
+              // off the lot. "geocode" is the API's valid address-type token;
+              // "address" is rejected and "street_address" returns nothing for
+              // partial input (verified against the live Places (New) API).
+              includedPrimaryTypes: ["geocode"],
               sessionToken: sessionTokenRef.current,
             });
+          if (!active) return;
           next = predictions
             .map((s) => s.placePrediction)
             .filter((p): p is google.maps.places.PlacePrediction => p !== null)
@@ -169,6 +185,7 @@ export default function AddressSearch({
           }));
         }
 
+        if (!active) return;
         setSuggestions(next);
         setSuggestionsOpen(next.length > 0);
         setActiveIndex(-1);
@@ -178,6 +195,7 @@ export default function AddressSearch({
     }, 300);
 
     return () => {
+      active = false;
       controller.abort();
       clearTimeout(timer);
     };
@@ -199,6 +217,7 @@ export default function AddressSearch({
         if (place.location) {
           const formattedAddress = place.formattedAddress ?? suggestion.text;
           selectedValueRef.current = formattedAddress;
+          resolvedValueRef.current = formattedAddress;
           setInputValue(formattedAddress);
           onSelect({
             lat: place.location.lat(),
@@ -210,6 +229,12 @@ export default function AddressSearch({
       } catch (err) {
         console.error("[AddressSearch] Failed to resolve place:", err);
       }
+      // The Google pick didn't resolve to coordinates (fetchFields threw, or no
+      // location). Discard the now-spent session token so the next search starts
+      // a fresh billing session, and clear the resolved marker so the user can
+      // retry — either via the free-text handoff below or a fresh Search press.
+      sessionTokenRef.current = null;
+      selectedValueRef.current = "";
     }
 
     // Server-suggestion pick, or a Google pick whose place couldn't resolve.
@@ -240,8 +265,9 @@ export default function AddressSearch({
     setSuggestionsOpen(false);
     setActiveIndex(-1);
     const query = inputValue.trim();
-    // Already resolved via a picked suggestion — don't re-submit as free text.
-    if (query === selectedValueRef.current) return;
+    // Skip re-submitting only a fully resolved Google pick. Server picks and
+    // failed Google resolves stay retryable so a flaky lookup can be retried.
+    if (query && query === resolvedValueRef.current) return;
     if (query && onSubmitText) onSubmitText(query);
   }
 
@@ -319,7 +345,7 @@ export default function AddressSearch({
         >
           {suggestions.map((suggestion, index) => (
             <li
-              key={`${suggestion.text}-${index}`}
+              key={suggestion.prediction?.placeId ?? suggestion.text}
               id={`address-suggestion-${index}`}
               role="option"
               aria-selected={index === activeIndex}
@@ -337,6 +363,17 @@ export default function AddressSearch({
               <span className="truncate">{suggestion.text}</span>
             </li>
           ))}
+          {/* Google Maps Platform requires visible attribution when Places
+              predictions are shown outside a Google map (the legacy widget
+              supplied this automatically). Only the Google-sourced list needs it. */}
+          {googleEnabled && (
+            <li
+              role="presentation"
+              className="flex items-center justify-end gap-1 border-t border-lf-hairline px-3 py-1.5 text-[10px] uppercase tracking-wide text-lf-muted"
+            >
+              Powered by Google
+            </li>
+          )}
         </ul>
       )}
 
