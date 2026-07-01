@@ -74,6 +74,8 @@ See `docs/release-checklist.md` for the full manual sign-off list and `docs/depl
 
 CI runs on every push to `main`/`master` and on every pull request via `.github/workflows/ci.yml`. The workflow runs lint, unit tests, typecheck, build, and Playwright end-to-end tests against Chromium. Do not merge a pull request whose CI run is failing.
 
+See `docs/repository-governance.md` for the maintainer playbook: issue triage, bug diagnosis/bisection, branch strategy, and the repo health routine. Issue/PR templates live under `.github/`.
+
 ## Deployment
 
 The app deploys to Firebase Hosting + Cloud Functions. Set the required server-side variables in the Firebase Functions config. See `docs/deployment.md` for the full deployment guide, including CI setup, post-deploy smoke checks, and rollback steps.

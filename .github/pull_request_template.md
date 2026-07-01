@@ -22,6 +22,9 @@ Before submitting this PR, please ensure you have checked the following criteria
 - [ ] My PR commits follow the Conventional Commits specification.
 - [ ] This PR introduces breaking changes. *(If checked, explain the migration path in the description below)*.
 
+### Reviewer Assignment
+- [ ] I have requested review from the CODEOWNERS matched to the changed paths.
+
 ---
 
 ## Reviewer Checklist
