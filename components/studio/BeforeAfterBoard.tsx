@@ -137,7 +137,7 @@ export default function BeforeAfterBoard({
     <div
       ref={dialogRef}
       onClick={handleScrimClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-lf-espresso/90 p-4 md:p-8 overflow-y-auto backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-lf-espresso/90 p-4 md:p-8 overflow-y-auto backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="board-title"

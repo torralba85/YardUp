@@ -64,7 +64,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div className="w-full max-w-md rounded-xl bg-lf-mahogany text-white shadow-2xl relative overflow-hidden border border-white/10">
         <button
           onClick={onClose}
@@ -75,7 +75,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </button>
 
         <div className="p-8">
-          <h2 className="lf-panel-heading mb-2 text-lf-sand">
+          <h2 id="auth-modal-title" className="lf-panel-heading mb-2 text-lf-sand">
             {isSignUp ? "Create an account" : "Welcome back"}
           </h2>
           <p className="lf-body-sm mb-6 text-lf-taupe">

@@ -54,7 +54,7 @@ export default function UnlockSlip({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-lf-espresso/90 p-6"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-lf-espresso/90 p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !pending) onClose();
       }}

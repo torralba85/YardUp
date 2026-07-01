@@ -96,7 +96,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
   const roundedRent = teaser ? `~$${(Math.round(teaser.monthlyRent / 100) * 100).toLocaleString()}` : "";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-lf-sand" role="dialog" aria-label="Get started">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-lf-sand" role="dialog" aria-label="Get started">
       <div className="flex items-center justify-center gap-1.5 pt-5" aria-hidden>
         {(["address", "size", "results"] as WizardStep[]).map((s) => (
           <span key={s} className={`h-1.5 w-1.5 rounded-full ${s === step ? "bg-lf-clay" : "bg-lf-taupe/40"}`} />
