@@ -78,6 +78,12 @@ CI runs on every push to `main`/`master` and on every pull request via `.github/
 
 The app deploys to Firebase Hosting + Cloud Functions. Set the required server-side variables in the Firebase Functions config. See `docs/deployment.md` for the full deployment guide, including CI setup, post-deploy smoke checks, and rollback steps.
 
+## Contributing & Repository Governance
+
+Issue triage, bug/feature templates, branch and merge policy, and the
+repository health routine are documented in
+`docs/repository-governance.md`. Issue and PR templates live in `.github/`.
+
 ## Scope Notes
 
 - Feasibility and financial outputs are estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents with local professionals before investing.
