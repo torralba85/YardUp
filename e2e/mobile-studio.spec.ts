@@ -19,6 +19,10 @@ test.describe("mobile studio", () => {
   });
 
   test("expanding the sheet reveals controls and metrics react to size change", async ({ page }) => {
+    // This flow drives several sequential vaul sheet snaps plus an accordion
+    // open before asserting; it runs close to the default 30s budget and tips
+    // over on slower CI runners. Triple the timeout to keep it stable.
+    test.slow();
     await page.goto("/studio");
     await page.getByRole("button", { name: /skip — explore the demo lot/i }).click();
     const note = page.getByRole("note").filter({ hasText: /drag your adu/i });

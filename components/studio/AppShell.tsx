@@ -133,7 +133,7 @@ export default function AppShell({
                 <button
                   type="button"
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   <MapPin size={13} />
                   Change address
@@ -142,7 +142,7 @@ export default function AppShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-9 w-full rounded-lg border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="mt-3 h-9 w-full rounded-full border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 hover:text-lf-sand motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
@@ -229,7 +229,7 @@ export default function AppShell({
               <button
                 type="button"
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-white motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Sign In
               </button>
@@ -254,7 +254,7 @@ export default function AppShell({
           <button
             type="button"
             onClick={onReset}
-            className="h-9 rounded-lg border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="h-9 rounded-full border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             Reset
           </button>
