@@ -159,7 +159,7 @@ export default function BuilderInbox({
       </div>
 
       <div className="mt-4 border border-lf-hairline">
-        <BuilderMoneyBand metrics={metrics} />
+        <BuilderMoneyBand metrics={metrics} credits={profile.credits} />
       </div>
 
       <div aria-live="polite" className="sr-only">
@@ -175,52 +175,57 @@ export default function BuilderInbox({
       {items.length === 0 ? (
         <ZeroEverEmptyState />
       ) : (
-        <>
-          <div role="tablist" aria-label="Filter leads by status" className="mt-5 flex flex-wrap gap-2">
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.key}
-                onClick={() => setTab(t.key)}
-                className={`border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition ${
-                  tab === t.key
-                    ? "border-lf-espresso bg-lf-espresso text-lf-sand"
-                    : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                }`}
-              >
-                {t.label} · {tabCounts[t.key]}
-              </button>
-            ))}
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="mt-4 border border-lf-hairline bg-lf-card p-6 text-sm text-lf-muted">
-              {tab === "archived"
-                ? "Nothing archived yet."
-                : `No ${tab} leads right now.`}
-            </div>
-          ) : (
-            <div className="mt-4 grid gap-4">
-              {filtered.map((item) => (
-                <LeadCard
-                  key={item.request.id}
-                  item={item}
-                  access={access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked")}
-                  contact={contacts[item.request.id] ?? null}
-                  demo={demoGrants[item.request.id]}
-                  responding={isPending && pendingId === item.request.id}
-                  onUnlockClick={() => {
-                    setSlipId(item.request.id);
-                    setSlipError(null);
-                  }}
-                  onRespond={(status) => respond(item.request.id, status)}
-                />
+        <div className="mt-4 flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0">
+            <div role="tablist" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition ${
+                    tab === t.key
+                      ? "border-lf-espresso bg-lf-espresso text-lf-sand"
+                      : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+                  }`}
+                >
+                  {t.label} · {tabCounts[t.key]}
+                </button>
               ))}
             </div>
-          )}
-        </>
+
+            {filtered.length === 0 ? (
+              <div className="mt-4 border border-lf-hairline bg-lf-card p-6 text-sm text-lf-muted">
+                {tab === "archived"
+                  ? "Nothing archived yet."
+                  : `No ${tab} leads right now.`}
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-4">
+                {filtered.map((item) => (
+                  <LeadCard
+                    key={item.request.id}
+                    item={item}
+                    access={access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked")}
+                    contact={contacts[item.request.id] ?? null}
+                    demo={demoGrants[item.request.id]}
+                    responding={isPending && pendingId === item.request.id}
+                    onUnlockClick={() => {
+                      setSlipId(item.request.id);
+                      setSlipError(null);
+                    }}
+                    onRespond={(status) => respond(item.request.id, status)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          <aside className="w-full lg:w-80 shrink-0 space-y-4">
+            <CreditShop />
+          </aside>
+        </div>
       )}
 
       {slipItem && (
@@ -294,6 +299,85 @@ function ZeroEverEmptyState() {
           Owner contact unlocks for {formatUnlockPrice()} — once you have real leads
         </p>
       </article>
+    </div>
+  );
+}
+
+function CreditShop() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function buyPack(pack: number) {
+    if (!user) return;
+    setLoading(pack);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/stripe/checkout-credits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ pack }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to initiate checkout");
+      }
+      if (data.url) {
+        window.location.assign(data.url);
+      } else if (data.demo) {
+        // Reload to show the new credits and ledger
+        window.location.reload();
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  return (
+    <div className="border border-lf-hairline bg-lf-card p-5">
+      <h3 className="lf-card-heading text-lf-espresso">Credit Shop</h3>
+      <p className="mt-1 text-sm text-lf-muted">
+        Unlock leads instantly with credits. Save up to 25% by buying in bulk.
+      </p>
+      {error && (
+        <div className="mt-3 bg-lf-brick/10 p-2 text-xs text-lf-brick border border-lf-brick/20">
+          {error}
+        </div>
+      )}
+      <div className="mt-4 space-y-3">
+        <button
+          onClick={() => buyPack(5)}
+          disabled={loading !== null}
+          className="w-full flex items-center justify-between border border-lf-hairline p-3 hover:bg-lf-sand-2 disabled:opacity-50 transition"
+        >
+          <div className="text-left">
+            <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
+            <div className="text-xs text-lf-muted">$35 / lead</div>
+          </div>
+          <div className="font-mono text-sm text-lf-money-on-dark font-semibold">
+            $175
+          </div>
+        </button>
+        <button
+          onClick={() => buyPack(10)}
+          disabled={loading !== null}
+          className="w-full flex items-center justify-between border border-lf-hairline bg-lf-espresso p-3 hover:bg-lf-espresso/90 disabled:opacity-50 transition"
+        >
+          <div className="text-left">
+            <div className="font-semibold text-lf-sand">10-Lead Pack</div>
+            <div className="text-xs text-lf-taupe">$30 / lead (Best Value)</div>
+          </div>
+          <div className="font-mono text-sm text-lf-money font-semibold">
+            $300
+          </div>
+        </button>
+      </div>
     </div>
   );
 }
