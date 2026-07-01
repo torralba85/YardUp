@@ -29,6 +29,7 @@ const profile: BuilderProfile = {
   licenseNumber: null,
   serviceAreas: [{ city: "Seattle", state: "WA", key: "seattle-wa" }],
   active: true,
+  credits: 0,
   createdAt: null,
   updatedAt: null,
 };
