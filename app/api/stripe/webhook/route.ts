@@ -49,6 +49,11 @@ export async function POST(request: NextRequest) {
           const ledgerRef = builderRef.collection("ledger").doc(`${builderId}_${session.id}`);
 
           await adminDb.runTransaction(async (transaction) => {
+            const ledgerSnap = await transaction.get(ledgerRef);
+            if (ledgerSnap.exists) {
+              return;
+            }
+
             const builderDoc = await transaction.get(builderRef);
             if (!builderDoc.exists) {
               throw new Error(`Builder ${builderId} not found`);
