@@ -181,7 +181,7 @@ export default function ConstraintsPanel({
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
           <AIPropertyInsightsPanel
-            key={`${parcel.address}-${config.footprint}-${config.width}x${config.length}-${config.roof}-${config.finish}`}
+            key={`${parcel.address}-${config.footprint}-${config.width}x${config.length}x${config.height}-${config.roof}-${config.finish}`}
             parcel={parcel}
             result={result}
             config={config}
