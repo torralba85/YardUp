@@ -1,0 +1,467 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e11] [cursor=pointer]:
+    - img [ref=e12]
+  - alert [ref=e15]
+  - generic [ref=e16]:
+    - complementary "Application navigation" [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - img "LotFoundry" [ref=e20]
+          - paragraph [ref=e21]: a foundry for lots
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - paragraph [ref=e25]: Survey of
+            - paragraph [ref=e26]: 1234 Oak Street
+          - navigation "Survey plates" [ref=e27]:
+            - button "I The Lot ✓ eligible" [ref=e28]:
+              - generic [ref=e30]: I
+              - generic [ref=e32]: The Lot
+              - generic "eligible" [ref=e33]:
+                - text: ✓
+                - generic [ref=e34]: eligible
+            - button "II The Buildoptional · not started" [active] [ref=e35]:
+              - generic [ref=e37]: II
+              - generic [ref=e39]: The Buildoptional
+              - generic "not started" [ref=e40]:
+                - text: ·
+                - generic [ref=e41]: not started
+            - button "III The Return ✓ eligible" [ref=e42]:
+              - generic [ref=e44]: III
+              - generic [ref=e46]: The Return
+              - generic "eligible" [ref=e47]:
+                - text: ✓
+                - generic [ref=e48]: eligible
+            - button "IV The Record ◦ ready to record" [ref=e49]:
+              - generic [ref=e51]: IV
+              - generic [ref=e53]: The Record
+              - generic "ready to record" [ref=e54]:
+                - text: ◦
+                - generic [ref=e55]: ready to record
+        - generic [ref=e56]:
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - img [ref=e59]
+              - generic [ref=e60]:
+                - generic [ref=e61]: 1234 Oak Street
+                - generic [ref=e62]: Seattle, WA 98115
+            - button "Change address" [ref=e63]:
+              - img [ref=e64]
+              - text: Change address
+            - button "Reset Project" [ref=e67]
+          - button "Sign In" [ref=e68]
+    - main [ref=e69]:
+      - generic [ref=e70]:
+        - heading "Feasibility field book" [level=2] [ref=e71]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: If built
+            - generic [ref=e75]: $2,050/mo
+          - generic [ref=e76]:
+            - img [ref=e77]
+            - text: Likely Feasible
+        - generic [ref=e283]:
+          - region "Parcel massing scene" [ref=e284]:
+            - generic [ref=e285]:
+              - generic [ref=e290]:
+                - generic [ref=e291]: Buildable envelope
+                - generic [ref=e292]: Within declared limits
+                - generic [ref=e293]: 20 ft front, 25 ft rear, 5 ft side setbacks.
+              - generic [ref=e294]:
+                - button "Overview" [pressed] [ref=e295]:
+                  - img [ref=e296]
+                  - generic [ref=e299]: Overview
+                - button "ADU" [ref=e300]:
+                  - img [ref=e301]
+                  - generic [ref=e304]: ADU
+                - button "Setbacks" [ref=e305]:
+                  - img [ref=e306]
+                  - generic [ref=e312]: Setbacks
+              - generic: "N"
+          - generic [ref=e313]:
+            - region "Feasibility Studio" [ref=e314]:
+              - generic [ref=e315]:
+                - generic [ref=e316]:
+                  - generic [ref=e317]:
+                    - heading "Feasibility Studio" [level=2] [ref=e318]
+                    - paragraph [ref=e319]: Confirm the lot, shape the ADU, then test the income case.
+                  - button "Reset" [ref=e320]:
+                    - img [ref=e321]
+                    - text: Reset
+                - list [ref=e327]:
+                  - listitem [ref=e328]:
+                    - generic [ref=e329]: "1"
+                    - generic [ref=e330]:
+                      - generic [ref=e331]: Property
+                      - paragraph [ref=e332]: Confirm the address or sample parcel.
+                  - listitem [ref=e333]:
+                    - generic [ref=e334]: "2"
+                    - generic [ref=e335]:
+                      - generic [ref=e336]: ADU fit
+                      - paragraph [ref=e337]: Shape the unit and watch the lot update.
+                  - listitem [ref=e338]:
+                    - generic [ref=e339]: "3"
+                    - generic [ref=e340]:
+                      - generic [ref=e341]: Money model
+                      - paragraph [ref=e342]: Check rent, payback, and review flags.
+                - generic [ref=e343]:
+                  - generic [ref=e344]:
+                    - button "1 Your Property" [expanded] [ref=e345]:
+                      - generic [ref=e346]: "1"
+                      - generic [ref=e347]: Your Property
+                      - img [ref=e348]
+                    - generic [ref=e353]:
+                      - generic [ref=e355]: Sample Property
+                      - combobox "Sample Property" [ref=e356]:
+                        - option "Typical R-1 Lot (5,000 sf)" [selected]
+                        - option "Corner Family Lot (7,200 sf)"
+                        - option "Compact Urban Lot (4,200 sf)"
+                      - generic [ref=e357]:
+                        - paragraph [ref=e358]: "Or search your address:"
+                        - search [ref=e359]:
+                          - generic [ref=e360]: Search property address
+                          - generic:
+                            - img
+                          - combobox "Search property address" [ref=e361]
+                          - button "Search" [disabled] [ref=e362]:
+                            - img [ref=e363]
+                            - text: Search
+                      - generic [ref=e366]:
+                        - generic [ref=e367]:
+                          - generic [ref=e368]: Lot Area
+                          - generic [ref=e369]: 5,000 sf
+                        - generic [ref=e370]:
+                          - generic [ref=e371]: Lot Dimensions
+                          - generic [ref=e372]: 40' x 125'
+                        - generic [ref=e373]:
+                          - generic [ref=e374]: Existing Footprint
+                          - generic [ref=e375]: 1,380 sf
+                        - generic [ref=e376]:
+                          - generic [ref=e377]: Max Coverage
+                          - generic [ref=e378]: 40%
+                        - generic [ref=e379]:
+                          - generic [ref=e380]: Setbacks
+                          - generic [ref=e381]: 20/5/25 ft
+                      - 'button "Next: Design your ADU" [ref=e382]':
+                        - text: "Next: Design your ADU"
+                        - img [ref=e383]
+                  - generic [ref=e385]:
+                    - button "2 Design Your ADU" [ref=e386]:
+                      - generic [ref=e387]: "2"
+                      - generic [ref=e388]: Design Your ADU
+                      - img [ref=e389]
+                    - generic [ref=e392]:
+                      - generic [ref=e393]:
+                        - generic [ref=e394]:
+                          - heading "ADU Size" [level=3] [ref=e395]
+                          - generic [ref=e396]: Footprint
+                        - group "ADU footprint size" [ref=e397]:
+                          - button "400 sf" [ref=e398]
+                          - button "600 sf" [pressed] [ref=e399]
+                          - button "800 sf" [ref=e400]
+                          - button "1,000 sf" [ref=e401]
+                        - paragraph [ref=e402]: "Selected: 600 sf (1 bed / 1 bath)"
+                      - generic [ref=e403]:
+                        - heading "Fine-tune dimensions" [level=3] [ref=e405]
+                        - generic [ref=e406]:
+                          - generic [ref=e407]:
+                            - text: Width
+                            - generic [ref=e408]: 20 ft
+                          - slider "Width 20 ft" [ref=e409]: "20"
+                        - generic [ref=e410]:
+                          - generic [ref=e411]:
+                            - text: Length
+                            - generic [ref=e412]: 30 ft
+                          - slider "Length 30 ft" [ref=e413]: "30"
+                      - generic [ref=e414]:
+                        - heading "Roof Style" [level=3] [ref=e416]
+                        - group "Roof style" [ref=e417]:
+                          - button "Shed" [pressed] [ref=e418]:
+                            - img [ref=e419]
+                            - text: Shed
+                          - button "Gable" [ref=e423]:
+                            - img [ref=e424]
+                            - text: Gable
+                          - button "Flat" [ref=e428]:
+                            - img [ref=e429]
+                            - text: Flat
+                      - generic [ref=e433]:
+                        - heading "Exterior Finish" [level=3] [ref=e435]
+                        - group "Exterior finish" [ref=e436]:
+                          - button "Cedar" [pressed] [ref=e437]: Cedar
+                          - button "Lap Siding" [ref=e439]: Lap Siding
+                          - button "Stucco" [ref=e441]: Stucco
+                          - button "Board & Batten" [ref=e443]: Board & Batten
+                      - button "Remove Entry & Windows" [pressed] [ref=e445]:
+                        - img [ref=e446]
+                        - text: Remove Entry & Windows
+                      - 'button "Next: Run the numbers" [ref=e448]':
+                        - text: "Next: Run the numbers"
+                        - img [ref=e449]
+                  - generic [ref=e451]:
+                    - button "3 Run the Numbers" [ref=e452]:
+                      - generic [ref=e453]: "3"
+                      - generic [ref=e454]: Run the Numbers
+                      - img [ref=e455]
+                    - generic [ref=e459]:
+                      - generic [ref=e460]:
+                        - heading "Rental Estimate" [level=3] [ref=e461]
+                        - generic [ref=e462]: $2,050
+                      - group "Rental estimate" [ref=e463]:
+                        - button "Conservative" [pressed] [ref=e464]
+                        - button "Market" [ref=e465]
+                        - button "Optimistic" [ref=e466]
+                - generic [ref=e467]:
+                  - generic [ref=e468]:
+                    - generic [ref=e469]: Next best action
+                    - paragraph [ref=e470]: Search an address or keep the sample lot, then move to ADU fit.
+                  - button "Create my ADU report" [ref=e471]:
+                    - generic [ref=e472]: Create my ADU report
+                    - img [ref=e474]
+                  - button "Save this design" [ref=e477]:
+                    - img [ref=e478]
+                    - text: Save this design
+            - region "Inspiration gallery panel" [ref=e480]:
+              - generic [ref=e481]:
+                - generic [ref=e482]:
+                  - heading "Inspiration Gallery" [level=2] [ref=e483]
+                  - paragraph [ref=e484]: Explore standard ADU designs. Toggle between real-world 3D rendering and site-fit massing.
+                - generic [ref=e485]:
+                  - generic [ref=e486]:
+                    - generic [ref=e488]:
+                      - generic [ref=e489]:
+                        - paragraph [ref=e490]: Your house / your ADU
+                        - heading "Style-match photo" [level=3] [ref=e491]
+                      - img [ref=e493]
+                    - generic [ref=e496]:
+                      - generic [ref=e497]:
+                        - generic [ref=e499]:
+                          - img [ref=e500]
+                          - paragraph [ref=e503]: Used only to match your ADU's style. Never shown to builders.
+                        - generic [ref=e504] [cursor=pointer]:
+                          - img [ref=e505]
+                          - generic [ref=e509]: Choose house photo
+                          - generic [ref=e510]: JPG PNG WEBP HEIC
+                      - button "Choose house photo JPG PNG WEBP HEIC" [ref=e511]
+                  - generic [ref=e512]:
+                    - generic [ref=e513]:
+                      - img "Courtyard Studio with Clerestory Light Real 3D Render" [ref=e515]
+                      - generic:
+                        - img "Courtyard Studio with Clerestory Light parcel-fit diagram":
+                          - generic:
+                            - generic: TEMPLATE
+                            - generic: 640 sf
+                      - generic [ref=e516]:
+                        - button "Real View" [ref=e517] [cursor=pointer]:
+                          - img [ref=e518]
+                          - text: Real View
+                        - button "Massing" [ref=e521] [cursor=pointer]:
+                          - img [ref=e522]
+                          - text: Massing
+                    - generic [ref=e526]:
+                      - generic [ref=e527]:
+                        - heading "Courtyard Studio with Clerestory Light" [level=3] [ref=e528]
+                        - generic [ref=e529]:
+                          - generic [ref=e530]: Warm Modern
+                          - generic [ref=e531]: 640 sf (20'x32')
+                      - paragraph [ref=e532]: A compact detached layout with a private entry court and high daylight clerestory windows.
+                      - generic [ref=e533]:
+                        - generic [ref=e534]: studio
+                        - generic [ref=e535]: courtyard
+                        - generic [ref=e536]: daylight
+                      - generic [ref=e537]:
+                        - generic [ref=e539]: $250k - $400k
+                        - button "Apply to Studio" [ref=e540] [cursor=pointer]:
+                          - img [ref=e541]
+                          - text: Apply to Studio
+                  - generic [ref=e544]:
+                    - generic [ref=e545]:
+                      - img "Garage Conversion with Garden Entry Real 3D Render" [ref=e547]
+                      - generic:
+                        - img "Garage Conversion with Garden Entry parcel-fit diagram":
+                          - generic:
+                            - generic: TEMPLATE
+                            - generic: 520 sf
+                      - generic [ref=e548]:
+                        - button "Real View" [ref=e549] [cursor=pointer]:
+                          - img [ref=e550]
+                          - text: Real View
+                        - button "Massing" [ref=e553] [cursor=pointer]:
+                          - img [ref=e554]
+                          - text: Massing
+                    - generic [ref=e558]:
+                      - generic [ref=e559]:
+                        - heading "Garage Conversion with Garden Entry" [level=3] [ref=e560]
+                        - generic [ref=e561]:
+                          - generic [ref=e562]: California Bungalow
+                          - generic [ref=e563]: 520 sf (20'x26')
+                      - paragraph [ref=e564]: A reuse-first concept for homeowners prioritizing speed, budget control, and rental utility.
+                      - generic [ref=e565]:
+                        - generic [ref=e566]: garage
+                        - generic [ref=e567]: conversion
+                        - generic [ref=e568]: compact
+                      - generic [ref=e569]:
+                        - generic [ref=e571]: Under $250k
+                        - button "Apply to Studio" [ref=e572] [cursor=pointer]:
+                          - img [ref=e573]
+                          - text: Apply to Studio
+                  - generic [ref=e576]:
+                    - generic [ref=e577]:
+                      - img "One-Bedroom with Bay-Facing Lounge Real 3D Render" [ref=e579]
+                      - generic:
+                        - img "One-Bedroom with Bay-Facing Lounge parcel-fit diagram":
+                          - generic:
+                            - generic: TEMPLATE
+                            - generic: 780 sf
+                      - generic [ref=e580]:
+                        - button "Real View" [ref=e581] [cursor=pointer]:
+                          - img [ref=e582]
+                          - text: Real View
+                        - button "Massing" [ref=e585] [cursor=pointer]:
+                          - img [ref=e586]
+                          - text: Massing
+                    - generic [ref=e590]:
+                      - generic [ref=e591]:
+                        - heading "One-Bedroom with Bay-Facing Lounge" [level=3] [ref=e592]
+                        - generic [ref=e593]:
+                          - generic [ref=e594]: Urban Craftsman
+                          - generic [ref=e595]: 780 sf (24'x32.5')
+                      - paragraph [ref=e596]: A larger rental-ready layout with a defined living room, bay windows, and a small work alcove.
+                      - generic [ref=e597]:
+                        - generic [ref=e598]: one bedroom
+                        - generic [ref=e599]: premium
+                        - generic [ref=e600]: work nook
+                      - generic [ref=e601]:
+                        - generic [ref=e603]: Over $400k
+                        - button "Apply to Studio" [ref=e604] [cursor=pointer]:
+                          - img [ref=e605]
+                          - text: Apply to Studio
+                  - generic [ref=e608]:
+                    - generic [ref=e609]:
+                      - img "Coastal Long-Lot ADU Real 3D Render" [ref=e611]
+                      - generic:
+                        - img "Coastal Long-Lot ADU parcel-fit diagram":
+                          - generic:
+                            - generic: TEMPLATE
+                            - generic: 700 sf
+                      - generic [ref=e612]:
+                        - button "Real View" [ref=e613] [cursor=pointer]:
+                          - img [ref=e614]
+                          - text: Real View
+                        - button "Massing" [ref=e617] [cursor=pointer]:
+                          - img [ref=e618]
+                          - text: Massing
+                    - generic [ref=e622]:
+                      - generic [ref=e623]:
+                        - heading "Coastal Long-Lot ADU" [level=3] [ref=e624]
+                        - generic [ref=e625]:
+                          - generic [ref=e626]: Coastal Minimal
+                          - generic [ref=e627]: 700 sf (16'x44')
+                      - paragraph [ref=e628]: A narrow footprint designed to preserve outdoor living space on tighter seaside lots.
+                      - generic [ref=e629]:
+                        - generic [ref=e630]: detached
+                        - generic [ref=e631]: long lot
+                        - generic [ref=e632]: beach style
+                      - generic [ref=e633]:
+                        - generic [ref=e635]: $250k - $400k
+                        - button "Apply to Studio" [ref=e636] [cursor=pointer]:
+                          - img [ref=e637]
+                          - text: Apply to Studio
+                  - generic [ref=e640]:
+                    - generic [ref=e641]:
+                      - img "JADU Suite inside Existing Home Real 3D Render" [ref=e643]
+                      - generic:
+                        - img "JADU Suite inside Existing Home parcel-fit diagram":
+                          - generic:
+                            - generic: TEMPLATE
+                            - generic: 400 sf
+                      - generic [ref=e644]:
+                        - button "Real View" [ref=e645] [cursor=pointer]:
+                          - img [ref=e646]
+                          - text: Real View
+                        - button "Massing" [ref=e649] [cursor=pointer]:
+                          - img [ref=e650]
+                          - text: Massing
+                    - generic [ref=e654]:
+                      - generic [ref=e655]:
+                        - heading "JADU Suite inside Existing Home" [level=3] [ref=e656]
+                        - generic [ref=e657]:
+                          - generic [ref=e658]: Simple Contemporary
+                          - generic [ref=e659]: 400 sf (20'x20')
+                      - paragraph [ref=e660]: A modest suite conversion for family flexibility with a lower construction footprint.
+                      - generic [ref=e661]:
+                        - generic [ref=e662]: jadu
+                        - generic [ref=e663]: conversion
+                        - generic [ref=e664]: existing space
+                      - generic [ref=e665]:
+                        - generic [ref=e667]: Under $250k
+                        - button "Apply to Studio" [ref=e668] [cursor=pointer]:
+                          - img [ref=e669]
+                          - text: Apply to Studio
+                  - generic [ref=e672]:
+                    - generic [ref=e673]:
+                      - img "Permit-Ready Inspired Cottage Real 3D Render" [ref=e675]
+                      - generic:
+                        - img "Permit-Ready Inspired Cottage parcel-fit diagram":
+                          - generic:
+                            - generic: TEMPLATE
+                            - generic: 600 sf
+                      - generic [ref=e676]:
+                        - button "Real View" [ref=e677] [cursor=pointer]:
+                          - img [ref=e678]
+                          - text: Real View
+                        - button "Massing" [ref=e681] [cursor=pointer]:
+                          - img [ref=e682]
+                          - text: Massing
+                    - generic [ref=e686]:
+                      - generic [ref=e687]:
+                        - heading "Permit-Ready Inspired Cottage" [level=3] [ref=e688]
+                        - generic [ref=e689]:
+                          - generic [ref=e690]: Clean Gable
+                          - generic [ref=e691]: 600 sf (20'x30')
+                      - paragraph [ref=e692]: A straightforward detached concept intended to align with permit-ready plan thinking.
+                      - generic [ref=e693]:
+                        - generic [ref=e694]: one bedroom
+                        - generic [ref=e695]: cottage
+                        - generic [ref=e696]: gable
+                      - generic [ref=e697]:
+                        - generic [ref=e699]: $250k - $400k
+                        - button "Apply to Studio" [ref=e700] [cursor=pointer]:
+                          - img [ref=e701]
+                          - text: Apply to Studio
+      - region "Feasibility metrics" [ref=e237]:
+        - generic [ref=e238]:
+          - generic [ref=e239]:
+            - img [ref=e240]
+            - text: Monthly Rent
+          - generic [ref=e243]: $2,050
+          - generic [ref=e245]: Local demo estimate
+        - generic [ref=e246]:
+          - generic [ref=e247]:
+            - img [ref=e248]
+            - text: Annual NOI
+          - generic [ref=e250]: $16,605
+          - generic [ref=e252]: After expenses & vacancy
+        - generic [ref=e253]:
+          - generic [ref=e254]:
+            - img [ref=e255]
+            - text: Build Cost Range
+          - generic [ref=e261]: $231K-$289K
+          - generic [ref=e262]: $385 - $482 / sf
+        - generic [ref=e263]:
+          - generic [ref=e264]:
+            - img [ref=e265]
+            - text: Payback
+          - generic [ref=e266]: 15.1 yrs
+          - generic [ref=e267]: At mid-range cost
+        - generic [ref=e268]:
+          - generic [ref=e269]:
+            - img [ref=e270]
+            - text: Lot Coverage
+          - generic [ref=e274]: 40%
+          - generic [ref=e275]: of 40% max
+        - generic [ref=e276]:
+          - generic [ref=e277]:
+            - img [ref=e278]
+            - text: Zoning Status
+          - generic [ref=e281]: Compliant
+          - generic [ref=e282]: ADU appears allowed

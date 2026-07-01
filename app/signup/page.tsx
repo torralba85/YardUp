@@ -1,25 +1,23 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
-/**
- * Sign-up route (`/signup`). Collects name, email, and password (plus Google
- * sign-up) to create an account via {@link useAuth}, then routes the new user
- * onward based on their role.
- */
-export default function SignupPage() {
+function SignupForm() {
   const { signUp, signInWithGoogle, user, profile } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"user" | "builder">("user");
+  
+  const initialRole = searchParams.get("role") === "builder" ? "builder" : "user";
+  const [role, setRole] = useState<"user" | "builder">(initialRole);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -281,4 +279,17 @@ function getAuthErrorMessage(code: string): string {
     default:
       return "Something went wrong. Please try again.";
   }
+}
+
+/**
+ * Sign-up route (`/signup`). Collects name, email, and password (plus Google
+ * sign-up) to create an account via {@link useAuth}, then routes the new user
+ * onward based on their role.
+ */
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-lf-muted">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
+  );
 }
