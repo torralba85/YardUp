@@ -42,7 +42,9 @@ import BuilderLeadPanel, {
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
-import AIPropertyInsightsPanel from "./studio/AIPropertyInsightsPanel";
+import AIPropertyInsightsPanel, {
+  createAIPropertyInsightsKey,
+} from "./studio/AIPropertyInsightsPanel";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import type { InspirationItem } from "@/lib/inspiration-data";
 import { configForFootprint } from "@/lib/feasibility";
@@ -496,7 +498,7 @@ function FeasibilityStudioInner() {
               />
               <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
               <AIPropertyInsightsPanel
-                key={`${activeParcel.address}-${config.footprint}-${config.width}x${config.length}x${config.height}-${config.roof}-${config.finish}`}
+                key={createAIPropertyInsightsKey({ parcel: activeParcel, result, config })}
                 parcel={activeParcel}
                 result={result}
                 config={config}
