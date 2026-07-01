@@ -82,9 +82,11 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 
 | File | Purpose |
 |---|---|
-| `components/FeasibilityStudio.tsx` | Main orchestrator: wraps ParcelProvider, manages state, renders scene + inspector + metrics + report |
+| `components/FeasibilityStudio.tsx` | Main orchestrator: wraps ParcelProvider, owns the active spine step, maps each step (Your Lot / Feasibility & Rules / Design / Certificate / Builders) to a view |
 | `components/ParcelScene.tsx` | 3D scene (Canvas) with drag-to-place + arrow-key ADU placement, trees, fences, driveway |
-| `components/studio/AppShell.tsx` | Desktop sidebar nav + mobile header, saved scenarios list |
+| `components/studio/StudioShell.tsx` | Desktop chrome: logo, the single `StepRail` spine (replaces the old sidebar-nav + tab-bar double navigation), active-parcel card, saved concepts, account block |
+| `lib/studio-steps.ts` | The ordered spine model + `deriveStepStates` (pure, tested) |
+| `components/ui/*` | Shared accessible primitives: `MoneyFigure`, `Button`, `Panel`, `StatusChip`, `Field`/`Segmented`/`Slider`, `StepRail`/`StepProgress` |
 | `components/studio/FeasibilityInspector.tsx` | Right-side control panel: parcel selector, ADU config sliders, roof/finish/rent controls |
 | `components/studio/MetricsSummary.tsx` | Bottom 6-metric bento strip: rent, NOI, build cost, payback, coverage, zoning |
 | `components/studio/ReportPreview.tsx` | Expandable report export panel: print/PDF, download text/CSV, share link |

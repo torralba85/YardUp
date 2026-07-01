@@ -48,7 +48,17 @@ function TestWrapper({ children }: { children: ReactNode }) {
   return <AuthProvider>{children}</AuthProvider>;
 }
 
-describe("FeasibilityStudio", () => {
+/** The single spine navigation landmark. */
+function stepRail() {
+  return screen.getByRole("navigation", { name: "Studio steps" });
+}
+
+/** A step button in the rail, matched by its label (ignores the sr-only state). */
+function stepButton(label: RegExp) {
+  return within(stepRail()).getByRole("button", { name: label });
+}
+
+describe("FeasibilityStudio (guided spine)", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
     // Simulate reduced motion so useCountUp snaps synchronously to its final
@@ -70,33 +80,42 @@ describe("FeasibilityStudio", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders the verdict-led workflow and exposes massing controls from its tab", async () => {
-    const user = userEvent.setup();
+  it("presents a single spine navigation with the Feasibility & Rules step active", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    expect(
-      screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Feasibility" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+
+    // Exactly one navigation model — the spine. The old tab strip is gone.
+    expect(stepRail()).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+
+    expect(stepButton(/Feasibility & Rules/)).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
     expect(screen.getByText("Feasibility verdict")).toBeInTheDocument();
     expect(screen.getByText("Readiness")).toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole("tab", { name: /Massing/i }));
+  it("marks certificate and builders as the revenue steps", () => {
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    // The rail flags the two revenue destinations with a "$" signifier.
+    expect(within(stepRail()).getAllByText("$")).toHaveLength(2);
+  });
 
-    // "Sample Property" is a label (not h3) for the preset select element
+  it("folds the local permit guide into the Feasibility & Rules step", () => {
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
-      screen.getByRole("combobox", { name: "Sample Property" }),
+      screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i }),
     ).toBeInTheDocument();
+  });
+
+  it("exposes massing controls on the Design step", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Design/));
+
+    expect(screen.getByRole("combobox", { name: "Sample Property" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Create my ADU report/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Property")).toBeInTheDocument();
-    expect(screen.getByText("ADU fit")).toBeInTheDocument();
-    expect(screen.getByText("Money model")).toBeInTheDocument();
-    expect(screen.getByText(/Search an address or keep the sample lot/i)).toBeInTheDocument();
     expect(screen.getByText("Build Cost Range")).toBeInTheDocument();
   });
 
@@ -104,8 +123,7 @@ describe("FeasibilityStudio", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getByRole("tab", { name: /Massing/i }));
-
+    await user.click(stepButton(/Design/));
     await user.selectOptions(screen.getByLabelText("Sample Property"), "compact-lot");
 
     const sizeGroup = screen.getByRole("group", { name: /ADU footprint size/i });
@@ -114,102 +132,70 @@ describe("FeasibilityStudio", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/Review needed/i);
   });
 
-  it("updates the rental estimate when switching to Market", async () => {
+  it("updates the rental estimate when switching the basis to Market", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getByRole("tab", { name: /Massing/i }));
-
-    const rentGroup = screen.getByRole("group", { name: /Rental estimate/i });
-    await user.click(within(rentGroup).getByRole("button", { name: "Market" }));
+    // Rent basis lives on the Feasibility step as an accessible radiogroup.
+    const rentGroup = screen.getByRole("radiogroup", { name: /Rent estimate basis/i });
+    await user.click(within(rentGroup).getByRole("radio", { name: "Market" }));
 
     const monthlyRentSection = screen.getByText("Monthly Rent").parentElement;
     expect(monthlyRentSection).toHaveTextContent("$2,350");
   });
 
-  it("exposes report print and download controls after generating the report", async () => {
+  it("reaches the certificate step and generates the report", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getByRole("tab", { name: "Certificate" }));
-    await user.click(screen.getByRole("button", { name: /Create report/i }));
-
+    await user.click(stepButton(/Certificate/));
     expect(
-      screen.getByText(/recorded concept for this lot/i),
+      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
     ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Create report/i }));
+    expect(screen.getByText(/recorded concept for this lot/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();
   });
 
-  it("opens the estimate summary from the navigation", async () => {
+  it("navigates among the steps via the rail", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getAllByRole("button", { name: /Estimate Summary/i })[0]);
-
-    expect(
-      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Current feasibility snapshot for/i)).toBeInTheDocument();
-  });
-
-  it("switches among feasibility, massing, and certificate surfaces", async () => {
-    const user = userEvent.setup();
-    render(<FeasibilityStudio />, { wrapper: TestWrapper });
-
-    await user.click(screen.getByRole("tab", { name: /Massing/i }));
+    await user.click(stepButton(/Design/));
     expect(screen.getByRole("combobox", { name: "Sample Property" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Certificate" }));
+    await user.click(stepButton(/Certificate/));
     expect(
       screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "Feasibility" }));
+    await user.click(stepButton(/Feasibility & Rules/));
     expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
   });
 
-  it("opens the certificate tab without also opening the report preview", async () => {
+  it("jumps to the certificate step from the constraints panel without opening the report", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     await user.click(screen.getByRole("button", { name: "View certificate" }));
 
-    expect(screen.getByRole("tab", { name: "Certificate" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(stepButton(/Certificate/)).toHaveAttribute("aria-current", "step");
     expect(
       screen.queryByRole("heading", { name: "Certificate of Feasibility" }),
     ).not.toBeInTheDocument();
   });
 
-  it("routes every primary navigation item to a visible studio surface", async () => {
+  it("reaches the builders step and can launch the connect flow", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getAllByRole("button", { name: /Permit Guide/i })[0]);
-    expect(screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeInTheDocument();
-
-    await user.click(screen.getAllByRole("button", { name: /Inspiration Gallery/i })[0]);
-    expect(screen.getByRole("heading", { name: /Inspiration Gallery/i })).toBeInTheDocument();
-
-    await user.click(screen.getAllByRole("button", { name: /Estimate Summary/i })[0]);
+    await user.click(stepButton(/Builders/));
     expect(
-      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
+      screen.getByRole("heading", { name: /Connect with local builders/i }),
     ).toBeInTheDocument();
-
-    await user.click(screen.getAllByRole("button", { name: /Export Preview/i })[0]);
-    expect(screen.getByRole("heading", { name: "Certificate of Feasibility" })).toBeInTheDocument();
-
-    await user.click(screen.getAllByRole("button", { name: /Feasibility Studio/i })[0]);
-    expect(
-      screen.getByRole("heading", { name: "Feasibility Studio", level: 2 }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Feasibility" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: /Connect with builders/i })).toBeInTheDocument();
   });
 
   it("marks the lead money figures with the investment-grade accent", () => {

@@ -26,10 +26,10 @@ type StudioStep = "lot" | "feasibility" | "design" | "certificate" | "builders";
 ```
 
 Ordered, with per-step metadata (label, revenue flag). Derived `StepState` for the rail:
-- `done` — steps before the furthest-reached step **and** whose precondition is met (e.g. a parcel exists).
+- `done` — steps before the active step.
 - `current` — `activeStep`.
-- `upcoming` — later steps that are reachable.
-- `locked` — steps gated by a missing precondition. P1 rule: **nothing is hard-locked** except by an explicit precondition; certificate/builders require a resolved parcel (not the demo default) — until then they render an inline "search your address first" prompt rather than being unreachable. Keep the journey explorable.
+- `upcoming` — later steps.
+- `locked` — reserved for a missing precondition; `deriveStepStates` computes it (and it is unit-tested), but **P1 keeps the whole journey explorable** on any loaded lot (demo presets included) by passing `hasParcel: true`. The paid preconditions belong at the *actions* (certificate purchase in P3, builder charge in P4), not as navigation locks — gating nav would block the investor-demo walk-through and mislabels a real demo parcel as "no lot." The `requiresParcel` metadata + locked branch stay for P3/P4 to consume.
 
 Revenue steps: `certificate`, `builders` (rail shows the `$` marker).
 

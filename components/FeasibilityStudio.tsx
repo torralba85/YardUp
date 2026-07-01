@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -31,8 +31,9 @@ import {
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
-import AppShell from "./studio/AppShell";
+import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
+import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
@@ -54,10 +55,13 @@ import MobileStudio from "./studio/mobile/MobileStudio";
 import MobileHeader from "./studio/mobile/MobileHeader";
 import PeekMetrics from "./studio/mobile/PeekMetrics";
 import WizardFlow from "./studio/mobile/WizardFlow";
-// ── Redesign: feasibility-verdict-led studio ────────────────────────────────
+// ── Redesign: guided-spine studio ───────────────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
-import StudioTabBar, { tabId, tabPanelId, type StudioTab } from "./studio/StudioTabBar";
+import { Button } from "./ui/Button";
+import { MoneyFigure } from "./ui/MoneyFigure";
+import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
+import { ArrowRight, Search } from "lucide-react";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -87,7 +91,7 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
  * state, keeps it in sync with the shareable URL ({@link parseScenarioParams} /
  * {@link serializeScenarioParams}), runs {@link calculateFeasibility} on every
  * change, and wires up reports, saved scenarios, and the connect-with-builders
- * flow. Renders the desktop {@link AppShell} or the mobile studio shell.
+ * flow. Renders the desktop {@link StudioShell} spine or the mobile studio shell.
  */
 export default function FeasibilityStudio() {
   const initialPreset = parcelPresets[0];
@@ -100,7 +104,7 @@ export default function FeasibilityStudio() {
 
 function FeasibilityStudioInner() {
   const { user, loading: authLoading } = useAuth();
-  const { parcel: liveParcel, parcelMode, parcelError, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
+  const { parcel: liveParcel, parcelMode, parcelError, parcelLoading, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
@@ -109,10 +113,13 @@ function FeasibilityStudioInner() {
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState("studio");
-  // Redesign: in-studio tabs (Feasibility / Massing / Certificate).
-  const [studioTab, setStudioTab] = useState<StudioTab>("feasibility");
-  // Bumped by the sidebar "Change address" action to focus the studio search.
+  // Guided spine: one active step drives the whole desktop studio (replaces the
+  // old activeNav + studioTab two-navigation matrix).
+  const [activeStep, setActiveStep] = useState<StudioStep>("feasibility");
+  // Focus target for the active step body — moved to on step change so keyboard
+  // and screen-reader users land on the new content, not back at the rail.
+  const stepBodyRef = useRef<HTMLDivElement | null>(null);
+  // Bumped by the "Change address" action to focus the studio search.
   const [addressFocusSignal, setAddressFocusSignal] = useState(0);
   const [reportAutoFocus, setReportAutoFocus] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -282,6 +289,18 @@ function FeasibilityStudioInner() {
     window.history.replaceState(null, "", next);
   }, [assumptions, config, hydratedFromUrl, parcelId]);
 
+  // Managed focus: when the active step changes, move focus to the new step's
+  // body so keyboard/screen-reader users follow the navigation instead of being
+  // stranded in the rail. Skipped on the initial mount (no prior step to leave).
+  const didMountStep = useRef(false);
+  useEffect(() => {
+    if (!didMountStep.current) {
+      didMountStep.current = true;
+      return;
+    }
+    stepBodyRef.current?.focus();
+  }, [activeStep]);
+
   function resetScenario() {
     resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
@@ -289,23 +308,18 @@ function FeasibilityStudioInner() {
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
     setBuilderLeadOpen(false);
-    setActiveNav("studio");
-    setStudioTab("feasibility");
+    setActiveStep("lot");
     setReportAutoFocus(false);
   }
 
-  function handleNavigate(id: string) {
-    setActiveNav(id);
-    if (id === "export") {
-      setReportOpen(true);
-    }
+  function handleStepSelect(id: StudioStep) {
+    setActiveStep(id);
   }
 
-  // Route to the address search from anywhere in the shell: land on the
-  // Feasibility tab (where the search lives) and focus it.
+  // Route to the address search from anywhere: land on the "Your Lot" step
+  // (where the search leads) and focus it.
   function handleChangeAddress() {
-    setActiveNav("studio");
-    setStudioTab("feasibility");
+    setActiveStep("lot");
     setAddressFocusSignal((n) => n + 1);
   }
 
@@ -554,124 +568,124 @@ function FeasibilityStudioInner() {
   }
 
   const parcelName = `${activeParcel.address}, ${activeParcel.city}`;
-  // Hide the metrics strip only on the Certificate tab, which carries its own
-  // summary. Every other view keeps it (matches prior behavior).
-  const showMetrics = !(activeNav === "studio" && studioTab === "certificate");
+  // Whether the user has resolved their own address (live Regrid / wizard
+  // estimate) vs. the default demo preset — drives the "Your Lot" value teaser.
+  const parcelResolved = parcelMode !== "preset";
+  // P1 keeps the whole journey explorable on any loaded lot (presets included);
+  // the paid preconditions (certificate purchase, builder charge) are enforced
+  // at those actions in later phases, not as navigation locks.
+  const steps = deriveStepStates(activeStep, { hasParcel: true });
+  const currentStepMeta = STUDIO_STEPS.find((s) => s.id === activeStep)!;
+  // The income band leads steps 2–5; the "Your Lot" step leads with the search
+  // itself. Metrics support only the two working steps, not every screen.
+  const showsVerdictBand = activeStep !== "lot";
+  const showsMetrics = activeStep === "feasibility" || activeStep === "design";
 
   return (
-    <AppShell
-      activeNav={activeNav}
+    <StudioShell
+      steps={steps}
+      onStepSelect={handleStepSelect}
       parcelAddress={activeParcel.address}
       parcelCity={activeParcel.city}
-      onNavigate={handleNavigate}
-      onReset={resetScenario}
       onChangeAddress={handleChangeAddress}
+      onReset={resetScenario}
       savedScenarios={savedScenarios}
       onLoadScenario={handleLoadScenario}
       onDeleteScenario={handleDeleteScenario}
       deleteNotice={deleteNotice}
     >
-      {activeNav === "guide" ? (
-        <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
-          <SceneSection sceneNode={sceneNode} />
-          <PermitGuidePanel address={parcelName} />
-        </div>
-      ) : activeNav === "inspiration" ? (
-        <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
-          <SceneSection sceneNode={sceneNode} />
-          <InspirationGalleryPanel
-            generatedConcepts={generatedConcepts}
-            onGenerationComplete={handleGenerationComplete}
-            onViewComparison={handleViewComparison}
-            styleMatchKey={styleMatchKey}
-            onApply={(item) => {
-              const baseConfig = configForFootprint(item.sqft, config);
-              setConfig({
-                ...baseConfig,
-                width: item.width,
-                length: item.length,
-                roof: item.roof,
-                finish: item.finish,
-              });
-              setActiveNav("studio");
-              setStudioTab("massing");
-            }}
-          />
-        </div>
-      ) : activeNav === "summary" ? (
-        <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
-          <SceneSection sceneNode={sceneNode} />
-          <EstimateSummaryPanel
-            parcelName={parcelName}
-            result={result}
-            onGenerateReport={handleGenerateReport}
-          />
-        </div>
-      ) : (
-        // ── Redesigned "Feasibility Studio" view ────────────────────────────
-        <div className="flex min-h-0 flex-1 flex-col">
-          <h2 className="sr-only">Feasibility Studio</h2>
+      <section
+        ref={stepBodyRef}
+        tabIndex={-1}
+        aria-label={currentStepMeta.label}
+        className="flex flex-1 flex-col outline-none"
+      >
+        {showsVerdictBand && (
           <FeasibilityVerdictBand
             parcel={activeParcel}
             result={result}
             config={config}
             eyebrow={activeParcel.city}
           />
-          <StudioTabBar active={studioTab} onChange={setStudioTab} />
+        )}
 
-          {studioTab === "certificate" ? (
-            <div
-              role="tabpanel"
-              id={tabPanelId("certificate")}
-              aria-labelledby={tabId("certificate")}
-              className="flex min-h-0 flex-1 flex-col"
-            >
-              <EstimateSummaryPanel
-                parcelName={parcelName}
+        {activeStep === "lot" ? (
+          <LotStep
+            sceneNode={sceneNode}
+            hasParcel={parcelResolved}
+            monthlyRent={result.monthlyRent}
+            addressFocusSignal={addressFocusSignal}
+            parcelLoading={parcelLoading}
+            parcelError={parcelError}
+            onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
+            onSubmitText={(query) => searchByAddress(query)}
+            onContinue={() => setActiveStep("feasibility")}
+          />
+        ) : activeStep === "feasibility" ? (
+          <>
+            <div className="lf-studio-pane flex flex-col lg:flex-row">
+              <SceneSection sceneNode={sceneNode} />
+              <ConstraintsPanel
+                parcel={activeParcel}
                 result={result}
-                onGenerateReport={handleGenerateReport}
+                config={config}
+                assumptions={assumptions}
+                onAssumptionsChange={setAssumptions}
+                onViewCertificate={() => setActiveStep("certificate")}
+                addressFocusSignal={addressFocusSignal}
               />
             </div>
-          ) : (
-            <div
-              role="tabpanel"
-              id={tabPanelId(studioTab)}
-              aria-labelledby={tabId(studioTab)}
-              className="flex min-h-0 flex-1 flex-col lg:flex-row"
-            >
+            <PermitGuidePanel address={parcelName} />
+          </>
+        ) : activeStep === "design" ? (
+          <>
+            <div className="lf-studio-pane flex flex-col lg:flex-row">
               <SceneSection sceneNode={sceneNode} />
-              {studioTab === "massing" ? (
-                <FeasibilityInspector
-                  parcelId={parcelId}
-                  config={config}
-                  assumptions={assumptions}
-                  result={result}
-                  onParcelChange={setParcelId}
-                  onConfigChange={setConfig}
-                  onAssumptionsChange={setAssumptions}
-                  onReset={resetScenario}
-                  onGenerateReport={handleGenerateReport}
-                  onSaveScenario={handleSaveScenario}
-                  savingScenario={savingScenario}
-                  saveNotice={saveNotice}
-                />
-              ) : (
-                <ConstraintsPanel
-                  parcel={activeParcel}
-                  result={result}
-                  config={config}
-                  assumptions={assumptions}
-                  onAssumptionsChange={setAssumptions}
-                  onViewCertificate={() => setStudioTab("certificate")}
-                  addressFocusSignal={addressFocusSignal}
-                />
-              )}
+              <FeasibilityInspector
+                parcelId={parcelId}
+                config={config}
+                assumptions={assumptions}
+                result={result}
+                onParcelChange={setParcelId}
+                onConfigChange={setConfig}
+                onAssumptionsChange={setAssumptions}
+                onReset={resetScenario}
+                onGenerateReport={handleGenerateReport}
+                onSaveScenario={handleSaveScenario}
+                savingScenario={savingScenario}
+                saveNotice={saveNotice}
+              />
             </div>
-          )}
-        </div>
-      )}
+            <InspirationGalleryPanel
+              generatedConcepts={generatedConcepts}
+              onGenerationComplete={handleGenerationComplete}
+              onViewComparison={handleViewComparison}
+              styleMatchKey={styleMatchKey}
+              onApply={(item) => {
+                const baseConfig = configForFootprint(item.sqft, config);
+                setConfig({
+                  ...baseConfig,
+                  width: item.width,
+                  length: item.length,
+                  roof: item.roof,
+                  finish: item.finish,
+                });
+              }}
+            />
+          </>
+        ) : activeStep === "certificate" ? (
+          <EstimateSummaryPanel
+            parcelName={parcelName}
+            result={result}
+            onGenerateReport={handleGenerateReport}
+          />
+        ) : (
+          <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />
+        )}
 
-      {showMetrics && <MetricsSummary result={result} />}
+        {showsMetrics && <MetricsSummary result={result} />}
+      </section>
+
       {reportOpen && (
         <ReportPreview
           parcelName={parcelName}
@@ -715,11 +729,11 @@ function FeasibilityStudioInner() {
           onDelete={() => handleDeleteConcept(activeConcept.id)}
         />
       )}
-    </AppShell>
+    </StudioShell>
   );
 }
 
-/** Shared parcel-scene panel used by every desktop view. */
+/** Shared parcel-scene panel used by the working studio steps. */
 function SceneSection({ sceneNode }: { sceneNode: React.ReactNode }) {
   return (
     <section
@@ -728,5 +742,97 @@ function SceneSection({ sceneNode }: { sceneNode: React.ReactNode }) {
     >
       {sceneNode}
     </section>
+  );
+}
+
+/** Props for {@link LotStep}. */
+interface LotStepProps {
+  sceneNode: React.ReactNode;
+  hasParcel: boolean;
+  monthlyRent: number;
+  addressFocusSignal: number;
+  parcelLoading: boolean;
+  parcelError: string | null;
+  onSelect: (found: AddressSearchResult) => void;
+  onSubmitText: (query: string) => void;
+  onContinue: () => void;
+}
+
+/**
+ * Step 1 — the value hook. The address search leads (survey instrument), the
+ * parcel renders below, and once a lot resolves the income figure appears with a
+ * one-tap path onward to Feasibility & Rules.
+ */
+function LotStep({
+  sceneNode,
+  hasParcel,
+  monthlyRent,
+  addressFocusSignal,
+  parcelLoading,
+  parcelError,
+  onSelect,
+  onSubmitText,
+  onContinue,
+}: LotStepProps) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="border-b border-lf-hairline bg-lf-sand px-6 py-8 lg:px-10">
+        <p className="lf-kicker text-lf-clay">Step 1 · Your Lot</p>
+        <h2 className="lf-section-heading mt-2 text-lf-espresso">Start with your address.</h2>
+        <p className="lf-body mt-2 max-w-[60ch] text-lf-muted">
+          We&rsquo;ll pull your parcel, local zoning, and market rents to show what an ADU could add to your property.
+        </p>
+        <div className="mt-5 max-w-xl">
+          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
+          {parcelLoading && (
+            <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+              <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+              Looking up parcel data…
+            </div>
+          )}
+          {parcelError && (
+            <div
+              role="alert"
+              className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+            >
+              <Search size={14} className="mt-0.5 shrink-0" />
+              {parcelError}
+            </div>
+          )}
+        </div>
+        {hasParcel && (
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div>
+              <p className="lf-kicker-dense text-lf-muted">If built</p>
+              <MoneyFigure value={monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
+            </div>
+            <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
+              See what it could earn
+            </Button>
+          </div>
+        )}
+      </div>
+      <SceneSection sceneNode={sceneNode} />
+    </div>
+  );
+}
+
+/**
+ * Step 5 — the builder-referral destination. Presents the connect action; the
+ * matching + outreach runs through the existing {@link BuilderLeadPanel} flow
+ * (the referral charge lands in a later phase).
+ */
+function BuildersStep({ onConnect }: { onConnect: () => void }) {
+  return (
+    <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      <p className="lf-kicker text-lf-clay">Step 5 · Builders</p>
+      <h2 className="lf-section-heading text-lf-espresso">Connect with local builders.</h2>
+      <p className="lf-body max-w-md text-lf-muted">
+        Share your concept with vetted builders in your area. They reach out with quotes and the real next steps.
+      </p>
+      <Button variant="commit" onClick={onConnect}>
+        Connect with builders
+      </Button>
+    </div>
   );
 }
