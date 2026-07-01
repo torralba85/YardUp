@@ -56,10 +56,12 @@ beforeEach(() => {
   mocks.stripe = null;
   mocks.grant.mockClear();
   mocks.adminDb.runTransaction.mockClear();
+  mocks.transaction.get.mockReset();
   mocks.transaction.update.mockClear();
   mocks.transaction.set.mockClear();
   mocks.adminDb.collection.mockReturnValue({ doc: () => mocks.docRef });
   mocks.docRef.collection.mockReturnValue({ doc: () => mocks.docRef });
+  mocks.builderDoc.data.mockReturnValue({ credits: 10 });
 });
 
 afterEach(() => {
@@ -168,10 +170,9 @@ describe("POST /api/stripe/webhook", () => {
     };
 
     mocks.adminDb.runTransaction.mockImplementation(async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
-      mocks.transaction.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ credits: 10 }),
-      });
+      mocks.transaction.get
+        .mockResolvedValueOnce({ exists: false })
+        .mockResolvedValueOnce(mocks.builderDoc);
       await cb(mocks.transaction);
     });
 
@@ -193,5 +194,34 @@ describe("POST /api/stripe/webhook", () => {
         createdAt: "mock-timestamp",
       })
     );
+  });
+
+  it("skips duplicate credit_pack webhook deliveries", async () => {
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    mocks.stripe = {
+      webhooks: {
+        constructEvent: vi.fn(() => ({
+          type: "checkout.session.completed",
+          data: {
+            object: {
+              id: "sess_credit",
+              payment_status: "paid",
+              amount_total: 10000,
+              metadata: { purchaseType: "credit_pack", builderId: "b2", creditsToGrant: "5" },
+            },
+          },
+        })),
+      },
+    };
+
+    mocks.adminDb.runTransaction.mockImplementation(async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
+      mocks.transaction.get.mockResolvedValueOnce({ exists: true });
+      await cb(mocks.transaction);
+    });
+
+    const res = await POST(webhookRequest());
+    expect(res.status).toBe(200);
+    expect(mocks.transaction.update).not.toHaveBeenCalled();
+    expect(mocks.transaction.set).not.toHaveBeenCalled();
   });
 });
