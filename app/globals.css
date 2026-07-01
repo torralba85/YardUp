@@ -170,6 +170,25 @@ p {
   }
 }
 
+/* Studio scene+rail pane: on desktop it fills the viewport below the money
+   band (so the 3D scene and the rail are both fully usable), with a floor so it
+   never collapses on short screens. The page scrolls to reveal the local rules
+   and metrics below. On mobile it is a natural-height flex column. This is a
+   hand-written utility rather than an arbitrary `h-[calc(...)]` class because
+   the money-band offset must stay in one place and resolve reliably. */
+@media (min-width: 1024px) {
+  .lf-studio-pane {
+    /* vh (not dvh): this pane is desktop-only, where the two are equal, and
+       some CSS pipelines drop `dvh` inside calc(). */
+    height: calc(100vh - 7rem);
+    min-height: 440px;
+    /* Do not let the parent column flex-shrink the pane below its height —
+       otherwise the tall rules/metrics siblings squeeze it back to the floor. */
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+}
+
 /* Subtle grain overlay — breaks the flatness of warm cream surfaces */
 .lf-grain {
   position: relative;

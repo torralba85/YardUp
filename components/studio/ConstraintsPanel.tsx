@@ -97,7 +97,7 @@ export default function ConstraintsPanel({
   return (
     <aside
       aria-label="Property constraints"
-      className="flex w-full shrink-0 flex-col border-t border-lf-hairline bg-lf-card lg:w-[384px] lg:border-l lg:border-t-0"
+      className="flex w-full shrink-0 flex-col border-t border-lf-hairline bg-lf-card lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
     >
       <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
         <p className="pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
@@ -130,7 +130,7 @@ export default function ConstraintsPanel({
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-[22px] pb-[18px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] pb-[18px]">
         {GROUP_ORDER.map((group) => {
           const rows = summary.constraints.filter((c) => c.group === group);
           if (rows.length === 0) return null;

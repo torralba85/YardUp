@@ -1,120 +1,108 @@
 "use client";
 
-import { BarChart3, Box, ChevronDown, FileText, LogOut, MapPin, Sparkles, Share2, Trash2 } from "lucide-react";
+import { ChevronDown, LogOut, MapPin, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { NavItem } from "./types";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { StepRail } from "@/components/ui/StepRail";
+import { Button } from "@/components/ui/Button";
+import type { DerivedStep, StudioStep } from "@/lib/studio-steps";
 import { DeleteAccountButton } from "./DeleteAccountButton";
 
-/** The studio's primary navigation sections, in display order. */
-export const navItems: NavItem[] = [
-  { id: "studio", label: "Feasibility Studio", icon: Box },
-  { id: "guide", label: "Permit Guide", icon: FileText },
-  { id: "inspiration", label: "Inspiration Gallery", icon: Sparkles },
-  { id: "summary", label: "Estimate Summary", icon: BarChart3 },
-  { id: "export", label: "Export Preview", icon: Share2 },
-];
-
-/** Props for {@link AppShell}. */
-export interface AppShellProps {
-  /** Id of the currently active nav section. */
-  activeNav: string;
-  /** Active parcel's street address (shown in the sidebar). */
+/** Props for {@link StudioShell}. */
+export interface StudioShellProps {
+  /** The spine steps with their derived states. */
+  steps: DerivedStep[];
+  /** Called when a step is chosen. */
+  onStepSelect: (id: StudioStep) => void;
+  /** Active parcel street address. */
   parcelAddress: string;
-  /** Active parcel's city line. */
+  /** Active parcel city line. */
   parcelCity: string;
-  /** Called when a nav item is selected. */
-  onNavigate: (id: string) => void;
-  /** Called to reset the project back to defaults. */
-  onReset: () => void;
-  /** Called to jump to the address search (Feasibility tab) from anywhere. */
+  /** Jump to the address search. */
   onChangeAddress?: () => void;
-  /** Saved scenarios shown in the sidebar list. */
+  /** Reset the project to defaults. */
+  onReset: () => void;
+  /** Saved scenarios for the sidebar list. */
   savedScenarios?: SavedScenario[];
-  /** Called to load a saved scenario by id. */
+  /** Load a saved scenario by id. */
   onLoadScenario?: (id: string) => void;
-  /** Called to delete a saved scenario by id. */
+  /** Delete a saved scenario by id. */
   onDeleteScenario?: (id: string) => void;
-  /** Transient status message shown after a delete. */
+  /** Transient status after a delete. */
   deleteNotice?: string | null;
-  /** The main studio content. */
+  /** The active step's content. */
   children: React.ReactNode;
 }
 
 /**
- * Studio chrome: the desktop sidebar (logo, primary nav, active parcel, saved
- * concepts, and the auth/account block) plus the mobile header and bottom tab
- * bar. Renders `children` as the main content area and owns the sign-in modal.
+ * Desktop studio chrome for the guided-spine IA: a mahogany sidebar carrying the
+ * logo, the single {@link StepRail} navigation (replacing the old sidebar-nav +
+ * tab-bar double navigation), the active-parcel card, saved concepts, and the
+ * account block. The main region **scrolls** instead of clipping to one viewport,
+ * which is the structural fix for the studio being "unviewable" on short screens.
  *
- * @param props - The {@link AppShellProps}.
+ * Desktop-only: the mobile studio has its own shell ({@link MobileStudio}); this
+ * component is rendered only in the desktop branch.
  */
-export default function AppShell({
-  activeNav,
+export default function StudioShell({
+  steps,
+  onStepSelect,
   parcelAddress,
   parcelCity,
-  onNavigate,
-  onReset,
   onChangeAddress,
+  onReset,
   savedScenarios = [],
   onLoadScenario,
   onDeleteScenario,
   deleteNotice,
   children,
-}: AppShellProps) {
+}: StudioShellProps) {
   const { user, profile, logout } = useAuth();
   const [scenariosOpen, setScenariosOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const displayName = profile?.displayName || profile?.email?.split("@")[0] || "User";
-  const initials = displayName
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "U";
+  const initials =
+    displayName
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
   const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
 
   return (
-    <div className="flex min-h-dvh bg-lf-mahogany text-lf-espresso">
+    <div className="flex min-h-dvh bg-lf-mahogany text-lf-espresso lg:h-dvh lg:overflow-hidden">
       <aside
-        aria-label="Application navigation"
-        className="hidden w-[238px] shrink-0 flex-col border-r border-white/10 bg-lf-mahogany text-white lg:flex"
+        aria-label="Studio navigation"
+        className="hidden w-[248px] shrink-0 flex-col border-r border-white/10 bg-lf-mahogany text-white lg:flex"
       >
-        <div className="flex h-full flex-col p-4">
+        <div className="flex h-full flex-col overflow-y-auto p-4">
           <div className="flex flex-col gap-1 px-2 py-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lotfoundry-lockup-horizontal-inverse.svg" alt="LotFoundry" className="h-8 w-auto self-start" />
-            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-lf-taupe pl-0.5">
+            <img
+              src="/lotfoundry-lockup-horizontal-inverse.svg"
+              alt="LotFoundry"
+              className="h-8 w-auto self-start"
+            />
+            <p className="pl-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-lf-taupe">
               a foundry for lots
             </p>
           </div>
 
-          <nav aria-label="Primary" className="mt-8 space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeNav === item.id;
+          <div className="mt-6">
+            <p className="px-2 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-lf-taupe">
+              Your path
+            </p>
+            <StepRail
+              aria-label="Studio steps"
+              steps={steps}
+              onSelect={(id) => onStepSelect(id as StudioStep)}
+            />
+          </div>
 
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onNavigate(item.id)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`flex h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany ${
-                    isActive
-                      ? "bg-lf-espresso/45 text-white ring-1 ring-lf-taupe/20"
-                      : "text-lf-taupe hover:bg-white/5 hover:text-lf-sand"
-                  }`}
-                >
-                  <Icon size={18} className={isActive ? "text-lf-sand" : "text-lf-taupe"} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="mt-auto space-y-4">
+          <div className="mt-auto space-y-4 pt-6">
             <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
               <div className="flex gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,7 +114,7 @@ export default function AppShell({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-lf-sand">{parcelAddress}</div>
-                  <div className="truncate mt-1 text-xs text-lf-taupe">{parcelCity}</div>
+                  <div className="mt-1 truncate text-xs text-lf-taupe">{parcelCity}</div>
                 </div>
               </div>
               {onChangeAddress && (
@@ -142,7 +130,7 @@ export default function AppShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-9 w-full rounded-full border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 hover:text-lf-sand motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="mt-3 h-9 w-full rounded-full border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
@@ -240,59 +228,17 @@ export default function AppShell({
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
-      <main className="lf-grain flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lf-sand pb-16 lg:min-h-0 lg:h-dvh lg:overflow-hidden lg:pb-0">
+      {/* Mobile fallback header — the desktop branch can render briefly at narrow
+          widths during resize before the media-query swap to MobileStudio. */}
+      <main className="lf-grain flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lf-sand lg:h-dvh lg:overflow-y-auto">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
-          <div className="flex min-w-0 items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto shrink-0" />
-            <div className="hidden min-w-0 sm:block border-l border-lf-hairline pl-3">
-              <div className="truncate text-xs text-lf-muted">
-                {parcelAddress}, {parcelCity}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onReset}
-            className="h-9 rounded-full border border-lf-hairline px-3 text-sm font-semibold text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
-          >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto shrink-0" />
+          <Button variant="secondary" size="sm" onClick={onReset}>
             Reset
-          </button>
+          </Button>
         </header>
         {children}
-
-        {/* Mobile bottom tab navigation */}
-        <nav
-          aria-label="Mobile navigation"
-          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-lf-hairline bg-lf-card lg:hidden"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-        >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeNav === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onNavigate(item.id)}
-                aria-current={isActive ? "page" : undefined}
-                className="flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset"
-              >
-                <Icon
-                  size={20}
-                  className={`shrink-0 ${isActive ? "text-lf-mahogany" : "text-lf-muted"}`}
-                />
-                <span
-                  className={`truncate text-[10px] font-semibold ${
-                    isActive ? "text-lf-mahogany" : "text-lf-muted"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
       </main>
     </div>
   );
