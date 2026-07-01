@@ -21,7 +21,9 @@ import {
   Stamp,
   XCircle,
 } from "lucide-react";
-import { formatCurrency, type ADUConfig, type FeasibilityResult, type FinancialAssumptions, type Parcel, type RentScenario } from "@/lib/feasibility";
+import { type ADUConfig, type FeasibilityResult, type FinancialAssumptions, type Parcel, type RentScenario } from "@/lib/feasibility";
+import { MoneyFigure } from "@/components/ui/MoneyFigure";
+import { Segmented } from "@/components/ui/Field";
 import {
   summarizeFeasibility,
   statusTone,
@@ -154,31 +156,17 @@ export default function ConstraintsPanel({
             <p className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
               Rent estimate
             </p>
-            <span className="font-display text-sm font-semibold tabular-nums text-lf-mahogany">
-              {formatCurrency(result.monthlyRent)}
-              <span className="font-mono text-[10px] text-lf-muted">/mo</span>
-            </span>
+            <MoneyFigure value={result.monthlyRent} size="sm" className="text-lf-mahogany" />
           </div>
-          <div role="group" aria-label="Rent estimate basis" className="grid grid-cols-3 gap-2">
-            {(Object.keys(RENT_SCENARIO_LABELS) as RentScenario[]).map((scenario) => {
-              const isActive = assumptions.rentScenario === scenario;
-              return (
-                <button
-                  key={scenario}
-                  type="button"
-                  onClick={() => onAssumptionsChange({ ...assumptions, rentScenario: scenario })}
-                  aria-pressed={isActive}
-                  className={`h-9 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    isActive
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                  }`}
-                >
-                  {RENT_SCENARIO_LABELS[scenario]}
-                </button>
-              );
-            })}
-          </div>
+          <Segmented
+            aria-label="Rent estimate basis"
+            value={assumptions.rentScenario}
+            onChange={(scenario) => onAssumptionsChange({ ...assumptions, rentScenario: scenario })}
+            options={(Object.keys(RENT_SCENARIO_LABELS) as RentScenario[]).map((scenario) => ({
+              value: scenario,
+              label: RENT_SCENARIO_LABELS[scenario],
+            }))}
+          />
         </div>
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">

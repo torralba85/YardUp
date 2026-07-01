@@ -56,13 +56,15 @@ export async function fetchBuilderProfile(
  */
 export async function saveBuilderProfile(
   uid: string,
-  input: Omit<BuilderProfile, "id" | "ownerUid" | "createdAt" | "updatedAt">,
+  input: Omit<BuilderProfile, "id" | "ownerUid" | "createdAt" | "updatedAt" | "credits">,
 ): Promise<BuilderProfile> {
   const ref = doc(db, BUILDERS, uid);
   const existing = await getDoc(ref);
+  const credits = existing.exists() ? (existing.data().credits ?? 0) : 0;
 
   await setDoc(ref, {
     ...input,
+    credits,
     ownerUid: uid,
     createdAt: existing.exists() ? existing.data().createdAt : serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -70,6 +72,7 @@ export async function saveBuilderProfile(
 
   return {
     ...input,
+    credits,
     id: uid,
     ownerUid: uid,
     createdAt: existing.exists() ? timestampToIso(existing.data().createdAt) : null,
@@ -261,6 +264,7 @@ function firestoreToBuilderProfile(
     licenseNumber: (data.licenseNumber as string | null) || null,
     serviceAreas: (data.serviceAreas as ServiceArea[]) || [],
     active: Boolean(data.active),
+    credits: (data.credits as number) || 0,
     createdAt: timestampToIso(data.createdAt),
     updatedAt: timestampToIso(data.updatedAt),
   };

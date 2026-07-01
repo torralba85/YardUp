@@ -1,0 +1,104 @@
+"use client";
+
+import * as React from "react";
+import { formatCurrency } from "@/lib/feasibility";
+import { useCountUp } from "@/components/ui/use-count-up";
+import { cn } from "@/lib/utils";
+
+/** Money display size, mapped to the DESIGN.md money scale. */
+export type MoneyFigureSize = "hero" | "band" | "inline" | "sm";
+/** Money surface tone. `forest`/`onDark` are the only sanctioned green renders. */
+export type MoneyFigureTone = "onLight" | "onDark" | "forest";
+/** Small trailing unit (IBM Plex Mono). Empty string renders no unit. */
+export type MoneyFigureUnit = "/mo" | "/yr" | "yrs" | "";
+
+const SIZE_CLASS: Record<MoneyFigureSize, string> = {
+  hero: "text-[3.25rem] leading-none sm:text-[4rem]",
+  band: "text-[2.75rem] leading-none",
+  inline: "text-[1.3rem] leading-none",
+  sm: "text-sm leading-none",
+};
+
+const UNIT_SIZE_CLASS: Record<MoneyFigureSize, string> = {
+  hero: "text-base",
+  band: "text-sm",
+  inline: "text-[10px]",
+  sm: "text-[10px]",
+};
+
+const TONE_CLASS: Record<MoneyFigureTone, string> = {
+  onLight: "text-lf-espresso",
+  onDark: "text-lf-money-on-dark",
+  forest: "text-lf-forest",
+};
+
+const UNIT_TONE_CLASS: Record<MoneyFigureTone, string> = {
+  onLight: "text-lf-muted",
+  onDark: "text-lf-taupe",
+  forest: "text-lf-muted",
+};
+
+/** Props for {@link MoneyFigure}. */
+export interface MoneyFigureProps {
+  /** The dollar amount. Rounded to whole dollars for display. */
+  value: number;
+  /** Trailing unit; defaults to `"/mo"`. Pass `""` to omit. */
+  unit?: MoneyFigureUnit;
+  /** Size step; defaults to `"band"`. */
+  size?: MoneyFigureSize;
+  /** Surface tone; defaults to `"onLight"`. */
+  tone?: MoneyFigureTone;
+  /** Count up to the value when motion is allowed; snaps under reduced motion. */
+  animate?: boolean;
+  /** Element to render as; defaults to `"span"`. */
+  as?: React.ElementType;
+  /** Extra classes merged onto the root element. */
+  className?: string;
+}
+
+/**
+ * The single canonical way to render a money figure across LotFoundry — serif
+ * Cormorant numerals, tabular figures, and a small mono unit. Replaces the four
+ * divergent `$/mo` treatments the studio grew (band / rail / metrics / estimate)
+ * so the asset figure reads with one voice everywhere.
+ *
+ * `animate` opts into the mechanical count-up (DESIGN.md motion). The underlying
+ * {@link useCountUp} snaps immediately under `prefers-reduced-motion` and in
+ * jsdom, so the final value is always present without extra wiring.
+ */
+export function MoneyFigure({
+  value,
+  unit = "/mo",
+  size = "band",
+  tone = "onLight",
+  animate = false,
+  as,
+  className,
+}: MoneyFigureProps) {
+  const Component = as ?? "span";
+  // The hook must be called unconditionally; select the static value when the
+  // caller has not opted into motion.
+  const animated = useCountUp(value);
+  const shown = animate ? animated : value;
+
+  // Rendered via createElement so the polymorphic `as` element accepts children
+  // without TS collapsing the child prop of the ElementType union to `never`.
+  return React.createElement(
+    Component,
+    {
+      "data-money": true,
+      className: cn(
+        "inline-flex items-baseline font-display font-semibold tabular-nums",
+        SIZE_CLASS[size],
+        TONE_CLASS[tone],
+        className,
+      ),
+    },
+    <span>{formatCurrency(Math.round(shown))}</span>,
+    unit ? (
+      <span className={cn("ml-1 font-mono font-medium", UNIT_SIZE_CLASS[size], UNIT_TONE_CLASS[tone])}>
+        {unit}
+      </span>
+    ) : null,
+  );
+}

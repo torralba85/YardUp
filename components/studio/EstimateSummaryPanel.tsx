@@ -2,6 +2,8 @@
 
 import { BarChart3, CheckCircle2, FileText, Home, Ruler, SlidersHorizontal } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { Button } from "@/components/ui/Button";
+import { PanelHeader } from "@/components/ui/Panel";
 import type { FeasibilityResult } from "./types";
 
 /** Props for {@link EstimateSummaryPanel}. */
@@ -57,17 +59,12 @@ export default function EstimateSummaryPanel({
       aria-labelledby="estimate-summary-heading"
       className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-y-auto lg:w-[404px] lg:border-l"
     >
-      <div className="border-b border-lf-hairline px-6 py-5">
-        <h2
-          id="estimate-summary-heading"
-          className="lf-panel-heading text-lf-espresso"
-        >
-          Estimate Summary
-        </h2>
-        <p className="lf-body-sm mt-1 text-lf-muted">
-          Current feasibility snapshot for {parcelName}.
-        </p>
-      </div>
+      <PanelHeader
+        as="h2"
+        id="estimate-summary-heading"
+        title="Estimate Summary"
+        sub={`Current feasibility snapshot for ${parcelName}.`}
+      />
 
       <div className="space-y-4 px-6 py-5">
         <div className="rounded-md border border-lf-hairline bg-lf-sand-2 p-4">
@@ -117,14 +114,15 @@ export default function EstimateSummaryPanel({
           </div>
         )}
 
-        <button
+        <Button
           type="button"
           onClick={onGenerateReport}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-mahogany text-sm font-semibold text-lf-sand-2 transition hover:bg-lf-espresso motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+          fullWidth
+          leftIcon={<FileText size={16} />}
+          className="bg-lf-mahogany text-lf-sand-2 hover:bg-lf-espresso"
         >
-          <FileText size={16} />
           Create report
-        </button>
+        </Button>
       </div>
     </aside>
   );

@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth-context";
  * {@link safeRedirectPath}.
  */
 export default function LoginForm() {
-  const { signIn, signInWithGoogle, user } = useAuth();
+  const { signIn, signInWithGoogle, user, profile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -20,13 +20,16 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const next = safeRedirectPath(searchParams.get("next"));
-
   useEffect(() => {
-    if (user) {
-      router.replace(next);
+    if (user && profile) {
+      const nextParam = searchParams.get("next");
+      if (nextParam) {
+        router.replace(safeRedirectPath(nextParam));
+      } else {
+        router.replace(profile.role === "builder" ? "/builder" : "/studio");
+      }
     }
-  }, [next, router, user]);
+  }, [router, user, profile, searchParams]);
 
   if (user) return null;
 
@@ -36,7 +39,9 @@ export default function LoginForm() {
     startTransition(async () => {
       try {
         await signIn(email, password);
-        router.push(safeRedirectPath(searchParams.get("next")));
+        // Note: The useEffect will handle the actual redirect once profile loads,
+        // but we can leave this here or rely on the effect. It's safer to rely on the effect
+        // to avoid race conditions with profile loading, so we do nothing here on success!
       } catch (err: unknown) {
         const message =
           err instanceof Error && "code" in err
@@ -51,7 +56,7 @@ export default function LoginForm() {
     setError(null);
     try {
       await signInWithGoogle();
-      router.push(safeRedirectPath(searchParams.get("next")));
+      // Rely on the useEffect to handle redirect once profile loads
     } catch (err: unknown) {
       const message =
         err instanceof Error && "code" in err
@@ -159,12 +164,20 @@ export default function LoginForm() {
       Google
     </button>
 
-    <p className="lf-body-sm mt-6 text-center text-lf-muted">
-      Don&apos;t have an account?{" "}
-      <Link href="/signup" className="font-medium text-lf-clay hover:text-lf-mahogany">
-        Sign up
-      </Link>
-    </p>
+    <div className="mt-6 flex flex-col space-y-2">
+      <p className="lf-body-sm text-center text-lf-muted">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="font-medium text-lf-clay hover:text-lf-mahogany">
+          Sign up
+        </Link>
+      </p>
+      <p className="lf-body-sm text-center text-lf-muted">
+        Are you a builder?{" "}
+        <Link href="/signup?role=builder" className="font-medium text-lf-clay hover:text-lf-mahogany">
+          Register here
+        </Link>
+      </p>
+    </div>
     </>
   );
 }

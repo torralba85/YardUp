@@ -19,6 +19,8 @@ export interface UnlockSlipProps {
   onConfirm: () => void;
   /** Called to dismiss the slip. */
   onClose: () => void;
+  /** Whether the builder has bulk credits available. */
+  hasCredits?: boolean;
 }
 
 /**
@@ -34,6 +36,7 @@ export default function UnlockSlip({
   error,
   onConfirm,
   onClose,
+  hasCredits,
 }: UnlockSlipProps) {
   const { preview } = item.request;
   const price = formatUnlockPrice();
@@ -51,7 +54,7 @@ export default function UnlockSlip({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-lf-espresso/90 p-6"
+      className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/90 p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !pending) onClose();
       }}
@@ -117,11 +120,11 @@ export default function UnlockSlip({
             <div className="mb-2 text-[9.5px] uppercase tracking-[0.16em] text-lf-muted">This purchase</div>
             <div className="flex justify-between border-b border-dashed border-lf-hairline py-1.5">
               <span className="text-lf-muted">LEAD UNLOCK · {preview.previewSerial}</span>
-              <span className="text-lf-espresso">{priceWithCents}</span>
+              <span className="text-lf-espresso">{hasCredits ? "1 Credit" : priceWithCents}</span>
             </div>
             <div className="mt-1 flex justify-between border-t-4 border-double border-lf-espresso pt-2.5 font-semibold text-[13px] text-lf-espresso">
               <span>DUE NOW</span>
-              <span>{priceWithCents}</span>
+              <span>{hasCredits ? "1 Credit" : priceWithCents}</span>
             </div>
           </div>
 
@@ -137,8 +140,8 @@ export default function UnlockSlip({
             disabled={pending}
             className="mt-4 flex w-full items-center justify-between bg-lf-forest px-4 py-3.5 text-sm font-semibold text-lf-sand transition hover:brightness-95 disabled:opacity-60"
           >
-            <span>{pending ? "Recording unlock…" : "Pay with Stripe"}</span>
-            <span className="font-display text-lg">{price}</span>
+            <span>{pending ? "Recording unlock…" : (hasCredits ? "Unlock with 1 Credit" : "Pay with Stripe")}</span>
+            <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>
           </button>
           <div className="mt-3 flex justify-center gap-3.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-lf-muted">
             <span>Receipt emailed</span>

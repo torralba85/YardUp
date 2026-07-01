@@ -17,7 +17,7 @@ import {
   verdictTone,
   type VerdictLevel,
 } from "@/lib/feasibility-verdict";
-import { formatCurrency } from "@/lib/feasibility";
+import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { useCountUp } from "./use-count-up";
 
 const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
@@ -44,7 +44,6 @@ export default function FeasibilityVerdictBand({
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
   const readiness = useCountUp(summary.readiness);
-  const rent = useCountUp(result.monthlyRent);
 
   const lotLine = `${parcel.lotArea.toLocaleString()} sf lot · ${parcel.lotWidth}′ × ${parcel.lotLength}′`;
 
@@ -71,10 +70,13 @@ export default function FeasibilityVerdictBand({
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
             If built
           </p>
-          <div className="mt-1 font-display text-[44px] font-semibold leading-none tabular-nums text-lf-money-on-dark">
-            {formatCurrency(rent)}
-            <span className="ml-1 font-mono text-sm text-lf-taupe">/mo</span>
-          </div>
+          <MoneyFigure
+            value={result.monthlyRent}
+            animate
+            size="band"
+            tone="onDark"
+            className="mt-1"
+          />
         </div>
 
         <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />

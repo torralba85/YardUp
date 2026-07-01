@@ -35,6 +35,22 @@
   --color-lf-amber-on-dark: #D9AA4A;
   --color-lf-brick: #A23B26;
   --color-lf-brick-soft: #A23B261A;
+
+  /* Layering scale — replaces ad-hoc z-40 / z-[100] / z-50 / z-30 collisions.
+     Every stacking context in the app draws from these named tiers so overlay
+     order is deterministic (studio scene < rails < headers < nav < sheet <
+     modals < toasts < coach marks). Reference from markup with the v4 var
+     shorthand, e.g. `z-(--z-index-modal)`, so the layer resolves regardless
+     of whether the `z-index` utility namespace is generated. */
+  --z-index-base: 0;
+  --z-index-scene: 10;
+  --z-index-rail: 20;
+  --z-index-header: 30;
+  --z-index-nav: 40;
+  --z-index-sheet: 50;
+  --z-index-modal: 60;
+  --z-index-toast: 70;
+  --z-index-coach: 80;
 }
 
 * {

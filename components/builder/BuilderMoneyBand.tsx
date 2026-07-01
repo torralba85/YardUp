@@ -6,11 +6,11 @@ import type { BuilderMetrics } from "@/lib/builder-metrics";
  * value (2A) — the build value still in play — flanked by the new-lead count
  * and month spend. Figures use the on-dark money green; labels are mono taupe.
  */
-export default function BuilderMoneyBand({ metrics }: { metrics: BuilderMetrics }) {
+export default function BuilderMoneyBand({ metrics, credits }: { metrics: BuilderMetrics; credits?: number }) {
   const unlockLabel = `${metrics.unlockedCount} unlock${metrics.unlockedCount === 1 ? "" : "s"}`;
 
   return (
-    <div className="grid grid-cols-1 gap-px bg-lf-espresso text-lf-taupe sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-px bg-lf-espresso text-lf-taupe sm:grid-cols-4">
       <Cell label="New leads" value={String(metrics.newLeadCount)} />
       <Cell
         label="Pipeline value · new"
@@ -19,6 +19,7 @@ export default function BuilderMoneyBand({ metrics }: { metrics: BuilderMetrics 
         lead
       />
       <Cell label="Spend this month" value={formatCurrency(metrics.spend)} unit={unlockLabel} />
+      <Cell label="Lead Credits" value={String(credits ?? 0)} />
     </div>
   );
 }
