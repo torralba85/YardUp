@@ -22,6 +22,7 @@ service cloud.firestore {
         "licenseNumber",
         "serviceAreas",
         "active",
+        "credits",
         "createdAt",
         "updatedAt"
       ]) &&
@@ -40,7 +41,11 @@ service cloud.firestore {
         request.resource.data.phone is string) &&
       (!("licenseNumber" in request.resource.data) ||
         request.resource.data.licenseNumber == null ||
-        request.resource.data.licenseNumber is string);
+        request.resource.data.licenseNumber is string) &&
+      (!("credits" in request.resource.data) ||
+        (request.resource.data.credits is number &&
+          ((resource == null && request.resource.data.credits == 0) ||
+           (resource != null && request.resource.data.credits == resource.data.credits))));
     }
 
     // 1A: the redacted ROOT doc holds no contact info and no street address —
@@ -327,6 +332,11 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create, update: if isBuilder(builderId) && isValidBuilderProfile(builderId);
       allow delete: if false;
+
+      match /ledger/{transactionId} {
+        allow read: if isBuilder(builderId);
+        allow write: if false;
+      }
     }
 
     match /connectionRequests/{requestId} {

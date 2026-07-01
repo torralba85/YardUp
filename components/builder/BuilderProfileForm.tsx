@@ -6,7 +6,7 @@ import type { BuilderProfile } from "@/lib/marketplace-types";
 
 type BuilderProfileInput = Omit<
   BuilderProfile,
-  "id" | "ownerUid" | "createdAt" | "updatedAt"
+  "id" | "ownerUid" | "createdAt" | "updatedAt" | "credits"
 >;
 
 /**

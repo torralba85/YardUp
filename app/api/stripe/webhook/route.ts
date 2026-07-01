@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { grantLeadUnlock } from "@/lib/server/lead-unlocks";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
+import { getAdminDb } from "@/lib/server/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -33,19 +35,57 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const builderId = session.metadata?.builderId;
-    const requestId = session.metadata?.requestId;
-    // Grant only on confirmed payment. Card checkout is always "paid" by the
-    // time this fires; the guard stops a delayed payment method from revealing
-    // contact during its processing window (fulfil on async_payment_succeeded
-    // instead if one is ever enabled).
-    if (session.payment_status === "paid" && builderId && requestId) {
-      await grantLeadUnlock({
-        builderId,
-        requestId,
-        stripeSessionId: session.id,
-        amount: session.amount_total ?? LEAD_UNLOCK_PRICE_CENTS,
-      });
+    
+    if (session.payment_status === "paid") {
+      const purchaseType = session.metadata?.purchaseType;
+      
+      if (purchaseType === "credit_pack") {
+        const builderId = session.metadata?.builderId;
+        const creditsToGrant = parseInt(session.metadata?.creditsToGrant || "0", 10);
+        
+        if (builderId && creditsToGrant > 0) {
+          const adminDb = getAdminDb();
+          const builderRef = adminDb.collection("builders").doc(builderId);
+          const ledgerRef = builderRef.collection("ledger").doc(`${builderId}_${session.id}`);
+
+          await adminDb.runTransaction(async (transaction) => {
+            const builderDoc = await transaction.get(builderRef);
+            if (!builderDoc.exists) {
+              throw new Error(`Builder ${builderId} not found`);
+            }
+            const data = builderDoc.data();
+            const currentCredits = typeof data?.credits === "number" ? data.credits : 0;
+            
+            transaction.update(builderRef, {
+              credits: currentCredits + creditsToGrant,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+            
+            transaction.set(ledgerRef, {
+              type: "purchase",
+              creditsChange: creditsToGrant,
+              amountPaid: (session.amount_total ?? 0) / 100,
+              stripeSessionId: session.id,
+              createdAt: FieldValue.serverTimestamp(),
+            });
+          });
+        }
+      } else {
+        const builderId = session.metadata?.builderId;
+        const requestId = session.metadata?.requestId;
+        // Grant only on confirmed payment. Card checkout is always "paid" by the
+        // time this fires; the guard stops a delayed payment method from revealing
+        // contact during its processing window (fulfil on async_payment_succeeded
+        // instead if one is ever enabled).
+        if (builderId && requestId) {
+          await grantLeadUnlock({
+            builderId,
+            requestId,
+            stripeSessionId: session.id,
+            amount: session.amount_total ?? LEAD_UNLOCK_PRICE_CENTS,
+          });
+        }
+      }
     }
   }
 

@@ -44,10 +44,23 @@ export interface BuilderProfile {
   serviceAreas: ServiceArea[];
   /** Whether the profile is active and eligible for matching. */
   active: boolean;
+  /** Credit count for instant lead unlocks. */
+  credits: number;
   /** ISO creation timestamp, or `null` if pending a server write. */
   createdAt: string | null;
   /** ISO update timestamp, or `null`. */
   updatedAt: string | null;
+}
+
+export interface BuilderLedgerEntry {
+  id: string;
+  builderId: string;
+  type: "purchase" | "unlock" | "credit";
+  creditsChange: number;
+  amountPaid: number;
+  referenceId: string;
+  description: string;
+  createdAt: string;
 }
 
 /** A homeowner's contact details, captured with consent. */
