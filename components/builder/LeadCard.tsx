@@ -32,6 +32,8 @@ export interface LeadCardProps {
   onViewCertificate?: () => void;
   /** Wired by T9 (report-this-lead / bad-lead credit). */
   onReport?: () => void;
+  /** Whether the builder has bulk credits available. */
+  hasCredits?: boolean;
 }
 
 const ACCESS_CHIP: Record<LeadAccess, { label: string; cls: string }> = {
@@ -54,6 +56,7 @@ export default function LeadCard({
   contact,
   demo,
   responding,
+  hasCredits,
   onUnlockClick,
   onRespond,
   onViewCertificate,
@@ -163,8 +166,8 @@ export default function LeadCard({
               onClick={onUnlockClick}
               className="mt-2.5 inline-flex items-center gap-2 bg-lf-forest px-4 py-2.5 text-sm font-semibold text-lf-sand transition hover:brightness-95"
             >
-              Unlock lead
-              <span className="font-display text-base font-semibold">{formatUnlockPrice()}</span>
+              {hasCredits ? "Unlock with 1 Credit" : "Unlock lead"}
+              <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : formatUnlockPrice()}</span>
             </button>
           </div>
         )}

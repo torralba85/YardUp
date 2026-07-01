@@ -53,6 +53,7 @@ export default function BuilderInbox({
   const [isPending, startTransition] = useTransition();
   const [tab, setTab] = useState<TabKey>("all");
 
+  const [credits, setCredits] = useState(profile.credits ?? 0);
   const [access, setAccess] = useState<Record<string, LeadAccess>>({});
   const [contacts, setContacts] = useState<Record<string, UnlockedLeadContact>>({});
   const [demoGrants, setDemoGrants] = useState<Record<string, boolean>>({});
@@ -116,6 +117,35 @@ export default function BuilderInbox({
     setSlipError(null);
     try {
       const idToken = await user?.getIdToken();
+
+      if (credits > 0) {
+        const res = await fetch("/api/lead/unlock-credit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ requestId }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unlock failed");
+
+        setCredits(data.newCredits);
+
+        setSlipId(null);
+        setAccess((current) => ({ ...current, [requestId]: "confirming" }));
+        setAnnounce(`Lead ${serial}: credit applied, recording unlock.`);
+
+        const contact = await fetchUnlockedContact(requestId);
+        if (contact) {
+          setContacts((current) => ({ ...current, [requestId]: contact }));
+        }
+        setDemoGrants((current) => ({ ...current, [requestId]: false }));
+        setAccess((current) => ({ ...current, [requestId]: "unlocked" }));
+        setAnnounce(`Lead ${serial} unlocked. Owner contact is now visible.`);
+        return;
+      }
+
       const outcome = await startLeadUnlock(requestId, idToken);
 
       if (outcome.kind === "redirect") {
@@ -159,7 +189,7 @@ export default function BuilderInbox({
       </div>
 
       <div className="mt-4 border border-lf-hairline">
-        <BuilderMoneyBand metrics={metrics} credits={profile.credits} />
+        <BuilderMoneyBand metrics={metrics} credits={credits} />
       </div>
 
       <div aria-live="polite" className="sr-only">
@@ -211,6 +241,7 @@ export default function BuilderInbox({
                     access={access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked")}
                     contact={contacts[item.request.id] ?? null}
                     demo={demoGrants[item.request.id]}
+                    hasCredits={credits > 0}
                     responding={isPending && pendingId === item.request.id}
                     onUnlockClick={() => {
                       setSlipId(item.request.id);
@@ -232,6 +263,7 @@ export default function BuilderInbox({
         <UnlockSlip
           item={slipItem}
           companyName={profile.companyName}
+          hasCredits={credits > 0}
           pending={slipPending}
           error={slipError}
           onConfirm={confirmUnlock}
