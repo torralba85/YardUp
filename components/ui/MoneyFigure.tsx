@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { formatCurrency } from "@/lib/feasibility";
-import { useCountUp } from "@/components/studio/use-count-up";
+import { useCountUp } from "@/components/ui/use-count-up";
 import { cn } from "@/lib/utils";
 
 /** Money display size, mapped to the DESIGN.md money scale. */
