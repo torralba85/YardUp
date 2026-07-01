@@ -496,7 +496,7 @@ function FeasibilityStudioInner() {
               />
               <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
               <AIPropertyInsightsPanel
-                key={`${activeParcel.address}-${config.footprint}-${config.width}x${config.length}-${config.roof}-${config.finish}`}
+                key={`${activeParcel.address}-${config.footprint}-${config.width}x${config.length}x${config.height}-${config.roof}-${config.finish}`}
                 parcel={activeParcel}
                 result={result}
                 config={config}
