@@ -495,7 +495,12 @@ function FeasibilityStudioInner() {
                 onGenerateReport={handleGenerateReport}
               />
               <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
-              <AIPropertyInsightsPanel parcel={activeParcel} result={result} config={config} />
+              <AIPropertyInsightsPanel
+                key={`${activeParcel.address}-${config.footprint}-${config.width}x${config.length}-${config.roof}-${config.finish}`}
+                parcel={activeParcel}
+                result={result}
+                config={config}
+              />
               <InspirationGalleryPanel
                 generatedConcepts={generatedConcepts}
                 onGenerationComplete={handleGenerationComplete}
