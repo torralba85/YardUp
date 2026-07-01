@@ -118,7 +118,7 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2",
+              "group flex items-center gap-3 rounded-full px-2.5 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2",
               step.state === "current" && "bg-lf-taupe-soft",
               !locked && step.state !== "current" && "hover:bg-lf-sand-2",
               locked && "cursor-not-allowed opacity-55",
@@ -167,7 +167,7 @@ export function StepProgress({ steps, onSelect, className, ...aria }: StepNavPro
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset",
+              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset",
               locked && "cursor-not-allowed opacity-55",
             )}
           >
