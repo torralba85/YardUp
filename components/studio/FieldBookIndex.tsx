@@ -1,0 +1,101 @@
+"use client";
+
+/**
+ * FieldBookIndex — the studio's single navigation, drawn as a surveyor's field
+ * book contents page. A "SURVEY OF" subject header sits above four numbered
+ * plates; the active plate carries a sliding monument marker and aria-current.
+ * Replaces the old 5-item sidebar nav AND the 3-item StudioTabBar.
+ */
+
+import { PLATES, type PlateTick, type StudioPlate } from "@/lib/studio-plates";
+
+const TICK_META: Record<PlateTick, { glyph: string; label: string; className: string }> = {
+  eligible: { glyph: "✓", label: "eligible", className: "text-lf-money-on-dark" },
+  review: { glyph: "△", label: "review", className: "text-lf-amber-on-dark" },
+  unlikely: { glyph: "✕", label: "unlikely", className: "text-lf-brick" },
+  pending: { glyph: "·", label: "not started", className: "text-lf-taupe/60" },
+  ready: { glyph: "◦", label: "ready to record", className: "text-lf-money-on-dark" },
+};
+
+export interface FieldBookIndexProps {
+  active: StudioPlate;
+  onNavigate: (plate: StudioPlate) => void;
+  statuses: Record<StudioPlate, PlateTick>;
+  subject: { address: string; apn?: string; zone?: string };
+}
+
+export default function FieldBookIndex({
+  active,
+  onNavigate,
+  statuses,
+  subject,
+}: FieldBookIndexProps) {
+  return (
+    <div>
+      <div className="px-2 pb-4">
+        <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-lf-taupe">
+          Survey of
+        </p>
+        <p className="mt-1 truncate font-display text-base font-semibold text-lf-sand">
+          {subject.address}
+        </p>
+        {(subject.apn || subject.zone) && (
+          <p className="mt-0.5 font-mono text-[10px] text-lf-taupe">
+            {subject.apn ? `⌖ APN ${subject.apn}` : ""}
+            {subject.apn && subject.zone ? " · " : ""}
+            {subject.zone ?? ""}
+          </p>
+        )}
+      </div>
+
+      <nav aria-label="Survey plates" className="space-y-0.5 border-t border-white/10 pt-2">
+        {PLATES.map((plate) => {
+          const isActive = active === plate.id;
+          const tick = TICK_META[statuses[plate.id]];
+          return (
+            <button
+              key={plate.id}
+              type="button"
+              onClick={() => onNavigate(plate.id)}
+              aria-current={isActive ? "page" : undefined}
+              className={`relative flex w-full items-center gap-3 rounded-lg py-2.5 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset ${
+                isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-white/5"
+              }`}
+            >
+              {/* Sliding monument marker — the "you are here" gesture. */}
+              <span
+                aria-hidden
+                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-lf-clay transition-opacity motion-safe:transition-all ${
+                  isActive ? "opacity-100" : "opacity-0"
+                }`}
+              />
+              <span
+                className={`w-6 shrink-0 font-mono text-[11px] font-semibold tracking-widest ${
+                  isActive ? "text-lf-sand" : "text-lf-taupe"
+                }`}
+              >
+                {plate.numeral}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span
+                  className={`block text-sm font-medium ${isActive ? "text-lf-sand" : "text-lf-taupe"}`}
+                >
+                  {plate.title}
+                  {plate.optional && (
+                    <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-lf-taupe/70">
+                      optional
+                    </span>
+                  )}
+                </span>
+              </span>
+              <span className={`shrink-0 font-mono text-xs ${tick.className}`} title={tick.label}>
+                {tick.glyph}
+                <span className="sr-only"> {tick.label}</span>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}

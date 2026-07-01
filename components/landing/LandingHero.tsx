@@ -151,7 +151,7 @@ export function LandingHero() {
           variants={containerVariants}
           initial={shouldAnimate ? "hidden" : false}
           animate={shouldAnimate ? "visible" : undefined}
-          className={`pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] max-sm:top-24 max-sm:w-[calc(100%-40px)] ${mobileSceneFocused ? "max-sm:-translate-y-4 max-sm:opacity-0" : "max-sm:opacity-100"}`}
+          className={`pointer-events-none absolute left-[clamp(20px,5vw,64px)] top-[clamp(92px,14vh,132px)] z-10 w-[min(620px,82vw)] transition-[opacity,transform,visibility] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] max-sm:top-24 max-sm:w-[calc(100%-40px)] ${mobileSceneFocused ? "max-sm:invisible max-sm:-translate-y-4 max-sm:opacity-0" : "max-sm:visible max-sm:opacity-100"}`}
         >
           <motion.p
             variants={itemVariants}
@@ -202,7 +202,7 @@ export function LandingHero() {
             />
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 max-sm:w-full max-sm:rounded-2xl"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-lf-forest px-5 text-xs font-semibold text-lf-sand transition-all duration-300 hover:bg-lf-mahogany active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card max-sm:w-full max-sm:rounded-2xl"
             >
               Run feasibility
             </button>
@@ -259,7 +259,7 @@ export function LandingHero() {
                     </span>
                     <span className="max-sm:hidden">
                       <span className={`block text-[13px] ${active ? "text-lf-espresso" : "text-lf-muted"}`}>{layer.name}</span>
-                      <span className="mt-0.5 block text-[10px] text-lf-muted/70">{layer.detail}</span>
+                      <span className="mt-0.5 block text-[10px] text-lf-muted">{layer.detail}</span>
                     </span>
                   </button>
                 );
