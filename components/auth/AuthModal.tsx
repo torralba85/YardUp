@@ -64,7 +64,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div className="w-full max-w-md rounded-xl bg-lf-mahogany text-white shadow-2xl relative overflow-hidden border border-white/10">
         <button
           onClick={onClose}

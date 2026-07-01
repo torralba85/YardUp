@@ -167,7 +167,7 @@ describe("POST /api/stripe/webhook", () => {
       },
     };
 
-    mocks.adminDb.runTransaction.mockImplementation(async (cb: any) => {
+    mocks.adminDb.runTransaction.mockImplementation(async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
       mocks.transaction.get.mockResolvedValueOnce({
         exists: true,
         data: () => ({ credits: 10 }),

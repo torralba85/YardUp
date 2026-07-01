@@ -24,9 +24,7 @@ import {
   Lock, 
   Mail, 
   Phone, 
-  Printer, 
-  Unlock, 
-  User 
+  Unlock,
 } from "lucide-react";
 import { buildReportHtml, buildReportCsv, downloadBlob } from "@/lib/report";
 import { finishLabels, roofLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
@@ -574,7 +572,7 @@ export default function BuilderInbox({
                                   <div className="mt-3 border-t border-dashed border-lf-hairline pt-2">
                                     <span className="font-mono text-[9px] uppercase text-lf-muted font-medium">Homeowner Message:</span>
                                     <p className="text-xs italic text-lf-espresso mt-1 leading-relaxed bg-lf-card/60 p-2 border-l border-lf-taupe">
-                                      "{itemContact.ownerContact.message}"
+                                      &ldquo;{itemContact.ownerContact.message}&rdquo;
                                     </p>
                                   </div>
                                 )}
@@ -843,8 +841,8 @@ function CreditShop() {
         // Reload to show the new credits and ledger
         window.location.reload();
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(null);
     }

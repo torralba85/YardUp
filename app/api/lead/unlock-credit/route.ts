@@ -66,7 +66,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(result);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to unlock lead";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
