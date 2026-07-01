@@ -24,6 +24,16 @@ export async function POST(req: NextRequest) {
         throw new Error("Builder profile not found");
       }
 
+      const requestRef = db.doc(`connectionRequests/${requestId}`);
+      const requestSnap = await transaction.get(requestRef);
+      if (!requestSnap.exists) {
+        throw new Error("Lead not found");
+      }
+      const matchedBuilderIds = requestSnap.data()?.matchedBuilderIds;
+      if (!Array.isArray(matchedBuilderIds) || !matchedBuilderIds.includes(builderId)) {
+        throw new Error("Lead is not matched to this builder");
+      }
+
       const credits = profileSnap.data()?.credits ?? 0;
       if (credits < 1) {
         throw new Error("Insufficient credits");
