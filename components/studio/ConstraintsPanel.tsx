@@ -30,7 +30,9 @@ import {
   type ConstraintItem,
   type ConstraintStatus,
 } from "@/lib/feasibility-verdict";
-import AIPropertyInsightsPanel from "./AIPropertyInsightsPanel";
+import AIPropertyInsightsPanel, {
+  createAIPropertyInsightsKey,
+} from "./AIPropertyInsightsPanel";
 import AIStyleMatchPanel from "./AIStyleMatchPanel";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import { useParcel } from "@/lib/parcel-context";
@@ -180,7 +182,12 @@ export default function ConstraintsPanel({
         </div>
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
-          <AIPropertyInsightsPanel parcel={parcel} result={result} config={config} />
+          <AIPropertyInsightsPanel
+            key={createAIPropertyInsightsKey({ parcel, result, config })}
+            parcel={parcel}
+            result={result}
+            config={config}
+          />
         </div>
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">

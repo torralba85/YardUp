@@ -6,15 +6,57 @@ import { AIRequestError, requestParcelInsights } from "@/lib/ai-api";
 import type { AIParcelInsights } from "@/lib/ai-types";
 import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
 
+export interface AIPropertyInsightsPanelProps {
+  parcel: Parcel & { zoning?: string; source?: string };
+  result: FeasibilityResult;
+  config: ADUConfig;
+}
+
+export function createAIPropertyInsightsKey({
+  parcel,
+  result,
+  config,
+}: AIPropertyInsightsPanelProps) {
+  return [
+    parcel.address,
+    parcel.city,
+    parcel.lotArea,
+    parcel.lotWidth,
+    parcel.lotLength,
+    parcel.existingHouseSqft,
+    parcel.maxLotCoveragePercent,
+    parcel.setbacks.front,
+    parcel.setbacks.rear,
+    parcel.setbacks.side,
+    parcel.zoning ?? "",
+    parcel.source ?? "",
+    config.footprint,
+    config.width,
+    config.length,
+    config.height,
+    config.roof,
+    config.finish,
+    config.includeOpenings ? "openings" : "no-openings",
+    result.aduSqft,
+    result.allowedFootprint,
+    result.remainingCapacity,
+    result.coveragePercent,
+    result.maxCoveragePercent,
+    result.zoningStatus,
+    result.costLow,
+    result.costHigh,
+    result.monthlyRent,
+    result.annualNoi,
+    result.paybackYears,
+    result.warnings.join(","),
+  ].join("|");
+}
+
 export default function AIPropertyInsightsPanel({
   parcel,
   result,
   config,
-}: {
-  parcel: Parcel & { zoning?: string; source?: string };
-  result: FeasibilityResult;
-  config: ADUConfig;
-}) {
+}: AIPropertyInsightsPanelProps) {
   const [insights, setInsights] = useState<AIParcelInsights | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
