@@ -54,6 +54,9 @@ describe("POST /api/lead/unlock-credit", () => {
       if (ref.path === "builders/builder-123") {
         return { exists: true, data: () => ({ credits: 0 }) };
       }
+      if (ref.path === "connectionRequests/lead-123") {
+        return { exists: true, data: () => ({ matchedBuilderIds: ["builder-123"] }) };
+      }
       return { exists: false };
     });
 
@@ -68,12 +71,41 @@ describe("POST /api/lead/unlock-credit", () => {
     expect(data.error).toBe("Insufficient credits");
   });
 
+  it("rejects when the lead is not matched to the builder", async () => {
+    vi.mocked(requireApiAuth).mockResolvedValueOnce({ uid: "builder-123" });
+
+    mockGet.mockImplementation(async (ref) => {
+      if (ref.path === "builders/builder-123") {
+        return { exists: true, data: () => ({ credits: 5 }) };
+      }
+      if (ref.path === "connectionRequests/lead-123") {
+        return { exists: true, data: () => ({ matchedBuilderIds: ["other-builder"] }) };
+      }
+      return { exists: false };
+    });
+
+    const req = new NextRequest("http://localhost/api/lead/unlock-credit", {
+      method: "POST",
+      body: JSON.stringify({ requestId: "lead-123" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Lead is not matched to this builder");
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockSet).not.toHaveBeenCalled();
+  });
+
   it("successfully debits credits and returns the new credit balance", async () => {
     vi.mocked(requireApiAuth).mockResolvedValueOnce({ uid: "builder-123" });
     
     mockGet.mockImplementation(async (ref) => {
       if (ref.path === "builders/builder-123") {
         return { exists: true, data: () => ({ credits: 5 }) };
+      }
+      if (ref.path === "connectionRequests/lead-123") {
+        return { exists: true, data: () => ({ matchedBuilderIds: ["builder-123"] }) };
       }
       if (ref.path === "leadUnlocks/builder-123_lead-123") {
         return { exists: false };
