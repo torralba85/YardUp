@@ -48,10 +48,10 @@ export function deriveStepStates(activeStep: StudioStep, input: StepStateInput):
     let state: StepState;
     if (index === activeIndex) {
       state = "current";
-    } else if (step.requiresParcel && !input.hasParcel) {
-      state = "locked";
     } else if (index < activeIndex) {
       state = "done";
+    } else if (step.requiresParcel && !input.hasParcel) {
+      state = "locked";
     } else {
       state = "upcoming";
     }
