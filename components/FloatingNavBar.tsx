@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -11,6 +11,7 @@ import { ArrowRight } from "lucide-react";
  */
 export function FloatingNavBar() {
   const { scrollY } = useScroll();
+  const reduceMotion = useReducedMotion();
 
   // Map scroll position to different visual states.
   // Width is kept at 100% (static) and maxWidth transitions from a large value
@@ -49,17 +50,22 @@ export function FloatingNavBar() {
       <motion.header
         style={{
           width: "100%",
-          maxWidth,
-          paddingTop: paddingY,
-          paddingBottom: paddingY,
-          marginTop: top,
-          borderRadius,
-          background,
-          backdropFilter,
-          borderColor,
+          // Reduced-motion users get the resting pill state statically — the
+          // scroll-linked width/radius/position morph is disabled since the
+          // global CSS reduced-motion guard can't reach JS-driven motion values.
+          maxWidth: reduceMotion ? 850 : maxWidth,
+          paddingTop: reduceMotion ? "12px" : paddingY,
+          paddingBottom: reduceMotion ? "12px" : paddingY,
+          marginTop: reduceMotion ? "24px" : top,
+          borderRadius: reduceMotion ? "100px" : borderRadius,
+          background: reduceMotion ? "rgba(251, 246, 238, 0.85)" : background,
+          backdropFilter: reduceMotion ? "blur(12px)" : backdropFilter,
+          borderColor: reduceMotion ? "rgba(224, 205, 180, 0.8)" : borderColor,
           borderWidth: "1px",
           borderStyle: "solid",
-          boxShadow,
+          boxShadow: reduceMotion
+            ? "0 10px 40px -10px rgba(38, 19, 7, 0.1)"
+            : boxShadow,
         }}
         className="pointer-events-auto mx-auto box-border flex max-w-7xl items-center justify-between px-2 sm:px-6"
       >

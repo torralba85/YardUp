@@ -13,7 +13,7 @@ export default function LandingPage() {
     <AmbientBackdrop>
       <FloatingNavBar />
 
-      <main>
+      <main id="main-content">
         <LandingHero />
         <FeatureBand />
       </main>
