@@ -49,6 +49,12 @@ describe("deriveStepStates", () => {
     expect(stateFor(steps, "certificate")).toBe("current");
   });
 
+  it("keeps passed gated steps done even when later parcel state is missing", () => {
+    const steps = deriveStepStates("builders", { hasParcel: false });
+    expect(stateFor(steps, "certificate")).toBe("done");
+    expect(stateFor(steps, "builders")).toBe("current");
+  });
+
   it("marks all preceding steps done when deep in the journey", () => {
     const steps = deriveStepStates("design", { hasParcel: true });
     expect(stateFor(steps, "lot")).toBe("done");
