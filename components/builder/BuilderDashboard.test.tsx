@@ -187,4 +187,46 @@ describe("BuilderDashboard", () => {
     expect(screen.getByLabelText("Example lead")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Unlock lead/i })).not.toBeInTheDocument();
   });
+
+  it("toggles between cards and table view and renders the ledger table", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    // Renders cards by default
+    expect(await screen.findByText(/LF-AB12CD/)).toBeInTheDocument();
+    
+    // Toggle to table view
+    const tableToggle = screen.getByRole("button", { name: "Table" });
+    await userEvent.click(tableToggle);
+
+    // Ledger table is rendered with headers and columns
+    expect(screen.getByRole("table", { name: /inbox leads ledger/i })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /lead \/ recorded/i })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /rent potential/i })).toBeInTheDocument();
+    expect(screen.getByText("600 sf ADU")).toBeInTheDocument();
+  });
+
+  it("selects a row in table view to inspect details in the certificate pane", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    // Toggle to table
+    await userEvent.click(await screen.findByRole("button", { name: "Table" }));
+
+    // Inspection pane initially shows "No lead selected"
+    expect(screen.getByText(/no lead selected/i)).toBeInTheDocument();
+
+    // Select row
+    const row = screen.getByText("LF-AB12CD").closest("tr");
+    expect(row).toBeInTheDocument();
+    await userEvent.click(row!);
+
+    // Inspection pane shows the locked cover details
+    expect(screen.getByText(/feasibility certificate locked/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /unlock lead/i })).toBeInTheDocument();
+  });
 });
