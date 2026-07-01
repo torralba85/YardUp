@@ -66,13 +66,13 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           {menuOpen && (
             <>
               <div
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 z-(--z-index-nav)"
                 aria-hidden
                 onClick={() => setMenuOpen(false)}
               />
               <div
                 role="menu"
-                className="absolute right-0 top-12 z-50 w-60 space-y-2 rounded-lg border border-white/10 bg-lf-mahogany p-3 text-left shadow-xl"
+                className="absolute right-0 top-12 z-(--z-index-sheet) w-60 space-y-2 rounded-lg border border-white/10 bg-lf-mahogany p-3 text-left shadow-xl"
               >
                 <div className="px-1">
                   <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>

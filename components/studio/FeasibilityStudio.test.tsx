@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
+import { WIZARD_SEEN_KEY } from "@/lib/wizard-state";
 import type { ReactNode } from "react";
 
 vi.mock("next/dynamic", () => ({
@@ -61,6 +62,7 @@ function stepButton(label: RegExp) {
 describe("FeasibilityStudio (guided spine)", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
+    window.localStorage.clear();
     // Simulate reduced motion so useCountUp snaps synchronously to its final
     // value, keeping assertions on count-up figures deterministic.
     vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({
@@ -104,6 +106,32 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(
       screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i }),
     ).toBeInTheDocument();
+  });
+
+  it("scopes mobile sheet content to the selected spine step", async () => {
+    vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("prefers-reduced-motion"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as unknown as MediaQueryList)));
+    window.localStorage.setItem(WIZARD_SEEN_KEY, "1");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    expect(screen.getByRole("navigation", { name: "Studio progress", hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Inspiration Gallery" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Design/, hidden: true }));
+
+    expect(await screen.findByRole("heading", { name: "Feasibility Studio" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Inspiration Gallery" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Seattle ADU Starter Guide/i })).not.toBeInTheDocument();
   });
 
   it("exposes massing controls on the Design step", async () => {
