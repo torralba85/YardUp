@@ -18,6 +18,14 @@ export async function POST(request: NextRequest) {
   }
 
   const amountCents = pack === 5 ? 17500 : 30000;
+  const db = getAdminDb();
+  const profileRef = db.doc(`builders/${builderId}`);
+  const profileSnap = await profileRef.get();
+
+  if (!profileSnap.exists) {
+    return NextResponse.json({ error: "Builder profile not found" }, { status: 403 });
+  }
+
   const stripe = await getStripe();
 
   if (!stripe) {
@@ -29,12 +37,12 @@ export async function POST(request: NextRequest) {
     }
     
     // Demo grant
-    const db = getAdminDb();
     try {
       await db.runTransaction(async (transaction) => {
-        const profileRef = db.doc(`builders/${builderId}`);
         const profileSnap = await transaction.get(profileRef);
-        
+        if (!profileSnap.exists) {
+          throw new Error("Builder profile not found");
+        }
         const currentCredits = profileSnap.data()?.credits ?? 0;
         
         transaction.update(profileRef, {
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
           builderId,
           type: "purchase",
           creditsChange: pack,
-          amountPaid: amountCents,
+          amountPaid: amountCents / 100,
           description: `${pack}-Lead Pack`,
           createdAt: new Date().toISOString(),
         });
