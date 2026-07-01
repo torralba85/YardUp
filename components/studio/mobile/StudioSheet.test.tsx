@@ -72,7 +72,7 @@ describe("StudioSheet", () => {
 
     expect(descriptionId).toBeTruthy();
     expect(document.getElementById(descriptionId as string)).toHaveTextContent(
-      /adjust adu configuration controls/i,
+      /review the active studio step/i,
     );
   });
 

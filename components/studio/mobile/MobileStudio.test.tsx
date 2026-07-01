@@ -74,4 +74,38 @@ describe("MobileStudio", () => {
     renderStudio();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
   });
+
+  it("renders the spine progress and reports step selection", () => {
+    const onStepSelect = vi.fn();
+    render(
+      <MobileStudio
+        header={<div>m-header</div>}
+        scene={<div>m-scene</div>}
+        peek={<div>m-peek</div>}
+        controls={<div>m-controls</div>}
+        sections={<div>m-sections</div>}
+        activeStepLabel="Feasibility & Rules"
+        steps={[
+          { id: "lot", label: "Your Lot", state: "current" },
+          { id: "feasibility", label: "Feasibility & Rules", state: "upcoming" },
+        ]}
+        onStepSelect={onStepSelect}
+      />,
+    );
+
+    const progress = screen.getByRole("navigation", { name: "Studio progress", hidden: true });
+    expect(progress).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Feasibility & Rules/, hidden: true }));
+    expect(onStepSelect).toHaveBeenCalledWith("feasibility");
+    expect(screen.getByTestId("studio-sheet")).toHaveAttribute(
+      "aria-label",
+      "Feasibility & Rules step",
+    );
+    expect(screen.getByText("m-controls").parentElement).toHaveFocus();
+  });
+
+  it("omits the spine progress when no steps are provided", () => {
+    renderStudio();
+    expect(screen.queryByRole("navigation", { name: "Studio progress" })).not.toBeInTheDocument();
+  });
 });

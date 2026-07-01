@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -43,9 +43,6 @@ import BuilderLeadPanel, {
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
-import AIPropertyInsightsPanel, {
-  createAIPropertyInsightsKey,
-} from "./studio/AIPropertyInsightsPanel";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import type { InspirationItem } from "@/lib/inspiration-data";
 import { configForFootprint } from "@/lib/feasibility";
@@ -316,6 +313,12 @@ function FeasibilityStudioInner() {
     setActiveStep(id);
   }
 
+  function handleMobilePresetSelect(presetId: string) {
+    const preset = getParcelById(presetId);
+    resetToPreset(preset);
+    setParcelId(preset.id);
+  }
+
   // Route to the address search from anywhere: land on the "Your Lot" step
   // (where the search leads) and focus it.
   function handleChangeAddress() {
@@ -462,9 +465,123 @@ function FeasibilityStudioInner() {
     if (wizardOpen) {
       return <WizardFlow onComplete={handleWizardComplete} />;
     }
+    const mobileSteps = deriveStepStates(activeStep, { hasParcel: true });
+    const mobileStepLabel = STUDIO_STEPS.find((step) => step.id === activeStep)?.label ?? "Studio";
+    const mobileParcelName = `${activeParcel.address}, ${activeParcel.city}`;
+    // Step-scoped sheet content: the full sheet shows only the active step's
+    // panels rather than stacking every panel at once (the old mobile overload).
+    let mobileControls: ReactNode;
+    let mobileSections: ReactNode = null;
+    if (activeStep === "lot") {
+      mobileControls = (
+        <div className="pt-1">
+          <p className="lf-kicker pb-2 text-lf-clay">Your lot</p>
+          <AddressSearch
+            onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
+            onSubmitText={(query) => searchByAddress(query)}
+            autoFocusSignal={addressFocusSignal}
+          />
+          <p className="mt-2 text-xs text-lf-muted">
+            Search your address to pull parcel, zoning, and local rents.
+          </p>
+          <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            Or use a demo lot
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2" aria-label="Demo lots">
+            {parcelPresets.map((preset) => {
+              const selected = parcelMode === "preset" && parcelId === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleMobilePresetSelect(preset.id)}
+                  aria-pressed={selected}
+                  className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                    selected
+                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
+                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe hover:bg-lf-sand-2"
+                  }`}
+                >
+                  {preset.city.split(",")[0]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    } else if (activeStep === "feasibility") {
+      mobileControls = (
+        <ConstraintsPanel
+          parcel={activeParcel}
+          result={result}
+          config={config}
+          assumptions={assumptions}
+          onAssumptionsChange={setAssumptions}
+          onViewCertificate={() => setActiveStep("certificate")}
+          addressFocusSignal={addressFocusSignal}
+        />
+      );
+      mobileSections = (
+        <>
+          <PermitGuidePanel address={mobileParcelName} />
+          <MetricsSummary result={result} />
+        </>
+      );
+    } else if (activeStep === "design") {
+      mobileControls = (
+        <FeasibilityInspector
+          parcelId={parcelId}
+          config={config}
+          assumptions={assumptions}
+          result={result}
+          onParcelChange={setParcelId}
+          onConfigChange={setConfig}
+          onAssumptionsChange={setAssumptions}
+          onReset={resetScenario}
+          onGenerateReport={handleGenerateReport}
+          onSaveScenario={handleSaveScenario}
+          savingScenario={savingScenario}
+          saveNotice={saveNotice}
+        />
+      );
+      mobileSections = (
+        <>
+          <InspirationGalleryPanel
+            generatedConcepts={generatedConcepts}
+            onGenerationComplete={handleGenerationComplete}
+            onViewComparison={handleViewComparison}
+            styleMatchKey={styleMatchKey}
+            onApply={(item) => {
+              const baseConfig = configForFootprint(item.sqft, config);
+              setConfig({
+                ...baseConfig,
+                width: item.width,
+                length: item.length,
+                roof: item.roof,
+                finish: item.finish,
+              });
+            }}
+          />
+          <MetricsSummary result={result} />
+        </>
+      );
+    } else if (activeStep === "certificate") {
+      mobileControls = (
+        <EstimateSummaryPanel
+          parcelName={mobileParcelName}
+          result={result}
+          onGenerateReport={handleGenerateReport}
+        />
+      );
+    } else {
+      mobileControls = <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />;
+    }
     return (
       <>
         <MobileStudio
+          steps={mobileSteps}
+          onStepSelect={(id) => handleStepSelect(id as StudioStep)}
+          activeStepLabel={mobileStepLabel}
           header={
             <MobileHeader
               address={activeParcel.address}
@@ -486,55 +603,8 @@ function FeasibilityStudioInner() {
               }
             />
           }
-          controls={
-            <FeasibilityInspector
-              parcelId={parcelId}
-              config={config}
-              assumptions={assumptions}
-              result={result}
-              onParcelChange={setParcelId}
-              onConfigChange={setConfig}
-              onAssumptionsChange={setAssumptions}
-              onReset={resetScenario}
-              onGenerateReport={handleGenerateReport}
-              onSaveScenario={handleSaveScenario}
-              savingScenario={savingScenario}
-              saveNotice={saveNotice}
-            />
-          }
-          sections={
-            <>
-              <MetricsSummary result={result} />
-              <EstimateSummaryPanel
-                parcelName={`${activeParcel.address}, ${activeParcel.city}`}
-                result={result}
-                onGenerateReport={handleGenerateReport}
-              />
-              <PermitGuidePanel address={`${activeParcel.address}, ${activeParcel.city}`} />
-              <AIPropertyInsightsPanel
-                key={createAIPropertyInsightsKey({ parcel: activeParcel, result, config })}
-                parcel={activeParcel}
-                result={result}
-                config={config}
-              />
-              <InspirationGalleryPanel
-                generatedConcepts={generatedConcepts}
-                onGenerationComplete={handleGenerationComplete}
-                onViewComparison={handleViewComparison}
-                styleMatchKey={styleMatchKey}
-                onApply={(item) => {
-                  const baseConfig = configForFootprint(item.sqft, config);
-                  setConfig({
-                    ...baseConfig,
-                    width: item.width,
-                    length: item.length,
-                    roof: item.roof,
-                    finish: item.finish,
-                  });
-                }}
-              />
-            </>
-          }
+          controls={mobileControls}
+          sections={mobileSections}
         />
         {reportOpen && (
           <ReportPreview

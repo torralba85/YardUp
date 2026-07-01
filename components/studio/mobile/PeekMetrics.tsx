@@ -1,4 +1,5 @@
-import { finishLabels, formatCompactCurrency, formatCurrency, type ADUConfig, type FeasibilityResult } from "@/lib/feasibility";
+import { finishLabels, formatCompactCurrency, type ADUConfig, type FeasibilityResult } from "@/lib/feasibility";
+import { MoneyFigure } from "@/components/ui/MoneyFigure";
 
 /** Props for {@link PeekMetrics}. */
 export interface PeekMetricsProps {
@@ -31,9 +32,13 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
           Rent potential / mo
         </p>
-        <p className="mt-0.5 font-display text-[26px] font-semibold leading-none tabular-nums text-lf-forest">
-          {formatCurrency(result.monthlyRent)}
-        </p>
+        <MoneyFigure
+          value={result.monthlyRent}
+          unit=""
+          size="inline"
+          tone="forest"
+          className="mt-0.5 text-[26px]"
+        />
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <Metric
