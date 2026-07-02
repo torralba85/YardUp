@@ -57,6 +57,15 @@ function initGoogleMaps(apiKey: string) {
 }
 
 /**
+ * Whether a value plausibly is a Google browser API key (`AIza` + 35 chars).
+ * A mangled deploy-time value (seen in production: `-`) must read as "no key",
+ * so the server-suggest fallback stays available instead of a dead dropdown.
+ */
+function looksLikeBrowserKey(value: string | undefined): value is string {
+  return typeof value === "string" && /^AIza[\w-]{35}$/.test(value);
+}
+
+/**
  * Address search input with a custom, design-system-styled suggestion dropdown.
  *
  * When `NEXT_PUBLIC_GOOGLE_PLACES_KEY` is set it uses the Google Places (New)
@@ -75,7 +84,7 @@ export default function AddressSearch({
   disabled = false,
   autoFocusSignal,
 }: AddressSearchProps) {
-  const hasPlacesKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
+  const hasPlacesKey = looksLikeBrowserKey(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   // Suppresses the dropdown from re-opening on the just-picked text.
@@ -89,15 +98,18 @@ export default function AddressSearch({
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const [loading, setLoading] = useState(hasPlacesKey);
   const [placesReady, setPlacesReady] = useState(false);
+  // Google accepted the key format but rejected it at runtime (InvalidKey,
+  // referrer block, network) — hand autocomplete to the server path instead.
+  const [googleFailed, setGoogleFailed] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  // Both sources feed the same dropdown. Google when a key is loaded; otherwise
-  // the server fallback (only useful when a free-text handler is provided).
-  const googleEnabled = hasPlacesKey && placesReady && !disabled;
-  const serverEnabled = !hasPlacesKey && Boolean(onSubmitText) && !disabled;
+  // Both sources feed the same dropdown. Google when a key is loaded and
+  // working; otherwise the server fallback (needs a free-text handler).
+  const googleEnabled = hasPlacesKey && placesReady && !googleFailed && !disabled;
+  const serverEnabled = (!hasPlacesKey || googleFailed) && Boolean(onSubmitText) && !disabled;
   const dropdownEnabled = googleEnabled || serverEnabled;
 
   // Imperative focus when an outside action (e.g. sidebar "Change address")
@@ -106,10 +118,10 @@ export default function AddressSearch({
     if (autoFocusSignal) inputRef.current?.focus();
   }, [autoFocusSignal]);
 
-  // Load the Places (New) library once when a key is configured.
+  // Load the Places (New) library once when a plausible key is configured.
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
-    if (!apiKey) return;
+    if (!looksLikeBrowserKey(apiKey)) return;
 
     initGoogleMaps(apiKey);
     let active = true;
@@ -119,6 +131,7 @@ export default function AddressSearch({
       })
       .catch((err: unknown) => {
         console.error("[AddressSearch] Failed to load Places API:", err);
+        if (active) setGoogleFailed(true);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -153,18 +166,28 @@ export default function AddressSearch({
           if (!sessionTokenRef.current) {
             sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
           }
-          const { suggestions: predictions } =
-            await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-              input: query,
-              includedRegionCodes: ["US"],
-              // Geocoded addresses only (no establishments/POIs) — the parcel
-              // lookup needs a property address, not a business whose pin sits
-              // off the lot. "geocode" is the API's valid address-type token;
-              // "address" is rejected and "street_address" returns nothing for
-              // partial input (verified against the live Places (New) API).
-              includedPrimaryTypes: ["geocode"],
-              sessionToken: sessionTokenRef.current,
-            });
+          let predictions: google.maps.places.AutocompleteSuggestion[];
+          try {
+            ({ suggestions: predictions } =
+              await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                input: query,
+                includedRegionCodes: ["US"],
+                // Geocoded addresses only (no establishments/POIs) — the parcel
+                // lookup needs a property address, not a business whose pin sits
+                // off the lot. "geocode" is the API's valid address-type token;
+                // "address" is rejected and "street_address" returns nothing for
+                // partial input (verified against the live Places (New) API).
+                includedPrimaryTypes: ["geocode"],
+                sessionToken: sessionTokenRef.current,
+              }));
+          } catch (err) {
+            // The library loaded but Google rejects requests (InvalidKey,
+            // referrer block). Flip to the server path; the effect re-runs
+            // with the same query and repopulates from /api/suggest.
+            console.error("[AddressSearch] Google autocomplete failed:", err);
+            if (active) setGoogleFailed(true);
+            return;
+          }
           if (!active) return;
           next = predictions
             .map((s) => s.placePrediction)
