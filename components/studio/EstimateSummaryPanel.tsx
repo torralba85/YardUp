@@ -63,7 +63,7 @@ export default function EstimateSummaryPanel({
   return (
     <aside
       aria-labelledby="estimate-summary-heading"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-y-auto lg:w-[404px] lg:border-l"
+      className="w-full overflow-hidden rounded-lg border border-lf-hairline bg-lf-card"
     >
       <PanelHeader
         as="h2"
@@ -92,7 +92,7 @@ export default function EstimateSummaryPanel({
           </div>
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {metrics.map((metric) => {
             const Icon = metric.icon;
             return (
