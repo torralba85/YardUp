@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer } from "vaul";
 
@@ -26,6 +26,10 @@ export interface StudioSheetProps {
   controls: ReactNode;
   /** Scrollable at full snap: summary, permits, inspiration, export. */
   sections: ReactNode;
+  /** Title for the active step content. */
+  title?: string;
+  /** Bump to focus the active step content after a step-navigation action. */
+  focusSignal?: number;
 }
 
 /**
@@ -35,9 +39,29 @@ export interface StudioSheetProps {
  *
  * @param props - The {@link StudioSheetProps}.
  */
-export default function StudioSheet({ snap, onSnapChange, peek, controls, sections }: StudioSheetProps) {
+export default function StudioSheet({
+  snap,
+  onSnapChange,
+  peek,
+  controls,
+  sections,
+  title = "Feasibility controls",
+  focusSignal = 0,
+}: StudioSheetProps) {
   const isFull = snap === FULL_SNAP;
   const isPeek = snap === PEEK_SNAP || snap === null;
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const didMountFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!didMountFocusRef.current) {
+      didMountFocusRef.current = true;
+      return;
+    }
+    if (!isPeek) {
+      contentRef.current?.focus();
+    }
+  }, [focusSignal, isPeek]);
 
   function cycleSnap() {
     if (isPeek) onSnapChange(HALF_SNAP);
@@ -57,13 +81,12 @@ export default function StudioSheet({ snap, onSnapChange, peek, controls, sectio
       <Drawer.Portal>
         <Drawer.Content
           data-testid="studio-sheet"
-          aria-label="Feasibility controls"
-          className="fixed bottom-0 left-0 right-0 z-40 flex h-[96dvh] flex-col rounded-t-2xl border-t border-lf-hairline bg-lf-card shadow-[0_-8px_28px_rgba(38,19,7,0.3)] outline-none"
+          aria-label={title}
+          className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[96dvh] flex-col rounded-t-2xl border-t border-lf-hairline bg-lf-card shadow-[0_-8px_28px_rgba(38,19,7,0.3)] outline-none"
         >
-          <Drawer.Title className="sr-only">Feasibility controls</Drawer.Title>
+          <Drawer.Title className="sr-only">{title}</Drawer.Title>
           <Drawer.Description className="sr-only">
-            Adjust ADU configuration controls, review feasibility metrics, and open detailed studio
-            sections.
+            Review the active studio step, adjust available controls, and expand for supporting sections.
           </Drawer.Description>
           <div className="relative shrink-0 pt-2">
             <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-lf-taupe/40" />
@@ -81,7 +104,12 @@ export default function StudioSheet({ snap, onSnapChange, peek, controls, sectio
             className={`min-h-0 flex-1 px-4 ${isFull ? "overflow-y-auto" : "overflow-hidden"}`}
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
           >
-            <div className="flex flex-col gap-6">
+            <div
+              ref={contentRef}
+              tabIndex={-1}
+              aria-label={title}
+              className="flex flex-col gap-6 outline-none"
+            >
               {controls}
               {sections}
             </div>

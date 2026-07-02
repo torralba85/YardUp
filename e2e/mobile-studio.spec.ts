@@ -8,9 +8,10 @@ test.describe("mobile studio", () => {
 
     await expect(page.getByText(/could your backyard pay you rent/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /skip — explore the demo lot/i }).click();
+    await page.getByRole("button", { name: /skip/i }).click();
 
     await expect(page.getByTestId("studio-sheet")).toBeVisible();
+    await expect(page.locator('nav[aria-label="Studio progress"]')).toBeVisible();
     await expect(page.getByText("Rent potential / mo")).toBeVisible();
     // Coach marks appear once on a fresh profile. The inspector renders its
     // own role="note" hint, so filter to the coach mark.
@@ -18,39 +19,38 @@ test.describe("mobile studio", () => {
     await page.getByRole("button", { name: /got it/i }).click();
   });
 
-  test("expanding the sheet reveals controls and metrics react to size change", async ({ page }) => {
-    // This flow drives several sequential vaul sheet snaps plus an accordion
-    // open before asserting; it runs close to the default 30s budget and tips
-    // over on slower CI runners. Triple the timeout to keep it stable.
+  test("design step controls update metrics from the mobile spine", async ({ page }) => {
+    // This flow drives a vaul sheet snap plus an accordion before asserting; it
+    // can run close to the default 30s budget on slower CI runners.
     test.slow();
     await page.goto("/studio");
-    await page.getByRole("button", { name: /skip — explore the demo lot/i }).click();
+    await page.getByRole("button", { name: /skip/i }).click();
     const note = page.getByRole("note").filter({ hasText: /drag your adu/i });
     if (await note.isVisible()) {
       await page.getByRole("button", { name: /got it/i }).click();
     }
 
     // Monthly rent is scenario-driven and ignores footprint, so watch the
-    // build-cost range — it scales with ADU size.
+    // build-cost range; it scales with ADU size.
     const buildRange = page.getByTestId("studio-sheet").getByText(/\$\d+K-\$\d+K/).first();
     const buildBefore = await buildRange.textContent();
 
-    // Two clicks: peek → half → full. Only the full snap scrolls the sheet
-    // body, so the footprint presets stay unreachable at half.
+    // P2 scopes mobile sheet content by the guided spine. Move to Design before
+    // driving the inspector; Feasibility no longer dumps every panel at once.
+    await page.locator('nav[aria-label="Studio progress"] button').filter({ hasText: "Design" }).click();
     await page.getByRole("button", { name: /expand panel/i }).click();
-    await page.getByRole("button", { name: /expand panel/i }).click();
-    // The inspector is an accordion: open step 2 to reach the footprint
-    // presets (buttons labeled like "800 sf"), which stay clipped otherwise.
+
+    // The inspector is an accordion: open step 2 to reach the footprint presets.
     await page.getByRole("button", { name: "2 Design Your ADU" }).click();
     await page.getByRole("button", { name: /800 sf/i }).click();
 
-    await expect(page.getByTestId("studio-sheet").getByText("800 ft²").first()).toBeVisible();
+    await expect(page.getByTestId("studio-sheet").getByText(/800 ft/).first()).toBeVisible();
     await expect(buildRange).not.toHaveText(buildBefore ?? "");
   });
 
   test("wizard does not reappear after being skipped", async ({ page }) => {
     await page.goto("/studio");
-    await page.getByRole("button", { name: /skip — explore the demo lot/i }).click();
+    await page.getByRole("button", { name: /skip/i }).click();
     await expect(page.getByTestId("studio-sheet")).toBeVisible();
 
     await page.reload();
