@@ -108,4 +108,22 @@ describe("MobileStudio", () => {
     renderStudio();
     expect(screen.queryByRole("navigation", { name: "Studio progress" })).not.toBeInTheDocument();
   });
+
+  it("reveals and focuses the sheet when the active step changes programmatically", () => {
+    window.localStorage.setItem(COACH_SEEN_KEY, "1");
+    const props = {
+      header: <div>m-header</div>,
+      scene: <div>m-scene</div>,
+      peek: <div>m-peek</div>,
+      controls: <div>m-controls</div>,
+      sections: <div>m-sections</div>,
+    };
+    const { rerender } = render(<MobileStudio {...props} activeStepId="feasibility" />);
+    expect(screen.getByText("m-controls").parentElement).not.toHaveFocus();
+
+    // An in-sheet CTA (e.g. "View certificate") changes the step without going
+    // through the spine — the sheet must still reveal and focus the content.
+    rerender(<MobileStudio {...props} activeStepId="certificate" />);
+    expect(screen.getByText("m-controls").parentElement).toHaveFocus();
+  });
 });

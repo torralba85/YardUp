@@ -205,28 +205,33 @@ See `DESIGN.md` for the full brand spec and use it as the source of truth before
 
 ## Current Status
 
+_Last updated 2026-07-02 (guided-spine release train)._
+
 | Dimension | Status | Notes |
 |---|---|---|
-| Brand/Identity | ✅ Complete | LotFoundry fully integrated |
-| Core Feasibility Logic | ✅ Complete | 3 presets + live parcel support |
+| Brand/Identity | ✅ Complete | LotFoundry fully integrated; field-book design system (`DESIGN.md`) |
+| Core Feasibility Logic | ✅ Complete | 3 presets + live parcel (Regrid) + wizard estimates; market-basis rents |
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
-| Aerial View | ✅ Code written | Requires live API keys to render |
-| UI/UX Polish | ✅ Improved | Scroll containment, bento grid responsive |
-| Testing | ✅ 103 Vitest tests + E2E specs | `npm run lint` and `npm test -- --run` passing on 2026-06-08 |
-| Deployment | ✅ Configured | Firebase Hosting + Functions, CI pipeline active |
-| Auth / User Accounts | ✅ Implemented | Login, signup, password reset, Google sign-in, and role-aware redirects |
-| Builder Routing | ⚠️ In progress | Builder dashboard route exists; partner network workflow still needs hardening |
+| Guided Spine (P0–P4) | ✅ Landed | Single step model: Lot → Feasibility → Design → Certificate → Builders on desktop rail + mobile progress spine; step-scoped mobile bottom sheet |
+| Monetization | ✅ Implemented | Stripe paid certificate purchase (P3) + builder lead-unlock marketplace; `LOTFOUNDRY_DEMO_UNLOCKS` for dev |
+| AI Panels | ✅ Implemented | Parcel insights + style-matched ADU concepts (auth + rate-limited server routes) |
+| Testing | ✅ ~400 Vitest tests + Playwright desktop/mobile | Full gate green 2026-07-02 |
+| Deployment | ✅ Configured | Firebase Hosting + Functions, CI deploys master; see `docs/deployment.md` |
+| Auth / User Accounts | ✅ Implemented | Login, signup, password reset, Google sign-in, role-aware redirects, in-app account deletion |
+| Builder Marketplace | ✅ V1 | Builder dashboard, inbox, lead cards, unlock ledger; BuildersPanel matches by service area |
+| Store Packaging (iOS/Play) | ⚠️ Blocked on decisions | PWA is healthy; no TWA/wrapper project yet — see `docs/store-deployment-readiness.md` |
 
 ---
 
-## Next Priorities (from audit)
+## Next Priorities (deployment audit 2026-07-02)
 
-1. **Solar simulation** — time-of-day slider with SunCalc + Three.js directional light
-2. **View mode selector** — aerial/layers/setbacks toggles on the scene
-3. **Aerial view polish** — tick marks, corner dots, better label positioning to match the design target
-4. **Auth smoke coverage** — verify email/password and Google sign-in against Firebase test users
-5. **Builder routing hardening** — lead capture, partner network, marketplace element
-6. **Server-side scenario persistence** — keep Firestore saves covered by smoke tests and CI-safe fixtures
+1. **Production env gap** — `NEXT_PUBLIC_GOOGLE_PLACES_KEY` is missing from GitHub secrets, so address autocomplete is dead in production. Add a browser key (referrer-restricted). This is the one confirmed production break (`docs/store-deployment-readiness.md` §1).
+2. **`NEXT_PUBLIC_APP_URL`** — set to the real domain or Stripe redirects land on `yardup-2026.web.app`.
+3. **Stripe live-mode verification** — webhook endpoint registered in the dashboard, one live test checkout for certificate + lead-unlock flows.
+4. **Store packaging** — wrapper strategy decided (PWABuilder); needs `assetlinks.json`, manifest screenshots, signed `.aab`, iOS wrapper project (`docs/store-deployment-readiness.md` §2–3).
+5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md` (pill-radius system, amber/brick semantics, typography trio) on landing, studio, builder dashboard.
+6. **Builder network growth** — real builder onboarding flow; zero-state city coverage is honest but the network is empty.
+7. **Solar simulation / view modes / aerial polish** — deferred scene enhancements from the earlier audit.
 
 ---
 

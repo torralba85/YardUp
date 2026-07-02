@@ -38,6 +38,7 @@ import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
 import CertificatePanel from "./studio/CertificatePanel";
+import BuildersPanel from "./studio/BuildersPanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
@@ -487,7 +488,7 @@ function FeasibilityStudioInner() {
           <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
             Or use a demo lot
           </p>
-          <div className="mt-2 flex flex-wrap gap-2" aria-label="Demo lots">
+          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">
             {parcelPresets.map((preset) => {
               const selected = parcelMode === "preset" && parcelId === preset.id;
               return (
@@ -575,7 +576,26 @@ function FeasibilityStudioInner() {
         />
       );
     } else {
-      mobileControls = <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />;
+      // The connect form must render inside the sheet: the mobile shell is a
+      // fixed h-dvh viewport, so a panel mounted after it is unreachable.
+      mobileControls = builderLeadOpen ? (
+        <BuilderLeadPanel
+          open
+          userDefaults={{
+            name: user?.displayName || "",
+            email: user?.email || "",
+          }}
+          parcelKey={parcelId}
+          parcel={activeParcel}
+          config={config}
+          assumptions={assumptions}
+          result={result}
+          onClose={() => setBuilderLeadOpen(false)}
+          onSubmit={handleBuilderLeadSubmit}
+        />
+      ) : (
+        <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
+      );
     }
     return (
       <>
@@ -583,6 +603,7 @@ function FeasibilityStudioInner() {
           steps={mobileSteps}
           onStepSelect={(id) => handleStepSelect(id as StudioStep)}
           activeStepLabel={mobileStepLabel}
+          activeStepId={activeStep}
           header={
             <MobileHeader
               address={activeParcel.address}
@@ -615,25 +636,17 @@ function FeasibilityStudioInner() {
             onDownload={downloadReport}
             onExportCsv={exportCsv}
             onShare={handleShareLink}
-            onConnectBuilders={() => setBuilderLeadOpen(true)}
+            onConnectBuilders={() => {
+              // The form lives on the Builders step's sheet — close the report
+              // and land there with the form open.
+              setReportOpen(false);
+              setActiveStep("builders");
+              setBuilderLeadOpen(true);
+            }}
             shareNotice={shareNotice}
             autoFocus={reportAutoFocus}
           />
         )}
-        <BuilderLeadPanel
-          open={builderLeadOpen}
-          userDefaults={{
-            name: user?.displayName || "",
-            email: user?.email || "",
-          }}
-          parcelKey={parcelId}
-          parcel={activeParcel}
-          config={config}
-          assumptions={assumptions}
-          result={result}
-          onClose={() => setBuilderLeadOpen(false)}
-          onSubmit={handleBuilderLeadSubmit}
-        />
       </>
     );
   }
@@ -752,7 +765,7 @@ function FeasibilityStudioInner() {
             onOpenCertificate={handleGenerateReport}
           />
         ) : (
-          <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />
+          <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
         )}
 
         {showsMetrics && <MetricsSummary result={result} />}
@@ -889,22 +902,3 @@ function LotStep({
   );
 }
 
-/**
- * Step 5 — the builder-referral destination. Presents the connect action; the
- * matching + outreach runs through the existing {@link BuilderLeadPanel} flow
- * (the referral charge lands in a later phase).
- */
-function BuildersStep({ onConnect }: { onConnect: () => void }) {
-  return (
-    <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-      <p className="lf-kicker text-lf-clay">Step 5 · Builders</p>
-      <h2 className="lf-section-heading text-lf-espresso">Connect with local builders.</h2>
-      <p className="lf-body max-w-md text-lf-muted">
-        Share your concept with vetted builders in your area. They reach out with quotes and the real next steps.
-      </p>
-      <Button variant="commit" onClick={onConnect}>
-        Connect with builders
-      </Button>
-    </div>
-  );
-}

@@ -25,6 +25,12 @@ export interface MobileStudioProps {
   onStepSelect?: (id: string) => void;
   /** Human label for the active step's sheet content. */
   activeStepLabel?: string;
+  /**
+   * The active step's id. When it changes — from the spine or from an in-sheet
+   * CTA that jumps steps programmatically — the sheet opens to at least half
+   * and focus moves to the new step content.
+   */
+  activeStepId?: string;
 }
 
 /**
@@ -43,16 +49,32 @@ export default function MobileStudio({
   steps,
   onStepSelect,
   activeStepLabel,
+  activeStepId,
 }: MobileStudioProps) {
   const [snap, setSnap] = useState<SheetSnap | null>(PEEK_SNAP);
   const [sheetFocusSignal, setSheetFocusSignal] = useState(0);
+  const [prevStepId, setPrevStepId] = useState(activeStepId);
 
-  function handleStepSelect(id: string) {
-    onStepSelect?.(id);
+  function revealSheet() {
     // Reveal the step's content: if the sheet is collapsed to the peek strip,
     // open it to half so the newly-selected step is visible.
     setSnap((current) => (current === PEEK_SNAP || current === null ? HALF_SNAP : current));
     setSheetFocusSignal((current) => current + 1);
+  }
+
+  // Render-phase adjustment (not an effect): any step change — spine tap or an
+  // in-sheet CTA like "View certificate" — reveals and focuses the new content,
+  // so programmatic jumps behave exactly like spine navigation.
+  if (activeStepId !== prevStepId) {
+    setPrevStepId(activeStepId);
+    revealSheet();
+  }
+
+  function handleStepSelect(id: string) {
+    onStepSelect?.(id);
+    // Reveal directly on tap — this also answers re-selecting the current
+    // step, which never flows back as an activeStepId change.
+    revealSheet();
   }
   const [coachVisible, setCoachVisible] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -75,7 +97,10 @@ export default function MobileStudio({
 
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden bg-lf-espresso">
-      <div className="relative z-(--z-index-header) shrink-0">{header}</div>
+      {/* The header sits one layer above the spine (nav > header) so its
+          account dropdown, which extends below the header bar, paints over the
+          spine instead of being clipped behind this later sibling. */}
+      <div className="relative z-(--z-index-nav) shrink-0">{header}</div>
 
       {steps && steps.length > 0 && (
         <div className="relative z-(--z-index-header) shrink-0 border-b border-lf-hairline bg-lf-card px-2 py-1.5">
