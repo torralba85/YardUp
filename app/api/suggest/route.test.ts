@@ -19,20 +19,18 @@ afterEach(() => {
 });
 
 describe("GET /api/suggest", () => {
-  it("returns Google Places predictions for a partial address", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          predictions: [
-            { description: "123 Main St, San Jose, CA, USA" },
-            { description: "123 Main St, Santa Monica, CA, USA" },
-          ],
-        }),
+  it("returns Places (New) predictions for a partial address", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        suggestions: [
+          { placePrediction: { text: { text: "123 Main St, San Jose, CA, USA" } } },
+          { placePrediction: { text: { text: "123 Main St, Santa Monica, CA, USA" } } },
+        ],
       }),
-    );
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     const res = await GET(makeRequest("123 Main"));
     expect(res.status).toBe(200);
@@ -41,6 +39,13 @@ describe("GET /api/suggest", () => {
       "123 Main St, San Jose, CA, USA",
       "123 Main St, Santa Monica, CA, USA",
     ]);
+    // The legacy autocomplete endpoint is unavailable to new Cloud projects —
+    // the route must call Places API (New) with the key in a header.
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://places.googleapis.com/v1/places:autocomplete");
+    expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>)["X-Goog-Api-Key"]).toBe("test-key");
+    expect(url).not.toContain("test-key");
   });
 
   it("caps the number of suggestions at 5", async () => {
@@ -50,8 +55,8 @@ describe("GET /api/suggest", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          predictions: Array.from({ length: 8 }, (_, i) => ({
-            description: `${i} Main St, Denver, CO, USA`,
+          suggestions: Array.from({ length: 8 }, (_, i) => ({
+            placePrediction: { text: { text: `${i} Main St, Denver, CO, USA` } },
           })),
         }),
       }),

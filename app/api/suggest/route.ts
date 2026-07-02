@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
 const GOOGLE_AUTOCOMPLETE_API =
-  "https://maps.googleapis.com/maps/api/place/autocomplete/json";
+  "https://places.googleapis.com/v1/places:autocomplete";
 const TIMEOUT_MS = 4000;
 const MAX_QUERY_LEN = 200;
 const MIN_QUERY_LEN = 3;
@@ -22,7 +22,9 @@ export interface AddressSuggestions {
  *
  * Returns US address predictions for a partial query so the studio's address
  * input can suggest while the user types, without exposing a browser-side
- * Places key. Uses the server-side Google key (Places Autocomplete API).
+ * Places key. Uses the server-side Google key against Places API (New) —
+ * the legacy `maps/api/place/autocomplete` endpoint silently fails for new
+ * Cloud projects, which left this route returning `[]` in production.
  * Degrades to an empty list when no key is configured or the provider fails —
  * the input then falls back to plain submit-to-search.
  */
@@ -47,27 +49,37 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const url = new URL(GOOGLE_AUTOCOMPLETE_API);
-    url.searchParams.set("input", q);
-    url.searchParams.set("types", "address");
-    url.searchParams.set("components", "country:us");
-    url.searchParams.set("key", googleKey);
-
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let res: Response;
     try {
-      res = await fetch(url.toString(), { signal: controller.signal });
+      res = await fetch(GOOGLE_AUTOCOMPLETE_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Key travels in a header, never the URL, so it stays out of
+          // request logs.
+          "X-Goog-Api-Key": googleKey,
+        },
+        body: JSON.stringify({
+          input: q,
+          includedRegionCodes: ["us"],
+          // Same address-only filter the studio's in-browser search uses —
+          // "geocode" is the valid token for property addresses.
+          includedPrimaryTypes: ["geocode"],
+        }),
+        signal: controller.signal,
+      });
     } finally {
       clearTimeout(timer);
     }
     if (!res.ok) throw new Error(`Autocomplete returned ${res.status}`);
 
     const json = (await res.json()) as {
-      predictions?: Array<{ description?: string }>;
+      suggestions?: Array<{ placePrediction?: { text?: { text?: string } } }>;
     };
-    const suggestions = (json.predictions ?? [])
-      .map((p) => p.description?.trim() ?? "")
+    const suggestions = (json.suggestions ?? [])
+      .map((s) => s.placePrediction?.text?.text?.trim() ?? "")
       .filter(Boolean)
       .slice(0, MAX_SUGGESTIONS);
 
