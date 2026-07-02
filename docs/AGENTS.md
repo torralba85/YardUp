@@ -225,7 +225,7 @@ _Last updated 2026-07-02 (guided-spine release train)._
 
 ## Next Priorities (deployment audit 2026-07-02)
 
-1. **Production env gap** — `NEXT_PUBLIC_GOOGLE_PLACES_KEY` is missing from GitHub secrets, so address autocomplete is dead in production. Add a browser key (referrer-restricted). This is the one confirmed production break (`docs/store-deployment-readiness.md` §1).
+1. **Production env gap** — the `NEXT_PUBLIC_GOOGLE_PLACES_KEY` GitHub secret exists but holds a wrong value (the deployed bundle bootstraps Maps JS with `key=-`, Google answers `InvalidKey` + RPC 400), so address autocomplete is dead in production. The correct browser key already exists: GCP key "New next_public_google_places_key" (uid `4d270dd8-96b9-4a5a-b660-533c5ea082a5`, referrer-restricted to the prod domains + localhost, Places (New) enabled) — it matches the verified-working key in `.env.local`. Fix: `gcloud services api-keys get-key-string projects/yardup-2026/locations/global/keys/4d270dd8-96b9-4a5a-b660-533c5ea082a5 --format="value(keyString)" | gh secret set NEXT_PUBLIC_GOOGLE_PLACES_KEY --repo torralba85/YardUp`, then any master push redeploys with it. Verify with a live autocomplete request against https://yardup-2026.web.app/studio.
 2. **`NEXT_PUBLIC_APP_URL`** — set to the real domain or Stripe redirects land on `yardup-2026.web.app`.
 3. **Stripe live-mode verification** — webhook endpoint registered in the dashboard, one live test checkout for certificate + lead-unlock flows.
 4. **Store packaging** — wrapper strategy decided (PWABuilder); needs `assetlinks.json`, manifest screenshots, signed `.aab`, iOS wrapper project (`docs/store-deployment-readiness.md` §2–3).
