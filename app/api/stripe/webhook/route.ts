@@ -53,6 +53,10 @@ export async function POST(request: NextRequest) {
             stripeSessionId: session.id,
             amount: session.amount_total ?? CERTIFICATE_PRICE_CENTS,
           });
+        } else {
+          console.error(
+            `[stripe/webhook] Missing uid or certKey in certificate purchase metadata for session ${session.id}`,
+          );
         }
       } else if (purchaseType === "credit_pack") {
         const builderId = session.metadata?.builderId;
