@@ -62,11 +62,11 @@ test.describe("mobile studio", () => {
 test.describe("desktop studio regression", () => {
   test.skip(({ viewport }) => !viewport || viewport.width < 1024, "desktop-only suite");
 
-  test("desktop keeps the AppShell layout and never shows the wizard", async ({ page }) => {
+  test("desktop shows the guided spine and never the mobile wizard", async ({ page }) => {
     await page.goto("/studio");
 
-    await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Feasibility Studio" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Feasibility & Rules" })).toBeVisible();
     await expect(page.getByText(/could your backyard pay you rent/i)).not.toBeVisible();
     await expect(page.getByTestId("studio-sheet")).not.toBeVisible();
   });
