@@ -230,6 +230,36 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByRole("button", { name: /Connect with builders/i })).toBeInTheDocument();
   });
 
+  it("opens the builder connect form inside the mobile sheet", async () => {
+    // Non-desktop matchMedia: the studio renders the mobile shell, whose
+    // fixed-viewport layout would hide any panel mounted outside the sheet.
+    vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("prefers-reduced-motion"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as unknown as MediaQueryList)));
+    window.localStorage.setItem(WIZARD_SEEN_KEY, "1");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    fireEvent.click(screen.getByRole("button", { name: /Builders/, hidden: true }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Connect with builders/i, hidden: true }),
+    );
+
+    const sheet = screen.getByTestId("studio-sheet");
+    expect(
+      within(sheet).getByRole("button", {
+        name: /Close builder connection form/i,
+        hidden: true,
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("marks the lead money figures with the investment-grade accent", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     const summary = document.getElementById("summary");

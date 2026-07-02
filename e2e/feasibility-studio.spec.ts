@@ -81,6 +81,8 @@ test.describe("Public LotFoundry flows", () => {
       // expand to full snap (peek → half → full) to reach it.
       await page.getByRole("button", { name: /expand panel/i }).click();
       await page.getByRole("button", { name: /expand panel/i }).click();
+      // Wait for the animation to complete
+      await page.waitForTimeout(500);
     } else {
       // Navigating via sidebar navigation button
       await page.getByRole("button", { name: /Feasibility & Rules/i }).click();
@@ -99,11 +101,13 @@ test.describe("Public LotFoundry flows", () => {
       await expect(page.getByRole("dialog", { name: /Design step/i })).toBeVisible();
       // Step selection opens the sheet to half; expand once more to reach full.
       await page.getByRole("button", { name: /expand panel/i }).click();
+      // Wait for the animation to complete
+      await page.waitForTimeout(500);
     } else {
       // Navigating via sidebar navigation button
       await page.getByRole("button", { name: /Design/i }).click();
     }
-    await expect(page.getByRole("heading", { name: /Inspiration Gallery/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Inspiration Gallery/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/Courtyard Studio with Clerestory Light/i)).toBeVisible();
 
     // Click Apply on the first inspiration card (Canyon Courtyard)

@@ -51,6 +51,7 @@ export default function StudioSheet({
   const isFull = snap === FULL_SNAP;
   const isPeek = snap === PEEK_SNAP || snap === null;
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const didMountFocusRef = useRef(false);
 
   useEffect(() => {
@@ -59,7 +60,11 @@ export default function StudioSheet({
       return;
     }
     if (!isPeek) {
-      contentRef.current?.focus();
+      // The scroll container persists across step changes, so a prior step's
+      // scroll offset would leave the new content opened mid-way. Reset it
+      // explicitly and keep focus() from issuing a competing scroll.
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      contentRef.current?.focus({ preventScroll: true });
     }
   }, [focusSignal, isPeek]);
 
@@ -101,6 +106,7 @@ export default function StudioSheet({
           </div>
           <div className="shrink-0 px-4 pb-2 pt-1">{peek}</div>
           <div
+            ref={scrollRef}
             className={`min-h-0 flex-1 px-4 ${isFull ? "overflow-y-auto" : "overflow-hidden"}`}
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
           >

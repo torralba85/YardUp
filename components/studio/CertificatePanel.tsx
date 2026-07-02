@@ -128,7 +128,17 @@ export default function CertificatePanel({
       : `Generate complete certificate — ${price}`;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    // Step 4 destination layout — a centered column like BuildersPanel, not a
+    // right-rail sidebar; the estimate and the unlock offer are its content.
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
+      <div className="text-center">
+        <p className="lf-kicker text-lf-clay">Step 4 · Certificate</p>
+        <h2 className="lf-section-heading mt-2 text-lf-espresso">Your Certificate of Feasibility.</h2>
+        <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
+          Review your estimate, then unlock the complete certificate to share with builders and lenders.
+        </p>
+      </div>
+
       <EstimateSummaryPanel
         parcelName={parcelName}
         result={result}
@@ -137,7 +147,7 @@ export default function CertificatePanel({
         reportCtaBusy={busy || loading}
       />
 
-      <div className="border-t border-lf-hairline bg-lf-sand-2 px-6 py-5">
+      <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 px-6 py-5">
         {purchased ? (
           <div className="flex items-start gap-3">
             <ShieldCheck size={20} className="mt-0.5 shrink-0 text-lf-forest" />
