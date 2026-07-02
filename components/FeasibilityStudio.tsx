@@ -38,6 +38,7 @@ import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
 import CertificatePanel from "./studio/CertificatePanel";
+import BuildersPanel from "./studio/BuildersPanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
@@ -575,7 +576,9 @@ function FeasibilityStudioInner() {
         />
       );
     } else {
-      mobileControls = <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />;
+      mobileControls = (
+        <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
+      );
     }
     return (
       <>
@@ -752,7 +755,7 @@ function FeasibilityStudioInner() {
             onOpenCertificate={handleGenerateReport}
           />
         ) : (
-          <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />
+          <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
         )}
 
         {showsMetrics && <MetricsSummary result={result} />}
@@ -889,22 +892,3 @@ function LotStep({
   );
 }
 
-/**
- * Step 5 — the builder-referral destination. Presents the connect action; the
- * matching + outreach runs through the existing {@link BuilderLeadPanel} flow
- * (the referral charge lands in a later phase).
- */
-function BuildersStep({ onConnect }: { onConnect: () => void }) {
-  return (
-    <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-      <p className="lf-kicker text-lf-clay">Step 5 · Builders</p>
-      <h2 className="lf-section-heading text-lf-espresso">Connect with local builders.</h2>
-      <p className="lf-body max-w-md text-lf-muted">
-        Share your concept with vetted builders in your area. They reach out with quotes and the real next steps.
-      </p>
-      <Button variant="commit" onClick={onConnect}>
-        Connect with builders
-      </Button>
-    </div>
-  );
-}
