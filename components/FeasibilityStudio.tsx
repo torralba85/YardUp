@@ -37,7 +37,7 @@ import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch"
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
-import EstimateSummaryPanel from "./studio/EstimateSummaryPanel";
+import CertificatePanel from "./studio/CertificatePanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
@@ -538,7 +538,7 @@ function FeasibilityStudioInner() {
           onConfigChange={setConfig}
           onAssumptionsChange={setAssumptions}
           onReset={resetScenario}
-          onGenerateReport={handleGenerateReport}
+          onGenerateReport={() => setActiveStep("certificate")}
           onSaveScenario={handleSaveScenario}
           savingScenario={savingScenario}
           saveNotice={saveNotice}
@@ -567,10 +567,11 @@ function FeasibilityStudioInner() {
       );
     } else if (activeStep === "certificate") {
       mobileControls = (
-        <EstimateSummaryPanel
-          parcelName={mobileParcelName}
+        <CertificatePanel
+          parcel={activeParcel}
           result={result}
-          onGenerateReport={handleGenerateReport}
+          parcelName={mobileParcelName}
+          onOpenCertificate={handleGenerateReport}
         />
       );
     } else {
@@ -720,7 +721,7 @@ function FeasibilityStudioInner() {
                 onConfigChange={setConfig}
                 onAssumptionsChange={setAssumptions}
                 onReset={resetScenario}
-                onGenerateReport={handleGenerateReport}
+                onGenerateReport={() => setActiveStep("certificate")}
                 onSaveScenario={handleSaveScenario}
                 savingScenario={savingScenario}
                 saveNotice={saveNotice}
@@ -744,10 +745,11 @@ function FeasibilityStudioInner() {
             />
           </>
         ) : activeStep === "certificate" ? (
-          <EstimateSummaryPanel
-            parcelName={parcelName}
+          <CertificatePanel
+            parcel={activeParcel}
             result={result}
-            onGenerateReport={handleGenerateReport}
+            parcelName={parcelName}
+            onOpenCertificate={handleGenerateReport}
           />
         ) : (
           <BuildersStep onConnect={() => setBuilderLeadOpen(true)} />

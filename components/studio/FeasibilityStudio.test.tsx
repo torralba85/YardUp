@@ -172,19 +172,23 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(monthlyRentSection).toHaveTextContent("$2,350");
   });
 
-  it("reaches the certificate step and generates the report", async () => {
+  it("paywalls the complete certificate behind a purchase (guest sees sign-in)", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     await user.click(stepButton(/Certificate/));
+
+    // The free estimate snapshot stays visible...
     expect(
       screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
     ).toBeInTheDocument();
+    // ...but the complete certificate is gated behind a one-time price.
+    expect(screen.getByText(/complete certificate is a one-time \$29/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Create report/i }));
-    expect(screen.getByText(/recorded concept for this lot/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Print \/ Save/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Download/i })).toBeInTheDocument();
+    // A guest is asked to sign in, and the paid report does not open.
+    await user.click(screen.getByRole("button", { name: /Sign in to generate your certificate/i }));
+    expect(screen.queryByText(/recorded concept for this lot/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Print \/ Save/i })).not.toBeInTheDocument();
   });
 
   it("navigates among the steps via the rail", async () => {

@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 const mocks = vi.hoisted(() => ({
   stripe: null as null | { webhooks: { constructEvent: ReturnType<typeof vi.fn> } },
   grant: vi.fn(),
+  grantCertificate: vi.fn(),
   adminDb: {
     runTransaction: vi.fn(),
     collection: vi.fn(),
@@ -25,6 +26,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/server/lead-unlocks", () => ({
   grantLeadUnlock: (...args: unknown[]) => mocks.grant(...args),
+}));
+
+vi.mock("@/lib/server/certificate-purchases", () => ({
+  grantCertificate: (...args: unknown[]) => mocks.grantCertificate(...args),
 }));
 
 vi.mock("@/lib/stripe", () => ({
@@ -55,6 +60,7 @@ function webhookRequest(body = "{}", signature = "sig"): NextRequest {
 beforeEach(() => {
   mocks.stripe = null;
   mocks.grant.mockClear();
+  mocks.grantCertificate.mockClear();
   mocks.adminDb.runTransaction.mockClear();
   mocks.transaction.get.mockReset();
   mocks.transaction.update.mockClear();
@@ -223,5 +229,39 @@ describe("POST /api/stripe/webhook", () => {
     expect(res.status).toBe(200);
     expect(mocks.transaction.update).not.toHaveBeenCalled();
     expect(mocks.transaction.set).not.toHaveBeenCalled();
+  });
+
+  it("grants a certificate purchase on paid checkout completion", async () => {
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    mocks.stripe = {
+      webhooks: {
+        constructEvent: vi.fn(() => ({
+          type: "checkout.session.completed",
+          data: {
+            object: {
+              id: "sess_cert",
+              payment_status: "paid",
+              amount_total: 2900,
+              metadata: {
+                purchaseType: "certificate",
+                uid: "user_1",
+                certKey: "1234-oak-street-seattle",
+              },
+            },
+          },
+        })),
+      },
+    };
+
+    const res = await POST(webhookRequest());
+    expect(res.status).toBe(200);
+    expect(mocks.grant).not.toHaveBeenCalled();
+    expect(mocks.adminDb.runTransaction).not.toHaveBeenCalled();
+    expect(mocks.grantCertificate).toHaveBeenCalledWith({
+      uid: "user_1",
+      certKey: "1234-oak-street-seattle",
+      stripeSessionId: "sess_cert",
+      amount: 2900,
+    });
   });
 });
