@@ -12,8 +12,12 @@ export interface EstimateSummaryPanelProps {
   parcelName: string;
   /** The feasibility result whose figures are summarized. */
   result: FeasibilityResult;
-  /** Called when the user requests report generation. */
+  /** Called when the user activates the report/certificate CTA. */
   onGenerateReport: () => void;
+  /** CTA label; defaults to "Create report". */
+  reportCtaLabel?: string;
+  /** Show the CTA in a busy/disabled state (e.g. while starting checkout). */
+  reportCtaBusy?: boolean;
 }
 
 /**
@@ -26,6 +30,8 @@ export default function EstimateSummaryPanel({
   parcelName,
   result,
   onGenerateReport,
+  reportCtaLabel = "Create report",
+  reportCtaBusy = false,
 }: EstimateSummaryPanelProps) {
   const metrics = [
     {
@@ -118,10 +124,11 @@ export default function EstimateSummaryPanel({
           type="button"
           onClick={onGenerateReport}
           fullWidth
+          loading={reportCtaBusy}
           leftIcon={<FileText size={16} />}
           className="bg-lf-mahogany text-lf-sand-2 hover:bg-lf-espresso"
         >
-          Create report
+          {reportCtaLabel}
         </Button>
       </div>
     </aside>

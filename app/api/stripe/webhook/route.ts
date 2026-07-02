@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { grantLeadUnlock } from "@/lib/server/lead-unlocks";
+import { grantCertificate } from "@/lib/server/certificate-purchases";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -39,7 +41,20 @@ export async function POST(request: NextRequest) {
     if (session.payment_status === "paid") {
       const purchaseType = session.metadata?.purchaseType;
       
-      if (purchaseType === "credit_pack") {
+      if (purchaseType === "certificate") {
+        // User certificate purchase. Deterministic grant id makes a replayed
+        // webhook a no-op, so this is safe to receive twice.
+        const uid = session.metadata?.uid;
+        const certKey = session.metadata?.certKey;
+        if (uid && certKey) {
+          await grantCertificate({
+            uid,
+            certKey,
+            stripeSessionId: session.id,
+            amount: session.amount_total ?? CERTIFICATE_PRICE_CENTS,
+          });
+        }
+      } else if (purchaseType === "credit_pack") {
         const builderId = session.metadata?.builderId;
         const creditsToGrant = parseInt(session.metadata?.creditsToGrant || "0", 10);
         

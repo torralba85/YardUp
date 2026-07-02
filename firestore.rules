@@ -393,5 +393,17 @@ service cloud.firestore {
         && resource.data.builderId == request.auth.uid;
       allow create, update, delete: if false;
     }
+
+    // Paid certificate purchases. Doc id is the deterministic "{uid}_{certKey}"
+    // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
+    // the webhook via the Admin SDK (which bypasses these rules); no client may
+    // self-grant. A user reads only their own grant; a missing grant is denied
+    // (not a clean 404), so no one can probe another user's purchases.
+    match /certificatePurchases/{purchaseId} {
+      allow read: if isSignedIn()
+        && resource != null
+        && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
   }
 }
