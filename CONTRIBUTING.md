@@ -73,6 +73,14 @@ New issues are triaged using `.github/triage_checklist.md`. Use
 
 Branches are audited monthly per `.github/stale_branch_cleanup.md`.
 
+## Debugging & repo maintenance
+
+For reproducing and diagnosing bugs (log collection, environment isolation,
+`git bisect`, minimal reproducible examples, flaky tests), see
+`docs/debugging-guide.md`. For the recurring weekly/monthly maintenance
+routine (dependency review, CI health, doc freshness, stale branches,
+release tagging), see `docs/repo-health-routine.md`.
+
 ## Security
 
 Do not open public issues for suspected vulnerabilities — see `SECURITY.md`
