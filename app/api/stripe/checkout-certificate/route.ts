@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
   // fall back to Origin for local dev.
   const origin = (
     process.env.NEXT_PUBLIC_APP_URL ||
-    request.headers.get("origin") ||
+    (process.env.NODE_ENV !== "production" ? request.headers.get("origin") : "") ||
     ""
   ).replace(/\/+$/, "");
   if (!origin) {
