@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FileText, MapPinned, Ruler, ShieldCheck, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Bezel } from "@/components/ui/Bezel";
 import { CTAButton } from "./CTAButton";
+import { TYPICAL_MARKET } from "./LandingHero";
 
 const PROOF = [
   ["Address-first", "grounded in the parcel"],
@@ -103,10 +104,7 @@ export function FeatureBand() {
                 innerClassName="flex h-full min-h-[280px] flex-col justify-between p-8"
               >
                 <div>
-                  <div className="flex items-center justify-between">
-                    <span className="lf-kicker-dense text-lf-clay">01</span>
-                    <MapPinned className="h-7 w-7 text-lf-clay" />
-                  </div>
+                  <span className="lf-kicker-dense text-lf-clay">01</span>
                   <h3 className="lf-card-heading mt-6 text-lf-espresso">
                     Start with your address
                   </h3>
@@ -132,10 +130,7 @@ export function FeatureBand() {
               >
                 <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
                   <div>
-                    <div className="flex items-center gap-3">
-                      <span className="lf-kicker-dense text-lf-clay">02</span>
-                      <Ruler className="h-7 w-7 text-lf-clay" />
-                    </div>
+                    <span className="lf-kicker-dense text-lf-clay">02</span>
                     <h3 className="lf-card-heading mt-6 text-lf-espresso">
                       See what fits and what does not
                     </h3>
@@ -144,16 +139,20 @@ export function FeatureBand() {
                       together so you can spot obvious fit issues before you hire anyone.
                     </p>
                   </div>
-                  <div className="relative flex h-36 flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-lf-hairline/60 bg-lf-sand-2/50 p-4 text-center">
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-lf-mahogany/5 to-lf-espresso/10" />
-                    <div className="lf-kicker-dense text-lf-clay">
-                      3D Visual Studio
-                    </div>
-                    <div className="lf-caption mt-2 max-w-[20ch] text-lf-muted">
-                      Parcel lines, setbacks, driveways, and the proposed ADU stay
-                      visible together.
-                    </div>
-                  </div>
+                  <figure className="overflow-hidden rounded-lg border border-lf-hairline bg-lf-sand-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/landing/studio-scene-still.png"
+                      alt="The LotFoundry studio: an existing house and a proposed ADU on a 3D lot, with the note 'Within declared limits — 20 ft front, 25 ft rear, 5 ft side setbacks.'"
+                      className="block w-full"
+                      loading="lazy"
+                      width={800}
+                      height={620}
+                    />
+                    <figcaption className="border-t border-lf-hairline px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                      The studio · setbacks + proposed ADU
+                    </figcaption>
+                  </figure>
                 </div>
               </Bezel>
             </motion.div>
@@ -168,10 +167,7 @@ export function FeatureBand() {
             >
               <Bezel innerClassName="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between md:p-10">
                 <div className="max-w-2xl">
-                  <div className="flex items-center gap-3">
-                    <span className="lf-kicker-dense text-lf-clay">03</span>
-                    <FileText className="h-7 w-7 text-lf-clay" />
-                  </div>
+                  <span className="lf-kicker-dense text-lf-clay">03</span>
                   <h3 className="lf-card-heading mt-6 text-lf-espresso">
                     Get a report you can actually use
                   </h3>
@@ -192,7 +188,7 @@ export function FeatureBand() {
       </section>
 
       <section className="bg-lf-espresso text-lf-sand">
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-32 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-40">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-24 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-32">
           <div>
             <span className="inline-flex items-center rounded-full bg-lf-taupe/15 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-lf-taupe">
               Owner report
@@ -206,19 +202,67 @@ export function FeatureBand() {
               planner, lender, or builder.
             </p>
           </div>
-          <div className="grid gap-4">
-            {REPORT.map((item) => (
-              <div
-                key={item}
-                className="flex items-start gap-4 border-t border-lf-taupe/25 pt-4"
-              >
-                <ShieldCheck
-                  className="mt-1 h-5 w-5 shrink-0 text-lf-taupe"
-                  aria-hidden="true"
-                />
-                <span className="lf-body-lg text-lf-sand">{item}</span>
+          {/* A miniature Certificate of Feasibility — the report is the
+              product's shareable artifact, so the landing shows the artifact
+              itself: serial line, ledger figures, recorded contents, stamp. */}
+          <div className="relative mx-auto w-full max-w-md">
+            <div className="rounded-lg border border-lf-taupe/30 bg-[#2A1A10] p-6 shadow-[0_18px_44px_rgba(0,0,0,0.4)] sm:p-8">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.16em] text-lf-taupe">
+                <span>No. LF-042-0117-118</span>
+                <span>Typical · supported markets</span>
               </div>
-            ))}
+              <div className="mt-4 border-t border-lf-taupe/25 pt-4">
+                <p className="font-display text-2xl font-semibold leading-tight text-lf-sand">
+                  Certificate of Feasibility
+                </p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
+                  Specimen — your address replaces this
+                </p>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-1">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
+                  Rent potential
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
+                  Build range
+                </p>
+                <p className="font-display text-[21px] font-semibold leading-none tabular-nums text-lf-money-on-dark sm:text-[26px]">
+                  {TYPICAL_MARKET.rentBand}
+                  <span className="ml-1 font-mono text-xs font-normal text-lf-taupe">/mo</span>
+                </p>
+                <p className="font-display text-[21px] font-semibold leading-none tabular-nums text-lf-sand sm:text-[26px]">
+                  {TYPICAL_MARKET.buildBand}
+                </p>
+              </div>
+
+              <div className="mt-6 flex items-baseline justify-between gap-4 border-b-4 border-double border-lf-taupe/50 pb-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
+                  Net operating income
+                </span>
+                <span className="font-display text-2xl font-semibold leading-none tabular-nums text-lf-money-on-dark">
+                  {TYPICAL_MARKET.noi}
+                  <span className="ml-1 font-mono text-xs font-normal text-lf-taupe">/yr</span>
+                </span>
+              </div>
+
+              <ul className="mt-6 space-y-2.5">
+                {REPORT.map((item) => (
+                  <li key={item} className="flex gap-2.5 font-mono text-xs leading-5 text-lf-sand/85">
+                    <span aria-hidden="true" className="shrink-0 text-lf-taupe">
+                      —
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div
+              aria-hidden="true"
+              className="absolute -top-3 right-8 rotate-6 rounded-sm border-2 border-lf-brick/80 bg-lf-brick/15 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-lf-brick"
+            >
+              Concept · not a permit
+            </div>
           </div>
         </div>
       </section>
