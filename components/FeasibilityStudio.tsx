@@ -488,7 +488,7 @@ function FeasibilityStudioInner() {
           <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
             Or use a demo lot
           </p>
-          <div className="mt-2 flex flex-wrap gap-2" aria-label="Demo lots">
+          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">
             {parcelPresets.map((preset) => {
               const selected = parcelMode === "preset" && parcelId === preset.id;
               return (
@@ -576,7 +576,24 @@ function FeasibilityStudioInner() {
         />
       );
     } else {
-      mobileControls = (
+      // The connect form must render inside the sheet: the mobile shell is a
+      // fixed h-dvh viewport, so a panel mounted after it is unreachable.
+      mobileControls = builderLeadOpen ? (
+        <BuilderLeadPanel
+          open
+          userDefaults={{
+            name: user?.displayName || "",
+            email: user?.email || "",
+          }}
+          parcelKey={parcelId}
+          parcel={activeParcel}
+          config={config}
+          assumptions={assumptions}
+          result={result}
+          onClose={() => setBuilderLeadOpen(false)}
+          onSubmit={handleBuilderLeadSubmit}
+        />
+      ) : (
         <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
       );
     }
@@ -586,6 +603,7 @@ function FeasibilityStudioInner() {
           steps={mobileSteps}
           onStepSelect={(id) => handleStepSelect(id as StudioStep)}
           activeStepLabel={mobileStepLabel}
+          activeStepId={activeStep}
           header={
             <MobileHeader
               address={activeParcel.address}
@@ -618,25 +636,17 @@ function FeasibilityStudioInner() {
             onDownload={downloadReport}
             onExportCsv={exportCsv}
             onShare={handleShareLink}
-            onConnectBuilders={() => setBuilderLeadOpen(true)}
+            onConnectBuilders={() => {
+              // The form lives on the Builders step's sheet — close the report
+              // and land there with the form open.
+              setReportOpen(false);
+              setActiveStep("builders");
+              setBuilderLeadOpen(true);
+            }}
             shareNotice={shareNotice}
             autoFocus={reportAutoFocus}
           />
         )}
-        <BuilderLeadPanel
-          open={builderLeadOpen}
-          userDefaults={{
-            name: user?.displayName || "",
-            email: user?.email || "",
-          }}
-          parcelKey={parcelId}
-          parcel={activeParcel}
-          config={config}
-          assumptions={assumptions}
-          result={result}
-          onClose={() => setBuilderLeadOpen(false)}
-          onSubmit={handleBuilderLeadSubmit}
-        />
       </>
     );
   }
