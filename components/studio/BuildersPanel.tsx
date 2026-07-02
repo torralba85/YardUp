@@ -115,7 +115,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
                   ) : null}
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  {b.serviceAreas.slice(0, 3).map((area) => (
+                  {(b.serviceAreas || []).slice(0, 3).map((area) => (
                     <span
                       key={area.key}
                       className="inline-flex items-center gap-1 rounded-md border border-lf-hairline bg-lf-sand-2 px-1.5 py-0.5 font-mono text-[10px] text-lf-muted"

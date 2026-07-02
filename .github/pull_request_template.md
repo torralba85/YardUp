@@ -5,18 +5,19 @@ Before submitting this PR, please ensure you have checked the following criteria
 ## Author Checklist
 
 ### Code Quality & Standards
-- [ ] My code follows the code style guide of this project.
-- [ ] I have executed local linters (`npm run lint` / `cargo clippy` etc.) and they pass without warnings.
-- [ ] I have formatted my code locally (`npm run format` / `cargo fmt`).
+- [ ] My code follows `DESIGN.md` and the style rules in `CLAUDE.md` (TypeScript strict mode, two-space indent, `@/*` imports).
+- [ ] `npm run lint` passes with zero warnings.
+- [ ] `npx tsc --noEmit` passes with no type errors.
 
 ### Testing & Verification
-- [ ] I have added automated unit/integration tests to verify my changes.
-- [ ] All existing and new tests pass locally (`npm run test`).
-- [ ] I have verified the changes manually in a development environment.
+- [ ] I have added or updated unit tests (`npm run test`) to verify my changes.
+- [ ] `npm run build` succeeds locally.
+- [ ] I have verified the changes manually in a development environment (`npm run dev`), including mobile/responsive states for UI changes.
+- [ ] For landing, studio, or responsive UI changes, I ran or updated the relevant `npm run test:e2e` Playwright coverage.
 
 ### Documentation
-- [ ] I have updated the documentation (README, API references, code comments) to reflect my changes.
-- [ ] If changing environment variables, I have updated the `.env.example` file.
+- [ ] I have updated relevant docs (`README.md`, `docs/`, `CLAUDE.md`/`AGENTS.md`) to reflect my changes.
+- [ ] If I added or changed an environment variable, I have documented it in `CLAUDE.md`/`README.md` (never committed to `.env.local` or `functions/.env`).
 
 ### Release Impact
 - [ ] My PR commits follow the Conventional Commits specification.
