@@ -64,7 +64,7 @@ export default function CertificatePanel({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("cert") !== "1") return;
+    if (params.get("cert") !== "1" || purchased) return;
     let tries = 0;
     const timer = window.setInterval(() => {
       tries += 1;
@@ -79,7 +79,7 @@ export default function CertificatePanel({
       `${window.location.pathname}${next ? `?${next}` : ""}`,
     );
     return () => window.clearInterval(timer);
-  }, [refresh]);
+  }, [refresh, purchased]);
 
   // When the purchase resolves (demo grant or webhook), open the artifact once.
   useEffect(() => {
