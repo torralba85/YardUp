@@ -10,6 +10,13 @@ async function signUpUser(page: Page) {
   await page.waitForURL(/\/studio/);
 }
 
+async function skipMobileFirstRunUi(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem("lf-wizard-seen", "1");
+    localStorage.setItem("lf-coach-seen", "1");
+  });
+}
+
 test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the daylight feasibility hero", async ({ page }, testInfo) => {
     await page.goto("/");
@@ -67,7 +74,7 @@ test.describe("Public LotFoundry flows", () => {
     const mobile = !!viewport && viewport.width < 1024;
     // Mobile shows the first-run wizard on a fresh profile — skip it so the
     // test lands in the sheet studio directly.
-    if (mobile) await page.addInitScript(() => localStorage.setItem("lf-wizard-seen", "1"));
+    if (mobile) await skipMobileFirstRunUi(page);
     await signUpUser(page);
     if (mobile) {
       // Mobile renders the permit guide inside the bottom sheet's sections —
@@ -84,12 +91,13 @@ test.describe("Public LotFoundry flows", () => {
 
   test("user can browse Inspiration Gallery and apply a template", async ({ page, viewport }) => {
     const mobile = !!viewport && viewport.width < 1024;
-    if (mobile) await page.addInitScript(() => localStorage.setItem("lf-wizard-seen", "1"));
+    if (mobile) await skipMobileFirstRunUi(page);
     await signUpUser(page);
     if (mobile) {
-      // Mobile renders the gallery inside the bottom sheet's sections —
-      // expand to full snap (peek → half → full) to reach it.
-      await page.getByRole("button", { name: /expand panel/i }).click();
+      // Mobile renders the gallery inside the Design step's sheet sections.
+      await page.locator("nav button").filter({ hasText: /^Design/ }).click();
+      await expect(page.getByRole("dialog", { name: /Design step/i })).toBeVisible();
+      // Step selection opens the sheet to half; expand once more to reach full.
       await page.getByRole("button", { name: /expand panel/i }).click();
     } else {
       // Navigating via sidebar navigation button
