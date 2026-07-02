@@ -43,10 +43,11 @@ const FEASIBILITY_LAYERS = [
  * markets` eyebrow carries that estimate-honesty contract. A single source of
  * truth so the headline number can be tuned in one place.
  */
-const TYPICAL_MARKET = {
+export const TYPICAL_MARKET = {
   rentBand: "$2,100–$2,600",
   noi: "$22,400",
   paybackYears: "12",
+  buildBand: "$230K–$290K",
 } as const;
 
 function useHeroScrollProgress(ref: React.RefObject<HTMLElement | null>) {
