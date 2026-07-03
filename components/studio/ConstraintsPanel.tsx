@@ -236,7 +236,7 @@ function RowTrailing({
   // The income figure keeps the brand's serif-money treatment.
   if (item.id === "rent") {
     return (
-      <span className="font-display text-[21px] font-semibold text-lf-forest">
+      <span className="lf-money-sm text-lf-forest">
         {item.value?.replace("/mo", "")}
         <span className="font-mono text-[10px] text-lf-muted">/mo</span>
       </span>

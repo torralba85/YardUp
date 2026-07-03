@@ -39,9 +39,7 @@ function Cell({
     <div className="bg-lf-espresso px-6 py-4">
       <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-lf-taupe">{label}</p>
       <p
-        className={`mt-1.5 font-display font-semibold leading-none tabular-nums text-lf-money-on-dark ${
-          lead ? "text-[34px]" : "text-[28px]"
-        }`}
+        className={`mt-1.5 text-lf-money-on-dark ${lead ? "lf-money-xl" : "lf-money-lg"}`}
       >
         {value}
         {unit && <span className="ml-1.5 font-mono text-[11px] text-lf-taupe">{unit}</span>}

@@ -98,7 +98,7 @@ export default function UnlockSlip({
               <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
               {item.request.ownerVerified && <span>Owner-verified</span>}
             </p>
-            <p className="mt-2 font-display text-[28px] font-semibold text-lf-forest tabular-nums">
+            <p className="mt-2 lf-money-lg text-lf-forest">
               {formatCurrency(preview.rentBand)}
               <span className="ml-1.5 font-mono text-[10px] uppercase text-lf-muted">/mo rent potential</span>
             </p>

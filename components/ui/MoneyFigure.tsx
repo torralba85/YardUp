@@ -12,10 +12,12 @@ export type MoneyFigureTone = "onLight" | "onDark" | "forest";
 /** Small trailing unit (IBM Plex Mono). Empty string renders no unit. */
 export type MoneyFigureUnit = "/mo" | "/yr" | "yrs" | "";
 
+/* Sizes sit on the Major Third money scale (DESIGN.md): 20 · 25 · 31 · 39 ·
+   49 · 61–76. `sm` stays on the body ramp for money set inside prose rows. */
 const SIZE_CLASS: Record<MoneyFigureSize, string> = {
-  hero: "text-[3.25rem] leading-none sm:text-[4rem]",
-  band: "text-[2.75rem] leading-none",
-  inline: "text-[1.3rem] leading-none",
+  hero: "text-[3.8125rem] leading-none sm:text-[4.75rem]",
+  band: "text-[3.0625rem] leading-none",
+  inline: "text-[1.25rem] leading-none",
   sm: "text-sm leading-none",
 };
 

@@ -127,7 +127,7 @@ function LeadCell({
       <div
         data-metric-lead="true"
         data-accent="amber"
-        className="mt-2 inline-block font-display text-3xl font-semibold leading-none tracking-[-0.02em] tabular-nums text-lf-espresso"
+        className="mt-2 inline-block lf-money-lg text-lf-espresso"
       >
         {format(animated)}
         {/* Gold-leaf value hairline — the signature "this is the money" tell. */}

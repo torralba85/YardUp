@@ -39,7 +39,7 @@ export default function IncomeRail({ monthlyRent, verdict }: IncomeRailProps) {
         </span>
         <span
           data-income-figure="true"
-          className="font-display text-[28px] font-semibold leading-none tabular-nums text-lf-money-on-dark"
+          className="lf-money-lg text-lf-money-on-dark"
         >
           {formatCurrency(rent)}
           <span className="ml-1 font-mono text-xs text-lf-taupe">/mo</span>

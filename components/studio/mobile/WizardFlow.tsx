@@ -192,7 +192,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             </p>
             <div className="mt-5 rounded-2xl border border-lf-hairline bg-lf-card p-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">Rent potential</p>
-              <p className="font-display text-4xl font-bold tabular-nums text-lf-espresso">
+              <p className="lf-money-xl text-lf-espresso">
                 {roundedRent}
                 <span className="text-base font-medium text-lf-muted">/mo</span>
               </p>

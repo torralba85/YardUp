@@ -227,11 +227,11 @@ export function FeatureBand() {
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
                   Build range
                 </p>
-                <p className="font-display text-[21px] font-semibold leading-none tabular-nums text-lf-money-on-dark sm:text-[26px]">
+                <p className="lf-money-sm text-lf-money-on-dark sm:lf-money-md">
                   {TYPICAL_MARKET.rentBand}
                   <span className="ml-1 font-mono text-xs font-normal text-lf-taupe">/mo</span>
                 </p>
-                <p className="font-display text-[21px] font-semibold leading-none tabular-nums text-lf-sand sm:text-[26px]">
+                <p className="lf-money-sm text-lf-sand sm:lf-money-md">
                   {TYPICAL_MARKET.buildBand}
                 </p>
               </div>
@@ -240,7 +240,7 @@ export function FeatureBand() {
                 <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">
                   Net operating income
                 </span>
-                <span className="font-display text-2xl font-semibold leading-none tabular-nums text-lf-money-on-dark">
+                <span className="lf-money-md text-lf-money-on-dark">
                   {TYPICAL_MARKET.noi}
                   <span className="ml-1 font-mono text-xs font-normal text-lf-taupe">/yr</span>
                 </span>

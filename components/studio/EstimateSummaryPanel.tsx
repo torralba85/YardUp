@@ -104,7 +104,7 @@ export default function EstimateSummaryPanel({
                   <Icon size={13} />
                   {metric.label}
                 </div>
-                <div className="mt-2 font-display text-2xl font-semibold tracking-tight text-lf-espresso">
+                <div className="mt-2 lf-money-md text-lf-espresso">
                   {metric.value}
                 </div>
                 <div className="mt-1 text-xs text-lf-muted">{metric.detail}</div>

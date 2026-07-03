@@ -84,7 +84,7 @@ export default function LeadCard({
       </div>
 
       {/* Value band first (B2): green is the money this lead pays the builder. */}
-      <p className="mt-3 font-display text-[26px] font-semibold leading-none text-lf-forest tabular-nums">
+      <p className="mt-3 lf-money-md text-lf-forest">
         {formatCurrency(preview.rentBand)}
         <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
           /mo rent potential

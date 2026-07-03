@@ -340,7 +340,7 @@ export default function BuilderInbox({
                             </div>
                             <div className="font-mono text-[9.5px] text-lf-muted mt-0.5">{item.request.preview.zip}</div>
                           </td>
-                          <td className="px-4 py-3.5 text-right font-display text-lg font-semibold text-lf-forest whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right lf-money-sm text-lf-forest whitespace-nowrap">
                             {formatCurrency(item.request.preview.rentBand)}
                             <span className="font-mono text-[8px] font-normal text-lf-muted ml-0.5">/mo</span>
                           </td>
@@ -470,7 +470,7 @@ export default function BuilderInbox({
                           {itemAccess === "locked" && (
                             <div className="space-y-4">
                               <div>
-                                <p className="font-display text-[26px] font-semibold leading-none text-lf-forest tabular-nums">
+                                <p className="lf-money-md text-lf-forest">
                                   {formatCurrency(selectedItem.request.preview.rentBand)}
                                   <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
                                     /mo rent potential
@@ -798,7 +798,7 @@ function ZeroEverEmptyState() {
           <span>800 sf ADU</span>
           <span>Compliant</span>
         </p>
-        <p className="mt-2 font-display text-[26px] font-semibold leading-none text-lf-forest tabular-nums">
+        <p className="mt-2 lf-money-md text-lf-forest">
           $2,500
           <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
             /mo rent potential

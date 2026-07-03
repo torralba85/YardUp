@@ -299,7 +299,7 @@ export function LandingHero() {
             <div className="flex flex-1 flex-nowrap items-end gap-x-5 whitespace-nowrap">
               <div>
                 <p className="lf-kicker-dense text-lf-taupe">Rent potential</p>
-                <p className="mt-0.5 font-display text-[22px] font-semibold leading-none tabular-nums sm:text-[28px]">
+                <p className="mt-0.5 lf-money-sm sm:lf-money-lg">
                   <span className="text-lf-money-on-dark">{TYPICAL_MARKET.rentBand}</span>
                   <span className="ml-1 font-mono text-xs text-lf-taupe">/mo</span>
                 </p>
@@ -309,7 +309,7 @@ export function LandingHero() {
 
               <div className="hidden lg:block">
                 <p className="lf-kicker-dense text-lf-taupe">Net operating income</p>
-                <p className="mt-0.5 font-display text-[26px] font-semibold leading-none tabular-nums sm:text-[28px]">
+                <p className="mt-0.5 lf-money-md sm:lf-money-lg">
                   <span className="text-lf-money-on-dark">{TYPICAL_MARKET.noi}</span>
                   <span className="ml-1 font-mono text-xs text-lf-taupe">/yr</span>
                 </p>
@@ -319,7 +319,7 @@ export function LandingHero() {
 
               <div className="hidden lg:block">
                 <p className="lf-kicker-dense text-lf-taupe">Simple payback</p>
-                <p className="mt-0.5 font-display text-[26px] font-semibold leading-none tabular-nums text-lf-sand sm:text-[28px]">
+                <p className="mt-0.5 lf-money-md text-lf-sand sm:lf-money-lg">
                   ~{TYPICAL_MARKET.paybackYears}
                   <span className="ml-1 font-mono text-xs text-lf-taupe">yrs</span>
                 </p>

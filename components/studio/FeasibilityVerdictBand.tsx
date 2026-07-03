@@ -106,7 +106,7 @@ export default function FeasibilityVerdictBand({
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
             Readiness
           </p>
-          <div className="mt-0.5 font-display text-[40px] font-semibold leading-none text-lf-sand tabular-nums">
+          <div className="mt-0.5 lf-money-xl text-lf-sand">
             {readiness}
             <span className="font-mono text-sm text-lf-taupe"> /100</span>
           </div>

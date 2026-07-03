@@ -72,15 +72,15 @@ export function StageCaptions({ progress }: { progress: MotionValue<number> }) {
         </div>
         <div className="mt-7 grid max-w-md grid-cols-3 border-y border-lf-hairline/70 py-4 text-sm text-lf-muted">
           <span>
-            <strong className="block font-display text-xl text-lf-espresso">$2,350</strong>
+            <strong className="block lf-money-sm text-lf-espresso">$2,350</strong>
             rent estimate
           </span>
           <span>
-            <strong className="block font-display text-xl text-lf-espresso">31%</strong>
+            <strong className="block lf-money-sm text-lf-espresso">31%</strong>
             lot coverage
           </span>
           <span>
-            <strong className="block font-display text-xl text-lf-espresso">9.8 yrs</strong>
+            <strong className="block lf-money-sm text-lf-espresso">9.8 yrs</strong>
             payback model
           </span>
         </div>

@@ -159,6 +159,45 @@ p {
   line-height: 1.125rem;
 }
 
+/* Money/lead-figure scale — Major Third steps (16px × 1.25ⁿ: 20 · 25 · 31 · 39)
+   for dollar figures and other lead numerals that `MoneyFigure` cannot render
+   (ranges, percents, years, scores). Cormorant 600, tight-set, tabular figures.
+   Color stays per-context (forest on light; money-on-dark/sand on dark).
+   Declared with @utility so responsive variants (`sm:lf-money-lg`) work. */
+@utility lf-money-sm {
+  font-family: var(--font-display);
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility lf-money-md {
+  font-family: var(--font-display);
+  font-size: 1.5625rem; /* 25px */
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility lf-money-lg {
+  font-family: var(--font-display);
+  font-size: 1.9375rem; /* 31px */
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility lf-money-xl {
+  font-family: var(--font-display);
+  font-size: 2.4375rem; /* 39px */
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (min-width: 640px) {
   .lf-display-hero {
     font-size: clamp(3rem, 5.3vw, 4.75rem);
