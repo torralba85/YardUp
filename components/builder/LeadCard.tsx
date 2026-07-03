@@ -76,7 +76,7 @@ export default function LeadCard({
           {recorded ? ` · RECORDED ${recorded}` : ""}
         </span>
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${chip.cls}`}
+          className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${chip.cls}`}
         >
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
           {chip.label}
@@ -120,7 +120,7 @@ export default function LeadCard({
           {preview.matchReasons.map((reason) => (
             <li
               key={reason}
-              className="bg-lf-sand-2 px-2 py-1 text-[11px] text-lf-muted"
+              className="rounded-md bg-lf-sand-2 px-2 py-1 text-[11px] text-lf-muted"
             >
               {reason}
             </li>

@@ -199,7 +199,7 @@ export default function BuilderInbox({
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
-          <span className="rounded-full border border-lf-hairline px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="self-start rounded-md border border-lf-hairline px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
             {profile.active ? "Active" : "Inactive"}
           </span>
         </div>
@@ -455,7 +455,7 @@ export default function BuilderInbox({
                               NO. {selectedItem.request.preview.previewSerial}
                               {recordedDate ? ` · RECORDED ${recordedDate}` : ""}
                             </span>
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] ${
+                            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] ${
                               itemAccess === "unlocked" 
                                 ? "bg-lf-forest-soft text-lf-forest" 
                                 : itemAccess === "confirming" 
@@ -785,7 +785,7 @@ function ZeroEverEmptyState() {
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
             NO. LF-EXAMPLE
           </span>
-          <span className="rounded-full bg-lf-taupe-soft px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="rounded-md bg-lf-taupe-soft px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
             Example
           </span>
         </div>
