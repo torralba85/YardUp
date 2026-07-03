@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { LogOut } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import {
   fetchBuilderInbox,
   fetchBuilderProfile,
@@ -31,6 +34,7 @@ export default function BuilderDashboard({
   email: string;
   displayName: string | null;
 }) {
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<BuilderProfile | null>(null);
   const [items, setItems] = useState<BuilderInboxItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,22 +69,25 @@ export default function BuilderDashboard({
 
   if (loading) {
     return (
-      <main className="min-h-dvh bg-lf-sand p-4 text-lf-espresso lg:p-8" aria-busy="true">
-        <div
-          role="status"
-          aria-label="Loading the builder dashboard"
-          className="mx-auto max-w-6xl"
-        >
-          <Skeleton className="h-9 w-64 max-w-full" />
-          <Skeleton className="mt-3 h-4 w-[28rem] max-w-full" />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-40" />
-            ))}
+      <div className="min-h-dvh bg-lf-sand text-lf-espresso">
+        <BuilderHeader identity={displayName || email} onSignOut={() => void logout()} />
+        <main className="p-4 lg:p-8" aria-busy="true">
+          <div
+            role="status"
+            aria-label="Loading the builder dashboard"
+            className="mx-auto max-w-6xl"
+          >
+            <Skeleton className="h-9 w-64 max-w-full" />
+            <Skeleton className="mt-3 h-4 w-[28rem] max-w-full" />
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-40" />
+              ))}
+            </div>
+            <span className="sr-only">Loading…</span>
           </div>
-          <span className="sr-only">Loading…</span>
-        </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
@@ -105,9 +112,11 @@ export default function BuilderDashboard({
   }
 
   return (
-    <main className="min-h-dvh bg-lf-sand p-4 text-lf-espresso lg:p-8">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="lf-section-heading">Builder dashboard</h1>
+    <div className="min-h-dvh bg-lf-sand text-lf-espresso">
+      <BuilderHeader identity={displayName || email} onSignOut={() => void logout()} />
+      <main className="p-4 lg:p-8">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="lf-section-heading">Builder dashboard</h1>
         <p className="lf-body-sm mt-2 text-lf-muted">
           Review consented ADU feasibility snapshots matched to your service area.
         </p>
@@ -116,15 +125,55 @@ export default function BuilderDashboard({
             {loadError}
           </div>
         )}
-        {!profile ? (
-          <BuilderProfileForm
-            defaults={{ companyName: displayName || "", contactEmail: email }}
-            onSave={handleSaveProfile}
-          />
-        ) : (
-          <BuilderInbox profile={profile} items={items} onRespond={handleRespond} />
-        )}
+          {!profile ? (
+            <BuilderProfileForm
+              defaults={{ companyName: displayName || "", contactEmail: email }}
+              onSave={handleSaveProfile}
+            />
+          ) : (
+            <BuilderInbox profile={profile} items={items} onRespond={handleRespond} />
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/**
+ * Slim app header for the builder desk: brand lockup home link plus the
+ * signed-in identity and sign-out. Mirrors the studio's account affordance
+ * (StudioShell / MobileHeader) so a builder is never stranded on /builder.
+ */
+function BuilderHeader({
+  identity,
+  onSignOut,
+}: {
+  identity: string;
+  onSignOut: () => void;
+}) {
+  return (
+    <header className="border-b border-lf-hairline bg-lf-card">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
+        <Link
+          href="/"
+          aria-label="LotFoundry home"
+          className="shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto" />
+        </Link>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="hidden min-w-0 truncate text-sm text-lf-muted sm:block">{identity}</span>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-lf-hairline px-4 py-1.5 text-xs font-semibold text-lf-espresso transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay"
+          >
+            <LogOut size={13} />
+            Sign out
+          </button>
+        </div>
       </div>
-    </main>
+    </header>
   );
 }
