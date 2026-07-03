@@ -252,6 +252,7 @@ export default function BuilderInbox({
                 <button
                   type="button"
                   onClick={() => setViewMode("cards")}
+                  aria-pressed={viewMode === "cards"}
                   className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition cursor-pointer ${
                     viewMode === "cards"
                       ? "bg-lf-espresso text-lf-sand font-semibold"
@@ -263,6 +264,7 @@ export default function BuilderInbox({
                 <button
                   type="button"
                   onClick={() => setViewMode("table")}
+                  aria-pressed={viewMode === "table"}
                   className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition cursor-pointer ${
                     viewMode === "table"
                       ? "bg-lf-espresso text-lf-sand font-semibold"
