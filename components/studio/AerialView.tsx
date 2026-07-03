@@ -156,9 +156,11 @@ export default function AerialView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng, parcel.lotLength]);
 
-  // SVG overlay colors — these match --lf-forest (#2F4A38) and --lf-brick (#A23B26)
-  // but must be hardcoded hex for SVG attributes (CSS variables don't work in SVG stroke/fill)
-  const statusColor = isCompliant ? "#2F4A38" : "#A23B26";
+  // SVG overlay colors — these match --lf-forest (#2F4A38) and --lf-amber (#C8922A)
+  // but must be hardcoded hex for SVG attributes (CSS variables don't work in SVG stroke/fill).
+  // Non-compliant here means "review needed", which is amber semantics — brick
+  // is reserved for genuine blockers (DESIGN.md).
+  const statusColor = isCompliant ? "#2F4A38" : "#C8922A";
 
   return (
     <div
@@ -225,15 +227,15 @@ export default function AerialView({
           width="92"
           height="18"
           rx="3"
-          fill="rgba(0,0,0,0.65)"
+          fill="rgba(38,19,7,0.78)"
         />
         <text
           x={aduRect.labelX}
           y={aduRect.labelY + 4}
           textAnchor="middle"
-          fill="white"
+          fill="#F2E5D5"
           fontSize="10"
-          fontFamily="'Geist Mono', monospace"
+          style={{ fontFamily: "var(--font-mono)" }}
           fontWeight="600"
           letterSpacing="0.06em"
         >
@@ -247,15 +249,15 @@ export default function AerialView({
           width="104"
           height="18"
           rx="3"
-          fill="rgba(0,0,0,0.55)"
+          fill="rgba(38,19,7,0.66)"
         />
         <text
           x={houseCenter.x}
           y={houseCenter.y + 4}
           textAnchor="middle"
-          fill="rgba(255,255,255,0.85)"
+          fill="#F2E5D5"
           fontSize="10"
-          fontFamily="'Geist Mono', monospace"
+          style={{ fontFamily: "var(--font-mono)" }}
           fontWeight="600"
           letterSpacing="0.06em"
         >
@@ -289,8 +291,8 @@ export default function AerialView({
 
       {/* Zoning badge */}
       <div
-        className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-md ${
-          isCompliant ? "bg-[var(--lf-forest)]" : "bg-[var(--lf-brick)]"
+        className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 font-mono text-xs font-semibold shadow-md ${
+          isCompliant ? "bg-lf-forest text-lf-sand" : "bg-lf-amber text-lf-espresso"
         }`}
         aria-label={`Zoning status: ${isCompliant ? "Compliant" : "Review needed"}`}
       >
@@ -340,15 +342,15 @@ function SetbackLabel({
         width={w}
         height="18"
         rx="3"
-        fill="rgba(0,0,0,0.55)"
+        fill="rgba(38,19,7,0.66)"
       />
       <text
         x={x}
         y={y + 4}
         textAnchor="middle"
-        fill="white"
+        fill="#F2E5D5"
         fontSize="9.5"
-        fontFamily="'Geist Mono', monospace"
+        style={{ fontFamily: "var(--font-mono)" }}
         opacity="0.92"
         letterSpacing="0.04em"
       >

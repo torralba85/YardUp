@@ -77,7 +77,7 @@ export default function EstimateSummaryPanel({
           <div className="flex items-start gap-3">
             <CheckCircle2
               size={18}
-              className={result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-clay"}
+              className={result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-amber-ink"}
             />
             <div>
               <div className="text-sm font-semibold text-lf-espresso">

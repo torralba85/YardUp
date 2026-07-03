@@ -77,7 +77,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       detail: result.zoningStatus === "Compliant" ? "ADU appears allowed" : "Needs review",
       detailMono: false,
       valueClass: `font-sans font-semibold text-xl ${
-        result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-clay"
+        result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-amber-ink"
       }`,
     },
   ] as const;

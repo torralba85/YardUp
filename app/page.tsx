@@ -1,6 +1,7 @@
 import { AmbientBackdrop } from "@/components/landing/AmbientBackdrop";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { FeatureBand } from "@/components/landing/FeatureBand";
+import { ComingSoonBanner } from "@/components/landing/ComingSoonBanner";
 import { FloatingNavBar } from "@/components/FloatingNavBar";
 import Link from "next/link";
 
@@ -16,6 +17,7 @@ export default function LandingPage() {
       <main id="main-content">
         <LandingHero />
         <FeatureBand />
+        <ComingSoonBanner />
       </main>
 
       <footer className="relative z-20 border-t border-lf-hairline/50">
