@@ -614,7 +614,7 @@ export default function BuilderInbox({
 
                                       {/* Annual Ledger T-Account */}
                                       <div className="space-y-1">
-                                        <div className="font-mono text-[8px] uppercase tracking-[0.1%u] text-lf-clay font-bold">Ledger Balance</div>
+                                        <div className="font-mono text-[8px] uppercase tracking-[0.14em] text-lf-clay font-bold">Ledger Balance</div>
                                         <div className="border border-lf-hairline text-[10px] divide-y divide-lf-hairline bg-lf-sand-2/20">
                                           <div className="grid grid-cols-2 p-1.5">
                                             <div>
