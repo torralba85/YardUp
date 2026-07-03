@@ -2,7 +2,7 @@
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
-import { Html, OrbitControls } from "@react-three/drei";
+import { Html, Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -39,36 +39,145 @@ interface ParcelSceneProps {
 
 type ViewMode = "overview" | "adu" | "setbacks";
 
-// Scene palette: architectural studio render with natural tones
+// Scene palette — "surveyor's desk at golden hour" (DESIGN.md). Two registers:
+// SEMANTIC colors trace to DESIGN.md tokens (plat ink, review amber, eligible
+// forest, clay drafting lines, sand label chips); WORLD colors are the
+// sanctioned scene-only material palette for lawn, timber, and glazing
+// (logged in the DESIGN.md Decisions Log, 2026-07-03).
 const SCENE = {
-  ground: "#7a8b5e", // richer green lawn
-  groundOuter: "#5a6b4e", // darker surrounding context
-  groundPatch: "#8a7e6e", // dirt/path areas
+  // Semantic — must trace to DESIGN.md tokens
+  ink: "#261307", // --lf-espresso: plat boundary, corner ticks, label text
+  eligible: "#2F4A38", // --lf-forest: compliance ring/footprint (eligible)
+  review: "#C8922A", // --lf-amber: over-limit boundary/ring (review needed)
+  setback: "#8C5B3F", // --lf-clay: dashed drafting setback lines
+  labelChip: "rgba(242,229,213,0.92)", // --lf-sand: LabelSprite chip fill
+  hoverGlow: "#8C5B3F", // --lf-clay: interactive affordance glow on the ADU
+  // World — scene-only material palette
+  ground: "#85925F", // warm sage lawn
+  groundPaper: "#E7D8BE", // surveyor graph-paper context plane
   wall: "#d8d2c8", // warm cream existing-house walls
-  wallAccent: "#b8b0a4", // shadow side wall tone
   roof: "#3d3428", // warm dark brown roof
   glass: "#1a2a34", // deep blue-green glazing
   slab: "#c4bfb3", // warm concrete
-  label: "#2b2f33",
-  boundaryOk: "#3a9e4f",
-  boundaryOver: "#c07a1f",
-  setback: "#cfcabd",
-  gridCenter: "#8f8a7e",
-  gridLine: "#a8a294",
-  fog: "#c8bfa8",
   tree: "#4a6e3a", // tree canopy green
   treeLight: "#5b7d46", // sunlit canopy lobe
   treeDark: "#3f6132", // shaded canopy lobe
   treeTrunk: "#5a4430", // bark brown
   fence: "#8a7e6e", // weathered wood fence
   driveway: "#9e9688", // gravel driveway
-  sun: "#fff4e0", // warm sun light
-  skyTop: "#87CEEB", // sky blue
-  skyBottom: "#f0e6d2", // warm horizon
+  sun: "#ffdcae", // low golden-hour key light
+  ambient: "#f6e8d2", // warm ambient fill
+  fog: "#ddcbaa", // warm sand haze
 };
 
 const SCENE_BACKDROP =
-  "linear-gradient(180deg, #a8d8ea 0%, #c8e0d0 30%, #e8dcc8 60%, #d4c8b0 100%)";
+  "linear-gradient(180deg, #b7c4ba 0%, #ded4b8 38%, #ecd9b2 64%, #d9c199 100%)";
+
+/**
+ * Canvas graph-paper texture: 5 ft minor lines inside a 25 ft major cell,
+ * inked in espresso at low alpha over the given base. One tile repeats per
+ * 25 ft of plane, so the grid stays true to lot dimensions.
+ */
+function makeSurveyGridTexture(base: string, minorAlpha: number, majorAlpha: number) {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = `rgba(38,19,7,${minorAlpha})`;
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 5; i++) {
+    const p = Math.round((i * size) / 5) + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(p, 0);
+    ctx.lineTo(p, size);
+    ctx.moveTo(0, p);
+    ctx.lineTo(size, p);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = `rgba(38,19,7,${majorAlpha})`;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, size - 2, size - 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+const GRID_CELL_FT = 25;
+
+/** Ground plane with the surveyor graph-paper grid baked into its material. */
+function SurveyGround({
+  width,
+  length,
+  base,
+  minorAlpha,
+  majorAlpha,
+  y = 0,
+}: {
+  width: number;
+  length: number;
+  base: string;
+  minorAlpha: number;
+  majorAlpha: number;
+  y?: number;
+}) {
+  const texture = useMemo(() => {
+    const tex = makeSurveyGridTexture(base, minorAlpha, majorAlpha);
+    tex?.repeat.set(width / GRID_CELL_FT, length / GRID_CELL_FT);
+    return tex;
+  }, [base, minorAlpha, majorAlpha, width, length]);
+
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} receiveShadow>
+      <planeGeometry args={[width, length]} />
+      {texture ? (
+        <meshStandardMaterial map={texture} roughness={0.95} />
+      ) : (
+        <meshStandardMaterial color={base} roughness={0.95} />
+      )}
+    </mesh>
+  );
+}
+
+/** Soft radial contact shadow anchored under a building footprint. */
+function ContactShadow({
+  width,
+  length,
+  opacity = 0.3,
+}: {
+  width: number;
+  length: number;
+  opacity?: number;
+}) {
+  const texture = useMemo(() => {
+    const size = 128;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.1, size / 2, size / 2, size / 2);
+    gradient.addColorStop(0, "rgba(38,19,7,0.55)");
+    gradient.addColorStop(0.7, "rgba(38,19,7,0.22)");
+    gradient.addColorStop(1, "rgba(38,19,7,0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  if (!texture) return null;
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+      <planeGeometry args={[width, length]} />
+      <meshBasicMaterial map={texture} transparent opacity={opacity} depthWrite={false} />
+    </mesh>
+  );
+}
 
 function SceneCallout({
   eyebrow,
@@ -118,6 +227,14 @@ function SceneCameraChoreography({
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
   const active = useRef(true);
+  // DESIGN.md: always guard motion. Reduced-motion users get an instant cut
+  // to the destination instead of the lerped camera flight.
+  const reduceMotion = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    [],
+  );
 
   const destination = useMemo(() => {
     const [aduX, aduZ] = aduPos;
@@ -128,8 +245,12 @@ function SceneCameraChoreography({
       };
     }
     if (mode === "setbacks") {
+      // Frame the whole plat top-down: fit the lot's long axis (plus margin
+      // for the dimension labels) inside the camera's vertical FOV.
+      const fovRad = (42 * Math.PI) / 180;
+      const fitHeight = (parcel.lotLength / 2 + 16) / Math.tan(fovRad / 2);
       return {
-        position: new THREE.Vector3(0, Math.max(parcel.lotLength * 0.7, 86), 8),
+        position: new THREE.Vector3(0, Math.max(fitHeight, 96), 0.02),
         target: new THREE.Vector3(0, 0, 0),
       };
     }
@@ -145,7 +266,7 @@ function SceneCameraChoreography({
 
   useFrame((_, delta) => {
     if (!active.current) return;
-    const alpha = 1 - Math.exp(-delta * 4.8);
+    const alpha = reduceMotion ? 1 : 1 - Math.exp(-delta * 4.8);
     camera.position.lerp(destination.position, alpha);
     if (controls) {
       controls.target.lerp(destination.target, alpha);
@@ -170,91 +291,184 @@ function SceneCameraChoreography({
   return null;
 }
 
+/**
+ * Lot boundary as a plat-map ink line: a heavier espresso stroke with short
+ * corner ticks extending outward, like a recorded survey. Compliance stays
+ * signaled elsewhere (ADU ring, callout, constraints rail); the boundary only
+ * shifts to review amber when the placement breaks the declared envelope.
+ */
 function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompliant: boolean }) {
-  const object = useMemo(() => {
-    const halfWidth = parcel.lotWidth / 2;
-    const halfLength = parcel.lotLength / 2;
-    const vertices = new Float32Array([
-      -halfWidth, 0.14, -halfLength,
-      halfWidth, 0.14, -halfLength,
-      halfWidth, 0.14, -halfLength,
-      halfWidth, 0.14, halfLength,
-      halfWidth, 0.14, halfLength,
-      -halfWidth, 0.14, halfLength,
-      -halfWidth, 0.14, halfLength,
-      -halfWidth, 0.14, -halfLength,
-    ]);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-    const material = new THREE.LineBasicMaterial({ color: isCompliant ? SCENE.boundaryOk : SCENE.boundaryOver });
-    return new THREE.LineSegments(geometry, material);
-  }, [isCompliant, parcel.lotLength, parcel.lotWidth]);
+  const y = 0.14;
+  const color = isCompliant ? SCENE.ink : SCENE.review;
+  const { loop, ticks } = useMemo(() => {
+    const hw = parcel.lotWidth / 2;
+    const hl = parcel.lotLength / 2;
+    const loop: [number, number, number][] = [
+      [-hw, y, -hl],
+      [hw, y, -hl],
+      [hw, y, hl],
+      [-hw, y, hl],
+      [-hw, y, -hl],
+    ];
+    const tickLen = 3;
+    const tickGap = 1.1;
+    const ticks: [number, number, number][][] = [];
+    for (const [cx, , cz] of loop.slice(0, 4)) {
+      const sx = Math.sign(cx);
+      const sz = Math.sign(cz);
+      ticks.push([
+        [cx + sx * tickGap, y, cz],
+        [cx + sx * (tickGap + tickLen), y, cz],
+      ]);
+      ticks.push([
+        [cx, y, cz + sz * tickGap],
+        [cx, y, cz + sz * (tickGap + tickLen)],
+      ]);
+    }
+    return { loop, ticks };
+  }, [parcel.lotLength, parcel.lotWidth]);
 
-  return <primitive object={object} />;
+  return (
+    <group>
+      <Line points={loop} color={color} lineWidth={2.5} />
+      {ticks.map((segment, i) => (
+        <Line key={i} points={segment} color={color} lineWidth={2} />
+      ))}
+    </group>
+  );
 }
 
+/** Setback envelope as dashed clay drafting lines (recorded-fact register). */
 function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
-  const object = useMemo(() => {
+  const points = useMemo((): [number, number, number][] => {
     const halfWidth = parcel.lotWidth / 2;
     const halfLength = parcel.lotLength / 2;
     const left = -halfWidth + parcel.setbacks.side;
     const right = halfWidth - parcel.setbacks.side;
     const front = halfLength - parcel.setbacks.front;
     const rear = -halfLength + parcel.setbacks.rear;
-    const vertices = new Float32Array([
-      left, 0.18, rear,
-      right, 0.18, rear,
-      right, 0.18, rear,
-      right, 0.18, front,
-      right, 0.18, front,
-      left, 0.18, front,
-      left, 0.18, front,
-      left, 0.18, rear,
-    ]);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-    const material = new THREE.LineDashedMaterial({
-      color: SCENE.setback,
-      dashSize: 2.4,
-      gapSize: 1.6,
-      transparent: true,
-      opacity: 0.9,
-    });
-    const lines = new THREE.LineSegments(geometry, material);
-    lines.computeLineDistances();
-    return lines;
+    const y = 0.18;
+    return [
+      [left, y, rear],
+      [right, y, rear],
+      [right, y, front],
+      [left, y, front],
+      [left, y, rear],
+    ];
   }, [parcel]);
 
-  return <primitive object={object} />;
+  return (
+    <Line
+      points={points}
+      color={SCENE.setback}
+      lineWidth={1.5}
+      dashed
+      dashSize={2.4}
+      gapSize={1.6}
+      transparent
+      opacity={0.85}
+    />
+  );
 }
 
+/**
+ * Mono dimension labels for the Setbacks view: setback distances at each
+ * envelope edge plus overall lot dimensions along the boundary, all derived
+ * from the parcel's declared numbers.
+ */
+function SetbackDimensions({ parcel }: { parcel: ParcelPreset }) {
+  const hw = parcel.lotWidth / 2;
+  const hl = parcel.lotLength / 2;
+  const { front, rear, side } = parcel.setbacks;
+  // Sized for the top-down plat framing: the camera pulls back to fit the
+  // whole lot, so the chips scale with lot size to stay legible.
+  const scale = Math.max(parcel.lotWidth * 0.85, 30);
+  return (
+    <group>
+      <LabelSprite text={`${front}′ front`} position={[0, 1.2, hl - front / 2]} scale={scale} />
+      <LabelSprite text={`${rear}′ rear`} position={[0, 1.2, -hl + rear / 2]} scale={scale} />
+      <LabelSprite text={`${side}′ side`} position={[-hw + side / 2, 1.2, 0]} scale={scale * 0.85} />
+      <LabelSprite text={`${side}′ side`} position={[hw - side / 2, 1.2, 0]} scale={scale * 0.85} />
+      <LabelSprite text={`${parcel.lotWidth}′`} position={[0, 1.2, hl + 7]} scale={scale * 0.7} />
+      <LabelSprite text={`${parcel.lotLength}′`} position={[hw + 9, 1.2, 0]} scale={scale * 0.7} />
+    </group>
+  );
+}
+
+/**
+ * The brand mono stack for canvas drawing. Canvas text does not inherit CSS
+ * fonts, and next/font registers IBM Plex Mono under a hashed family name —
+ * so resolve the `--font-mono` variable at runtime instead of hardcoding.
+ */
+function monoFontStack(): string {
+  if (typeof window === "undefined") return "monospace";
+  const stack = getComputedStyle(document.documentElement)
+    .getPropertyValue("--font-mono")
+    .trim();
+  return stack || "monospace";
+}
+
+/**
+ * In-scene text label drawn to a canvas sprite (Drei/Troika `Text` loads fonts
+ * over CDN and fails silently in dev — see CLAUDE.md). Labels are recorded
+ * facts, so they render as UPPERCASE tracked IBM Plex Mono in espresso ink on
+ * a rectangular sand chip (pills are reserved for clickable controls). The
+ * canvas is scaled by devicePixelRatio so sprite text stays crisp on mobile,
+ * and redrawn once `document.fonts` settles so the brand mono actually lands.
+ */
 function LabelSprite({ text, position, scale = 6 }: { text: string; position: [number, number, number]; scale?: number }) {
-  const sprite = useMemo(() => {
+  const { sprite, redraw } = useMemo(() => {
+    const baseW = 512;
+    const baseH = 64;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const canvas = document.createElement("canvas");
+    canvas.width = baseW * dpr;
+    canvas.height = baseH * dpr;
     const ctx = canvas.getContext("2d")!;
-    canvas.width = 512;
-    canvas.height = 64;
-    ctx.font = "bold 36px system-ui, -apple-system, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    // Subtle background pill
-    const metrics = ctx.measureText(text);
-    const pillW = metrics.width + 40;
-    const pillH = 48;
-    ctx.fillStyle = "rgba(242,229,213,0.88)";
-    ctx.beginPath();
-    ctx.roundRect((512 - pillW) / 2, (64 - pillH) / 2, pillW, pillH, 24);
-    ctx.fill();
-    ctx.fillStyle = "#2b2f33";
-    ctx.fillText(text, 256, 34);
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
+
+    const label = text.toUpperCase();
+    const draw = () => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, baseW, baseH);
+      ctx.font = `600 30px ${monoFontStack()}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const metrics = ctx.measureText(label);
+      const chipW = Math.min(metrics.width + 36, baseW - 4);
+      const chipH = 46;
+      ctx.fillStyle = SCENE.labelChip;
+      ctx.beginPath();
+      ctx.roundRect((baseW - chipW) / 2, (baseH - chipH) / 2, chipW, chipH, 8);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(38,19,7,0.28)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = SCENE.ink;
+      ctx.fillText(label, baseW / 2, baseH / 2 + 1);
+      texture.needsUpdate = true;
+    };
+    draw();
+
     const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
     const s = new THREE.Sprite(mat);
     s.scale.set(scale, scale * 0.125, 1);
     s.position.set(...position);
-    return s;
+    return { sprite: s, redraw: draw };
   }, [text, position, scale]);
+
+  useEffect(() => {
+    const fonts = document.fonts;
+    if (!fonts?.ready) return;
+    let cancelled = false;
+    fonts.ready.then(() => {
+      if (!cancelled) redraw();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [redraw]);
 
   return <primitive object={sprite} />;
 }
@@ -344,6 +558,9 @@ function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
 
   return (
     <group position={[0, 0, zPos]}>
+      {/* Soft contact shadow grounding the house */}
+      <ContactShadow width={width + 6} length={depth + 6} opacity={0.3} />
+
       {/* Foundation */}
       <mesh position={[0, 0.2, 0]} receiveShadow>
         <boxGeometry args={[width + 1.5, 0.4, depth + 1.5]} />
@@ -589,24 +806,27 @@ function ProposedAdu({
         }}
         onPointerUp={handlePointerUp}
       >
-        {/* Shadow indicator on ground */}
+        {/* Soft contact shadow grounding the massing */}
+        <ContactShadow width={config.width + 5} length={config.length + 5} opacity={0.34} />
+
+        {/* Footprint compliance tint (eligible forest / review amber) */}
         <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[config.width + 1, config.length + 1]} />
           <meshBasicMaterial
-            color={isInsideSetback ? "#3a9e4f" : "#c07a1f"}
-            opacity={isInsideSetback ? 0.15 : 0.2}
+            color={isInsideSetback ? SCENE.eligible : SCENE.review}
+            opacity={isInsideSetback ? 0.15 : 0.22}
             transparent
           />
         </mesh>
 
-        {/* ADU body */}
+        {/* ADU body — hover/drag glow is clay, the interactive accent */}
         <mesh position={[0, y, 0]} castShadow receiveShadow>
           <boxGeometry args={[config.width, config.height, config.length]} />
           <meshStandardMaterial
             color={finishColor}
             roughness={0.74}
-            emissive={isHovered ? "#f3c87a" : "#000000"}
-            emissiveIntensity={isHovered ? 0.16 : 0}
+            emissive={isHovered ? SCENE.hoverGlow : "#000000"}
+            emissiveIntensity={isHovered ? 0.22 : 0}
           />
         </mesh>
 
@@ -668,7 +888,7 @@ function ProposedAdu({
         <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
           <meshBasicMaterial
-            color={isInsideSetback ? SCENE.boundaryOk : SCENE.boundaryOver}
+            color={isInsideSetback ? SCENE.eligible : SCENE.review}
             transparent
             opacity={isHovered ? 0.86 : 0.6}
             side={THREE.DoubleSide}
@@ -893,12 +1113,16 @@ export default function ParcelScene({
           className="relative z-0 h-full w-full"
           style={{ background: "transparent" }}
         >
-        <fog attach="fog" args={[SCENE.fog, 120, 230]} />
-        <ambientLight intensity={1.3} />
+        {/* Golden-hour envelope: warm low key light, warm ambient fill, sand
+            haze. The fog far plane sits beyond the top-down plat framing so
+            the Setbacks view never washes out. */}
+        <fog attach="fog" args={[SCENE.fog, 170, 430]} />
+        <ambientLight intensity={1.15} color={SCENE.ambient} />
         <directionalLight
           castShadow
-          position={[36, 70, 28]}
-          intensity={4}
+          position={[44, 50, 30]}
+          intensity={3.6}
+          color={SCENE.sun}
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
           shadow-camera-left={-90}
@@ -907,17 +1131,27 @@ export default function ParcelScene({
           shadow-camera-bottom={-90}
         />
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
-          <meshStandardMaterial color={SCENE.ground} roughness={0.95} />
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} receiveShadow>
-          <planeGeometry args={[parcel.lotWidth + 26, parcel.lotLength + 26]} />
-          <meshStandardMaterial color={SCENE.groundOuter} roughness={0.98} />
-        </mesh>
+        {/* Lot lawn and surrounding context, both carrying the surveyor
+            graph-paper grid (5 ft minors, 25 ft majors). */}
+        <SurveyGround
+          width={parcel.lotWidth}
+          length={parcel.lotLength}
+          base={SCENE.ground}
+          minorAlpha={0.05}
+          majorAlpha={0.1}
+        />
+        <SurveyGround
+          width={parcel.lotWidth + 26}
+          length={parcel.lotLength + 26}
+          base={SCENE.groundPaper}
+          minorAlpha={0.07}
+          majorAlpha={0.13}
+          y={-0.08}
+        />
 
         <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
         <SetbackLines parcel={parcel} />
+        {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
         {viewMode === "overview" && (
           <SceneCallout
             eyebrow="Buildable envelope"
@@ -968,13 +1202,15 @@ export default function ParcelScene({
           <meshStandardMaterial color={SCENE.driveway} roughness={0.95} />
         </mesh>
 
-        <gridHelper args={[160, 32, SCENE.gridCenter, SCENE.gridLine]} position={[0, 0.02, 0]} />
-        <OrbitControls enableDamping dampingFactor={0.06} makeDefault maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={145} />
+        <OrbitControls enableDamping dampingFactor={0.06} makeDefault maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={240} />
         <SceneCameraChoreography mode={viewMode} parcel={parcel} config={config} aduPos={aduPos} />
       </Canvas>
       </ErrorBoundary>
 
-      <div className="absolute bottom-4 right-4 lg:bottom-24 lg:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
+      {/* View-mode toggle. On mobile the bottom sheet's peek strip (148px)
+          overlays the bottom of the scene, so the toggle docks above it;
+          buttons meet the 44px touch floor below the `sm` breakpoint. */}
+      <div className="absolute bottom-44 right-4 lg:bottom-24 lg:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -987,7 +1223,7 @@ export default function ParcelScene({
               type="button"
               onClick={() => setViewMode(mode)}
               aria-pressed={active}
-              className={`inline-flex h-9 min-w-9 items-center justify-center gap-2 rounded px-2.5 text-xs font-semibold leading-none transition-colors sm:min-w-[86px] ${
+              className={`inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded px-2.5 text-xs font-semibold leading-none transition-colors sm:h-9 sm:min-w-[86px] ${
                 active
                   ? "bg-lf-mahogany text-lf-sand"
                   : "text-lf-espresso hover:bg-lf-taupe/10 focus-visible:bg-lf-taupe/10"
@@ -1000,7 +1236,8 @@ export default function ParcelScene({
         })}
       </div>
 
-      <div className="pointer-events-none absolute bottom-4 left-4 z-40 rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
+      {/* Mobile-only gesture hint — also docked above the sheet's peek strip. */}
+      <div className="pointer-events-none absolute bottom-44 left-4 z-40 rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
         Drag ADU to move · Pinch to zoom
       </div>
 
@@ -1030,7 +1267,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
   const frontSetback = parcel.lotLength / 2 - parcel.setbacks.front;
   const rearSetback = -parcel.lotLength / 2 + parcel.setbacks.rear;
 
-  const boundaryStroke = isCompliant ? SCENE.boundaryOk : SCENE.boundaryOver;
+  const boundaryStroke = isCompliant ? SCENE.eligible : SCENE.review;
 
   return (
     <div
@@ -1100,7 +1337,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           <text
             x="0"
             y="18"
-            fill={SCENE.label}
+            fill={SCENE.ink}
             fontSize="3.2"
             fontWeight="bold"
             textAnchor="middle"
@@ -1126,7 +1363,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
           <text
             x="0"
             y="-32"
-            fill={SCENE.label}
+            fill={SCENE.ink}
             fontSize="3.2"
             fontWeight="bold"
             textAnchor="middle"
