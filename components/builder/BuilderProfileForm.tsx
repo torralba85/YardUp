@@ -138,6 +138,7 @@ export default function BuilderProfileForm({
       <label className="flex items-center gap-2 text-sm text-lf-muted md:col-span-2">
         <input
           type="checkbox"
+          className="accent-lf-clay"
           checked={active}
           onChange={(event) => setActive(event.target.checked)}
         />
