@@ -1,0 +1,89 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import BuilderInbox from "./BuilderInbox";
+import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
+
+vi.mock("@/lib/marketplace-firestore", () => ({
+  fetchUnlockedContact: vi.fn(),
+}));
+vi.mock("@/lib/lead-unlock-api", () => ({ startLeadUnlock: vi.fn() }));
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({ user: { uid: "builder-1", getIdToken: async () => "tok" } }),
+}));
+
+const profile: BuilderProfile = {
+  id: "builder-1",
+  ownerUid: "builder-1",
+  companyName: "Seattle ADU Works",
+  contactEmail: "team@seattle.example",
+  phone: null,
+  licenseNumber: null,
+  serviceAreas: [{ city: "Seattle", state: "WA", key: "seattle-wa" }],
+  active: true,
+  credits: 0,
+  createdAt: null,
+  updatedAt: null,
+};
+
+const item: BuilderInboxItem = {
+  request: {
+    id: "request-1",
+    ownerUid: "owner-1",
+    preview: {
+      neighborhood: "Seattle, WA",
+      zip: "98115",
+      state: "WA",
+      lotSqft: 5000,
+      config: {
+        footprint: 600,
+        width: 20,
+        length: 30,
+        height: 12,
+        roof: "shed",
+        finish: "cedar",
+        includeOpenings: true,
+      },
+      aduSqft: 600,
+      buildBandLow: 200000,
+      buildBandHigh: 275000,
+      rentBand: 2000,
+      paybackYears: 15.7,
+      zoningStatus: "Compliant",
+      matchReasons: ["In your service area: Seattle, WA"],
+      previewSerial: "LF-AB12CD",
+    },
+    matchedBuilderIds: ["builder-1"],
+    status: "submitted",
+    ownerVerified: true,
+    headStartUntil: null,
+    createdAt: "2026-05-31T00:00:00.000Z",
+    updatedAt: "2026-05-31T00:00:00.000Z",
+  },
+  response: {
+    builderId: "builder-1",
+    status: "new",
+    createdAt: null,
+    updatedAt: null,
+  },
+  unlocked: false,
+};
+
+describe("BuilderInbox table view keyboard access", () => {
+  it("selects a ledger row with Enter and opens the detail panel", async () => {
+    render(<BuilderInbox profile={profile} items={[item]} onRespond={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /table/i }));
+
+    const row = screen.getByText("LF-AB12CD").closest("tr");
+    expect(row).not.toBeNull();
+    expect(row).toHaveAttribute("tabindex", "0");
+
+    fireEvent.keyDown(row!, { key: "Enter" });
+
+    expect(
+      screen.getByRole("heading", { name: /feasibility certificate locked/i }),
+    ).toBeInTheDocument();
+    expect(row).toHaveAttribute("aria-selected", "true");
+  });
+});

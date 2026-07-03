@@ -323,7 +323,15 @@ export default function BuilderInbox({
                       return (
                         <tr
                           key={item.request.id}
+                          tabIndex={0}
+                          aria-selected={isSelected}
                           onClick={() => setSelectedItemId(item.request.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedItemId(item.request.id);
+                            }
+                          }}
                           className={`group border-b border-lf-hairline cursor-pointer transition hover:bg-lf-sand-2/50 ${
                             isSelected ? "bg-lf-sand-2 border-l-[3px] border-l-lf-clay" : ""
                           }`}
