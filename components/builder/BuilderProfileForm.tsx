@@ -111,7 +111,7 @@ export default function BuilderProfileForm({
         />
       </label>
       <label className="lf-body-sm font-medium text-lf-espresso">
-        Phone optional
+        Phone (optional)
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
           value={phone}
@@ -119,7 +119,7 @@ export default function BuilderProfileForm({
         />
       </label>
       <label className="lf-body-sm font-medium text-lf-espresso">
-        License number optional
+        License number (optional)
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
           value={licenseNumber}
