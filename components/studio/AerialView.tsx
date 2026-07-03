@@ -156,9 +156,11 @@ export default function AerialView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng, parcel.lotLength]);
 
-  // SVG overlay colors — these match --lf-forest (#2F4A38) and --lf-brick (#A23B26)
-  // but must be hardcoded hex for SVG attributes (CSS variables don't work in SVG stroke/fill)
-  const statusColor = isCompliant ? "#2F4A38" : "#A23B26";
+  // SVG overlay colors — these match --lf-forest (#2F4A38) and --lf-amber (#C8922A)
+  // but must be hardcoded hex for SVG attributes (CSS variables don't work in SVG stroke/fill).
+  // Non-compliant here means "review needed", which is amber semantics — brick
+  // is reserved for genuine blockers (DESIGN.md).
+  const statusColor = isCompliant ? "#2F4A38" : "#C8922A";
 
   return (
     <div
@@ -289,8 +291,8 @@ export default function AerialView({
 
       {/* Zoning badge */}
       <div
-        className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 font-mono text-xs font-semibold text-lf-sand shadow-md ${
-          isCompliant ? "bg-lf-forest" : "bg-lf-brick"
+        className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 font-mono text-xs font-semibold shadow-md ${
+          isCompliant ? "bg-lf-forest text-lf-sand" : "bg-lf-amber text-lf-espresso"
         }`}
         aria-label={`Zoning status: ${isCompliant ? "Compliant" : "Review needed"}`}
       >
