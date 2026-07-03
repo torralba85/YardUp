@@ -119,7 +119,7 @@ export default function BuilderInbox({
       try {
         await onRespond(requestId, status);
       } catch {
-        setError("Could not update this request.");
+        setError("Could not update this request. Check your connection and try again.");
       } finally {
         setPendingId(null);
       }
