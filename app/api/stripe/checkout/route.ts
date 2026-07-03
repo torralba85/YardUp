@@ -3,6 +3,7 @@ import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
+import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -67,15 +68,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", demo: true });
   }
 
-  // Prefer the server-configured URL over the client-supplied Origin header (a
-  // caller can spoof it) to avoid an open redirect via the Stripe return URLs;
-  // fall back to Origin for local dev. Trailing slash stripped so
-  // `${origin}/builder` never doubles up.
-  const origin = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    request.headers.get("origin") ||
-    ""
-  ).replace(/\/+$/, "");
+  const origin = resolveCheckoutOrigin(request.headers);
   if (!origin) {
     // Stripe requires absolute success/cancel URLs. With no Origin header and no
     // NEXT_PUBLIC_APP_URL we would send a relative one and Stripe would reject the

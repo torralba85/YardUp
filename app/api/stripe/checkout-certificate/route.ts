@@ -3,6 +3,7 @@ import { requireApiAuth } from "@/lib/server/api-auth";
 import { grantCertificate, hasCertificate } from "@/lib/server/certificate-purchases";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { getStripe } from "@/lib/stripe";
+import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -57,14 +58,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", demo: true });
   }
 
-  // Prefer the server-configured URL over the client-supplied Origin header (a
-  // caller can spoof it) to avoid an open redirect via the Stripe return URLs;
-  // fall back to Origin for local dev.
-  const origin = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.NODE_ENV !== "production" ? request.headers.get("origin") : "") ||
-    ""
-  ).replace(/\/+$/, "");
+  const origin = resolveCheckoutOrigin(request.headers);
   if (!origin) {
     console.error(
       "[stripe/checkout-certificate] No request Origin and NEXT_PUBLIC_APP_URL is unset; cannot build return URLs.",

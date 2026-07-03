@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { getStripe } from "@/lib/stripe";
+import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 
 export const runtime = "nodejs";
 
@@ -69,11 +70,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const origin = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    request.headers.get("origin") ||
-    ""
-  ).replace(/\/+$/, "");
+  const origin = resolveCheckoutOrigin(request.headers);
 
   if (!origin) {
     return NextResponse.json(

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
@@ -53,6 +53,10 @@ beforeEach(() => {
   mocks.grant.mockClear();
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("POST /api/stripe/checkout", () => {
   it("400s without a requestId", async () => {
     const res = await POST(postRequest({}));
@@ -93,6 +97,24 @@ describe("POST /api/stripe/checkout", () => {
     expect(mocks.grant).not.toHaveBeenCalled();
     expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: { builderId: "b1", requestId: "r1" } }),
+    );
+  });
+
+  it("does not use the request Origin for production Stripe return URLs", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    mocks.stripe = {
+      checkout: {
+        sessions: { create: vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" }) },
+      },
+    };
+
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(res.status).toBe(200);
+    expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success_url: "https://yardup-2026.web.app/builder?lead=r1&unlocked=1",
+        cancel_url: "https://yardup-2026.web.app/builder?lead=r1",
+      }),
     );
   });
 
