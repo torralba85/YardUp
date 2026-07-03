@@ -515,7 +515,12 @@ export default function BuilderInbox({
                                     type="button"
                                     onClick={() => respond(selectedItem.request.id, "interested")}
                                     disabled={responding}
-                                    className="flex h-8 items-center gap-1 bg-lf-mahogany px-2.5 text-[10.5px] font-semibold text-lf-sand transition hover:bg-lf-espresso disabled:opacity-50 cursor-pointer rounded-full"
+                                    aria-pressed={selectedItem.response.status === "interested"}
+                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
+                                      selectedItem.response.status === "interested"
+                                        ? "bg-lf-mahogany text-lf-sand"
+                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+                                    }`}
                                   >
                                     <CheckCircle2 size={12} />
                                     Interested
@@ -524,7 +529,12 @@ export default function BuilderInbox({
                                     type="button"
                                     onClick={() => respond(selectedItem.request.id, "not-a-fit")}
                                     disabled={responding}
-                                    className="flex h-8 items-center gap-1 border border-lf-hairline px-2.5 text-[10.5px] font-semibold text-lf-muted transition hover:bg-lf-sand-2 disabled:opacity-50 cursor-pointer rounded-full"
+                                    aria-pressed={selectedItem.response.status === "not-a-fit"}
+                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
+                                      selectedItem.response.status === "not-a-fit"
+                                        ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
+                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+                                    }`}
                                   >
                                     <CircleSlash size={12} />
                                     Not a fit
@@ -705,7 +715,12 @@ export default function BuilderInbox({
                                     type="button"
                                     onClick={() => respond(selectedItem.request.id, "interested")}
                                     disabled={responding}
-                                    className="flex h-8 items-center gap-1 bg-lf-mahogany px-2.5 text-[10.5px] font-semibold text-lf-sand transition hover:bg-lf-espresso disabled:opacity-50 cursor-pointer rounded-full"
+                                    aria-pressed={selectedItem.response.status === "interested"}
+                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
+                                      selectedItem.response.status === "interested"
+                                        ? "bg-lf-mahogany text-lf-sand"
+                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+                                    }`}
                                   >
                                     <CheckCircle2 size={12} />
                                     Interested
@@ -714,7 +729,12 @@ export default function BuilderInbox({
                                     type="button"
                                     onClick={() => respond(selectedItem.request.id, "not-a-fit")}
                                     disabled={responding}
-                                    className="flex h-8 items-center gap-1 border border-lf-hairline px-2.5 text-[10.5px] font-semibold text-lf-muted transition hover:bg-lf-sand-2 disabled:opacity-50 cursor-pointer rounded-full"
+                                    aria-pressed={selectedItem.response.status === "not-a-fit"}
+                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
+                                      selectedItem.response.status === "not-a-fit"
+                                        ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
+                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+                                    }`}
                                   >
                                     <CircleSlash size={12} />
                                     Not a fit

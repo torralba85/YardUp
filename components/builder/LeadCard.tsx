@@ -137,7 +137,12 @@ export default function LeadCard({
             type="button"
             onClick={() => onRespond("interested")}
             disabled={responding}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-lf-mahogany px-3.5 text-xs font-semibold text-lf-sand transition hover:bg-lf-espresso disabled:opacity-50"
+            aria-pressed={item.response.status === "interested"}
+            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
+              item.response.status === "interested"
+                ? "bg-lf-mahogany text-lf-sand"
+                : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+            }`}
           >
             <CheckCircle2 size={14} />
             Interested
@@ -146,7 +151,12 @@ export default function LeadCard({
             type="button"
             onClick={() => onRespond("not-a-fit")}
             disabled={responding}
-            className="flex h-9 items-center gap-1.5 rounded-full border border-lf-hairline px-3.5 text-xs font-semibold text-lf-muted transition hover:bg-lf-sand-2 disabled:opacity-50"
+            aria-pressed={item.response.status === "not-a-fit"}
+            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
+              item.response.status === "not-a-fit"
+                ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
+                : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
+            }`}
           >
             <CircleSlash size={14} />
             Not a fit
