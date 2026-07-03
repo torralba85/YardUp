@@ -869,7 +869,7 @@ function CreditShop() {
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
             <div className="text-xs text-lf-muted">$35 / lead</div>
           </div>
-          <div className="font-mono text-sm text-lf-money-on-dark font-semibold">
+          <div className="font-display text-lg font-semibold text-lf-forest">
             $175
           </div>
         </button>
@@ -882,7 +882,7 @@ function CreditShop() {
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>
             <div className="text-xs text-lf-taupe">$30 / lead (Best Value)</div>
           </div>
-          <div className="font-mono text-sm text-lf-money font-semibold">
+          <div className="font-display text-lg font-semibold text-lf-money-on-dark">
             $300
           </div>
         </button>
