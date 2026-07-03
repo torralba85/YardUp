@@ -236,7 +236,7 @@ export default function BuilderInbox({
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition ${
+                    className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition ${
                       tab === t.key
                         ? "border-lf-espresso bg-lf-espresso text-lf-sand"
                         : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
@@ -500,7 +500,7 @@ export default function BuilderInbox({
                                   }}
                                   className="w-full justify-center inline-flex items-center gap-2 bg-lf-forest px-4 py-2.5 text-xs font-semibold text-lf-sand transition hover:brightness-95 cursor-pointer rounded-full"
                                 >
-                                  Unlock Lead
+                                  Unlock lead
                                   <span className="font-display text-sm font-semibold">{formatUnlockPrice()}</span>
                                 </button>
                               </div>
@@ -679,7 +679,7 @@ export default function BuilderInbox({
                                   type="button"
                                   onClick={handleDownloadHtml}
                                   disabled={!itemContact.snapshot?.result}
-                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-md bg-lf-mahogany text-[10px] font-semibold text-lf-sand-2 transition hover:bg-lf-espresso cursor-pointer disabled:opacity-50"
+                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-full bg-lf-mahogany text-[10px] font-semibold text-lf-sand-2 transition hover:bg-lf-espresso cursor-pointer disabled:opacity-50"
                                 >
                                   <Download size={11} />
                                   Download HTML
@@ -688,7 +688,7 @@ export default function BuilderInbox({
                                   type="button"
                                   onClick={handleDownloadCsv}
                                   disabled={!itemContact.snapshot?.result}
-                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-md border border-lf-hairline text-[10px] font-semibold text-lf-muted transition hover:bg-lf-sand-2 cursor-pointer disabled:opacity-50"
+                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-full border border-lf-hairline text-[10px] font-semibold text-lf-muted transition hover:bg-lf-sand-2 cursor-pointer disabled:opacity-50"
                                 >
                                   <FileSpreadsheet size={11} />
                                   CSV Export
@@ -863,7 +863,7 @@ function CreditShop() {
         <button
           onClick={() => buyPack(5)}
           disabled={loading !== null}
-          className="w-full flex items-center justify-between border border-lf-hairline p-3 hover:bg-lf-sand-2 disabled:opacity-50 transition"
+          className="w-full flex items-center justify-between rounded-lg border border-lf-hairline p-3 hover:bg-lf-sand-2 disabled:opacity-50 transition"
         >
           <div className="text-left">
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
@@ -876,7 +876,7 @@ function CreditShop() {
         <button
           onClick={() => buyPack(10)}
           disabled={loading !== null}
-          className="w-full flex items-center justify-between border border-lf-hairline bg-lf-espresso p-3 hover:bg-lf-espresso/90 disabled:opacity-50 transition"
+          className="w-full flex items-center justify-between rounded-lg border border-lf-hairline bg-lf-espresso p-3 hover:bg-lf-espresso/90 disabled:opacity-50 transition"
         >
           <div className="text-left">
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>

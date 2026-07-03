@@ -137,7 +137,7 @@ export default function LeadCard({
             type="button"
             onClick={() => onRespond("interested")}
             disabled={responding}
-            className="flex h-9 items-center gap-1.5 bg-lf-mahogany px-3 text-xs font-semibold text-lf-sand transition hover:bg-lf-espresso disabled:opacity-50"
+            className="flex h-9 items-center gap-1.5 rounded-full bg-lf-mahogany px-3.5 text-xs font-semibold text-lf-sand transition hover:bg-lf-espresso disabled:opacity-50"
           >
             <CheckCircle2 size={14} />
             Interested
@@ -146,7 +146,7 @@ export default function LeadCard({
             type="button"
             onClick={() => onRespond("not-a-fit")}
             disabled={responding}
-            className="flex h-9 items-center gap-1.5 border border-lf-hairline px-3 text-xs font-semibold text-lf-muted transition hover:bg-lf-sand-2 disabled:opacity-50"
+            className="flex h-9 items-center gap-1.5 rounded-full border border-lf-hairline px-3.5 text-xs font-semibold text-lf-muted transition hover:bg-lf-sand-2 disabled:opacity-50"
           >
             <CircleSlash size={14} />
             Not a fit
@@ -164,7 +164,7 @@ export default function LeadCard({
             <button
               type="button"
               onClick={onUnlockClick}
-              className="mt-2.5 inline-flex items-center gap-2 bg-lf-forest px-4 py-2.5 text-sm font-semibold text-lf-sand transition hover:brightness-95"
+              className="mt-2.5 inline-flex items-center gap-2 rounded-full bg-lf-forest px-5 py-2.5 text-sm font-semibold text-lf-sand transition hover:brightness-95"
             >
               {hasCredits ? "Unlock with 1 Credit" : "Unlock lead"}
               <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : formatUnlockPrice()}</span>
@@ -204,7 +204,7 @@ export default function LeadCard({
                 <button
                   type="button"
                   onClick={onViewCertificate}
-                  className="flex items-center gap-1.5 border border-lf-hairline px-3 py-2 text-[11.5px] text-lf-clay transition hover:bg-lf-card"
+                  className="flex items-center gap-1.5 rounded-full border border-lf-hairline px-3.5 py-2 text-[11.5px] text-lf-clay transition hover:bg-lf-card"
                 >
                   <FileText size={13} />
                   View certificate
@@ -214,7 +214,7 @@ export default function LeadCard({
                 <button
                   type="button"
                   onClick={onReport}
-                  className="flex items-center gap-1.5 border border-lf-hairline px-3 py-2 text-[11.5px] text-lf-clay transition hover:bg-lf-card"
+                  className="flex items-center gap-1.5 rounded-full border border-lf-hairline px-3.5 py-2 text-[11.5px] text-lf-clay transition hover:bg-lf-card"
                 >
                   <Flag size={13} />
                   Report this lead
