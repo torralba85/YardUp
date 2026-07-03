@@ -212,7 +212,7 @@ export default function ConstraintsPanel({
 function ConstraintRow({ item }: { item: ConstraintItem }) {
   const tone = statusTone(item.status);
   const Icon = STATUS_ICON[item.status];
-  const iconColor = item.status === "info" ? "var(--lf-muted)" : tone.color;
+  const iconColor = item.status === "info" ? "var(--color-lf-muted)" : tone.color;
 
   return (
     <div className="flex items-start gap-3 border-b border-lf-hairline py-3">
@@ -248,7 +248,7 @@ function RowTrailing({
     return (
       <span
         className="whitespace-nowrap font-mono text-xs"
-        style={{ color: item.status === "blocked" ? tone.color : "var(--lf-espresso)" }}
+        style={{ color: item.status === "blocked" ? tone.color : "var(--color-lf-espresso)" }}
       >
         {item.value}
       </span>
