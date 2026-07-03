@@ -10,7 +10,7 @@ export default function BuilderMoneyBand({ metrics, credits }: { metrics: Builde
   const unlockLabel = `${metrics.unlockedCount} unlock${metrics.unlockedCount === 1 ? "" : "s"}`;
 
   return (
-    <div className="grid grid-cols-1 gap-px bg-lf-espresso text-lf-taupe sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-px bg-lf-espresso text-lf-taupe sm:grid-cols-4">
       <Cell label="New leads" value={String(metrics.newLeadCount)} />
       <Cell
         label="Pipeline value · new"
