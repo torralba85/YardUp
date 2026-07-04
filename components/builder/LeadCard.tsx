@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, CircleSlash, FileText, Flag, Lock } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { finishLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
 import type {
@@ -171,14 +172,10 @@ export default function LeadCard({
               <Lock size={13} />
               Contact locked — unlock to view
             </div>
-            <button
-              type="button"
-              onClick={onUnlockClick}
-              className="mt-2.5 inline-flex items-center gap-2 rounded-full bg-lf-forest px-5 py-2.5 text-sm font-semibold text-lf-sand transition hover:brightness-95"
-            >
+            <Button variant="commit" onClick={onUnlockClick} className="mt-2.5">
               {hasCredits ? "Unlock with 1 Credit" : "Unlock lead"}
               <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : formatUnlockPrice()}</span>
-            </button>
+            </Button>
           </div>
         )}
 
@@ -211,24 +208,26 @@ export default function LeadCard({
             </address>
             <div className="mt-2.5 flex gap-2">
               {onViewCertificate && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={onViewCertificate}
-                  className="flex items-center gap-1.5 rounded-full border border-lf-hairline px-3.5 py-2 text-[11.5px] text-lf-clay transition hover:bg-lf-card"
+                  leftIcon={<FileText size={13} />}
+                  className="border border-lf-hairline"
                 >
-                  <FileText size={13} />
                   View certificate
-                </button>
+                </Button>
               )}
               {onReport && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={onReport}
-                  className="flex items-center gap-1.5 rounded-full border border-lf-hairline px-3.5 py-2 text-[11.5px] text-lf-clay transition hover:bg-lf-card"
+                  leftIcon={<Flag size={13} />}
+                  className="border border-lf-hairline"
                 >
-                  <Flag size={13} />
                   Report this lead
-                </button>
+                </Button>
               )}
             </div>
           </div>

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * - `ghost` — text-only clay.
  */
 export type ButtonVariant = "commit" | "primary" | "secondary" | "ghost";
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   commit: "bg-lf-forest text-lf-sand hover:bg-lf-mahogany",
@@ -23,6 +23,9 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
+  // xs is the compact-density step for the builder inbox's inline action rows,
+  // where a 36px control would crowd the table detail panel.
+  xs: "h-8 gap-1.5 px-3 text-xs",
   sm: "h-9 gap-1.5 px-3.5 text-sm",
   md: "h-11 gap-2 px-5 text-sm",
   lg: "h-12 gap-2 px-6 text-base",
