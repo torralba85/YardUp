@@ -259,7 +259,7 @@ function RowTrailing({
     item.status === "clear" ? "Clear" : item.status === "blocked" ? "Blocked" : "Review";
   return (
     <span
-      className="inline-flex h-[22px] items-center rounded-md border px-[9px] font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em]"
+      className="inline-flex h-[22px] items-center rounded-md border px-[9px] font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em]"
       style={{
         backgroundColor: tone.soft,
         color: tone.color,

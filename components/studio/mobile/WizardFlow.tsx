@@ -150,7 +150,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <h1 className="font-display text-3xl font-bold text-lf-espresso">What size ADU?</h1>
             <p className="mt-1 text-sm text-lf-muted">
               {address?.formattedAddress}
-              <span className="ml-2 rounded bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">
+              <span className="ml-2 rounded bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]">
                 lot: estimated
               </span>
             </p>
@@ -186,7 +186,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <h1 className="font-display text-2xl font-bold text-lf-espresso">Your lot looks promising</h1>
             <p className="mt-1 text-sm text-lf-muted">
               {address?.formattedAddress} · {footprint} ft²
-              <span className="ml-2 rounded bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">
+              <span className="ml-2 rounded bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]">
                 estimated
               </span>
             </p>

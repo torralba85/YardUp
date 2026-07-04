@@ -77,7 +77,7 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-lf-hairline bg-lf-card px-2.5 py-1.5">
-      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-lf-taupe">{label}</p>
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">{label}</p>
       <p className="font-display text-base font-semibold tabular-nums text-lf-espresso">{value}</p>
     </div>
   );

@@ -204,7 +204,7 @@ function SceneCallout({
       <div
         className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] xl:block ${toneClass}`}
       >
-        <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.12em] opacity-75">{eyebrow}</div>
+        <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.14em] opacity-75">{eyebrow}</div>
         <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
         <div className="mt-1 text-[11px] leading-[1.45] opacity-80">{detail}</div>
       </div>

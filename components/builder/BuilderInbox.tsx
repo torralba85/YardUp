@@ -236,7 +236,7 @@ export default function BuilderInbox({
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition ${
+                    className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition ${
                       tab === t.key
                         ? "border-lf-espresso bg-lf-espresso text-lf-sand"
                         : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
@@ -253,7 +253,7 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer ${
                     viewMode === "cards"
                       ? "bg-lf-espresso text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
@@ -265,7 +265,7 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer ${
                     viewMode === "table"
                       ? "bg-lf-espresso text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
@@ -377,7 +377,7 @@ export default function BuilderInbox({
                               {itemAccess === "confirming" && (
                                 <span className="h-2 w-2 rounded-full bg-lf-amber animate-pulse" />
                               )}
-                              <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-lf-muted ml-0.5">
+                              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted ml-0.5">
                                 {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
                               </span>
                             </div>
@@ -465,7 +465,7 @@ export default function BuilderInbox({
                               NO. {selectedItem.request.preview.previewSerial}
                               {recordedDate ? ` · RECORDED ${recordedDate}` : ""}
                             </span>
-                            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] ${
+                            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] ${
                               itemAccess === "unlocked" 
                                 ? "bg-lf-forest-soft text-lf-forest" 
                                 : itemAccess === "confirming" 
@@ -482,14 +482,14 @@ export default function BuilderInbox({
                               <div>
                                 <p className="lf-money-md text-lf-forest">
                                   {formatCurrency(selectedItem.request.preview.rentBand)}
-                                  <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+                                  <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
                                     /mo rent potential
                                   </span>
                                 </p>
                                 <p className="mt-2 font-semibold text-lf-espresso text-sm">
                                   {selectedItem.request.preview.neighborhood}
                                 </p>
-                                <p className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+                                <p className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
                                   <span>{selectedItem.request.preview.lotSqft.toLocaleString()} sqft lot</span>
                                   <span>{selectedItem.request.preview.aduSqft.toLocaleString()} sf ADU</span>
                                   <span>{finishLabels[selectedItem.request.preview.config.finish]}</span>
@@ -823,18 +823,18 @@ function ZeroEverEmptyState() {
           Ballard, WA
           <span className="ml-1.5 font-mono text-[10.5px] font-normal text-lf-muted">98107</span>
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
           <span>6,200 sqft</span>
           <span>800 sf ADU</span>
           <span>Compliant</span>
         </p>
         <p className="mt-2 lf-money-md text-lf-forest">
           $2,500
-          <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+          <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
             /mo rent potential
           </span>
         </p>
-        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-lf-muted">
+        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
           Owner contact unlocks for {formatUnlockPrice()} — once you have real leads
         </p>
       </article>

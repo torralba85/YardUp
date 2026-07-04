@@ -222,7 +222,7 @@ export default function BeforeAfterBoard({
               {styleTraits.map((trait) => (
                 <span
                   key={trait}
-                  className="bg-lf-card border border-lf-hairline px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-lf-muted"
+                  className="bg-lf-card border border-lf-hairline px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-lf-muted"
                 >
                   {trait.toUpperCase()}
                 </span>
@@ -234,7 +234,7 @@ export default function BeforeAfterBoard({
               <span className="text-[10px] uppercase tracking-[0.14em] text-lf-muted/70">
                 Lot info
               </span>
-              <span className="font-semibold text-lf-espresso uppercase mt-0.5 tracking-[0.08em]">
+              <span className="font-semibold text-lf-espresso uppercase mt-0.5 tracking-[0.14em]">
                 {lotSizeInfo.toUpperCase()}
               </span>
             </div>

@@ -140,7 +140,7 @@ function LeadCell({
 
 function CellLabel({ icon: Icon, label }: { icon: typeof Home; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-lf-muted sm:text-[11px]">
+    <div className="flex items-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-lf-muted sm:text-[11px]">
       <Icon size={13} />
       {label}
     </div>

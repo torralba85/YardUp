@@ -108,7 +108,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-lf-espresso">{b.companyName}</span>
                   {b.licenseNumber ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lf-forest/30 bg-lf-forest-soft px-1.5 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-lf-forest">
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lf-forest/30 bg-lf-forest-soft px-1.5 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-lf-forest">
                       <BadgeCheck size={11} aria-hidden />
                       Licensed
                     </span>

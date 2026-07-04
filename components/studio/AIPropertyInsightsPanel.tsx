@@ -131,7 +131,7 @@ export default function AIPropertyInsightsPanel({
             <p className="mt-1 text-xs leading-5 text-lf-muted">{insights.summary}</p>
           </div>
           <div>
-            <div className="font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] text-lf-muted">
+            <div className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
               Best fit
             </div>
             <p className="mt-1 text-xs leading-5 text-lf-espresso">{insights.bestFit}</p>
@@ -141,7 +141,7 @@ export default function AIPropertyInsightsPanel({
               <div key={`${risk.label}-${risk.level}`} className="rounded-md border border-lf-hairline bg-lf-card p-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold text-lf-espresso">{risk.label}</span>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-lf-muted">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
                     {risk.level}
                   </span>
                 </div>

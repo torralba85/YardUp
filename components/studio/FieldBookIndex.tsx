@@ -82,7 +82,7 @@ export default function FieldBookIndex({
                 >
                   {plate.title}
                   {plate.optional && (
-                    <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-lf-taupe/70">
+                    <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-lf-taupe/70">
                       optional
                     </span>
                   )}

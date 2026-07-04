@@ -41,7 +41,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 shrink-0 rounded" />
       <span className="min-w-0 flex-1 truncate rounded-full bg-white/10 px-2.5 py-1 text-xs text-lf-sand">
         {address}
-        {estimated && <span className="ml-1.5 font-mono text-[9px] uppercase tracking-[0.08em] text-lf-amber-on-dark">est.</span>}
+        {estimated && <span className="ml-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-on-dark">est.</span>}
       </span>
       <button
         type="button"
