@@ -225,10 +225,10 @@ _Last updated 2026-07-02 (guided-spine release train)._
 
 ## Next Priorities (deployment audit 2026-07-02)
 
-1. **Production env gap** — the `NEXT_PUBLIC_GOOGLE_PLACES_KEY` GitHub secret exists but holds a wrong value (the deployed bundle bootstraps Maps JS with `key=-`, Google answers `InvalidKey` + RPC 400), so address autocomplete is dead in production. The correct browser key already exists: GCP key "New next_public_google_places_key" (uid `4d270dd8-96b9-4a5a-b660-533c5ea082a5`, referrer-restricted to the prod domains + localhost, Places (New) enabled) — it matches the verified-working key in `.env.local`. Fix: `gcloud services api-keys get-key-string projects/yardup-2026/locations/global/keys/4d270dd8-96b9-4a5a-b660-533c5ea082a5 --format="value(keyString)" | gh secret set NEXT_PUBLIC_GOOGLE_PLACES_KEY --repo torralba85/YardUp`, then any master push redeploys with it. Verify with a live autocomplete request against https://yardup-2026.web.app/studio.
+1. **Production Places key verification** — `NEXT_PUBLIC_GOOGLE_PLACES_KEY` exists in GitHub Actions metadata and the 2026-07-04 live smoke against `https://yardup-2026.web.app/studio` returned `/api/suggest` suggestions for `1600 Pennsylvania Ave`. Still verify in Google Cloud Console that the secret value is the intended browser key, referrer-restricted to production domains + localhost, with Places (New) enabled.
 2. **`NEXT_PUBLIC_APP_URL`** — set to the real domain or Stripe redirects land on `yardup-2026.web.app`.
 3. **Stripe live-mode verification** — webhook endpoint registered in the dashboard, one live test checkout for certificate + lead-unlock flows.
-4. **Store packaging** — wrapper strategy decided (PWABuilder); needs `assetlinks.json`, manifest screenshots, signed `.aab`, iOS wrapper project (`docs/store-deployment-readiness.md` §2–3).
+4. **Store packaging** — wrapper strategy decided (PWABuilder); `assetlinks.json` exists but still has the placeholder Play signing SHA-256; needs manifest screenshots, signed `.aab`, iOS wrapper project (`docs/store-deployment-readiness.md` §2–3).
 5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md` (pill-radius system, amber/brick semantics, typography trio) on landing, studio, builder dashboard.
 6. **Builder network growth** — real builder onboarding flow; zero-state city coverage is honest but the network is empty.
 7. **Solar simulation / view modes / aerial polish** — deferred scene enhancements from the earlier audit.

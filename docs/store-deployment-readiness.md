@@ -1,8 +1,9 @@
 # Store Deployment Readiness — iOS App Store + Google Play
 
 **Date:** 2026-06-28
-**Baseline health:** `lint` clean, `tsc --noEmit` clean, **291/291 Vitest pass**, last `master` CI run green.
-**Verdict:** The web app is production-healthy, but **not yet shippable to either store** — there is no native/store wrapper, one production API key is missing, and several store-packaging items need fixing.
+**Updated:** 2026-07-04
+**Baseline health:** `lint` clean, `tsc --noEmit` clean, **408/408 Vitest pass**, `npm run build` clean, latest `master` CI run green.
+**Verdict:** The web app is production-healthy, but **not yet shippable to either store** — there is no native/store wrapper, the store signing/linking assets are still placeholder/incomplete, and live payment/store-console checks remain.
 
 ---
 
@@ -21,10 +22,10 @@ Method: cross-checked `gh secret list`, Google Secret Manager (`gcloud secrets l
 | `STRIPE_WEBHOOK_SECRET` | Secret Manager → bound to `apiStripe` | `api/stripe/webhook` |
 | `NEXT_PUBLIC_FIREBASE_*` | hardcoded fallback in `lib/firebase.ts` | Firebase Auth + Firestore client |
 
-### ❌ MISSING / BROKEN
+### ⚠️ Needs live-console verification
 | Key | Impact |
 |---|---|
-| **`NEXT_PUBLIC_GOOGLE_PLACES_KEY`** | **Not** in GitHub secrets. CI writes it as an empty string into both `functions/.env` and `.env.production.local`, and `components/studio/AddressSearch.tsx` has **no fallback** → **address autocomplete is dead in production**. Add a browser-safe Places key (HTTP-referrer-restricted to the prod domain, Places API enabled). This is the one confirmed break. |
+| **`NEXT_PUBLIC_GOOGLE_PLACES_KEY`** | GitHub Actions metadata shows this secret exists as of 2026-07-04, and a live browser smoke against `https://yardup-2026.web.app/studio` returned `/api/suggest` suggestions for `1600 Pennsylvania Ave`. Still verify in Google Cloud Console that the value is the intended browser-safe Places key, HTTP-referrer-restricted to the production domains and localhost. |
 
 ### 🟡 Optional / fallback (works, but confirm before launch)
 | Key | Behavior |
@@ -57,7 +58,7 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ## 3. PWA-correctness bugs found
 - ~~**Mislabeled icons:** `public/icon-180.png` and `public/icon-192.png` are both actually **512×512**. The manifest declares `192×192` and the Apple touch icon expects `180×180` → Lighthouse/PWABuilder flag a size mismatch and the maskable-icon test. Regenerate at true sizes; add a maskable variant with safe-zone padding.~~ ✅ fixed 2026-06-28.
 - **No store screenshots:** `manifest.json` has no `screenshots` array (Play listing wants narrow + wide).
-- **No `/.well-known/assetlinks.json`** for the Android TWA.
+- **Placeholder `/.well-known/assetlinks.json`:** the file exists, but the SHA-256 fingerprint is `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT`. Replace it after Play signing is available.
 - ~~**Service worker is fallback-only:** `sw.js` serves `offline.html` on navigation failure but does not precache the app shell — a stronger offline story also helps the Apple 4.2 case.~~ ✅ fixed 2026-06-28.
 
 ---
@@ -65,14 +66,14 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ## 4. Prioritized Todo List
 
 ### P0 — Launch blockers
-1. **Add `NEXT_PUBLIC_GOOGLE_PLACES_KEY`** GitHub secret (browser Places key, referrer-restricted). Without it autocomplete is dead.
+1. **Verify `NEXT_PUBLIC_GOOGLE_PLACES_KEY`** in Google Cloud Console (browser Places key, referrer-restricted) and rotate/update the GitHub secret if it does not match the intended key.
 2. **Decide native-wrapper strategy** (PWABuilder TWA+iOS vs Capacitor) — drives the entire packaging path. *(user decision)*
 3. ~~**Regenerate `icon-180.png` (180²) and `icon-192.png` (192²)** at true sizes + a maskable-padded variant.~~ ✅ done 2026-06-28.
 4. **Set `NEXT_PUBLIC_APP_URL`** to the production custom domain (Stripe redirects).
 5. **Verify `GOOGLE_MAPS_API_KEY`** has Static + Geocoding + Places enabled and is server-safe (not referrer-locked).
 
 ### P1 — Store packaging
-6. Add `/.well-known/assetlinks.json` + generate the **Android TWA** (PWABuilder/Bubblewrap) → signed `.aab`.
+6. Replace the placeholder SHA-256 in `/.well-known/assetlinks.json` + generate the **Android TWA** (PWABuilder/Bubblewrap) → signed `.aab`.
 7. Generate the **iOS wrapper** project; satisfy Apple 4.2 (offline shell / push / native value-add).
 8. Add `manifest.json` **screenshots** (mobile + tablet) for richer listings.
 9. **Privacy compliance:** App Store privacy "nutrition labels" + Play **Data Safety** form (you collect address, account email, payment via Stripe). Privacy policy `/privacy` ✅ and terms `/terms` ✅ already exist.
@@ -88,7 +89,7 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ---
 
 ## 5. Recommended sequence
-1. Land P0-1, P0-4, P0-5 (config — fast, no architecture change).
+1. Land P0-1, P0-4, P0-5 (config verification — fast, no architecture change).
 2. Get the P0-2 wrapper decision, then execute P1 packaging on that path.
 3. Run P2 device QA → use those screenshots for both store listings.
 4. Re-run the full release gate (`lint && test && tsc --noEmit && build`) + Firebase smoke, then submit.

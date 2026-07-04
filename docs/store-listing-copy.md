@@ -129,10 +129,10 @@ LotFoundry is a feasibility and estimation tool. Outputs are early estimates onl
 ---
 
 ## E. Pre-submission checklist
-- [ ] Add `NEXT_PUBLIC_GOOGLE_PLACES_KEY` + set `NEXT_PUBLIC_APP_URL` (see store-deployment-readiness.md).
+- [ ] Verify `NEXT_PUBLIC_GOOGLE_PLACES_KEY` in Google Cloud Console + set `NEXT_PUBLIC_APP_URL` (see store-deployment-readiness.md).
 - [x] Confirm photo retention (A-1 — not persisted) and wire a data-deletion path (A-2 — `POST /api/account/delete` + in-app UI).
 - [ ] Decide retention policy for marketplace `connectionRequests` PII (shared lead records).
-- [ ] Generate packages in PWABuilder; paste Play signing SHA-256 into `public/.well-known/assetlinks.json`.
+- [ ] Generate packages in PWABuilder; replace the placeholder Play signing SHA-256 in `public/.well-known/assetlinks.json`.
 - [ ] Capture device screenshots; export 1024² / 512² icons + feature graphic.
 - [ ] Fill App Privacy (B) and Data Safety (C) exactly as above.
 - [ ] Submit.
