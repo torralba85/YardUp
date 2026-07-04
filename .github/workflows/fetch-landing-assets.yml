@@ -23,13 +23,17 @@ jobs:
             echo "Assets already present; nothing to do."
             exit 0
           fi
+          if ! command -v magick >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+          fi
+          IM="$(command -v magick || command -v convert)"
           mkdir -p public/landing
           curl -fsSLo /tmp/hero.png "https://d8j0ntlcm91z4.cloudfront.net/user_3G3XBbmynn6BWoSh7I8ETDtDkFc/hf_20260704_214935_ef43390c-9ee2-45e4-bacc-9dac0c790e38.png"
           curl -fsSLo /tmp/adu.png "https://d8j0ntlcm91z4.cloudfront.net/user_3G3XBbmynn6BWoSh7I8ETDtDkFc/hf_20260704_214951_2e076295-2a6d-4dcd-b394-3e4d0df6acad.png"
-          convert /tmp/hero.png -resize 2560x -strip -interlace Plane -quality 82 public/landing/hero-dusk.jpg
-          convert /tmp/hero.png -resize 1280x -strip -quality 70 public/landing/hero-dusk-poster.jpg
-          convert /tmp/adu.png -resize 1920x -strip -interlace Plane -quality 82 public/landing/adu-dusk.jpg
-          identify public/landing/*.jpg
+          "$IM" /tmp/hero.png -resize 2560x -strip -interlace Plane -quality 82 public/landing/hero-dusk.jpg
+          "$IM" /tmp/hero.png -resize 1280x -strip -quality 70 public/landing/hero-dusk-poster.jpg
+          "$IM" /tmp/adu.png -resize 1920x -strip -interlace Plane -quality 82 public/landing/adu-dusk.jpg
+          ls -la public/landing
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/landing
