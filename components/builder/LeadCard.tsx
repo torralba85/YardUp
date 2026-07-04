@@ -86,7 +86,7 @@ export default function LeadCard({
       {/* Value band first (B2): green is the money this lead pays the builder. */}
       <p className="mt-3 lf-money-md text-lf-forest">
         {formatCurrency(preview.rentBand)}
-        <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+        <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
           /mo rent potential
         </span>
       </p>
@@ -100,14 +100,14 @@ export default function LeadCard({
             </span>
           )}
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
           <span>{preview.lotSqft.toLocaleString()} sqft</span>
           <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
           <span>{finishLabels[preview.config.finish]}</span>
         </p>
       </div>
 
-      <p className="mt-2 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+      <p className="mt-2 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
         <span>
           Build {formatCompactCurrency(preview.buildBandLow)}–{formatCompactCurrency(preview.buildBandHigh)}
         </span>
@@ -167,7 +167,7 @@ export default function LeadCard({
       <div className="mt-3 border-t border-dashed border-lf-hairline pt-3">
         {access === "locked" && (
           <div>
-            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-lf-muted">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
               <Lock size={13} />
               Contact locked — unlock to view
             </div>
@@ -191,7 +191,7 @@ export default function LeadCard({
             <p className="mt-1.5 text-xs text-lf-espresso">
               Usually a few seconds. Your contact details will appear right here.
             </p>
-            <p className="mt-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-lf-muted">
+            <p className="mt-2 font-mono text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
               You will not be charged twice.
             </p>
           </div>

@@ -71,7 +71,7 @@ export default function UnlockSlip({
           type="button"
           onClick={onClose}
           disabled={pending}
-          className="absolute right-4 top-3.5 z-10 font-mono text-[10px] uppercase tracking-[0.1em] text-lf-muted disabled:opacity-40"
+          className="absolute right-4 top-3.5 z-10 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted disabled:opacity-40"
         >
           Esc · Close
         </button>
@@ -93,7 +93,7 @@ export default function UnlockSlip({
 
           <div className="mt-4 border border-lf-hairline bg-lf-sand-2 px-4 py-3.5">
             <p className="font-semibold">{preview.neighborhood}</p>
-            <p className="mt-1 flex flex-wrap gap-3.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+            <p className="mt-1 flex flex-wrap gap-3.5 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
               <span>{preview.lotSqft.toLocaleString()} sqft lot</span>
               <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
               {item.request.ownerVerified && <span>Owner-verified</span>}
@@ -143,7 +143,7 @@ export default function UnlockSlip({
             <span>{pending ? "Recording unlock…" : (hasCredits ? "Unlock with 1 Credit" : "Pay with Stripe")}</span>
             <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>
           </button>
-          <div className="mt-3 flex justify-center gap-3.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-lf-muted">
+          <div className="mt-3 flex justify-center gap-3.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
             <span>Receipt emailed</span>
             <span>Secure checkout — Stripe</span>
           </div>

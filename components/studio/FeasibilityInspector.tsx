@@ -510,7 +510,7 @@ export default function FeasibilityInspector({
         {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
         <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
           <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2">
-            <div className="font-mono text-[10px] font-bold uppercase leading-4 tracking-[0.12em] text-lf-muted">
+            <div className="font-mono text-[10px] font-bold uppercase leading-4 tracking-[0.14em] text-lf-muted">
               Next best action
             </div>
             <p className="mt-1 text-xs leading-5 text-lf-espresso">
