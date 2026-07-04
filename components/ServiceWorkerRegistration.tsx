@@ -9,6 +9,9 @@ import { useEffect } from "react";
 export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    // Never register in dev: the precache serves stale bundles across dev-server
+    // restarts (even after deleting .next), silently hiding source edits.
+    if (process.env.NODE_ENV === "development") return;
     navigator.serviceWorker.register("/sw.js").catch(() => {
       // Registration failure is non-fatal; the app works without offline support.
     });
