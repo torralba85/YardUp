@@ -1,10 +1,29 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StyleMatchPanel from "./StyleMatchPanel";
+import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
+import type { AIADUConcept } from "@/lib/ai-types";
+import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 import type { PreparedStyleMatchPhoto } from "@/lib/style-match-photo";
+
+vi.mock("@/lib/ai-api", () => ({
+  AIRequestError: class AIRequestError extends Error {
+    userMessage: string;
+
+    constructor(userMessage: string) {
+      super(userMessage);
+      this.name = "AIRequestError";
+      this.userMessage = userMessage;
+    }
+  },
+  requestADUConcept: vi.fn(),
+}));
+
+const requestADUConceptMock = vi.mocked(requestADUConcept);
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.clearAllMocks();
 });
 
 const preparedPhoto: PreparedStyleMatchPhoto = {
@@ -22,8 +41,31 @@ const preparedPhoto: PreparedStyleMatchPhoto = {
   strippedMetadata: true,
 };
 
+const generatedConcept: AIADUConcept = {
+  architecturalStyle: "Craftsman",
+  styleSummary: "Warm wood trim and a low-pitch roof.",
+  matchedElements: ["Cedar lap siding", "Low-pitch gable", "White trim"],
+  recommendedConfig: { roof: "gable", finish: "lap" },
+  imagePrompt: "Craftsman backyard ADU",
+  imageDataUrl: "data:image/png;base64,generated-concept",
+  disclaimer: "Concept image only.",
+};
+
+const activeParcel = parcelPresets[1];
+const activeConfig = {
+  ...defaultAduConfig,
+  width: 22,
+  length: 31,
+  roof: "shed" as const,
+  finish: "cedar" as const,
+};
+
+beforeEach(() => {
+  requestADUConceptMock.mockResolvedValue(generatedConcept);
+});
+
 describe("StyleMatchPanel", () => {
-  it("prepares, previews, and confirms a house photo using timer simulation", async () => {
+  it("prepares a sanitized photo and requests a generated concept with active parcel and config", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
     const onConfirm = vi.fn();
     const onGenerationComplete = vi.fn();
@@ -33,7 +75,9 @@ describe("StyleMatchPanel", () => {
         preparePhoto={preparePhoto}
         onConfirm={onConfirm}
         onGenerationComplete={onGenerationComplete}
-      />
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
     );
 
     const input = screen.getByLabelText(/Choose house photo/i);
@@ -45,30 +89,29 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByText("2048 px")).toBeInTheDocument();
     expect(screen.getByText("Stripped")).toBeInTheDocument();
 
-    // Use fake timers only for the confirmation/progress simulation phase
-    vi.useFakeTimers();
-
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
 
     expect(onConfirm).toHaveBeenCalledWith(preparedPhoto);
-    expect(screen.getByText("Casting concept…")).toBeInTheDocument();
+    expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
     expect(screen.getByText(/Reading materials & roofline/i)).toBeInTheDocument();
 
-    // Advance timers by 10 seconds to complete the simulation, wrapped in act()
-    act(() => {
-      vi.advanceTimersByTime(10000);
-    });
-
-    // Switch back to real timers for testing wait/render outcomes
-    vi.useRealTimers();
+    await waitFor(() => expect(requestADUConceptMock).toHaveBeenCalledTimes(1));
+    const request = requestADUConceptMock.mock.calls[0][0];
+    expect(request.parcel).toBe(activeParcel);
+    expect(request.config).toBe(activeConfig);
+    expect(request.image).toBeInstanceOf(File);
+    expect(request.image.name).toBe("owner-yard.jpg");
+    expect(request.image.type).toBe("image/jpeg");
+    await expect(request.image.text()).resolves.toBe("prepared");
 
     await waitFor(() => {
-      expect(onGenerationComplete).toHaveBeenCalledWith(
-        expect.objectContaining({
-          styleName: "Craftsman",
-          matchPercentage: 91,
-        })
-      );
+      expect(onGenerationComplete).toHaveBeenCalledWith({
+        photoUrl: expect.stringMatching(/^blob:/),
+        conceptUrl: generatedConcept.imageDataUrl,
+        styleName: "Craftsman",
+        matchPercentage: 91,
+        traits: generatedConcept.matchedElements,
+      });
     });
 
     expect(screen.getByText(/Photo sealed for style match/i)).toBeInTheDocument();
@@ -79,7 +122,13 @@ describe("StyleMatchPanel", () => {
       throw new Error("HEIC is accepted, but this browser could not decode this file.");
     });
 
-    render(<StyleMatchPanel preparePhoto={preparePhoto} />);
+    render(
+      <StyleMatchPanel
+        preparePhoto={preparePhoto}
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
+    );
 
     fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
       target: { files: [new File(["raw"], "broken.heic", { type: "image/heic" })] },
@@ -91,17 +140,55 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
 
+  it("surfaces API errors and allows retry without reconfirming", async () => {
+    const preparePhoto = vi.fn(async () => preparedPhoto);
+    const onConfirm = vi.fn();
+    requestADUConceptMock
+      .mockRejectedValueOnce(
+        new AIRequestError("AI is not configured yet. Add OPENAI_API_KEY on the server."),
+      )
+      .mockResolvedValueOnce(generatedConcept);
+
+    render(
+      <StyleMatchPanel
+        preparePhoto={preparePhoto}
+        onConfirm={onConfirm}
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
+      target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
+    });
+    expect(await screen.findByAltText(/Prepared house photo preview/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
+
+    expect(await screen.findByText(/OPENAI_API_KEY/i)).toBeInTheDocument();
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: /Retry/i }));
+
+    await waitFor(() => expect(requestADUConceptMock).toHaveBeenCalledTimes(2));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText(/Photo sealed for style match/i)).toBeInTheDocument();
+  });
+
   it("uses Dev Test Controls [Success] button to transition state immediately", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
     const onConfirm = vi.fn();
     const onGenerationComplete = vi.fn();
+    requestADUConceptMock.mockReturnValue(new Promise(() => {}));
 
     render(
       <StyleMatchPanel
         preparePhoto={preparePhoto}
         onConfirm={onConfirm}
         onGenerationComplete={onGenerationComplete}
-      />
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
     );
 
     const input = screen.getByLabelText(/Choose house photo/i);
@@ -114,7 +201,7 @@ describe("StyleMatchPanel", () => {
     vi.useFakeTimers();
 
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
-    expect(screen.getByText("Casting concept…")).toBeInTheDocument();
+    expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "[Success]" }));
 
@@ -124,7 +211,8 @@ describe("StyleMatchPanel", () => {
       expect.objectContaining({
         styleName: "Craftsman",
         matchPercentage: 91,
-      })
+        conceptUrl: expect.stringMatching(/^data:image\/png;base64,/),
+      }),
     );
     expect(screen.getByText(/Photo sealed for style match/i)).toBeInTheDocument();
   });
@@ -132,8 +220,16 @@ describe("StyleMatchPanel", () => {
   it("uses Dev Test Controls [Error] button and allows Retry without reconfirming", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
     const onConfirm = vi.fn();
+    requestADUConceptMock.mockReturnValue(new Promise(() => {}));
 
-    render(<StyleMatchPanel preparePhoto={preparePhoto} onConfirm={onConfirm} />);
+    render(
+      <StyleMatchPanel
+        preparePhoto={preparePhoto}
+        onConfirm={onConfirm}
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
+    );
 
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
@@ -145,23 +241,30 @@ describe("StyleMatchPanel", () => {
     vi.useFakeTimers();
 
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
-    expect(screen.getByText("Casting concept…")).toBeInTheDocument();
+    expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "[Error]" }));
 
     expect(
-      screen.getByText(/We couldn't read enough of the house from this photo/i)
+      screen.getByText(/We couldn't read enough of the house from this photo/i),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Retry/i }));
-    expect(screen.getByText("Casting concept…")).toBeInTheDocument();
+    expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
   it("uses Dev Test Controls [Timeout] button and allows Choose Another", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
+    requestADUConceptMock.mockReturnValue(new Promise(() => {}));
 
-    render(<StyleMatchPanel preparePhoto={preparePhoto} />);
+    render(
+      <StyleMatchPanel
+        preparePhoto={preparePhoto}
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
+    );
 
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
@@ -173,7 +276,7 @@ describe("StyleMatchPanel", () => {
     vi.useFakeTimers();
 
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
-    expect(screen.getByText("Casting concept…")).toBeInTheDocument();
+    expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "[Timeout]" }));
 

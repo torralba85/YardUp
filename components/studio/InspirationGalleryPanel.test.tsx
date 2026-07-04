@@ -1,19 +1,25 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import InspirationGalleryPanel from "./InspirationGalleryPanel";
+import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
+
+const galleryProps = {
+  parcel: parcelPresets[0],
+  config: defaultAduConfig,
+};
 
 describe("InspirationGalleryPanel component", () => {
   it("renders inspiration cards list", () => {
     const onApply = vi.fn();
-    render(<InspirationGalleryPanel onApply={onApply} />);
+    render(<InspirationGalleryPanel {...galleryProps} onApply={onApply} />);
     expect(screen.getByText(/Courtyard Studio with Clerestory Light/i)).toBeInTheDocument();
     expect(screen.getByText(/Garage Conversion with Garden Entry/i)).toBeInTheDocument();
   });
 
   it("calls onApply when clicking the apply button", () => {
     const onApply = vi.fn();
-    render(<InspirationGalleryPanel onApply={onApply} />);
+    render(<InspirationGalleryPanel {...galleryProps} onApply={onApply} />);
     
     const applyButtons = screen.getAllByRole("button", { name: /Apply to Studio/i });
     fireEvent.click(applyButtons[0]);
@@ -47,6 +53,7 @@ describe("InspirationGalleryPanel component", () => {
 
     render(
       <InspirationGalleryPanel
+        {...galleryProps}
         onApply={onApply}
         generatedConcepts={generatedConcepts}
       />
@@ -83,6 +90,7 @@ describe("InspirationGalleryPanel component", () => {
 
     render(
       <InspirationGalleryPanel
+        {...galleryProps}
         onApply={onApply}
         generatedConcepts={generatedConcepts}
         onViewComparison={onViewComparison}

@@ -16,9 +16,16 @@ import {
   STYLE_MATCH_ACCEPT,
   type PreparedStyleMatchPhoto,
 } from "@/lib/style-match-photo";
+import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
+import type { AIADUConcept } from "@/lib/ai-types";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
 
 /** Props for {@link StyleMatchPanel}. */
 export interface StyleMatchPanelProps {
+  /** Active parcel context sent to the ADU concept API. */
+  parcel: Parcel & { zoning?: string; source?: string };
+  /** Active ADU configuration sent to the ADU concept API. */
+  config: ADUConfig;
   /** Called with the prepared photo once the user confirms their upload. */
   onConfirm?: (photo: PreparedStyleMatchPhoto) => void;
   /** Called when concept generation finishes, with the synthesized result. */
@@ -40,6 +47,18 @@ const GENERATING_STEPS = [
   "Matching siding + trim palette",
   "Casting 2BD/1BA DADU concept",
 ];
+
+const STYLE_MATCH_CONFIDENCE = 91;
+const DEV_CONCEPT: AIADUConcept = {
+  architecturalStyle: "Craftsman",
+  styleSummary: "Dev-only style-match concept.",
+  matchedElements: ["Cedar lap siding", "Low-pitch gable", "White trim", "Espresso door"],
+  recommendedConfig: { roof: "gable", finish: "lap" },
+  imagePrompt: "Dev-only style-match concept.",
+  imageDataUrl:
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=",
+  disclaimer: "Developer preview only.",
+};
 
 const showDeveloperTestControls = process.env.NODE_ENV !== "production";
 
@@ -67,6 +86,8 @@ const getStepState = (index: number, progress: number): "completed" | "current" 
  * @param props - The {@link StyleMatchPanelProps}.
  */
 export default function StyleMatchPanel({
+  parcel,
+  config,
   onConfirm,
   onGenerationComplete,
   preparePhoto = prepareStyleMatchPhoto,
@@ -75,6 +96,7 @@ export default function StyleMatchPanel({
   const previewUrlRef = useRef<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onGenerationCompleteRef = useRef(onGenerationComplete);
+  const generationRunRef = useRef(0);
 
   const [status, setStatus] = useState<PanelStatus>("idle");
   const [prepared, setPrepared] = useState<PreparedStyleMatchPhoto | null>(null);
@@ -82,14 +104,22 @@ export default function StyleMatchPanel({
   const [error, setError] = useState<string | null>(null);
   const [generatingProgress, setGeneratingProgress] = useState(0);
 
+  function clearGenerationTimer() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
   useEffect(() => {
     onGenerationCompleteRef.current = onGenerationComplete;
   }, [onGenerationComplete]);
 
   useEffect(() => {
     return () => {
+      generationRunRef.current += 1;
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearGenerationTimer();
     };
   }, []);
 
@@ -100,10 +130,8 @@ export default function StyleMatchPanel({
     setError(null);
     setPrepared(null);
     replacePreviewUrl(null);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    generationRunRef.current += 1;
+    clearGenerationTimer();
 
     try {
       const next = await preparePhoto(file);
@@ -119,68 +147,65 @@ export default function StyleMatchPanel({
   }
 
   function triggerSuccess() {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setStatus("ready");
-    const currentPreviewUrl = previewUrlRef.current;
-    if (currentPreviewUrl) {
-      // TODO: Replace this deterministic fixture with the real style-match API response.
-      onGenerationCompleteRef.current?.({
-        photoUrl: currentPreviewUrl,
-        conceptUrl: "/inspiration/clean-gable.png",
-        styleName: "Craftsman",
-        matchPercentage: 91,
-        traits: ["Cedar lap siding", "Low-pitch gable", "White trim", "Espresso door"],
-      });
-    }
+    generationRunRef.current += 1;
+    completeGeneration(DEV_CONCEPT);
   }
 
   function triggerError() {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    generationRunRef.current += 1;
+    clearGenerationTimer();
     setError("We couldn't read enough of the house from this photo. Try a daylight shot.");
     setStatus("error");
   }
 
   function triggerTimeout() {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    generationRunRef.current += 1;
+    clearGenerationTimer();
     setError("Casting timed out (>90s). Try again or check connection.");
     setStatus("timeout");
   }
 
-  function startGeneration() {
+  async function startGeneration() {
     if (!prepared || !previewUrlRef.current) return;
+    const runId = generationRunRef.current + 1;
+    generationRunRef.current = runId;
     setStatus("generating");
     setError(null);
     setGeneratingProgress(0);
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
+    clearGenerationTimer();
 
     let progress = 0;
     timerRef.current = setInterval(() => {
       progress += 5;
-      const nextProgress = Math.min(progress, 100);
+      const nextProgress = Math.min(progress, 95);
       setGeneratingProgress(nextProgress);
-
-      if (nextProgress >= 100) {
-        triggerSuccess();
-      }
     }, 500);
+
+    try {
+      const concept = await requestADUConcept({
+        image: new File([prepared.blob], prepared.filename, { type: prepared.outputType }),
+        parcel,
+        config,
+      });
+      if (generationRunRef.current !== runId) return;
+      completeGeneration(concept);
+    } catch (caught) {
+      if (generationRunRef.current !== runId) return;
+      clearGenerationTimer();
+      setError(
+        caught instanceof AIRequestError
+          ? caught.userMessage
+          : "AI concept generation failed. Please try another photo.",
+      );
+      setStatus("error");
+    }
   }
 
   function handleConfirm() {
     if (!prepared || !previewUrlRef.current) return;
     onConfirm?.(prepared);
-    startGeneration();
+    void startGeneration();
   }
 
   function handleReset() {
@@ -189,10 +214,8 @@ export default function StyleMatchPanel({
     setError(null);
     replacePreviewUrl(null);
     setGeneratingProgress(0);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    generationRunRef.current += 1;
+    clearGenerationTimer();
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -200,6 +223,22 @@ export default function StyleMatchPanel({
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     previewUrlRef.current = nextUrl;
     setPreviewUrl(nextUrl);
+  }
+
+  function completeGeneration(concept: AIADUConcept) {
+    clearGenerationTimer();
+    setGeneratingProgress(100);
+    setStatus("ready");
+    const currentPreviewUrl = previewUrlRef.current;
+    if (currentPreviewUrl) {
+      onGenerationCompleteRef.current?.({
+        photoUrl: currentPreviewUrl,
+        conceptUrl: concept.imageDataUrl,
+        styleName: concept.architecturalStyle,
+        matchPercentage: STYLE_MATCH_CONFIDENCE,
+        traits: concept.matchedElements,
+      });
+    }
   }
 
   const inputId = "style-match-photo-input";
@@ -419,7 +458,7 @@ export default function StyleMatchPanel({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={startGeneration}
+                onClick={() => void startGeneration()}
                 className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
               >
                 <RotateCcw size={16} aria-hidden="true" />

@@ -548,6 +548,8 @@ function FeasibilityStudioInner() {
       mobileSections = (
         <>
           <InspirationGalleryPanel
+            parcel={activeParcel}
+            config={config}
             generatedConcepts={generatedConcepts}
             onGenerationComplete={handleGenerationComplete}
             onViewComparison={handleViewComparison}
@@ -741,6 +743,8 @@ function FeasibilityStudioInner() {
               />
             </div>
             <InspirationGalleryPanel
+              parcel={activeParcel}
+              config={config}
               generatedConcepts={generatedConcepts}
               onGenerationComplete={handleGenerationComplete}
               onViewComparison={handleViewComparison}
@@ -901,4 +905,3 @@ function LotStep({
     </div>
   );
 }
-

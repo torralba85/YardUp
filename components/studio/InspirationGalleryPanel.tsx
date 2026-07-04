@@ -4,10 +4,15 @@ import { useState } from "react";
 import Image from "next/image";
 import { CheckCircle2, Sparkles, Camera, Layers } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import StyleMatchPanel from "./StyleMatchPanel";
 
 /** Props for {@link InspirationGalleryPanel}. */
 export interface InspirationGalleryPanelProps {
+  /** Active parcel context sent to the embedded style-match generation flow. */
+  parcel: Parcel & { zoning?: string; source?: string };
+  /** Active ADU configuration sent to the embedded style-match generation flow. */
+  config: ADUConfig;
   /** Called when the user applies a concept's config to the studio. */
   onApply: (item: InspirationItem) => void;
   /** AI style-match concepts to show alongside the curated gallery. */
@@ -34,6 +39,8 @@ export interface InspirationGalleryPanelProps {
  * @param props - The {@link InspirationGalleryPanelProps}.
  */
 export default function InspirationGalleryPanel({
+  parcel,
+  config,
   onApply,
   generatedConcepts = [],
   onGenerationComplete,
@@ -75,6 +82,8 @@ export default function InspirationGalleryPanel({
           <StyleMatchPanel
             key={styleMatchKey}
             onGenerationComplete={onGenerationComplete}
+            parcel={parcel}
+            config={config}
           />
 
           {allItems.map((item) => {
