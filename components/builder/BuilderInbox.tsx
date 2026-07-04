@@ -14,6 +14,7 @@ import type {
 import BuilderMoneyBand from "./BuilderMoneyBand";
 import LeadCard, { type LeadAccess } from "./LeadCard";
 import UnlockSlip from "./UnlockSlip";
+import { Button } from "@/components/ui/Button";
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -352,13 +353,13 @@ export default function BuilderInbox({
                           </td>
                           <td className="px-4 py-3.5 text-right lf-money-sm text-lf-forest whitespace-nowrap">
                             {formatCurrency(item.request.preview.rentBand)}
-                            <span className="font-mono text-[8px] font-normal text-lf-muted ml-0.5">/mo</span>
+                            <span className="font-mono text-[9px] font-normal text-lf-muted ml-0.5">/mo</span>
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap">
                             <div className="font-mono text-[9.5px] text-lf-espresso font-medium">
                               {item.request.preview.aduSqft.toLocaleString()} sf ADU
                             </div>
-                            <div className="font-mono text-[8.5px] text-lf-muted mt-0.5">
+                            <div className="font-mono text-[9px] text-lf-muted mt-0.5">
                               {item.request.preview.lotSqft.toLocaleString()} sf lot
                             </div>
                           </td>
@@ -366,7 +367,7 @@ export default function BuilderInbox({
                             <div className="font-mono text-[9.5px] text-lf-espresso">
                               Build: {formatCompactCurrency(item.request.preview.buildBandLow)}–{formatCompactCurrency(item.request.preview.buildBandHigh)}
                             </div>
-                            <div className="font-mono text-[8.5px] text-lf-muted mt-0.5">
+                            <div className="font-mono text-[9px] text-lf-muted mt-0.5">
                               Payback: {item.request.preview.paybackYears} yrs
                             </div>
                           </td>
@@ -502,17 +503,18 @@ export default function BuilderInbox({
                                 <p className="text-xs text-lf-muted max-w-xs mx-auto leading-relaxed">
                                   Unlock this lead to reveal the exact street address, parcel boundaries, zoning calculations, detailed finances ledger, and direct homeowner contact info.
                                 </p>
-                                <button
-                                  type="button"
+                                <Button
+                                  variant="commit"
+                                  size="sm"
+                                  fullWidth
                                   onClick={() => {
                                     setSlipId(selectedItem.request.id);
                                     setSlipError(null);
                                   }}
-                                  className="w-full justify-center inline-flex items-center gap-2 bg-lf-forest px-4 py-2.5 text-xs font-semibold text-lf-sand transition hover:brightness-95 cursor-pointer rounded-full"
                                 >
                                   Unlock lead
                                   <span className="font-display text-sm font-semibold">{formatUnlockPrice()}</span>
-                                </button>
+                                </Button>
                               </div>
 
                               {/* Response triage inline buttons */}
@@ -615,16 +617,16 @@ export default function BuilderInbox({
                                     <div className="border border-lf-taupe p-4 space-y-4">
                                       {/* Monogram / Header */}
                                       <div className="text-center border-b border-lf-hairline pb-2">
-                                        <div className="font-mono text-[8px] uppercase tracking-[0.14em] text-lf-clay font-bold">LotFoundry</div>
+                                        <div className="lf-dataprint text-lf-clay">LotFoundry</div>
                                         <h5 className="font-display font-semibold text-sm text-lf-espresso leading-tight mt-0.5">Certificate of Feasibility</h5>
-                                        <p className="font-mono text-[7.5px] text-lf-muted mt-1 truncate">
+                                        <p className="font-mono text-[9px] text-lf-muted mt-1 truncate">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
                                         </p>
                                       </div>
 
                                       {/* Annual Ledger T-Account */}
                                       <div className="space-y-1">
-                                        <div className="font-mono text-[8px] uppercase tracking-[0.14em] text-lf-clay font-bold">Ledger Balance</div>
+                                        <div className="lf-dataprint text-lf-clay">Ledger Balance</div>
                                         <div className="border border-lf-hairline text-[10px] divide-y divide-lf-hairline bg-lf-sand-2/20">
                                           <div className="grid grid-cols-2 p-1.5">
                                             <div>
@@ -656,16 +658,16 @@ export default function BuilderInbox({
                                       {/* Technical details table */}
                                       <div className="text-[10px] space-y-1 border-t border-dashed border-lf-hairline pt-3">
                                         <div className="flex justify-between py-1">
-                                          <span className="font-mono text-lf-muted text-[8px] uppercase">ADU Size</span>
+                                          <span className="lf-dataprint text-lf-muted">ADU Size</span>
                                           <span className="font-semibold text-lf-espresso">{itemContact.snapshot.result.aduSqft} sf</span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="font-mono text-lf-muted text-[8px] uppercase">Roof Style</span>
+                                          <span className="lf-dataprint text-lf-muted">Roof Style</span>
                                           <span className="font-semibold text-lf-espresso">{roofLabels[itemContact.snapshot.config.roof]}</span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="font-mono text-lf-muted text-[8px] uppercase">Zoning Status</span>
-                                          <span className={`font-semibold border px-1 text-[8.5px] ${
+                                          <span className="lf-dataprint text-lf-muted">Zoning Status</span>
+                                          <span className={`font-semibold border px-1 text-[9px] ${
                                             itemContact.snapshot.result.zoningStatus === "Compliant" 
                                               ? "border-lf-forest text-lf-forest" 
                                               : "border-lf-amber text-lf-amber-ink"
@@ -674,18 +676,18 @@ export default function BuilderInbox({
                                           </span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="font-mono text-lf-muted text-[8px] uppercase">Build cost range</span>
+                                          <span className="lf-dataprint text-lf-muted">Build cost range</span>
                                           <span className="font-semibold text-lf-espresso">
                                             {formatCurrency(itemContact.snapshot.result.costLow)} - {formatCurrency(itemContact.snapshot.result.costHigh)}
                                           </span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="font-mono text-lf-muted text-[8px] uppercase">Payback Estimate</span>
+                                          <span className="lf-dataprint text-lf-muted">Payback Estimate</span>
                                           <span className="font-semibold text-lf-espresso">{itemContact.snapshot.result.paybackYears} yrs</span>
                                         </div>
                                       </div>
 
-                                      <div className="text-[8px] font-mono text-center border-2 border-lf-brick/30 text-lf-brick py-1 font-bold uppercase tracking-wider rotate-[-2deg]">
+                                      <div className="text-[9px] font-mono text-center border-2 border-lf-brick/30 text-lf-brick py-1 font-bold uppercase tracking-wider rotate-[-2deg]">
                                         Concept &middot; Not a Permit
                                       </div>
                                     </div>

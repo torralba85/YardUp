@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Historical plan/spec documents carry JSX snippets of retired markup; without
+   this exclusion Tailwind's automatic source scanning compiles utilities from
+   them, resurrecting deleted classes in the shipped CSS. */
+@source not "../docs";
+
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-sans), sans-serif;
@@ -20,6 +25,9 @@
   /* On-dark accents (money band, instrument rail) */
   --color-lf-money-on-dark: #9DC4A8;
   --color-lf-clay-strong: #6F3F28;
+  /* Raised dark surface — the mahogany-family "#2A1A10 surface" from the
+     DESIGN.md dark-mode spec, for cards/panels sitting on espresso/mahogany. */
+  --color-lf-dark-surface: #2A1A10;
 
   /* Semantic colors */
   --color-lf-forest: #2F4A38;
@@ -119,6 +127,21 @@ p {
   font-weight: 600;
   letter-spacing: 0.14em;
   line-height: 0.875rem;
+  text-transform: uppercase;
+}
+
+/* Micro-print — the smallest sanctioned informational text (9px floor,
+   2026-07-04 ruling). For micro labels in data-dense builder tables, ledger
+   slips, and inline certificates: mono, uppercase, kicker-tracked. Text below
+   9px is reserved for decorative facsimiles (scaled-down document thumbnails),
+   never informational content. Declared with @utility so responsive variants
+   work, matching the lf-money-* steps. */
+@utility lf-dataprint {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem; /* 9px */
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 0.8125rem;
   text-transform: uppercase;
 }
 
