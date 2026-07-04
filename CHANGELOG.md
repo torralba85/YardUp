@@ -6,6 +6,12 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- Repository governance doc (`docs/repo-governance.md`) covering the issue
+  priority matrix, debugging/bisect methodology, repo health routine, and
+  release/changelog strategy.
+- Canonical label taxonomy (`.github/labels.yml`).
+
 ### Changed
 - Replaced the landing-page hero video with an interactive daylight ADU scene
   that deconstructs into five feasibility layers as the user scrolls.
