@@ -65,13 +65,26 @@ automatically.
 
 ## Issues
 
-New issues are triaged using `.github/triage_checklist.md`. Use
+New issues are triaged using `.github/triage_checklist.md` (includes the
+priority matrix and label taxonomy). Use
 `.github/ISSUE_TEMPLATE/bug_report.md` for bugs and
 `.github/ISSUE_TEMPLATE/feature_request.md` for feature/enhancement requests.
+
+## Diagnosing bugs
+
+Before proposing a fix, follow `docs/debugging-methodology.md` — log
+collection, environment isolation, `git bisect`, and how to build the
+Minimal Reproducible Example the bug report template requires.
 
 ## Stale branches
 
 Branches are audited monthly per `.github/stale_branch_cleanup.md`.
+
+## Repo health routine
+
+Weekly/monthly maintenance (dependency audits, secrets scanning, doc
+freshness, release tagging) is consolidated in
+`docs/repo-health-routine.md`.
 
 ## Security
 
