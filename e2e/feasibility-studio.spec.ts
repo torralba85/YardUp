@@ -18,14 +18,17 @@ async function skipMobileFirstRunUi(page: Page) {
 }
 
 test.describe("Public LotFoundry flows", () => {
-  test("loads the landing page with the daylight feasibility hero", async ({ page }, testInfo) => {
+  test("loads the landing page with the blue hour survey hero", async ({ page }, testInfo) => {
     await page.goto("/");
 
     await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility & Income Estimates/);
-    await expect(page.getByRole("heading", { name: /Your backyard, cast into an asset/i })).toBeVisible();
-    // The scroll rail exposes the feasibility layers directly in the hero.
-    await expect(page.getByRole("complementary", { name: /Feasibility stack/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Jump to foundation/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Every backyard hides a second address/i }),
+    ).toBeVisible();
+    // The rent verdict plate leads the first viewport.
+    await expect(
+      page.getByRole("complementary", { name: /Projected rent verdict/i }),
+    ).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
       page.getByRole("heading", { name: /Know what to ask before you spend on plans/i }),
