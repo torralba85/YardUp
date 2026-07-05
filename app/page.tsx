@@ -1,38 +1,76 @@
-import { AmbientBackdrop } from "@/components/landing/AmbientBackdrop";
-import { LandingHero } from "@/components/landing/LandingHero";
-import { FeatureBand } from "@/components/landing/FeatureBand";
-import { ComingSoonBanner } from "@/components/landing/ComingSoonBanner";
-import { FloatingNavBar } from "@/components/FloatingNavBar";
+import type { Viewport } from "next";
+import { Fraunces } from "next/font/google";
 import Link from "next/link";
+import { NocturneNav } from "@/components/landing/nocturne/NocturneNav";
+import { BlueHourHero } from "@/components/landing/nocturne/BlueHourHero";
+import { SignalLedger } from "@/components/landing/nocturne/SignalLedger";
+import { OwnerPath } from "@/components/landing/nocturne/OwnerPath";
+import { DuskShowcase } from "@/components/landing/nocturne/DuskShowcase";
+import { ClosingCall } from "@/components/landing/nocturne/ClosingCall";
+
+// The landing's display face. Loaded here (not in the root layout) so the
+// studio and auth pages don't pay for it; exposed as --font-display-ln for
+// the ln-* type roles in globals.css.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-display-ln",
+});
+
+/** The landing runs nocturnal — match the browser chrome to the night ink. */
+export const viewport: Viewport = {
+  themeColor: "#0A1120",
+  viewportFit: "cover",
+};
 
 /**
- * Marketing landing page (`/`): the scroll-driven hero, feature band, floating
- * nav, and footer.
+ * Marketing landing page (`/`): the Blue Hour scroll-scrubbed survey hero,
+ * ledger band, owner path, showcase, closing CTA, and footer.
  */
 export default function LandingPage() {
   return (
-    <AmbientBackdrop>
-      <FloatingNavBar />
+    <div className={`${fraunces.variable} bg-ln-ink text-ln-mist`}>
+      <NocturneNav />
 
       <main id="main-content">
-        <LandingHero />
-        <FeatureBand />
-        <ComingSoonBanner />
+        <BlueHourHero />
+        <SignalLedger />
+        <OwnerPath />
+        <DuskShowcase />
+        <ClosingCall />
       </main>
 
-      <footer className="relative z-20 border-t border-lf-hairline/50">
+      <footer className="border-t border-ln-hairline/60">
         <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto" />
-            <p className="text-sm text-lf-muted">A foundry for lots. Estimates, not guarantees.</p>
-            <div className="flex items-center gap-4 text-sm text-lf-muted">
-              <Link href="/terms" className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso">Terms</Link>
-              <Link href="/privacy" className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso">Privacy</Link>
+            <img
+              src="/lotfoundry-lockup-horizontal-inverse.svg"
+              alt="LotFoundry"
+              className="h-7 w-auto"
+            />
+            <p className="text-sm text-ln-slate">
+              A foundry for lots. Estimates, not guarantees.
+            </p>
+            <div className="flex items-center gap-4 text-sm text-ln-slate">
+              <Link
+                href="/terms"
+                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
+              >
+                Terms
+              </Link>
+              <Link
+                href="/privacy"
+                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
+              >
+                Privacy
+              </Link>
             </div>
           </div>
         </div>
       </footer>
-    </AmbientBackdrop>
+    </div>
   );
 }

@@ -36,6 +36,21 @@
   --color-lf-brick: #A23B26;
   --color-lf-brick-soft: #A23B261A;
 
+  /* ── Blue Hour landing palette (landing page only) ─────────────
+     The marketing landing runs nocturnal — twilight real-estate
+     photography as the visual thesis — while the studio app keeps the
+     warm-earth daylight palette. Amber is the window-glow action accent;
+     patina green carries money on dark; slate is muted copy. */
+  --color-ln-ink: #0A1120;
+  --color-ln-navy: #121D33;
+  --color-ln-card: #16233C;
+  --color-ln-mist: #EAF0FA;
+  --color-ln-slate: #93A3C0;
+  --color-ln-amber: #F5B54A;
+  --color-ln-amber-deep: #B87E14;
+  --color-ln-money: #7ED4A6;
+  --color-ln-hairline: #263450;
+
   /* Layering scale — replaces ad-hoc z-40 / z-[100] / z-50 / z-30 collisions.
      Every stacking context in the app draws from these named tiers so overlay
      order is deterministic (studio scene < rails < headers < nav < sheet <
@@ -358,20 +373,72 @@ button:focus-visible {
   .lf-stagger > *:nth-child(6) { animation-delay: 225ms; }
 }
 
-/* ── Hero motion ──────────────────────────────────────────────
-   Only the ambient backdrop below remains; the unused entrance, float,
-   glow, and shimmer keyframes were removed (see DESIGN.md decisions log). */
+/* ── Blue Hour landing type roles ─────────────────────────────
+   The landing's display face is Fraunces (loaded per-page via next/font as
+   --font-display-ln on the landing wrapper); the studio keeps Cormorant.
+   Fall back to the global display stack so nothing breaks if the variable
+   is absent (e.g. a component reused outside the landing wrapper). */
+.ln-display-hero {
+  font-family: var(--font-display-ln, var(--font-display));
+  font-size: clamp(2.5rem, 11vw, 3.1rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
 
-/* Hero ambient backdrop — warm radial wash + faint grain. */
+.ln-section-heading {
+  font-family: var(--font-display-ln, var(--font-display));
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
+}
+
+.ln-card-heading {
+  font-family: var(--font-display-ln, var(--font-display));
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+@utility ln-money {
+  font-family: var(--font-display-ln, var(--font-display));
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 640px) {
+  .ln-display-hero {
+    font-size: clamp(3.1rem, 5vw, 4.4rem);
+  }
+}
+
+/* Scroll-reveal for landing sections: elements start soft-hidden and settle
+   when a small script (or IntersectionObserver hook) stamps data-revealed.
+   Reduced-motion users see everything immediately. */
+@media (prefers-reduced-motion: no-preference) {
+  .ln-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--ln-reveal-delay, 0ms);
+  }
+  .ln-reveal[data-revealed="true"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ambient warm backdrop — radial wash + faint grain (via `.lf-grain`).
+   Used by the auth pages (AuthLayout). */
 .lf-backdrop {
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(140, 91, 63, 0.10), transparent 60%),
     radial-gradient(90% 60% at 85% 10%, rgba(47, 74, 56, 0.06), transparent 55%),
     var(--color-lf-sand);
 }
-/* Note: the grain texture comes from the existing `.lf-grain` rule (also used
-   by the studio shell). AmbientBackdrop reuses it instead of redefining
-   `.lf-grain::after`, so the studio's appearance is unchanged. */
 
 /* Committed-state stamp/settle (6A): a granted unlock lands at 1.02→1, it
    never flips or bounces. Reduced-motion users get an instant swap. */
