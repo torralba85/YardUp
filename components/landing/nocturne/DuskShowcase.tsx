@@ -10,8 +10,8 @@ export function DuskShowcase() {
     <section aria-labelledby="showcase-heading" className="border-t border-ln-hairline/60 bg-ln-navy/30">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32">
         <Reveal>
-          <p className="lf-kicker flex items-center gap-2.5 text-ln-amber">
-            <span aria-hidden="true" className="h-px w-6 bg-ln-amber/70" />
+          <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
+            <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
             What you get
           </p>
           <h2 id="showcase-heading" className="ln-section-heading mt-4 max-w-2xl text-ln-mist">
@@ -54,7 +54,7 @@ export function DuskShowcase() {
                   ["Owner report", "Rent, build range, payback, and assumptions — saved and shareable."],
                 ].map(([title, body]) => (
                   <li key={title} className="flex gap-4">
-                    <span aria-hidden="true" className="mt-2.5 h-px w-6 shrink-0 bg-ln-amber/70" />
+                    <span aria-hidden="true" className="mt-2.5 h-px w-6 shrink-0 bg-ln-glow/70" />
                     <p className="lf-body-sm text-ln-slate">
                       <strong className="font-semibold text-ln-mist">{title}.</strong>{" "}
                       {body}
@@ -80,7 +80,7 @@ export function DuskShowcase() {
               <p className="mt-8">
                 <a
                   href="/studio"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ln-hairline px-6 text-sm font-semibold text-ln-mist transition-colors hover:border-ln-amber/60 hover:text-ln-amber"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ln-hairline px-6 text-sm font-semibold text-ln-mist transition-colors hover:border-ln-glow/60 hover:text-ln-glow"
                 >
                   Open the studio
                   <span aria-hidden="true">→</span>

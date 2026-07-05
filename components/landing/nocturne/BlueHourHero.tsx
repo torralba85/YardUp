@@ -145,14 +145,14 @@ export function BlueHourHero() {
           data-testid="hero-copy"
           className={`absolute left-[clamp(20px,5vw,72px)] top-[clamp(96px,16vh,160px)] z-10 w-[min(600px,84vw)] transition-opacity duration-500 max-sm:top-24 ${copyDimmed ? "max-sm:pointer-events-none max-sm:opacity-0" : ""}`}
         >
-          <p className="lf-kicker flex items-center gap-2.5 text-ln-amber">
-            <span aria-hidden="true" className="h-px w-6 bg-ln-amber/70" />
+          <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
+            <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
             LotFoundry · ADU feasibility studio
           </p>
 
           <h1 className="ln-display-hero mt-4 text-ln-mist">
             Every backyard hides{" "}
-            <em className="italic text-ln-amber">a second address.</em>
+            <em className="italic text-ln-glow">a second address.</em>
           </h1>
 
           <p className="lf-body-lg mt-5 max-w-[46ch] text-ln-slate">
@@ -163,7 +163,7 @@ export function BlueHourHero() {
 
           <form
             onSubmit={handleSubmit}
-            className="mt-7 flex max-w-md items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-amber/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl"
+            className="mt-7 flex max-w-md items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl"
           >
             <label htmlFor="hero-address" className="sr-only">
               Property address
@@ -179,7 +179,7 @@ export function BlueHourHero() {
             />
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-amber px-5 text-xs font-semibold text-ln-ink transition-all duration-300 hover:bg-ln-mist active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-amber focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-glow px-5 text-xs font-semibold text-ln-ink transition-all duration-300 hover:bg-ln-mist active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-glow focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
             >
               Run feasibility
             </button>
@@ -196,11 +196,11 @@ export function BlueHourHero() {
           aria-hidden="true"
           className="lf-kicker-dense absolute bottom-8 left-[clamp(20px,5vw,72px)] z-10 hidden items-center gap-3 text-ln-slate motion-safe:sm:flex"
         >
-          <span className="relative h-7 w-[18px] rounded-full border border-ln-slate/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-ln-amber" />
+          <span className="relative h-7 w-[18px] rounded-full border border-ln-slate/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-ln-glow" />
           <span className="min-w-56">{readout.label}</span>
           <span className="block h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline">
             <span
-              className="block h-full bg-ln-amber transition-[width] duration-100"
+              className="block h-full bg-ln-glow transition-[width] duration-100"
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </span>

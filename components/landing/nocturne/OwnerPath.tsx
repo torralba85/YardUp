@@ -30,8 +30,8 @@ export function OwnerPath() {
   return (
     <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-24 sm:py-32">
       <Reveal>
-        <p className="lf-kicker flex items-center gap-2.5 text-ln-amber">
-          <span aria-hidden="true" className="h-px w-6 bg-ln-amber/70" />
+        <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
+          <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
           The owner path
         </p>
         <h2 className="ln-section-heading mt-4 max-w-2xl text-ln-mist">
@@ -48,7 +48,7 @@ export function OwnerPath() {
                 <div>
                   <span
                     aria-hidden="true"
-                    className="grid h-10 w-10 place-items-center rounded-full border border-ln-amber/50 font-mono text-xs font-semibold text-ln-amber"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-ln-glow/50 font-mono text-xs font-semibold text-ln-glow"
                   >
                     {step.number}
                   </span>
