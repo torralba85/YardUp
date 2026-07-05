@@ -15,7 +15,7 @@ export const LN = {
   card: "#16233C",
   mist: "#EAF0FA",
   slate: "#93A3C0",
-  amber: "#F5B54A",
+  glow: "#F5B54A",
   money: "#7ED4A6",
   hairline: "#263450",
 } as const;

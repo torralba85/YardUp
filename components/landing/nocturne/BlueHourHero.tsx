@@ -13,6 +13,8 @@ import {
   type SurveyHighlight,
 } from "@/remotion/nocturne/constants";
 import { stashAddressQuery } from "@/lib/address-handoff";
+import { DawnRampOverlay, DAWN_RAMP_MS } from "./DawnStudioLink";
+import { TYPICAL_MARKET } from "./typical-market";
 import { useHeroProgress } from "./use-hero-progress";
 import {
   SURVEY_RAIL,
@@ -40,13 +42,17 @@ const VERDICT_RENT = 2340;
  * composition scrubbed by scroll. The page pins for ~3 viewport-heights while
  * the parcel boundary, setback envelope, and ADU cast draw themselves; the
  * rent verdict lands as real HTML. Reduced-motion users get the still
- * photograph with the copy — no pin, no scrub.
+ * photograph with the copy - no pin, no scrub.
  */
 export function BlueHourHero() {
   const trackRef = useRef<HTMLElement>(null);
   const playerRef = useRef<PlayerRef>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const rampTimerRef = useRef<number | null>(null);
   const [query, setQuery] = useState("");
+  const [addressError, setAddressError] = useState(false);
+  const [dawnRamp, setDawnRamp] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [highlight, setHighlight] = useState<SurveyHighlight>(null);
@@ -62,7 +68,12 @@ export function BlueHourHero() {
     setReducedMotion(media.matches);
     const onChange = (event: MediaQueryListEvent) => setReducedMotion(event.matches);
     media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    return () => {
+      media.removeEventListener("change", onChange);
+      if (rampTimerRef.current !== null) {
+        window.clearTimeout(rampTimerRef.current);
+      }
+    };
   }, []);
 
   const progress = useHeroProgress(trackRef);
@@ -147,11 +158,24 @@ export function BlueHourHero() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setAddressError(true);
+      addressInputRef.current?.focus();
+      return;
+    }
+
     // Privacy: hand the address to the studio via session storage instead of
     // the URL, so a guest's typed address never lands in browser history, the
     // Referer header, or analytics. The studio consumes it once on mount.
-    stashAddressQuery(query);
-    router.push("/studio");
+    stashAddressQuery(trimmed);
+    setDawnRamp(true);
+    if (rampTimerRef.current !== null) {
+      window.clearTimeout(rampTimerRef.current);
+    }
+    rampTimerRef.current = window.setTimeout(() => {
+      router.push("/studio");
+    }, DAWN_RAMP_MS);
   }
 
   return (
@@ -240,7 +264,7 @@ export function BlueHourHero() {
           ) : null}
         </div>
 
-        {/* Legibility scrims — ink from the left for the copy column, ink up
+        {/* Legibility scrims - ink from the left for the copy column, ink up
             from the base so the hero seats into the page. */}
         <div
           aria-hidden="true"
@@ -254,52 +278,78 @@ export function BlueHourHero() {
         {/* Copy column */}
         <div
           data-testid="hero-copy"
-          className={`absolute left-[clamp(20px,5vw,72px)] top-[clamp(96px,16vh,160px)] z-10 w-[min(600px,84vw)] transition-opacity duration-500 max-sm:top-24 ${copyDimmed ? "max-sm:pointer-events-none max-sm:opacity-0" : ""}`}
+          className="absolute left-[clamp(20px,5vw,72px)] top-[clamp(96px,16vh,160px)] z-10 w-[min(600px,84vw)] max-sm:top-24"
         >
-          <p className="lf-kicker flex items-center gap-2.5 text-ln-amber">
-            <span aria-hidden="true" className="h-px w-6 bg-ln-amber/70" />
-            LotFoundry · ADU feasibility studio
-          </p>
+          <div
+            className={`transition-opacity duration-500 ${copyDimmed ? "max-sm:hidden" : ""}`}
+          >
+            <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
+              <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
+              LotFoundry · ADU feasibility studio
+            </p>
 
-          <h1 className="ln-display-hero mt-4 text-ln-mist">
-            Every backyard hides{" "}
-            <em className="italic text-ln-amber">a second address.</em>
-          </h1>
+            <h1 className="ln-display-hero mt-4 text-ln-mist">
+              Every backyard hides{" "}
+              <em className="italic text-ln-glow">a second address.</em>
+            </h1>
 
-          <p className="lf-body-lg mt-5 max-w-[46ch] text-ln-slate">
-            LotFoundry surveys your parcel at blue hour — boundary, setbacks,
-            buildable envelope, projected rent — before you spend a dollar on
-            plans.
-          </p>
+            <p className="lf-body-lg mt-5 max-w-[46ch] text-ln-slate">
+              LotFoundry surveys your parcel at blue hour - boundary, setbacks,
+              buildable envelope, projected rent - before you spend a dollar on
+              plans.
+            </p>
+          </div>
 
           <form
             onSubmit={handleSubmit}
-            className={`mt-7 flex max-w-md items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-amber/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl ${verdictLanded ? "ln-cta-pulse" : ""}`}
+            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
           >
-            <label htmlFor="hero-address" className="sr-only">
-              Property address
-            </label>
-            <input
-              id="hero-address"
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Enter your property address"
-              autoComplete="street-address"
-              className="min-h-11 min-w-0 flex-1 rounded-full bg-transparent px-4 font-mono text-[11px] text-ln-mist placeholder:text-ln-slate/70 focus:outline-none sm:px-5 sm:text-xs"
-            />
+            <p
+              className={`lf-kicker-dense hidden text-ln-glow ${copyDimmed ? "max-sm:mb-1 max-sm:flex" : "max-sm:hidden"}`}
+            >
+              {readout.label}
+            </p>
+            <div className="flex min-w-0 flex-1 items-center max-sm:w-full max-sm:flex-col max-sm:items-stretch max-sm:gap-1">
+              <label
+                htmlFor="hero-address"
+                className="lf-kicker-dense shrink-0 px-4 text-ln-glow max-sm:px-4 max-sm:pt-2"
+              >
+                Property address
+              </label>
+              <input
+                ref={addressInputRef}
+                id="hero-address"
+                type="text"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  if (addressError) setAddressError(false);
+                }}
+                placeholder="Enter your property address"
+                autoComplete="street-address"
+                aria-invalid={addressError}
+                aria-describedby={addressError ? "hero-address-error" : undefined}
+                className="min-h-11 min-w-0 flex-1 rounded-full bg-transparent px-4 font-mono text-[11px] text-ln-mist placeholder:text-ln-slate/70 focus:outline-none sm:px-5 sm:text-xs"
+              />
+            </div>
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-amber px-5 text-xs font-semibold text-ln-ink transition-all duration-300 hover:bg-ln-mist active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-amber focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-glow px-5 text-xs font-semibold text-ln-ink transition-all duration-300 hover:bg-ln-mist active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-glow focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
             >
               Run feasibility
             </button>
           </form>
 
-          <p className="lf-caption mt-3 max-w-md text-ln-slate/80">
-            Early estimate only. Local review is still required before design,
-            permitting, financing, or investment decisions.
-          </p>
+          {addressError ? (
+            <p id="hero-address-error" className="lf-caption mt-3 max-w-md text-ln-glow">
+              Enter an address before running feasibility.
+            </p>
+          ) : (
+            <p className="lf-caption mt-3 max-w-md text-ln-slate/80">
+              Early estimate only. Local review is still required before design,
+              permitting, financing, or investment decisions.
+            </p>
+          )}
         </div>
 
         {/* Survey phase rail — narrates the scrubbed phase and jumps to it. */}
@@ -310,7 +360,7 @@ export function BlueHourHero() {
           >
             <span
               aria-hidden="true"
-              className="relative h-7 w-[18px] rounded-full border border-ln-slate/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-ln-amber"
+              className="relative h-7 w-[18px] rounded-full border border-ln-slate/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-ln-glow"
             />
             <span className="flex items-center gap-1.5">
               {SURVEY_RAIL.map((entry, index) => {
@@ -322,9 +372,9 @@ export function BlueHourHero() {
                     aria-current={active ? "step" : undefined}
                     aria-label={index === 0 ? entry.label : `Jump to ${entry.label}`}
                     onClick={() => jumpToPhase(entry.target)}
-                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-amber ${
+                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
                       active
-                        ? "border-ln-amber/70 bg-ln-amber/15 text-ln-amber"
+                        ? "border-ln-glow/70 bg-ln-glow/15 text-ln-glow"
                         : "border-ln-hairline text-ln-slate hover:border-ln-slate/60 hover:text-ln-mist"
                     }`}
                   >
@@ -336,19 +386,19 @@ export function BlueHourHero() {
             <span className="min-w-56">{readout.label}</span>
             <span className="block h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline">
               <span
-                className="block h-full bg-ln-amber transition-[width] duration-100"
+                className="block h-full bg-ln-glow transition-[width] duration-100"
                 style={{ width: `${Math.round(Math.min(1, progress) * 100)}%` }}
               />
             </span>
           </nav>
         ) : null}
 
-        {/* Verdict plate — real HTML so every crop and screen reader gets the
+        {/* Verdict plate - real HTML so every crop and screen reader gets the
             number. Fades in over the last stretch of the scrub; static and
             fully visible for reduced-motion users. */}
         <aside
           aria-label="Projected rent verdict"
-          className="absolute bottom-8 right-[clamp(20px,5vw,72px)] z-10 rounded-lg border-[1.5px] border-ln-hairline bg-ln-ink/85 px-6 py-5 backdrop-blur-md transition-opacity duration-300 max-sm:inset-x-5 max-sm:right-5 motion-safe:sm:translate-y-0"
+          className="absolute bottom-8 right-[clamp(20px,5vw,72px)] z-10 rounded-lg border-[1.5px] border-ln-hairline bg-ln-ink/85 px-6 py-5 backdrop-blur-md transition-opacity duration-300 max-sm:inset-x-5 max-sm:right-5 sm:w-[440px] motion-safe:sm:translate-y-0"
           style={showPlayer ? { opacity: plateOpacity } : undefined}
         >
           <p className="lf-kicker-dense text-ln-slate">
@@ -358,6 +408,22 @@ export function BlueHourHero() {
             ${(showPlayer ? rent : VERDICT_RENT).toLocaleString("en-US")}
             <span className="ml-1 font-mono text-sm font-normal text-ln-slate">/mo</span>
           </p>
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-ln-hairline/60 pt-3">
+            <div>
+              <p className="lf-kicker-dense text-ln-slate/80">Annual NOI</p>
+              <p className="ln-money mt-1 text-2xl text-ln-money">
+                {TYPICAL_MARKET.noi}
+                <span className="ml-1 font-mono text-xs font-normal text-ln-slate">/yr</span>
+              </p>
+            </div>
+            <div>
+              <p className="lf-kicker-dense text-ln-slate/80">Payback</p>
+              <p className="ln-money mt-1 text-2xl text-ln-mist">
+                ~{TYPICAL_MARKET.paybackYears}
+                <span className="ml-1 font-mono text-xs font-normal text-ln-slate">yrs</span>
+              </p>
+            </div>
+          </div>
           <p
             className="lf-kicker-dense mt-3 inline-flex rounded-md border border-ln-money/50 px-2.5 py-1 text-ln-money transition-opacity duration-300"
             style={showPlayer ? { opacity: Math.max(restIn, verdictIn) } : undefined}
@@ -365,6 +431,7 @@ export function BlueHourHero() {
             Feasible · estimate only
           </p>
         </aside>
+        <DawnRampOverlay visible={dawnRamp} />
       </div>
     </section>
   );

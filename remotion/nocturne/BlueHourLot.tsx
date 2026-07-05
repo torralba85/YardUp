@@ -146,7 +146,7 @@ export const BlueHourLot: React.FC<{ highlight?: SurveyHighlight }> = ({
                 y1={0.3 * height}
                 x2={sweepX}
                 y2={0.96 * height}
-                stroke={LN.amber}
+                stroke={LN.glow}
                 strokeWidth={14}
                 opacity={0.14}
               />
@@ -155,7 +155,7 @@ export const BlueHourLot: React.FC<{ highlight?: SurveyHighlight }> = ({
                 y1={0.3 * height}
                 x2={sweepX}
                 y2={0.96 * height}
-                stroke={LN.amber}
+                stroke={LN.glow}
                 strokeWidth={2}
                 style={{ filter: "drop-shadow(0 0 10px rgba(245,181,74,0.8))" }}
               />
@@ -210,7 +210,7 @@ export const BlueHourLot: React.FC<{ highlight?: SurveyHighlight }> = ({
           <polygon
             points={aduPoints}
             fill={`rgba(245, 181, 74, ${cast * (lifted("adu") ? 0.24 : 0.16) * castPulse})`}
-            stroke={LN.amber}
+            stroke={LN.glow}
             strokeWidth={lifted("adu") ? 5 : 3.5}
             pathLength={1}
             strokeDasharray={1}
@@ -288,7 +288,7 @@ export const BlueHourLot: React.FC<{ highlight?: SurveyHighlight }> = ({
           left: aduCenterX - 40,
           top: GEOMETRY.adu[1][1] * height + 18,
           borderColor: "rgba(245, 181, 74, 0.55)",
-          color: LN.amber,
+          color: LN.glow,
           opacity: phase(frame, PHASES.cast.start + 24, PHASES.cast.start + 40) * dim("adu"),
           transform: "translateX(-50%)",
         }}

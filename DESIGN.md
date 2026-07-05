@@ -1,4 +1,4 @@
-# LotFoundry — Design System v2
+# LotFoundry — Design System v3
 
 LotFoundry turns land a homeowner already owns into earning potential, routing them to a builder who can act on it. The ADU is the first thing the foundry casts from a lot.
 
@@ -8,7 +8,7 @@ LotFoundry turns land a homeowner already owns into earning potential, routing t
 
 - **What this is:** ADU feasibility studio — address search → live parcel/zoning data on an aerial map → instant rent potential, NOI, build cost range, payback → shareable concept report.
 - **Who it's for:** US homeowners deciding whether their lot can earn; secondarily the builder they bring the report to.
-- **Space/industry:** Proptech / ADU planning. Peers: Symbium Build, Maxable, ADU cost calculators — uniformly white/cool-toned, generic grotesque sans, permission-or-cost framing.
+- **Space/industry:** Proptech / ADU planning. Peers: Symbium Build (purple/white centered hero, permission framing — unchanged as of July 2026), Maxable (**went warm July 2026**: cream background, gold accents, charcoal sections — now overlaps the daylight sand-and-amber territory), ADU cost calculators. The nocturne landing restores full acquisition-surface separation; the daylight app still owns serif authority + mono record-keeping, which Maxable's generic sans does not touch.
 - **Project type:** Consumer web app — poster-style marketing landing + data-dense studio dashboard with 3D parcel scene.
 
 ## Aesthetic Direction
@@ -16,7 +16,21 @@ LotFoundry turns land a homeowner already owns into earning potential, routing t
 - **Direction:** "Surveyor's desk at golden hour" — editorial land-instrument warmth. Tactile paper, dark ink, copper-stamped decisions, sharp financial signal.
 - **Decoration level:** Intentional — hairline double-rules, plat-map linework, subtle paper warmth. No gradients, no blobs, no icon grids.
 - **Mood:** Less "software that checks rules," more "a land-value instrument." Financially serious without fintech SaaS coldness. Things settle and stamp; nothing bounces.
-- **Differentiation:** The entire category is cool-toned sans on white. LotFoundry is warm paper + serif authority + mono precision. Zero visual collision with any competitor (verified by screenshot research, June 2026).
+- **Differentiation:** The category leads with cool sans and permission framing. LotFoundry is serif authority + mono precision, told at two times of day (see Dual-Lighting System below). Screenshot research July 2026: Symbium unchanged; Maxable moved to warm cream + gold, so warmth alone is no longer the moat — the serif/mono record-keeping identity and the nocturne acquisition surface are.
+
+## Blue Hour / Golden Hour — Dual-Lighting System
+
+**The landing is the night you decide; the studio is the morning you build.** One property, two times of day — you dream about your backyard at night, you work on it in daylight. This is one continuous sky, not two palettes: the marketing landing (`/`) runs the nocturnal **Blue Hour** identity; studio, auth, builder, report, certificate, and product email run the warm **Golden Hour** system. Every future surface must be assigned to exactly one lighting; the seam is deliberate, never accidental.
+
+**Invariants — identical day and night (the split holds only while these hold):**
+
+1. **One drawing, two lightings.** Layout grammar, pill-radius system, spacing scale, and settle-and-stamp motion are shared. The palette (and the display serif, per the typography rule) is the *only* thing that changes. Scroll-scrub is allowed on the landing; bounce and floaty SaaS drift are not, anywhere.
+2. **Green is money, always.** `--lf-forest` (daylight) and `--color-ln-money` patina (`#7ED4A6`, night) are the same semantic — money, readiness, the payable outcome. Neither surface may use green for anything else.
+3. **The mono layer never changes voice.** Recorded facts (APN, dimensions, zoning, status chips) are UPPERCASE tracked IBM Plex Mono on both surfaces. Facts don't care what time it is.
+4. **The certificate is the sun.** The Certificate of Feasibility renders as warm daylight parchment everywhere — including embedded on the night landing (a lit window in a dark house). It is the artifact that pre-trains landing visitors on the daylight system.
+5. **Income framing everywhere.** Both surfaces lead with rent/NOI/payback. If the landing goes mood-first and delays the money proof, it has drifted into "cool tech startup night mode" — that is the failure state, not a style option.
+
+**The seam (landing → studio transition):** never hard-cut `#0A1120` night ink into parchment — that is a flashbang. Target spec: a 400–600ms **dawn ramp** (night ink warms through an amber horizon into parchment), then the studio assembles with settle-and-stamp (aerial tile, parcel boundary draws, mono chips stamp down), carrying the searched address through so the user arrives at *their* situation. **A money-green figure must be visible within 3 seconds** of arrival. No onboarding modal, no spinner-on-white. Until the ramp is built, the transition must at minimum route through a warm dark intermediate surface, never ink → white. The seam may show at: address-search submit, first studio load, auth handoff, saved-report email, certificate share page. It must not show inside nav, forms, pricing, the builder dashboard, or mid-task flows — those pick one lighting and stay there.
 
 ## Visual Identity & Logo
 
@@ -30,9 +44,12 @@ The signature gesture is the interlocking **L/F monogram** — two letterforms c
 
 ## Typography
 
-Three families, three jobs. The serif carries authority and money; the sans does operational work; the mono records fact.
+Three families, three jobs — plus a fourth face scoped to the nocturne landing. The serif carries authority and money; the sans does operational work; the mono records fact.
 
-- **Display / Money:** **Cormorant Garamond** (600–700) — hero headlines, screen titles, and every large dollar figure. High-contrast serif reads "asset discovery," not "wedding invitation," when set heavy and large.
+**The two-serif rule: Fraunces persuades, Cormorant records.** Fraunces is the *poster voice* — Blue Hour landing display, campaign surfaces, app-store screenshots, social/OG cards: anywhere LotFoundry is persuading. Cormorant Garamond is the *ledger voice* — studio, report, certificate, builder surfaces, product email: anywhere LotFoundry is recording. One display serif per surface, never both in one viewport — the only sanctioned co-appearance is the certificate embedded on the landing, which keeps Cormorant because it is an artifact (a photo of a document), not landing type. Money follows the surface's serif: a landing figure is an *advertised estimate* and sets in Fraunces (`ln-money` utility); a studio/report/certificate figure is a *recorded fact* and sets in Cormorant, always. Fraunces never enters studio, auth, builder, report, certificate, or product-email surfaces. (Note: Cormorant's thin hairlines shimmer on night ink below ~40px — a rendering reason, not just taste, why the landing carries its own face.)
+
+- **Display / Money (Golden Hour):** **Cormorant Garamond** (600–700) — hero headlines, screen titles, and every large dollar figure on daylight surfaces. High-contrast serif reads "asset discovery," not "wedding invitation," when set heavy and large.
+- **Display (Blue Hour landing only):** **Fraunces** (500) — `--font-display-ln`, loaded per-page via `next/font`; `.ln-display-hero`, `.ln-section-heading`, `.ln-card-heading`, `ln-money` utilities fall back to the global display stack outside the landing wrapper.
 - **Body / UI:** **Libre Franklin** (400–700) — paragraphs, labels, controls, nav, dense studio UI. Deliberately plain so the serif and mono do the talking.
 - **Data / Recorded Fact:** **IBM Plex Mono** (400–600) — APNs, lot dimensions, zoning codes, setbacks, status chips, eyebrows, table figures. Mono is the typographic signal of "this is recorded fact."
 - **Loading:** `next/font/google` — `Cormorant_Garamond` (`--font-display`), `Libre_Franklin` (`--font-sans`), `IBM_Plex_Mono` (`--font-mono`). *Implementation note (2026-06-20): all families are now wired in `app/layout.tsx` via `next/font/google` — Cormorant, Libre Franklin, and IBM Plex Mono. The mono "recorded fact" layer is live. The legacy `--font-hero` (Outfit) was removed 2026-06-25; only the three brand families remain.*
@@ -76,11 +93,23 @@ Warm by default, never white. Sand is the world, clay is the hand you click with
 
   /* On-dark accents (money band, instrument rail) */
   --lf-money-on-dark: #9DC4A8; /* Forest lightened for dark surfaces */
+
+  /* Blue Hour landing (ln) — nocturne palette, landing-scoped */
+  --color-ln-ink:       #0A1120; /* Night ground */
+  --color-ln-navy:      #121D33; /* Twilight surface */
+  --color-ln-card:      #16233C; /* Raised night card */
+  --color-ln-mist:      #EAF0FA; /* Primary text on night */
+  --color-ln-slate:     #93A3C0; /* Muted text on night */
+  --color-ln-glow:      #F5B54A; /* Window-glow — landing CTA/interactive accent. NOT warning amber. */
+  --color-ln-glow-deep: #B87E14; /* Glow hover/deep variant */
+  --color-ln-money:     #7ED4A6; /* Patina — money on night (same semantic as forest) */
+  --color-ln-hairline:  #263450; /* Night borders */
 }
 ```
 
 - **Approach:** Restrained-warm. One interactive accent (clay), one meaning-bearing color (forest), two alert colors used sparingly.
 - **Rules:** Forest green is reserved exclusively for money, readiness, and the primary CTA — when a user sees green, it pays them. Amber defaults for unknowns; brick only for genuine blockers. Use base amber for fills and accents, `--lf-amber-ink` for warning text/icons on light surfaces, and `--lf-amber-on-dark` for warning text/icons on mahogany or espresso. Never encode status by color alone (label + icon always). Dark surfaces use `--lf-money-on-dark` for figures, taupe for labels.
+- **The amber firewall (glow vs risk):** window-glow (`--color-ln-glow`) and warning amber (`--lf-amber` family) are *different semantics that share a family*, and they are fenced by the radius system: glow lives only in pills and links on logged-out landing/campaign surfaces; warning amber is never a fill on an interactive element and glow is never applied to a data chip. Anything a logged-in user sees uses app semantics (amber = risk) even when promotional — amber CTAs are for logged-out surfaces only; product emails use clay or green CTAs. Never place a glow CTA and a risk-amber chip in the same component (e.g. a builder lead card with a permit-review chip must not have an amber unlock button — inside the app the commit CTA stays forest). The moment the user is evaluating a parcel, amber means caution again.
 - **Dark mode:** Dark surfaces are mahogany-family (`#1E120A` bg, `#2A1A10` surface), not gray. Ink flips to sand. Reduce accent saturation ~15%; forest lightens to `#4A6B54`.
 
 ## Spacing
@@ -111,10 +140,25 @@ Warm by default, never white. Sand is the world, clay is the hand you click with
 1. **Certificate of Feasibility** — the export/report is an engraved instrument, not a dashboard: APN-derived serial number (`NO. LF-{APN}`), "Recorded {date}" line, finances typeset as a ledger T-account (income left, costs right, NOI double-underlined), a rotated "CONCEPT · NOT A PERMIT" stamp in brick. The shareable artifact is the viral loop.
 2. **Poster hero with instrument rail** — headline left/low over warm aerial imagery, live proof points docked at the bottom edge.
 3. **Mono data layer** — every recorded fact in UPPERCASE tracked IBM Plex Mono. Competitors visualize data; LotFoundry *records* it.
+4. **Blue Hour / Golden Hour dual lighting** — the brand owns two times of day on one property (see the Dual-Lighting System section). Protected by its invariants; the dawn-ramp seam is part of the risk.
+
+### Candidate signature risks (logged 2026-07-05, not committed)
+
+From outside-voice synthesis — evaluate when their surfaces are built, do not ship by default:
+
+- **The Yard Deed** — the share artifact as a deed-styled certificate card: parchment, ledger T-account, APN serial, one enormous Cormorant figure ("This yard can earn $2,140/mo"), rendered as the OG image and text-message card; optionally an orderable letterpress print. Weaponizes the certificate + income framing into the share loop.
+- **The Builder's Almanac** — the builder marketplace styled as a field ledger, and each builder gets a public parchment *almanac page* of verified builds (APN-anonymized entries, money-green realized figures, stamped completion dates). Paying for a lead becomes a recorded professional act; the almanac page becomes the builder's own marketing asset.
+- **Certificate night mode** — a shared certificate opened after local sunset renders in the nocturne treatment. Gimmick-adjacent but cheap, on-story, and screenshot-bait.
+
+## Next-Phase Gaps (design debt to spec before the surfaces ship)
+
+- **Builder marketplace register:** trust primitives (verified badge, license/insurance state, response SLA, completed ADUs), lead economics (unlock cost, exclusivity, refund state), status taxonomy (new → unlocked → contacted → bid → won → expired → disputed). Ledger slips and lead tickets, never SaaS card mosaics. Clay for operations; green only for won/revenue/readiness — not every builder button.
+- **PWA / app-store presence:** icon + maskable safe area, splash, status-bar color, home-screen title; store screenshot art direction (Blue Hour for acquisition shots, daylight studio for proof shots); push-notification tone and icon; offline states (parcel unavailable, certificate cached, estimate stale). Official store badges only once listings are live (2026-07-03 ruling).
+- **Email / notification system:** campaign email (Blue Hour, Fraunces, glow CTAs) vs product email (Golden Hour, Cormorant, clay/green CTAs) split; transactional templates (certificate saved, builder response, receipt, report shared); certificate thumbnail rendering in clients; dark-mode email behavior; plain-text fallback voice; hierarchy = money first, then parcel/address, then action.
 
 ## Anti-Slop Rules
 
-No purple or gradients. No 3-column icon grids. No centered hero stack. No decorative blobs. No white-SaaS dashboard surfaces. No rounded cards floating inside cards. No icons explaining obvious concepts. No "Unlock your property potential" copy. No Inter/Roboto/system-ui anywhere user-visible. No donut/area charts for the money story — use the ledger.
+No purple or gradients (photographic dusk imagery and scrims on the Blue Hour landing are not "gradients" — decorative CSS gradient fills still are, on both surfaces). No 3-column icon grids. No centered hero stack. No decorative blobs. No white-SaaS dashboard surfaces. No rounded cards floating inside cards. No icons explaining obvious concepts. No "Unlock your property potential" copy. No Inter/Roboto/system-ui anywhere user-visible. No donut/area charts for the money story — use the ledger. Blue Hour additions: no "cool tech startup dark mode" drift (the night is a *property at dusk*, not a terminal theme); no glow amber inside the app; no Fraunces on recorded surfaces; no mood-first landing that delays the money proof.
 
 ## Voice & Concepts
 
@@ -155,3 +199,4 @@ Lead with money, feasibility, and a credible next step.
 | 2026-07-03 | Coming Soon banner: custom platform chips, not official store badges | The landing's pre-launch app banner uses custom espresso chips with Apple/Google Play glyphs. The official App Store / Google Play badge artwork is licensed only for live, unmodified store listings — which don't exist yet — so official badge PNGs must not be swapped in until the apps ship. Chips are non-interactive read-only frames and stay rectangular per the pill-radius system. |
 | 2026-07-04 | RULING — micro-print tier formalized; 9px informational floor | Design-system audit found ~200 arbitrary `text-[…]` sizes, clustered at 7.5–11px in the data-dense builder surfaces — a coherent micro-print tier the scale never had (same convergence pattern the money scale showed before 2026-07-03). Added the `lf-dataprint` @utility (9px Plex Mono, 600, 0.14em, uppercase) and ruled 9px the floor for informational text. The distinction is informational vs. facsimile: the builder's unlocked inline certificate is a paid, readable deliverable, so its 7.5–8.5px lines (serial, ledger labels, spec labels, the "Concept · Not a Permit" disclaimer) were lifted to 9px/`lf-dataprint`; the `ReportPreview` mini-certificate thumbnail is a decorative facsimile and keeps its 8px stamp. Also minted `--color-lf-dark-surface` (#2A1A10, the dark-mode raised surface already specified above) replacing the hardcoded hex in `FeatureBand`, and moved the floating nav from raw `z-50` onto the named `--z-index-nav` tier. Follow-ups landed same day: all off-spec kicker tracking (0.08/0.1/0.12em, ~36 sites incl. `StatusChip`) snapped to `0.14em`; `Button` gained an `xs` size (h-8, for the builder's compact action rows) and the builder unlock CTAs (LeadCard + inbox table detail → `commit`) and LeadCard tertiary actions (→ `ghost xs`) adopted it. Deliberately left raw: selected-state controls (triage `aria-pressed` pairs, tabs, cards/table switch — `Button` has no selected API), the `UnlockSlip` ledger pay-row (protected certificate artifact, not a pill), and the mahogany download pair (mahogany is not a sanctioned interactive fill — repainting it to clay/secondary is an open design call, not a refactor). Note: `FeatureBand` and the floating nav were removed the next day by the Blue Hour landing rebuild; the tier, tokens, and Button adoptions in the builder stand. |
 | 2026-07-05 | Blue Hour landing (sanctioned departure) | The marketing landing (`/`) moved to a nocturnal "Blue Hour" identity — user-approved departure from the warm-earth palette, scoped to the landing only. Tokens: `--color-ln-*` in `globals.css` (night ink `#0A1120` ground, twilight navy surfaces, window-glow amber `#F5B54A` as the interactive/CTA accent, patina green `#7ED4A6` for money on dark, mist text, slate muted). Display face is Fraunces (`--font-display-ln`, loaded per-page via `next/font`); Libre Franklin body and IBM Plex Mono data roles are unchanged. Hero is a Higgsfield-generated dusk aerial (`public/landing/hero-dusk.jpg`) with a Remotion survey composition (`remotion/nocturne/`) scrubbed by scroll via `@remotion/player`; the rent verdict renders as real HTML for crops and screen readers, and reduced motion gets the still photograph with no pin. The studio, auth, and builder surfaces keep the daylight warm-earth system — the amber-means-review and forest-means-money rules still apply everywhere except this landing, where amber is the action accent and patina green carries money. |
+| 2026-07-05 | DESIGN.md v3 — Blue Hour formalized as Dual-Lighting System | /design-consultation update pass (Codex + Claude subagent outside voices, both converging). Promoted the 2026-07-05 landing departure from a log entry into design law: the "Blue Hour / Golden Hour" section with five invariants (one drawing two lightings; green = money always; mono layer never changes voice; certificate renders daylight parchment everywhere; income framing everywhere) and a dawn-ramp seam spec (400–600ms ramp, no ink→parchment hard cut, money-green figure within 3s of studio arrival — backlog item, not yet built). Typography: the two-serif rule "Fraunces persuades, Cormorant records," one display serif per surface; resolved the voices' internal conflict by ruling landing figures *advertised estimates* (Fraunces, shipped `ln-money`) vs studio/report/certificate figures *recorded facts* (Cormorant, always) — the embedded certificate keeps Cormorant on the landing as an artifact. Color: renamed `--color-ln-amber(-deep)` → `--color-ln-glow(-deep)` in code (globals.css, 5 nocturne components, remotion constants `LN.glow`) so the token name enforces that window-glow is not warning amber; added the amber-firewall rules (glow only in pills/links on logged-out surfaces; warning amber never an interactive fill; no glow CTA + risk chip in one component; product emails use clay/green). Research refresh: Maxable went warm (cream + gold, July 2026) — differentiation note updated; warmth alone is no longer the moat. Added Next-Phase Gaps (builder marketplace register, PWA/store art direction, email system) and three candidate signature risks (Yard Deed, Builder's Almanac, certificate night mode). |

@@ -54,8 +54,8 @@
   --color-ln-card: #16233C;
   --color-ln-mist: #EAF0FA;
   --color-ln-slate: #93A3C0;
-  --color-ln-amber: #F5B54A;
-  --color-ln-amber-deep: #B87E14;
+  --color-ln-glow: #F5B54A;
+  --color-ln-glow-deep: #B87E14;
   --color-ln-money: #7ED4A6;
   --color-ln-hairline: #263450;
 
@@ -304,6 +304,11 @@ button:focus-visible {
      This also unifies with the component-level `ring-lf-clay` focus styles. */
   outline: 2px solid var(--color-lf-clay);
   outline-offset: 3px;
+}
+
+[data-theme="blue-hour"] a:focus-visible,
+[data-theme="blue-hour"] button:focus-visible {
+  outline-color: var(--color-ln-glow);
 }
 
 @media print {
