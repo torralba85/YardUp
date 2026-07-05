@@ -49,7 +49,7 @@ function PlatformChip({ name, glyph }: { name: string; glyph: React.ReactNode })
     <div className="flex items-center gap-3 rounded-lg border border-ln-hairline bg-ln-ink px-4 py-2.5 text-ln-mist">
       {glyph}
       <div className="leading-tight">
-        <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-ln-slate">
+        <div className="lf-dataprint text-ln-slate">
           Coming soon on
         </div>
         <div className="mt-0.5 text-base font-semibold">{name}</div>
