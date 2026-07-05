@@ -1,3 +1,4 @@
+import { DawnStudioLink } from "./DawnStudioLink";
 import { Reveal } from "./Reveal";
 
 /**
@@ -15,7 +16,7 @@ export function DuskShowcase() {
             What you get
           </p>
           <h2 id="showcase-heading" className="ln-section-heading mt-4 max-w-2xl text-ln-mist">
-            A survey you can read, a concept you can feel.
+            Rent, lot fit, and a concept that looks like it belongs.
           </h2>
         </Reveal>
 
@@ -78,13 +79,12 @@ export function DuskShowcase() {
                 the fine print honest. Estimates, never guarantees.
               </p>
               <p className="mt-8">
-                <a
-                  href="/studio"
+                <DawnStudioLink
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ln-hairline px-6 text-sm font-semibold text-ln-mist transition-colors hover:border-ln-glow/60 hover:text-ln-glow"
                 >
                   Open the studio
                   <span aria-hidden="true">→</span>
-                </a>
+                </DawnStudioLink>
               </p>
             </div>
           </Reveal>

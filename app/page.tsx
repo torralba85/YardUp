@@ -31,7 +31,7 @@ export const viewport: Viewport = {
  */
 export default function LandingPage() {
   return (
-    <div className={`${fraunces.variable} bg-ln-ink text-ln-mist`}>
+    <div data-theme="blue-hour" className={`${fraunces.variable} bg-ln-ink text-ln-mist`}>
       <NocturneNav />
 
       <main id="main-content">

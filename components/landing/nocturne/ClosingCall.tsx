@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DawnStudioLink } from "./DawnStudioLink";
 import { Reveal } from "./Reveal";
 
 /** Closing CTA: one quiet, confident ask before the footer. */
@@ -14,12 +15,11 @@ export function ClosingCall() {
             plans.
           </h2>
           <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <Link
-              href="/studio"
+            <DawnStudioLink
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-ln-glow px-8 text-sm font-semibold text-ln-ink transition-colors duration-300 hover:bg-ln-mist active:scale-[0.98]"
             >
               Check my address
-            </Link>
+            </DawnStudioLink>
             <Link
               href="/login"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-ln-hairline px-8 text-sm font-semibold text-ln-mist transition-colors hover:border-ln-glow/60 hover:text-ln-glow"

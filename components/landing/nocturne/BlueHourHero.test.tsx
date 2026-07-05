@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { forwardRef, useImperativeHandle } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, forwardRef, useImperativeHandle } from "react";
+import { DAWN_RAMP_MS } from "./DawnStudioLink";
 import { BlueHourHero } from "./BlueHourHero";
 
 const { pushMock, stashMock } = vi.hoisted(() => ({
@@ -47,6 +48,10 @@ describe("BlueHourHero", () => {
     stashMock.mockClear();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders the second-address headline, address instrument, and estimate-honest copy", () => {
     render(<BlueHourHero />);
     expect(screen.getByText(/lotfoundry · adu feasibility studio/i)).toBeInTheDocument();
@@ -78,13 +83,30 @@ describe("BlueHourHero", () => {
     expect(verdict).toHaveTextContent(/typical supported markets/i);
   });
 
+  it("asks for an address instead of routing to the demo studio on empty submit", () => {
+    render(<BlueHourHero />);
+    const input = screen.getByLabelText(/property address/i);
+    fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
+    expect(input).toHaveFocus();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText(/enter an address before running feasibility/i)).toBeInTheDocument();
+    expect(stashMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
   it("routes the typed address to the studio via session stash, never the URL", () => {
+    vi.useFakeTimers();
     render(<BlueHourHero />);
     fireEvent.change(screen.getByLabelText(/property address/i), {
-      target: { value: "456 Pine St, Denver, CO" },
+      target: { value: " 456 Pine St, Denver, CO " },
     });
     fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
     expect(stashMock).toHaveBeenCalledWith("456 Pine St, Denver, CO");
+    expect(screen.getByRole("status")).toHaveTextContent(/opening studio/i);
+    expect(pushMock).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(DAWN_RAMP_MS);
+    });
     expect(pushMock).toHaveBeenCalledWith("/studio");
   });
 });

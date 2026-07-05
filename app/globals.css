@@ -306,6 +306,11 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
+[data-theme="blue-hour"] a:focus-visible,
+[data-theme="blue-hour"] button:focus-visible {
+  outline-color: var(--color-ln-glow);
+}
+
 @media print {
   aside,
   canvas,
