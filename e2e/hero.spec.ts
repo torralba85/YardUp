@@ -1,74 +1,56 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Landing daylight deconstruction hero", () => {
-  test("shows the cast headline, address instrument, and daylight scene", async ({ page }) => {
+test.describe("Blue Hour survey hero", () => {
+  test("shows the second-address headline, address instrument, and dusk scene", async ({ page }) => {
     await page.goto("/");
 
-    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
+    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
     await expect(
-      hero.getByRole("heading", { name: /your backyard, cast into an asset/i }),
+      hero.getByRole("heading", { name: /every backyard hides a second address/i }),
     ).toBeVisible();
     await expect(hero.getByLabel(/property address/i)).toBeVisible();
     await expect(hero.getByRole("button", { name: /run feasibility/i })).toBeVisible();
-    await expect(hero.getByRole("button", { name: /jump to zoning envelope/i })).toBeVisible();
-    const scene = hero.getByTestId("blueprint-scene");
-    await expect(scene).toBeVisible();
-    await expect(scene).toHaveAttribute("data-renderer-state", "fallback");
+
+    // The dusk aerial poster is always present (no-JS/reduced motion floor);
+    // the Remotion composition draws its own copy on top, so match by alt.
+    await expect(hero.getByRole("img", { name: /aerial view of a suburban lot/i })).toBeVisible();
     await expect(hero.locator("video")).toHaveCount(0);
 
     const box = await hero.locator(".sticky").boundingBox();
-    expect(box?.height ?? 0).toBeGreaterThan(540);
+    expect(box?.height ?? 0).toBeGreaterThan(560);
   });
 
-  test("clears the copy to keep the scene readable during mobile scroll", async ({
-    page,
-    viewport,
-  }) => {
-    test.skip(!viewport || viewport.width >= 640, "mobile-only regression");
+  test("mounts the scroll-scrubbed Remotion player when motion is allowed", async ({ page }) => {
     await page.goto("/");
-
-    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
-    await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.7)));
-    await expect(hero.getByTestId("hero-copy")).toHaveCSS("opacity", "0");
-
-    const scene = hero.getByTestId("blueprint-scene");
-    await expect(scene).toBeVisible();
-    const box = await scene.boundingBox();
-    expect(box?.width ?? 0).toBeGreaterThanOrEqual(viewport!.width);
-    expect(box?.height ?? 0).toBeGreaterThanOrEqual(viewport!.height);
+    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    await expect(hero.getByTestId("blue-hour-player")).toBeVisible();
   });
 
-  test("leads the first viewport with the docked income instrument rail", async ({
-    page,
-  }) => {
+  test("leads the first viewport with the projected-rent verdict plate", async ({ page }) => {
     await page.goto("/");
-    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
-    const rail = hero.getByRole("complementary", {
-      name: /typical earning potential/i,
-    });
-    await expect(rail).toBeVisible();
-    await expect(rail.getByText(/\$2,100/)).toBeVisible();
-    await expect(rail.getByText(/supported markets/i)).toBeVisible();
+    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    const verdict = hero.getByRole("complementary", { name: /projected rent verdict/i });
+    await expect(verdict).toBeAttached();
+    await expect(verdict.getByText(/typical supported markets/i)).toBeAttached();
 
-    // Docked to the bottom edge, money on screen without scrolling.
-    const box = await rail.boundingBox();
+    // Anchored inside the first viewport.
+    const box = await verdict.boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(box).not.toBeNull();
     expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(height + 2);
   });
 
-  test("scrolls through the feasibility layers", async ({ page }) => {
+  test("counts the rent verdict up as the survey scrubs to its end", async ({ page }) => {
     await page.goto("/");
-    const hero = page.locator('section[aria-label="ADU feasibility deconstruction"]');
+    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
     await hero.evaluate((element) => {
       const top = window.scrollY + element.getBoundingClientRect().top;
       const travel = element.clientHeight - window.innerHeight;
-      window.scrollTo(0, top + travel * 0.78);
+      window.scrollTo(0, top + travel * 0.98);
     });
-
-    await expect(
-      hero.getByRole("button", { name: /jump to finished value/i }),
-    ).toHaveAttribute("aria-current", "step");
+    const verdict = hero.getByRole("complementary", { name: /projected rent verdict/i });
+    await expect(verdict.getByText("$2,340")).toBeVisible();
+    await expect(verdict.getByText(/feasible · estimate only/i)).toBeVisible();
   });
 
   test("routes the typed address to the studio without persisting it in the URL", async ({ page }) => {
@@ -80,12 +62,17 @@ test.describe("Landing daylight deconstruction hero", () => {
     expect(page.url()).not.toMatch(/456|Pine|Denver|[?&]q=/i);
   });
 
-  test("keeps the daylight scene under reduced motion", async ({ browser }) => {
+  test("keeps the still photograph and skips the player under reduced motion", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
-    await expect(page.locator('[data-scene-palette="daylight"]')).toBeVisible();
-    await expect(page.locator("video")).toHaveCount(0);
+    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    await expect(hero.getByRole("img", { name: /aerial view of a suburban lot/i })).toBeVisible();
+    await expect(hero.getByTestId("blue-hour-player")).toHaveCount(0);
+    // No pin: the track collapses to a single viewport for reduced motion.
+    const track = await hero.boundingBox();
+    const viewport = page.viewportSize()?.height ?? 0;
+    expect(track?.height ?? 0).toBeLessThanOrEqual(Math.max(viewport, 640) + 2);
     await context.close();
   });
 });

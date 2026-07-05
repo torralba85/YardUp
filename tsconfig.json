@@ -26,6 +26,13 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      // The repo's remotion/ source folder shadows the `remotion` package
+      // under baseUrl resolution once compositions are imported by app code
+      // (the scroll-scrubbed landing hero). Pin the bare specifier to the
+      // real package; bundlers already resolve it there at runtime.
+      "remotion": [
+        "./node_modules/remotion"
       ]
     }
   },
