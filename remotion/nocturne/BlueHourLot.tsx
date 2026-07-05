@@ -160,7 +160,7 @@ export const BlueHourLot: React.FC = () => {
           <polygon
             points={aduPoints}
             fill={`rgba(245, 181, 74, ${cast * 0.16 * castPulse})`}
-            stroke={LN.amber}
+            stroke={LN.glow}
             strokeWidth={3.5}
             pathLength={1}
             strokeDasharray={1}
@@ -210,7 +210,7 @@ export const BlueHourLot: React.FC = () => {
           left: aduCenterX - 40,
           top: GEOMETRY.adu[1][1] * height + 18,
           borderColor: "rgba(245, 181, 74, 0.55)",
-          color: LN.amber,
+          color: LN.glow,
           opacity: phase(frame, PHASES.cast.start + 24, PHASES.cast.start + 40),
           transform: "translateX(-50%)",
         }}
