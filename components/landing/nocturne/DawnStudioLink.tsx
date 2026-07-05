@@ -21,6 +21,7 @@ export function DawnRampOverlay({ visible }: { visible: boolean }) {
     <div
       role="status"
       aria-live="polite"
+      aria-label={`Opening studio. ${TYPICAL_MARKET.rentBand} per month typical.`}
       style={{ zIndex: "var(--z-index-coach)" }}
       className="fixed inset-0 grid place-items-center overflow-hidden bg-ln-ink text-ln-mist"
     >
