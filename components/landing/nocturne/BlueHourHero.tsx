@@ -99,6 +99,9 @@ export function BlueHourHero() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/landing/hero-dusk.jpg"
+          srcSet="/landing/hero-dusk-poster.jpg 1280w, /landing/hero-dusk.jpg 2560w"
+          sizes="max(100vw, 177.78svh)"
+          fetchPriority="high"
           alt="Aerial view of a suburban lot at dusk: the main house in front, a small ADU with warm lit windows in the backyard"
           className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover portrait:-translate-x-[62%]"
         />

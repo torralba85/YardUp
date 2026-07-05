@@ -28,7 +28,7 @@ export function useHeroProgress(ref: React.RefObject<HTMLElement | null>) {
 
     queueMeasure();
     window.addEventListener("scroll", queueMeasure, { passive: true });
-    window.addEventListener("resize", queueMeasure);
+    window.addEventListener("resize", queueMeasure, { passive: true });
 
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
