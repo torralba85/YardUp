@@ -438,6 +438,26 @@ button:focus-visible {
   }
 }
 
+/* Verdict → CTA handoff: when the hero scrub's verdict lands, the address
+   instrument pulses twice in window-glow amber, converting the payoff into
+   the action. Applied only when the scrubbed player is active, which is
+   already motion-gated; the media query is defense in depth. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ln-cta-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(245, 181, 74, 0);
+    }
+    40% {
+      box-shadow: 0 0 0 7px rgba(245, 181, 74, 0.26);
+    }
+  }
+
+  .ln-cta-pulse {
+    animation: ln-cta-pulse 1.4s ease-out 2;
+  }
+}
+
 /* Scroll-reveal for landing sections: elements start soft-hidden and settle
    when a small script (or IntersectionObserver hook) stamps data-revealed.
    Reduced-motion users see everything immediately. */
