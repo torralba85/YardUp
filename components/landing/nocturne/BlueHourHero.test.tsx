@@ -18,12 +18,21 @@ vi.mock("@/lib/address-handoff", () => ({
 }));
 
 // The real Player needs a browser rendering pipeline; the hero's contract with
-// it (mount + seekTo on scroll) is what matters here, not Remotion internals.
+// it (mount + seekTo on scroll + low-frequency inputProps) is what matters
+// here, not Remotion internals.
 const { seekToMock } = vi.hoisted(() => ({ seekToMock: vi.fn() }));
 vi.mock("@remotion/player", () => ({
-  Player: forwardRef(function MockPlayer(_props, ref) {
+  Player: forwardRef(function MockPlayer(
+    props: { inputProps?: { highlight?: string | null } },
+    ref,
+  ) {
     useImperativeHandle(ref, () => ({ seekTo: seekToMock }));
-    return <div data-testid="mock-player" />;
+    return (
+      <div
+        data-testid="mock-player"
+        data-highlight={props.inputProps?.highlight ?? ""}
+      />
+    );
   }),
 }));
 
@@ -81,6 +90,56 @@ describe("BlueHourHero", () => {
     render(<BlueHourHero />);
     const verdict = screen.getByRole("complementary", { name: /projected rent verdict/i });
     expect(verdict).toHaveTextContent(/typical supported markets/i);
+  });
+
+  it("renders a keyboard-usable survey phase rail with the opening beat active", () => {
+    render(<BlueHourHero />);
+    const rail = screen.getByRole("navigation", { name: /survey phases/i });
+    expect(rail).toBeInTheDocument();
+    const open = screen.getByRole("button", { name: /lot record opens/i });
+    expect(open).toHaveAttribute("aria-current", "step");
+    expect(
+      screen.getByRole("button", { name: /jump to phase 01 · parcel boundary/i }),
+    ).not.toHaveAttribute("aria-current");
+    expect(
+      screen.getByRole("button", { name: /jump to phase 04 · verdict/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("passes hovered or focused survey geometry to the composition as highlight", () => {
+    render(<BlueHourHero />);
+    const hotspot = screen.getByRole("button", { name: /highlight parcel boundary/i });
+
+    fireEvent.focus(hotspot);
+    expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "parcel");
+
+    fireEvent.blur(hotspot);
+    expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
+
+    const adu = screen.getByRole("button", { name: /highlight adu cast/i });
+    fireEvent.mouseEnter(adu);
+    expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "adu");
+    fireEvent.mouseLeave(adu);
+    expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
+  });
+
+  it("does not pulse the address instrument before the verdict lands", () => {
+    render(<BlueHourHero />);
+    const form = screen
+      .getByRole("button", { name: /run feasibility/i })
+      .closest("form")!;
+    expect(form.className).not.toMatch(/ln-cta-pulse/);
+  });
+
+  it("keeps hotspots and the rail out of the reduced-motion experience", () => {
+    setMatchMedia(true);
+    render(<BlueHourHero />);
+    expect(
+      screen.queryByRole("button", { name: /highlight parcel boundary/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: /survey phases/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("asks for an address instead of routing to the demo studio on empty submit", () => {

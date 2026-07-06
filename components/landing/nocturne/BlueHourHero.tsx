@@ -9,19 +9,29 @@ import {
   BLUE_HOUR_FPS,
   BLUE_HOUR_HEIGHT,
   BLUE_HOUR_WIDTH,
+  GEOMETRY,
+  type SurveyHighlight,
 } from "@/remotion/nocturne/constants";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { DawnRampOverlay, DAWN_RAMP_MS } from "./DawnStudioLink";
 import { TYPICAL_MARKET } from "./typical-market";
 import { useHeroProgress } from "./use-hero-progress";
+import {
+  SURVEY_RAIL,
+  VERDICT_LANDED_AT,
+  activeRailPhase,
+  nocturneParallax,
+} from "./hero-phases";
 
-/** Survey phases as the scroll readout narrates them. */
-const READOUT: ReadonlyArray<{ until: number; label: string }> = [
-  { until: 0.16, label: "Blue hour · lot record opens" },
-  { until: 0.42, label: "Phase 01 · parcel boundary" },
-  { until: 0.62, label: "Phase 02 · setback envelope" },
-  { until: 0.8, label: "Phase 03 · ADU cast" },
-  { until: 1.01, label: "Phase 04 · verdict" },
+/** Hotspot definitions: composition geometry + how the page names each layer. */
+const HOTSPOTS: ReadonlyArray<{
+  id: Exclude<SurveyHighlight, null>;
+  label: string;
+  polygon: ReadonlyArray<readonly [number, number]>;
+}> = [
+  { id: "parcel", label: "Highlight parcel boundary", polygon: GEOMETRY.parcel },
+  { id: "envelope", label: "Highlight setback envelope", polygon: GEOMETRY.envelope },
+  { id: "adu", label: "Highlight ADU cast", polygon: GEOMETRY.adu },
 ];
 
 /** Rent figure the verdict plate counts up to (typical supported-market midpoint). */
@@ -37,6 +47,7 @@ const VERDICT_RENT = 2340;
 export function BlueHourHero() {
   const trackRef = useRef<HTMLElement>(null);
   const playerRef = useRef<PlayerRef>(null);
+  const parallaxRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const rampTimerRef = useRef<number | null>(null);
   const [query, setQuery] = useState("");
@@ -44,6 +55,7 @@ export function BlueHourHero() {
   const [dawnRamp, setDawnRamp] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [highlight, setHighlight] = useState<SurveyHighlight>(null);
   const router = useRouter();
 
   // Post-hydration gate: server and first client render agree (no Player),
@@ -75,8 +87,63 @@ export function BlueHourHero() {
     );
   }, [progress, showPlayer]);
 
-  const readout =
-    READOUT.find((entry) => progress < entry.until) ?? READOUT[READOUT.length - 1];
+  // Pointer parallax: the composition wrapper drifts a few px against the
+  // cursor (rAF-lerped refs, no React state per mousemove, no Remotion
+  // re-render). Fine pointers only; reduced motion never mounts the player.
+  useEffect(() => {
+    if (!showPlayer) return;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    const target = { x: 0, y: 0 };
+    const eased = { x: 0, y: 0 };
+    let raf = 0;
+    const tick = () => {
+      raf = 0;
+      eased.x += (target.x - eased.x) * 0.08;
+      eased.y += (target.y - eased.y) * 0.08;
+      const drift = nocturneParallax(eased.x, eased.y);
+      const element = parallaxRef.current;
+      if (element) {
+        element.style.transform = `translate3d(${-drift.x}px, ${drift.y}px, 0) scale(1.03)`;
+      }
+      if (
+        Math.abs(target.x - eased.x) > 0.001 ||
+        Math.abs(target.y - eased.y) > 0.001
+      ) {
+        raf = window.requestAnimationFrame(tick);
+      }
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      target.x = (event.clientX / window.innerWidth) * 2 - 1;
+      target.y = (event.clientY / window.innerHeight) * 2 - 1;
+      if (!raf) raf = window.requestAnimationFrame(tick);
+    };
+    const onPointerExit = () => {
+      target.x = 0;
+      target.y = 0;
+      if (!raf) raf = window.requestAnimationFrame(tick);
+    };
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    document.documentElement.addEventListener("pointerleave", onPointerExit);
+    return () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onPointerMove);
+      document.documentElement.removeEventListener("pointerleave", onPointerExit);
+    };
+  }, [showPlayer]);
+
+  const readout = activeRailPhase(progress);
+  const verdictLanded = showPlayer && progress >= VERDICT_LANDED_AT;
+
+  function jumpToPhase(target: number) {
+    const track = trackRef.current;
+    if (!track) return;
+    const top = window.scrollY + track.getBoundingClientRect().top;
+    const travel = Math.max(1, track.offsetHeight - window.innerHeight);
+    window.scrollTo({
+      top: top + target * travel,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  }
   // The plate leads the first viewport with the full figure (money before
   // features), yields to the survey as the scrub starts, then counts back up
   // when the verdict phase lands.
@@ -118,40 +185,84 @@ export function BlueHourHero() {
       aria-label="Blue hour lot survey"
     >
       <div className="sticky top-0 h-svh min-h-[640px] overflow-hidden bg-ln-ink">
-        {/* Poster still - always present so reduced-motion, no-JS, and the
-            first paint before the Player mounts all show the photograph. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/landing/hero-dusk.jpg"
-          srcSet="/landing/hero-dusk-poster.jpg 1280w, /landing/hero-dusk.jpg 2560w"
-          sizes="max(100vw, 177.78svh)"
-          fetchPriority="high"
-          alt="Aerial view of a suburban lot at dusk: the main house in front, a small ADU with warm lit windows in the backyard"
-          className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover portrait:-translate-x-[62%]"
-        />
+        {/* Parallax wrapper: the photograph and the scrubbed composition
+            drift together a few px against the cursor; HTML copy, chips, and
+            the plate stay put for depth separation. */}
+        <div ref={parallaxRef} className="absolute inset-0 will-change-transform">
+          {/* Poster still — always present so reduced-motion, no-JS, and the
+              first paint before the Player mounts all show the photograph. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/landing/hero-dusk.jpg"
+            srcSet="/landing/hero-dusk-poster.jpg 1280w, /landing/hero-dusk.jpg 2560w"
+            sizes="max(100vw, 177.78svh)"
+            fetchPriority="high"
+            alt="Aerial view of a suburban lot at dusk: the main house in front, a small ADU with warm lit windows in the backyard"
+            className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover portrait:-translate-x-[62%]"
+          />
 
-        {showPlayer ? (
-          <div
-            aria-hidden="true"
-            data-testid="blue-hour-player"
-            className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%]"
-          >
-            <Player
-              ref={playerRef}
-              component={BlueHourLot}
-              durationInFrames={BLUE_HOUR_DURATION_IN_FRAMES}
-              fps={BLUE_HOUR_FPS}
-              compositionWidth={BLUE_HOUR_WIDTH}
-              compositionHeight={BLUE_HOUR_HEIGHT}
-              controls={false}
-              clickToPlay={false}
-              doubleClickToFullscreen={false}
-              spaceKeyToPlayOrPause={false}
-              acknowledgeRemotionLicense
-              style={{ width: "100%", height: "100%" }}
-            />
-          </div>
-        ) : null}
+          {showPlayer ? (
+            <div
+              aria-hidden="true"
+              data-testid="blue-hour-player"
+              className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%]"
+            >
+              <Player
+                ref={playerRef}
+                component={BlueHourLot}
+                inputProps={{ highlight }}
+                durationInFrames={BLUE_HOUR_DURATION_IN_FRAMES}
+                fps={BLUE_HOUR_FPS}
+                compositionWidth={BLUE_HOUR_WIDTH}
+                compositionHeight={BLUE_HOUR_HEIGHT}
+                controls={false}
+                clickToPlay={false}
+                doubleClickToFullscreen={false}
+                spaceKeyToPlayOrPause={false}
+                acknowledgeRemotionLicense
+                style={{ width: "100%", height: "100%" }}
+              />
+            </div>
+          ) : null}
+
+          {showPlayer ? (
+            /* Geometry hotspots — invisible, hover/focus lifts that survey
+               layer in the composition. Desktop-pointer affordance; the
+               container tracks the composition's 16:9 cover crop exactly. */
+            <svg
+              data-testid="survey-hotspots"
+              viewBox={`0 0 ${BLUE_HOUR_WIDTH} ${BLUE_HOUR_HEIGHT}`}
+              preserveAspectRatio="none"
+              className="absolute left-1/2 top-1/2 hidden h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%] sm:block"
+              aria-label="Survey layers"
+              role="group"
+            >
+              {HOTSPOTS.map((spot) => (
+                <polygon
+                  key={spot.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={spot.label}
+                  points={spot.polygon
+                    .map(([x, y]) => `${x * BLUE_HOUR_WIDTH},${y * BLUE_HOUR_HEIGHT}`)
+                    .join(" ")}
+                  fill="transparent"
+                  stroke="none"
+                  className="cursor-help outline-none"
+                  style={{ pointerEvents: "all" }}
+                  onMouseEnter={() => setHighlight(spot.id)}
+                  onMouseLeave={() =>
+                    setHighlight((current) => (current === spot.id ? null : current))
+                  }
+                  onFocus={() => setHighlight(spot.id)}
+                  onBlur={() =>
+                    setHighlight((current) => (current === spot.id ? null : current))
+                  }
+                />
+              ))}
+            </svg>
+          ) : null}
+        </div>
 
         {/* Legibility scrims - ink from the left for the copy column, ink up
             from the base so the hero seats into the page. */}
@@ -191,7 +302,7 @@ export function BlueHourHero() {
 
           <form
             onSubmit={handleSubmit}
-            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"}`}
+            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
           >
             <p
               className={`lf-kicker-dense hidden text-ln-glow ${copyDimmed ? "max-sm:mb-1 max-sm:flex" : "max-sm:hidden"}`}
@@ -241,20 +352,46 @@ export function BlueHourHero() {
           )}
         </div>
 
-        {/* Survey readout - narrates the scrubbed phase. */}
-        <div
-          aria-hidden="true"
-          className="lf-kicker-dense absolute bottom-8 left-[clamp(20px,5vw,72px)] z-10 hidden items-center gap-3 text-ln-slate motion-safe:sm:flex"
-        >
-          <span className="relative h-7 w-[18px] rounded-full border border-ln-slate/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-ln-glow" />
-          <span className="min-w-56">{readout.label}</span>
-          <span className="block h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline">
+        {/* Survey phase rail — narrates the scrubbed phase and jumps to it. */}
+        {showPlayer ? (
+          <nav
+            aria-label="Survey phases"
+            className="lf-kicker-dense absolute bottom-8 left-[clamp(20px,5vw,72px)] z-10 hidden items-center gap-3 text-ln-slate motion-safe:sm:flex"
+          >
             <span
-              className="block h-full bg-ln-glow transition-[width] duration-100"
-              style={{ width: `${Math.round(progress * 100)}%` }}
+              aria-hidden="true"
+              className="relative h-7 w-[18px] rounded-full border border-ln-slate/60 before:absolute before:left-1/2 before:top-1.5 before:h-1.5 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-ln-glow"
             />
-          </span>
-        </div>
+            <span className="flex items-center gap-1.5">
+              {SURVEY_RAIL.map((entry, index) => {
+                const active = readout.id === entry.id;
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    aria-current={active ? "step" : undefined}
+                    aria-label={index === 0 ? entry.label : `Jump to ${entry.label}`}
+                    onClick={() => jumpToPhase(entry.target)}
+                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
+                      active
+                        ? "border-ln-glow/70 bg-ln-glow/15 text-ln-glow"
+                        : "border-ln-hairline text-ln-slate hover:border-ln-slate/60 hover:text-ln-mist"
+                    }`}
+                  >
+                    {index === 0 ? "◦" : String(index).padStart(2, "0")}
+                  </button>
+                );
+              })}
+            </span>
+            <span className="min-w-56">{readout.label}</span>
+            <span className="block h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline">
+              <span
+                className="block h-full bg-ln-glow transition-[width] duration-100"
+                style={{ width: `${Math.round(Math.min(1, progress) * 100)}%` }}
+              />
+            </span>
+          </nav>
+        ) : null}
 
         {/* Verdict plate - real HTML so every crop and screen reader gets the
             number. Fades in over the last stretch of the scrub; static and

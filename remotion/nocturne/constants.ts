@@ -38,6 +38,12 @@ export const PHASES = {
 } as const;
 
 /**
+ * Survey layer the page can ask the composition to emphasize (rail hover or
+ * keyboard focus on a geometry hotspot). Null means no emphasis.
+ */
+export type SurveyHighlight = "parcel" | "envelope" | "adu" | null;
+
+/**
  * Overlay geometry in 0–1 frame space, traced against
  * public/landing/hero-dusk.jpg. Tune here if the photo changes.
  */
