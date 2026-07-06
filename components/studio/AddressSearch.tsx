@@ -349,7 +349,7 @@ export default function AddressSearch({
           activeIndex >= 0 ? `address-suggestion-${activeIndex}` : undefined
         }
         className={[
-          "h-11 w-full rounded-full border pl-9 pr-20 text-sm",
+          "h-11 w-full rounded-full border pl-9 pr-26 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-taupe",
           "outline-none transition",
           "focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15",
