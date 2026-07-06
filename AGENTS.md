@@ -82,6 +82,8 @@ Key entry points:
 - `README.md` - product scope, local setup, environment variables, verification, CI, deployment.
 - `docs/deployment.md` - Firebase deploy flow, CI secrets, rollback, deployment troubleshooting.
 - `docs/release-checklist.md` - manual and automated release checks.
+- `docs/debugging-guide.md` - bug reproduction and diagnosis methodology (log collection, environment isolation, `git bisect`, minimal reproducible examples, flaky tests).
+- `docs/repo-health-routine.md` - weekly/monthly repo maintenance schedule (dependency review, CI health, secrets scanning, doc freshness, release tagging).
 - `docs/feasibility-engine-interface.md` - calculation/data contract details.
 - `docs/ai-integration-plan.md` - AI panel architecture, prompts, and OpenAI integration.
 - `docs/plans/monetization-marketplace-ai.md` - Stripe/lead-unlock marketplace + monetization design.
