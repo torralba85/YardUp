@@ -221,11 +221,10 @@ export function createAIPanelRoute<Input, Output, Ctx>(
  * Execute one model-requested tool call and return the string handed back to
  * the model as `function_call_output.output`.
  *
- * The happy path (find tool → parse args → run → stringify) is implemented.
- * The FAILURE POLICY is intentionally left to you — it's the safety/UX heart of
- * an agentic pipeline. See the two TODOs below and the RED tests in
- * `ai-pipeline.test.ts` (describe "executeTool"). Agreed default:
- * recover-and-continue (return an `{ error }` payload the model can read).
+ * Failure policy: recover-and-continue. An unknown tool or a throwing tool
+ * returns a JSON `{ error }` payload the model can read and adapt to, rather
+ * than throwing and 502-ing the whole request. Covered by the "executeTool"
+ * tests in `ai-pipeline.test.ts`.
  */
 export async function executeTool<Ctx>(
   tools: AIToolHandler<Ctx>[],
@@ -234,10 +233,8 @@ export async function executeTool<Ctx>(
 ): Promise<string> {
   const tool = tools.find((t) => t.name === call.name);
   if (!tool) {
-    // TODO(you): an unknown tool must not crash the request. Return a JSON
-    // string with an `error` field naming the unknown tool so the model can
-    // recover. (Test: "returns an { error } payload for an unknown tool name".)
-    throw new Error(`TODO: decide unknown-tool policy for "${call.name}"`);
+    // Recover: let the model see the unknown tool and adapt, not crash.
+    return JSON.stringify({ error: `Unknown tool: ${call.name}` });
   }
 
   try {
@@ -245,10 +242,9 @@ export async function executeTool<Ctx>(
     const result = await tool.execute(args, ctx);
     return JSON.stringify(result);
   } catch (err) {
-    // TODO(you): pick the failure policy. Agreed default = recover-and-continue:
-    // return JSON.stringify({ error: <message> }) so the model sees the failure
-    // and adapts, instead of re-throwing (which 502s the whole request). Swap to
-    // `throw err` for fail-fast. (Test: "recovers from a throwing tool ...".)
-    throw err;
+    // Recover-and-continue: surface the failure to the model as data so it can
+    // adapt (e.g. try a different tool) instead of 502-ing the whole request.
+    const message = err instanceof Error ? err.message : "Tool execution failed.";
+    return JSON.stringify({ error: message });
   }
 }
