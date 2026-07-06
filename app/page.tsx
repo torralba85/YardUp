@@ -7,6 +7,7 @@ import { SignalLedger } from "@/components/landing/nocturne/SignalLedger";
 import { OwnerPath } from "@/components/landing/nocturne/OwnerPath";
 import { DuskShowcase } from "@/components/landing/nocturne/DuskShowcase";
 import { ClosingCall } from "@/components/landing/nocturne/ClosingCall";
+import { ComingSoonBanner } from "@/components/landing/nocturne/ComingSoonBanner";
 
 // The landing's display face. Loaded here (not in the root layout) so the
 // studio and auth pages don't pay for it; exposed as --font-display-ln for
@@ -40,6 +41,7 @@ export default function LandingPage() {
         <OwnerPath />
         <DuskShowcase />
         <ClosingCall />
+        <ComingSoonBanner />
       </main>
 
       <footer className="border-t border-ln-hairline/60">
