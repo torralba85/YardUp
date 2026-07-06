@@ -36,6 +36,9 @@ import AIPropertyInsightsPanel, {
   createAIPropertyInsightsKey,
 } from "./AIPropertyInsightsPanel";
 import AIStyleMatchPanel from "./AIStyleMatchPanel";
+import AIPermitPathwayPanel, {
+  createAIPermitPathwayKey,
+} from "./AIPermitPathwayPanel";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import { useParcel } from "@/lib/parcel-context";
 
@@ -180,6 +183,15 @@ export default function ConstraintsPanel({
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
           <AIStyleMatchPanel parcel={parcel} config={config} />
+        </div>
+
+        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
+          <AIPermitPathwayPanel
+            key={createAIPermitPathwayKey({ parcel, result, config })}
+            parcel={parcel}
+            result={result}
+            config={config}
+          />
         </div>
       </div>
 

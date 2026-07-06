@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { OpenAIConfigError, OpenAIProviderError } from "@/lib/server/openai";
 
-interface AIRouteErrorMessages {
+export interface AIRouteErrorMessages {
   config: string;
   provider: string;
   syntax: string;

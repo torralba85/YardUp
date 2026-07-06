@@ -11,9 +11,20 @@ interface OpenAIOutputItem {
   type?: string;
   result?: string;
   content?: OpenAITextContent[];
+  // Present on `function_call` items when the model invokes a tool.
+  id?: string;
+  call_id?: string;
+  name?: string;
+  arguments?: string;
 }
 
-interface OpenAIResponseShape {
+export interface OpenAIFunctionCall {
+  call_id: string;
+  name: string;
+  arguments: string;
+}
+
+export interface OpenAIResponseShape {
   output_text?: string;
   output?: OpenAIOutputItem[];
   error?: { message?: string };
@@ -101,4 +112,29 @@ export function extractGeneratedImageBase64(response: OpenAIResponseShape): stri
     }
   }
   return null;
+}
+
+/**
+ * Pull the model's tool invocations out of a Responses API reply.
+ *
+ * Returns one entry per `function_call` output item (in order), each carrying
+ * the `call_id` needed to submit its result and the JSON-encoded `arguments`
+ * string the model produced. Non-tool items (messages, refusals) are ignored.
+ *
+ * @param response - A raw OpenAI Responses API reply.
+ * @returns The tool calls the caller must execute, or `[]` if the model
+ *   returned a final answer instead of calling tools.
+ */
+export function extractFunctionCalls(response: OpenAIResponseShape): OpenAIFunctionCall[] {
+  const calls: OpenAIFunctionCall[] = [];
+  for (const item of response.output ?? []) {
+    if (item.type === "function_call" && item.call_id && item.name) {
+      calls.push({
+        call_id: item.call_id,
+        name: item.name,
+        arguments: item.arguments ?? "{}",
+      });
+    }
+  }
+  return calls;
 }

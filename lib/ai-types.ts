@@ -32,3 +32,41 @@ export interface AIADUConcept {
   imageDataUrl: string;
   disclaimer: string;
 }
+
+export interface AIPermitStage {
+  name: string;
+  description: string;
+  estWeeksLow: number;
+  estWeeksHigh: number;
+  status: "clear" | "review" | "blocker";
+}
+
+export interface AIPermitPathway {
+  headline: string;
+  summary: string;
+  track: {
+    name: string;
+    type: "ministerial" | "discretionary";
+    basis: string;
+  };
+  stages: AIPermitStage[];
+  reviewFlags: AIParcelRisk[];
+  totalEstWeeksLow: number;
+  totalEstWeeksHigh: number;
+  recommendedNextSteps: string[];
+  disclaimer: string;
+}
+
+export interface AIPermitPathwayInput {
+  parcel: Parcel & { zoning?: string; source?: string };
+  config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
+  result: Pick<
+    FeasibilityResult,
+    | "aduSqft"
+    | "zoningStatus"
+    | "coveragePercent"
+    | "maxCoveragePercent"
+    | "remainingCapacity"
+    | "warnings"
+  >;
+}
