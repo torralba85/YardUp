@@ -68,8 +68,8 @@ automatically.
 New issues are triaged using `.github/triage_checklist.md`. Use
 `.github/ISSUE_TEMPLATE/bug_report.md` for bugs and
 `.github/ISSUE_TEMPLATE/feature_request.md` for feature/enhancement requests.
-Labels are defined in `.github/labels.yml`; priority (`P0`-`P3`) is assigned
-using the severity × impact matrix in `docs/repo-governance.md`.
+Priority (`P0`-`P3`) is assigned using the severity × impact matrix in
+`docs/repo-governance.md`.
 
 ## Stale branches
 

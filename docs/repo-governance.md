@@ -12,7 +12,6 @@ files:
 - `.github/triage_checklist.md` — per-issue triage steps
 - `.github/stale_branch_cleanup.md` — monthly branch audit
 - `.github/dependabot.yml` — automated dependency PRs
-- `.github/labels.yml` — canonical label taxonomy (source of truth for names/colors)
 
 This doc covers what those don't: the priority matrix triage uses, how to
 debug and bisect a regression, the recurring repo-health routine, and the

@@ -12,8 +12,8 @@ Follow these steps for every newly submitted issue before assigning prioritizati
   - *Action if missing/unclear:* Apply `status: needs-repro` label and request missing details.
 - [ ] **Security Screening:** Ensure the issue does not expose raw API keys, production tokens, or sensitive user data.
   - *Action if leaked:* Immediately edit/delete the post content and cycle any leaked credentials.
-- [ ] **Apply Classification Labels:** see `.github/labels.yml` for the full taxonomy.
-  - [ ] `type: bug`, `type: feature`, `type: chore`, `type: docs`, or `type: security`.
+- [ ] **Apply Classification Labels:**
+  - [ ] `type: bug`, `type: feature`, or `type: chore`.
   - [ ] Component tags (e.g., `area: auth`, `area: firebase`, `area: studio`).
 - [ ] **Determine Priority:** Evaluate Severity vs. Impact and apply a single priority tag: `P0`, `P1`, `P2`, or `P3`. See the matrix in `docs/repo-governance.md#priority-framework-severity--impact`.
 - [ ] **Assign Ownership:** If it's a P0/P1 issue, assign it to a team member or milestone. If suitable for community, apply `good-first-issue`.
