@@ -1,4 +1,10 @@
-import type { AIADUConcept, AIParcelInsights, AIParcelInsightsInput } from "./ai-types";
+import type {
+  AIADUConcept,
+  AIParcelInsights,
+  AIParcelInsightsInput,
+  AIPermitPathway,
+  AIPermitPathwayInput,
+} from "./ai-types";
 import type { ADUConfig, Parcel } from "./feasibility";
 
 export class AIRequestError extends Error {
@@ -22,6 +28,23 @@ export async function requestParcelInsights(
 
   if (!res.ok) throw new AIRequestError(await readError(res));
   return (await res.json()) as AIParcelInsights;
+}
+
+export async function requestPermitPathway(
+  input: AIPermitPathwayInput,
+  idToken?: string,
+): Promise<AIPermitPathway> {
+  const res = await fetch("/api/ai/permit-pathway", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) throw new AIRequestError(await readError(res));
+  return (await res.json()) as AIPermitPathway;
 }
 
 export async function requestADUConcept({
