@@ -24,6 +24,7 @@ test.describe("Visual breakpoint coverage", () => {
       // Always-rendered closing CTA heading — stable across hero variants.
       const heading = page.getByRole("heading", { name: /Know what to ask before you spend on plans/i });
       await expect(heading).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Take the studio to the yard/i })).toBeVisible();
 
       const widths = await page.evaluate(() => ({
         doc: document.documentElement.scrollWidth,
