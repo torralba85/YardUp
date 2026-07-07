@@ -687,7 +687,7 @@ export default function BuilderInbox({
                                         </div>
                                       </div>
 
-                                      <div className="text-[9px] font-mono text-center border-2 border-lf-brick/30 text-lf-brick py-1 font-bold uppercase tracking-wider rotate-[-2deg]">
+                                      <div className="lf-dataprint text-center border-2 border-lf-brick/30 py-1 font-bold text-lf-brick rotate-[-2deg]">
                                         Concept &middot; Not a Permit
                                       </div>
                                     </div>
