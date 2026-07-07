@@ -1,6 +1,6 @@
 # LotFoundry — Agent Guide
 
-**Last updated:** 2026-06-27 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
+**Last updated:** 2026-07-06 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
 
 ---
 
@@ -13,7 +13,7 @@
 - **3D Scene:** `@react-three/fiber` + `@react-three/drei` + Three.js 0.164
 - **Backend API:** Firebase Cloud Functions (nodejs22) proxying Regrid parcel data and Google Maps Static aerial images
 - **Hosting:** Firebase Hosting + Cloud Functions
-- **Testing:** Vitest (103 tests passing on 2026-06-08) + Playwright E2E coverage
+- **Testing:** Vitest (~400 tests passing) + Playwright E2E coverage
 
 **What this app IS:**
 - Local-first investor-demo with optional live parcel data via API keys

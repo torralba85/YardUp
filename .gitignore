@@ -29,3 +29,8 @@ preview-shots/
 # Dev-server log artifacts
 next-dev-*.log
 next-dev-*.err.log
+
+# Firebase CLI debug logs
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
