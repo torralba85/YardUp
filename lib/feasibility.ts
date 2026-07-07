@@ -11,6 +11,8 @@
  */
 import type { Parcel } from "./parcel-types";
 export type { Parcel } from "./parcel-types";
+import { calculateZoning } from "./zoning";
+import { calculateFinance } from "./finance";
 
 /** Roof geometry of the ADU; affects per-square-foot construction premium. */
 export type RoofStyle = "shed" | "gable" | "flat";
@@ -310,49 +312,16 @@ export function calculateFeasibility(
   assumptions: FinancialAssumptions,
   expectedRent?: Record<RentScenario, number>,
 ): FeasibilityResult {
-  const aduSqft = config.width * config.length;
-  const totalFootprint = parcel.existingHouseSqft + aduSqft;
-  const allowedFootprint = Math.round(parcel.lotArea * (parcel.maxLotCoveragePercent / 100));
-  const remainingCapacity = allowedFootprint - totalFootprint;
-  const coveragePercent = (totalFootprint / parcel.lotArea) * 100;
-  const baseCostPerSqft = assumptions.costPerSqft[config.finish];
-  const roofPremium = config.roof === "gable" ? 18 : config.roof === "flat" ? 8 : 0;
-  const openingPremium = config.includeOpenings ? 9000 : 0;
-  const hardCost = aduSqft * (baseCostPerSqft + roofPremium) + openingPremium;
-  const costMid = hardCost * assumptions.softCostMultiplier;
-  const costLow = Math.round((costMid * 0.92) / 1000) * 1000;
-  const costHigh = Math.round((costMid * 1.15) / 1000) * 1000;
+  const zoning = calculateZoning(parcel, config);
+  
   // For live parcels, expectedRent is passed separately or estimated from lotArea.
   const rentTable = expectedRent ?? ("expectedRent" in parcel ? (parcel as ParcelPreset).expectedRent : estimateRent(parcel.lotArea));
-  const monthlyRent = rentTable[assumptions.rentScenario];
-  const annualNoi = Math.round(monthlyRent * 12 * (1 - assumptions.operatingExpenseRatio));
-  const paybackYears = Number((costMid / annualNoi).toFixed(1));
-  const warnings: string[] = [];
-
-  if (remainingCapacity < 0) {
-    warnings.push(`Footprint exceeds local coverage allowance by ${Math.abs(remainingCapacity).toLocaleString()} sf.`);
-  }
-
-  if (config.height > 16) {
-    warnings.push("Height should be reviewed against local accessory structure limits.");
-  }
+  
+  const finance = calculateFinance(zoning.aduSqft, config, assumptions, rentTable);
 
   return {
-    aduSqft,
-    totalFootprint,
-    allowedFootprint,
-    remainingCapacity,
-    coveragePercent,
-    maxCoveragePercent: parcel.maxLotCoveragePercent,
-    zoningStatus: remainingCapacity >= 0 ? "Compliant" : "Review needed",
-    costLow,
-    costHigh,
-    costPerSqftLow: Math.round(costLow / aduSqft),
-    costPerSqftHigh: Math.round(costHigh / aduSqft),
-    monthlyRent,
-    annualNoi,
-    paybackYears,
-    warnings,
+    ...zoning,
+    ...finance,
   };
 }
 
