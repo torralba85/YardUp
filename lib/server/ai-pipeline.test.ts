@@ -128,6 +128,80 @@ describe("runAgentic", () => {
     expect(toolRan).toBe(false);
   });
 
+  it("preserves reasoning items while dropping malformed function calls from history", async () => {
+    const reasoningItem = { id: "rs_1", type: "reasoning", summary: [] };
+    const malformedCall = {
+      id: "fc_bad",
+      call_id: "call_bad",
+      type: "function_call",
+      arguments: "{}",
+    };
+    const validCall = {
+      id: "fc_1",
+      call_id: "call_1",
+      type: "function_call",
+      name: "lookup",
+      arguments: "{}",
+    };
+    const { fn, calls } = scriptedResponder([
+      { output: [reasoningItem, malformedCall, validCall] },
+      messageResponse({ answer: "done" }),
+    ]);
+
+    const result = await runAgentic(testDef, { q: "x" }, { q: "x" }, {
+      createResponse: fn,
+      executeTool: async () => "{}",
+    });
+
+    expect(result).toEqual({ answer: "done" });
+    const followUpInput = calls[1].input as Array<Record<string, unknown>>;
+    expect(followUpInput).toContainEqual(reasoningItem);
+    expect(followUpInput).toContainEqual(validCall);
+    expect(followUpInput).not.toContainEqual(malformedCall);
+    expect(
+      followUpInput.filter((item) => item.type === "function_call_output"),
+    ).toEqual([{ type: "function_call_output", call_id: "call_1", output: "{}" }]);
+  });
+
+  it("forces configured tools in sequence before accepting a final output", async () => {
+    const sequenceDef: AIPanelDefinition<TestInput, TestOutput, TestCtx> = {
+      ...testDef,
+      tools: [
+        ...testDef.tools,
+        {
+          name: "bench",
+          description: "Second test tool.",
+          parameters: { type: "object", properties: {}, additionalProperties: false },
+          execute: async () => ({ stages: [] }),
+        },
+      ],
+      requiredToolSequence: ["lookup", "bench"],
+    };
+    const { fn, calls } = scriptedResponder([
+      toolCallResponse("lookup", {}, "call_1"),
+      toolCallResponse("bench", {}, "call_2"),
+      messageResponse({ answer: "done" }),
+    ]);
+
+    const result = await runAgentic(sequenceDef, { q: "x" }, { q: "x" }, {
+      createResponse: fn,
+      executeTool: async () => "{}",
+    });
+
+    expect(result).toEqual({ answer: "done" });
+    expect(calls[0]).toMatchObject({
+      parallel_tool_calls: false,
+      tool_choice: { type: "function", name: "lookup" },
+      tools: [expect.objectContaining({ name: "lookup" })],
+    });
+    expect(calls[1]).toMatchObject({
+      parallel_tool_calls: false,
+      tool_choice: { type: "function", name: "bench" },
+      tools: [expect.objectContaining({ name: "bench" })],
+    });
+    expect(calls[2].tool_choice).toBeUndefined();
+  });
+
   it("stops after maxToolRounds and forces a tool-free finalize", async () => {
     const loopingTool = toolCallResponse("lookup", {}, "call_x");
     const { fn, calls } = scriptedResponder([
@@ -177,11 +251,9 @@ describe("createAIPanelRoute", () => {
   });
 });
 
-// --- executeTool: the tool-execution policy (YOUR contribution) -----------
-// These are RED. Implement the two TODO branches in ai-pipeline.ts's
-// executeTool to make them green. Agreed default: recover-and-continue —
-// a failing or unknown tool returns an { error } payload the model can read,
-// instead of throwing and 502-ing the whole request.
+// --- executeTool: the tool-execution policy -------------------------------
+// Recover-and-continue: a failing or unknown tool returns an { error } payload
+// the model can read, instead of throwing and 502-ing the whole request.
 
 describe("executeTool", () => {
   const tools = [

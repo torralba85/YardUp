@@ -98,6 +98,7 @@ export const permitPathwayDef: AIPanelDefinition<
   // calls per request, so each request costs more.
   rateLimit: { limit: 8, windowMs: 60_000 },
   maxOutputTokens: 1200,
+  requiredToolSequence: ["lookup_permit_tracks", "get_stage_benchmarks"],
   systemPrompt: SYSTEM_PROMPT,
   outputSchema: OUTPUT_SCHEMA,
   validateInput: (raw) => {
@@ -110,7 +111,13 @@ export const permitPathwayDef: AIPanelDefinition<
     }
     return { ok: true, value: input as AIPermitPathwayInput };
   },
-  buildContext: (input) => ({ jurisdiction: input.parcel.city }),
+  buildContext: (input) => {
+    const city = input.parcel.city.trim();
+    const address = input.parcel.address.trim();
+    return {
+      jurisdiction: city.includes(",") || !address ? city : `${city}, ${address}`,
+    };
+  },
   tools: [
     {
       name: "lookup_permit_tracks",

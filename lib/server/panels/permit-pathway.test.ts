@@ -40,4 +40,21 @@ describe("permitPathwayDef tools", () => {
     };
     expect(out.stages.length).toBeGreaterThan(0);
   });
+
+  it("combines city-only live data with the address to recover the state code", async () => {
+    const input = validInput();
+    const cityOnlyInput = {
+      ...input,
+      parcel: {
+        ...input.parcel,
+        address: "1600 Pennsylvania Avenue, Seattle, WA 98115",
+        city: "Seattle",
+      },
+    };
+    const ctx = permitPathwayDef.buildContext(cityOnlyInput);
+    const lookup = permitPathwayDef.tools.find((t) => t.name === "lookup_permit_tracks");
+    const out = (await lookup!.execute({}, ctx)) as { tracks: Array<{ type: string }> };
+
+    expect(out.tracks[0].type).toBe("ministerial");
+  });
 });

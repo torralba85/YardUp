@@ -35,7 +35,8 @@ const TRACKS_BY_STATE: Record<string, PermitTrack[]> = {
       id: "ca-state-adu-ministerial",
       name: "California State ADU (ministerial)",
       type: "ministerial",
-      basis: "Cal. Gov. Code §65852.2 — 60-day ministerial ADU review, no discretionary hearing.",
+      basis:
+        "Cal. Gov. Code §§66310-66342, including §§66317/66335 - 60-day ministerial ADU review, no discretionary hearing.",
     },
   ],
   WA: [

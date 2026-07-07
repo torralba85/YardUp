@@ -26,7 +26,7 @@ export interface OpenAIFunctionCall {
 
 export interface OpenAIResponseShape {
   output_text?: string;
-  output?: OpenAIOutputItem[];
+  output?: Array<OpenAIOutputItem | null | undefined>;
   error?: { message?: string };
 }
 
@@ -91,6 +91,7 @@ export function extractResponseText(response: OpenAIResponseShape): string | nul
   }
 
   for (const item of response.output ?? []) {
+    if (!item) continue;
     if (item.type !== "message") continue;
     for (const content of item.content ?? []) {
       if (content.type === "output_text" && content.text?.trim()) {
@@ -107,6 +108,7 @@ export function extractResponseText(response: OpenAIResponseShape): string | nul
 
 export function extractGeneratedImageBase64(response: OpenAIResponseShape): string | null {
   for (const item of response.output ?? []) {
+    if (!item) continue;
     if (item.type === "image_generation_call" && item.result?.trim()) {
       return item.result;
     }
@@ -128,6 +130,7 @@ export function extractGeneratedImageBase64(response: OpenAIResponseShape): stri
 export function extractFunctionCalls(response: OpenAIResponseShape): OpenAIFunctionCall[] {
   const calls: OpenAIFunctionCall[] = [];
   for (const item of response.output ?? []) {
+    if (!item) continue;
     if (item.type === "function_call" && item.call_id && item.name) {
       calls.push({
         call_id: item.call_id,

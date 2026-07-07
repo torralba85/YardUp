@@ -45,4 +45,28 @@ describe("extractFunctionCalls", () => {
     ).toEqual([]);
     expect(extractFunctionCalls({})).toEqual([]);
   });
+
+  it("ignores nullish or malformed function_call items", () => {
+    expect(
+      extractFunctionCalls({
+        output: [
+          null,
+          undefined,
+          { type: "function_call", call_id: "missing_name", arguments: "{}" },
+          {
+            type: "function_call",
+            call_id: "call_1",
+            name: "lookup_permit_tracks",
+            arguments: "{}",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        call_id: "call_1",
+        name: "lookup_permit_tracks",
+        arguments: "{}",
+      },
+    ]);
+  });
 });

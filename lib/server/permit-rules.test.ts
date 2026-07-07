@@ -7,7 +7,7 @@ describe("lookupPermitTracks", () => {
     expect(tracks.length).toBeGreaterThan(0);
     const ministerial = tracks.find((t) => t.type === "ministerial");
     expect(ministerial).toBeDefined();
-    expect(ministerial?.basis).toMatch(/65852\.2|ministerial/i);
+    expect(ministerial?.basis).toMatch(/66310|66317|ministerial/i);
   });
 
   it("reads the state code from a demo-preset city string", () => {

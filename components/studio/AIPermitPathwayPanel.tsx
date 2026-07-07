@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { AuthModal } from "@/components/auth/AuthModal";
 import { AIRequestError, requestPermitPathway } from "@/lib/ai-api";
 import type { AIPermitPathway, AIPermitStage } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
@@ -50,16 +51,21 @@ export default function AIPermitPathwayPanel({
   result,
   config,
 }: AIPermitPathwayPanelProps) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [pathway, setPathway] = useState<AIPermitPathway | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
 
   async function generatePathway() {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const idToken = await user?.getIdToken();
+      const idToken = await user.getIdToken();
       const data = await requestPermitPathway(
         {
           parcel,
@@ -94,6 +100,12 @@ export default function AIPermitPathwayPanel({
     }
   }
 
+  const stages = Array.isArray(pathway?.stages) ? pathway.stages : [];
+  const reviewFlags = Array.isArray(pathway?.reviewFlags) ? pathway.reviewFlags : [];
+  const recommendedNextSteps = Array.isArray(pathway?.recommendedNextSteps)
+    ? pathway.recommendedNextSteps
+    : [];
+
   return (
     <section aria-label="AI permit pathway" className="space-y-3">
       <div className="flex items-start justify-between gap-3">
@@ -108,17 +120,19 @@ export default function AIPermitPathwayPanel({
         <button
           type="button"
           onClick={generatePathway}
-          disabled={loading}
+          disabled={loading || authLoading}
           className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-lf-espresso px-3 text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
         >
           <Sparkles size={13} />
-          {loading ? "Mapping" : "Generate"}
+          {loading ? "Mapping" : user ? "Generate" : "Sign in"}
         </button>
       </div>
 
       {!pathway && !error && (
         <p className="rounded-lg border border-lf-hairline bg-lf-sand-2 p-3 text-xs leading-5 text-lf-muted">
-          Estimate the likely permit track and review timeline for this jurisdiction, grounded in typical stage durations.
+          {user
+            ? "Estimate the likely permit track and review timeline for this jurisdiction, grounded in typical stage durations."
+            : "Sign in to generate a permit pathway grounded in typical stage durations."}
         </p>
       )}
 
@@ -157,8 +171,8 @@ export default function AIPermitPathwayPanel({
           </div>
 
           <ol className="space-y-1.5">
-            {pathway.stages.map((stage, i) => {
-              const status = STAGE_STATUS[stage.status];
+            {stages.map((stage, i) => {
+              const status = STAGE_STATUS[stage.status] ?? STAGE_STATUS.clear;
               return (
                 <li key={`${stage.name}-${i}`} className="flex items-start gap-2">
                   <span className="mt-0.5 font-mono text-[10px] text-lf-taupe">{i + 1}</span>
@@ -183,9 +197,9 @@ export default function AIPermitPathwayPanel({
             })}
           </ol>
 
-          {pathway.reviewFlags.length > 0 && (
+          {reviewFlags.length > 0 && (
             <div className="space-y-2">
-              {pathway.reviewFlags.map((flag) => (
+              {reviewFlags.map((flag) => (
                 <div
                   key={`${flag.label}-${flag.level}`}
                   className="rounded-md border border-lf-hairline bg-lf-card p-2"
@@ -202,17 +216,20 @@ export default function AIPermitPathwayPanel({
             </div>
           )}
 
-          <ol className="list-decimal space-y-1 pl-4 text-xs leading-5 text-lf-muted">
-            {pathway.recommendedNextSteps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
+          {recommendedNextSteps.length > 0 && (
+            <ol className="list-decimal space-y-1 pl-4 text-xs leading-5 text-lf-muted">
+              {recommendedNextSteps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          )}
 
           <p className="border-t border-lf-hairline pt-2 text-[11px] leading-4 text-lf-muted">
             {pathway.disclaimer}
           </p>
         </div>
       )}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </section>
   );
 }

@@ -17,7 +17,7 @@ import {
 const DEFAULT_TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
 const DEFAULT_MAX_OUTPUT_TOKENS = 1000;
 const DEFAULT_MAX_TOOL_ROUNDS = 4;
-const DEFAULT_DEADLINE_MS = 90_000;
+const DEFAULT_DEADLINE_MS = 75_000;
 
 /**
  * A deterministic, server-side function the model may call mid-generation.
@@ -64,6 +64,8 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
   maxToolRounds?: number;
   /** Cumulative wall-clock budget across all model calls. */
   deadlineMs?: number;
+  /** Ordered tool names that must run before a final answer can be accepted. */
+  requiredToolSequence?: string[];
 }
 
 /** Injectable side-effects, so the loop is unit-testable without the network. */
@@ -99,6 +101,18 @@ function parseFinal<Output>(res: OpenAIResponseShape): Output {
   return JSON.parse(text) as Output;
 }
 
+function outputItemsForHistory(
+  res: OpenAIResponseShape,
+  calls: OpenAIFunctionCall[],
+): unknown[] {
+  const callIds = new Set(calls.map((call) => call.call_id));
+  return (res.output ?? []).filter((item) => {
+    if (!item) return false;
+    if (item.type !== "function_call") return true;
+    return Boolean(item.call_id && item.name && callIds.has(item.call_id));
+  });
+}
+
 /**
  * Run one panel's request as an agentic loop: the model may call allow-listed
  * tools, we execute them server-side and thread the results back, and it
@@ -117,6 +131,7 @@ export async function runAgentic<Input, Output, Ctx>(
   const maxToolRounds = def.maxToolRounds ?? DEFAULT_MAX_TOOL_ROUNDS;
   const deadline = Date.now() + (def.deadlineMs ?? DEFAULT_DEADLINE_MS);
   const toolSchemas = def.tools.map(toResponsesToolSchema);
+  const completedRequiredTools = new Set<string>();
   const format = {
     type: "json_schema",
     name: def.id.replace(/-/g, "_"),
@@ -130,25 +145,47 @@ export async function runAgentic<Input, Output, Ctx>(
   ];
 
   for (let round = 0; round < maxToolRounds; round++) {
+    const nextRequiredTool = def.requiredToolSequence?.find(
+      (toolName) => !completedRequiredTools.has(toolName),
+    );
+    const activeToolSchemas = nextRequiredTool
+      ? toolSchemas.filter((tool) => tool.name === nextRequiredTool)
+      : toolSchemas;
+    if (nextRequiredTool && activeToolSchemas.length === 0) {
+      throw new OpenAIProviderError(`Required tool "${nextRequiredTool}" is not configured.`);
+    }
+
     const res = await deps.createResponse({
       model,
       max_output_tokens: maxOutputTokens,
       input: running,
-      tools: toolSchemas.length > 0 ? toolSchemas : undefined,
+      tools: activeToolSchemas.length > 0 ? activeToolSchemas : undefined,
+      ...(activeToolSchemas.length > 0 ? { parallel_tool_calls: false } : {}),
+      ...(nextRequiredTool
+        ? { tool_choice: { type: "function", name: nextRequiredTool } }
+        : {}),
       text: { format },
     });
 
     const calls = extractFunctionCalls(res);
-    if (calls.length === 0) return parseFinal<Output>(res);
+    if (calls.length === 0) {
+      if (nextRequiredTool) {
+        throw new OpenAIProviderError(
+          `OpenAI did not call required tool "${nextRequiredTool}".`,
+        );
+      }
+      return parseFinal<Output>(res);
+    }
 
-    const callItems = (res.output ?? []).filter((item) => item.type === "function_call");
+    const responseHistory = outputItemsForHistory(res, calls);
     const outputs = await Promise.all(
       calls.map((call) => deps.executeTool(def.tools, call, ctx)),
     );
+    for (const call of calls) completedRequiredTools.add(call.name);
 
     running = [
       ...running,
-      ...callItems,
+      ...responseHistory,
       ...outputs.map((output, i) => ({
         type: "function_call_output",
         call_id: calls[i].call_id,
