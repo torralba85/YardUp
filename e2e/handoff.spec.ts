@@ -17,19 +17,16 @@ test.describe("landing → studio handoff", () => {
     await page.getByRole("button", { name: /run feasibility/i }).click();
 
     await expect(page).toHaveURL(/\/studio/);
-    // Seam rule: a money figure within 3 seconds of arrival (arrival plate
-    // and the step-1 MoneyFigure both stamp data-money).
+    // Seam rule (DESIGN.md): a money-green figure within 3s of arrival — the
+    // dawn arrival plate stamps data-money while Firebase auth resolves.
     await expect(page.locator("[data-money]").first()).toBeVisible({ timeout: 3000 });
-    // The studio renders past the arrival plate into step 1's address survey.
-    // The "If built" income teaser is gated to a *resolved* lot; a failed
-    // search stays on the demo preset (parcelMode "preset"), so it correctly
-    // stays hidden here — the money moment is carried by the arrival plate's
-    // data-money above.
-    await expect(
-      page.getByRole("heading", { name: /start with your address/i }),
-    ).toBeVisible();
-    // The handed-off search ran (and failed for this unresolvable address).
+    // The handed-off search ran and failed for this unresolvable address
+    // (15s absorbs the geocode round trip; the banner surfaces with or without keys).
     await expect(page.getByRole("alert")).toBeVisible({ timeout: 15000 });
+    // Money moment survives: the desktop studio opens on Feasibility with the
+    // demo preset, so its "If built" income figure stays on screen after the
+    // failed search settles. 15s absorbs auth + the search round trip.
+    await expect(page.getByText("If built").first()).toBeVisible({ timeout: 15000 });
     // Privacy: the typed address never reaches the URL.
     expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });
