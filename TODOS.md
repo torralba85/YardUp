@@ -99,6 +99,13 @@ P1 - release-hardening tasks an agent can prepare:
 - Run an agency-bar visual QA sweep against `DESIGN.md` for landing, studio,
   builder, auth, certificate/report, and mobile breakpoints; file issues for
   any typography, radius, or semantic-color drift.
+- Honor parcel query and address handoff on mobile/tablet studio entry so the
+  first visible state includes the selected lot and a money figure, not the
+  generic onboarding plate.
+- Expand auth secondary links and footer links to 44px tap targets while
+  preserving the compact Golden Hour auth layout.
+- Audit shared studio controls and tabs for 44px interaction targets; keep
+  read-only data chips compact per the pill-radius system.
 
 P2 - larger agent work that needs a focused branch:
 
