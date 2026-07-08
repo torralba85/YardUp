@@ -26,6 +26,11 @@ test.describe("Visual breakpoint coverage", () => {
       await expect(heading).toBeVisible();
       await expect(page.getByRole("heading", { name: /Take the studio to the yard/i })).toBeVisible();
 
+      // The certificate specimen (steps 04–05) must survive every breakpoint.
+      await expect(
+        page.getByRole("heading", { name: /certificate meets your builder/i }),
+      ).toBeVisible();
+
       const widths = await page.evaluate(() => ({
         doc: document.documentElement.scrollWidth,
         win: window.innerWidth,

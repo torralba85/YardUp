@@ -14,7 +14,7 @@ import {
 } from "@/remotion/nocturne/constants";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { DawnRampOverlay, DAWN_RAMP_MS } from "./DawnStudioLink";
-import { TYPICAL_MARKET } from "./typical-market";
+import { TYPICAL_MARKET } from "@/lib/typical-market";
 import { useHeroProgress } from "./use-hero-progress";
 import {
   SURVEY_RAIL,

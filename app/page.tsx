@@ -6,6 +6,7 @@ import { BlueHourHero } from "@/components/landing/nocturne/BlueHourHero";
 import { SignalLedger } from "@/components/landing/nocturne/SignalLedger";
 import { OwnerPath } from "@/components/landing/nocturne/OwnerPath";
 import { DuskShowcase } from "@/components/landing/nocturne/DuskShowcase";
+import { CertificateSpecimen } from "@/components/landing/nocturne/CertificateSpecimen";
 import { ClosingCall } from "@/components/landing/nocturne/ClosingCall";
 import { ComingSoonBanner } from "@/components/landing/nocturne/ComingSoonBanner";
 
@@ -40,6 +41,7 @@ export default function LandingPage() {
         <SignalLedger />
         <OwnerPath />
         <DuskShowcase />
+        <CertificateSpecimen />
         <ClosingCall />
         <ComingSoonBanner />
       </main>

@@ -4,7 +4,7 @@ import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { TYPICAL_MARKET } from "./typical-market";
+import { TYPICAL_MARKET } from "@/lib/typical-market";
 
 export const DAWN_RAMP_MS = 520;
 
