@@ -19,16 +19,24 @@ export function nextStep(step: WizardStep): WizardStep {
 
 interface ShowWizardInput {
   hasUrlScenario: boolean;
+  /** True when a landing-hero address handoff is waiting to be consumed. */
+  hasPendingAddress: boolean;
   storage: Pick<Storage, "getItem">;
 }
 
 /**
- * Show the wizard only to fresh visitors opening a clean URL. Fails closed
- * (no wizard) if storage is unavailable — a broken first-run overlay is
- * worse than no overlay.
+ * Show the wizard only to fresh visitors opening a clean URL with no pending
+ * address handoff — a visitor who already typed their address on the landing
+ * must arrive in the searched studio, not an onboarding modal (DESIGN.md
+ * dawn-ramp seam rule). Fails closed (no wizard) if storage is unavailable —
+ * a broken first-run overlay is worse than no overlay.
  */
-export function shouldShowWizard({ hasUrlScenario, storage }: ShowWizardInput): boolean {
-  if (hasUrlScenario) return false;
+export function shouldShowWizard({
+  hasUrlScenario,
+  hasPendingAddress,
+  storage,
+}: ShowWizardInput): boolean {
+  if (hasUrlScenario || hasPendingAddress) return false;
   try {
     return storage.getItem(WIZARD_SEEN_KEY) !== "1";
   } catch {

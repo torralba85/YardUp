@@ -30,7 +30,7 @@ import {
   deleteSavedScenario,
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
-import { consumeAddressQuery } from "@/lib/address-handoff";
+import { consumeAddressQuery, peekAddressQuery } from "@/lib/address-handoff";
 import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
@@ -236,7 +236,16 @@ function FeasibilityStudioInner() {
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 1024px)").matches) return; // desktop never sees the wizard
     const hasUrlScenario = window.location.search.length > 1;
-    setWizardOpen(shouldShowWizard({ hasUrlScenario, storage: window.localStorage }));
+    setWizardOpen(
+      shouldShowWizard({
+        hasUrlScenario,
+        // A landing handoff is about to run its own search — the wizard must
+        // yield or it would ask for the address the visitor already typed.
+        // Peek, don't consume: the hydration effect below still needs it.
+        hasPendingAddress: peekAddressQuery() !== null,
+        storage: window.localStorage,
+      }),
+    );
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
