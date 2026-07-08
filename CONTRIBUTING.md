@@ -68,6 +68,8 @@ automatically.
 New issues are triaged using `.github/triage_checklist.md`. Use
 `.github/ISSUE_TEMPLATE/bug_report.md` for bugs and
 `.github/ISSUE_TEMPLATE/feature_request.md` for feature/enhancement requests.
+Priority (`P0`-`P3`) is assigned using the severity × impact matrix in
+`docs/repo-governance.md`.
 
 ## Stale branches
 
@@ -85,3 +87,9 @@ release tagging), see `docs/repo-health-routine.md`.
 
 Do not open public issues for suspected vulnerabilities — see `SECURITY.md`
 for private reporting via GitHub Security Advisories.
+
+## Repository health & release process
+
+See `docs/repo-governance.md` for the debugging/bisect methodology, the
+weekly/monthly repo-health routine (Dependabot review, `npm audit`, secret
+scanning, doc freshness), and the changelog/release-tagging strategy.

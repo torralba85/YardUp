@@ -87,6 +87,7 @@ Key entry points:
 - `docs/feasibility-engine-interface.md` - calculation/data contract details.
 - `docs/ai-integration-plan.md` - AI panel architecture, prompts, and OpenAI integration.
 - `docs/plans/monetization-marketplace-ai.md` - Stripe/lead-unlock marketplace + monetization design.
+- `docs/repo-governance.md` - issue priority matrix, debugging/bisect methodology, repo health routine, release/changelog strategy.
 - `docs/superpowers/plans/*` and `docs/superpowers/specs/*` - dated per-feature plans and design specs.
 
 ## Design System
