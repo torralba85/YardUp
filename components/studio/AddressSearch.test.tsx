@@ -29,8 +29,11 @@ describe("AddressSearch", () => {
     render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
 
     const button = screen.getByRole("button", { name: /search/i });
-    expect(button.className).toContain("h-7");
-    expect(button.className).toContain("right-2.5");
+    expect(button.classList.contains("h-7")).toBe(true);
+    expect(button.classList.contains("right-2.5")).toBe(true);
+    // The exact values that made the button protrude must not come back.
+    expect(button.classList.contains("h-8")).toBe(false);
+    expect(button.classList.contains("right-1.5")).toBe(false);
   });
 
   it("submits typed addresses through the free-text search path", async () => {
