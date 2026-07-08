@@ -1,5 +1,5 @@
 import { Reveal } from "./Reveal";
-import { TYPICAL_MARKET } from "./typical-market";
+import { TYPICAL_MARKET } from "@/lib/typical-market";
 
 const FIGURES = [
   { label: "Rent potential", value: TYPICAL_MARKET.rentBand, unit: "/mo", money: true },
