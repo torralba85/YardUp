@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useParcel } from "@/lib/parcel-context";
+import { Lock } from "lucide-react";
 import { buildEstimatedParcel, type EstimatedParcel } from "@/lib/estimated-parcel";
 import {
   calculateFeasibility,
@@ -203,7 +204,10 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
               </div>
             </div>
             <div className="mt-4 rounded-2xl border-2 border-dashed border-lf-clay/60 bg-lf-card p-4 text-center">
-              <p className="font-semibold text-lf-espresso">🔒 Unlock your exact numbers</p>
+              <p className="inline-flex items-center justify-center gap-2 font-semibold text-lf-espresso">
+                <Lock size={14} aria-hidden className="text-lf-clay" />
+                Unlock your exact numbers
+              </p>
               <p className="mt-1 text-xs text-lf-muted">Free account · real parcel data for your address</p>
             </div>
             <button
