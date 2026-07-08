@@ -19,6 +19,21 @@ afterEach(() => {
 });
 
 describe("AddressSearch", () => {
+  it("keeps the embedded Search button nested inside the rounded-full input", () => {
+    // Regression: the input is a 44px (h-11) `rounded-full` pill, so its border
+    // curves inward at the top/bottom-right. A 32px (h-8) button pinned 6px
+    // (right-1.5) from the edge pokes its rounded corners past that curve. The
+    // button must stay shorter than the input and inset far enough to nest
+    // concentrically — jsdom can't measure layout, so guard the class tokens.
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
+
+    const button = screen.getByRole("button", { name: /search/i });
+    expect(button.className).toContain("h-7");
+    expect(button.className).toContain("right-2.5");
+    expect(button.className).not.toContain("h-8");
+    expect(button.className).not.toMatch(/right-1\.5\b/);
+  });
+
   it("submits typed addresses through the free-text search path", async () => {
     const user = userEvent.setup();
     const onSubmitText = vi.fn();
