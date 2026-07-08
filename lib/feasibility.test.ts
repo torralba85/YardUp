@@ -15,7 +15,7 @@ describe("calculateFeasibility", () => {
     // Checks that zoning results are present
     expect(result.aduSqft).toBe(600);
     expect(result.zoningStatus).toBe("Compliant");
-    
+
     // Checks that finance results are present
     expect(result.monthlyRent).toBe(2050); // conservative scenario on oak-street
     expect(result.paybackYears).toBeGreaterThan(0);

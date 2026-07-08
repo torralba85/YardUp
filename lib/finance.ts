@@ -15,7 +15,7 @@ export interface FinanceResult {
 
 /**
  * Calculates the construction cost range, rental income, and simple payback.
- * 
+ *
  * @param aduSqft - Floor area in square feet.
  * @param config - The proposed ADU design parameters.
  * @param assumptions - Cost and income assumptions to apply.
@@ -35,7 +35,7 @@ export function calculateFinance(
   const costMid = hardCost * assumptions.softCostMultiplier;
   const costLow = Math.round((costMid * 0.92) / 1000) * 1000;
   const costHigh = Math.round((costMid * 1.15) / 1000) * 1000;
-  
+
   const monthlyRent = rentTable[assumptions.rentScenario];
   const annualNoi = Math.round(monthlyRent * 12 * (1 - assumptions.operatingExpenseRatio));
   const paybackYears = Number((costMid / annualNoi).toFixed(1));

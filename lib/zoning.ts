@@ -17,7 +17,7 @@ export interface ZoningResult {
 
 /**
  * Calculates zoning compliance, lot coverage, and surface warnings.
- * 
+ *
  * @param parcel - The lot being analyzed.
  * @param config - The proposed ADU design parameters.
  * @returns A ZoningResult indicating if the design fits within the coverage allowance.
@@ -28,7 +28,7 @@ export function calculateZoning(parcel: Parcel, config: ADUConfig): ZoningResult
   const allowedFootprint = Math.round(parcel.lotArea * (parcel.maxLotCoveragePercent / 100));
   const remainingCapacity = allowedFootprint - totalFootprint;
   const coveragePercent = (totalFootprint / parcel.lotArea) * 100;
-  
+
   const warnings: string[] = [];
 
   if (remainingCapacity < 0) {

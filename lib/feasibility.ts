@@ -313,10 +313,10 @@ export function calculateFeasibility(
   expectedRent?: Record<RentScenario, number>,
 ): FeasibilityResult {
   const zoning = calculateZoning(parcel, config);
-  
+
   // For live parcels, expectedRent is passed separately or estimated from lotArea.
   const rentTable = expectedRent ?? ("expectedRent" in parcel ? (parcel as ParcelPreset).expectedRent : estimateRent(parcel.lotArea));
-  
+
   const finance = calculateFinance(zoning.aduSqft, config, assumptions, rentTable);
 
   return {
