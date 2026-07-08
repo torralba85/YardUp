@@ -372,7 +372,7 @@ export function BlueHourHero() {
                     aria-current={active ? "step" : undefined}
                     aria-label={index === 0 ? entry.label : `Jump to ${entry.label}`}
                     onClick={() => jumpToPhase(entry.target)}
-                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
+                    className={`inline-flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
                       active
                         ? "border-ln-glow/70 bg-ln-glow/15 text-ln-glow"
                         : "border-ln-hairline text-ln-slate hover:border-ln-slate/60 hover:text-ln-mist"
