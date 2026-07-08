@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import StudioPage from "./page";
+import { TYPICAL_MARKET } from "@/lib/typical-market";
 
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -40,13 +41,17 @@ describe("StudioPage", () => {
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
-  it("shows the loading splash while auth state resolves", () => {
+  it("shows the dawn arrival plate with the typical money band while auth resolves", () => {
     mocks.authState.loading = true;
 
     render(<StudioPage />);
 
     expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
-    expect(screen.getByText("Loading studio...")).toBeInTheDocument();
+    // Seam rule (DESIGN.md): a money-green figure must be visible on arrival —
+    // never a bare "Loading studio..." spinner state.
+    expect(screen.queryByText("Loading studio...")).not.toBeInTheDocument();
+    expect(screen.getByText(TYPICAL_MARKET.rentBand)).toBeInTheDocument();
+    expect(screen.getByText(/typical supported markets/i)).toBeInTheDocument();
   });
 
   it("renders the studio for signed-in users", () => {
