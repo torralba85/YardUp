@@ -205,7 +205,7 @@ See `DESIGN.md` for the full brand spec and use it as the source of truth before
 
 ## Current Status
 
-_Last updated 2026-07-02 (guided-spine release train)._
+_Last updated 2026-07-07 (P5 landing handoff)._
 
 | Dimension | Status | Notes |
 |---|---|---|
@@ -213,6 +213,7 @@ _Last updated 2026-07-02 (guided-spine release train)._
 | Core Feasibility Logic | ✅ Complete | 3 presets + live parcel (Regrid) + wizard estimates; market-basis rents |
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
 | Guided Spine (P0–P4) | ✅ Landed | Single step model: Lot → Feasibility → Design → Certificate → Builders on desktop rail + mobile progress spine; step-scoped mobile bottom sheet |
+| Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; wizard yields to a pending handoff; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
 | Monetization | ✅ Implemented | Stripe paid certificate purchase (P3) + builder lead-unlock marketplace; `LOTFOUNDRY_DEMO_UNLOCKS` for dev |
 | AI Panels | ✅ Implemented | Parcel insights + style-matched ADU concepts (auth + rate-limited server routes) |
 | Testing | ✅ ~400 Vitest tests + Playwright desktop/mobile | Full gate green 2026-07-02 |
