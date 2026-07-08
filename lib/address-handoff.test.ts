@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { consumeAddressQuery, stashAddressQuery } from "./address-handoff";
+import { consumeAddressQuery, peekAddressQuery, stashAddressQuery } from "./address-handoff";
 
 describe("address-handoff", () => {
   beforeEach(() => {
@@ -44,6 +44,31 @@ describe("address-handoff", () => {
     // No raw address should linger anywhere in session storage.
     const dump = JSON.stringify({ ...window.sessionStorage });
     expect(dump).not.toContain("456 Pine St");
+  });
+
+  it("peeks at the stashed address without consuming it", () => {
+    stashAddressQuery("456 Pine St, Denver, CO");
+    expect(peekAddressQuery()).toBe("456 Pine St, Denver, CO");
+    // Peeking must not consume — the studio's hydration effect still needs it.
+    expect(consumeAddressQuery()).toBe("456 Pine St, Denver, CO");
+  });
+
+  it("peek returns null when nothing is stashed", () => {
+    expect(peekAddressQuery()).toBeNull();
+  });
+
+  it("peek degrades to null when sessionStorage reads throw", () => {
+    vi.stubGlobal("sessionStorage", {
+      getItem: () => {
+        throw new Error("storage blocked");
+      },
+      setItem: () => {},
+      removeItem: () => {},
+      clear: () => {},
+      key: () => null,
+      length: 0,
+    });
+    expect(peekAddressQuery()).toBeNull();
   });
 
   // jsdom's Storage methods can't be intercepted via vi.spyOn(window.sessionStorage, …),

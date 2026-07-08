@@ -39,6 +39,25 @@ export function stashAddressQuery(address: string): void {
 }
 
 /**
+ * Read the stashed address without removing it (non-destructive peek).
+ *
+ * Used by the studio's first-run-wizard gate: the wizard must yield when an
+ * address handoff is pending, but consumption happens later in the hydration
+ * effect, so the peek must leave the value in place.
+ *
+ * @returns The handed-off address, or null when nothing is stashed or session
+ *   storage is unavailable.
+ */
+export function peekAddressQuery(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage.getItem(ADDRESS_HANDOFF_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Read and remove the stashed address (consume-once).
  *
  * @returns The handed-off address, or null when nothing was stashed or session
