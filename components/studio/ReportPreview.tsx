@@ -138,7 +138,7 @@ export default function ReportPreview({
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-lf-mahogany text-xs font-semibold text-lf-sand-2 transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-lf-clay text-xs font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <Printer size={14} />
               Print / Save
@@ -146,7 +146,7 @@ export default function ReportPreview({
             <button
               type="button"
               onClick={onDownload}
-              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <Download size={14} />
               Download
@@ -155,7 +155,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onExportCsv}
-                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <FileSpreadsheet size={14} />
                 CSV Export
@@ -165,7 +165,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onShare}
-                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-lf-hairline text-xs font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <Share2 size={14} />
                 <span className="truncate">{shareNotice ?? "Share Link"}</span>
@@ -175,7 +175,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onConnectBuilders}
-                className="col-span-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-lf-mahogany text-xs font-semibold text-lf-sand-2 transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="col-span-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-lf-clay text-xs font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <Hammer size={14} />
                 Connect with local builders

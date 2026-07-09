@@ -104,7 +104,7 @@ export default function AIPropertyInsightsPanel({
           type="button"
           onClick={generateInsights}
           disabled={loading}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-lf-espresso px-3 text-xs font-semibold text-lf-sand transition hover:bg-lf-mahogany disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-lf-clay px-3 text-xs font-semibold text-lf-sand transition hover:bg-lf-clay-strong disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
         >
           <Sparkles size={13} />
           {loading ? "Reading" : "Generate"}

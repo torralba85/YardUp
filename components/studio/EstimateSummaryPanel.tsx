@@ -134,7 +134,6 @@ export default function EstimateSummaryPanel({
           fullWidth
           loading={reportCtaBusy}
           leftIcon={<FileText size={16} />}
-          className="bg-lf-mahogany text-lf-sand-2 hover:bg-lf-espresso"
         >
           {reportCtaLabel}
         </Button>
