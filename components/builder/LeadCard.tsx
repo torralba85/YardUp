@@ -141,7 +141,7 @@ export default function LeadCard({
             aria-pressed={item.response.status === "interested"}
             className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
               item.response.status === "interested"
-                ? "bg-lf-mahogany text-lf-sand"
+                ? "bg-lf-clay text-lf-sand"
                 : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
             }`}
           >

@@ -530,7 +530,7 @@ export default function BuilderInbox({
                                     aria-pressed={selectedItem.response.status === "interested"}
                                     className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
                                       selectedItem.response.status === "interested"
-                                        ? "bg-lf-mahogany text-lf-sand"
+                                        ? "bg-lf-clay text-lf-sand"
                                         : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
                                     }`}
                                   >
@@ -701,7 +701,7 @@ export default function BuilderInbox({
                                   type="button"
                                   onClick={handleDownloadHtml}
                                   disabled={!itemContact.snapshot?.result}
-                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-full bg-lf-mahogany text-[10px] font-semibold text-lf-sand-2 transition hover:bg-lf-espresso cursor-pointer disabled:opacity-50"
+                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-full bg-lf-clay text-[10px] font-semibold text-lf-sand-2 transition hover:bg-lf-clay-strong cursor-pointer disabled:opacity-50"
                                 >
                                   <Download size={11} />
                                   Download HTML
@@ -730,7 +730,7 @@ export default function BuilderInbox({
                                     aria-pressed={selectedItem.response.status === "interested"}
                                     className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
                                       selectedItem.response.status === "interested"
-                                        ? "bg-lf-mahogany text-lf-sand"
+                                        ? "bg-lf-clay text-lf-sand"
                                         : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
                                     }`}
                                   >
