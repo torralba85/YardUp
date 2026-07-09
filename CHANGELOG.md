@@ -10,12 +10,21 @@ All notable changes to LotFoundry are documented here. Format follows
 - Repository governance doc (`docs/repo-governance.md`) covering the issue
   priority matrix, debugging/bisect methodology, repo health routine, and
   release/changelog strategy.
+- Focused Playwright coverage for the address-suggest flow
+  (`e2e/address-suggest.spec.ts`): a mocked local `/api/suggest` fallback test,
+  plus an opt-in production smoke gated behind `LOTFOUNDRY_E2E_LIVE_SUGGEST=1`.
 
 ### Changed
 - Replaced the landing-page hero video with an interactive daylight ADU scene
   that deconstructs into five feasibility layers as the user scrolls.
 - Added responsive layer navigation, a no-WebGL illustration fallback, and an
   explicit daylight palette regression guard.
+- Retired the duplicate `AIStyleMatchPanel` from the Feasibility step;
+  style-match now lives solely on the Design step (`StyleMatchPanel` inside
+  `InspirationGalleryPanel`), removing a dead-end that ran a paid concept
+  generation and then discarded the result.
+- Expanded the studio phase-rail tap targets and replaced the wizard emoji lock
+  icon per design-audit findings (FINDING-001, FINDING-002).
 
 ### Fixed
 - Kept the landing ADU fully framed and unobstructed on narrow screens while
