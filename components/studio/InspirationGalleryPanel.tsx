@@ -181,7 +181,7 @@ export default function InspirationGalleryPanel({
                     {item.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full bg-lf-taupe-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-lf-clay"
+                        className="rounded-md bg-lf-taupe-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted"
                       >
                         {tag}
                       </span>
@@ -209,10 +209,10 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => handleApply(item)}
-                      className={`flex items-center gap-1.5 rounded px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                         appliedId === item.id
                           ? "bg-lf-forest text-lf-sand"
-                          : "bg-lf-mahogany text-lf-sand-2 hover:bg-lf-clay"
+                          : "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong"
                       }`}
                     >
                       {appliedId === item.id ? (

@@ -35,7 +35,6 @@ import {
 import AIPropertyInsightsPanel, {
   createAIPropertyInsightsKey,
 } from "./AIPropertyInsightsPanel";
-import AIStyleMatchPanel from "./AIStyleMatchPanel";
 import AIPermitPathwayPanel, {
   createAIPermitPathwayKey,
 } from "./AIPermitPathwayPanel";
@@ -179,10 +178,6 @@ export default function ConstraintsPanel({
             result={result}
             config={config}
           />
-        </div>
-
-        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
-          <AIStyleMatchPanel parcel={parcel} config={config} />
         </div>
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">

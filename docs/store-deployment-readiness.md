@@ -1,8 +1,8 @@
 # Store Deployment Readiness — iOS App Store + Google Play
 
 **Date:** 2026-06-28
-**Updated:** 2026-07-04
-**Baseline health:** `lint` clean, `tsc --noEmit` clean, **408/408 Vitest pass**, `npm run build` clean, latest `master` CI run green.
+**Updated:** 2026-07-08
+**Baseline health:** Last recorded broad gate: `lint` clean, `tsc --noEmit` clean, **408/408 Vitest pass**, `npm run build` clean, latest `master` CI run green. Re-run the release gate before submission.
 **Verdict:** The web app is production-healthy, but **not yet shippable to either store** — there is no native/store wrapper, the store signing/linking assets are still placeholder/incomplete, and live payment/store-console checks remain.
 
 ---
@@ -25,7 +25,7 @@ Method: cross-checked `gh secret list`, Google Secret Manager (`gcloud secrets l
 ### ⚠️ Needs live-console verification
 | Key | Impact |
 |---|---|
-| **`NEXT_PUBLIC_GOOGLE_PLACES_KEY`** | GitHub Actions metadata shows this secret exists as of 2026-07-04, and a live browser smoke against `https://yardup-2026.web.app/studio` returned `/api/suggest` suggestions for `1600 Pennsylvania Ave`. Still verify in Google Cloud Console that the value is the intended browser-safe Places key, HTTP-referrer-restricted to the production domains and localhost. |
+| **`NEXT_PUBLIC_GOOGLE_PLACES_KEY`** | GitHub Actions metadata shows this secret exists as of 2026-07-04, and a live browser smoke against `https://yardup-2026.web.app/studio` returned `/api/suggest` suggestions for `1600 Pennsylvania Ave`. As of 2026-07-08, `e2e/address-suggest.spec.ts` adds an **opt-in** production `/api/suggest` smoke, gated behind `LOTFOUNDRY_E2E_LIVE_SUGGEST=1` (default CI does not set it, so CI does not hit prod — run it manually before submission). Still verify in Google Cloud Console that the value is the intended browser-safe Places key, HTTP-referrer-restricted to the production domains and localhost. |
 
 ### 🟡 Optional / fallback (works, but confirm before launch)
 | Key | Behavior |
@@ -40,7 +40,7 @@ Method: cross-checked `gh secret list`, Google Secret Manager (`gcloud secrets l
 - **`GOOGLE_MAPS_API_KEY`** has **Maps Static API + Geocoding API + Places API** all enabled, and is **not HTTP-referrer-restricted** (it is called server-side; referrer restriction would break it — use IP allow-list or API-scope restriction only).
 - **`NEXT_PUBLIC_GOOGLE_PLACES_KEY`** (once added) is a **browser** key, referrer-restricted to the prod domain.
 - **Stripe webhook** endpoint is registered in the Stripe Dashboard at `https://<domain>/api/stripe/webhook` (event `checkout.session.completed`) and its signing secret matches `STRIPE_WEBHOOK_SECRET`. Run one live test checkout.
-- **Local dev:** no `.env.local` / `functions/.env` exist locally → only demo presets + Firebase work. Add keys locally to exercise live data.
+- **Local dev:** `.env.local` exists in this checkout, but `functions/.env` does not. Do not copy secrets into docs or commits; use local env files only to exercise live data.
 
 ---
 
@@ -57,8 +57,8 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 
 ## 3. PWA-correctness bugs found
 - ~~**Mislabeled icons:** `public/icon-180.png` and `public/icon-192.png` are both actually **512×512**. The manifest declares `192×192` and the Apple touch icon expects `180×180` → Lighthouse/PWABuilder flag a size mismatch and the maskable-icon test. Regenerate at true sizes; add a maskable variant with safe-zone padding.~~ ✅ fixed 2026-06-28.
-- **No store screenshots:** `manifest.json` has no `screenshots` array (Play listing wants narrow + wide).
-- **Placeholder `/.well-known/assetlinks.json`:** the file exists, but the SHA-256 fingerprint is `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT`. Replace it after Play signing is available.
+- **No store screenshots:** `public/manifest.json` currently declares the three app icons only (`icon-192.png`, `icon-512.png`, `icon-maskable-512.png`) and has no `screenshots` array. Add entries only after final mobile/tablet/desktop screenshots are captured and checked into `public/`.
+- **Placeholder `/.well-known/assetlinks.json`:** the file exists, but the SHA-256 fingerprint is `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT`. Replace it after the human supplies the real Play signing SHA-256 fingerprint.
 - ~~**Service worker is fallback-only:** `sw.js` serves `offline.html` on navigation failure but does not precache the app shell — a stronger offline story also helps the Apple 4.2 case.~~ ✅ fixed 2026-06-28.
 
 ---
@@ -73,15 +73,15 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 5. **Verify `GOOGLE_MAPS_API_KEY`** has Static + Geocoding + Places enabled and is server-safe (not referrer-locked).
 
 ### P1 — Store packaging
-6. Replace the placeholder SHA-256 in `/.well-known/assetlinks.json` + generate the **Android TWA** (PWABuilder/Bubblewrap) → signed `.aab`.
+6. Replace the placeholder SHA-256 in `/.well-known/assetlinks.json` after the real Play signing fingerprint is supplied, then generate the **Android TWA** (PWABuilder/Bubblewrap) → signed `.aab`.
 7. Generate the **iOS wrapper** project; satisfy Apple 4.2 (offline shell / push / native value-add).
-8. Add `manifest.json` **screenshots** (mobile + tablet) for richer listings.
+8. Add `manifest.json` **screenshots** after final mobile/tablet/desktop store captures are checked into `public/`.
 9. **Privacy compliance:** App Store privacy "nutrition labels" + Play **Data Safety** form (you collect address, account email, payment via Stripe). Privacy policy `/privacy` ✅ and terms `/terms` ✅ already exist.
 10. Store metadata: name, subtitle, description, keywords, age rating, category (Finance/Business).
 
 ### P2 — Functional / UX hardening
 11. Verify Stripe webhook registered + secret matches; run a live test checkout.
-12. **Real-device responsive QA** (iPhone SE/Pro, Pixel, iPad) — capture the store screenshots from this pass.
+12. **Real-device responsive QA** (iPhone SE/Pro, Pixel, iPad, Android tablet) — capture the store screenshots from this pass and document the capture flow.
 13. ~~Strengthen the service worker to precache the app shell (real offline launch).~~ ✅ done 2026-06-28.
 14. Run the Firebase smoke test with a dedicated user before promotion.
 15. ~~Add `OPENAI_API_KEY` to `functions/.env.example`~~ ✅ done 2026-06-28.

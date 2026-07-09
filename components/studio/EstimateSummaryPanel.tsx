@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, CheckCircle2, FileText, Home, Ruler, SlidersHorizontal } from "lucide-react";
+import { BarChart3, CheckCircle2, FileText, Home, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
 import { PanelHeader } from "@/components/ui/Panel";
@@ -114,9 +114,17 @@ export default function EstimateSummaryPanel({
         </div>
 
         {result.warnings.length > 0 && (
-          <div role="alert" className="rounded-md border border-lf-clay/40 bg-lf-clay/10 p-4">
-            <div className="text-sm font-semibold text-lf-clay">Review Needed</div>
-            <p className="mt-1 text-xs leading-5 text-lf-clay">{result.warnings[0]}</p>
+          <div
+            role="alert"
+            className="rounded-md border border-lf-amber-ink/35 bg-lf-amber-soft p-4 text-lf-amber-ink"
+          >
+            <div className="flex items-start gap-2">
+              <TriangleAlert className="mt-0.5 shrink-0" size={16} />
+              <div>
+                <div className="text-sm font-semibold">Review Needed</div>
+                <p className="mt-1 text-xs leading-5">{result.warnings[0]}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -126,7 +134,6 @@ export default function EstimateSummaryPanel({
           fullWidth
           loading={reportCtaBusy}
           leftIcon={<FileText size={16} />}
-          className="bg-lf-mahogany text-lf-sand-2 hover:bg-lf-espresso"
         >
           {reportCtaLabel}
         </Button>

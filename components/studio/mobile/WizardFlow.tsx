@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useParcel } from "@/lib/parcel-context";
+import { Lock } from "lucide-react";
 import { buildEstimatedParcel, type EstimatedParcel } from "@/lib/estimated-parcel";
 import {
   calculateFeasibility,
@@ -150,7 +151,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <h1 className="font-display text-3xl font-bold text-lf-espresso">What size ADU?</h1>
             <p className="mt-1 text-sm text-lf-muted">
               {address?.formattedAddress}
-              <span className="ml-2 rounded bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]">
+              <span className="ml-2 rounded bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-ink">
                 lot: estimated
               </span>
             </p>
@@ -174,7 +175,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <button
               type="button"
               onClick={() => setStep(nextStep("size"))}
-              className="mt-6 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-white transition hover:bg-lf-mahogany"
+              className="mt-6 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-white transition hover:bg-lf-clay-strong"
             >
               See my results →
             </button>
@@ -186,7 +187,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <h1 className="font-display text-2xl font-bold text-lf-espresso">Your lot looks promising</h1>
             <p className="mt-1 text-sm text-lf-muted">
               {address?.formattedAddress} · {footprint} ft²
-              <span className="ml-2 rounded bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]">
+              <span className="ml-2 rounded bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-ink">
                 estimated
               </span>
             </p>
@@ -203,13 +204,16 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
               </div>
             </div>
             <div className="mt-4 rounded-2xl border-2 border-dashed border-lf-clay/60 bg-lf-card p-4 text-center">
-              <p className="font-semibold text-lf-espresso">🔒 Unlock your exact numbers</p>
+              <p className="inline-flex items-center justify-center gap-2 font-semibold text-lf-espresso">
+                <Lock size={14} aria-hidden className="text-lf-clay" />
+                Unlock your exact numbers
+              </p>
               <p className="mt-1 text-xs text-lf-muted">Free account · real parcel data for your address</p>
             </div>
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
-              className="mt-4 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-white transition hover:bg-lf-mahogany"
+              className="mt-4 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-white transition hover:bg-lf-clay-strong"
             >
               Create free account
             </button>

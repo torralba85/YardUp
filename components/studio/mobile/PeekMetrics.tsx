@@ -37,7 +37,7 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
           unit=""
           size="inline"
           tone="forest"
-          className="mt-0.5 text-[26px]"
+          className="mt-0.5 text-[25px]"
         />
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
@@ -51,13 +51,13 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
         <Chip>{config.footprint} ft²</Chip>
         <Chip>{finishLabels[config.finish]}</Chip>
         {estimated && (
-          <span className="rounded-full bg-lf-amber/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-espresso">
+          <span className="rounded-md bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-amber-ink">
             estimated
           </span>
         )}
       </div>
       {parcelError && (
-        <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-lf-clay/40 bg-lf-clay/10 px-2.5 py-1.5 text-xs text-lf-espresso">
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-lf-amber-ink/35 bg-lf-amber-soft px-2.5 py-1.5 text-xs text-lf-amber-ink">
           <span>{parcelError}</span>
           {onRetry && (
             <button

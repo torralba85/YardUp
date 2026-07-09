@@ -491,7 +491,7 @@ export default function FeasibilityInspector({
               {result.warnings.length > 0 && (
                 <div
                   role="alert"
-                  className="rounded-lg border border-lf-clay/40 bg-lf-clay/10 p-3 text-sm text-lf-clay"
+                  className="rounded-lg border border-lf-amber-ink/35 bg-lf-amber-soft p-3 text-sm text-lf-amber-ink"
                 >
                   <div className="flex items-start gap-2">
                     <TriangleAlert className="mt-0.5 shrink-0" size={17} />

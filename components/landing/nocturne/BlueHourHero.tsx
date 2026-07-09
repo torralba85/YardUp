@@ -356,7 +356,7 @@ export function BlueHourHero() {
         {showPlayer ? (
           <nav
             aria-label="Survey phases"
-            className="lf-kicker-dense absolute bottom-8 left-[clamp(20px,5vw,72px)] z-10 hidden items-center gap-3 text-ln-slate motion-safe:sm:flex"
+            className="lf-kicker-dense absolute bottom-8 left-[clamp(20px,5vw,72px)] z-10 hidden items-center gap-3 text-ln-slate motion-safe:lg:flex"
           >
             <span
               aria-hidden="true"
@@ -372,7 +372,7 @@ export function BlueHourHero() {
                     aria-current={active ? "step" : undefined}
                     aria-label={index === 0 ? entry.label : `Jump to ${entry.label}`}
                     onClick={() => jumpToPhase(entry.target)}
-                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
+                    className={`inline-flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
                       active
                         ? "border-ln-glow/70 bg-ln-glow/15 text-ln-glow"
                         : "border-ln-hairline text-ln-slate hover:border-ln-slate/60 hover:text-ln-mist"
@@ -383,8 +383,11 @@ export function BlueHourHero() {
                 );
               })}
             </span>
-            <span className="min-w-56">{readout.label}</span>
-            <span className="block h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline">
+            {/* Readout label + progress bar are the rail's widest parts; they
+                only clear the bottom-right verdict plate at xl. Below xl the
+                rail is just the phase-jump buttons so nothing clips or collides. */}
+            <span className="hidden min-w-56 xl:block">{readout.label}</span>
+            <span className="hidden h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline xl:block">
               <span
                 className="block h-full bg-ln-glow transition-[width] duration-100"
                 style={{ width: `${Math.round(Math.min(1, progress) * 100)}%` }}

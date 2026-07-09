@@ -1,8 +1,9 @@
 # Store Listing Copy — App Store + Google Play
 
 **Date:** 2026-06-28
+**Updated:** 2026-07-08
 **App:** LotFoundry — ADU Feasibility Studio · package `com.lotfoundry.app`
-**Status:** DRAFT for review. Privacy answers are grounded in the current codebase (no analytics/tracking SDKs; Firebase Auth incl. Google sign-in; Regrid/Google/OpenAI/Stripe as processors). The two earlier open items (photo retention, in-app deletion path) are now resolved — see section A.
+**Status:** DRAFT for review. Privacy answers are grounded in the current codebase (no analytics/tracking SDKs; Firebase Auth incl. Google sign-in; Regrid/Google/OpenAI/Stripe as processors). The two earlier open items (photo retention, in-app deletion path) are now resolved — see section A. Store screenshots, feature graphic, wrapper packages, and the real Play signing fingerprint are still not final.
 
 ---
 
@@ -122,8 +123,9 @@ LotFoundry is a feasibility and estimation tool. Outputs are early estimates onl
 - **Content rating:** Everyone (questionnaire: no objectionable content; app handles financial estimates + user accounts).
 
 ### Shared assets still needed (P1/P2)
-- Screenshots: iPhone 6.7" + 6.5", iPad 12.9", Android phone + 7"/10" tablet. *(Capture from a real device — the WebGL studio canvas stalls automated capture.)*
-- App Store: 1024×1024 icon (use `icon-512.png` master upscaled / re-exported at 1024). Play: 512×512 icon + 1024×500 feature graphic.
+- Screenshots: iPhone 6.7" + 6.5", iPad 12.9", Android phone + 7"/10" tablet, plus desktop/wide PWA captures if used in the manifest. Capture from real devices where possible, check the final files into `public/`, then add `public/manifest.json` `screenshots` entries that point at those exact files.
+- App Store: 1024×1024 icon (use `icon-512.png` master upscaled / re-exported at 1024). Play: 512×512 icon + 1024×500 feature graphic. Current `public/` assets include `icon-180.png`, `icon-192.png`, `icon-512.png`, and `icon-maskable-512.png`.
+- Android Digital Asset Links: `public/.well-known/assetlinks.json` still contains `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT`; replace it only after the human supplies the real Play signing SHA-256.
 - Support URL, marketing URL, and the privacy policy URL → `/privacy` (already live).
 
 ---
@@ -133,6 +135,7 @@ LotFoundry is a feasibility and estimation tool. Outputs are early estimates onl
 - [x] Confirm photo retention (A-1 — not persisted) and wire a data-deletion path (A-2 — `POST /api/account/delete` + in-app UI).
 - [ ] Decide retention policy for marketplace `connectionRequests` PII (shared lead records).
 - [ ] Generate packages in PWABuilder; replace the placeholder Play signing SHA-256 in `public/.well-known/assetlinks.json`.
-- [ ] Capture device screenshots; export 1024² / 512² icons + feature graphic.
+- [ ] Capture device screenshots; check final files into `public/`; add manifest screenshot entries; export 1024² / 512² icons + feature graphic.
+- [ ] Run the focused address-suggest smoke before store submission: `LOTFOUNDRY_E2E_LIVE_SUGGEST=1 npx playwright test e2e/address-suggest.spec.ts --project=desktop-chromium`. The `LOTFOUNDRY_E2E_LIVE_SUGGEST=1` prefix is **required** — without it the production `/api/suggest` test is skipped. (The local fallback test in the same file also runs and needs the `localhost:3000` dev server from `playwright.config.ts`.)
 - [ ] Fill App Privacy (B) and Data Safety (C) exactly as above.
 - [ ] Submit.

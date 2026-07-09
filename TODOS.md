@@ -73,9 +73,10 @@ Latest verification in this audit:
 
 P0 - short, high-confidence fixes:
 
-- Reconcile the older `AIStyleMatchPanel` in `ConstraintsPanel` with the newer
-  gallery-integrated `StyleMatchPanel`: either retire the duplicate or make it a
-  thin wrapper around the same shared generation flow.
+- ~~Reconcile the older `AIStyleMatchPanel` in `ConstraintsPanel` with the newer
+  gallery-integrated `StyleMatchPanel`.~~ ✅ Retired 2026-07-08 — `AIStyleMatchPanel`
+  deleted; style-match now lives only on the Design step via `StyleMatchPanel` inside
+  `InspirationGalleryPanel`.
 - Keep `docs/store-deployment-readiness.md` and `docs/store-listing-copy.md`
   current as store assets and cloud settings change.
 - Add focused Playwright coverage for the live `/api/suggest` production path
@@ -99,6 +100,13 @@ P1 - release-hardening tasks an agent can prepare:
 - Run an agency-bar visual QA sweep against `DESIGN.md` for landing, studio,
   builder, auth, certificate/report, and mobile breakpoints; file issues for
   any typography, radius, or semantic-color drift.
+- Honor parcel query and address handoff on mobile/tablet studio entry so the
+  first visible state includes the selected lot and a money figure, not the
+  generic onboarding plate.
+- Expand auth secondary links and footer links to 44px tap targets while
+  preserving the compact Golden Hour auth layout.
+- Audit shared studio controls and tabs for 44px interaction targets; keep
+  read-only data chips compact per the pill-radius system.
 
 P2 - larger agent work that needs a focused branch:
 
