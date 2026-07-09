@@ -35,7 +35,9 @@ describe("PeekMetrics", () => {
       />,
     );
 
-    expect(screen.getByText("Live parcel lookup failed.")).toBeInTheDocument();
+    // The banner is a live region so assistive tech (and the handoff e2e
+    // spec) can find the mobile parcel error the same way as the desktop one.
+    expect(screen.getByRole("alert")).toHaveTextContent("Live parcel lookup failed.");
     await user.click(screen.getByRole("button", { name: /retry/i }));
     expect(onRetry).toHaveBeenCalledOnce();
   });

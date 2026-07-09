@@ -46,12 +46,19 @@ test.describe("landing → studio handoff", () => {
     await page.getByRole("button", { name: /run feasibility/i }).click();
 
     await expect(page).toHaveURL(/\/studio/);
-    // The studio sheet renders first…
-    await expect(page.getByTestId("studio-sheet")).toBeVisible();
+    // The studio sheet renders first… (15s: the dawn arrival plate holds the
+    // screen until Firebase auth resolves, same budget as the other arrivals)
+    await expect(page.getByTestId("studio-sheet")).toBeVisible({ timeout: 15000 });
     // …and the wizard never interrupts an arrival that brought an address.
     await expect(page.getByText(/could your backyard pay you rent/i)).not.toBeVisible();
     await expect(page.getByText("Rent potential / mo")).toBeVisible();
-    await expect(page.getByRole("alert")).toBeVisible({ timeout: 15000 });
+    // The handed-off search ran and failed: the parcel error surfaces as a
+    // role="alert" banner (PeekMetrics and the constraints panel both carry
+    // one). Filter out Next.js's empty route-announcer alert, then take the
+    // first since several error surfaces may show the message at once.
+    await expect(
+      page.getByRole("alert").filter({ hasText: /\S/ }).first(),
+    ).toBeVisible({ timeout: 15000 });
     expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });
 });
