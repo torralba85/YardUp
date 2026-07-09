@@ -33,6 +33,13 @@ test.describe("address suggestions", () => {
     const suggestion = "1600 Pennsylvania Avenue NW, Washington, DC, USA";
     const suggestRequests: string[] = [];
 
+    // Aborting the Places bootstrap fails @googlemaps/js-api-loader's
+    // `script.onerror`, which rejects `importLibrary("places")`. AddressSearch
+    // catches that, sets `googleFailed`, and hands autocomplete to `/api/suggest`
+    // — the path we assert here — even when a real NEXT_PUBLIC_GOOGLE_PLACES_KEY
+    // is configured (`hasPlacesKey === true`). The loader (v2.0.2) rejects
+    // immediately with no retry; the generous timeout below absorbs the delay if
+    // a future loader ever retries script loads with backoff.
     await page.route("https://maps.googleapis.com/**", (route) => route.abort());
     await page.route("https://maps.gstatic.com/**", (route) => route.abort());
     await page.route("**/api/suggest**", async (route) => {
@@ -49,7 +56,9 @@ test.describe("address suggestions", () => {
 
     await page.getByLabel("Search property address").fill("1600 Pennsylvania Ave");
 
-    await expect(page.getByRole("option", { name: suggestion })).toBeVisible();
+    await expect(page.getByRole("option", { name: suggestion })).toBeVisible({
+      timeout: 15_000,
+    });
     expect(suggestRequests.some((url) => url.includes("/api/suggest"))).toBe(true);
   });
 });
