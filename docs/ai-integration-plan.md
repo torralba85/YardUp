@@ -42,7 +42,8 @@ The MVP adds two AI surfaces:
 
 - The existing `ConstraintsPanel` now includes:
   - `AIPropertyInsightsPanel`
-  - `AIStyleMatchPanel`
+  - `AIPermitPathwayPanel`
+- Style-matched ADU concepts live on the Design step via `StyleMatchPanel`, embedded in `InspirationGalleryPanel`.
 
 This keeps AI close to the feasibility decision point without disrupting the existing massing controls or report workflow.
 

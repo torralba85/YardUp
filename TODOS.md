@@ -73,9 +73,10 @@ Latest verification in this audit:
 
 P0 - short, high-confidence fixes:
 
-- Reconcile the older `AIStyleMatchPanel` in `ConstraintsPanel` with the newer
-  gallery-integrated `StyleMatchPanel`: either retire the duplicate or make it a
-  thin wrapper around the same shared generation flow.
+- ~~Reconcile the older `AIStyleMatchPanel` in `ConstraintsPanel` with the newer
+  gallery-integrated `StyleMatchPanel`.~~ ✅ Retired 2026-07-08 — `AIStyleMatchPanel`
+  deleted; style-match now lives only on the Design step via `StyleMatchPanel` inside
+  `InspirationGalleryPanel`.
 - Keep `docs/store-deployment-readiness.md` and `docs/store-listing-copy.md`
   current as store assets and cloud settings change.
 - Add focused Playwright coverage for the live `/api/suggest` production path

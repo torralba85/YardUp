@@ -43,7 +43,7 @@ The layout is: **StepRail (left, replaces sidebar)** · **content column** where
 |---|---|
 | `lot` | The value hook: address search (survey instrument) front-and-center over the parcel scene; on result, the verdict band's `$/mo` animates in. Reuses `AddressSearch` + scene. |
 | `feasibility` | Scene + `ConstraintsPanel` (what the lot allows + rent basis) with the **Permit Guide / local rules + resources folded in** (today's orphan `PermitGuidePanel` content becomes a section here). Verdict band on top. |
-| `design` *(optional)* | Scene + `FeasibilityInspector` (massing) + an entry to inspiration/style-match (`InspirationGalleryPanel` / `AIStyleMatchPanel`). |
+| `design` *(optional)* | Scene + `FeasibilityInspector` (massing) + an entry to inspiration/style-match (`InspirationGalleryPanel`, which embeds `StyleMatchPanel`). |
 | `certificate` | `EstimateSummaryPanel` → certificate (P3 makes it the paid artifact). |
 | `builders` | Builder connection as a **destination** (the `BuilderLeadPanel` content inlined, not a modal). P4 wires the referral charge. |
 

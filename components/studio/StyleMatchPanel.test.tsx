@@ -117,6 +117,48 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByText(/Photo sealed for style match/i)).toBeInTheDocument();
   });
 
+  it("revokes preview blob URLs when replacing the photo and on unmount", async () => {
+    const preparePhoto = vi.fn(async () => preparedPhoto);
+    const createObjectURL = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValueOnce("blob:first-preview")
+      .mockReturnValueOnce("blob:second-preview");
+    const revokeObjectURL = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => undefined);
+
+    try {
+      const { unmount } = render(
+        <StyleMatchPanel
+          preparePhoto={preparePhoto}
+          parcel={activeParcel}
+          config={activeConfig}
+        />,
+      );
+
+      const input = screen.getByLabelText(/Choose house photo/i);
+
+      fireEvent.change(input, {
+        target: { files: [new File(["first"], "first.heic", { type: "image/heic" })] },
+      });
+      expect(await screen.findByAltText(/Prepared house photo preview/i)).toBeInTheDocument();
+
+      // Replacing the photo revokes the first preview URL before minting the second.
+      fireEvent.change(input, {
+        target: { files: [new File(["second"], "second.heic", { type: "image/heic" })] },
+      });
+      await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(2));
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:first-preview");
+
+      // Unmounting revokes the surviving preview URL.
+      unmount();
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:second-preview");
+    } finally {
+      createObjectURL.mockRestore();
+      revokeObjectURL.mockRestore();
+    }
+  });
+
   it("shows a recoverable error when photo preparation fails", async () => {
     const preparePhoto = vi.fn(async () => {
       throw new Error("HEIC is accepted, but this browser could not decode this file.");
