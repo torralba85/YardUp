@@ -57,7 +57,10 @@ export default function PeekMetrics({ result, config, estimated, parcelError, on
         )}
       </div>
       {parcelError && (
-        <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-lf-amber-ink/35 bg-lf-amber-soft px-2.5 py-1.5 text-xs text-lf-amber-ink">
+        <div
+          role="alert"
+          className="mt-2 flex items-center justify-between gap-2 rounded-md border border-lf-amber-ink/35 bg-lf-amber-soft px-2.5 py-1.5 text-xs text-lf-amber-ink"
+        >
           <span>{parcelError}</span>
           {onRetry && (
             <button
