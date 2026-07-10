@@ -19,6 +19,13 @@ afterEach(() => {
 });
 
 describe("AddressSearch", () => {
+  it("uses a compact visible placeholder without shortening its accessible name", () => {
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
+
+    const input = screen.getByLabelText("Search property address");
+    expect(input).toHaveAttribute("placeholder", "Search property address…");
+  });
+
   it("keeps the embedded Search button nested inside the rounded-full input", () => {
     // Regression: the input is a 44px (h-11) `rounded-full` pill, so its border
     // curves inward at the top/bottom-right. A 32px (h-8) button pinned 6px
