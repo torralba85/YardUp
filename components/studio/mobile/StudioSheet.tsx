@@ -75,9 +75,13 @@ export default function StudioSheet({
     if (!viewport) return;
     function onViewportChange() {
       if (!viewport) return;
-      setKeyboardInset(Math.max(0, window.innerHeight - viewport.height));
+      // Scale-corrected: pinch-zoom also shrinks `viewport.height` (it is in
+      // visual CSS pixels), but `height * scale` recovers the layout-viewport
+      // span, so only the keyboard produces a positive inset.
+      const inset = Math.max(0, Math.round(window.innerHeight - viewport.height * viewport.scale));
+      setKeyboardInset(inset);
       const active = document.activeElement;
-      if (active && sheetRef.current?.contains(active)) {
+      if (inset > 1 && active && sheetRef.current?.contains(active)) {
         window.scrollTo(0, 0);
       }
     }
@@ -167,6 +171,7 @@ export default function StudioSheet({
           <div className="shrink-0 px-4 pb-2 pt-1">{peek}</div>
           <div
             ref={scrollRef}
+            data-testid="sheet-scroll-area"
             className={`min-h-0 flex-1 px-4 ${isFull ? "overflow-y-auto" : "overflow-hidden"}`}
             style={{
               paddingBottom: `calc(2rem + env(safe-area-inset-bottom, 0px) + ${keyboardInset}px)`,
