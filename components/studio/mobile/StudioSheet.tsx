@@ -107,8 +107,12 @@ export default function StudioSheet({
     if (!scroller || !target || document.activeElement !== target || !scroller.contains(target)) {
       return;
     }
-    scroller.scrollTop +=
+    const delta =
       target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
+    // Skip sub-pixel deltas: once converged, later signals are no-ops instead
+    // of re-issuing writes that could interrupt in-flight native scrolling.
+    if (Math.abs(delta) < 1) return;
+    scroller.scrollTop += delta;
   }, []);
 
   function handleFocusCapture(event: FocusEvent<HTMLDivElement>) {
