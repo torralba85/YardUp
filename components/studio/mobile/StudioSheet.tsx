@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer } from "vaul";
 
@@ -13,6 +13,13 @@ export const FULL_SNAP = 0.96;
 
 /** A drawer snap point: a pixel string (e.g. `"148px"`) or a 0–1 fraction. */
 export type SheetSnap = number | string;
+
+/** Fields whose focus summons the on-screen keyboard (not sliders/toggles). */
+const KEYBOARD_FIELD_SELECTOR = [
+  "textarea",
+  '[contenteditable="true"]',
+  'input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="color"]):not([type="file"])',
+].join(", ");
 
 /** Props for {@link StudioSheet}. */
 export interface StudioSheetProps {
@@ -52,7 +59,49 @@ export default function StudioSheet({
   const isPeek = snap === PEEK_SNAP || snap === null;
   const contentRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
   const didMountFocusRef = useRef(false);
+  // Height of the on-screen keyboard, from the visual viewport. Used to pad the
+  // scroll area so content above the keyboard stays reachable while typing.
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  // The mobile keyboard is handled here, not by vaul (`repositionInputs` is
+  // disabled below): when the keyboard opens, iOS also scrolls the layout
+  // viewport to "reveal" the focused field inside this fixed sheet, dragging
+  // the header and step bar off-screen. The studio is a fixed full-viewport
+  // surface with nothing to scroll, so pin the page back in place.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    function onViewportChange() {
+      if (!viewport) return;
+      setKeyboardInset(Math.max(0, window.innerHeight - viewport.height));
+      const active = document.activeElement;
+      if (active && sheetRef.current?.contains(active)) {
+        window.scrollTo(0, 0);
+      }
+    }
+    viewport.addEventListener("resize", onViewportChange);
+    viewport.addEventListener("scroll", onViewportChange);
+    return () => {
+      viewport.removeEventListener("resize", onViewportChange);
+      viewport.removeEventListener("scroll", onViewportChange);
+    };
+  }, []);
+
+  function handleFocusCapture(event: FocusEvent<HTMLDivElement>) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !target.matches(KEYBOARD_FIELD_SELECTOR)) return;
+    if (!isFull) onSnapChange(FULL_SNAP);
+    // Once the snap transition settles, lift the field to the top of the
+    // scroll area so the keyboard (bottom ~40% of the screen) can't cover it.
+    window.setTimeout(() => {
+      const scroller = scrollRef.current;
+      if (!scroller || !target.isConnected || !scroller.contains(target)) return;
+      scroller.scrollTop +=
+        target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
+    }, 300);
+  }
 
   useEffect(() => {
     if (!didMountFocusRef.current) {
@@ -79,14 +128,21 @@ export default function StudioSheet({
       open
       modal={false}
       dismissible={false}
+      // vaul's keyboard handler rewrites the drawer's height/bottom styles
+      // and, with snap points active, folds the snap offset into that math —
+      // detaching the sheet into a floating mid-screen card while typing.
+      // Keyboard handling is done locally instead (see handleFocusCapture).
+      repositionInputs={false}
       snapPoints={[PEEK_SNAP, HALF_SNAP, FULL_SNAP]}
       activeSnapPoint={snap}
       setActiveSnapPoint={onSnapChange}
     >
       <Drawer.Portal>
         <Drawer.Content
+          ref={sheetRef}
           data-testid="studio-sheet"
           aria-label={title}
+          onFocusCapture={handleFocusCapture}
           className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[96dvh] flex-col rounded-t-2xl border-t border-lf-hairline bg-lf-card shadow-[0_-8px_28px_rgba(38,19,7,0.3)] outline-none"
         >
           <Drawer.Title className="sr-only">{title}</Drawer.Title>
@@ -108,7 +164,9 @@ export default function StudioSheet({
           <div
             ref={scrollRef}
             className={`min-h-0 flex-1 px-4 ${isFull ? "overflow-y-auto" : "overflow-hidden"}`}
-            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+            style={{
+              paddingBottom: `calc(2rem + env(safe-area-inset-bottom, 0px) + ${keyboardInset}px)`,
+            }}
           >
             <div
               ref={contentRef}

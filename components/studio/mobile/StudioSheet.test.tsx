@@ -76,6 +76,57 @@ describe("StudioSheet", () => {
     );
   });
 
+  it("snaps to full when a keyboard field inside the sheet gains focus", async () => {
+    const user = userEvent.setup();
+    const onSnapChange = vi.fn();
+    render(
+      <StudioSheet
+        snap={HALF_SNAP}
+        onSnapChange={onSnapChange}
+        peek={<div />}
+        controls={<input type="search" aria-label="Search property address" />}
+        sections={<div />}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("Search property address"));
+    expect(onSnapChange).toHaveBeenCalledWith(FULL_SNAP);
+  });
+
+  it("leaves the snap alone when a slider gains focus", async () => {
+    const user = userEvent.setup();
+    const onSnapChange = vi.fn();
+    render(
+      <StudioSheet
+        snap={HALF_SNAP}
+        onSnapChange={onSnapChange}
+        peek={<div />}
+        controls={<input type="range" aria-label="ADU width" />}
+        sections={<div />}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("ADU width"));
+    expect(onSnapChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps the snap unchanged when a field is focused at full height", async () => {
+    const user = userEvent.setup();
+    const onSnapChange = vi.fn();
+    render(
+      <StudioSheet
+        snap={FULL_SNAP}
+        onSnapChange={onSnapChange}
+        peek={<div />}
+        controls={<input type="search" aria-label="Search property address" />}
+        sections={<div />}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("Search property address"));
+    expect(onSnapChange).not.toHaveBeenCalled();
+  });
+
   it("expand button advances peek → half → full, then collapses back to peek", async () => {
     const user = userEvent.setup();
     const onSnapChange = vi.fn();
