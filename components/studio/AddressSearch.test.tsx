@@ -19,6 +19,34 @@ afterEach(() => {
 });
 
 describe("AddressSearch", () => {
+  it("keeps the embedded Search button nested inside the rounded-full input", () => {
+    // Regression: the input is a 44px (h-11) `rounded-full` pill, so its border
+    // curves inward at the top/bottom-right. A 32px (h-8) button pinned 6px
+    // (right-1.5) from the edge poked its rounded corners past that curve. The
+    // button must stay shorter than the input and inset far enough to nest
+    // concentrically. Layout can't be measured in jsdom, so assert the inset +
+    // height tokens; full visual coverage lives in the studio Playwright specs.
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
+
+    const button = screen.getByRole("button", { name: /search/i });
+    expect(button.classList.contains("h-7")).toBe(true);
+    expect(button.classList.contains("right-2.5")).toBe(true);
+    // The exact values that made the button protrude must not come back.
+    expect(button.classList.contains("h-8")).toBe(false);
+    expect(button.classList.contains("right-1.5")).toBe(false);
+    // The 28px visual pill alone is too small a touch target: an invisible
+    // ::before overlay must stretch the tappable area to the input's full
+    // 44px height (28px + 2×8px) without changing the nested silhouette.
+    expect(button.classList.contains("before:absolute")).toBe(true);
+    expect(button.classList.contains("before:-inset-y-2")).toBe(true);
+    expect(button.classList.contains("before:-inset-x-1")).toBe(true);
+    // Anchor to the input's 22px midline, not the form's center: when the
+    // no-Places-key helper renders below the input, the form grows taller and
+    // a top-1/2 button sinks past the pill's bottom edge.
+    expect(button.classList.contains("top-5.5")).toBe(true);
+    expect(button.classList.contains("top-1/2")).toBe(false);
+  });
+
   it("submits typed addresses through the free-text search path", async () => {
     const user = userEvent.setup();
     const onSubmitText = vi.fn();

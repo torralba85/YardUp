@@ -43,8 +43,8 @@ export function calculateFinance(
   return {
     costLow,
     costHigh,
-    costPerSqftLow: Math.round(costLow / aduSqft),
-    costPerSqftHigh: Math.round(costHigh / aduSqft),
+costPerSqftLow: aduSqft > 0 ? Math.round(costLow / aduSqft) : 0,
+    costPerSqftHigh: aduSqft > 0 ? Math.round(costHigh / aduSqft) : 0,
     monthlyRent,
     annualNoi,
     paybackYears,

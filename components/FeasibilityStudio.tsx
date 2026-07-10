@@ -228,10 +228,16 @@ function FeasibilityStudioInner() {
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
   const [wizardOpen, setWizardOpen] = useState(false);
+  // The handed-off address once consumed from session storage. `undefined`
+  // means "not consumed yet". A ref (not module state) so it survives Strict
+  // Mode's dev-only remount — the second effects pass finds session storage
+  // already emptied by the first, and without this memo the wizard gate below
+  // would wrongly conclude no handoff is pending — while still resetting on a
+  // real refresh or back-navigation, which must not re-run the search.
+  const incomingAddressRef = useRef<string | null | undefined>(undefined);
 
   // First-run wizard decision — mount-only, before the URL-write effect adds
   // scenario params, mirroring the existing post-hydration URL sync pattern.
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.matchMedia("(min-width: 1024px)").matches) return; // desktop never sees the wizard
@@ -241,13 +247,15 @@ function FeasibilityStudioInner() {
         hasUrlScenario,
         // A landing handoff is about to run its own search — the wizard must
         // yield or it would ask for the address the visitor already typed.
-        // Peek, don't consume: the hydration effect below still needs it.
-        hasPendingAddress: peekAddressQuery() !== null,
+        // Peek, don't consume: the hydration effect below still needs it. On a
+        // Strict Mode re-run storage is already consumed, so also honor the
+        // ref the hydration effect filled on the first pass.
+        hasPendingAddress:
+          peekAddressQuery() !== null || incomingAddressRef.current != null,
         storage: window.localStorage,
       }),
     );
   }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleWizardComplete(nextConfig?: ADUConfig) {
     if (nextConfig) setConfig(nextConfig);
@@ -269,8 +277,13 @@ function FeasibilityStudioInner() {
     // storage (never the URL, to keep a guest's address out of history, the
     // Referer header, and analytics). Consume it once here; fall back to a
     // ?q= param so direct /studio?q=<address> links still trigger a search.
-    // The auth-gated effect below runs the actual search.
-    const incomingAddress = consumeAddressQuery() ?? params.get("q")?.trim();
+    // The auth-gated effect below runs the actual search. Consume only once
+    // per component instance: on a Strict Mode re-run the ref replays the
+    // value that the first pass already removed from storage.
+    if (incomingAddressRef.current === undefined) {
+      incomingAddressRef.current = consumeAddressQuery() ?? params.get("q")?.trim() ?? null;
+    }
+    const incomingAddress = incomingAddressRef.current;
     if (incomingAddress) {
       setPendingAddressQuery(incomingAddress);
     }
