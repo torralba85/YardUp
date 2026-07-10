@@ -80,7 +80,7 @@ function looksLikeBrowserKey(value: string | undefined): value is string {
 export default function AddressSearch({
   onSelect,
   onSubmitText,
-  placeholder = "Search your property address…",
+  placeholder = "Search property address…",
   disabled = false,
   autoFocusSignal,
 }: AddressSearchProps) {

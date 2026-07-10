@@ -43,7 +43,7 @@ export function SignalLedger() {
             </Reveal>
           ))}
         </div>
-        <p className="lf-caption mt-8 max-w-[64ch] text-ln-slate/70">
+        <p className="lf-caption mt-8 max-w-[64ch] text-ln-slate">
           Midpoints for supported markets, not your parcel. Run your address for
           your number — and treat every figure as an estimate, not a guarantee.
         </p>

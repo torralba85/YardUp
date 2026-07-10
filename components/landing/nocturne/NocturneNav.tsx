@@ -15,20 +15,20 @@ export function NocturneNav() {
           <img
             src="/lotfoundry-lockup-horizontal-inverse.svg"
             alt="LotFoundry"
-            className="h-5 w-auto sm:h-7"
+            className="h-4 w-auto min-[360px]:h-5 sm:h-7"
           />
         </Link>
         <nav className="flex items-center gap-1 sm:gap-3" aria-label="Primary">
           <Link
             href="/login"
-            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium text-ln-mist transition-colors hover:bg-ln-mist/10 sm:px-4 sm:text-sm"
+            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium text-ln-mist transition-colors hover:bg-ln-mist/10 min-[360px]:inline-flex sm:px-4 sm:text-sm"
           >
             Sign in
           </Link>
           <DawnStudioLink
             className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full bg-ln-glow px-4 text-xs font-semibold text-ln-ink transition-colors duration-300 hover:bg-ln-mist active:scale-[0.98] sm:px-5 sm:text-sm"
           >
-            <span className="sm:hidden">Start</span>
+            <span className="sm:hidden">Check address</span>
             <span className="hidden sm:inline">Check my address</span>
           </DawnStudioLink>
         </nav>
