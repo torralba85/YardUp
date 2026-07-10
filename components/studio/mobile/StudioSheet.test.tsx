@@ -1,7 +1,23 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import StudioSheet, { FULL_SNAP, HALF_SNAP, PEEK_SNAP } from "./StudioSheet";
+
+/** Minimal `window.visualViewport` stand-in: jsdom does not implement it. */
+class FakeVisualViewport extends EventTarget {
+  height = window.innerHeight;
+  scale = 1;
+}
+
+function installVisualViewport(): FakeVisualViewport {
+  const viewport = new FakeVisualViewport();
+  Object.defineProperty(window, "visualViewport", {
+    value: viewport,
+    configurable: true,
+    writable: true,
+  });
+  return viewport;
+}
 
 beforeAll(() => {
   // Vaul touches these browser APIs that jsdom lacks.
@@ -40,6 +56,47 @@ beforeAll(() => {
 });
 
 describe("StudioSheet", () => {
+  afterEach(() => {
+    Object.defineProperty(window, "visualViewport", {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  it("pads the scroll area by the keyboard inset when the visual viewport shrinks", () => {
+    const viewport = installVisualViewport();
+    render(
+      <StudioSheet snap={FULL_SNAP} onSnapChange={() => {}} peek={<div />} controls={<div />} sections={<div />} />,
+    );
+
+    act(() => {
+      viewport.height = window.innerHeight - 336;
+      viewport.dispatchEvent(new Event("resize"));
+    });
+
+    expect(screen.getByTestId("sheet-scroll-area").style.paddingBottom).toContain("336px");
+  });
+
+  it("does not treat pinch-zoom as a keyboard inset", () => {
+    const viewport = installVisualViewport();
+    render(
+      <StudioSheet snap={FULL_SNAP} onSnapChange={() => {}} peek={<div />} controls={<div />} sections={<div />} />,
+    );
+
+    act(() => {
+      // Zoomed 2x: the visual viewport halves but spans the same layout area.
+      viewport.height = window.innerHeight / 2;
+      viewport.scale = 2;
+      viewport.dispatchEvent(new Event("resize"));
+    });
+
+    // A naive `innerHeight - height` would read a phantom 384px "keyboard".
+    const padding = screen.getByTestId("sheet-scroll-area").style.paddingBottom;
+    expect(padding).toContain("0px");
+    expect(padding).not.toContain("384px");
+  });
+
   it("renders peek, controls and sections content", () => {
     render(
       <StudioSheet
@@ -74,6 +131,57 @@ describe("StudioSheet", () => {
     expect(document.getElementById(descriptionId as string)).toHaveTextContent(
       /review the active studio step/i,
     );
+  });
+
+  it("snaps to full when a keyboard field inside the sheet gains focus", async () => {
+    const user = userEvent.setup();
+    const onSnapChange = vi.fn();
+    render(
+      <StudioSheet
+        snap={HALF_SNAP}
+        onSnapChange={onSnapChange}
+        peek={<div />}
+        controls={<input type="search" aria-label="Search property address" />}
+        sections={<div />}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("Search property address"));
+    expect(onSnapChange).toHaveBeenCalledWith(FULL_SNAP);
+  });
+
+  it("leaves the snap alone when a slider gains focus", async () => {
+    const user = userEvent.setup();
+    const onSnapChange = vi.fn();
+    render(
+      <StudioSheet
+        snap={HALF_SNAP}
+        onSnapChange={onSnapChange}
+        peek={<div />}
+        controls={<input type="range" aria-label="ADU width" />}
+        sections={<div />}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("ADU width"));
+    expect(onSnapChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps the snap unchanged when a field is focused at full height", async () => {
+    const user = userEvent.setup();
+    const onSnapChange = vi.fn();
+    render(
+      <StudioSheet
+        snap={FULL_SNAP}
+        onSnapChange={onSnapChange}
+        peek={<div />}
+        controls={<input type="search" aria-label="Search property address" />}
+        sections={<div />}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("Search property address"));
+    expect(onSnapChange).not.toHaveBeenCalled();
   });
 
   it("expand button advances peek → half → full, then collapses back to peek", async () => {
