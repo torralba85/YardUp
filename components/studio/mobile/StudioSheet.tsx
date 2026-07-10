@@ -93,8 +93,12 @@ export default function StudioSheet({
     const target = event.target;
     if (!(target instanceof HTMLElement) || !target.matches(KEYBOARD_FIELD_SELECTOR)) return;
     if (!isFull) onSnapChange(FULL_SNAP);
-    // Once the snap transition settles, lift the field to the top of the
-    // scroll area so the keyboard (bottom ~40% of the screen) can't cover it.
+    // Lift the field to the top of the scroll area so the keyboard (bottom
+    // ~40% of the screen) can't cover it. The rect math is relative between
+    // the scroller and the field — both ride the sheet's transform — so it
+    // needn't wait for the snap transition. The delay covers the re-render
+    // that enables scrolling (`overflow-y-auto` at full) and lets the mobile
+    // browser's own keyboard-driven scroll adjustments settle first.
     window.setTimeout(() => {
       const scroller = scrollRef.current;
       if (!scroller || !target.isConnected || !scroller.contains(target)) return;
