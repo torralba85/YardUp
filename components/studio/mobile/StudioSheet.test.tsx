@@ -186,18 +186,23 @@ describe("StudioSheet", () => {
     const scroller = screen.getByTestId("sheet-scroll-area");
     const field = screen.getByLabelText("Search property address");
     vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({ top: 100 } as DOMRect);
-    vi.spyOn(field, "getBoundingClientRect").mockReturnValue({ top: 300 } as DOMRect);
+    // The field rides the scroller: scrolling down moves its rect up, as in a
+    // real browser, so a re-applied lift converges instead of compounding.
+    vi.spyOn(field, "getBoundingClientRect").mockImplementation(
+      () => ({ top: 300 - scroller.scrollTop }) as DOMRect,
+    );
 
     await user.click(field);
-    const afterFocus = scroller.scrollTop;
+    expect(scroller.scrollTop).toBe(300 - 100 - 12);
 
     act(() => {
-      // The keyboard finishes opening after focus; the correction re-runs.
+      // The keyboard finishes opening after focus; the correction re-runs
+      // but the field is already at the top, so the offset must not change.
       viewport.height = window.innerHeight - 336;
       viewport.dispatchEvent(new Event("resize"));
     });
 
-    expect(scroller.scrollTop).toBe(afterFocus + (300 - 100 - 12));
+    expect(scroller.scrollTop).toBe(300 - 100 - 12);
   });
 
   it("leaves the snap alone when a slider gains focus", async () => {
