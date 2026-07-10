@@ -205,6 +205,39 @@ describe("StudioSheet", () => {
     expect(scroller.scrollTop).toBe(300 - 100 - 12);
   });
 
+  it("re-lifts after a viewport scroll that leaves the keyboard inset unchanged", async () => {
+    const viewport = installVisualViewport();
+    const user = userEvent.setup();
+    const controls = <input type="search" aria-label="Search property address" />;
+    render(
+      <StudioSheet snap={FULL_SNAP} onSnapChange={() => {}} peek={<div />} controls={controls} sections={<div />} />,
+    );
+
+    const scroller = screen.getByTestId("sheet-scroll-area");
+    const field = screen.getByLabelText("Search property address");
+    vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({ top: 100 } as DOMRect);
+    vi.spyOn(field, "getBoundingClientRect").mockImplementation(
+      () => ({ top: 300 - scroller.scrollTop }) as DOMRect,
+    );
+
+    await user.click(field);
+    act(() => {
+      viewport.height = window.innerHeight - 336;
+      viewport.dispatchEvent(new Event("resize"));
+    });
+    expect(scroller.scrollTop).toBe(300 - 100 - 12);
+
+    // The browser's late auto-reveal moves the scroller without resizing the
+    // viewport; the scroll event must re-correct even though the inset-keyed
+    // effect bails out on the unchanged value.
+    scroller.scrollTop = 40;
+    act(() => {
+      viewport.dispatchEvent(new Event("scroll"));
+    });
+
+    expect(scroller.scrollTop).toBe(300 - 100 - 12);
+  });
+
   it("leaves the snap alone when a slider gains focus", async () => {
     const user = userEvent.setup();
     const onSnapChange = vi.fn();

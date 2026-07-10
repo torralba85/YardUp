@@ -68,34 +68,6 @@ export default function StudioSheet({
   // scroll area so content above the keyboard stays reachable while typing.
   const [keyboardInset, setKeyboardInset] = useState(0);
 
-  // The mobile keyboard is handled here, not by vaul (`repositionInputs` is
-  // disabled below): when the keyboard opens, iOS also scrolls the layout
-  // viewport to "reveal" the focused field inside this fixed sheet, dragging
-  // the header and step bar off-screen. The studio is a fixed full-viewport
-  // surface with nothing to scroll, so pin the page back in place.
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    function onViewportChange() {
-      if (!viewport) return;
-      // Scale-corrected: pinch-zoom also shrinks `viewport.height` (it is in
-      // visual CSS pixels), but `height * scale` recovers the layout-viewport
-      // span, so only the keyboard produces a positive inset.
-      const inset = Math.max(0, Math.round(window.innerHeight - viewport.height * viewport.scale));
-      setKeyboardInset(inset);
-      const active = document.activeElement;
-      if (inset > 1 && active && sheetRef.current?.contains(active)) {
-        window.scrollTo(0, 0);
-      }
-    }
-    viewport.addEventListener("resize", onViewportChange);
-    viewport.addEventListener("scroll", onViewportChange);
-    return () => {
-      viewport.removeEventListener("resize", onViewportChange);
-      viewport.removeEventListener("scroll", onViewportChange);
-    };
-  }, []);
-
   // Lift the focused field to the top of the scroll area so the keyboard
   // (bottom ~40% of the screen) can't cover it. The rect math is relative
   // between the scroller and the field — both ride the sheet's transform —
@@ -114,6 +86,37 @@ export default function StudioSheet({
     if (Math.abs(delta) < 1) return;
     scroller.scrollTop += delta;
   }, []);
+
+  // The mobile keyboard is handled here, not by vaul (`repositionInputs` is
+  // disabled below): when the keyboard opens, iOS also scrolls the layout
+  // viewport to "reveal" the focused field inside this fixed sheet, dragging
+  // the header and step bar off-screen. The studio is a fixed full-viewport
+  // surface with nothing to scroll, so pin the page back in place.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    function onViewportChange() {
+      if (!viewport) return;
+      // Scale-corrected: pinch-zoom also shrinks `viewport.height` (it is in
+      // visual CSS pixels), but `height * scale` recovers the layout-viewport
+      // span, so only the keyboard produces a positive inset.
+      const inset = Math.max(0, Math.round(window.innerHeight - viewport.height * viewport.scale));
+      setKeyboardInset(inset);
+      const active = document.activeElement;
+      if (inset > 1 && active && sheetRef.current?.contains(active)) {
+        window.scrollTo(0, 0);
+        // Re-lift here too: a late auto-reveal scroll can move the field
+        // without changing the inset, so the inset-keyed effect bails out.
+        liftFocusedField();
+      }
+    }
+    viewport.addEventListener("resize", onViewportChange);
+    viewport.addEventListener("scroll", onViewportChange);
+    return () => {
+      viewport.removeEventListener("resize", onViewportChange);
+      viewport.removeEventListener("scroll", onViewportChange);
+    };
+  }, [liftFocusedField]);
 
   function handleFocusCapture(event: FocusEvent<HTMLDivElement>) {
     const target = event.target;
