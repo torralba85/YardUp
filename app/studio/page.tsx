@@ -3,16 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
+import SignedInStudioGate from "@/components/studio/SignedInStudioGate";
 import { useAuth } from "@/lib/auth-context";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
 
 /**
- * Studio route (`/studio`). Waits for auth to resolve (so saved scenarios and
- * live-parcel access are known) before rendering {@link FeasibilityStudio};
- * guests fall through to the demo/estimated studio. Builders are redirected.
+ * Studio route (`/studio`). Waits for auth to resolve, redirects builders to
+ * their dashboard, gives signed-in lot owners an empty address-first workspace,
+ * and keeps the exploratory demo studio available to guests.
  */
 export default function StudioPage() {
-  const { loading, profile } = useAuth();
+  const { user, loading, profile } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -42,5 +43,5 @@ export default function StudioPage() {
     );
   }
 
-  return <FeasibilityStudio />;
+  return user ? <SignedInStudioGate user={user} /> : <FeasibilityStudio />;
 }
