@@ -9,7 +9,6 @@ import { useAuth } from "@/lib/auth-context";
 const IMG_W = 800;
 const IMG_H = 540;
 const ZOOM = 19;
-const SCALE = 2; // retina — matches /api/aerial
 
 /** Props for {@link AerialView}. */
 export interface AerialViewProps {
@@ -40,6 +39,7 @@ export default function AerialView({
   const { lat, lng } = parcel;
   const [aerialSrc, setAerialSrc] = useState<string | null>(null);
   const [aerialError, setAerialError] = useState(false);
+  const [attribution, setAttribution] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +48,7 @@ export default function AerialView({
     async function loadAerial() {
       setAerialError(false);
       setAerialSrc(null);
+      setAttribution(null);
 
       try {
         const idToken = await user?.getIdToken();
@@ -73,6 +74,7 @@ export default function AerialView({
         }
         if (!cancelled) {
           setAerialError(res.headers.get("X-Aerial-Fallback") === "true");
+          setAttribution(res.headers.get("X-Aerial-Attribution"));
           setAerialSrc(objectUrl);
         }
       } catch {
@@ -92,7 +94,7 @@ export default function AerialView({
 
   // Project a lat/lng to SVG pixel coordinates
   const toPixel = (pLat: number, pLng: number) =>
-    latLngToPixel(pLat, pLng, lat, lng, ZOOM, IMG_W, IMG_H, SCALE);
+    latLngToPixel(pLat, pLng, lat, lng, ZOOM, IMG_W, IMG_H);
 
   // Project parcel boundary GeoJSON to SVG polygon points string
   const boundaryPoints = useMemo(() => {
@@ -181,6 +183,13 @@ export default function AerialView({
             width={IMG_W}
             height={IMG_H}
             draggable={false}
+            onError={() => {
+              // Undecodable payload (truncated raster, provider error bytes):
+              // drop the image and show the unavailable notice instead.
+              setAerialSrc(null);
+              setAttribution(null);
+              setAerialError(true);
+            }}
           />
         </>
       ) : (
@@ -306,6 +315,16 @@ export default function AerialView({
           role="note"
         >
           Aerial imagery unavailable - showing the parcel overlay without a satellite base.
+        </div>
+      )}
+
+      {/* Imagery attribution (required for the keyless Esri fallback base) */}
+      {attribution && (
+        <div
+          className="pointer-events-none absolute bottom-1 right-2 text-[10px] leading-tight text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]"
+          role="note"
+        >
+          {attribution}
         </div>
       )}
 

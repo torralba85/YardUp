@@ -112,7 +112,7 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 | Route | Purpose |
 |---|---|
 | `app/api/parcel/route.ts` | GET: Proxies Regrid parcel data by lat/lng, falls back to preset defaults |
-| `app/api/aerial/route.ts` | GET: Proxies Google Maps Static satellite image by lat/lng |
+| `app/api/aerial/route.ts` | GET: Proxies Google Maps Static satellite image by lat/lng, falls back to keyless Esri World Imagery, then an SVG placeholder |
 
 ### Firebase
 
