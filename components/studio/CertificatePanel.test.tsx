@@ -100,7 +100,7 @@ describe("CertificatePanel", () => {
     expect(onGenerateProjectBrief).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps the certificate closed and shows an error when token lookup fails", async () => {
+  it("opens the deterministic certificate with an inline error when token lookup fails", async () => {
     mocks.getIdToken.mockRejectedValueOnce(new Error("auth unavailable"));
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();
@@ -110,7 +110,10 @@ describe("CertificatePanel", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/verify your session/i);
     expect(onGenerateProjectBrief).not.toHaveBeenCalled();
-    expect(onOpenCertificate).not.toHaveBeenCalled();
+    expect(onOpenCertificate).toHaveBeenCalledWith(
+      "We could not verify your session. Please try again.",
+    );
+    expect(onOpenCertificate).toHaveBeenCalledTimes(1);
   });
 
   it("does not reopen the same certificate after a loading refresh flicker", async () => {

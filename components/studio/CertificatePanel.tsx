@@ -34,8 +34,8 @@ export interface CertificatePanelProps {
   result: FeasibilityResult;
   /** Display name of the lot. */
   parcelName: string;
-  /** Open the unlocked certificate artifact (the report preview). */
-  onOpenCertificate: () => void;
+  /** Open the unlocked certificate artifact, optionally carrying an AI setup error. */
+  onOpenCertificate: (projectBriefError?: string) => void;
   /** Unified AI interpretation recorded in the certificate when available. */
   projectBrief: AIProjectBrief | null;
   projectBriefLoading: boolean;
@@ -85,7 +85,9 @@ export default function CertificatePanel({
         try {
           idToken = await user.getIdToken();
         } catch {
-          setError("We could not verify your session. Please try again.");
+          const message = "We could not verify your session. Please try again.";
+          setError(message);
+          onOpenCertificate(message);
           return;
         }
         try {

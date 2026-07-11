@@ -385,7 +385,15 @@ function FeasibilityStudioInner() {
     setAddressFocusSignal((n) => n + 1);
   }
 
-  function handleGenerateReport() {
+  function handleGenerateReport(projectBriefUnavailableError?: string) {
+    if (projectBriefUnavailableError) {
+      setProjectBriefState((current) => ({
+        key: projectBriefKey,
+        data: current?.key === projectBriefKey ? current.data : null,
+        loading: false,
+        error: projectBriefUnavailableError,
+      }));
+    }
     setReportOpen(true);
     setReportAutoFocus(true);
   }
