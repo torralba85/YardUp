@@ -35,6 +35,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
 
   const lookupCoordinates = useCallback(
     async (lat: number, lng: number, address?: string) => {
+      if (lookupLoading) return;
       setLookupLoading(true);
       setLookupError(null);
       try {
@@ -47,13 +48,13 @@ export default function SignedInStudioGate({ user }: { user: User }) {
         setLookupLoading(false);
       }
     },
-    [openWithParcel, user],
+    [lookupLoading, openWithParcel, user],
   );
 
   const lookupText = useCallback(
     async (query: string) => {
       const trimmed = query.trim();
-      if (!trimmed) return;
+      if (!trimmed || lookupLoading) return;
       setLookupLoading(true);
       setLookupError(null);
       try {
@@ -67,7 +68,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
         setLookupLoading(false);
       }
     },
-    [openWithParcel, user],
+    [lookupLoading, openWithParcel, user],
   );
 
   // Landing address handoff intentionally starts the lookup during hydration.
