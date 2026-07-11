@@ -40,6 +40,7 @@ export default function AerialView({
   const { lat, lng } = parcel;
   const [aerialSrc, setAerialSrc] = useState<string | null>(null);
   const [aerialError, setAerialError] = useState(false);
+  const [attribution, setAttribution] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +49,7 @@ export default function AerialView({
     async function loadAerial() {
       setAerialError(false);
       setAerialSrc(null);
+      setAttribution(null);
 
       try {
         const idToken = await user?.getIdToken();
@@ -73,6 +75,7 @@ export default function AerialView({
         }
         if (!cancelled) {
           setAerialError(res.headers.get("X-Aerial-Fallback") === "true");
+          setAttribution(res.headers.get("X-Aerial-Attribution"));
           setAerialSrc(objectUrl);
         }
       } catch {
@@ -306,6 +309,16 @@ export default function AerialView({
           role="note"
         >
           Aerial imagery unavailable - showing the parcel overlay without a satellite base.
+        </div>
+      )}
+
+      {/* Imagery attribution (required for the keyless Esri fallback base) */}
+      {attribution && (
+        <div
+          className="pointer-events-none absolute bottom-1 right-2 text-[10px] leading-tight text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]"
+          role="note"
+        >
+          {attribution}
         </div>
       )}
 

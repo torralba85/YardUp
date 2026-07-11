@@ -3,10 +3,28 @@ import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
 const MAPS_STATIC_API = "https://maps.googleapis.com/maps/api/staticmap";
+const ESRI_EXPORT_API =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export";
+const ESRI_ATTRIBUTION =
+  "Imagery: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 const TIMEOUT_MS = 5000;
+
+/** Zoom level for the parcel view; AerialView's overlay projection assumes it. */
+const ZOOM = 19;
+/** Retina factor; matches AerialView's SCALE and Google's scale=2. */
+const SCALE = 2;
+/** WGS84 / Web Mercator (EPSG:3857) equatorial radius in meters. */
+const EARTH_RADIUS_M = 6378137;
+/** Web Mercator breaks down at the poles; clamp like the client projection. */
+const MAX_MERCATOR_LAT = 85.05112878;
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
+
+interface AerialImage {
+  buffer: ArrayBuffer;
+  contentType: string;
+}
 
 function aerialFallbackResponse(reason: "unconfigured" | "upstream") {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" role="img" aria-label="Aerial imagery unavailable">
@@ -43,14 +61,132 @@ function aerialFallbackResponse(reason: "unconfigured" | "upstream") {
   });
 }
 
+function imageResponse(
+  image: AerialImage,
+  provider: "google" | "esri",
+  attribution?: string,
+) {
+  const headers: Record<string, string> = {
+    "Content-Type": image.contentType,
+    "Cache-Control": "private, max-age=86400",
+    "X-Aerial-Provider": provider,
+  };
+  if (attribution) headers["X-Aerial-Attribution"] = attribution;
+  return new NextResponse(image.buffer, { status: 200, headers });
+}
+
+async function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchGoogleStatic(
+  lat: number,
+  lng: number,
+  w: number,
+  h: number,
+  mapsKey: string,
+): Promise<AerialImage | null> {
+  const url = new URL(MAPS_STATIC_API);
+  url.searchParams.set("center", `${lat},${lng}`);
+  url.searchParams.set("zoom", String(ZOOM));
+  url.searchParams.set("size", `${w}x${h}`);
+  url.searchParams.set("maptype", "satellite");
+  url.searchParams.set("scale", String(SCALE)); // retina
+  url.searchParams.set("key", mapsKey);
+
+  try {
+    const res = await fetchWithTimeout(url.toString());
+    if (!res.ok) {
+      console.warn(`[/api/aerial] Maps Static returned ${res.status}`);
+      return null;
+    }
+    return {
+      buffer: await res.arrayBuffer(),
+      contentType: res.headers.get("content-type") ?? "image/png",
+    };
+  } catch (err) {
+    console.warn("[/api/aerial] Maps Static fetch failed:", err);
+    return null;
+  }
+}
+
+/**
+ * Web Mercator (EPSG:3857) bbox covering the same ground extent as a Google
+ * Static Maps image centered on lat/lng at {@link ZOOM}. Both providers use
+ * the standard 256px tile pyramid, so an Esri export of this bbox at
+ * `w*SCALE x h*SCALE` pixels is pixel-equivalent to the Google view — which
+ * keeps AerialView's latLngToPixel overlay projection accurate.
+ */
+function mercatorBbox(lat: number, lng: number, w: number, h: number): string {
+  const clampedLat = Math.min(Math.max(lat, -MAX_MERCATOR_LAT), MAX_MERCATOR_LAT);
+  const x = (lng * Math.PI * EARTH_RADIUS_M) / 180;
+  const y =
+    Math.log(Math.tan(Math.PI / 4 + (clampedLat * Math.PI) / 360)) *
+    EARTH_RADIUS_M;
+  // Meters per CSS pixel at this zoom in Mercator units.
+  const resolution = (2 * Math.PI * EARTH_RADIUS_M) / 256 / 2 ** ZOOM;
+  const halfW = (w / 2) * resolution;
+  const halfH = (h / 2) * resolution;
+  return [x - halfW, y - halfH, x + halfW, y + halfH]
+    .map((v) => v.toFixed(4))
+    .join(",");
+}
+
+/**
+ * Keyless satellite fallback: Esri World Imagery "Export Map". Used when
+ * GOOGLE_MAPS_API_KEY is missing or Maps Static fails, so production still
+ * renders a real aerial base. Requires attribution (surfaced via the
+ * X-Aerial-Attribution header and rendered by AerialView).
+ */
+async function fetchEsriExport(
+  lat: number,
+  lng: number,
+  w: number,
+  h: number,
+): Promise<AerialImage | null> {
+  const url = new URL(ESRI_EXPORT_API);
+  url.searchParams.set("bbox", mercatorBbox(lat, lng, w, h));
+  url.searchParams.set("bboxSR", "3857");
+  url.searchParams.set("imageSR", "3857");
+  url.searchParams.set("size", `${w * SCALE},${h * SCALE}`);
+  url.searchParams.set("format", "jpg");
+  url.searchParams.set("f", "image");
+
+  try {
+    const res = await fetchWithTimeout(url.toString());
+    if (!res.ok) {
+      console.warn(`[/api/aerial] Esri export returned ${res.status}`);
+      return null;
+    }
+    // ArcGIS reports some errors as 200 with a JSON/HTML body; only trust
+    // responses that are actually images.
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.startsWith("image/")) {
+      console.warn(`[/api/aerial] Esri export returned non-image: ${contentType}`);
+      return null;
+    }
+    return { buffer: await res.arrayBuffer(), contentType };
+  } catch (err) {
+    console.warn("[/api/aerial] Esri export fetch failed:", err);
+    return null;
+  }
+}
+
 /**
  * GET /api/aerial?lat={lat}&lng={lng}&w={width}&h={height}
  *
- * Proxies a Google Maps Static satellite image request server-side so that
- * GOOGLE_MAPS_API_KEY is never exposed to the browser. Returns the raw
- * image bytes with the correct Content-Type.
- *
- * Images are cached for 1 week since satellite imagery rarely changes.
+ * Returns a satellite image centered on the parcel. Tries Google Maps Static
+ * first (proxied server-side so GOOGLE_MAPS_API_KEY is never exposed to the
+ * browser), then falls back to the keyless Esri World Imagery export, and
+ * only serves the SVG placeholder when both providers fail. Raw image bytes
+ * are returned with the correct Content-Type; X-Aerial-Provider identifies
+ * the source.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -72,46 +208,13 @@ export async function GET(request: NextRequest) {
   const h = Math.min(Math.max(parseInt(hStr, 10) || 540, 100), 1280);
 
   const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!mapsKey) {
-    return aerialFallbackResponse("unconfigured");
+  if (mapsKey) {
+    const googleImage = await fetchGoogleStatic(lat, lng, w, h, mapsKey);
+    if (googleImage) return imageResponse(googleImage, "google");
   }
 
-  const url = new URL(MAPS_STATIC_API);
-  url.searchParams.set("center", `${lat},${lng}`);
-  url.searchParams.set("zoom", "19");
-  url.searchParams.set("size", `${w}x${h}`);
-  url.searchParams.set("maptype", "satellite");
-  url.searchParams.set("scale", "2"); // retina
-  url.searchParams.set("key", mapsKey);
+  const esriImage = await fetchEsriExport(lat, lng, w, h);
+  if (esriImage) return imageResponse(esriImage, "esri", ESRI_ATTRIBUTION);
 
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-    let res: Response;
-    try {
-      res = await fetch(url.toString(), { signal: controller.signal });
-    } finally {
-      clearTimeout(timer);
-    }
-
-    if (!res.ok) {
-      console.warn(`[/api/aerial] Maps Static returned ${res.status}`);
-      return aerialFallbackResponse("upstream");
-    }
-
-    const contentType = res.headers.get("content-type") ?? "image/png";
-    const buffer = await res.arrayBuffer();
-
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "private, max-age=86400",
-      },
-    });
-  } catch (err) {
-    console.warn("[/api/aerial] Fetch failed:", err);
-    return aerialFallbackResponse("upstream");
-  }
+  return aerialFallbackResponse(mapsKey ? "upstream" : "unconfigured");
 }
