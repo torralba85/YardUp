@@ -67,7 +67,11 @@ export default function ReportPreview({
             </div>
             <div className="mx-auto mt-2 h-px w-10 bg-lf-hairline" />
             <div className="lf-caption mt-2 truncate text-lf-muted">{parcelName}</div>
-            <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.18em] text-lf-brick">
+            {/* 8px is below the 9px informational floor (DESIGN.md), but this
+                mini certificate is a decorative facsimile thumbnail, not
+                informational text — the sanctioned exception. Do not lift to
+                lf-dataprint; that's for the real, readable inline certificate. */}
+            <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-lf-brick">
               Concept
             </div>
           </div>

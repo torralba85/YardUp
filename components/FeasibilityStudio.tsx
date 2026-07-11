@@ -69,13 +69,7 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
       aria-label="Loading parcel scene"
       role="status"
     >
-      <div
-        className="absolute inset-0 animate-pulse"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 18%, rgba(242,229,213,0.07), transparent 38%), linear-gradient(150deg, rgba(89,42,15,0.45) 0%, rgba(38,19,7,0.95) 60%)",
-        }}
-      />
+      <div className="absolute inset-0 animate-pulse bg-lf-mahogany/40" />
       <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
         <div className="h-3 w-32 animate-pulse rounded bg-lf-taupe/15" />
         <div className="h-2.5 w-56 animate-pulse rounded bg-lf-taupe/10" />

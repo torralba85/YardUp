@@ -130,7 +130,7 @@ export default function LeadCard({
       )}
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-lf-muted">
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
           {statusLabel(item.response.status)}
         </span>
         <div className="flex gap-2">

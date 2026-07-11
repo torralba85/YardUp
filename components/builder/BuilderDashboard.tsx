@@ -14,6 +14,7 @@ import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -164,14 +165,16 @@ function BuilderHeader({
         </Link>
         <div className="flex min-w-0 items-center gap-3">
           <span className="hidden min-w-0 truncate text-sm text-lf-muted sm:block">{identity}</span>
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="xs"
             onClick={onSignOut}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-lf-hairline px-4 py-1.5 text-xs font-semibold text-lf-espresso transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay"
+            leftIcon={<LogOut size={13} />}
+            className="shrink-0"
           >
-            <LogOut size={13} />
             Sign out
-          </button>
+          </Button>
         </div>
       </div>
     </header>

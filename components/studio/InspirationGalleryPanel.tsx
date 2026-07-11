@@ -106,10 +106,9 @@ export default function InspirationGalleryPanel({
                       alt={`${item.title} Real 3D Render`}
                       fill
                       sizes="(max-width: 768px) 100vw, 384px"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
                       unoptimized // Served locally, bypass dynamic resizing costs/issues
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
                   </div>
 
                   {item.isStyleMatched && (

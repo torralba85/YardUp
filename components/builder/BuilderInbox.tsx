@@ -519,7 +519,7 @@ export default function BuilderInbox({
 
                               {/* Response triage inline buttons */}
                               <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-                                <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-lf-muted">
+                                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
                                   Response: {selectedItem.response.status === "interested" ? "Interested" : selectedItem.response.status === "not-a-fit" ? "Archived" : "New"}
                                 </span>
                                 <div className="flex gap-2">
@@ -613,7 +613,7 @@ export default function BuilderInbox({
                                   </div>
                                 ) : (
                                   /* Full styled inline certificate report */
-                                  <div className="border-[1.5px] border-lf-espresso bg-lf-card p-1 rounded-lg">
+                                  <div className="border-[1.5px] border-lf-espresso bg-lf-card p-1">
                                     <div className="border border-lf-taupe p-4 space-y-4">
                                       {/* Monogram / Header */}
                                       <div className="text-center border-b border-lf-hairline pb-2">
@@ -719,7 +719,7 @@ export default function BuilderInbox({
 
                               {/* Response triage inline buttons */}
                               <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-                                <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-lf-muted">
+                                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
                                   Response: {selectedItem.response.status === "interested" ? "Interested" : selectedItem.response.status === "not-a-fit" ? "Archived" : "New"}
                                 </span>
                                 <div className="flex gap-2">
@@ -806,7 +806,7 @@ function ZeroEverEmptyState() {
         </p>
       </div>
 
-      <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.16em] text-lf-muted">
+      <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
         Example · this is what a lead looks like
       </p>
       <article

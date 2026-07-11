@@ -34,7 +34,7 @@ export default function IncomeRail({ monthlyRent, verdict }: IncomeRailProps) {
       className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-lf-espresso px-7 py-2.5 text-lf-sand"
     >
       <div className="flex items-baseline gap-3">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-lf-taupe">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
           If built
         </span>
         <span

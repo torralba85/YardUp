@@ -24,6 +24,7 @@ import {
 import { type ADUConfig, type FeasibilityResult, type FinancialAssumptions, type Parcel, type RentScenario } from "@/lib/feasibility";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Segmented } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 import {
   summarizeFeasibility,
   statusTone,
@@ -203,14 +204,16 @@ export default function ConstraintsPanel({
         </p>
       </div>
       <div className="px-[22px] pb-4">
-        <button
+        <Button
           type="button"
+          variant="commit"
+          size="md"
+          fullWidth
           onClick={onViewCertificate}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-lf-forest text-[13px] font-semibold text-lf-sand transition hover:bg-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+          leftIcon={<Stamp size={15} />}
         >
-          <Stamp size={15} />
           View certificate
-        </button>
+        </Button>
       </div>
     </aside>
   );
