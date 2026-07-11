@@ -2,6 +2,11 @@ import type { LiveParcelData } from "./parcel-types";
 
 const INITIAL_PARCEL_KEY = "lf:initial-live-parcel";
 
+// Same-page fallback for when sessionStorage.setItem throws (private/restricted
+// browsing modes): the gate and the provider it hands off to mount in the same
+// page load, so an in-memory value is enough even without persisted storage.
+let inMemoryParcel: LiveParcelData | null = null;
+
 /**
  * Stash a resolved live parcel for the studio's next mount.
  *
@@ -13,31 +18,34 @@ const INITIAL_PARCEL_KEY = "lf:initial-live-parcel";
  */
 export function stashInitialParcel(parcel: LiveParcelData): boolean {
   if (typeof window === "undefined") return false;
+  inMemoryParcel = parcel;
   try {
     window.sessionStorage.setItem(INITIAL_PARCEL_KEY, JSON.stringify(parcel));
-    return true;
   } catch {
-    // Storage can be unavailable in private browsing; the caller keeps the gate
-    // open and can surface a retry instead of falling through to demo data.
-    return false;
+    // Storage can be unavailable in private browsing; the in-memory fallback
+    // above still lets the studio pick up the already-fetched parcel this page load.
   }
+  return true;
 }
 
 /** Read the pending parcel without removing it so React Strict Mode is safe. */
 export function peekInitialParcel(): LiveParcelData | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") return inMemoryParcel;
   try {
     const raw = window.sessionStorage.getItem(INITIAL_PARCEL_KEY);
-    if (!raw) return null;
-    const value: unknown = JSON.parse(raw);
-    return isLiveParcelData(value) ? value : null;
+    if (raw) {
+      const value: unknown = JSON.parse(raw);
+      if (isLiveParcelData(value)) return value;
+    }
   } catch {
-    return null;
+    // Fall through to the in-memory fallback.
   }
+  return inMemoryParcel;
 }
 
 /** Clear the one-shot parcel after the provider has initialized from it. */
 export function clearInitialParcel(): void {
+  inMemoryParcel = null;
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.removeItem(INITIAL_PARCEL_KEY);

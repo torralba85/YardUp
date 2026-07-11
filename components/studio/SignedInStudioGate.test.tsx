@@ -133,4 +133,20 @@ describe("SignedInStudioGate", () => {
     );
     expect(mocks.stashInitialParcel).toHaveBeenCalledWith(parcel);
   });
+
+  it("prefers an explicit ?q= URL address over a stale landing-page handoff", async () => {
+    window.history.replaceState(null, "", "/studio?q=456+Oak+Ave");
+    mocks.consumeAddressQuery.mockReturnValue("123 Main St");
+    mocks.geocodeAddress.mockResolvedValue({
+      lat: parcel.lat,
+      lng: parcel.lng,
+      formattedAddress: "456 Oak Ave",
+    });
+    mocks.fetchParcel.mockResolvedValue(parcel);
+
+    render(<SignedInStudioGate user={user} />);
+
+    expect(await screen.findByText("Real Parcel Studio")).toBeInTheDocument();
+    expect(mocks.geocodeAddress).toHaveBeenCalledWith("456 Oak Ave", "token");
+  });
 });

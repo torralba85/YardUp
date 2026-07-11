@@ -80,7 +80,8 @@ export default function SignedInStudioGate({ user }: { user: User }) {
     handoffStarted.current = true;
 
     const params = new URLSearchParams(window.location.search);
-    const pendingAddress = consumeAddressQuery() ?? params.get("q")?.trim() ?? null;
+    const urlAddress = params.get("q")?.trim() || null;
+    const pendingAddress = urlAddress ?? consumeAddressQuery();
     if (!pendingAddress) return;
 
     if (params.has("q")) {
