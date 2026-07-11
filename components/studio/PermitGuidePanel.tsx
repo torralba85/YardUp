@@ -83,10 +83,10 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
   return (
     <section
       aria-label="Permit guide panel"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden xl:w-[404px] xl:border-l"
+      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:border-t"
     >
-      <div className="flex h-full flex-col lg:min-h-0">
-        <div className="border-b border-lf-hairline px-6 py-5">
+      <div className="flex flex-col gap-4 border-b border-lf-hairline px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
           <h2 className="lf-panel-heading text-lf-espresso">
             Permit Guide
           </h2>
@@ -95,48 +95,50 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
           </p>
         </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4 lg:min-h-0">
+        {/* Risk Level Badge */}
+        <div className={`flex items-start gap-2.5 rounded-md border p-3.5 text-xs font-semibold lg:max-w-md ${risk.colorClass}`}>
+          <RiskIcon size={16} className="mt-0.5 shrink-0" />
           <div>
-            <h3 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{guide.title}</h3>
-            <p className="lf-body-sm mt-2 text-lf-muted">{guide.summary}</p>
+            <div>{risk.label}</div>
+            <p className="mt-1 font-normal leading-4 opacity-80">
+              Verified at: {guide.verifiedAt} · Confidence: {guide.confidence}
+            </p>
           </div>
+        </div>
+      </div>
 
-          {/* Risk Level Badge */}
-          <div className={`flex items-start gap-2.5 rounded-md border p-3.5 text-xs font-semibold ${risk.colorClass}`}>
-            <RiskIcon size={16} className="mt-0.5 shrink-0" />
-            <div>
-              <div>{risk.label}</div>
-              <p className="mt-1 font-normal leading-4 opacity-80">
-                Verified at: {guide.verifiedAt} · Confidence: {guide.confidence}
-              </p>
-            </div>
+      <div className="grid gap-8 px-6 py-5 lg:grid-cols-3 lg:gap-10">
+        <div>
+          <h3 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{guide.title}</h3>
+          <p className="lf-body-sm mt-2 text-lf-muted">{guide.summary}</p>
+        </div>
+
+        {/* Permit Steps Checklist */}
+        <div className="space-y-3">
+          <h4 className="lf-kicker-dense text-lf-muted">
+            Permitting Steps
+          </h4>
+          <div className="space-y-2.5">
+            {guide.permitSteps.map((step, idx) => (
+              <label
+                key={idx}
+                className="flex items-start gap-3 rounded-lg border border-lf-hairline bg-lf-sand/20 p-3 hover:bg-lf-sand/40 transition cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={!!checkedItems[step]}
+                  onChange={() => handleToggle(step)}
+                  className="mt-0.5 h-4 w-4 accent-lf-clay rounded focus:ring-lf-clay"
+                />
+                <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
+                  {step}
+                </span>
+              </label>
+            ))}
           </div>
+        </div>
 
-          {/* Permit Steps Checklist */}
-          <div className="space-y-3">
-            <h4 className="lf-kicker-dense text-lf-muted">
-              Permitting Steps
-            </h4>
-            <div className="space-y-2.5">
-              {guide.permitSteps.map((step, idx) => (
-                <label
-                  key={idx}
-                  className="flex items-start gap-3 rounded-lg border border-lf-hairline bg-lf-sand/20 p-3 hover:bg-lf-sand/40 transition cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!checkedItems[step]}
-                    onChange={() => handleToggle(step)}
-                    className="mt-0.5 h-4 w-4 accent-lf-clay rounded focus:ring-lf-clay"
-                  />
-                  <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
-                    {step}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
+        <div className="space-y-6">
           {/* Blockers / Warnings */}
           {guide.blockers.length > 0 && (
             <div className="space-y-3">
