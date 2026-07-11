@@ -24,6 +24,19 @@ describe("projectBriefDef", () => {
     expect(projectBriefDef.validateInput({ config: {}, result: {} }).ok).toBe(false);
   });
 
+  it.each([undefined, 42, "   "])(
+    "rejects an invalid parcel address before building context (%p)",
+    (address) => {
+      const input = validInput();
+      expect(
+        projectBriefDef.validateInput({
+          ...input,
+          parcel: { ...input.parcel, address },
+        }).ok,
+      ).toBe(false);
+    },
+  );
+
   it("requires the permit tools in a deterministic order", () => {
     expect(projectBriefDef.requiredToolSequence).toEqual([
       "lookup_permit_tracks",

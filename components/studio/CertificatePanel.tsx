@@ -78,16 +78,26 @@ export default function CertificatePanel({
     }
 
     setPreparingBrief(true);
+    setError(null);
     try {
       if (!projectBrief) {
-        await onGenerateProjectBrief(await user.getIdToken());
+        let idToken: string;
+        try {
+          idToken = await user.getIdToken();
+        } catch {
+          setError("We could not verify your session. Please try again.");
+          return;
+        }
+        try {
+          await onGenerateProjectBrief(idToken);
+        } catch {
+          // The deterministic certificate remains available. ReportPreview carries
+          // the persistent inline AI error and the user can refresh the brief.
+        }
       }
-    } catch {
-      // The deterministic certificate remains available. ReportPreview carries
-      // the persistent inline AI error and the user can refresh the brief.
+      onOpenCertificate();
     } finally {
       setPreparingBrief(false);
-      onOpenCertificate();
     }
   }, [onGenerateProjectBrief, onOpenCertificate, projectBrief, user]);
 
@@ -119,8 +129,8 @@ export default function CertificatePanel({
       openedOnUnlock.current = true;
       void prepareAndOpenCertificate();
     }
-    if (!purchased) openedOnUnlock.current = false;
-  }, [prepareAndOpenCertificate, purchased, user]);
+    if (!loading && !purchased) openedOnUnlock.current = false;
+  }, [loading, prepareAndOpenCertificate, purchased, user]);
 
   async function handleCta() {
     if (purchased) {
@@ -237,6 +247,11 @@ export default function CertificatePanel({
                   added yet.
                 </div>
               ) : null}
+              {error && (
+                <p role="alert" className="mt-3 text-xs leading-5 text-lf-brick">
+                  {error}
+                </p>
+              )}
             </div>
           </div>
         ) : (

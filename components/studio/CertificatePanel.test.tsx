@@ -1,5 +1,5 @@
-import { render, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -7,11 +7,15 @@ import {
   parcelPresets,
 } from "@/lib/feasibility";
 import type { AIProjectBrief } from "@/lib/ai-types";
-import CertificatePanel from "./CertificatePanel";
+import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
 
 const mocks = vi.hoisted(() => ({
-  getIdToken: vi.fn().mockResolvedValue("test-token"),
+  getIdToken: vi.fn(),
   refresh: vi.fn(),
+  access: {
+    purchased: true,
+    loading: false,
+  },
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -19,7 +23,7 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 vi.mock("@/lib/certificate-access", () => ({
-  useCertificateAccess: () => ({ purchased: true, loading: false, refresh: mocks.refresh }),
+  useCertificateAccess: () => ({ ...mocks.access, refresh: mocks.refresh }),
 }));
 
 vi.mock("@/components/auth/AuthModal", () => ({
@@ -51,34 +55,79 @@ const brief: AIProjectBrief = {
   disclaimer: "Planning estimate only.",
 };
 
+const parcel = parcelPresets[0];
+const result = calculateFeasibility(
+  parcel,
+  defaultAduConfig,
+  defaultFinancialAssumptions,
+);
+
+function createProps(
+  overrides: Partial<CertificatePanelProps> = {},
+): CertificatePanelProps {
+  return {
+    parcel,
+    result,
+    parcelName: `${parcel.address}, ${parcel.city}`,
+    onOpenCertificate: vi.fn(),
+    projectBrief: null,
+    projectBriefLoading: false,
+    projectBriefError: null,
+    onGenerateProjectBrief: vi.fn().mockResolvedValue(brief),
+    ...overrides,
+  };
+}
+
 describe("CertificatePanel", () => {
+  beforeEach(() => {
+    mocks.getIdToken.mockReset().mockResolvedValue("test-token");
+    mocks.refresh.mockReset();
+    mocks.access.purchased = true;
+    mocks.access.loading = false;
+  });
+
   it("prepares the combined AI brief before automatically opening an unlocked certificate", async () => {
-    const parcel = parcelPresets[0];
-    const result = calculateFeasibility(
-      parcel,
-      defaultAduConfig,
-      defaultFinancialAssumptions,
-    );
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();
+    const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
 
-    render(
-      <CertificatePanel
-        parcel={parcel}
-        result={result}
-        parcelName={`${parcel.address}, ${parcel.city}`}
-        onOpenCertificate={onOpenCertificate}
-        projectBrief={null}
-        projectBriefLoading={false}
-        projectBriefError={null}
-        onGenerateProjectBrief={onGenerateProjectBrief}
-      />,
-    );
+    render(<CertificatePanel {...props} />);
 
     await waitFor(() => {
       expect(onGenerateProjectBrief).toHaveBeenCalledWith("test-token");
       expect(onOpenCertificate).toHaveBeenCalledTimes(1);
     });
     expect(onGenerateProjectBrief).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the certificate closed and shows an error when token lookup fails", async () => {
+    mocks.getIdToken.mockRejectedValueOnce(new Error("auth unavailable"));
+    const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
+    const onOpenCertificate = vi.fn();
+    const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
+
+    render(<CertificatePanel {...props} />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/verify your session/i);
+    expect(onGenerateProjectBrief).not.toHaveBeenCalled();
+    expect(onOpenCertificate).not.toHaveBeenCalled();
+  });
+
+  it("does not reopen the same certificate after a loading refresh flicker", async () => {
+    const onOpenCertificate = vi.fn();
+    const props = createProps({ projectBrief: brief, onOpenCertificate });
+    const { rerender } = render(<CertificatePanel {...props} />);
+
+    await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
+
+    mocks.access.purchased = false;
+    mocks.access.loading = true;
+    rerender(<CertificatePanel {...props} />);
+
+    mocks.access.purchased = true;
+    mocks.access.loading = false;
+    rerender(<CertificatePanel {...props} />);
+
+    await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
   });
 });

@@ -113,6 +113,12 @@ export const projectBriefDef: AIPanelDefinition<
     if (typeof input.parcel.city !== "string" || input.parcel.city.trim().length === 0) {
       return { ok: false, error: "parcel.city is required to determine the jurisdiction." };
     }
+    if (
+      typeof input.parcel.address !== "string" ||
+      input.parcel.address.trim().length === 0
+    ) {
+      return { ok: false, error: "parcel.address is required to identify the property." };
+    }
     return { ok: true, value: input as AIProjectBriefInput };
   },
   buildContext: (input) => {
