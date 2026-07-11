@@ -8,14 +8,18 @@ const INITIAL_PARCEL_KEY = "lf:initial-live-parcel";
  * This is intentionally session-only and one-shot: signed-in users should enter
  * the studio with real property data, without persisting an address in the URL
  * or briefly rendering a demo preset while the lookup completes.
+ *
+ * @returns Whether the parcel was stored successfully.
  */
-export function stashInitialParcel(parcel: LiveParcelData): void {
-  if (typeof window === "undefined") return;
+export function stashInitialParcel(parcel: LiveParcelData): boolean {
+  if (typeof window === "undefined") return false;
   try {
     window.sessionStorage.setItem(INITIAL_PARCEL_KEY, JSON.stringify(parcel));
+    return true;
   } catch {
     // Storage can be unavailable in private browsing; the caller keeps the gate
     // open and can surface a retry instead of falling through to demo data.
+    return false;
   }
 }
 
