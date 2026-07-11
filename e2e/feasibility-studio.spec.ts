@@ -52,6 +52,15 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: /Create account/i })).toBeVisible();
   });
 
+  test("new homeowners start with a blank property workspace", async ({ page }) => {
+    await signUpUser(page);
+
+    await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible();
+    await expect(page.getByText("No property loaded")).toBeVisible();
+    await expect(page.getByText(/Seattle|Portland|Austin/)).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Studio steps" })).toHaveCount(0);
+  });
+
   test("studio is open to guests for the wizard funnel", async ({ page, viewport }) => {
     await page.goto("/studio");
 
@@ -73,12 +82,12 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 
-  test("user can navigate to Permit Guide and view local rules", async ({ page, viewport }) => {
+  test("guest can navigate to Permit Guide and view demo rules", async ({ page, viewport }) => {
     const mobile = !!viewport && viewport.width < 1024;
     // Mobile shows the first-run wizard on a fresh profile — skip it so the
     // test lands in the sheet studio directly.
     if (mobile) await skipMobileFirstRunUi(page);
-    await signUpUser(page);
+    await page.goto("/studio");
     if (mobile) {
       // Mobile renders the permit guide inside the bottom sheet's sections —
       // expand to full snap (peek → half → full) to reach it.
@@ -94,10 +103,10 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();
   });
 
-  test("user can browse Inspiration Gallery and apply a template", async ({ page, viewport }) => {
+  test("guest can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
     const mobile = !!viewport && viewport.width < 1024;
     if (mobile) await skipMobileFirstRunUi(page);
-    await signUpUser(page);
+    await page.goto("/studio");
     if (mobile) {
       // Mobile renders the gallery inside the Design step's sheet sections.
       await page.locator("nav button").filter({ hasText: /^Design/ }).click();
