@@ -70,6 +70,10 @@ export default function SignedInStudioGate({ user }: { user: User }) {
     [openWithParcel, user],
   );
 
+  // Landing address handoff intentionally starts the lookup during hydration.
+  // The state updates happen inside the async lookup rather than deriving render
+  // state from the effect itself, so keep this exception scoped to this effect.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (handoffStarted.current || typeof window === "undefined") return;
     handoffStarted.current = true;
@@ -80,11 +84,15 @@ export default function SignedInStudioGate({ user }: { user: User }) {
 
     if (params.has("q")) {
       params.delete("q");
-      const next = params.size > 0 ? `${window.location.pathname}?${params}` : window.location.pathname;
+      const remaining = params.toString();
+      const next = remaining
+        ? `${window.location.pathname}?${remaining}`
+        : window.location.pathname;
       window.history.replaceState(null, "", next);
     }
     void lookupText(pendingAddress);
   }, [lookupText]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (studioReady) {
     return <FeasibilityStudio />;
