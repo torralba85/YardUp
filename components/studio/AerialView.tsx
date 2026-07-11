@@ -9,7 +9,6 @@ import { useAuth } from "@/lib/auth-context";
 const IMG_W = 800;
 const IMG_H = 540;
 const ZOOM = 19;
-const SCALE = 2; // retina — matches /api/aerial
 
 /** Props for {@link AerialView}. */
 export interface AerialViewProps {
@@ -95,7 +94,7 @@ export default function AerialView({
 
   // Project a lat/lng to SVG pixel coordinates
   const toPixel = (pLat: number, pLng: number) =>
-    latLngToPixel(pLat, pLng, lat, lng, ZOOM, IMG_W, IMG_H, SCALE);
+    latLngToPixel(pLat, pLng, lat, lng, ZOOM, IMG_W, IMG_H);
 
   // Project parcel boundary GeoJSON to SVG polygon points string
   const boundaryPoints = useMemo(() => {

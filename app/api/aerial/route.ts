@@ -139,6 +139,26 @@ function mercatorBbox(lat: number, lng: number, w: number, h: number): string {
 }
 
 /**
+ * True when the payload starts with a known raster magic number (JPEG, PNG,
+ * GIF, or WebP). ArcGIS can serve soft errors with an image content type, so
+ * the header alone is not enough to trust the body.
+ */
+function looksLikeRasterImage(buffer: ArrayBuffer): boolean {
+  const b = new Uint8Array(buffer);
+  if (b.length < 12) return false;
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return true; // JPEG
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return true; // PNG
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return true; // GIF
+  if (
+    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50
+  ) {
+    return true; // WebP (RIFF....WEBP)
+  }
+  return false;
+}
+
+/**
  * Keyless satellite fallback: Esri World Imagery "Export Map". Used when
  * GOOGLE_MAPS_API_KEY is missing or Maps Static fails, so production still
  * renders a real aerial base. Requires attribution (surfaced via the
@@ -171,7 +191,12 @@ async function fetchEsriExport(
       console.warn(`[/api/aerial] Esri export returned non-image: ${contentType}`);
       return null;
     }
-    return { buffer: await res.arrayBuffer(), contentType };
+    const buffer = await res.arrayBuffer();
+    if (!looksLikeRasterImage(buffer)) {
+      console.warn("[/api/aerial] Esri export body is not a valid raster image");
+      return null;
+    }
+    return { buffer, contentType };
   } catch (err) {
     console.warn("[/api/aerial] Esri export fetch failed:", err);
     return null;

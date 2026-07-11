@@ -9,12 +9,17 @@ function makeRequest(): NextRequest {
   return new NextRequest(`http://localhost/api/aerial?lat=${LAT}&lng=${LNG}&w=800&h=540`);
 }
 
+// A minimal JPEG header (SOI + APP0 marker) so magic-byte sniffing passes.
+const JPEG_BYTES = new Uint8Array([
+  0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+]);
+
 function imageFetchResponse(contentType = "image/jpeg") {
   return {
     ok: true,
     status: 200,
     headers: new Headers({ "content-type": contentType }),
-    arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    arrayBuffer: async () => JPEG_BYTES.slice().buffer,
   };
 }
 
@@ -39,7 +44,7 @@ describe("GET /api/aerial", () => {
     expect(res.headers.get("Content-Type")).toBe("image/png");
     expect(res.headers.get("X-Aerial-Provider")).toBe("google");
     expect(res.headers.get("X-Aerial-Fallback")).toBeNull();
-    expect(new Uint8Array(await res.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+    expect(new Uint8Array(await res.arrayBuffer())).toEqual(JPEG_BYTES);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain("maps.googleapis.com");
   });
@@ -114,6 +119,26 @@ describe("GET /api/aerial", () => {
         status: 200,
         headers: new Headers({ "content-type": "text/html" }),
         arrayBuffer: async () => new ArrayBuffer(0),
+      }),
+    );
+
+    const res = await GET(makeRequest());
+
+    expect(res.headers.get("X-Aerial-Fallback")).toBe("true");
+    expect(res.headers.get("X-Aerial-Fallback-Reason")).toBe("unconfigured");
+  });
+
+  it("treats an Esri body without image magic bytes as a failure", async () => {
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "");
+    // ArcGIS soft error: image content type, but a JSON body.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "image/jpeg" }),
+        arrayBuffer: async () =>
+          new TextEncoder().encode('{"error":{"code":500}}').buffer,
       }),
     );
 

@@ -24,6 +24,11 @@ function project(lat: number, lng: number): { x: number; y: number } {
 /**
  * Convert a geographic coordinate to pixel position within a Static Maps image.
  *
+ * The image is treated as `imageWidth x imageHeight` CSS pixels of map
+ * coverage at `zoom`. Google's `scale` (retina) parameter only increases
+ * pixel density — it does not change ground coverage — so it does not enter
+ * this projection.
+ *
  * @param lat - Latitude of the point to project
  * @param lng - Longitude of the point to project
  * @param centerLat - Latitude of the map center (as requested to Static Maps API)
@@ -31,7 +36,6 @@ function project(lat: number, lng: number): { x: number; y: number } {
  * @param zoom - Zoom level (e.g. 19)
  * @param imageWidth - Width of the image in CSS pixels
  * @param imageHeight - Height of the image in CSS pixels
- * @param scale - Maps Static scale (1 or 2 for retina). Default 2.
  * @returns { x, y } pixel position within the image element
  */
 export function latLngToPixel(
@@ -42,23 +46,21 @@ export function latLngToPixel(
   zoom: number,
   imageWidth: number,
   imageHeight: number,
-  scale = 2,
 ): { x: number; y: number } {
   const numTiles = 1 << zoom; // 2^zoom
 
   const center = project(centerLat, centerLng);
   const point = project(lat, lng);
 
-  // Pixel offset from center in world pixels at this zoom
-  const dx = (point.x - center.x) * numTiles * TILE_SIZE;
-  const dy = (point.y - center.y) * numTiles * TILE_SIZE;
+  // project() already returns zoom-0 pixel coordinates (TILE_SIZE per world),
+  // so scaling by 2^zoom yields the offset in CSS pixels at this zoom.
+  const dx = (point.x - center.x) * numTiles;
+  const dy = (point.y - center.y) * numTiles;
 
   // The image coordinate origin is the top-left corner.
-  // Google Static Maps returns `scale` physical pixels per CSS pixel.
-  const cssScale = scale; // retina factor
   return {
-    x: imageWidth / 2 + dx / cssScale,
-    y: imageHeight / 2 + dy / cssScale,
+    x: imageWidth / 2 + dx,
+    y: imageHeight / 2 + dy,
   };
 }
 
