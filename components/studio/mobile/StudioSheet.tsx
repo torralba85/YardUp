@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer } from "vaul";
 
@@ -60,10 +60,32 @@ export default function StudioSheet({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  // The keyboard field whose focus asked for a scroll correction; only ever
+  // acted on while it is still the document's active element.
+  const focusedFieldRef = useRef<HTMLElement | null>(null);
   const didMountFocusRef = useRef(false);
   // Height of the on-screen keyboard, from the visual viewport. Used to pad the
   // scroll area so content above the keyboard stays reachable while typing.
   const [keyboardInset, setKeyboardInset] = useState(0);
+
+  // Lift the focused field to the top of the scroll area so the keyboard
+  // (bottom ~40% of the screen) can't cover it. The rect math is relative
+  // between the scroller and the field — both ride the sheet's transform —
+  // so it is stable even mid snap transition, and the whole correction is
+  // idempotent: re-running it converges on the same resting offset.
+  const liftFocusedField = useCallback(() => {
+    const scroller = scrollRef.current;
+    const target = focusedFieldRef.current;
+    if (!scroller || !target || document.activeElement !== target || !scroller.contains(target)) {
+      return;
+    }
+    const delta =
+      target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
+    // Skip sub-pixel deltas: once converged, later signals are no-ops instead
+    // of re-issuing writes that could interrupt in-flight native scrolling.
+    if (Math.abs(delta) < 1) return;
+    scroller.scrollTop += delta;
+  }, []);
 
   // The mobile keyboard is handled here, not by vaul (`repositionInputs` is
   // disabled below): when the keyboard opens, iOS also scrolls the layout
@@ -83,6 +105,9 @@ export default function StudioSheet({
       const active = document.activeElement;
       if (inset > 1 && active && sheetRef.current?.contains(active)) {
         window.scrollTo(0, 0);
+        // Re-lift here too: a late auto-reveal scroll can move the field
+        // without changing the inset, so the inset-keyed effect bails out.
+        liftFocusedField();
       }
     }
     viewport.addEventListener("resize", onViewportChange);
@@ -91,25 +116,25 @@ export default function StudioSheet({
       viewport.removeEventListener("resize", onViewportChange);
       viewport.removeEventListener("scroll", onViewportChange);
     };
-  }, []);
+  }, [liftFocusedField]);
 
   function handleFocusCapture(event: FocusEvent<HTMLDivElement>) {
     const target = event.target;
     if (!(target instanceof HTMLElement) || !target.matches(KEYBOARD_FIELD_SELECTOR)) return;
-    if (!isFull) onSnapChange(FULL_SNAP);
-    // Lift the field to the top of the scroll area so the keyboard (bottom
-    // ~40% of the screen) can't cover it. The rect math is relative between
-    // the scroller and the field — both ride the sheet's transform — so it
-    // needn't wait for the snap transition. The delay covers the re-render
-    // that enables scrolling (`overflow-y-auto` at full) and lets the mobile
-    // browser's own keyboard-driven scroll adjustments settle first.
-    window.setTimeout(() => {
-      const scroller = scrollRef.current;
-      if (!scroller || !target.isConnected || !scroller.contains(target)) return;
-      scroller.scrollTop +=
-        target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
-    }, 300);
+    focusedFieldRef.current = target;
+    if (isFull) liftFocusedField();
+    else onSnapChange(FULL_SNAP);
   }
+
+  // Rather than guessing a fixed delay, re-apply the lift when the async
+  // steps it depends on actually land: the full-snap re-render that turns on
+  // `overflow-y-auto` (before it, scrollTop writes are clamped), and each
+  // keyboard-driven visual-viewport resize, whose `keyboardInset` padding
+  // creates the scroll room under the field and also re-corrects after the
+  // browser's own keyboard scroll adjustments.
+  useEffect(() => {
+    if (isFull) liftFocusedField();
+  }, [isFull, keyboardInset, liftFocusedField]);
 
   useEffect(() => {
     if (!didMountFocusRef.current) {
