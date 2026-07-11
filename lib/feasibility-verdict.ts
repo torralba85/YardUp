@@ -86,12 +86,12 @@ const VERDICT_TONE: Record<VerdictLevel, VerdictTone> = {
   },
   "Needs Review": {
     color: "var(--color-lf-amber-ink)",
-    onDark: "#E0B463",
+    onDark: "var(--color-lf-amber-on-dark)",
     soft: "var(--color-lf-amber-soft)",
   },
   Unlikely: {
     color: "var(--color-lf-brick)",
-    onDark: "#D98A77",
+    onDark: "var(--color-lf-brick-on-dark)",
     soft: "var(--color-lf-brick-soft)",
   },
 };
@@ -106,9 +106,9 @@ export function statusTone(status: ConstraintStatus): VerdictTone {
     case "clear":
       return { color: "var(--color-lf-forest)", onDark: "var(--color-lf-money-on-dark)", soft: "var(--color-lf-forest-soft)" };
     case "review":
-      return { color: "var(--color-lf-amber-ink)", onDark: "#E0B463", soft: "var(--color-lf-amber-soft)" };
+      return { color: "var(--color-lf-amber-ink)", onDark: "var(--color-lf-amber-on-dark)", soft: "var(--color-lf-amber-soft)" };
     case "blocked":
-      return { color: "var(--color-lf-brick)", onDark: "#D98A77", soft: "var(--color-lf-brick-soft)" };
+      return { color: "var(--color-lf-brick)", onDark: "var(--color-lf-brick-on-dark)", soft: "var(--color-lf-brick-soft)" };
     default:
       return { color: "var(--color-lf-muted)", onDark: "var(--color-lf-taupe)", soft: "var(--color-lf-taupe-soft)" };
   }

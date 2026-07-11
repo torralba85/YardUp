@@ -20,25 +20,58 @@ describe("nextStep", () => {
 describe("shouldShowWizard", () => {
   it("shows for a fresh visitor with a clean URL", () => {
     expect(
-      shouldShowWizard({ hasUrlScenario: false, hasPendingAddress: false, storage: fakeStorage() }),
+      shouldShowWizard({
+        hasUrlScenario: false,
+        hasPendingAddress: false,
+        hasResolvedParcel: false,
+        storage: fakeStorage(),
+      }),
     ).toBe(true);
   });
 
   it("hides when a scenario URL is being opened", () => {
     expect(
-      shouldShowWizard({ hasUrlScenario: true, hasPendingAddress: false, storage: fakeStorage() }),
+      shouldShowWizard({
+        hasUrlScenario: true,
+        hasPendingAddress: false,
+        hasResolvedParcel: false,
+        storage: fakeStorage(),
+      }),
     ).toBe(false);
   });
 
   it("hides when a landing address handoff is pending", () => {
     expect(
-      shouldShowWizard({ hasUrlScenario: false, hasPendingAddress: true, storage: fakeStorage() }),
+      shouldShowWizard({
+        hasUrlScenario: false,
+        hasPendingAddress: true,
+        hasResolvedParcel: false,
+        storage: fakeStorage(),
+      }),
+    ).toBe(false);
+  });
+
+  it("hides when the studio already mounted with a resolved live parcel", () => {
+    expect(
+      shouldShowWizard({
+        hasUrlScenario: false,
+        hasPendingAddress: false,
+        hasResolvedParcel: true,
+        storage: fakeStorage(),
+      }),
     ).toBe(false);
   });
 
   it("hides after the wizard was seen", () => {
     const storage = fakeStorage({ [WIZARD_SEEN_KEY]: "1" });
-    expect(shouldShowWizard({ hasUrlScenario: false, hasPendingAddress: false, storage })).toBe(false);
+    expect(
+      shouldShowWizard({
+        hasUrlScenario: false,
+        hasPendingAddress: false,
+        hasResolvedParcel: false,
+        storage,
+      }),
+    ).toBe(false);
   });
 
   it("hides (fails closed) when storage throws", () => {
@@ -48,7 +81,14 @@ describe("shouldShowWizard", () => {
       },
       setItem: () => undefined,
     };
-    expect(shouldShowWizard({ hasUrlScenario: false, hasPendingAddress: false, storage })).toBe(false);
+    expect(
+      shouldShowWizard({
+        hasUrlScenario: false,
+        hasPendingAddress: false,
+        hasResolvedParcel: false,
+        storage,
+      }),
+    ).toBe(false);
   });
 });
 

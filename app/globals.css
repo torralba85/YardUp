@@ -43,6 +43,10 @@
   --color-lf-amber-on-dark: #D9AA4A;
   --color-lf-brick: #A23B26;
   --color-lf-brick-soft: #A23B261A;
+  /* Brick tuned for text/icons on the dark espresso/mahogany surfaces
+     (verdict band, constraint list) — mirrors --color-lf-amber-on-dark's role
+     for the brick family. */
+  --color-lf-brick-on-dark: #D98A77;
 
   /* ── Blue Hour landing palette (landing page only) ─────────────
      The marketing landing runs nocturnal — twilight real-estate

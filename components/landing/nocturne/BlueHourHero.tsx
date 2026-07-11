@@ -302,7 +302,7 @@ export function BlueHourHero() {
 
           <form
             onSubmit={handleSubmit}
-            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-3xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
+            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-2xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
           >
             <p
               className={`lf-kicker-dense hidden text-ln-glow ${copyDimmed ? "max-sm:mb-1 max-sm:flex" : "max-sm:hidden"}`}
@@ -329,7 +329,7 @@ export function BlueHourHero() {
                 autoComplete="street-address"
                 aria-invalid={addressError}
                 aria-describedby={addressError ? "hero-address-error" : undefined}
-                className="min-h-11 min-w-0 flex-1 rounded-full bg-transparent px-4 font-mono text-[11px] text-ln-mist placeholder:text-ln-slate/70 focus:outline-none sm:px-5 sm:text-xs"
+                className="min-h-11 min-w-0 flex-1 rounded-full bg-transparent px-4 font-mono text-[11px] text-ln-mist placeholder:text-ln-slate/70 focus:outline-none sm:px-5 sm:text-xs max-sm:rounded-2xl"
               />
             </div>
             <button

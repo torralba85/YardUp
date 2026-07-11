@@ -8,12 +8,19 @@ const mocks = vi.hoisted(() => ({
   authState: {
     loading: false,
     user: null as null | { uid: string },
+    profile: null as null | { role: "user" | "builder" },
   },
 }));
 
 vi.mock("@/components/FeasibilityStudio", () => ({
   default: function MockFeasibilityStudio() {
     return <div>Feasibility Studio Mock</div>;
+  },
+}));
+
+vi.mock("@/components/studio/SignedInStudioGate", () => ({
+  default: function MockSignedInStudioGate() {
+    return <div>Signed-in Blank Slate Mock</div>;
   },
 }));
 
@@ -32,12 +39,14 @@ describe("StudioPage", () => {
     mocks.replace.mockClear();
     mocks.authState.loading = false;
     mocks.authState.user = null;
+    mocks.authState.profile = null;
   });
 
-  it("renders the studio for guests without redirecting", () => {
+  it("renders the exploratory studio for guests without redirecting", () => {
     render(<StudioPage />);
 
     expect(screen.getByText("Feasibility Studio Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Signed-in Blank Slate Mock")).not.toBeInTheDocument();
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
@@ -54,11 +63,12 @@ describe("StudioPage", () => {
     expect(screen.getByText(/typical supported markets/i)).toBeInTheDocument();
   });
 
-  it("renders the studio for signed-in users", () => {
+  it("renders an empty address-first workspace for signed-in users", () => {
     mocks.authState.user = { uid: "user-1" };
 
     render(<StudioPage />);
 
-    expect(screen.getByText("Feasibility Studio Mock")).toBeInTheDocument();
+    expect(screen.getByText("Signed-in Blank Slate Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
   });
 });

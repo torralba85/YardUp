@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -13,6 +14,7 @@ import type { ParcelPreset } from "./feasibility";
 import type { EstimatedParcel } from "./estimated-parcel";
 import { fetchParcel, ParcelFetchError } from "./parcel-api";
 import { geocodeAddress, GeocodeError } from "./geocode-api";
+import { clearInitialParcel, peekInitialParcel } from "./parcel-handoff";
 
 /**
  * Which kind of parcel is currently active: a built-in demo `preset`, an
@@ -66,18 +68,27 @@ interface ParcelProviderProps {
  * Holds the active parcel, mode, loading, and error state, and exposes actions
  * to search by coordinates or address (which fetch live data and require an
  * auth token when available), restore a saved live parcel, apply an estimated
- * parcel, or reset to a demo preset. On fetch errors the current parcel and
- * mode are preserved and a user-facing message is surfaced via `parcelError`.
+ * parcel, or reset to a demo preset. A one-shot live parcel handoff can replace
+ * the preset on mount so authenticated users never see demo data while entering
+ * the studio. On fetch errors the current parcel and mode are preserved and a
+ * user-facing message is surfaced via `parcelError`.
  *
  * @param props - {@link ParcelProviderProps} with the initial preset and children.
  * @returns The context provider wrapping `children`.
  */
 export function ParcelProvider({ initialPreset, children }: ParcelProviderProps) {
   const { user } = useAuth();
-  const [parcel, setParcel] = useState<AnyParcel>(initialPreset);
-  const [parcelMode, setParcelMode] = useState<ParcelMode>("preset");
+  const [initialLiveParcel] = useState(() => peekInitialParcel());
+  const [parcel, setParcel] = useState<AnyParcel>(initialLiveParcel ?? initialPreset);
+  const [parcelMode, setParcelMode] = useState<ParcelMode>(
+    initialLiveParcel ? "live" : "preset",
+  );
   const [parcelLoading, setParcelLoading] = useState(false);
   const [parcelError, setParcelError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialLiveParcel) clearInitialParcel();
+  }, [initialLiveParcel]);
 
   const searchParcel = useCallback(
     async (lat: number, lng: number, address?: string) => {

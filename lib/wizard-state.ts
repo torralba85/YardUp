@@ -21,6 +21,10 @@ interface ShowWizardInput {
   hasUrlScenario: boolean;
   /** True when a landing-hero address handoff is waiting to be consumed. */
   hasPendingAddress: boolean;
+  /** True when the studio already mounted with a resolved live parcel (e.g.
+   * the signed-in blank-slate handoff) — the wizard would just re-ask for an
+   * address that's already been found. */
+  hasResolvedParcel: boolean;
   storage: Pick<Storage, "getItem">;
 }
 
@@ -34,9 +38,10 @@ interface ShowWizardInput {
 export function shouldShowWizard({
   hasUrlScenario,
   hasPendingAddress,
+  hasResolvedParcel,
   storage,
 }: ShowWizardInput): boolean {
-  if (hasUrlScenario || hasPendingAddress) return false;
+  if (hasUrlScenario || hasPendingAddress || hasResolvedParcel) return false;
   try {
     return storage.getItem(WIZARD_SEEN_KEY) !== "1";
   } catch {

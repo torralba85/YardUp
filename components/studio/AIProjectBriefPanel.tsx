@@ -3,6 +3,7 @@
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { Button } from "@/components/ui/Button";
 import type { AIProjectBrief, AIPermitStage, AIRiskLevel } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
 
@@ -66,20 +67,19 @@ export default function AIProjectBriefPanel({
             One brief for the certificate
           </h3>
         </div>
-        <button
+        <Button
           type="button"
+          variant={brief ? "secondary" : "primary"}
+          size="xs"
           onClick={handleGenerate}
           disabled={loading || authLoading}
+          loading={loading}
+          leftIcon={<Sparkles size={13} />}
           aria-label={brief ? "Refresh AI parcel and timeline brief" : "Generate AI parcel and timeline brief"}
-          className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-            brief
-              ? "border border-lf-clay/45 text-lf-clay hover:bg-lf-taupe-soft"
-              : "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong"
-          }`}
+          className="shrink-0"
         >
-          <Sparkles size={13} aria-hidden="true" />
           {loading ? "Building" : !user ? "Sign in" : brief ? "Refresh" : "Generate"}
-        </button>
+        </Button>
       </div>
 
       {!brief && !loading && !error && (

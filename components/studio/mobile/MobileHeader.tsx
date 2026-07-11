@@ -72,7 +72,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
               />
               <div
                 role="menu"
-                className="absolute right-0 top-12 z-(--z-index-sheet) w-60 space-y-2 rounded-lg border border-white/10 bg-lf-mahogany p-3 text-left shadow-xl"
+                className="absolute right-0 top-12 z-(--z-index-sheet) w-60 max-w-[calc(100vw-2rem)] space-y-2 rounded-lg border border-white/10 bg-lf-mahogany p-3 text-left shadow-xl"
               >
                 <div className="px-1">
                   <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
@@ -84,7 +84,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
                     setMenuOpen(false);
                     void logout();
                   }}
-                  className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-sm text-lf-sand transition hover:bg-lf-espresso/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="flex min-h-11 w-full items-center gap-2 rounded-md px-1 py-1.5 text-sm text-lf-sand transition hover:bg-lf-espresso/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   <LogOut size={14} /> Sign out
                 </button>

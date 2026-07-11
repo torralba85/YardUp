@@ -88,6 +88,7 @@ export default function BuilderProfileForm({
         <p className="lf-body-sm mt-1 text-lf-muted">
           Add your service coverage before receiving matched ADU snapshots.
         </p>
+        <p className="lf-caption mt-1 text-lf-muted">* Required</p>
       </div>
       {error && (
         <div role="alert" className="md:col-span-2 text-sm text-lf-brick">
@@ -95,19 +96,21 @@ export default function BuilderProfileForm({
         </div>
       )}
       <label className="lf-body-sm font-medium text-lf-espresso">
-        Company name
+        Company name <span aria-hidden="true">*</span>
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
+          aria-required="true"
         />
       </label>
       <label className="lf-body-sm font-medium text-lf-espresso">
-        Contact email
+        Contact email <span aria-hidden="true">*</span>
         <input
           className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
+          aria-required="true"
         />
       </label>
       <label className="lf-body-sm font-medium text-lf-espresso">

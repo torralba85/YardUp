@@ -117,7 +117,7 @@ export default function UnlockSlip({
           </ul>
 
           <div className="mt-4 font-mono text-[11.5px]">
-            <div className="mb-2 text-[9.5px] uppercase tracking-[0.16em] text-lf-muted">This purchase</div>
+            <div className="mb-2 text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">This purchase</div>
             <div className="flex justify-between border-b border-dashed border-lf-hairline py-1.5">
               <span className="text-lf-muted">LEAD UNLOCK · {preview.previewSerial}</span>
               <span className="text-lf-espresso">{hasCredits ? "1 Credit" : priceWithCents}</span>

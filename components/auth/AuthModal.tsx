@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { X, Mail, Lock, User as UserIcon } from "lucide-react";
 
@@ -26,6 +26,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  // Keyboard users shouldn't lose their place when the modal closes: capture
+  // whatever had focus when it opened and restore it on close.
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement as HTMLElement | null;
+    } else {
+      triggerRef.current?.focus?.();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
