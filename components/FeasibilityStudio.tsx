@@ -12,6 +12,12 @@ import {
   type FinancialAssumptions,
 } from "@/lib/feasibility";
 import { buildReportCsv, buildReportHtml, downloadBlob } from "@/lib/report";
+import { AIRequestError, requestProjectBrief } from "@/lib/ai-api";
+import type { AIProjectBrief } from "@/lib/ai-types";
+import {
+  buildAIProjectBriefInput,
+  createAIProjectBriefKey,
+} from "@/lib/ai-project-brief";
 import {
   mergeScenarioPartial,
   parseScenarioParams,
@@ -84,6 +90,13 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ),
 });
 
+interface ProjectBriefState {
+  key: string;
+  data: AIProjectBrief | null;
+  loading: boolean;
+  error: string | null;
+}
+
 /**
  * Top-level studio orchestrator. Owns the active parcel/config/assumptions
  * state, keeps it in sync with the shareable URL ({@link parseScenarioParams} /
@@ -131,6 +144,12 @@ function FeasibilityStudioInner() {
   const [activeConcept, setActiveConcept] = useState<InspirationItem | null>(null);
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [styleMatchKey, setStyleMatchKey] = useState(0);
+  const [projectBriefState, setProjectBriefState] = useState<ProjectBriefState | null>(null);
+  const projectBriefRequestRef = useRef<{
+    key: string;
+    id: symbol;
+    promise: Promise<AIProjectBrief>;
+  } | null>(null);
 
   const handleGenerationComplete = (concept: {
     photoUrl: string;
@@ -225,6 +244,20 @@ function FeasibilityStudioInner() {
     [assumptions, config, activeParcel],
   );
   const isCompliant = result.zoningStatus === "Compliant";
+  const projectBriefInput = useMemo(
+    () => buildAIProjectBriefInput({ parcel: activeParcel, result, config }),
+    [activeParcel, config, result],
+  );
+  const projectBriefKey = useMemo(
+    () => createAIProjectBriefKey({ parcel: activeParcel, result, config }),
+    [activeParcel, config, result],
+  );
+  const projectBrief =
+    projectBriefState?.key === projectBriefKey ? projectBriefState.data : null;
+  const projectBriefLoading =
+    projectBriefState?.key === projectBriefKey ? projectBriefState.loading : false;
+  const projectBriefError =
+    projectBriefState?.key === projectBriefKey ? projectBriefState.error : null;
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -330,6 +363,7 @@ function FeasibilityStudioInner() {
     setBuilderLeadOpen(false);
     setActiveStep("lot");
     setReportAutoFocus(false);
+    setProjectBriefState(null);
   }
 
   function handleStepSelect(id: StudioStep) {
@@ -352,6 +386,47 @@ function FeasibilityStudioInner() {
   function handleGenerateReport() {
     setReportOpen(true);
     setReportAutoFocus(true);
+  }
+
+  function handleGenerateProjectBrief(idToken: string): Promise<AIProjectBrief> {
+    const existingRequest = projectBriefRequestRef.current;
+    if (existingRequest?.key === projectBriefKey) return existingRequest.promise;
+
+    const requestKey = projectBriefKey;
+    const requestInput = projectBriefInput;
+    const existingData = projectBriefState?.key === requestKey ? projectBriefState.data : null;
+    setProjectBriefState({ key: requestKey, data: existingData, loading: true, error: null });
+
+    const requestId = Symbol("project-brief-request");
+    const promise = requestProjectBrief(requestInput, idToken)
+      .then((data) => {
+        setProjectBriefState((current) =>
+          current?.key === requestKey
+            ? { key: requestKey, data, loading: false, error: null }
+            : current,
+        );
+        return data;
+      })
+      .catch((err: unknown) => {
+        const message =
+          err instanceof AIRequestError
+            ? err.userMessage
+            : "The parcel and timeline brief is unavailable right now. Please try again.";
+        setProjectBriefState((current) =>
+          current?.key === requestKey
+            ? { key: requestKey, data: existingData, loading: false, error: message }
+            : current,
+        );
+        throw err;
+      })
+      .finally(() => {
+        if (projectBriefRequestRef.current?.id === requestId) {
+          projectBriefRequestRef.current = null;
+        }
+      });
+
+    projectBriefRequestRef.current = { key: requestKey, id: requestId, promise };
+    return promise;
   }
 
   async function handleSaveScenario() {
@@ -457,12 +532,22 @@ function FeasibilityStudioInner() {
   }
 
   function downloadReport() {
-    const html = buildReportHtml({ parcel: activeParcel, config, result });
+    const html = buildReportHtml({
+      parcel: activeParcel,
+      config,
+      result,
+      projectBrief: projectBrief ?? undefined,
+    });
     downloadBlob("lotfoundry-certificate-of-feasibility.html", html, "text/html");
   }
 
   function exportCsv() {
-    const csv = buildReportCsv({ parcel: activeParcel, config, result });
+    const csv = buildReportCsv({
+      parcel: activeParcel,
+      config,
+      result,
+      projectBrief: projectBrief ?? undefined,
+    });
     downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
   }
 
@@ -541,6 +626,10 @@ function FeasibilityStudioInner() {
           assumptions={assumptions}
           onAssumptionsChange={setAssumptions}
           onViewCertificate={() => setActiveStep("certificate")}
+          projectBrief={projectBrief}
+          projectBriefLoading={projectBriefLoading}
+          projectBriefError={projectBriefError}
+          onGenerateProjectBrief={handleGenerateProjectBrief}
           addressFocusSignal={addressFocusSignal}
         />
       );
@@ -597,6 +686,10 @@ function FeasibilityStudioInner() {
           result={result}
           parcelName={mobileParcelName}
           onOpenCertificate={handleGenerateReport}
+          projectBrief={projectBrief}
+          projectBriefLoading={projectBriefLoading}
+          projectBriefError={projectBriefError}
+          onGenerateProjectBrief={handleGenerateProjectBrief}
         />
       );
     } else {
@@ -656,6 +749,9 @@ function FeasibilityStudioInner() {
           <ReportPreview
             parcelName={`${activeParcel.address}, ${activeParcel.city}`}
             result={result}
+            projectBrief={projectBrief}
+            projectBriefLoading={projectBriefLoading}
+            projectBriefError={projectBriefError}
             onClose={() => setReportOpen(false)}
             onDownload={downloadReport}
             onExportCsv={exportCsv}
@@ -740,6 +836,10 @@ function FeasibilityStudioInner() {
                 assumptions={assumptions}
                 onAssumptionsChange={setAssumptions}
                 onViewCertificate={() => setActiveStep("certificate")}
+                projectBrief={projectBrief}
+                projectBriefLoading={projectBriefLoading}
+                projectBriefError={projectBriefError}
+                onGenerateProjectBrief={handleGenerateProjectBrief}
                 addressFocusSignal={addressFocusSignal}
               />
             </div>
@@ -789,6 +889,10 @@ function FeasibilityStudioInner() {
             result={result}
             parcelName={parcelName}
             onOpenCertificate={handleGenerateReport}
+            projectBrief={projectBrief}
+            projectBriefLoading={projectBriefLoading}
+            projectBriefError={projectBriefError}
+            onGenerateProjectBrief={handleGenerateProjectBrief}
           />
         ) : (
           <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
@@ -801,6 +905,9 @@ function FeasibilityStudioInner() {
         <ReportPreview
           parcelName={parcelName}
           result={result}
+          projectBrief={projectBrief}
+          projectBriefLoading={projectBriefLoading}
+          projectBriefError={projectBriefError}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
           onExportCsv={exportCsv}

@@ -70,3 +70,23 @@ export interface AIPermitPathwayInput {
     | "warnings"
   >;
 }
+
+/**
+ * One homeowner-facing brief shared by the feasibility surface and the paid
+ * certificate. Parcel interpretation and the permit timeline intentionally
+ * live in one schema so the UI never has to reconcile two AI answers.
+ */
+export interface AIProjectBrief {
+  headline: string;
+  summary: string;
+  bestFit: string;
+  risks: AIParcelRisk[];
+  permitTrack: AIPermitPathway["track"];
+  stages: AIPermitStage[];
+  totalEstWeeksLow: number;
+  totalEstWeeksHigh: number;
+  recommendedNextSteps: string[];
+  disclaimer: string;
+}
+
+export type AIProjectBriefInput = AIParcelInsightsInput;

@@ -6,7 +6,7 @@ Add AI assistance to the existing address-to-feasibility workflow without replac
 
 The MVP adds two AI surfaces:
 
-1. **AI Property Insights** — after a user enters an address and parcel data loads, summarize what the lot appears to support, key risks, and next steps.
+1. **AI Parcel + Permit Brief** — after a user enters an address and parcel data loads, produce one response covering lot fit, key risks, the typical jurisdiction-grounded approval timeline, and next steps. The same result is recorded in the Certificate of Feasibility.
 2. **AI Style Match** — let the user upload a home photo, analyze the visible architectural style, and generate a mock ADU concept that visually matches the home.
 
 ## Product Principles
@@ -26,6 +26,12 @@ The MVP adds two AI surfaces:
   - Output: structured JSON with headline, summary, best fit, risks, next steps, and disclaimer.
   - Uses OpenAI Responses API structured outputs.
 
+- `POST /api/ai/project-brief`
+  - Input: active parcel, ADU config, and the full feasibility result.
+  - Output: one structured brief with parcel interpretation, merged risks, an allow-listed permit track and stage timeline, deduplicated next steps, and a disclaimer.
+  - Requires auth, is rate-limited, and uses deterministic permit-track/stage tools before the model can finalize its response.
+  - This is the user-facing studio and certificate path; the narrower parcel-insights and permit-pathway routes remain available for compatibility.
+
 - `POST /api/ai/adu-concept`
   - Input: uploaded image file plus active parcel and ADU config.
   - Step 1: uses vision to extract home style cues and a recommended ADU configuration.
@@ -40,9 +46,8 @@ The MVP adds two AI surfaces:
 
 ### UI integration
 
-- The existing `ConstraintsPanel` now includes:
-  - `AIPropertyInsightsPanel`
-  - `AIPermitPathwayPanel`
+- The existing `ConstraintsPanel` now includes one `AIProjectBriefPanel` with one generation action for both the parcel readout and approval timeline.
+- `FeasibilityStudio` owns the generated brief so the same object flows into `CertificatePanel`, `ReportPreview`, and HTML/CSV downloads without a second user action.
 - Style-matched ADU concepts live on the Design step via `StyleMatchPanel`, embedded in `InspirationGalleryPanel`.
 
 This keeps AI close to the feasibility decision point without disrupting the existing massing controls or report workflow.
@@ -78,15 +83,16 @@ Manual smoke test:
 1. Start the app.
 2. Search a real address or use a demo parcel.
 3. Open the Feasibility tab.
-4. Click **Generate AI readout**.
-5. Confirm the insight card returns a summary, risks, and next steps.
-6. Upload a JPG/PNG/WebP home photo in **AI style match**.
-7. Click **Generate matching ADU**.
-8. Confirm a style summary and generated concept image appear.
+4. Sign in and click **Generate** under **AI parcel + timeline**.
+5. Confirm one brief returns the parcel summary, risks, permit track, stage ranges, and next steps.
+6. Open the Certificate step and confirm that the same brief appears in the certificate preview and HTML/CSV exports.
+7. Upload a JPG/PNG/WebP home photo in **AI style match**.
+8. Click **Generate matching ADU**.
+9. Confirm a style summary and generated concept image appear.
 
 ## Phase 2 — Recommended Next
 
-- Persist selected AI concepts into saved scenarios.
+- Persist generated project briefs and selected AI concepts into saved scenarios/share links.
 - Add generated concept images to the certificate/report export.
 - Add a cost guardrail: daily per-user AI request limits for Firebase-authenticated users.
 - Add moderation/safety logging for uploaded image failures.
