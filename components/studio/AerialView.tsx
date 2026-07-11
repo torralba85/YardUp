@@ -183,6 +183,13 @@ export default function AerialView({
             width={IMG_W}
             height={IMG_H}
             draggable={false}
+            onError={() => {
+              // Undecodable payload (truncated raster, provider error bytes):
+              // drop the image and show the unavailable notice instead.
+              setAerialSrc(null);
+              setAttribution(null);
+              setAerialError(true);
+            }}
           />
         </>
       ) : (

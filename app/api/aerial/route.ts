@@ -85,6 +85,29 @@ async function fetchWithTimeout(url: string): Promise<Response> {
   }
 }
 
+/**
+ * Read a provider response body, accepting it only when both the content type
+ * and the leading magic bytes identify a raster image. Providers can report
+ * errors as 2xx responses with JSON/HTML bodies; those must fail so the next
+ * provider in the chain gets a chance.
+ */
+async function readImageBody(
+  res: Response,
+  provider: string,
+): Promise<AerialImage | null> {
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.startsWith("image/")) {
+    console.warn(`[/api/aerial] ${provider} returned non-image: ${contentType}`);
+    return null;
+  }
+  const buffer = await res.arrayBuffer();
+  if (!looksLikeRasterImage(buffer)) {
+    console.warn(`[/api/aerial] ${provider} body is not a valid raster image`);
+    return null;
+  }
+  return { buffer, contentType };
+}
+
 async function fetchGoogleStatic(
   lat: number,
   lng: number,
@@ -106,10 +129,7 @@ async function fetchGoogleStatic(
       console.warn(`[/api/aerial] Maps Static returned ${res.status}`);
       return null;
     }
-    return {
-      buffer: await res.arrayBuffer(),
-      contentType: res.headers.get("content-type") ?? "image/png",
-    };
+    return await readImageBody(res, "Maps Static");
   } catch (err) {
     console.warn("[/api/aerial] Maps Static fetch failed:", err);
     return null;
@@ -184,19 +204,7 @@ async function fetchEsriExport(
       console.warn(`[/api/aerial] Esri export returned ${res.status}`);
       return null;
     }
-    // ArcGIS reports some errors as 200 with a JSON/HTML body; only trust
-    // responses that are actually images.
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!contentType.startsWith("image/")) {
-      console.warn(`[/api/aerial] Esri export returned non-image: ${contentType}`);
-      return null;
-    }
-    const buffer = await res.arrayBuffer();
-    if (!looksLikeRasterImage(buffer)) {
-      console.warn("[/api/aerial] Esri export body is not a valid raster image");
-      return null;
-    }
-    return { buffer, contentType };
+    return await readImageBody(res, "Esri export");
   } catch (err) {
     console.warn("[/api/aerial] Esri export fetch failed:", err);
     return null;

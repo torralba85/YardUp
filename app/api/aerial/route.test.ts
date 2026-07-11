@@ -128,6 +128,28 @@ describe("GET /api/aerial", () => {
     expect(res.headers.get("X-Aerial-Fallback-Reason")).toBe("unconfigured");
   });
 
+  it("falls back to Esri when Google responds 200 with a non-image body", async () => {
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "maps-key");
+    const fetchMock = vi
+      .fn()
+      // Maps Static soft error: 2xx with an HTML error page.
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "text/html" }),
+        arrayBuffer: async () => new ArrayBuffer(0),
+      })
+      .mockResolvedValueOnce(imageFetchResponse());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeRequest());
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("X-Aerial-Provider")).toBe("esri");
+    expect(res.headers.get("X-Aerial-Fallback")).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("treats an Esri body without image magic bytes as a failure", async () => {
     vi.stubEnv("GOOGLE_MAPS_API_KEY", "");
     // ArcGIS soft error: image content type, but a JSON body.
