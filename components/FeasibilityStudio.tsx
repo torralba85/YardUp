@@ -252,9 +252,17 @@ function FeasibilityStudioInner() {
         // ref the hydration effect filled on the first pass.
         hasPendingAddress:
           peekAddressQuery() !== null || incomingAddressRef.current != null,
+        // The signed-in blank-slate gate hands off an already-resolved live
+        // parcel before this component mounts — the wizard must yield to it
+        // too, or it re-asks for an address that's already been found (and a
+        // Skip tap would reset the resolved parcel back to a demo lot).
+        hasResolvedParcel: parcelMode === "live",
         storage: window.localStorage,
       }),
     );
+    // Mount-only by design (see comment above); parcelMode is read once to
+    // reflect whatever ParcelProvider initialized from, not on every change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleWizardComplete(nextConfig?: ADUConfig) {
