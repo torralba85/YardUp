@@ -38,6 +38,11 @@ const STAGE_TONE: Record<AIPermitStage["status"], { label: string; className: st
   blocker: { label: "Blocker", className: "border-lf-brick/35 bg-lf-brick-soft text-lf-brick" },
 };
 
+/** "1 permit stage" / "3 permit stages" — the locked counts read as prose. */
+function countNoun(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
 /**
  * One interaction for the parcel interpretation and jurisdiction-grounded
  * approval timeline. The server tiers the response by certificate purchase:
@@ -146,9 +151,9 @@ export function ProjectBriefPreviewContent({
 }) {
   const price = formatCertificatePrice();
   const lockedLine = [
-    `${preview.locked.riskCount} ranked risks`,
-    `${preview.locked.stageCount} permit stages with week-by-week timing`,
-    `${preview.locked.nextStepCount} recorded next steps`,
+    countNoun(preview.locked.riskCount, "ranked risk"),
+    `${countNoun(preview.locked.stageCount, "permit stage")} with week-by-week timing`,
+    countNoun(preview.locked.nextStepCount, "recorded next step"),
   ].join(" · ");
 
   return (

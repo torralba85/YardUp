@@ -138,6 +138,30 @@ describe("redactBriefToPreview", () => {
     expect(serialized).not.toContain("Prepare plans.");
   });
 
+  it("surfaces the most severe risk even when the model lists it later", () => {
+    // The output schema does not enforce risk ordering — a high risk buried
+    // mid-list must still be the one the preview shows.
+    const preview = redactBriefToPreview({
+      ...fullBrief,
+      risks: [
+        { label: "Coverage", level: "medium", explanation: "Near the cap." },
+        { label: "Sewer capacity", level: "high", explanation: "Lateral may need upsizing." },
+        { label: "Height", level: "low", explanation: "Within the envelope." },
+      ],
+    });
+    expect(preview.firstRisk.label).toBe("Sewer capacity");
+
+    // Equal severity: the model's own first ordering wins.
+    const tied = redactBriefToPreview({
+      ...fullBrief,
+      risks: [
+        { label: "First medium", level: "medium", explanation: "A." },
+        { label: "Second medium", level: "medium", explanation: "B." },
+      ],
+    });
+    expect(tied.firstRisk.label).toBe("First medium");
+  });
+
   it("substitutes a safe first risk when the brief has none", () => {
     const preview = redactBriefToPreview({ ...fullBrief, risks: [] });
     expect(preview.firstRisk.label).toBe("Feasibility review");

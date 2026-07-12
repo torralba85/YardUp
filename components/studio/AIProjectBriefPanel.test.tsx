@@ -53,19 +53,25 @@ const brief: AIProjectBrief = {
 
 const fullResponse: AIProjectBriefResponse = { tier: "full", brief };
 
-const previewResponse: AIProjectBriefResponse = {
-  tier: "preview",
-  preview: {
-    headline: brief.headline,
-    summary: brief.summary,
-    permitTrack: { name: brief.permitTrack.name, type: brief.permitTrack.type },
-    totalEstWeeksLow: brief.totalEstWeeksLow,
-    totalEstWeeksHigh: brief.totalEstWeeksHigh,
-    firstRisk: brief.risks[0],
-    locked: { riskCount: 2, stageCount: 2, nextStepCount: 3 },
-    disclaimer: brief.disclaimer,
-  },
-};
+function previewResponseWith(
+  locked: { riskCount: number; stageCount: number; nextStepCount: number },
+): AIProjectBriefResponse {
+  return {
+    tier: "preview",
+    preview: {
+      headline: brief.headline,
+      summary: brief.summary,
+      permitTrack: { name: brief.permitTrack.name, type: brief.permitTrack.type },
+      totalEstWeeksLow: brief.totalEstWeeksLow,
+      totalEstWeeksHigh: brief.totalEstWeeksHigh,
+      firstRisk: brief.risks[0],
+      locked,
+      disclaimer: brief.disclaimer,
+    },
+  };
+}
+
+const previewResponse = previewResponseWith({ riskCount: 2, stageCount: 2, nextStepCount: 3 });
 
 describe("AIProjectBriefPanel", () => {
   it("uses one action to request the combined parcel and timeline brief", async () => {
@@ -142,6 +148,24 @@ describe("AIProjectBriefPanel", () => {
 
     await user.click(screen.getByRole("button", { name: /Unlock with the certificate/ }));
     expect(onViewCertificate).toHaveBeenCalledTimes(1);
+  });
+
+  it("pluralizes the locked contents line by count", () => {
+    render(
+      <AIProjectBriefPanel
+        response={previewResponseWith({ riskCount: 1, stageCount: 1, nextStepCount: 1 })}
+        loading={false}
+        error={null}
+        onGenerate={vi.fn()}
+        onViewCertificate={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /1 ranked risk · 1 permit stage with week-by-week timing · 1 recorded next step/,
+      ),
+    ).toBeInTheDocument();
   });
 
   it("uses a layout-matched loading state and an inline error state", () => {

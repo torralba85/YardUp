@@ -1,8 +1,10 @@
 import type {
+  AIParcelRisk,
   AIProjectBrief,
   AIProjectBriefInput,
   AIProjectBriefPreview,
   AIProjectBriefResponse,
+  AIRiskLevel,
 } from "@/lib/ai-types";
 import { certificateKey } from "@/lib/certificate-key";
 import type { AIPanelDefinition } from "@/lib/server/ai-pipeline";
@@ -96,15 +98,29 @@ const SYSTEM_PROMPT = [
   "Call `lookup_permit_tracks` first, select the most applicable returned track, then call `get_stage_benchmarks` with that exact track id.",
   "The permit track name, statutory basis, every stage, and every week estimate MUST come only from those tool results. Set the total low and high values to the exact sums of the selected stages.",
   "Merge parcel-fit and permit concerns into one concise `risks` list. Map feasibility warnings onto the relevant risks and stage statuses; do not repeat the same concern in different words.",
+  "Write `summary` as a self-contained plain-language overview. Never name the statute or ordinance, individual review-stage names, or specific next-step actions inside `summary` — that detail belongs only in its dedicated fields.",
   "Return one deduplicated `recommendedNextSteps` list spanning parcel verification, design, and permitting. Keep the summary concrete, estimate-honest, and suitable for a builder or lender handoff.",
   "Always state in `disclaimer` that the AI interpretation and timeline are planning estimates, not permitting advice, an approval guarantee, or a guarantee of income.",
 ].join(" ");
 
+const RISK_SEVERITY: Record<AIRiskLevel, number> = { high: 0, medium: 1, low: 2 };
+
+/** The most severe risk, first-listed winning ties (the model's own ordering). */
+function mostSevereRisk(risks: AIParcelRisk[]): AIParcelRisk | undefined {
+  return risks.reduce<AIParcelRisk | undefined>(
+    (worst, risk) =>
+      !worst || RISK_SEVERITY[risk.level] < RISK_SEVERITY[worst.level] ? risk : worst,
+    undefined,
+  );
+}
+
 /**
  * Redact a full brief into the free preview tier: the narrative hook stays
- * (headline, summary, track name/type, total weeks, the top risk) while the
- * paid depth (full risk list, staged timeline, statutory basis, best-fit
- * readout, next steps) is replaced by honest counts for the locked card.
+ * (headline, summary, track name/type, total weeks, the most severe risk)
+ * while the paid depth (full risk list, staged timeline, statutory basis,
+ * best-fit readout, next steps) is replaced by honest counts for the locked
+ * card. The schema does not enforce risk ordering, so severity is selected
+ * here rather than trusting `risks[0]`.
  */
 export function redactBriefToPreview(brief: AIProjectBrief): AIProjectBriefPreview {
   return {
@@ -116,7 +132,7 @@ export function redactBriefToPreview(brief: AIProjectBrief): AIProjectBriefPrevi
     },
     totalEstWeeksLow: brief.totalEstWeeksLow,
     totalEstWeeksHigh: brief.totalEstWeeksHigh,
-    firstRisk: brief.risks[0] ?? {
+    firstRisk: mostSevereRisk(brief.risks) ?? {
       label: "Feasibility review",
       level: "medium",
       explanation: "Unlock the complete brief for the ranked risk list.",
