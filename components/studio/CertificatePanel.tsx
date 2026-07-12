@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Lock, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, CheckCircle2, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
+import type { AIProjectBrief } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { StatusChip } from "@/components/ui/StatusChip";
@@ -21,8 +22,8 @@ const CERTIFICATE_INCLUDES = [
   "Income ledger & payback",
   "Site plan & 3D massing",
   "Zoning & compliance summary",
+  "AI parcel readout & approval timeline",
   "Print / PDF + shareable link",
-  "Builder-ready next steps",
 ] as const;
 
 /** Props for {@link CertificatePanel}. */
@@ -33,8 +34,14 @@ export interface CertificatePanelProps {
   result: FeasibilityResult;
   /** Display name of the lot. */
   parcelName: string;
-  /** Open the unlocked certificate artifact (the report preview). */
-  onOpenCertificate: () => void;
+  /** Open the unlocked certificate artifact, optionally carrying an AI setup error. */
+  onOpenCertificate: (projectBriefError?: string) => void;
+  /** Unified AI interpretation recorded in the certificate when available. */
+  projectBrief: AIProjectBrief | null;
+  projectBriefLoading: boolean;
+  projectBriefError: string | null;
+  /** Generate the parcel + timeline brief with the signed-in user's token. */
+  onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBrief>;
 }
 
 /**
@@ -50,6 +57,10 @@ export default function CertificatePanel({
   result,
   parcelName,
   onOpenCertificate,
+  projectBrief,
+  projectBriefLoading,
+  projectBriefError,
+  onGenerateProjectBrief,
 }: CertificatePanelProps) {
   const { user } = useAuth();
   const certKey = certificateKey(parcel);
@@ -57,7 +68,40 @@ export default function CertificatePanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [preparingBrief, setPreparingBrief] = useState(false);
   const openedOnUnlock = useRef(false);
+
+  const prepareAndOpenCertificate = useCallback(async () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+
+    setPreparingBrief(true);
+    setError(null);
+    try {
+      if (!projectBrief) {
+        let idToken: string;
+        try {
+          idToken = await user.getIdToken();
+        } catch {
+          const message = "We could not verify your session. Please try again.";
+          setError(message);
+          onOpenCertificate(message);
+          return;
+        }
+        try {
+          await onGenerateProjectBrief(idToken);
+        } catch {
+          // The deterministic certificate remains available. ReportPreview carries
+          // the persistent inline AI error and the user can refresh the brief.
+        }
+      }
+      onOpenCertificate();
+    } finally {
+      setPreparingBrief(false);
+    }
+  }, [onGenerateProjectBrief, onOpenCertificate, projectBrief, user]);
 
   // Reconcile the Stripe return. The webhook writes the grant asynchronously, so
   // poll a few times after landing on ?cert=1, then strip the param.
@@ -83,16 +127,16 @@ export default function CertificatePanel({
 
   // When the purchase resolves (demo grant or webhook), open the artifact once.
   useEffect(() => {
-    if (purchased && !openedOnUnlock.current) {
+    if (purchased && user && !openedOnUnlock.current) {
       openedOnUnlock.current = true;
-      onOpenCertificate();
+      void prepareAndOpenCertificate();
     }
-    if (!purchased) openedOnUnlock.current = false;
-  }, [purchased, onOpenCertificate]);
+    if (!loading && !purchased) openedOnUnlock.current = false;
+  }, [loading, prepareAndOpenCertificate, purchased, user]);
 
   async function handleCta() {
     if (purchased) {
-      onOpenCertificate();
+      await prepareAndOpenCertificate();
       return;
     }
     if (!user) {
@@ -121,8 +165,13 @@ export default function CertificatePanel({
   }
 
   const price = formatCertificatePrice();
-  const ctaLabel = purchased
-    ? "View certificate"
+  const reportBusy = busy || loading || preparingBrief || projectBriefLoading;
+  const ctaLabel = reportBusy
+    ? purchased
+      ? "Preparing complete certificate"
+      : "Preparing certificate"
+    : purchased
+    ? "View complete certificate"
     : !user
       ? "Sign in to generate your certificate"
       : `Generate complete certificate — ${price}`;
@@ -135,7 +184,8 @@ export default function CertificatePanel({
         <p className="lf-kicker text-lf-clay">Step 4 · Certificate</p>
         <h2 className="lf-section-heading mt-2 text-lf-espresso">Your Certificate of Feasibility.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
-          Review your estimate, then unlock the complete certificate to share with builders and lenders.
+          Review your estimate, then create one recorded parcel, income, and approval-timeline
+          artifact to share with builders and lenders.
         </p>
       </div>
 
@@ -144,7 +194,7 @@ export default function CertificatePanel({
         result={result}
         onGenerateReport={handleCta}
         reportCtaLabel={ctaLabel}
-        reportCtaBusy={busy || loading}
+        reportCtaBusy={reportBusy}
       />
 
       <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 px-6 py-5">
@@ -157,8 +207,53 @@ export default function CertificatePanel({
                 <StatusChip status="clear" label="Purchased" />
               </div>
               <p className="lf-body-sm mt-1 text-lf-muted">
-                Your complete Certificate of Feasibility for {parcelName} is ready to print, download, or share.
+                Your complete Certificate of Feasibility for {parcelName} is ready to print,
+                download, or share.
               </p>
+              {projectBrief ? (
+                <div className="mt-3 flex items-start gap-2 border-t border-lf-hairline pt-3">
+                  <Sparkles
+                    size={15}
+                    className="mt-0.5 shrink-0 text-lf-forest"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-forest">
+                      AI brief recorded
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-lf-espresso">
+                      {projectBrief.headline}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-4 text-lf-muted">
+                      Parcel assessment + {projectBrief.totalEstWeeksLow}&ndash;
+                      {projectBrief.totalEstWeeksHigh} week approval timeline
+                    </p>
+                  </div>
+                </div>
+              ) : projectBriefLoading || preparingBrief ? (
+                <div className="mt-3 border-t border-lf-hairline pt-3" role="status">
+                  <span className="sr-only">Adding the AI parcel and timeline brief</span>
+                  <div className="motion-safe:animate-pulse">
+                    <div className="h-2.5 w-28 rounded bg-lf-taupe-soft" />
+                    <div className="mt-2 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />
+                  </div>
+                </div>
+              ) : projectBriefError ? (
+                <div className="mt-3 flex items-start gap-2 border-t border-lf-hairline pt-3 text-xs leading-5 text-lf-brick">
+                  <AlertTriangle
+                    size={14}
+                    className="mt-0.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  The core certificate is ready. The AI parcel and timeline brief could not be
+                  added yet.
+                </div>
+              ) : null}
+              {error && (
+                <p role="alert" className="mt-3 text-xs leading-5 text-lf-brick">
+                  {error}
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -170,7 +265,8 @@ export default function CertificatePanel({
               </h3>
             </div>
             <p className="lf-body-sm mt-1 text-lf-muted">
-              The estimate above is free. Unlock the engraved, shareable certificate to bring to a builder or lender.
+              The estimate above is free. Unlock the engraved, shareable certificate with its
+              AI parcel interpretation and typical approval timeline.
             </p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {CERTIFICATE_INCLUDES.map((item) => (

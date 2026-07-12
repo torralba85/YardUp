@@ -6,6 +6,7 @@ import {
   type FeasibilityResult,
 } from "./feasibility";
 import type { Parcel } from "./parcel-types";
+import type { AIProjectBrief } from "./ai-types";
 
 /** Inputs needed to render any of the feasibility report formats. */
 export interface ReportInput {
@@ -17,6 +18,8 @@ export interface ReportInput {
   result: FeasibilityResult;
   /** Recorded date shown on the certificate; defaults to now. Injectable for tests. */
   recordedAt?: Date;
+  /** Optional generated parcel interpretation and permit timeline. */
+  projectBrief?: AIProjectBrief;
 }
 
 const DISCLAIMER =
@@ -50,7 +53,22 @@ function formatRecordedDate(date: Date): string {
  * @param input - The {@link ReportInput} (parcel, config, result, optional date).
  * @returns The report as newline-joined text.
  */
-export function buildReportText({ parcel, config, result, recordedAt }: ReportInput): string {
+export function buildReportText({
+  parcel,
+  config,
+  result,
+  recordedAt,
+  projectBrief,
+}: ReportInput): string {
+  const briefRisks = Array.isArray(projectBrief?.risks) ? projectBrief.risks : [];
+  const briefStages = Array.isArray(projectBrief?.stages) ? projectBrief.stages : [];
+  const nextSteps = Array.isArray(projectBrief?.recommendedNextSteps)
+    ? projectBrief.recommendedNextSteps
+    : [
+        "Confirm the parcel, zoning, and utility constraints with the local jurisdiction.",
+        "Review the concept with a licensed designer or builder.",
+        "Update costs, financing, taxes, and rent assumptions before making decisions.",
+      ];
   const lines = [
     "LotFoundry Certificate of Feasibility",
     `No. ${makeCertificateSerial(parcel)} - Recorded ${formatRecordedDate(recordedAt ?? new Date())}`,
@@ -75,10 +93,29 @@ export function buildReportText({ parcel, config, result, recordedAt }: ReportIn
     `Annual net income estimate: ${formatCurrency(result.annualNoi)}`,
     `Simple payback: ${result.paybackYears} years`,
     "",
+    ...(projectBrief
+      ? [
+          "AI Parcel & Permit Brief",
+          projectBrief.headline,
+          projectBrief.summary,
+          `Best fit: ${projectBrief.bestFit}`,
+          ...briefRisks.map(
+            (risk) => `Verify — ${risk.label} (${risk.level}): ${risk.explanation}`,
+          ),
+          "",
+          `Typical permit track: ${projectBrief.permitTrack.name} (${projectBrief.permitTrack.type})`,
+          `Basis: ${projectBrief.permitTrack.basis}`,
+          `Typical approval timeline: ${projectBrief.totalEstWeeksLow}-${projectBrief.totalEstWeeksHigh} weeks`,
+          ...briefStages.map(
+            (stage, index) =>
+              `${index + 1}. ${stage.name}: ${stage.estWeeksLow}-${stage.estWeeksHigh} weeks (${stage.status}) — ${stage.description}`,
+          ),
+          `AI note: ${projectBrief.disclaimer}`,
+          "",
+        ]
+      : []),
     "Next Steps",
-    "1. Confirm the parcel, zoning, and utility constraints with the local jurisdiction.",
-    "2. Review the concept with a licensed designer or builder.",
-    "3. Update costs, financing, taxes, and rent assumptions before making decisions.",
+    ...nextSteps.map((step, index) => `${index + 1}. ${step}`),
     "",
     DISCLAIMER,
   ];
@@ -93,7 +130,13 @@ export function buildReportText({ parcel, config, result, recordedAt }: ReportIn
  * @param input - The {@link ReportInput} (parcel, config, result, optional date).
  * @returns A complete HTML document string (printable / saveable).
  */
-export function buildReportHtml({ parcel, config, result, recordedAt }: ReportInput): string {
+export function buildReportHtml({
+  parcel,
+  config,
+  result,
+  recordedAt,
+  projectBrief,
+}: ReportInput): string {
   const rows: Array<[string, string]> = [
     ["Property", `${parcel.address}, ${parcel.city}`],
     ["ADU size", `${result.aduSqft.toLocaleString()} sf`],
@@ -116,6 +159,13 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
   const operatingAllowance = grossAnnualRent - result.annualNoi;
   const operatingPct =
     grossAnnualRent > 0 ? Math.round((operatingAllowance / grossAnnualRent) * 1000) / 10 : 0;
+  const nextSteps = Array.isArray(projectBrief?.recommendedNextSteps)
+    ? projectBrief.recommendedNextSteps
+    : [
+        "Confirm the parcel, zoning, and utility constraints with the local jurisdiction.",
+        "Review the concept with a licensed designer or builder.",
+        "Update costs, financing, taxes, and rent assumptions before making decisions.",
+      ];
 
   return `<!doctype html>
 <html lang="en">
@@ -240,6 +290,41 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
     .note { border-left: 3px solid var(--amber); background: var(--paper); padding: 12px 14px; color: var(--ink); }
     ol { margin: 0; padding-left: 20px; color: var(--muted); }
     li + li { margin-top: 8px; }
+    .ai-brief { margin-top: 32px; padding: 24px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+    .brief-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+    .brief-heading h2 { margin: 0; }
+    .brief-total { white-space: nowrap; text-align: right; }
+    .brief-total strong { font-family: "Cormorant Garamond", Georgia, serif; font-size: 32px; line-height: 1; color: var(--ink); }
+    .brief-total span { margin-left: 5px; font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .brief-grid { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 28px; margin-top: 22px; }
+    .brief-column + .brief-column { border-left: 1px solid var(--line); padding-left: 28px; }
+    .brief-label { font-family: "IBM Plex Mono", monospace; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--clay); }
+    .brief-title { margin: 7px 0 0; font-size: 15px; line-height: 1.4; color: var(--ink); }
+    .brief-copy { margin-top: 7px; font-size: 12px; line-height: 1.7; }
+    .best-fit { margin-top: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 11px 0; }
+    .best-fit p { margin-top: 5px; color: var(--ink); }
+    .risk-list { margin-top: 14px; border-top: 1px solid var(--line); }
+    .risk-row { padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .risk-head, .track-head, .stage-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .risk-head strong, .track-head strong, .stage-head strong { color: var(--ink); }
+    .risk-row p, .track-basis, .stage-copy { margin-top: 4px; font-size: 11px; line-height: 1.55; }
+    .data-chip { display: inline-block; border: 1px solid var(--line); padding: 2px 7px; font-family: "IBM Plex Mono", monospace; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+    .tone-low { color: var(--muted); }
+    .tone-medium { color: #745A00; border-color: #745A0060; background: #C8922A1A; }
+    .tone-high { color: var(--brick); border-color: #A23B2660; background: #A23B261A; }
+    .stage-list { list-style: none; margin: 16px 0 0; padding: 0; }
+    .stage { display: grid; grid-template-columns: 24px 1fr; gap: 10px; position: relative; padding-bottom: 13px; }
+    .stage + .stage { margin-top: 0; }
+    .stage:not(:last-child)::before { content: ""; position: absolute; left: 11px; top: 23px; bottom: 0; width: 1px; background: var(--line); }
+    .stage-index { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--muted); z-index: 1; }
+    .stage-body { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+    .stage:last-child .stage-body { border-bottom: 0; }
+    .stage-weeks, .stage-status { font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .stage-status { display: block; margin-top: 5px; font-weight: 600; letter-spacing: 0.14em; }
+    .stage-clear { color: var(--forest); }
+    .stage-review { color: #745A00; }
+    .stage-blocker { color: var(--brick); }
+    .brief-disclaimer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 10px; line-height: 1.6; }
     .motto {
       margin-top: 34px;
       text-align: center;
@@ -277,6 +362,10 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
       .snapshot th, .snapshot td { display: block; width: 100%; }
       .snapshot th { border-bottom: 0; padding-bottom: 2px; }
       .snapshot td { padding-top: 2px; }
+      .brief-heading { align-items: flex-start; flex-direction: column; }
+      .brief-total { text-align: left; }
+      .brief-grid { grid-template-columns: 1fr; }
+      .brief-column + .brief-column { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 20px; }
       .stamp { right: 18px; bottom: 18px; }
     }
     @media print {
@@ -339,11 +428,11 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
         <h2>Review Note</h2>
         <p class="note">${escapeHtml(reviewNote)}</p>
 
+        ${projectBrief ? buildProjectBriefHtml(projectBrief) : ""}
+
         <h2>Recommended Next Steps</h2>
         <ol>
-          <li>Confirm the parcel, zoning, and utility constraints with the local jurisdiction.</li>
-          <li>Review the concept with a licensed designer or builder.</li>
-          <li>Update costs, financing, taxes, and rent assumptions before making decisions.</li>
+          ${nextSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
         </ol>
 
         <div class="motto">&ldquo;Your backyard is an asset.&rdquo;</div>
@@ -356,6 +445,99 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
 </html>`;
 }
 
+function buildProjectBriefHtml(brief: AIProjectBrief): string {
+  const risks = Array.isArray(brief.risks) ? brief.risks : [];
+  const stages = Array.isArray(brief.stages) ? brief.stages : [];
+
+  return `<section class="ai-brief" aria-labelledby="ai-brief-heading">
+    <div class="brief-heading">
+      <div>
+        <div class="brief-label">AI-assisted &middot; Recorded in this certificate</div>
+        <h2 id="ai-brief-heading">Parcel &amp; Permit Brief</h2>
+      </div>
+      <div class="brief-total">
+        <strong>${brief.totalEstWeeksLow}&ndash;${brief.totalEstWeeksHigh}</strong>
+        <span>weeks typical</span>
+      </div>
+    </div>
+
+    <div class="brief-grid">
+      <div class="brief-column">
+        <div class="brief-label">Parcel interpretation</div>
+        <h3 class="brief-title">${escapeHtml(brief.headline)}</h3>
+        <p class="brief-copy">${escapeHtml(brief.summary)}</p>
+
+        <div class="best-fit">
+          <div class="brief-label">Best-fit concept</div>
+          <p>${escapeHtml(brief.bestFit)}</p>
+        </div>
+
+        ${
+          risks.length > 0
+            ? `<div class="risk-list">
+              ${risks
+                .map(
+                  (risk) => `<div class="risk-row">
+                    <div class="risk-head">
+                      <strong>${escapeHtml(risk.label)}</strong>
+                      <span class="data-chip ${reportRiskClass(risk.level)}">${escapeHtml(risk.level)}</span>
+                    </div>
+                    <p>${escapeHtml(risk.explanation)}</p>
+                  </div>`,
+                )
+                .join("")}
+            </div>`
+            : ""
+        }
+      </div>
+
+      <div class="brief-column">
+        <div class="track-head">
+          <div>
+            <div class="brief-label">Typical approval path</div>
+            <strong>${escapeHtml(brief.permitTrack.name)}</strong>
+          </div>
+          <span class="data-chip tone-low">${escapeHtml(brief.permitTrack.type)}</span>
+        </div>
+        <p class="track-basis">${escapeHtml(brief.permitTrack.basis)}</p>
+
+        <ol class="stage-list">
+          ${stages
+            .map((stage, index) => {
+              const stageTone = reportStageClass(stage.status);
+              return `<li class="stage">
+                <span class="stage-index">${index + 1}</span>
+                <div class="stage-body">
+                  <div class="stage-head">
+                    <strong>${escapeHtml(stage.name)}</strong>
+                    <span class="stage-weeks">${stage.estWeeksLow}&ndash;${stage.estWeeksHigh} wk</span>
+                  </div>
+                  <p class="stage-copy">${escapeHtml(stage.description)}</p>
+                  <span class="stage-status ${stageTone.className}">${stageTone.label}</span>
+                </div>
+              </li>`;
+            })
+            .join("")}
+        </ol>
+      </div>
+    </div>
+
+    <p class="brief-disclaimer">${escapeHtml(brief.disclaimer)}</p>
+  </section>`;
+}
+
+function reportRiskClass(level: string): string {
+  if (level === "medium") return "tone-medium";
+  if (level === "high") return "tone-high";
+  return "tone-low";
+}
+
+function reportStageClass(status: string): { className: string; label: string } {
+  if (status === "review") return { className: "stage-review", label: "Review" };
+  if (status === "blocker") return { className: "stage-blocker", label: "Blocker" };
+  return { className: "stage-clear", label: "Clear" };
+}
+
 /**
  * Build a two-column (Field, Value) CSV summary of the feasibility report,
  * with values escaped for safe CSV embedding.
@@ -363,7 +545,42 @@ export function buildReportHtml({ parcel, config, result, recordedAt }: ReportIn
  * @param input - The {@link ReportInput} (parcel, config, result).
  * @returns The report as CSV text.
  */
-export function buildReportCsv({ parcel, config, result }: ReportInput): string {
+export function buildReportCsv({ parcel, config, result, projectBrief }: ReportInput): string {
+  const risks = Array.isArray(projectBrief?.risks) ? projectBrief.risks : [];
+  const stages = Array.isArray(projectBrief?.stages) ? projectBrief.stages : [];
+  const nextSteps = Array.isArray(projectBrief?.recommendedNextSteps)
+    ? projectBrief.recommendedNextSteps
+    : [];
+  const aiRows: Array<[string, string]> = projectBrief
+    ? [
+        ["AI Brief Headline", projectBrief.headline],
+        ["AI Parcel Summary", projectBrief.summary],
+        ["AI Best Fit", projectBrief.bestFit],
+        ...risks.map(
+          (risk): [string, string] => [
+            `AI Verify - ${risk.label} (${risk.level})`,
+            risk.explanation,
+          ],
+        ),
+        ["Typical Permit Track", projectBrief.permitTrack.name],
+        ["Permit Track Type", projectBrief.permitTrack.type],
+        ["Permit Track Basis", projectBrief.permitTrack.basis],
+        [
+          "Typical Approval Timeline (weeks)",
+          `${projectBrief.totalEstWeeksLow}-${projectBrief.totalEstWeeksHigh}`,
+        ],
+        ...stages.map(
+          (stage, index): [string, string] => [
+            `Permit Stage ${index + 1} - ${stage.name}`,
+            `${stage.estWeeksLow}-${stage.estWeeksHigh} weeks (${stage.status}): ${stage.description}`,
+          ],
+        ),
+        ...nextSteps.map(
+          (step, index): [string, string] => [`AI Next Step ${index + 1}`, step],
+        ),
+        ["AI Brief Disclaimer", projectBrief.disclaimer],
+      ]
+    : [];
   const rows: Array<[string, string]> = [
     ["Field", "Value"],
     ["Address", `${parcel.address}, ${parcel.city}`],
@@ -378,6 +595,7 @@ export function buildReportCsv({ parcel, config, result }: ReportInput): string 
     ["Monthly Rent ($)", String(result.monthlyRent)],
     ["Annual Net Income ($)", String(result.annualNoi)],
     ["Simple Payback (years)", String(result.paybackYears)],
+    ...aiRows,
     ["Disclaimer", DISCLAIMER],
   ];
 

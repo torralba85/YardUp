@@ -6,12 +6,50 @@ import {
   defaultFinancialAssumptions,
   getParcelById,
 } from "./feasibility";
+import type { AIProjectBrief } from "./ai-types";
 
 function makeInput() {
   const parcel = getParcelById("oak-street");
   const config = defaultAduConfig;
   const result = calculateFeasibility(parcel, config, defaultFinancialAssumptions);
   return { parcel, config, result };
+}
+
+function makeProjectBrief(): AIProjectBrief {
+  return {
+    headline: "A workable backyard concept with two review items",
+    summary: "The current concept fits the recorded parcel and coverage assumptions.",
+    bestFit: "Keep the 600 sf one-bedroom concept and confirm utility routing.",
+    risks: [
+      { label: "Utility route", level: "medium", explanation: "Confirm the sewer path." },
+      { label: "Coverage", level: "low", explanation: "The concept remains below the cap." },
+    ],
+    permitTrack: {
+      name: "Washington ministerial ADU review",
+      type: "ministerial",
+      basis: "Typical administrative review for a qualifying ADU.",
+    },
+    stages: [
+      {
+        name: "Pre-application check",
+        description: "Confirm the submittal set.",
+        estWeeksLow: 1,
+        estWeeksHigh: 2,
+        status: "review",
+      },
+      {
+        name: "Plan review",
+        description: "Jurisdiction review of the application.",
+        estWeeksLow: 4,
+        estWeeksHigh: 7,
+        status: "clear",
+      },
+    ],
+    totalEstWeeksLow: 5,
+    totalEstWeeksHigh: 9,
+    recommendedNextSteps: ["Confirm utilities.", "Prepare the plan set.", "Submit for review."],
+    disclaimer: "AI-assisted planning estimate only; not an approval guarantee.",
+  };
 }
 
 describe("buildReportText", () => {
@@ -25,6 +63,14 @@ describe("buildReportText", () => {
     expect(text).toMatch(/Monthly rent estimate/i);
     expect(text).toMatch(/Annual net income estimate/i);
     expect(text).toMatch(/Planning estimate only/i);
+  });
+
+  it("records the merged AI parcel interpretation and permit timeline", () => {
+    const text = buildReportText({ ...makeInput(), projectBrief: makeProjectBrief() });
+    expect(text).toContain("AI Parcel & Permit Brief");
+    expect(text).toContain("Utility route");
+    expect(text).toContain("Typical approval timeline: 5-9 weeks");
+    expect(text).toContain("Pre-application check: 1-2 weeks");
   });
 });
 
@@ -71,6 +117,28 @@ describe("buildReportHtml", () => {
     expect(html).toContain(formatCurrencyForTest(allowance));
     expect(html).toContain(formatCurrencyForTest(input.result.annualNoi));
   });
+
+  it("adds one styled parcel and permit brief to the printable certificate", () => {
+    const html = buildReportHtml({ ...makeInput(), projectBrief: makeProjectBrief() });
+
+    expect(html).toContain("Parcel &amp; Permit Brief");
+    expect(html).toContain("AI-assisted &middot; Recorded in this certificate");
+    expect(html).toContain("Washington ministerial ADU review");
+    expect(html).toContain("Pre-application check");
+    expect(html).toContain("5&ndash;9");
+    expect(html).toContain("Confirm utilities.");
+  });
+
+  it("escapes AI-generated certificate content", () => {
+    const projectBrief = {
+      ...makeProjectBrief(),
+      headline: '<script data-test="brief">alert(1)</script>',
+    };
+    const html = buildReportHtml({ ...makeInput(), projectBrief });
+
+    expect(html).not.toContain('<script data-test="brief">');
+    expect(html).toContain("&lt;script data-test=&quot;brief&quot;&gt;");
+  });
 });
 
 function formatCurrencyForTest(value: number) {
@@ -100,5 +168,13 @@ describe("buildReportCsv", () => {
     const input = makeInput();
     const csv = buildReportCsv(input);
     expect(csv).toContain('"1234 Oak Street, Seattle, WA 98115"');
+  });
+
+  it("exports the recorded AI brief and each timeline stage", () => {
+    const csv = buildReportCsv({ ...makeInput(), projectBrief: makeProjectBrief() });
+    expect(csv).toContain("AI Brief Headline");
+    expect(csv).toContain("Typical Approval Timeline (weeks),5-9");
+    expect(csv).toContain("Permit Stage 1 - Pre-application check");
+    expect(csv).toContain("AI Next Step 1,Confirm utilities.");
   });
 });

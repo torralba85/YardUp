@@ -33,12 +33,8 @@ import {
   type ConstraintItem,
   type ConstraintStatus,
 } from "@/lib/feasibility-verdict";
-import AIPropertyInsightsPanel, {
-  createAIPropertyInsightsKey,
-} from "./AIPropertyInsightsPanel";
-import AIPermitPathwayPanel, {
-  createAIPermitPathwayKey,
-} from "./AIPermitPathwayPanel";
+import type { AIProjectBrief } from "@/lib/ai-types";
+import AIProjectBriefPanel from "./AIProjectBriefPanel";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import { useParcel } from "@/lib/parcel-context";
 
@@ -68,6 +64,10 @@ export interface ConstraintsPanelProps {
   assumptions: FinancialAssumptions;
   onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
   onViewCertificate: () => void;
+  projectBrief: AIProjectBrief | null;
+  projectBriefLoading: boolean;
+  projectBriefError: string | null;
+  onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBrief>;
   /** Bumped by an outside "Change address" action to focus the search field. */
   addressFocusSignal?: number;
 }
@@ -79,6 +79,10 @@ export default function ConstraintsPanel({
   assumptions,
   onAssumptionsChange,
   onViewCertificate,
+  projectBrief,
+  projectBriefLoading,
+  projectBriefError,
+  onGenerateProjectBrief,
   addressFocusSignal,
 }: ConstraintsPanelProps) {
   const summary = summarizeFeasibility(parcel, result, config);
@@ -173,20 +177,11 @@ export default function ConstraintsPanel({
         </div>
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
-          <AIPropertyInsightsPanel
-            key={createAIPropertyInsightsKey({ parcel, result, config })}
-            parcel={parcel}
-            result={result}
-            config={config}
-          />
-        </div>
-
-        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
-          <AIPermitPathwayPanel
-            key={createAIPermitPathwayKey({ parcel, result, config })}
-            parcel={parcel}
-            result={result}
-            config={config}
+          <AIProjectBriefPanel
+            brief={projectBrief}
+            loading={projectBriefLoading}
+            error={projectBriefError}
+            onGenerate={onGenerateProjectBrief}
           />
         </div>
       </div>

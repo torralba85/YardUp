@@ -178,6 +178,18 @@ describe("FeasibilityStudio (guided spine)", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers one AI action for the parcel interpretation and approval timeline", () => {
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    const brief = screen.getByRole("region", { name: "AI parcel and timeline brief" });
+    expect(
+      within(brief).getByRole("button", { name: "Generate AI parcel and timeline brief" }),
+    ).toBeInTheDocument();
+    expect(within(brief).getAllByRole("button")).toHaveLength(1);
+    expect(screen.queryByText("Translate the parcel data")).not.toBeInTheDocument();
+    expect(screen.queryByText("Map the approval timeline")).not.toBeInTheDocument();
+  });
+
   it("scopes mobile sheet content to the selected spine step", async () => {
     vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("prefers-reduced-motion"),

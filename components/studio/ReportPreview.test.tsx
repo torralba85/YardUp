@@ -1,0 +1,73 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import {
+  calculateFeasibility,
+  defaultAduConfig,
+  defaultFinancialAssumptions,
+  parcelPresets,
+} from "@/lib/feasibility";
+import type { AIProjectBrief } from "@/lib/ai-types";
+import ReportPreview from "./ReportPreview";
+
+const brief: AIProjectBrief = {
+  headline: "A workable backyard concept with two review items",
+  summary: "The current concept fits the recorded parcel and coverage assumptions.",
+  bestFit: "Keep the 600 sf one-bedroom concept and confirm utility routing.",
+  risks: [
+    { label: "Utility route", level: "medium", explanation: "Confirm the sewer path." },
+  ],
+  permitTrack: {
+    name: "Washington ministerial ADU review",
+    type: "ministerial",
+    basis: "Typical administrative review for a qualifying ADU.",
+  },
+  stages: [
+    {
+      name: "Pre-application check",
+      description: "Confirm the submittal set.",
+      estWeeksLow: 1,
+      estWeeksHigh: 2,
+      status: "review",
+    },
+    {
+      name: "Plan review",
+      description: "Jurisdiction review of the application.",
+      estWeeksLow: 4,
+      estWeeksHigh: 7,
+      status: "clear",
+    },
+  ],
+  totalEstWeeksLow: 5,
+  totalEstWeeksHigh: 9,
+  recommendedNextSteps: ["Confirm utilities.", "Prepare the plan set.", "Submit for review."],
+  disclaimer: "AI-assisted planning estimate only; not an approval guarantee.",
+};
+
+describe("ReportPreview", () => {
+  it("renders the AI parcel assessment and approval timeline inside one certificate", () => {
+    const parcel = parcelPresets[0];
+    const result = calculateFeasibility(
+      parcel,
+      defaultAduConfig,
+      defaultFinancialAssumptions,
+    );
+
+    render(
+      <ReportPreview
+        parcelName={`${parcel.address}, ${parcel.city}`}
+        result={result}
+        projectBrief={brief}
+        onClose={vi.fn()}
+        onDownload={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Parcel & Permit Brief" })).toBeInTheDocument();
+    expect(screen.getByText(brief.headline)).toBeInTheDocument();
+    expect(screen.getByText("Utility route")).toBeInTheDocument();
+    expect(screen.getByText("Washington ministerial ADU review")).toBeInTheDocument();
+    expect(screen.getByText("Pre-application check")).toBeInTheDocument();
+    expect(screen.getByText(/5–9/)).toBeInTheDocument();
+    expect(screen.getByText("Confirm utilities.")).toBeInTheDocument();
+  });
+});

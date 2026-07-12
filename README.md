@@ -7,11 +7,11 @@ A production-grade ADU feasibility studio. Search a real property address to pul
 - **Live parcel search:** Enter any US residential address → Regrid parcel API returns actual lot dimensions, setbacks, and zoning
 - **Aerial visualization:** Google Maps Static satellite view with parcel boundary + ADU footprint overlay
 - **Feasibility engine:** Instant NOI, payback, build cost ranges, and zoning compliance
-- **AI property insights:** Server-side OpenAI route explains the active parcel, ADU fit, risks, and next steps
+- **AI parcel + permit brief:** One authenticated OpenAI response joins parcel fit, review risks, a jurisdiction-grounded approval timeline, and recorded next steps; the same brief is included in the certificate and exports
 - **AI style-matched concepts:** Upload a home photo and generate a conceptual ADU mockup that matches visible exterior style cues
 - **Demo mode:** Three hardcoded presets (Seattle, Portland, Austin) for offline / API-less use
 - **Scenario persistence:** Authenticated users save scenarios to Firebase; guest users keep local browser saves; shareable deep-link URLs
-- **Concept report:** Printable / downloadable PDF-quality summary
+- **Concept report:** Printable / downloadable Certificate of Feasibility with the financial ledger, AI parcel interpretation, and typical permit timeline
 
 ## Run Locally
 
@@ -82,4 +82,4 @@ The app deploys to Firebase Hosting + Cloud Functions. Set the required server-s
 
 - Feasibility and financial outputs are estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents with local professionals before investing.
 - Parcel data is sourced from Regrid and may not reflect recent changes. Always verify with your local jurisdiction.
-- AI property insights and style-matched ADU images are conceptual aids, not permit approvals, construction documents, or architectural advice.
+- AI parcel interpretations, permit timelines, and style-matched ADU images are conceptual planning aids, not permit approvals, construction documents, or architectural advice.
