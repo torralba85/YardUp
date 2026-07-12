@@ -21,16 +21,11 @@ The MVP adds two AI surfaces:
 
 ### Server routes
 
-- `POST /api/ai/parcel-insights`
-  - Input: active parcel, ADU config, feasibility result.
-  - Output: structured JSON with headline, summary, best fit, risks, next steps, and disclaimer.
-  - Uses OpenAI Responses API structured outputs.
-
 - `POST /api/ai/project-brief`
   - Input: active parcel, ADU config, and the full feasibility result.
   - Output: one structured brief with parcel interpretation, merged risks, an allow-listed permit track and stage timeline, deduplicated next steps, and a disclaimer.
   - Requires auth, is rate-limited, and uses deterministic permit-track/stage tools before the model can finalize its response.
-  - This is the user-facing studio and certificate path; the narrower parcel-insights and permit-pathway routes remain available for compatibility.
+  - This is the user-facing studio and certificate path; the earlier single-purpose parcel-insights and permit-pathway routes were removed in its favor.
 
 - `POST /api/ai/adu-concept`
   - Input: uploaded image file plus active parcel and ADU config.

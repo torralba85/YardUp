@@ -8,21 +8,6 @@ export interface AIParcelRisk {
   explanation: string;
 }
 
-export interface AIParcelInsights {
-  headline: string;
-  summary: string;
-  bestFit: string;
-  risks: AIParcelRisk[];
-  recommendedNextSteps: string[];
-  disclaimer: string;
-}
-
-export interface AIParcelInsightsInput {
-  parcel: Parcel & { zoning?: string; source?: string };
-  config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
-  result: Pick<FeasibilityResult, "aduSqft" | "allowedFootprint" | "remainingCapacity" | "coveragePercent" | "maxCoveragePercent" | "zoningStatus" | "costLow" | "costHigh" | "monthlyRent" | "annualNoi" | "paybackYears" | "warnings">;
-}
-
 export interface AIADUConcept {
   architecturalStyle: string;
   styleSummary: string;
@@ -41,36 +26,6 @@ export interface AIPermitStage {
   status: "clear" | "review" | "blocker";
 }
 
-export interface AIPermitPathway {
-  headline: string;
-  summary: string;
-  track: {
-    name: string;
-    type: "ministerial" | "discretionary";
-    basis: string;
-  };
-  stages: AIPermitStage[];
-  reviewFlags: AIParcelRisk[];
-  totalEstWeeksLow: number;
-  totalEstWeeksHigh: number;
-  recommendedNextSteps: string[];
-  disclaimer: string;
-}
-
-export interface AIPermitPathwayInput {
-  parcel: Parcel & { zoning?: string; source?: string };
-  config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
-  result: Pick<
-    FeasibilityResult,
-    | "aduSqft"
-    | "zoningStatus"
-    | "coveragePercent"
-    | "maxCoveragePercent"
-    | "remainingCapacity"
-    | "warnings"
-  >;
-}
-
 /**
  * One homeowner-facing brief shared by the feasibility surface and the paid
  * certificate. Parcel interpretation and the permit timeline intentionally
@@ -81,7 +36,11 @@ export interface AIProjectBrief {
   summary: string;
   bestFit: string;
   risks: AIParcelRisk[];
-  permitTrack: AIPermitPathway["track"];
+  permitTrack: {
+    name: string;
+    type: "ministerial" | "discretionary";
+    basis: string;
+  };
   stages: AIPermitStage[];
   totalEstWeeksLow: number;
   totalEstWeeksHigh: number;
@@ -89,4 +48,8 @@ export interface AIProjectBrief {
   disclaimer: string;
 }
 
-export type AIProjectBriefInput = AIParcelInsightsInput;
+export interface AIProjectBriefInput {
+  parcel: Parcel & { zoning?: string; source?: string };
+  config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
+  result: Pick<FeasibilityResult, "aduSqft" | "allowedFootprint" | "remainingCapacity" | "coveragePercent" | "maxCoveragePercent" | "zoningStatus" | "costLow" | "costHigh" | "monthlyRent" | "annualNoi" | "paybackYears" | "warnings">;
+}
