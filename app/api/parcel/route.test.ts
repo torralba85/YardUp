@@ -36,6 +36,35 @@ function regridResponse(fields: Record<string, unknown>, geometry: unknown = nul
   };
 }
 
+/**
+ * A closed GeoJSON ring for a widthFt × lengthFt rectangle rotated by
+ * `degrees`, centered at (latC, lngC). Uses the same latitude-corrected
+ * ft-per-degree scales as lib/parcel-geometry so dimensions round-trip.
+ */
+function rotatedRectPolygon(
+  latC: number,
+  lngC: number,
+  widthFt: number,
+  lengthFt: number,
+  degrees: number,
+) {
+  const rad = (degrees * Math.PI) / 180;
+  const lngScale = 364000 * Math.cos((latC * Math.PI) / 180);
+  const corners: Array<[number, number]> = [
+    [-widthFt / 2, -lengthFt / 2],
+    [widthFt / 2, -lengthFt / 2],
+    [widthFt / 2, lengthFt / 2],
+    [-widthFt / 2, lengthFt / 2],
+  ];
+  const ring = corners.map(([x, y]) => {
+    const rx = x * Math.cos(rad) - y * Math.sin(rad);
+    const ry = x * Math.sin(rad) + y * Math.cos(rad);
+    return [lngC + rx / lngScale, latC + ry / 364000];
+  });
+  ring.push(ring[0]);
+  return { type: "Polygon", coordinates: [ring] };
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.stubEnv("REGRID_API_KEY", "test-token");
@@ -106,6 +135,45 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     const res = await GET(makeRequest(47.65, -122.31));
     const data = (await res.json()) as LiveParcelData;
     expect(data.existingHouseSqft).toBe(980);
+  });
+
+  it("derives oriented (not axis-aligned) dimensions from a rotated parcel polygon", async () => {
+    // A 50ft × 100ft lot rotated 30° at Seattle latitude. The old axis-aligned
+    // bounding box (with its hardcoded 288000 ft/° longitude scale) inflates
+    // this to ~93 × ~112; the oriented bounding box recovers the true 50 × 100.
+    const geometry = rotatedRectPolygon(47.65, -122.31, 50, 100, 30);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({ ll_gisacre: 5000 / 43560, zoning: "R-1" }, geometry),
+      ),
+    );
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("regrid");
+    expect(data.lotWidth).toBeGreaterThanOrEqual(49);
+    expect(data.lotWidth).toBeLessThanOrEqual(51);
+    expect(data.lotLength).toBeGreaterThanOrEqual(99);
+    expect(data.lotLength).toBeLessThanOrEqual(101);
+  });
+
+  it("estimates proportional dimensions from lot area when Regrid returns no geometry", async () => {
+    // 10890 sq ft with no polygon: the area estimator (~2:1 depth-to-width)
+    // gives 74 × 147 — not the old hardcoded 40 ft width (which forced 40 × 272).
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({ ll_gisacre: 0.25, zoning: "R-1" }),
+      ),
+    );
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.lotWidth).toBe(74);
+    expect(data.lotLength).toBe(147);
   });
 
   it("returns a fallback preset (source=fallback) when Regrid has no features", async () => {

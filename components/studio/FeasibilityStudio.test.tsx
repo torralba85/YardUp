@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
@@ -8,8 +8,18 @@ import type { ReactNode } from "react";
 
 vi.mock("next/dynamic", () => ({
   default: () => {
-    const MockParcelScene = () => (
-      <div data-testid="parcel-scene">parcel scene placeholder</div>
+    // Expose the dims the scene receives so tests can assert the 3D lot
+    // tracks the active parcel (preset, estimated, or live).
+    const MockParcelScene = (props: {
+      parcel?: { lotWidth: number; lotLength: number };
+    }) => (
+      <div
+        data-testid="parcel-scene"
+        data-lot-width={props.parcel?.lotWidth}
+        data-lot-length={props.parcel?.lotLength}
+      >
+        parcel scene placeholder
+      </div>
     );
     MockParcelScene.displayName = "MockParcelScene";
     return MockParcelScene;
@@ -93,6 +103,66 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
     expect(screen.getByText("Feasibility verdict")).toBeInTheDocument();
     expect(screen.getByText("Readiness")).toBeInTheDocument();
+  });
+
+  it("renders the searched live parcel's dimensions in the 3D scene", async () => {
+    // Reproduces the demo-lot bug: after a live address search the 3D lot must
+    // re-proportion to the fetched parcel, not keep the oak-street 40 × 125.
+    const liveParcel = {
+      address: "141 N Almaden Ave",
+      city: "San Jose, CA 95110",
+      lotArea: 7436,
+      lotWidth: 52,
+      lotLength: 143,
+      existingHouseSqft: 1210,
+      maxLotCoveragePercent: 40,
+      setbacks: { front: 20, rear: 20, side: 5 },
+      zoning: "R-1",
+      boundaryGeoJson: null,
+      lat: 37.3337,
+      lng: -121.8907,
+      source: "regrid",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/geocode")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              lat: liveParcel.lat,
+              lng: liveParcel.lng,
+              formattedAddress: "141 N Almaden Ave, San Jose, CA 95110",
+            }),
+          };
+        }
+        if (url.includes("/api/parcel")) {
+          return { ok: true, status: 200, json: async () => liveParcel };
+        }
+        // Debounced address autocomplete may fire mid-test; keep it empty.
+        return { ok: true, status: 200, json: async () => ({ suggestions: [] }) };
+      }),
+    );
+
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    // The demo preset renders first (oak-street, 40 ft wide).
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "40");
+
+    const search = screen.getByRole("search");
+    await user.type(
+      within(search).getByLabelText("Search property address"),
+      "141 N Almaden Ave, San Jose, CA",
+    );
+    await user.click(within(search).getByRole("button", { name: /Search/ }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "52");
+    });
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-length", "143");
   });
 
   it("marks certificate and builders as the revenue steps", () => {

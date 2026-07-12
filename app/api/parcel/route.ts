@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { parcelPresets } from "@/lib/feasibility";
+import { estimateLotDimensions, orientedLotDimensions } from "@/lib/parcel-geometry";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
@@ -91,8 +92,14 @@ export async function GET(request: NextRequest) {
     const existingHouseSqft =
       fields.ll_bldg_footprint_sqft ?? fields.sqft ?? 0;
 
-    // Derive approximate lot width/length from bounding box if not explicit
-    const { lotWidth, lotLength } = deriveWidthLength(lotAreaSqft, geometry);
+    // Prefer the real parcel shape's oriented bounding box (latitude-corrected,
+    // rotation-proof); otherwise estimate proportions from lot area so the 3D
+    // lot still responds to the address instead of assuming a 40 ft width.
+    const { lotWidth, lotLength } =
+      orientedLotDimensions(
+        geometry?.type === "Polygon" ? geometry : null,
+        lotAreaSqft,
+      ) ?? estimateLotDimensions(lotAreaSqft);
 
     // Regrid's standard parcel schema does not include zoning setbacks, so
     // this resolves to DEFAULT_SETBACKS. Kept as a single seam so a future
@@ -207,29 +214,6 @@ function nearestPreset(lat: number, lng: number) {
     }
   }
   return parcelPresets.find((p) => p.id === bestId) ?? parcelPresets[0];
-}
-
-function deriveWidthLength(
-  lotAreaSqft: number,
-  geometry: { type: string; coordinates: number[][][] } | null,
-): { lotWidth: number; lotLength: number } {
-  if (geometry?.type === "Polygon" && geometry.coordinates[0]?.length > 0) {
-    const coords = geometry.coordinates[0];
-    const lats = coords.map((c) => c[1]);
-    const lngs = coords.map((c) => c[0]);
-    const dLat = Math.max(...lats) - Math.min(...lats);
-    const dLng = Math.max(...lngs) - Math.min(...lngs);
-    // Convert degrees to approximate feet (1° lat ≈ 364_000 ft, 1° lng ≈ 288_000 ft at 38°N)
-    const heightFt = dLat * 364000;
-    const widthFt = dLng * 288000;
-    return {
-      lotWidth: Math.round(Math.min(widthFt, heightFt)),
-      lotLength: Math.round(Math.max(widthFt, heightFt)),
-    };
-  }
-  // Fallback: assume 40ft wide lot
-  const width = 40;
-  return { lotWidth: width, lotLength: Math.round(lotAreaSqft / width) };
 }
 
 function parseSetbacks(

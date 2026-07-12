@@ -6,7 +6,7 @@ import { Html, Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import type { ADUConfig, ParcelPreset } from "@/lib/feasibility";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
 
 /** Minimal error boundary that falls back to a render function. */
@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<
 }
 
 interface ParcelSceneProps {
-  parcel: ParcelPreset;
+  parcel: Parcel;
   config: ADUConfig;
   isCompliant: boolean;
   aduPosition?: [number, number];
@@ -220,7 +220,7 @@ function SceneCameraChoreography({
   aduPos,
 }: {
   mode: ViewMode;
-  parcel: ParcelPreset;
+  parcel: Parcel;
   config: ADUConfig;
   aduPos: [number, number];
 }) {
@@ -297,7 +297,7 @@ function SceneCameraChoreography({
  * signaled elsewhere (ADU ring, callout, constraints rail); the boundary only
  * shifts to review amber when the placement breaks the declared envelope.
  */
-function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompliant: boolean }) {
+function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: boolean }) {
   const y = 0.14;
   const color = isCompliant ? SCENE.ink : SCENE.review;
   const { loop, ticks } = useMemo(() => {
@@ -339,7 +339,7 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: ParcelPreset; isCompli
 }
 
 /** Setback envelope as dashed clay drafting lines (recorded-fact register). */
-function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
+function SetbackLines({ parcel }: { parcel: Parcel }) {
   const points = useMemo((): [number, number, number][] => {
     const halfWidth = parcel.lotWidth / 2;
     const halfLength = parcel.lotLength / 2;
@@ -376,7 +376,7 @@ function SetbackLines({ parcel }: { parcel: ParcelPreset }) {
  * envelope edge plus overall lot dimensions along the boundary, all derived
  * from the parcel's declared numbers.
  */
-function SetbackDimensions({ parcel }: { parcel: ParcelPreset }) {
+function SetbackDimensions({ parcel }: { parcel: Parcel }) {
   const hw = parcel.lotWidth / 2;
   const hl = parcel.lotLength / 2;
   const { front, rear, side } = parcel.setbacks;
@@ -548,7 +548,7 @@ function GableRoof({
   );
 }
 
-function ExistingHouse({ parcel }: { parcel: ParcelPreset }) {
+function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const maxBuildableWidth = parcel.lotWidth - parcel.setbacks.side * 2;
   const width = Math.max(Math.min(maxBuildableWidth * 0.65, 32), 10);
   const depth = Math.max(Math.min(parcel.existingHouseSqft / width, 28), 8);
@@ -695,7 +695,7 @@ function ProposedAdu({
   onPositionChange,
 }: {
   config: ADUConfig;
-  parcel: ParcelPreset;
+  parcel: Parcel;
   position: [number, number];
   onPositionChange?: (pos: [number, number]) => void;
 }) {

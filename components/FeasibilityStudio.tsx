@@ -209,12 +209,11 @@ function FeasibilityStudioInner() {
   const presetParcel = getParcelById(parcelId);
   // Context parcel covers both live (Regrid) and estimated (wizard) modes.
   const activeParcel = parcelMode === "preset" ? presetParcel : liveParcel;
-  // Estimated parcels have no 3D geometry of their own — render the base
-  // preset's lot in the scene while the metrics use the estimated parcel.
-  const sceneParcel =
-    parcelMode === "estimated" && "basePresetId" in activeParcel
-      ? getParcelById(activeParcel.basePresetId)
-      : presetParcel;
+  // The 3D scene renders the active parcel's rectangle, so a live address
+  // search re-proportions the lot instead of keeping the demo preset's dims.
+  // (Estimated wizard parcels borrow their base preset's dimensions, so they
+  // render identically to before.)
+  const sceneParcel = activeParcel;
   // Only a geocoded (Regrid/fallback) parcel has real lat/lng for AerialView's
   // satellite imagery — demo presets and wizard estimates never do.
   const aerialAvailable = parcelMode === "live" && "lat" in activeParcel;
