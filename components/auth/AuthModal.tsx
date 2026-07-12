@@ -12,6 +12,10 @@ export interface AuthModalProps {
   onClose: () => void;
 }
 
+/** Keyboard-reachable controls, excluding disabled ones the browser won't focus. */
+const FOCUSABLE_SELECTOR =
+  'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
 /**
  * Modal that toggles between sign-in and sign-up, supporting email/password
  * and Google sign-in via {@link useAuth}. Renders nothing when closed.
@@ -27,17 +31,34 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const triggerAncestorsRef = useRef<HTMLElement[]>([]);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   // Keyboard users shouldn't lose their place when the modal closes: capture
   // whatever had focus when it opened, move focus into the dialog, and
-  // restore the trigger's focus on close.
+  // restore the trigger's focus on close. A successful sign-in replaces the
+  // trigger with account UI, so also capture its ancestor chain up front —
+  // a detached node can't be walked upward after React removes it.
   useEffect(() => {
     if (isOpen) {
-      triggerRef.current = document.activeElement as HTMLElement | null;
+      const trigger = document.activeElement as HTMLElement | null;
+      triggerRef.current = trigger;
+      const ancestors: HTMLElement[] = [];
+      for (let el = trigger?.parentElement; el; el = el.parentElement) {
+        ancestors.push(el);
+      }
+      triggerAncestorsRef.current = ancestors;
       panelRef.current?.querySelector<HTMLElement>("input")?.focus();
     } else {
-      triggerRef.current?.focus?.();
+      const trigger = triggerRef.current;
+      if (trigger?.isConnected) {
+        trigger.focus();
+      } else if (trigger) {
+        // Trigger was replaced (e.g. sign-in button → account controls):
+        // land on the first focusable control in its nearest surviving host.
+        const host = triggerAncestorsRef.current.find((el) => el.isConnected);
+        host?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+      }
     }
   }, [isOpen]);
 
@@ -52,9 +73,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       if (event.key !== "Tab") return;
       const panel = panelRef.current;
       if (!panel) return;
-      const focusable = panel.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
+      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -250,7 +269,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-lf-taupe transition-colors hover:text-lf-sand"
+            className="rounded-full text-sm text-lf-taupe transition-colors hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
           >
             {isSignUp
               ? "Already have an account? Sign In"

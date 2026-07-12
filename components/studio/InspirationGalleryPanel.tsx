@@ -142,7 +142,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "image")}
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso ${
                         viewMode === "image"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -154,7 +154,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "diagram")}
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso ${
                         viewMode === "diagram"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"

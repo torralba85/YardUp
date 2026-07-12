@@ -54,7 +54,13 @@ export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
 
 export interface CountyParcelResult {
   county: string;
+  /**
+   * The parcel part containing the query point (largest part as fallback) —
+   * downstream only supports a single Polygon. Ring 0 is the exterior; any
+   * later rings are holes.
+   */
   polygon: GeoJsonPolygon;
+  /** Assessor/GIS area when available, else hole-aware area of every part. */
   lotAreaSqft: number | null;
 }
 
@@ -82,61 +88,187 @@ export async function fetchCountyParcel(
     geometryType: "esriGeometryPoint",
     inSR: "4326",
     spatialRel: "esriSpatialRelIntersects",
-    outFields: source.areaField ?? "",
     returnGeometry: "true",
     outSR: "4326",
   });
+  if (source.areaField) params.set("outFields", source.areaField);
 
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    let res: Response;
+    let json: { features?: unknown } | null = null;
     try {
-      res = await fetch(`${source.queryUrl}?${params.toString()}`, {
+      const res = await fetch(`${source.queryUrl}?${params.toString()}`, {
         signal: controller.signal,
       });
+      if (!res.ok) return null;
+      // Keep the abort timer armed through the body read so a stalled stream
+      // trips the same 5s bound as stalled headers.
+      json = await res.json();
     } finally {
       clearTimeout(timer);
     }
-    if (!res.ok) return null;
 
-    const json = await res.json();
-    const feature = json?.features?.[0];
-    const polygon = normalizePolygon(feature?.geometry);
-    if (!polygon) return null;
+    const features = Array.isArray(json?.features) ? json.features : [];
+    const best = pickBestFeature(features, lat, lng);
+    if (!best) return null;
 
     const lotAreaSqft =
-      readAreaField(feature?.properties, source) ??
-      roundedPositive(polygonAreaSqft(polygon));
+      readAreaField(
+        best.feature.properties ?? best.feature.attributes,
+        source,
+      ) ?? roundedPositive(best.totalAreaSqft);
 
-    return { county: source.county, polygon, lotAreaSqft };
+    return { county: source.county, polygon: best.polygon, lotAreaSqft };
   } catch {
     return null;
   }
 }
 
-/** Accept GeoJSON Polygon/MultiPolygon or Esri JSON rings; else null. */
-function normalizePolygon(geometry: unknown): GeoJsonPolygon | null {
-  if (!geometry || typeof geometry !== "object") return null;
+interface RawFeature {
+  geometry?: unknown;
+  /** GeoJSON responses put fields here… */
+  properties?: Record<string, unknown>;
+  /** …Esri JSON responses (servers that ignore f=geojson) put them here. */
+  attributes?: Record<string, unknown>;
+}
+
+interface ScoredFeature {
+  feature: RawFeature;
+  polygon: GeoJsonPolygon;
+  totalAreaSqft: number;
+  containsPoint: boolean;
+}
+
+/**
+ * Stacked layers (condos, vertical parcels) can return several features for
+ * one point, and a feature can be multipart. Prefer the feature whose
+ * geometry actually contains the point, then the largest; within a feature,
+ * return the part containing the point (largest part as fallback).
+ */
+function pickBestFeature(
+  features: unknown[],
+  lat: number,
+  lng: number,
+): ScoredFeature | null {
+  let best: ScoredFeature | null = null;
+  for (const raw of features) {
+    if (!raw || typeof raw !== "object") continue;
+    const feature = raw as RawFeature;
+    const parts = normalizeParts(feature.geometry);
+    if (parts.length === 0) continue;
+    const totalAreaSqft = parts.reduce(
+      (sum, part) => sum + partAreaSqft(part),
+      0,
+    );
+    const containing = parts.find((part) =>
+      ringContainsPoint(part.coordinates[0], lng, lat),
+    );
+    const polygon =
+      containing ??
+      parts.reduce((a, b) => (partAreaSqft(b) > partAreaSqft(a) ? b : a));
+    const containsPoint = containing !== undefined;
+    const beatsBest =
+      !best ||
+      (containsPoint && !best.containsPoint) ||
+      (containsPoint === best.containsPoint &&
+        totalAreaSqft > best.totalAreaSqft);
+    if (beatsBest) {
+      best = { feature, polygon, totalAreaSqft, containsPoint };
+    }
+  }
+  return best;
+}
+
+/**
+ * Accept GeoJSON Polygon/MultiPolygon or Esri JSON rings as a list of
+ * single-polygon parts (ring 0 exterior, later rings holes); else [].
+ */
+function normalizeParts(geometry: unknown): GeoJsonPolygon[] {
+  if (!geometry || typeof geometry !== "object") return [];
   const g = geometry as {
     type?: string;
     coordinates?: unknown;
     rings?: unknown;
   };
-  if (g.type === "Polygon" && Array.isArray(g.coordinates)) {
-    return { type: "Polygon", coordinates: g.coordinates as number[][][] };
+  if (g.type === "Polygon" && isRingArray(g.coordinates)) {
+    return [{ type: "Polygon", coordinates: g.coordinates as number[][][] }];
   }
   if (g.type === "MultiPolygon" && Array.isArray(g.coordinates)) {
-    const first = (g.coordinates as number[][][][])[0];
-    if (Array.isArray(first)) return { type: "Polygon", coordinates: first };
+    return (g.coordinates as unknown[])
+      .filter(isRingArray)
+      .map((part) => ({
+        type: "Polygon" as const,
+        coordinates: part as number[][][],
+      }));
   }
-  if (Array.isArray(g.rings) && Array.isArray((g.rings as unknown[])[0])) {
-    return {
-      type: "Polygon",
-      coordinates: [(g.rings as number[][][])[0]],
-    };
+  if (isRingArray(g.rings)) {
+    return esriRingsToParts(g.rings as number[][][]);
   }
-  return null;
+  return [];
+}
+
+function isRingArray(value: unknown): boolean {
+  return Array.isArray(value) && value.length > 0 && Array.isArray(value[0]);
+}
+
+/**
+ * Esri JSON flattens every part and hole into one rings array, encoding the
+ * role by winding order (clockwise = exterior) instead of nesting. Rebuild
+ * GeoJSON parts by starting a part at each exterior ring and attaching hole
+ * rings to the most recent exterior.
+ */
+function esriRingsToParts(rings: number[][][]): GeoJsonPolygon[] {
+  const parts: GeoJsonPolygon[] = [];
+  for (const ring of rings) {
+    if (!Array.isArray(ring) || ring.length < 4) continue;
+    const isExterior = ringSignedArea(ring) < 0;
+    if (isExterior || parts.length === 0) {
+      parts.push({ type: "Polygon", coordinates: [ring] });
+    } else {
+      parts[parts.length - 1].coordinates.push(ring);
+    }
+  }
+  return parts;
+}
+
+/** Shoelace signed area in degrees²; negative = clockwise in [lng, lat]. */
+function ringSignedArea(ring: number[][]): number {
+  let sum = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    sum += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+  }
+  return sum / 2;
+}
+
+/** Hole-aware part area: exterior ring minus hole rings, floored at zero. */
+function partAreaSqft(part: GeoJsonPolygon): number {
+  const [outer, ...holes] = part.coordinates;
+  const outerArea = polygonAreaSqft({ type: "Polygon", coordinates: [outer] });
+  const holeArea = holes.reduce(
+    (sum, ring) =>
+      sum + polygonAreaSqft({ type: "Polygon", coordinates: [ring] }),
+    0,
+  );
+  return Math.max(outerArea - holeArea, 0);
+}
+
+/** Ray-casting point-in-ring test in [lng, lat] coordinates. */
+function ringContainsPoint(
+  ring: number[][],
+  lng: number,
+  lat: number,
+): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const intersects =
+      yi > lat !== yj > lat &&
+      lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
 }
 
 function readAreaField(
@@ -145,8 +277,18 @@ function readAreaField(
 ): number | null {
   if (!source.areaField || !properties) return null;
   const raw = properties[source.areaField];
-  if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) return null;
-  return Math.round(source.areaUnit === "acres" ? raw * SQFT_PER_ACRE : raw);
+  // GIS attribute tables often store numerics as strings. Number() rejects
+  // ambiguous values like "1,234" so bad data falls back to computed area.
+  const value =
+    typeof raw === "number"
+      ? raw
+      : typeof raw === "string" && raw.trim() !== ""
+        ? Number(raw)
+        : NaN;
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return Math.round(
+    source.areaUnit === "acres" ? value * SQFT_PER_ACRE : value,
+  );
 }
 
 function roundedPositive(value: number): number | null {
