@@ -1004,8 +1004,8 @@ function SceneViewport({
 }) {
   return (
     <div data-testid="scene-viewport" className="relative h-full min-h-0 flex-1">
-      {sceneNode}
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} />
+      {sceneNode}
     </div>
   );
 }
@@ -1046,7 +1046,7 @@ function SceneViewToggle({
     <div
       role="group"
       aria-label="Parcel view"
-      className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-0.5 rounded-full border border-lf-hairline bg-lf-card p-1 shadow-sm sm:left-5 sm:top-5"
+      className="pointer-events-auto absolute left-4 top-4 z-(--z-index-header) flex items-center gap-0.5 rounded-full border border-lf-hairline bg-lf-card p-1 shadow-sm sm:left-5 sm:top-5"
     >
       <Button
         type="button"

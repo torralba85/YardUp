@@ -175,6 +175,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     const aerialButton = within(viewControl).getByRole("button", { name: "Aerial" });
 
     expect(viewControl).toHaveClass("absolute", "left-4", "top-4");
+    expect(viewControl).toHaveClass("pointer-events-auto", "z-(--z-index-header)");
+    expect(viewport.firstElementChild).toBe(viewControl);
     expect(modelButton).toHaveAttribute("aria-pressed", "true");
     expect(aerialButton).toHaveAttribute("aria-pressed", "false");
 
