@@ -56,4 +56,45 @@ describe("AI project brief input", () => {
       warnings: result.warnings,
     });
   });
+
+  it("strips live parcel geometry and preset extras from the payload", () => {
+    const preset = parcelPresets[0];
+    const liveParcel = {
+      ...preset,
+      zoning: "R-1",
+      source: "regrid",
+      boundaryGeoJson: {
+        type: "Polygon" as const,
+        coordinates: [
+          [
+            [-122.3, 47.6],
+            [-122.3, 47.601],
+            [-122.299, 47.601],
+            [-122.3, 47.6],
+          ],
+        ],
+      },
+      lat: 47.6,
+      lng: -122.3,
+    };
+    const result = calculateFeasibility(
+      liveParcel,
+      defaultAduConfig,
+      defaultFinancialAssumptions,
+    );
+
+    const input = buildAIProjectBriefInput({
+      parcel: liveParcel,
+      result,
+      config: defaultAduConfig,
+    });
+
+    expect(input.parcel).not.toHaveProperty("boundaryGeoJson");
+    expect(input.parcel).not.toHaveProperty("lat");
+    expect(input.parcel).not.toHaveProperty("lng");
+    expect(input.parcel).not.toHaveProperty("expectedRent");
+    expect(input.parcel.zoning).toBe("R-1");
+    expect(input.parcel.source).toBe("regrid");
+    expect(input.parcel.setbacks).toEqual(preset.setbacks);
+  });
 });

@@ -430,7 +430,7 @@ function CertificateBriefSection({
           </p>
           <ol className="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {nextSteps.map((step, index) => (
-              <li key={step} className="grid grid-cols-[20px_1fr] gap-2 text-xs leading-5 text-lf-muted">
+              <li key={`${index}-${step}`} className="grid grid-cols-[20px_1fr] gap-2 text-xs leading-5 text-lf-muted">
                 <span className="font-mono text-[9px] text-lf-taupe">
                   {String(index + 1).padStart(2, "0")}
                 </span>

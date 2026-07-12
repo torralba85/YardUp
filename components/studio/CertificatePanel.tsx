@@ -70,6 +70,16 @@ export default function CertificatePanel({
   const [authOpen, setAuthOpen] = useState(false);
   const [preparingBrief, setPreparingBrief] = useState(false);
   const openedOnUnlock = useRef(false);
+  const sawSettledUnpurchased = useRef(false);
+  const returnedFromCheckout = useRef(false);
+
+  // A parcel switch is a new purchase context — never carry unlock history
+  // from one certificate key to another.
+  useEffect(() => {
+    openedOnUnlock.current = false;
+    sawSettledUnpurchased.current = false;
+    returnedFromCheckout.current = false;
+  }, [certKey]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -104,17 +114,19 @@ export default function CertificatePanel({
   }, [onGenerateProjectBrief, onOpenCertificate, projectBrief, user]);
 
   // Reconcile the Stripe return. The webhook writes the grant asynchronously, so
-  // poll a few times after landing on ?cert=1, then strip the param.
+  // poll a few times after landing on ?cert=<certKey>, then strip the param.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("cert") !== "1" || purchased) return;
-    let tries = 0;
-    const timer = window.setInterval(() => {
-      tries += 1;
-      refresh();
-      if (tries >= 5) window.clearInterval(timer);
-    }, 1500);
+    const returned = params.get("cert");
+    if (!returned) return;
+    // The success URL stamps which certificate was bought; only treat the
+    // return as this panel's unlock when the keys match. "1" is the legacy
+    // stamp from sessions created before the key was included.
+    const matchesThisPanel = returned === certKey || returned === "1";
+    if (matchesThisPanel) returnedFromCheckout.current = true;
+    // Always strip the marker — leaving it in place would re-arm the unlock
+    // on every reload once the grant exists.
     params.delete("cert");
     const next = params.toString();
     window.history.replaceState(
@@ -122,16 +134,35 @@ export default function CertificatePanel({
       "",
       `${window.location.pathname}${next ? `?${next}` : ""}`,
     );
+    if (!matchesThisPanel || purchased) return;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      refresh();
+      if (tries >= 5) window.clearInterval(timer);
+    }, 1500);
     return () => window.clearInterval(timer);
-  }, [refresh, purchased]);
+  }, [refresh, purchased, certKey]);
 
-  // When the purchase resolves (demo grant or webhook), open the artifact once.
+  // Open the artifact once when a purchase resolves in this session — a demo
+  // or webhook grant observed after a settled unpurchased read, or a Stripe
+  // checkout return. A grant read passively on a fresh visit must not
+  // regenerate the AI brief or pop the certificate; the CTA covers that path.
   useEffect(() => {
-    if (purchased && user && !openedOnUnlock.current) {
+    const unlockedThisSession =
+      sawSettledUnpurchased.current || returnedFromCheckout.current;
+    if (purchased && user && unlockedThisSession && !openedOnUnlock.current) {
       openedOnUnlock.current = true;
       void prepareAndOpenCertificate();
     }
-    if (!loading && !purchased) openedOnUnlock.current = false;
+    // Only a signed-in read counts as "settled unpurchased": before Firebase
+    // auth resolves, the access hook reports not-loading/not-purchased for
+    // the guest uid, and treating that as settled would make a returning
+    // purchaser's grant look like an in-session unlock on every fresh load.
+    if (user && !loading && !purchased) {
+      sawSettledUnpurchased.current = true;
+      openedOnUnlock.current = false;
+    }
   }, [loading, prepareAndOpenCertificate, purchased, user]);
 
   async function handleCta() {

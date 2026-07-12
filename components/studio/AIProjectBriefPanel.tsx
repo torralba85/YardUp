@@ -215,7 +215,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
           </p>
           <ol className="mt-2 space-y-2">
             {nextSteps.map((step, index) => (
-              <li key={step} className="grid grid-cols-[18px_1fr] gap-2 text-[11px] leading-4 text-lf-muted">
+              <li key={`${index}-${step}`} className="grid grid-cols-[18px_1fr] gap-2 text-[11px] leading-4 text-lf-muted">
                 <span className="font-mono text-[9px] text-lf-taupe">{String(index + 1).padStart(2, "0")}</span>
                 <span>{step}</span>
               </li>
