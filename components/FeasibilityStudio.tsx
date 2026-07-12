@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -65,7 +65,10 @@ import ConstraintsPanel from "./studio/ConstraintsPanel";
 import { Button } from "./ui/Button";
 import { MoneyFigure } from "./ui/MoneyFigure";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, ImageOff, Search } from "lucide-react";
+
+/** The two scene render modes users can switch between via {@link SceneViewToggle}. */
+type SceneViewMode = "3d" | "aerial";
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -231,6 +234,15 @@ function FeasibilityStudioInner() {
     parcelMode === "estimated" && "basePresetId" in activeParcel
       ? getParcelById(activeParcel.basePresetId)
       : presetParcel;
+  // Only a geocoded (Regrid/fallback) parcel has real lat/lng for AerialView's
+  // satellite imagery — demo presets and wizard estimates never do.
+  const aerialAvailable = parcelMode === "live" && "lat" in activeParcel;
+  // User-controlled scene mode. Seeded once from today's default (aerial for an
+  // already-geocoded parcel, 3D otherwise) but never auto-switched afterward —
+  // this replaces the old data-driven auto-switch with an explicit toggle.
+  const [viewMode, setViewMode] = useState<SceneViewMode>(() =>
+    aerialAvailable ? "aerial" : "3d",
+  );
   const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
     () => calculateFeasibility(activeParcel, config, assumptions, expectedRent),
@@ -562,12 +574,24 @@ function FeasibilityStudioInner() {
   }
 
   const sceneNode =
-    parcelMode === "live" && "lat" in activeParcel ? (
-      <AerialView
-        parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
-        config={config}
-        isCompliant={isCompliant}
-      />
+    viewMode === "aerial" ? (
+      aerialAvailable ? (
+        <AerialView
+          parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
+          config={config}
+          isCompliant={isCompliant}
+        />
+      ) : (
+        <div
+          role="status"
+          className="flex h-full flex-col items-center justify-center gap-3 bg-lf-espresso p-8 text-center"
+        >
+          <ImageOff size={28} className="text-lf-taupe" aria-hidden="true" />
+          <p className="lf-body max-w-[28ch] text-lf-taupe">
+            Aerial view requires a real address. Search your address from the Lot step to see satellite imagery.
+          </p>
+        </div>
+      )
     ) : (
       <ParcelScene
         parcel={sceneParcel}
@@ -826,6 +850,8 @@ function FeasibilityStudioInner() {
         {activeStep === "lot" ? (
           <LotStep
             sceneNode={sceneNode}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
             hasParcel={parcelResolved}
             monthlyRent={result.monthlyRent}
             addressFocusSignal={addressFocusSignal}
@@ -838,7 +864,7 @@ function FeasibilityStudioInner() {
         ) : activeStep === "feasibility" ? (
           <>
             <div className="lf-studio-pane flex flex-col lg:flex-row">
-              <SceneSection sceneNode={sceneNode} />
+              <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={setViewMode} />
               <ConstraintsPanel
                 parcel={activeParcel}
                 result={result}
@@ -858,7 +884,7 @@ function FeasibilityStudioInner() {
         ) : activeStep === "design" ? (
           <>
             <div className="lf-studio-pane flex flex-col lg:flex-row">
-              <SceneSection sceneNode={sceneNode} />
+              <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={setViewMode} />
               <FeasibilityInspector
                 parcelId={parcelId}
                 config={config}
@@ -962,20 +988,69 @@ function FeasibilityStudioInner() {
 }
 
 /** Shared parcel-scene panel used by the working studio steps. */
-function SceneSection({ sceneNode }: { sceneNode: React.ReactNode }) {
+function SceneSection({
+  sceneNode,
+  viewMode,
+  onViewModeChange,
+}: {
+  sceneNode: React.ReactNode;
+  viewMode: SceneViewMode;
+  onViewModeChange: (mode: SceneViewMode) => void;
+}) {
   return (
     <section
       aria-label="Parcel massing scene"
-      className="lf-entrance relative min-h-[440px] flex-1 overflow-hidden border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
+      className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-hidden border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
     >
-      {sceneNode}
+      <SceneViewToggle mode={viewMode} onChange={onViewModeChange} />
+      <div className="relative min-h-0 flex-1">{sceneNode}</div>
     </section>
+  );
+}
+
+/** Segmented 3D/Aerial control for the scene panel's header row. */
+function SceneViewToggle({
+  mode,
+  onChange,
+}: {
+  mode: SceneViewMode;
+  onChange: (mode: SceneViewMode) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Scene view"
+      className="flex shrink-0 items-center justify-end gap-1 border-b border-white/10 bg-lf-espresso px-3 py-2"
+    >
+      <Button
+        type="button"
+        size="xs"
+        variant={mode === "3d" ? "primary" : "ghost"}
+        aria-pressed={mode === "3d"}
+        onClick={() => onChange("3d")}
+        className={mode === "3d" ? undefined : "text-lf-sand-2 hover:bg-white/10"}
+      >
+        3D
+      </Button>
+      <Button
+        type="button"
+        size="xs"
+        variant={mode === "aerial" ? "primary" : "ghost"}
+        aria-pressed={mode === "aerial"}
+        onClick={() => onChange("aerial")}
+        className={mode === "aerial" ? undefined : "text-lf-sand-2 hover:bg-white/10"}
+      >
+        Aerial
+      </Button>
+    </div>
   );
 }
 
 /** Props for {@link LotStep}. */
 interface LotStepProps {
   sceneNode: React.ReactNode;
+  viewMode: SceneViewMode;
+  onViewModeChange: (mode: SceneViewMode) => void;
   hasParcel: boolean;
   monthlyRent: number;
   addressFocusSignal: number;
@@ -993,6 +1068,8 @@ interface LotStepProps {
  */
 function LotStep({
   sceneNode,
+  viewMode,
+  onViewModeChange,
   hasParcel,
   monthlyRent,
   addressFocusSignal,
@@ -1040,7 +1117,7 @@ function LotStep({
           </div>
         )}
       </div>
-      <SceneSection sceneNode={sceneNode} />
+      <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={onViewModeChange} />
     </div>
   );
 }
