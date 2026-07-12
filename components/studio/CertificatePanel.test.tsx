@@ -78,25 +78,60 @@ function createProps(
   };
 }
 
+/** Mount unpurchased-settled, then resolve the grant — a real unlock. */
+function renderWithUnlock(props: CertificatePanelProps) {
+  mocks.access.purchased = false;
+  mocks.access.loading = false;
+  const view = render(<CertificatePanel {...props} />);
+  mocks.access.purchased = true;
+  view.rerender(<CertificatePanel {...props} />);
+  return view;
+}
+
 describe("CertificatePanel", () => {
   beforeEach(() => {
     mocks.getIdToken.mockReset().mockResolvedValue("test-token");
     mocks.refresh.mockReset();
     mocks.access.purchased = true;
     mocks.access.loading = false;
+    window.history.replaceState(null, "", "/");
   });
 
-  it("prepares the combined AI brief before automatically opening an unlocked certificate", async () => {
+  it("prepares the combined AI brief before automatically opening a newly unlocked certificate", async () => {
+    const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
+    const onOpenCertificate = vi.fn();
+    const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
+
+    renderWithUnlock(props);
+
+    await waitFor(() => {
+      expect(onGenerateProjectBrief).toHaveBeenCalledWith("test-token");
+      expect(onOpenCertificate).toHaveBeenCalledTimes(1);
+    });
+    expect(onGenerateProjectBrief).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not regenerate or auto-open an existing grant read passively on a fresh visit", async () => {
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();
     const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
 
     render(<CertificatePanel {...props} />);
 
-    await waitFor(() => {
-      expect(onGenerateProjectBrief).toHaveBeenCalledWith("test-token");
-      expect(onOpenCertificate).toHaveBeenCalledTimes(1);
-    });
+    expect(await screen.findByText(/certificate unlocked/i)).toBeInTheDocument();
+    expect(onGenerateProjectBrief).not.toHaveBeenCalled();
+    expect(onOpenCertificate).not.toHaveBeenCalled();
+  });
+
+  it("auto-opens once when returning from Stripe checkout with the grant already written", async () => {
+    window.history.replaceState(null, "", "/?cert=1");
+    const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
+    const onOpenCertificate = vi.fn();
+    const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
+
+    render(<CertificatePanel {...props} />);
+
+    await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
     expect(onGenerateProjectBrief).toHaveBeenCalledTimes(1);
   });
 
@@ -106,7 +141,7 @@ describe("CertificatePanel", () => {
     const onOpenCertificate = vi.fn();
     const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
 
-    render(<CertificatePanel {...props} />);
+    renderWithUnlock(props);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/verify your session/i);
     expect(onGenerateProjectBrief).not.toHaveBeenCalled();
@@ -119,7 +154,7 @@ describe("CertificatePanel", () => {
   it("does not reopen the same certificate after a loading refresh flicker", async () => {
     const onOpenCertificate = vi.fn();
     const props = createProps({ projectBrief: brief, onOpenCertificate });
-    const { rerender } = render(<CertificatePanel {...props} />);
+    const { rerender } = renderWithUnlock(props);
 
     await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
 

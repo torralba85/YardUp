@@ -70,6 +70,16 @@ export default function CertificatePanel({
   const [authOpen, setAuthOpen] = useState(false);
   const [preparingBrief, setPreparingBrief] = useState(false);
   const openedOnUnlock = useRef(false);
+  const sawSettledUnpurchased = useRef(false);
+  const returnedFromCheckout = useRef(false);
+
+  // A parcel switch is a new purchase context — never carry unlock history
+  // from one certificate key to another.
+  useEffect(() => {
+    openedOnUnlock.current = false;
+    sawSettledUnpurchased.current = false;
+    returnedFromCheckout.current = false;
+  }, [certKey]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -108,7 +118,9 @@ export default function CertificatePanel({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("cert") !== "1" || purchased) return;
+    if (params.get("cert") !== "1") return;
+    returnedFromCheckout.current = true;
+    if (purchased) return;
     let tries = 0;
     const timer = window.setInterval(() => {
       tries += 1;
@@ -125,13 +137,21 @@ export default function CertificatePanel({
     return () => window.clearInterval(timer);
   }, [refresh, purchased]);
 
-  // When the purchase resolves (demo grant or webhook), open the artifact once.
+  // Open the artifact once when a purchase resolves in this session — a demo
+  // or webhook grant observed after a settled unpurchased read, or a Stripe
+  // checkout return. A grant read passively on a fresh visit must not
+  // regenerate the AI brief or pop the certificate; the CTA covers that path.
   useEffect(() => {
-    if (purchased && user && !openedOnUnlock.current) {
+    const unlockedThisSession =
+      sawSettledUnpurchased.current || returnedFromCheckout.current;
+    if (purchased && user && unlockedThisSession && !openedOnUnlock.current) {
       openedOnUnlock.current = true;
       void prepareAndOpenCertificate();
     }
-    if (!loading && !purchased) openedOnUnlock.current = false;
+    if (!loading && !purchased) {
+      sawSettledUnpurchased.current = true;
+      openedOnUnlock.current = false;
+    }
   }, [loading, prepareAndOpenCertificate, purchased, user]);
 
   async function handleCta() {

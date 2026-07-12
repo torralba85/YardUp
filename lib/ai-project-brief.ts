@@ -14,7 +14,21 @@ export function buildAIProjectBriefInput({
   config,
 }: AIProjectBriefSource): AIProjectBriefInput {
   return {
-    parcel,
+    // Live parcels carry boundaryGeoJson/lat/lng beyond the advertised input
+    // type; a detailed boundary polygon would bloat the request, the OpenAI
+    // prompt, and the brief identity key, so pick the core fields explicitly.
+    parcel: {
+      address: parcel.address,
+      city: parcel.city,
+      lotArea: parcel.lotArea,
+      lotWidth: parcel.lotWidth,
+      lotLength: parcel.lotLength,
+      existingHouseSqft: parcel.existingHouseSqft,
+      maxLotCoveragePercent: parcel.maxLotCoveragePercent,
+      setbacks: parcel.setbacks,
+      zoning: parcel.zoning,
+      source: parcel.source,
+    },
     config: {
       footprint: config.footprint,
       width: config.width,
