@@ -66,6 +66,21 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
   deadlineMs?: number;
   /** Ordered tool names that must run before a final answer can be accepted. */
   requiredToolSequence?: string[];
+  /**
+   * `"required"` (default) 401s without a valid Bearer token. `"optional"`
+   * resolves the uid when a token is present and otherwise runs as a guest
+   * (`uid: null`) — for panels whose response tiers by identity/purchase
+   * instead of refusing outright.
+   */
+  auth?: "required" | "optional";
+  /**
+   * Post-process the structured output into the response payload (e.g. redact
+   * paid content for callers without a purchase). Defaults to identity.
+   */
+  finalize?: (
+    output: Output,
+    meta: { uid: string | null; input: Input },
+  ) => Promise<unknown> | unknown;
 }
 
 /** Injectable side-effects, so the loop is unit-testable without the network. */
@@ -222,8 +237,15 @@ export function createAIPanelRoute<Input, Output, Ctx>(
   deps: AIPipelineDeps<Ctx> = defaultDeps<Ctx>(),
 ): (request: NextRequest) => Promise<NextResponse> {
   return async function POST(request: NextRequest): Promise<NextResponse> {
-    const auth = await requireApiAuth(request);
-    if (auth instanceof NextResponse) return auth;
+    // Optional-auth panels serve guests as uid null; a *present* but invalid
+    // token still 401s (an expired session should re-auth, not silently
+    // downgrade a signed-in user to the guest tier).
+    let uid: string | null = null;
+    if (def.auth !== "optional" || request.headers.get("authorization")) {
+      const auth = await requireApiAuth(request);
+      if (auth instanceof NextResponse) return auth;
+      uid = auth.uid;
+    }
 
     const limited = await checkAIRateLimit(request, {
       limit: def.rateLimit.limit,
@@ -247,7 +269,10 @@ export function createAIPanelRoute<Input, Output, Ctx>(
     try {
       const ctx = def.buildContext(validated.value);
       const result = await runAgentic(def, validated.value, ctx, deps);
-      return NextResponse.json(result);
+      const payload = def.finalize
+        ? await def.finalize(result, { uid, input: validated.value })
+        : result;
+      return NextResponse.json(payload);
     } catch (err) {
       return createAIRouteErrorResponse(err, `/api/ai/${def.id}`, def.errorMessages);
     }
