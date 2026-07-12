@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
@@ -22,8 +22,14 @@ const FOCUSABLE_SELECTOR =
  *
  * @param props - The {@link AuthModalProps}.
  */
+interface TriggerHost {
+  el: HTMLElement;
+  /** The trigger's position among the host's focusable controls at open. */
+  index: number;
+}
+
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,36 +37,84 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
-  const triggerAncestorsRef = useRef<HTMLElement[]>([]);
+  const triggerHostsRef = useRef<TriggerHost[]>([]);
+  const restoredTriggerRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  const releaseTriggerRefs = useCallback(() => {
+    triggerRef.current = null;
+    restoredTriggerRef.current = null;
+    triggerHostsRef.current = [];
+  }, []);
+
+  // Focus the control standing where the trigger used to be: in the nearest
+  // surviving host, pick the focusable at the trigger's captured position
+  // (clamped), so sign-in's replacement account control wins over unrelated
+  // earlier controls that share the same subtree.
+  const focusTriggerReplacement = useCallback(() => {
+    for (const { el, index } of triggerHostsRef.current) {
+      if (!el.isConnected) continue;
+      const focusables = el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      const target = focusables[Math.min(index, focusables.length - 1)];
+      if (target) {
+        target.focus();
+        break;
+      }
+    }
+    releaseTriggerRefs();
+  }, [releaseTriggerRefs]);
 
   // Keyboard users shouldn't lose their place when the modal closes: capture
   // whatever had focus when it opened, move focus into the dialog, and
   // restore the trigger's focus on close. A successful sign-in replaces the
-  // trigger with account UI, so also capture its ancestor chain up front —
-  // a detached node can't be walked upward after React removes it.
+  // trigger with account UI, so also capture its ancestor chain (with the
+  // trigger's focusable position in each) up front — a detached node can't
+  // be walked upward after React removes it.
   useEffect(() => {
     if (isOpen) {
       const trigger = document.activeElement as HTMLElement | null;
       triggerRef.current = trigger;
-      const ancestors: HTMLElement[] = [];
-      for (let el = trigger?.parentElement; el; el = el.parentElement) {
-        ancestors.push(el);
+      restoredTriggerRef.current = null;
+      const hosts: TriggerHost[] = [];
+      if (trigger) {
+        for (let el = trigger.parentElement; el; el = el.parentElement) {
+          const focusables = Array.from(
+            el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+          );
+          hosts.push({ el, index: Math.max(0, focusables.indexOf(trigger)) });
+        }
       }
-      triggerAncestorsRef.current = ancestors;
+      triggerHostsRef.current = hosts;
       panelRef.current?.querySelector<HTMLElement>("input")?.focus();
     } else {
       const trigger = triggerRef.current;
       if (trigger?.isConnected) {
         trigger.focus();
+        // The auth observer can replace the trigger a render after this
+        // close — remember what we restored to so the effect below can move
+        // focus to its replacement if it unmounts.
+        restoredTriggerRef.current = trigger;
       } else if (trigger) {
-        // Trigger was replaced (e.g. sign-in button → account controls):
-        // land on the first focusable control in its nearest surviving host.
-        const host = triggerAncestorsRef.current.find((el) => el.isConnected);
-        host?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+        focusTriggerReplacement();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, focusTriggerReplacement]);
+
+  // Email/password sign-in closes the modal before AuthProvider's
+  // onAuthStateChanged render swaps the trigger for account UI, so the
+  // restore above can land on a control that unmounts a moment later. When
+  // the auth user changes while closed, re-check and recover the focus.
+  useEffect(() => {
+    if (isOpen) return;
+    const restored = restoredTriggerRef.current;
+    if (restored && !restored.isConnected) {
+      focusTriggerReplacement();
+    } else if (user && restored) {
+      // Sign-in settled and the restored control survived — release the
+      // captured DOM nodes so detached subtrees can be collected.
+      releaseTriggerRefs();
+    }
+  }, [user, isOpen, focusTriggerReplacement, releaseTriggerRefs]);
 
   // Escape dismisses; Tab cycles inside the dialog while it is open.
   useEffect(() => {
