@@ -28,6 +28,29 @@ const SEATTLE_POLYGON = {
   ],
 };
 
+/** Same-size part ~250 ft west — never contains the King fixture point. */
+const FAR_PART = {
+  type: "Polygon",
+  coordinates: [
+    [
+      [-122.32616, 47.68051],
+      [-122.32596, 47.68051],
+      [-122.32596, 47.68078],
+      [-122.32616, 47.68078],
+      [-122.32616, 47.68051],
+    ],
+  ],
+};
+
+/** ~850 sq ft counterclockwise hole inside SEATTLE_POLYGON. */
+const CCW_HOLE = [
+  [-122.3251, 47.68058],
+  [-122.32502, 47.68058],
+  [-122.32502, 47.6807],
+  [-122.3251, 47.6807],
+  [-122.3251, 47.68058],
+];
+
 beforeEach(() => {
   vi.restoreAllMocks();
 });
@@ -117,12 +140,27 @@ describe("fetchCountyParcel — response parsing", () => {
     expect((await fetchCountyParcel(TRAVIS_POINT.lat, TRAVIS_POINT.lng))!.lotAreaSqft).toBe(5873);
   });
 
-  it("takes the first ring of a MultiPolygon", async () => {
+  it("handles a single-part MultiPolygon", async () => {
     const multi = { type: "MultiPolygon", coordinates: [SEATTLE_POLYGON.coordinates] };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(multi)));
     const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
     expect(result!.polygon.type).toBe("Polygon");
     expect(result!.polygon.coordinates).toEqual(SEATTLE_POLYGON.coordinates);
+  });
+
+  it("returns the point-containing part of a MultiPolygon and sums area over all parts", async () => {
+    // A second split-parcel part ~250 ft west of the query point, listed
+    // first so selection cannot pass by luck of array order.
+    const multi = {
+      type: "MultiPolygon",
+      coordinates: [FAR_PART.coordinates, SEATTLE_POLYGON.coordinates],
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(multi)));
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual(SEATTLE_POLYGON.coordinates);
+    // Two ~4,900 sq ft parts → computed fallback area must cover both.
+    expect(result!.lotAreaSqft).toBeGreaterThan(8000);
+    expect(result!.lotAreaSqft).toBeLessThan(12000);
   });
 
   it("converts Esri JSON rings when the server ignores f=geojson", async () => {
@@ -133,6 +171,71 @@ describe("fetchCountyParcel — response parsing", () => {
       type: "Polygon",
       coordinates: [SEATTLE_POLYGON.coordinates[0]],
     });
+  });
+
+  it("keeps Esri hole rings and subtracts them from the computed area", async () => {
+    // Esri winding: clockwise exterior, counterclockwise hole.
+    const cwOuter = [...SEATTLE_POLYGON.coordinates[0]].reverse();
+    const esriGeometry = { rings: [cwOuter, CCW_HOLE] };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual([cwOuter, CCW_HOLE]);
+    // ~4,900 sq ft outer minus ~850 sq ft hole.
+    expect(result!.lotAreaSqft).toBeGreaterThan(3400);
+    expect(result!.lotAreaSqft).toBeLessThan(4600);
+  });
+
+  it("reads the area field from Esri JSON attributes when properties are absent", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          features: [
+            {
+              attributes: { Shape__Area: 4051.87 },
+              geometry: { rings: SEATTLE_POLYGON.coordinates },
+            },
+          ],
+        }),
+      }),
+    );
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.lotAreaSqft).toBe(4052);
+  });
+
+  it("parses string-typed area fields and rejects ambiguous ones", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON, { Shape__Area: "4051.87" }))
+      .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON, { Shape__Area: "4,051" }));
+    vi.stubGlobal("fetch", fetchSpy);
+    expect((await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng))!.lotAreaSqft).toBe(4052);
+    // "4,051" is ambiguous → fall back to the computed geometry area.
+    const fallback = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(fallback!.lotAreaSqft).toBeGreaterThan(3000);
+    expect(fallback!.lotAreaSqft).toBeLessThan(7000);
+  });
+
+  it("prefers the point-containing feature over earlier or larger stacked features", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          features: [
+            { type: "Feature", geometry: null, properties: {} },
+            { type: "Feature", geometry: FAR_PART, properties: { Shape__Area: 99999 } },
+            { type: "Feature", geometry: SEATTLE_POLYGON, properties: { Shape__Area: 4052 } },
+          ],
+        }),
+      }),
+    );
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual(SEATTLE_POLYGON.coordinates);
+    expect(result!.lotAreaSqft).toBe(4052);
   });
 });
 
