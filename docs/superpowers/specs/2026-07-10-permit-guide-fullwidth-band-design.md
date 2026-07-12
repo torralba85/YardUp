@@ -58,7 +58,9 @@ Alternatives considered and rejected:
 ### Content grid
 
 At `lg+`, a three-column grid; below `lg`, the current single-column stack
-(the mobile studio sheet usage is untouched):
+(the mobile studio sheet usage is untouched). The columns stay equal from
+`lg` through `<xl`; at `xl+`, they rebalance to a 3 / 6 / 3 track split so the
+checklist has room to breathe without squeezing the two reference columns:
 
 | Column 1 | Column 2 | Column 3 |
 |---|---|---|
