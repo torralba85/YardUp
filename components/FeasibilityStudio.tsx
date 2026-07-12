@@ -761,7 +761,13 @@ function FeasibilityStudioInner() {
               onReset={resetScenario}
             />
           }
-          scene={<div className="h-full">{sceneNode}</div>}
+          scene={
+            <SceneViewport
+              sceneNode={sceneNode}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          }
           peek={
             <PeekMetrics
               result={result}
@@ -986,6 +992,24 @@ function FeasibilityStudioInner() {
   );
 }
 
+/** Canvas viewport shared by desktop and mobile studio layouts. */
+function SceneViewport({
+  sceneNode,
+  viewMode,
+  onViewModeChange,
+}: {
+  sceneNode: React.ReactNode;
+  viewMode: SceneViewMode;
+  onViewModeChange: (mode: SceneViewMode) => void;
+}) {
+  return (
+    <div data-testid="scene-viewport" className="relative h-full min-h-0 flex-1">
+      <SceneViewToggle mode={viewMode} onChange={onViewModeChange} />
+      {sceneNode}
+    </div>
+  );
+}
+
 /** Shared parcel-scene panel used by the working studio steps. */
 function SceneSection({
   sceneNode,
@@ -1001,13 +1025,16 @@ function SceneSection({
       aria-label="Parcel massing scene"
       className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-hidden border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
     >
-      <SceneViewToggle mode={viewMode} onChange={onViewModeChange} />
-      <div className="relative min-h-0 flex-1">{sceneNode}</div>
+      <SceneViewport
+        sceneNode={sceneNode}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+      />
     </section>
   );
 }
 
-/** Segmented 3D/Aerial control for the scene panel's header row. */
+/** Floating 3D/Aerial lens switch kept visually inside the parcel canvas. */
 function SceneViewToggle({
   mode,
   onChange,
@@ -1018,8 +1045,8 @@ function SceneViewToggle({
   return (
     <div
       role="group"
-      aria-label="Scene view"
-      className="flex shrink-0 items-center justify-end gap-1 border-b border-lf-taupe/25 bg-lf-espresso px-3 py-2"
+      aria-label="Parcel view"
+      className="pointer-events-auto absolute left-4 top-4 z-(--z-index-header) flex items-center gap-0.5 rounded-full border border-lf-hairline bg-lf-card p-1 shadow-sm sm:left-5 sm:top-5"
     >
       <Button
         type="button"
@@ -1027,9 +1054,11 @@ function SceneViewToggle({
         variant={mode === "3d" ? "primary" : "ghost"}
         aria-pressed={mode === "3d"}
         onClick={() => onChange("3d")}
-        className={mode === "3d" ? undefined : "text-lf-sand-2 hover:bg-lf-sand/10"}
+        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
+          mode === "3d" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+        }`}
       >
-        3D
+        3D model
       </Button>
       <Button
         type="button"
@@ -1037,7 +1066,9 @@ function SceneViewToggle({
         variant={mode === "aerial" ? "primary" : "ghost"}
         aria-pressed={mode === "aerial"}
         onClick={() => onChange("aerial")}
-        className={mode === "aerial" ? undefined : "text-lf-sand-2 hover:bg-lf-sand/10"}
+        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
+          mode === "aerial" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+        }`}
       >
         Aerial
       </Button>

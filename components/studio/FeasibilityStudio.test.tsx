@@ -165,6 +165,30 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-length", "143");
   });
 
+  it("keeps the parcel view switch inside the scene and changes views explicitly", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    const viewport = screen.getByTestId("scene-viewport");
+    const viewControl = within(viewport).getByRole("group", { name: "Parcel view" });
+    const modelButton = within(viewControl).getByRole("button", { name: "3D model" });
+    const aerialButton = within(viewControl).getByRole("button", { name: "Aerial" });
+
+    expect(viewControl).toHaveClass("absolute", "left-4", "top-4");
+    expect(viewControl).toHaveClass("pointer-events-auto", "z-(--z-index-header)");
+    expect(viewport.firstElementChild).toBe(viewControl);
+    expect(modelButton).toHaveAttribute("aria-pressed", "true");
+    expect(aerialButton).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(aerialButton);
+
+    expect(modelButton).toHaveAttribute("aria-pressed", "false");
+    expect(aerialButton).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(viewport).getByText(/Aerial view requires a real address/i),
+    ).toBeInTheDocument();
+  });
+
   it("marks certificate and builders as the revenue steps", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     // The rail flags the two revenue destinations with a "$" signifier.

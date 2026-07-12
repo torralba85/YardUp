@@ -312,7 +312,7 @@ export default function AerialView({
       {/* Fallback notice */}
       {aerialError && (
         <div
-          className="pointer-events-none absolute left-4 top-4 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           Aerial imagery unavailable - showing the parcel overlay without a satellite base.
