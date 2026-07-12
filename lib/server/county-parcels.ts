@@ -113,11 +113,12 @@ export async function fetchCountyParcel(
     const best = pickBestFeature(features, lat, lng);
     if (!best) return null;
 
+    // Try both field containers: a server can send an empty `properties`
+    // object alongside populated Esri-style `attributes`.
     const lotAreaSqft =
-      readAreaField(
-        best.feature.properties ?? best.feature.attributes,
-        source,
-      ) ?? roundedPositive(best.totalAreaSqft);
+      readAreaField(best.feature.properties, source) ??
+      readAreaField(best.feature.attributes, source) ??
+      roundedPositive(best.totalAreaSqft);
 
     return { county: source.county, polygon: best.polygon, lotAreaSqft };
   } catch {
@@ -162,7 +163,7 @@ function pickBestFeature(
       0,
     );
     const containing = parts.find((part) =>
-      ringContainsPoint(part.coordinates[0], lng, lat),
+      partContainsPoint(part, lng, lat),
     );
     const polygon =
       containing ??
@@ -209,24 +210,39 @@ function normalizeParts(geometry: unknown): GeoJsonPolygon[] {
 }
 
 function isRingArray(value: unknown): boolean {
-  return Array.isArray(value) && value.length > 0 && Array.isArray(value[0]);
+  if (!Array.isArray(value) || value.length === 0) return false;
+  const first: unknown = value[0];
+  return Array.isArray(first) && first.length > 0 && Array.isArray(first[0]);
 }
 
 /**
  * Esri JSON flattens every part and hole into one rings array, encoding the
- * role by winding order (clockwise = exterior) instead of nesting. Rebuild
- * GeoJSON parts by starting a part at each exterior ring and attaching hole
- * rings to the most recent exterior.
+ * role by winding order (clockwise = exterior) instead of nesting. Ring order
+ * is not guaranteed to interleave holes with their shells, so attach each
+ * hole to the exterior ring that contains it.
  */
 function esriRingsToParts(rings: number[][][]): GeoJsonPolygon[] {
   const parts: GeoJsonPolygon[] = [];
+  const holes: number[][][] = [];
   for (const ring of rings) {
     if (!Array.isArray(ring) || ring.length < 4) continue;
-    const isExterior = ringSignedArea(ring) < 0;
-    if (isExterior || parts.length === 0) {
+    if (ringSignedArea(ring) < 0) {
       parts.push({ type: "Polygon", coordinates: [ring] });
     } else {
-      parts[parts.length - 1].coordinates.push(ring);
+      holes.push(ring);
+    }
+  }
+  for (const hole of holes) {
+    const [lng, lat] = hole[0];
+    const host = parts.find((part) =>
+      ringContainsPoint(part.coordinates[0], lng, lat),
+    );
+    if (host) {
+      host.coordinates.push(hole);
+    } else {
+      // No containing exterior: most likely a sloppily wound exterior from a
+      // lax service — keep it as its own part rather than corrupt another.
+      parts.push({ type: "Polygon", coordinates: [hole] });
     }
   }
   return parts;
@@ -253,12 +269,26 @@ function partAreaSqft(part: GeoJsonPolygon): number {
   return Math.max(outerArea - holeArea, 0);
 }
 
+/** Point-in-part test: inside the exterior ring and outside every hole. */
+function partContainsPoint(
+  part: GeoJsonPolygon,
+  lng: number,
+  lat: number,
+): boolean {
+  const [outer, ...holes] = part.coordinates;
+  return (
+    ringContainsPoint(outer, lng, lat) &&
+    !holes.some((ring) => ringContainsPoint(ring, lng, lat))
+  );
+}
+
 /** Ray-casting point-in-ring test in [lng, lat] coordinates. */
 function ringContainsPoint(
   ring: number[][],
   lng: number,
   lat: number,
 ): boolean {
+  if (!Array.isArray(ring) || ring.length < 4) return false;
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i];

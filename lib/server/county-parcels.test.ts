@@ -173,6 +173,61 @@ describe("fetchCountyParcel — response parsing", () => {
     });
   });
 
+  it("attaches Esri holes to their containing exterior even when listed first", async () => {
+    const cwOuter = [...SEATTLE_POLYGON.coordinates[0]].reverse();
+    // Hole listed before its shell — order must not matter.
+    const esriGeometry = { rings: [CCW_HOLE, cwOuter] };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual([cwOuter, CCW_HOLE]);
+    expect(result!.lotAreaSqft).toBeGreaterThan(3400);
+    expect(result!.lotAreaSqft).toBeLessThan(4600);
+  });
+
+  it("prefers an island part over a donut whose hole contains the point", async () => {
+    // The query point sits inside CCW_HOLE. Part A is a donut (Seattle outer
+    // ring with that hole); part B is an island inside the hole around the
+    // point. Hole-aware containment must pick the island, not the donut.
+    const island = [
+      [-122.32508, 47.68062],
+      [-122.32504, 47.68062],
+      [-122.32504, 47.68068],
+      [-122.32508, 47.68068],
+      [-122.32508, 47.68062],
+    ];
+    const multi = {
+      type: "MultiPolygon",
+      coordinates: [
+        [SEATTLE_POLYGON.coordinates[0], CCW_HOLE],
+        [island],
+      ],
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(multi)));
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual([island]);
+  });
+
+  it("reads attributes when properties is present but empty", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          features: [
+            {
+              properties: {},
+              attributes: { Shape__Area: 4051.87 },
+              geometry: SEATTLE_POLYGON,
+            },
+          ],
+        }),
+      }),
+    );
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.lotAreaSqft).toBe(4052);
+  });
+
   it("keeps Esri hole rings and subtracts them from the computed area", async () => {
     // Esri winding: clockwise exterior, counterclockwise hole.
     const cwOuter = [...SEATTLE_POLYGON.coordinates[0]].reverse();
