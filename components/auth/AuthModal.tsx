@@ -58,7 +58,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const target = focusables[Math.min(index, focusables.length - 1)];
       if (target) {
         target.focus();
-        break;
+        // A hidden or since-removed target won't actually take focus; try
+        // the next surviving host instead of giving up on it.
+        if (document.activeElement === target) break;
       }
     }
     releaseTriggerRefs();
@@ -77,7 +79,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       restoredTriggerRef.current = null;
       const hosts: TriggerHost[] = [];
       if (trigger) {
-        for (let el = trigger.parentElement; el; el = el.parentElement) {
+        for (
+          let el = trigger.parentElement;
+          el && el !== document.body;
+          el = el.parentElement
+        ) {
           const focusables = Array.from(
             el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
           );
