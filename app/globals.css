@@ -275,9 +275,13 @@ p {
   position: relative;
   isolation: isolate;
 }
+/* Fixed, not absolute: an absolute inset-0 overlay inside a scroll container
+   (the desktop StudioShell main is one) scrolls away with the content, so the
+   texture would cover only the first viewport. Viewport-pinning keeps the
+   paper uniform while scrolling and stays off the layout/paint path. */
 .lf-grain::after {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
@@ -321,6 +325,11 @@ button:focus-visible {
   .print\:hidden,
   [aria-labelledby="feasibility-heading"],
   [aria-label="Parcel massing scene"] {
+    display: none !important;
+  }
+
+  /* A fixed overlay repeats on every printed page — keep report paper clean. */
+  .lf-grain::after {
     display: none !important;
   }
 

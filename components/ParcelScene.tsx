@@ -1210,7 +1210,7 @@ export default function ParcelScene({
       {/* View-mode toggle. On mobile the bottom sheet's peek strip (148px)
           overlays the bottom of the scene, so the toggle docks above it;
           buttons meet the 44px touch floor below the `sm` breakpoint. */}
-      <div className="absolute bottom-44 right-4 lg:bottom-24 lg:right-5 z-40 flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
+      <div className="absolute bottom-44 right-4 lg:bottom-24 lg:right-5 z-(--z-index-scene) flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -1237,11 +1237,11 @@ export default function ParcelScene({
       </div>
 
       {/* Mobile-only gesture hint — also docked above the sheet's peek strip. */}
-      <div className="pointer-events-none absolute bottom-44 left-4 z-40 rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
+      <div className="pointer-events-none absolute bottom-44 left-4 z-(--z-index-scene) rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
         Drag ADU to move · Pinch to zoom
       </div>
 
-      <div className="pointer-events-none absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+      <div className="pointer-events-none absolute right-5 top-5 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
     </div>
@@ -1276,12 +1276,12 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
     >
       {/* 2D Mode Badge â€” hidden on mobile to match the 3D badge and avoid
           overlapping the income-potential overlay card on narrow screens. */}
-      <div className="absolute right-5 top-20 z-40 hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm sm:flex">
+      <div className="absolute right-5 top-20 z-(--z-index-scene) hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm sm:flex">
         <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
         <span className="px-2 py-1 text-lf-muted">WebGL Fallback</span>
       </div>
 
-      <div className="absolute right-5 top-5 z-40 rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+      <div className="absolute right-5 top-5 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
 

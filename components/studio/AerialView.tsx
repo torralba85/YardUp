@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { TriangleAlert } from "lucide-react";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import { latLngToPixel } from "@/lib/map-utils";
@@ -330,10 +331,13 @@ export default function AerialView({
 
       {parcel.source === "fallback" && (
         <div
-          className="pointer-events-none absolute bottom-4 left-4 right-4 rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
-          ⚠ Parcel boundary unavailable for this address — showing estimated defaults. Verify dimensions with your local jurisdiction.
+          <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-on-dark" aria-hidden="true" />
+          <span>
+            Parcel boundary unavailable for this address — showing estimated defaults. Verify dimensions with your local jurisdiction.
+          </span>
         </div>
       )}
     </div>

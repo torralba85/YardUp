@@ -175,7 +175,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <button
               type="button"
               onClick={() => setStep(nextStep("size"))}
-              className="mt-6 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-white transition hover:bg-lf-clay-strong"
+              className="mt-6 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
             >
               See my results →
             </button>
@@ -213,7 +213,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
-              className="mt-4 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-white transition hover:bg-lf-clay-strong"
+              className="mt-4 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
             >
               Create free account
             </button>

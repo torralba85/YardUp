@@ -110,10 +110,10 @@ export default function FeasibilityVerdictBand({
             {readiness}
             <span className="font-mono text-sm text-lf-taupe"> /100</span>
           </div>
-          <div className="mt-2 h-1 w-[110px] overflow-hidden rounded-full bg-white/10">
+          <div className="mt-2 h-1 w-[110px] overflow-hidden rounded-full bg-lf-sand/10">
             <div
-              className="h-full rounded-full transition-[width] duration-500"
-              style={{ width: `${summary.readiness}%`, backgroundColor: tone.onDark }}
+              className="h-full w-full origin-left rounded-full transition-transform duration-500"
+              style={{ transform: `scaleX(${summary.readiness / 100})`, backgroundColor: tone.onDark }}
             />
           </div>
         </div>

@@ -345,7 +345,7 @@ export default function StyleMatchPanel({
             </div>
 
             <div className="h-1.5 w-full bg-lf-taupe-soft mt-4 overflow-hidden rounded-full">
-              <div className="h-full bg-lf-clay transition-all duration-300 animate-pulse" style={{ width: `${generatingProgress}%` }} />
+              <div className="h-full w-full origin-left bg-lf-clay transition-transform duration-300 animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
             </div>
 
             <p className="mt-3 text-[11px] text-lf-muted leading-normal">

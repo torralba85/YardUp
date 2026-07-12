@@ -905,7 +905,7 @@ function SceneViewToggle({
     <div
       role="group"
       aria-label="Scene view"
-      className="flex shrink-0 items-center justify-end gap-1 border-b border-white/10 bg-lf-espresso px-3 py-2"
+      className="flex shrink-0 items-center justify-end gap-1 border-b border-lf-taupe/25 bg-lf-espresso px-3 py-2"
     >
       <Button
         type="button"
@@ -913,7 +913,7 @@ function SceneViewToggle({
         variant={mode === "3d" ? "primary" : "ghost"}
         aria-pressed={mode === "3d"}
         onClick={() => onChange("3d")}
-        className={mode === "3d" ? undefined : "text-lf-sand-2 hover:bg-white/10"}
+        className={mode === "3d" ? undefined : "text-lf-sand-2 hover:bg-lf-sand/10"}
       >
         3D
       </Button>
@@ -923,7 +923,7 @@ function SceneViewToggle({
         variant={mode === "aerial" ? "primary" : "ghost"}
         aria-pressed={mode === "aerial"}
         onClick={() => onChange("aerial")}
-        className={mode === "aerial" ? undefined : "text-lf-sand-2 hover:bg-white/10"}
+        className={mode === "aerial" ? undefined : "text-lf-sand-2 hover:bg-lf-sand/10"}
       >
         Aerial
       </Button>
