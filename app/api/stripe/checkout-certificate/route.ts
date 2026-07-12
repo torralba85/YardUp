@@ -91,7 +91,9 @@ export async function POST(request: NextRequest) {
       ],
       // The webhook reads these back to write the grant.
       metadata: { purchaseType: "certificate", uid, certKey },
-      success_url: `${origin}/studio?cert=1`,
+      // Stamp which certificate was bought so the return only unlocks the
+      // panel whose key matches (the studio may rehydrate a different parcel).
+      success_url: `${origin}/studio?cert=${encodeURIComponent(certKey)}`,
       cancel_url: `${origin}/studio`,
     });
 

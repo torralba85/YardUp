@@ -114,19 +114,19 @@ export default function CertificatePanel({
   }, [onGenerateProjectBrief, onOpenCertificate, projectBrief, user]);
 
   // Reconcile the Stripe return. The webhook writes the grant asynchronously, so
-  // poll a few times after landing on ?cert=1, then strip the param.
+  // poll a few times after landing on ?cert=<certKey>, then strip the param.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("cert") !== "1") return;
-    returnedFromCheckout.current = true;
-    if (purchased) return;
-    let tries = 0;
-    const timer = window.setInterval(() => {
-      tries += 1;
-      refresh();
-      if (tries >= 5) window.clearInterval(timer);
-    }, 1500);
+    const returned = params.get("cert");
+    if (!returned) return;
+    // The success URL stamps which certificate was bought; only treat the
+    // return as this panel's unlock when the keys match. "1" is the legacy
+    // stamp from sessions created before the key was included.
+    const matchesThisPanel = returned === certKey || returned === "1";
+    if (matchesThisPanel) returnedFromCheckout.current = true;
+    // Always strip the marker — leaving it in place would re-arm the unlock
+    // on every reload once the grant exists.
     params.delete("cert");
     const next = params.toString();
     window.history.replaceState(
@@ -134,8 +134,15 @@ export default function CertificatePanel({
       "",
       `${window.location.pathname}${next ? `?${next}` : ""}`,
     );
+    if (!matchesThisPanel || purchased) return;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      refresh();
+      if (tries >= 5) window.clearInterval(timer);
+    }, 1500);
     return () => window.clearInterval(timer);
-  }, [refresh, purchased]);
+  }, [refresh, purchased, certKey]);
 
   // Open the artifact once when a purchase resolves in this session — a demo
   // or webhook grant observed after a settled unpurchased read, or a Stripe
@@ -148,7 +155,11 @@ export default function CertificatePanel({
       openedOnUnlock.current = true;
       void prepareAndOpenCertificate();
     }
-    if (!loading && !purchased) {
+    // Only a signed-in read counts as "settled unpurchased": before Firebase
+    // auth resolves, the access hook reports not-loading/not-purchased for
+    // the guest uid, and treating that as settled would make a returning
+    // purchaser's grant look like an in-session unlock on every fresh load.
+    if (user && !loading && !purchased) {
       sawSettledUnpurchased.current = true;
       openedOnUnlock.current = false;
     }
