@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { CheckCircle2, Sparkles, Camera, Layers } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
@@ -49,11 +49,19 @@ export default function InspirationGalleryPanel({
 }: InspirationGalleryPanelProps) {
   const [appliedId, setAppliedId] = useState<string | null>(null);
   const [viewModes, setViewModes] = useState<Record<string, "image" | "diagram">>({});
+  const appliedTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (appliedTimerRef.current !== null) window.clearTimeout(appliedTimerRef.current);
+    };
+  }, []);
 
   const handleApply = (item: InspirationItem) => {
     onApply(item);
     setAppliedId(item.id);
-    setTimeout(() => setAppliedId(null), 1500);
+    if (appliedTimerRef.current !== null) window.clearTimeout(appliedTimerRef.current);
+    appliedTimerRef.current = window.setTimeout(() => setAppliedId(null), 1500);
   };
 
   const getViewMode = (id: string) => viewModes[id] || "image";
@@ -91,7 +99,7 @@ export default function InspirationGalleryPanel({
             return (
               <div
                 key={item.id}
-                className="group overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-sm hover:border-lf-clay/50 hover:shadow-md transition-all duration-300"
+                className="group overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-lf-clay/50 hover:shadow-md"
               >
                 {/* Media area with toggling Views */}
                 <div className="relative h-44 w-full overflow-hidden bg-lf-sand-2 border-b border-lf-hairline">
@@ -134,9 +142,9 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "image")}
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
                         viewMode === "image"
-                          ? "bg-lf-clay text-white font-bold shadow-sm"
+                          ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
                       }`}
                     >
@@ -146,9 +154,9 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "diagram")}
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
                         viewMode === "diagram"
-                          ? "bg-lf-clay text-white font-bold shadow-sm"
+                          ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
                       }`}
                     >
@@ -321,10 +329,10 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
       {/* Dimension badge */}
       <g transform="translate(18 18)">
         <rect width="78" height="28" rx="4" fill="#261307" />
-        <text x="10" y="12" fill="#F2E5D5" fontSize="7" fontWeight="700" fontFamily="monospace" letterSpacing="1.1">
+        <text x="10" y="12" fill="#F2E5D5" fontSize="7" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }} letterSpacing="1.1">
           TEMPLATE
         </text>
-        <text x="10" y="23" fill="#F2E5D5" fontSize="10" fontWeight="800">
+        <text x="10" y="23" fill="#F2E5D5" fontSize="10" fontWeight="800" style={{ fontFamily: "var(--font-mono)" }}>
           {item.sqft} sf
         </text>
       </g>

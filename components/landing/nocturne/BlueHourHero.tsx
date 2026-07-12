@@ -302,7 +302,7 @@ export function BlueHourHero() {
 
           <form
             onSubmit={handleSubmit}
-            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-all duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-2xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
+            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-[margin-top,border-color,background-color,box-shadow] duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-2xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
           >
             <p
               className={`lf-kicker-dense hidden text-ln-glow ${copyDimmed ? "max-sm:mb-1 max-sm:flex" : "max-sm:hidden"}`}
@@ -334,7 +334,7 @@ export function BlueHourHero() {
             </div>
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-glow px-5 text-xs font-semibold text-ln-ink transition-all duration-300 hover:bg-ln-mist active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-glow focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-glow px-5 text-xs font-semibold text-ln-ink transition duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-glow focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
             >
               Run feasibility
             </button>
@@ -389,8 +389,8 @@ export function BlueHourHero() {
             <span className="hidden min-w-56 xl:block">{readout.label}</span>
             <span className="hidden h-0.5 w-28 overflow-hidden rounded-full bg-ln-hairline xl:block">
               <span
-                className="block h-full bg-ln-glow transition-[width] duration-100"
-                style={{ width: `${Math.round(Math.min(1, progress) * 100)}%` }}
+                className="block h-full w-full origin-left bg-ln-glow transition-transform duration-100"
+                style={{ transform: `scaleX(${Math.min(1, progress)})` }}
               />
             </span>
           </nav>

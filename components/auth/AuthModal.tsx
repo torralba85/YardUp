@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { X, Mail, Lock, User as UserIcon } from "lucide-react";
+import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
 /** Props for {@link AuthModal}. */
 export interface AuthModalProps {
@@ -27,16 +27,49 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   // Keyboard users shouldn't lose their place when the modal closes: capture
-  // whatever had focus when it opened and restore it on close.
+  // whatever had focus when it opened, move focus into the dialog, and
+  // restore the trigger's focus on close.
   useEffect(() => {
     if (isOpen) {
       triggerRef.current = document.activeElement as HTMLElement | null;
+      panelRef.current?.querySelector<HTMLElement>("input")?.focus();
     } else {
       triggerRef.current?.focus?.();
     }
   }, [isOpen]);
+
+  // Escape dismisses; Tab cycles inside the dialog while it is open.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !panel.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -75,11 +108,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-      <div className="w-full max-w-md rounded-xl bg-lf-mahogany text-white shadow-2xl relative overflow-hidden border border-white/10">
+    <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <div ref={panelRef} className="w-full max-w-md rounded-lg bg-lf-mahogany text-lf-sand shadow-2xl relative overflow-hidden border border-lf-taupe/25">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1 text-lf-taupe hover:bg-white/10 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-lf-sand"
+          className="absolute right-4 top-4 rounded-full p-1 text-lf-taupe hover:bg-lf-sand/10 hover:text-lf-sand transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
         >
           <X size={20} />
           <span className="sr-only">Close</span>
@@ -110,8 +144,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     required
-                    className="w-full bg-black/20 border border-white/10 rounded-md py-2 pl-10 pr-3 text-sm text-white placeholder-lf-taupe focus:outline-none focus:ring-2 focus:ring-lf-sand focus:border-transparent transition-all"
-                    placeholder="Jane Doe"
+                    className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/40"
+                    placeholder="Alma Reyes"
                   />
                 </div>
               </div>
@@ -130,7 +164,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-black/20 border border-white/10 rounded-md py-2 pl-10 pr-3 text-sm text-white placeholder-lf-taupe focus:outline-none focus:ring-2 focus:ring-lf-sand focus:border-transparent transition-all"
+                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/40"
                   placeholder="name@example.com"
                 />
               </div>
@@ -149,22 +183,23 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-black/20 border border-white/10 rounded-md py-2 pl-10 pr-3 text-sm text-white placeholder-lf-taupe focus:outline-none focus:ring-2 focus:ring-lf-sand focus:border-transparent transition-all"
+                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/40"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="lf-body-sm rounded border border-red-400/20 bg-red-400/10 p-3 text-red-400">
-                {error}
+              <div role="alert" className="lf-body-sm flex items-start gap-2 rounded-md border border-lf-brick-on-dark/40 bg-lf-brick/20 p-3 text-lf-brick-on-dark">
+                <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-lf-sand text-lf-espresso hover:bg-white focus:ring-2 focus:ring-lf-sand focus:ring-offset-2 focus:ring-offset-lf-mahogany font-medium py-2 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="mt-2 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
             </button>
@@ -173,7 +208,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
+                <div className="w-full border-t border-lf-taupe/25"></div>
               </div>
               <div className="lf-caption relative flex justify-center">
                 <span className="bg-lf-mahogany px-2 text-lf-taupe">
@@ -183,9 +218,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <button
+              type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="mt-4 w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-lf-sand focus:ring-offset-2 focus:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -210,10 +246,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
         </div>
 
-        <div className="bg-black/20 p-4 text-center border-t border-white/10">
+        <div className="bg-lf-espresso/30 p-4 text-center border-t border-lf-taupe/25">
           <button
+            type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-lf-taupe hover:text-white transition-colors focus:outline-none"
+            className="text-sm text-lf-taupe transition-colors hover:text-lf-sand"
           >
             {isSignUp
               ? "Already have an account? Sign In"

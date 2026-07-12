@@ -48,7 +48,7 @@ export default function FieldBookIndex({
         )}
       </div>
 
-      <nav aria-label="Survey plates" className="space-y-0.5 border-t border-white/10 pt-2">
+      <nav aria-label="Survey plates" className="space-y-0.5 border-t border-lf-taupe/25 pt-2">
         {PLATES.map((plate) => {
           const isActive = active === plate.id;
           const tick = TICK_META[statuses[plate.id]];
@@ -59,13 +59,13 @@ export default function FieldBookIndex({
               onClick={() => onNavigate(plate.id)}
               aria-current={isActive ? "page" : undefined}
               className={`relative flex w-full items-center gap-3 rounded-lg py-2.5 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset ${
-                isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-white/5"
+                isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-lf-sand/5"
               }`}
             >
               {/* Sliding monument marker — the "you are here" gesture. */}
               <span
                 aria-hidden
-                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-lf-clay transition-opacity motion-safe:transition-all ${
+                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-lf-clay transition-opacity ${
                   isActive ? "opacity-100" : "opacity-0"
                 }`}
               />

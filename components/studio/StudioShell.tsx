@@ -76,7 +76,7 @@ export default function StudioShell({
     <div className="flex min-h-dvh bg-lf-mahogany text-lf-espresso lg:h-dvh lg:overflow-hidden">
       <aside
         aria-label="Studio navigation"
-        className="hidden w-[248px] shrink-0 flex-col border-r border-white/10 bg-lf-mahogany text-white lg:flex"
+        className="hidden w-[248px] shrink-0 flex-col border-r border-lf-taupe/25 bg-lf-mahogany text-lf-sand lg:flex"
       >
         <div className="flex h-full flex-col overflow-y-auto p-4">
           <div className="flex flex-col gap-1 px-2 py-4">
@@ -103,7 +103,7 @@ export default function StudioShell({
           </div>
 
           <div className="mt-auto space-y-4 pt-6">
-            <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+            <div className="rounded-lg border border-lf-taupe/20 bg-lf-sand/[0.02] p-3">
               <div className="flex gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -121,7 +121,7 @@ export default function StudioShell({
                 <button
                   type="button"
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   <MapPin size={13} />
                   Change address
@@ -130,14 +130,14 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-9 w-full rounded-full border border-white/10 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="mt-3 h-9 w-full rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
             </div>
 
             {savedScenarios.length > 0 && (
-              <div className="rounded-lg border border-white/[0.07] bg-white/[0.02]">
+              <div className="rounded-lg border border-lf-taupe/20 bg-lf-sand/[0.02]">
                 <button
                   type="button"
                   onClick={() => setScenariosOpen((o) => !o)}
@@ -146,7 +146,7 @@ export default function StudioShell({
                 >
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
                     Saved Concepts
-                    <span className="ml-1.5 rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-lf-taupe">
+                    <span className="ml-1.5 rounded-md bg-lf-sand/10 px-1.5 py-0.5 text-[10px] font-bold text-lf-taupe">
                       {savedScenarios.length}
                     </span>
                   </span>
@@ -157,17 +157,17 @@ export default function StudioShell({
                 </button>
 
                 {scenariosOpen && (
-                  <div className="border-t border-white/[0.07] px-3 pb-3 pt-1">
+                  <div className="border-t border-lf-taupe/20 px-3 pb-3 pt-1">
                     <ul className="space-y-1">
                       {savedScenarios.slice(0, 5).map((scenario) => (
                         <li
                           key={scenario.id}
-                          className="flex items-center gap-2 rounded-md px-1 py-1 text-xs hover:bg-white/5"
+                          className="flex items-center gap-2 rounded-md px-1 py-1 text-xs hover:bg-lf-sand/5"
                         >
                           <button
                             type="button"
                             onClick={() => onLoadScenario?.(scenario.id)}
-                            className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                            className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-lf-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                           >
                             {scenario.name}
                           </button>
@@ -194,7 +194,7 @@ export default function StudioShell({
 
             {user ? (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2">
+                <div className="flex items-center gap-2 rounded-lg border border-lf-taupe/25 bg-lf-sand/[0.03] p-2">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
                     {initials}
                   </div>
@@ -217,7 +217,7 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-white motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Sign In
               </button>

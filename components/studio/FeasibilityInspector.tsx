@@ -520,7 +520,7 @@ export default function FeasibilityInspector({
           <button
             type="button"
             onClick={handleGenerateReportClick}
-            className="group flex h-12 w-full items-center justify-between gap-4 rounded-lg bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 active:scale-[0.98]"
+            className="group flex h-12 w-full items-center justify-between gap-4 rounded-lg bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 motion-safe:active:scale-[0.98]"
           >
             <span>Create my ADU report</span>
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-lf-sand/15 transition-transform duration-300 group-hover:translate-x-0.5">
@@ -620,7 +620,7 @@ function AccordionStep({
         <span
           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition ${
             isOpen
-              ? "bg-lf-mahogany text-white"
+              ? "bg-lf-mahogany text-lf-sand"
               : isComplete
               ? "bg-lf-clay/15 text-lf-clay"
               : "bg-lf-sand-2 text-lf-muted"

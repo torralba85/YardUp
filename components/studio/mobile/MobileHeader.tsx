@@ -32,14 +32,14 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
 
   return (
     <header
-      className="flex items-center gap-2 border-b border-white/10 bg-lf-mahogany px-3 py-2 text-white"
+      className="flex items-center gap-2 border-b border-lf-taupe/25 bg-lf-mahogany px-3 py-2 text-lf-sand"
       style={{ paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
     >
       {/* Compact mark (not the full lockup): on phone widths the address pill
           needs the horizontal space — see DESIGN.md "Visual Identity & Logo". */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 shrink-0 rounded" />
-      <span className="min-w-0 flex-1 truncate rounded-full bg-white/10 px-2.5 py-1 text-xs text-lf-sand">
+      <span className="min-w-0 flex-1 truncate rounded-full bg-lf-sand/10 px-2.5 py-1 text-xs text-lf-sand">
         {address}
         {estimated && <span className="ml-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-on-dark">est.</span>}
       </span>
@@ -47,7 +47,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
         type="button"
         aria-label="Reset scenario"
         onClick={onReset}
-        className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-white"
+        className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-sand"
       >
         <RotateCcw size={17} />
       </button>
@@ -59,7 +59,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-lf-sand"
           >
             {initial}
           </button>
@@ -72,7 +72,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
               />
               <div
                 role="menu"
-                className="absolute right-0 top-12 z-(--z-index-sheet) w-60 max-w-[calc(100vw-2rem)] space-y-2 rounded-lg border border-white/10 bg-lf-mahogany p-3 text-left shadow-xl"
+                className="absolute right-0 top-12 z-(--z-index-sheet) w-60 max-w-[calc(100vw-2rem)] space-y-2 rounded-lg border border-lf-taupe/25 bg-lf-mahogany p-3 text-left shadow-xl"
               >
                 <div className="px-1">
                   <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
@@ -98,7 +98,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           type="button"
           aria-label="Sign in"
           onClick={() => setAuthOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-white"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-sand"
         >
           <UserRound size={18} />
         </button>
