@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
-import type { AIProjectBrief } from "@/lib/ai-types";
+import type { AIProjectBrief, AIProjectBriefResponse } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { StatusChip } from "@/components/ui/StatusChip";
@@ -41,7 +41,7 @@ export interface CertificatePanelProps {
   projectBriefLoading: boolean;
   projectBriefError: string | null;
   /** Generate the parcel + timeline brief with the signed-in user's token. */
-  onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBrief>;
+  onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBriefResponse>;
 }
 
 /**

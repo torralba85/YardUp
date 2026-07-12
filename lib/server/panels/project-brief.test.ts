@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -6,7 +6,18 @@ import {
   parcelPresets,
 } from "@/lib/feasibility";
 import { buildAIProjectBriefInput } from "@/lib/ai-project-brief";
-import { projectBriefDef } from "./project-brief";
+import { certificateKey } from "@/lib/certificate-key";
+import type { AIProjectBrief } from "@/lib/ai-types";
+import { projectBriefDef, redactBriefToPreview } from "./project-brief";
+
+const purchases = vi.hoisted(() => ({
+  hasCertificate: vi.fn(),
+}));
+
+// The finalize tier check must not touch Firestore in unit tests.
+vi.mock("@/lib/server/certificate-purchases", () => ({
+  hasCertificate: purchases.hasCertificate,
+}));
 
 function validInput() {
   const parcel = parcelPresets[0];
@@ -17,6 +28,30 @@ function validInput() {
   );
   return buildAIProjectBriefInput({ parcel, config: defaultAduConfig, result });
 }
+
+const fullBrief: AIProjectBrief = {
+  headline: "A workable concept",
+  summary: "Fits the recorded assumptions.",
+  bestFit: "Keep the 600 sf concept.",
+  risks: [
+    { label: "Utility route", level: "medium", explanation: "Confirm the sewer path." },
+    { label: "Coverage", level: "low", explanation: "Below the cap." },
+    { label: "Height", level: "low", explanation: "Within the envelope." },
+  ],
+  permitTrack: {
+    name: "Washington ministerial ADU review",
+    type: "ministerial",
+    basis: "Typical administrative review.",
+  },
+  stages: [
+    { name: "Pre-app", description: "Check the set.", estWeeksLow: 1, estWeeksHigh: 2, status: "clear" },
+    { name: "Plan review", description: "Review.", estWeeksLow: 4, estWeeksHigh: 7, status: "review" },
+  ],
+  totalEstWeeksLow: 5,
+  totalEstWeeksHigh: 9,
+  recommendedNextSteps: ["Confirm utilities.", "Prepare plans.", "Submit."],
+  disclaimer: "Planning estimate only.",
+};
 
 describe("projectBriefDef", () => {
   it("accepts the unified payload and rejects missing parcel data", () => {
@@ -76,5 +111,80 @@ describe("projectBriefDef", () => {
     const out = (await lookup.execute({}, ctx)) as { tracks: Array<{ type: string }> };
 
     expect(out.tracks[0].type).toBe("ministerial");
+  });
+});
+
+describe("redactBriefToPreview", () => {
+  it("keeps the narrative hook and replaces the paid depth with honest counts", () => {
+    const preview = redactBriefToPreview(fullBrief);
+
+    expect(preview.headline).toBe(fullBrief.headline);
+    expect(preview.summary).toBe(fullBrief.summary);
+    expect(preview.permitTrack).toEqual({
+      name: fullBrief.permitTrack.name,
+      type: fullBrief.permitTrack.type,
+    });
+    expect(preview.totalEstWeeksLow).toBe(5);
+    expect(preview.totalEstWeeksHigh).toBe(9);
+    expect(preview.firstRisk).toEqual(fullBrief.risks[0]);
+    expect(preview.locked).toEqual({ riskCount: 3, stageCount: 2, nextStepCount: 3 });
+    expect(preview.disclaimer).toBe(fullBrief.disclaimer);
+
+    // The paid depth must not leak into the preview payload.
+    const serialized = JSON.stringify(preview);
+    expect(serialized).not.toContain(fullBrief.permitTrack.basis);
+    expect(serialized).not.toContain(fullBrief.bestFit);
+    expect(serialized).not.toContain("Plan review");
+    expect(serialized).not.toContain("Prepare plans.");
+  });
+
+  it("substitutes a safe first risk when the brief has none", () => {
+    const preview = redactBriefToPreview({ ...fullBrief, risks: [] });
+    expect(preview.firstRisk.label).toBe("Feasibility review");
+    expect(preview.locked.riskCount).toBe(0);
+  });
+});
+
+describe("projectBriefDef.finalize", () => {
+  beforeEach(() => {
+    purchases.hasCertificate.mockReset();
+  });
+
+  it("returns the full tier for a verified certificate purchaser", async () => {
+    purchases.hasCertificate.mockResolvedValue(true);
+    const input = validInput();
+
+    const response = await projectBriefDef.finalize!(fullBrief, { uid: "buyer-1", input });
+
+    expect(purchases.hasCertificate).toHaveBeenCalledWith(
+      "buyer-1",
+      certificateKey(input.parcel),
+    );
+    expect(response).toEqual({ tier: "full", brief: fullBrief });
+  });
+
+  it("returns the redacted preview for a signed-in non-purchaser", async () => {
+    purchases.hasCertificate.mockResolvedValue(false);
+
+    const response = await projectBriefDef.finalize!(fullBrief, {
+      uid: "browser-1",
+      input: validInput(),
+    });
+
+    expect(response).toEqual({ tier: "preview", preview: redactBriefToPreview(fullBrief) });
+  });
+
+  it("degrades to the preview tier when the purchase ledger read fails", async () => {
+    purchases.hasCertificate.mockRejectedValue(new Error("firestore down"));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const response = (await projectBriefDef.finalize!(fullBrief, {
+      uid: "buyer-2",
+      input: validInput(),
+    })) as { tier: string };
+
+    expect(response.tier).toBe("preview");
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

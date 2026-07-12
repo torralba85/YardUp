@@ -1,5 +1,12 @@
-import type { AIProjectBrief, AIProjectBriefInput } from "@/lib/ai-types";
+import type {
+  AIProjectBrief,
+  AIProjectBriefInput,
+  AIProjectBriefPreview,
+  AIProjectBriefResponse,
+} from "@/lib/ai-types";
+import { certificateKey } from "@/lib/certificate-key";
 import type { AIPanelDefinition } from "@/lib/server/ai-pipeline";
+import { hasCertificate } from "@/lib/server/certificate-purchases";
 import { getStageBenchmarks, lookupPermitTracks } from "@/lib/server/permit-rules";
 
 interface ProjectBriefContext {
@@ -93,6 +100,36 @@ const SYSTEM_PROMPT = [
   "Always state in `disclaimer` that the AI interpretation and timeline are planning estimates, not permitting advice, an approval guarantee, or a guarantee of income.",
 ].join(" ");
 
+/**
+ * Redact a full brief into the free preview tier: the narrative hook stays
+ * (headline, summary, track name/type, total weeks, the top risk) while the
+ * paid depth (full risk list, staged timeline, statutory basis, best-fit
+ * readout, next steps) is replaced by honest counts for the locked card.
+ */
+export function redactBriefToPreview(brief: AIProjectBrief): AIProjectBriefPreview {
+  return {
+    headline: brief.headline,
+    summary: brief.summary,
+    permitTrack: {
+      name: brief.permitTrack.name,
+      type: brief.permitTrack.type,
+    },
+    totalEstWeeksLow: brief.totalEstWeeksLow,
+    totalEstWeeksHigh: brief.totalEstWeeksHigh,
+    firstRisk: brief.risks[0] ?? {
+      label: "Feasibility review",
+      level: "medium",
+      explanation: "Unlock the complete brief for the ranked risk list.",
+    },
+    locked: {
+      riskCount: brief.risks.length,
+      stageCount: brief.stages.length,
+      nextStepCount: brief.recommendedNextSteps.length,
+    },
+    disclaimer: brief.disclaimer,
+  };
+}
+
 export const projectBriefDef: AIPanelDefinition<
   AIProjectBriefInput,
   AIProjectBrief,
@@ -154,6 +191,18 @@ export const projectBriefDef: AIPanelDefinition<
       },
     },
   ],
+  finalize: async (brief, { uid, input }): Promise<AIProjectBriefResponse> => {
+    try {
+      if (await hasCertificate(uid, certificateKey(input.parcel))) {
+        return { tier: "full", brief };
+      }
+    } catch (err) {
+      // A purchase-ledger hiccup must not fail the whole brief — degrade to
+      // the preview tier; a purchaser can regenerate for the full version.
+      console.warn("[project-brief] purchase check failed; serving preview:", err);
+    }
+    return { tier: "preview", preview: redactBriefToPreview(brief) };
+  },
   errorMessages: {
     config: "AI is not configured yet. Add OPENAI_API_KEY on the server.",
     provider: "The parcel and timeline brief failed. Please try again.",

@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { AIProjectBrief } from "@/lib/ai-types";
+import type { AIProjectBrief, AIProjectBriefResponse } from "@/lib/ai-types";
 import AIProjectBriefPanel from "./AIProjectBriefPanel";
 
 const auth = vi.hoisted(() => ({
@@ -51,16 +51,33 @@ const brief: AIProjectBrief = {
   disclaimer: "AI-assisted planning estimate only; not an approval guarantee.",
 };
 
+const fullResponse: AIProjectBriefResponse = { tier: "full", brief };
+
+const previewResponse: AIProjectBriefResponse = {
+  tier: "preview",
+  preview: {
+    headline: brief.headline,
+    summary: brief.summary,
+    permitTrack: { name: brief.permitTrack.name, type: brief.permitTrack.type },
+    totalEstWeeksLow: brief.totalEstWeeksLow,
+    totalEstWeeksHigh: brief.totalEstWeeksHigh,
+    firstRisk: brief.risks[0],
+    locked: { riskCount: 2, stageCount: 2, nextStepCount: 3 },
+    disclaimer: brief.disclaimer,
+  },
+};
+
 describe("AIProjectBriefPanel", () => {
   it("uses one action to request the combined parcel and timeline brief", async () => {
     const user = userEvent.setup();
-    const onGenerate = vi.fn().mockResolvedValue(brief);
+    const onGenerate = vi.fn().mockResolvedValue(fullResponse);
     render(
       <AIProjectBriefPanel
-        brief={null}
+        response={null}
         loading={false}
         error={null}
         onGenerate={onGenerate}
+        onViewCertificate={vi.fn()}
       />,
     );
 
@@ -78,10 +95,11 @@ describe("AIProjectBriefPanel", () => {
   it("renders the merged parcel assessment and approval stages as one artifact", () => {
     render(
       <AIProjectBriefPanel
-        brief={brief}
+        response={fullResponse}
         loading={false}
         error={null}
         onGenerate={vi.fn()}
+        onViewCertificate={vi.fn()}
       />,
     );
 
@@ -93,13 +111,47 @@ describe("AIProjectBriefPanel", () => {
     expect(screen.getByText(/5–9/)).toBeInTheDocument();
   });
 
+  it("renders the preview tier with the locked contents and certificate unlock CTA", async () => {
+    const user = userEvent.setup();
+    const onViewCertificate = vi.fn();
+    render(
+      <AIProjectBriefPanel
+        response={previewResponse}
+        loading={false}
+        error={null}
+        onGenerate={vi.fn()}
+        onViewCertificate={onViewCertificate}
+      />,
+    );
+
+    // The narrative hook is visible…
+    expect(screen.getByText(brief.headline)).toBeInTheDocument();
+    expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.getByText(brief.permitTrack.name)).toBeInTheDocument();
+    expect(screen.getByText(/5–9/)).toBeInTheDocument();
+    expect(screen.getByText("Utility route")).toBeInTheDocument();
+
+    // …but the paid depth is locked behind honest counts, not rendered.
+    expect(screen.queryByText("Parcel readout")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pre-application check")).not.toBeInTheDocument();
+    expect(screen.queryByText("Recorded next steps")).not.toBeInTheDocument();
+    expect(screen.queryByText(brief.permitTrack.basis)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/2 ranked risks · 2 permit stages with week-by-week timing · 3 recorded next steps/),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Unlock with the certificate/ }));
+    expect(onViewCertificate).toHaveBeenCalledTimes(1);
+  });
+
   it("uses a layout-matched loading state and an inline error state", () => {
     const { rerender } = render(
       <AIProjectBriefPanel
-        brief={null}
+        response={null}
         loading
         error={null}
         onGenerate={vi.fn()}
+        onViewCertificate={vi.fn()}
       />,
     );
 
@@ -112,10 +164,11 @@ describe("AIProjectBriefPanel", () => {
 
     rerender(
       <AIProjectBriefPanel
-        brief={null}
+        response={null}
         loading={false}
         error="The combined brief is unavailable."
         onGenerate={vi.fn()}
+        onViewCertificate={vi.fn()}
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent("The combined brief is unavailable.");

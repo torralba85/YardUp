@@ -33,7 +33,7 @@ import {
   type ConstraintItem,
   type ConstraintStatus,
 } from "@/lib/feasibility-verdict";
-import type { AIProjectBrief } from "@/lib/ai-types";
+import type { AIProjectBriefResponse } from "@/lib/ai-types";
 import AIProjectBriefPanel from "./AIProjectBriefPanel";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import { useParcel } from "@/lib/parcel-context";
@@ -64,10 +64,10 @@ export interface ConstraintsPanelProps {
   assumptions: FinancialAssumptions;
   onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
   onViewCertificate: () => void;
-  projectBrief: AIProjectBrief | null;
+  projectBriefResponse: AIProjectBriefResponse | null;
   projectBriefLoading: boolean;
   projectBriefError: string | null;
-  onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBrief>;
+  onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBriefResponse>;
   /** Bumped by an outside "Change address" action to focus the search field. */
   addressFocusSignal?: number;
 }
@@ -79,7 +79,7 @@ export default function ConstraintsPanel({
   assumptions,
   onAssumptionsChange,
   onViewCertificate,
-  projectBrief,
+  projectBriefResponse,
   projectBriefLoading,
   projectBriefError,
   onGenerateProjectBrief,
@@ -178,10 +178,11 @@ export default function ConstraintsPanel({
 
         <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
           <AIProjectBriefPanel
-            brief={projectBrief}
+            response={projectBriefResponse}
             loading={projectBriefLoading}
             error={projectBriefError}
             onGenerate={onGenerateProjectBrief}
+            onViewCertificate={onViewCertificate}
           />
         </div>
       </div>
