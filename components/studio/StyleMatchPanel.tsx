@@ -418,7 +418,7 @@ export default function StyleMatchPanel({
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
+                  className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
                 >
                   <CheckCircle2 size={16} aria-hidden="true" />
                   Use this photo
@@ -426,7 +426,7 @@ export default function StyleMatchPanel({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex min-h-11 items-center justify-center border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
                   aria-label="Choose another photo"
                 >
                   <RotateCcw size={16} aria-hidden="true" />
@@ -459,7 +459,7 @@ export default function StyleMatchPanel({
               <button
                 type="button"
                 onClick={() => void startGeneration()}
-                className="flex min-h-11 flex-1 items-center justify-center gap-2 bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
+                className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
               >
                 <RotateCcw size={16} aria-hidden="true" />
                 Retry
@@ -467,7 +467,7 @@ export default function StyleMatchPanel({
               <button
                 type="button"
                 onClick={handleReset}
-                className="flex min-h-11 flex-1 items-center justify-center border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
+                className="flex min-h-11 flex-1 items-center justify-center rounded-full border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
               >
                 Choose another photo
               </button>

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AddressSearch from "./AddressSearch";
 import { importLibrary } from "@googlemaps/js-api-loader";
 
@@ -9,9 +9,23 @@ vi.mock("@googlemaps/js-api-loader", () => ({
   importLibrary: vi.fn(),
 }));
 
-vi.mock("@/lib/auth-context", () => ({
-  useAuth: () => ({ user: null }),
+const mocks = vi.hoisted(() => ({
+  authState: {
+    user: null as null | { getIdToken: () => Promise<string> },
+  },
 }));
+
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => mocks.authState,
+}));
+
+function signIn() {
+  mocks.authState.user = { getIdToken: async () => "token" };
+}
+
+beforeEach(() => {
+  mocks.authState.user = null;
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -70,6 +84,7 @@ describe("AddressSearch", () => {
   });
 
   it("shows server-backed suggestions while typing and searches the picked one", async () => {
+    signIn();
     const user = userEvent.setup();
     const onSubmitText = vi.fn();
     vi.stubGlobal(
@@ -103,6 +118,7 @@ describe("AddressSearch", () => {
   it("falls back to server suggestions when the configured key is malformed", async () => {
     // A mangled deploy-time key (e.g. "-") must not disable autocomplete
     // entirely — the component should behave as if no key were configured.
+    signIn();
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_PLACES_KEY", "-");
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue({
@@ -127,9 +143,28 @@ describe("AddressSearch", () => {
     );
   });
 
+  it("suppresses all suggestion sources for signed-out visitors", async () => {
+    // Guests must never spend metered suggestion quota (browser Places or
+    // /api/suggest); they see a sign-in note and no dropdown instead.
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Search property address"), "456 Pine St");
+    // Wait out the 300ms suggestion debounce before asserting nothing fired.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent(/sign in to search a real address/i);
+  });
+
   it("falls back to server suggestions when the Places library fails to load", async () => {
     // Well-formed key, but Google rejects it (InvalidKey, referrer block, …):
     // importLibrary rejects and the server path must take over.
+    signIn();
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_PLACES_KEY", `AIza${"A".repeat(35)}`);
     vi.mocked(importLibrary).mockRejectedValue(new Error("InvalidKey"));
     const user = userEvent.setup();

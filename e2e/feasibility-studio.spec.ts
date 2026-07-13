@@ -52,7 +52,7 @@ test.describe("Public LotFoundry flows", () => {
       await expect(page.getByText(/could your backyard pay you rent/i)).toBeVisible();
     } else {
       await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Feasibility & Rules/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Rules & Fit/i })).toBeVisible();
     }
   });
 
@@ -78,7 +78,7 @@ test.describe("Public LotFoundry flows", () => {
       await page.waitForTimeout(500);
     } else {
       // Navigating via sidebar navigation button
-      await page.getByRole("button", { name: /Feasibility & Rules/i }).click();
+      await page.getByRole("button", { name: /Rules & Fit/i }).click();
     }
     await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();

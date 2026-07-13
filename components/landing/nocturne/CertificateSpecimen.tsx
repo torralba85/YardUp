@@ -100,7 +100,7 @@ export function CertificateSpecimen() {
 
               <div className="mt-6 flex items-baseline justify-between gap-4 border-b-4 border-double border-lf-taupe pb-2">
                 <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
-                  Net operating income
+                  Yearly income
                 </span>
                 <span className="lf-money-md text-lf-forest">
                   {TYPICAL_MARKET.noi}

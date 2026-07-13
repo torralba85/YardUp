@@ -84,10 +84,10 @@ describe("MobileStudio", () => {
         peek={<div>m-peek</div>}
         controls={<div>m-controls</div>}
         sections={<div>m-sections</div>}
-        activeStepLabel="Feasibility & Rules"
+        activeStepLabel="Rules & Fit"
         steps={[
           { id: "lot", label: "Your Lot", state: "current" },
-          { id: "feasibility", label: "Feasibility & Rules", state: "upcoming" },
+          { id: "feasibility", label: "Rules & Fit", state: "upcoming" },
         ]}
         onStepSelect={onStepSelect}
       />,
@@ -95,11 +95,11 @@ describe("MobileStudio", () => {
 
     const progress = screen.getByRole("navigation", { name: "Studio progress", hidden: true });
     expect(progress).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Feasibility & Rules/, hidden: true }));
+    fireEvent.click(screen.getByRole("button", { name: /Rules & Fit/, hidden: true }));
     expect(onStepSelect).toHaveBeenCalledWith("feasibility");
     expect(screen.getByTestId("studio-sheet")).toHaveAttribute(
       "aria-label",
-      "Feasibility & Rules step",
+      "Rules & Fit step",
     );
     expect(screen.getByText("m-controls").parentElement).toHaveFocus();
   });

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, BookOpen, ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BookOpen, ExternalLink } from "lucide-react";
 import { inferJurisdiction, regulationGuides } from "@/lib/regulations-data";
 import { getSafeCitationHref } from "@/lib/safe-url";
+import { StatusChip } from "@/components/ui/StatusChip";
 
 /** Props for {@link PermitGuidePanel}. */
 export interface PermitGuidePanelProps {
@@ -54,56 +55,37 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
     }));
   };
 
-  const getRiskDetails = () => {
-    switch (guide.confidence) {
-      case "high":
-        return {
-          label: "Verified Regulations (Low Risk)",
-          icon: ShieldCheck,
-          colorClass: "bg-lf-forest-soft text-lf-forest border-lf-forest/20",
-        };
-      case "medium":
-        return {
-          label: "Active Zoning Check (Moderate Risk)",
-          icon: ShieldCheck,
-          colorClass: "bg-lf-amber-soft text-lf-amber-ink border-lf-amber-ink/25",
-        };
-      default:
-        return {
-          label: "Review Required (Unverified Risk)",
-          icon: ShieldAlert,
-          colorClass: "bg-lf-brick-soft text-lf-brick border-lf-brick/20",
-        };
-    }
-  };
-
-  const risk = getRiskDetails();
-  const RiskIcon = risk.icon;
-
   return (
     <section
       aria-label="Permit guide panel"
       className="w-full shrink-0 border-lf-hairline bg-lf-card lg:border-t"
     >
       <div className="flex flex-col gap-4 border-b border-lf-hairline px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
-        <div>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="lf-panel-heading text-lf-espresso">
             Permit Guide
           </h2>
-          <p className="lf-body-sm mt-1 text-lf-muted">
-            Sourced local rules and permit review guides.
-          </p>
+          <StatusChip
+            status={
+              guide.confidence === "high"
+                ? "clear"
+                : guide.confidence === "medium"
+                ? "review"
+                : "blocked"
+            }
+            label={
+              guide.confidence === "high"
+                ? "Low Risk"
+                : guide.confidence === "medium"
+                ? "Moderate Risk"
+                : "Review Required"
+            }
+            size="sm"
+          />
         </div>
 
-        {/* Risk Level Badge */}
-        <div className={`flex items-start gap-2.5 rounded-md border p-3.5 text-xs font-semibold lg:max-w-md ${risk.colorClass}`}>
-          <RiskIcon size={16} className="mt-0.5 shrink-0" />
-          <div>
-            <div>{risk.label}</div>
-            <p className="mt-1 font-normal leading-4 opacity-80">
-              Verified at: {guide.verifiedAt} · Confidence: {guide.confidence}
-            </p>
-          </div>
+        <div className="text-xs text-lf-muted">
+          Verified at: {guide.verifiedAt} · Confidence: {guide.confidence}
         </div>
       </div>
 

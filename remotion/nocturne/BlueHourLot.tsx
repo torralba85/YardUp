@@ -261,7 +261,7 @@ export const BlueHourLot: React.FC<{ highlight?: SurveyHighlight }> = ({
           transform: `translateY(${(1 - boundaryLabel) * 10}px)`,
         }}
       >
-        <span style={{ color: LN.mist }}>Parcel</span> APN 0423-011-118 · 6,480 sq ft
+        <span style={{ color: LN.mist }}>Lot</span> APN 0423-011-118 · 6,480 sq ft
       </div>
 
       {/* Setback label — riding the envelope's top edge, clear of the page's
@@ -293,7 +293,7 @@ export const BlueHourLot: React.FC<{ highlight?: SurveyHighlight }> = ({
           transform: "translateX(-50%)",
         }}
       >
-        Cast · ADU 480 sq ft
+        ADU · 480 sq ft
       </div>
     </AbsoluteFill>
   );

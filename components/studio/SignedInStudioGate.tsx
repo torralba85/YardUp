@@ -5,10 +5,10 @@ import type { User } from "firebase/auth";
 import { LogOut, Search } from "lucide-react";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import { useAuth } from "@/lib/auth-context";
-import { consumeAddressQuery } from "@/lib/address-handoff";
+import { consumeAddressQuery, peekAddressQuery } from "@/lib/address-handoff";
 import { geocodeAddress, GeocodeError } from "@/lib/geocode-api";
 import { fetchParcel, ParcelFetchError } from "@/lib/parcel-api";
-import { stashInitialParcel } from "@/lib/parcel-handoff";
+import { peekInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 
 /**
@@ -20,7 +20,16 @@ import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
  */
 export default function SignedInStudioGate({ user }: { user: User }) {
   const { logout } = useAuth();
-  const [studioReady, setStudioReady] = useState(false);
+  const [studioReady, setStudioReady] = useState(() => {
+    // A pending address (?q= or landing handoff) asks for a NEW lot: show the
+    // gate so its lookup runs and replaces the stash, instead of silently
+    // reopening the previously stashed parcel over the fresh request.
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("q")?.trim() || peekAddressQuery()) return false;
+    }
+    return peekInitialParcel() !== null;
+  });
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const handoffStarted = useRef(false);

@@ -48,7 +48,7 @@ export default function FieldBookIndex({
         )}
       </div>
 
-      <nav aria-label="Survey plates" className="space-y-0.5 border-t border-lf-taupe/25 pt-2">
+      <nav aria-label="Studio sections" className="space-y-0.5 border-t border-lf-taupe/25 pt-2">
         {PLATES.map((plate) => {
           const isActive = active === plate.id;
           const tick = TICK_META[statuses[plate.id]];
@@ -58,7 +58,7 @@ export default function FieldBookIndex({
               type="button"
               onClick={() => onNavigate(plate.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex w-full items-center gap-3 rounded-lg py-2.5 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset ${
+              className={`relative flex w-full min-h-11 items-center gap-3 rounded-lg py-2 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset ${
                 isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-lf-sand/5"
               }`}
             >

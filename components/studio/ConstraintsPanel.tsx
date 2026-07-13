@@ -4,7 +4,7 @@
  * ConstraintsPanel — the right rail of the redesigned "Feasibility" tab.
  *
  * Replaces the massing-controls-first rail with a constraints checklist: what
- * the lot actually allows, grouped Zoning & envelope / Site & utilities /
+ * the lot actually allows, grouped Zoning & setbacks / Site & utilities /
  * Economics, each line a real engine-derived finding with a Clear / Review
  * status. Massing controls move to their own tab (the existing
  * FeasibilityInspector). Ends with a verdict-reason strip + a jump to the
@@ -25,6 +25,7 @@ import { type ADUConfig, type FeasibilityResult, type FinancialAssumptions, type
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Segmented } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
+import { StatusChip } from "@/components/ui/StatusChip";
 import {
   summarizeFeasibility,
   statusTone,
@@ -46,7 +47,7 @@ const STATUS_ICON: Record<ConstraintStatus, typeof CheckCircle2> = {
 };
 
 const GROUP_ORDER: ConstraintGroup[] = [
-  "Zoning & envelope",
+  "Zoning & setbacks",
   "Site & utilities",
   "Economics",
 ];
@@ -114,7 +115,7 @@ export default function ConstraintsPanel({
         {parcelLoading && (
           <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
             <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
-            Looking up parcel data…
+            Looking up property data…
           </div>
         )}
         {parcelError && (
@@ -227,18 +228,12 @@ function ConstraintRow({ item }: { item: ConstraintItem }) {
         <div className="text-[13px] font-semibold text-lf-espresso">{item.label}</div>
         <div className="mt-0.5 text-xs text-lf-muted">{item.detail}</div>
       </div>
-      <RowTrailing item={item} tone={tone} />
+      <RowTrailing item={item} />
     </div>
   );
 }
 
-function RowTrailing({
-  item,
-  tone,
-}: {
-  item: ConstraintItem;
-  tone: ReturnType<typeof statusTone>;
-}) {
+function RowTrailing({ item }: { item: ConstraintItem }) {
   // The income figure keeps the brand's serif-money treatment.
   if (item.id === "rent") {
     return (
@@ -254,7 +249,12 @@ function RowTrailing({
     return (
       <span
         className="whitespace-nowrap font-mono text-xs"
-        style={{ color: item.status === "blocked" ? tone.color : "var(--color-lf-espresso)" }}
+        style={{
+          color:
+            item.status === "blocked"
+              ? statusTone(item.status).color
+              : "var(--color-lf-espresso)",
+        }}
       >
         {item.value}
       </span>
@@ -263,16 +263,5 @@ function RowTrailing({
   // Otherwise a status chip (Clear / Review / Blocked).
   const chipLabel =
     item.status === "clear" ? "Clear" : item.status === "blocked" ? "Blocked" : "Review";
-  return (
-    <span
-      className="inline-flex h-[22px] items-center rounded-md border px-[9px] font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em]"
-      style={{
-        backgroundColor: tone.soft,
-        color: tone.color,
-        borderColor: `color-mix(in srgb, ${tone.color} 33%, transparent)`,
-      }}
-    >
-      {chipLabel}
-    </span>
-  );
+  return <StatusChip status={item.status} label={chipLabel} size="sm" />;
 }

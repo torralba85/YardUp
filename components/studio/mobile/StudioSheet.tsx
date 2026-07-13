@@ -52,7 +52,7 @@ export default function StudioSheet({
   peek,
   controls,
   sections,
-  title = "Feasibility controls",
+  title = "Estimate controls",
   focusSignal = 0,
 }: StudioSheetProps) {
   const isFull = snap === FULL_SNAP;

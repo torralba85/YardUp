@@ -174,7 +174,7 @@ export default function BuilderLeadPanel({
         <button
           type="submit"
           disabled={isPending}
-          className="h-10 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong disabled:opacity-50"
+          className="h-11 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong disabled:opacity-50"
         >
           {isPending ? "Submitting..." : "Submit snapshot"}
         </button>

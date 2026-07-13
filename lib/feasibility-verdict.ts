@@ -27,7 +27,7 @@ export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
 export type ConstraintStatus = "clear" | "review" | "blocked" | "info";
 
 export type ConstraintGroup =
-  | "Zoning & envelope"
+  | "Zoning & setbacks"
   | "Site & utilities"
   | "Economics";
 
@@ -152,7 +152,7 @@ export function summarizeFeasibility(
   const constraints: ConstraintItem[] = [
     {
       id: "zoning",
-      group: "Zoning & envelope",
+      group: "Zoning & setbacks",
       label: "Zoning · ADU allowed",
       detail: compliant
         ? `${zoneCode ? zoneCode + " — " : ""}ADU appears permitted under current rules`
@@ -161,7 +161,7 @@ export function summarizeFeasibility(
     },
     {
       id: "buildable",
-      group: "Zoning & envelope",
+      group: "Zoning & setbacks",
       label: "Buildable area after setbacks",
       detail: `${parcel.setbacks.side}′ side · ${parcel.setbacks.front}′ front · ${parcel.setbacks.rear}′ rear`,
       status: envelopeFits ? "clear" : "review",
@@ -169,7 +169,7 @@ export function summarizeFeasibility(
     },
     {
       id: "capacity",
-      group: "Zoning & envelope",
+      group: "Zoning & setbacks",
       label: "Remaining build capacity",
       detail: hasCapacity
         ? "Headroom under the lot-coverage allowance"
@@ -179,7 +179,7 @@ export function summarizeFeasibility(
     },
     {
       id: "coverage",
-      group: "Zoning & envelope",
+      group: "Zoning & setbacks",
       label: "Lot coverage vs. max",
       detail: "Existing house plus the proposed ADU",
       status: coverageOk ? "clear" : "blocked",

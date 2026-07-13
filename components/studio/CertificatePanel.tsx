@@ -18,12 +18,12 @@ import EstimateSummaryPanel from "./EstimateSummaryPanel";
 
 /** What the complete certificate includes — the paid deliverable's contents. */
 const CERTIFICATE_INCLUDES = [
-  "Engraved Certificate of Feasibility",
-  "Income ledger & payback",
-  "Site plan & 3D massing",
-  "Zoning & compliance summary",
-  "AI parcel readout & approval timeline",
-  "Print / PDF + shareable link",
+  "Certificate of Feasibility",
+  "Income and payback summary",
+  "Site plan and 3D view",
+  "Zoning and setback summary",
+  "Property notes and approval timeline",
+  "Print / PDF and shareable link",
 ] as const;
 
 /** Props for {@link CertificatePanel}. */
@@ -263,7 +263,7 @@ export default function CertificatePanel({
                 </div>
               ) : projectBriefLoading || preparingBrief ? (
                 <div className="mt-3 border-t border-lf-hairline pt-3" role="status">
-                  <span className="sr-only">Adding the AI parcel and timeline brief</span>
+                  <span className="sr-only">Adding property notes and timeline</span>
                   <div className="motion-safe:animate-pulse">
                     <div className="h-2.5 w-28 rounded bg-lf-taupe-soft" />
                     <div className="mt-2 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />
@@ -276,7 +276,7 @@ export default function CertificatePanel({
                     className="mt-0.5 shrink-0"
                     aria-hidden="true"
                   />
-                  The core certificate is ready. The AI parcel and timeline brief could not be
+                  The core certificate is ready. Property notes could not be
                   added yet.
                 </div>
               ) : null}
@@ -296,8 +296,8 @@ export default function CertificatePanel({
               </h3>
             </div>
             <p className="lf-body-sm mt-1 text-lf-muted">
-              The estimate above is free. Unlock the engraved, shareable certificate with its
-              AI parcel interpretation and typical approval timeline.
+              The estimate above is free. Unlock the shareable certificate with
+              property notes and a typical approval timeline.
             </p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {CERTIFICATE_INCLUDES.map((item) => (

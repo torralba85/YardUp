@@ -87,9 +87,9 @@ describe("AIProjectBriefPanel", () => {
       />,
     );
 
-    const region = screen.getByRole("region", { name: "AI parcel and timeline brief" });
+    const region = screen.getByRole("region", { name: "Property notes and timeline" });
     const action = within(region).getByRole("button", {
-      name: "Generate AI parcel and timeline brief",
+      name: "Generate property notes and timeline",
     });
     expect(within(region).getAllByRole("button")).toHaveLength(1);
 
@@ -110,10 +110,10 @@ describe("AIProjectBriefPanel", () => {
     );
 
     expect(screen.getByText(brief.headline)).toBeInTheDocument();
-    expect(screen.getByText("Parcel readout")).toBeInTheDocument();
+    expect(screen.getAllByText("Property notes").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Typical approval path")).toBeInTheDocument();
     expect(screen.getByText("Pre-application check")).toBeInTheDocument();
-    expect(screen.getByText("Recorded next steps")).toBeInTheDocument();
+    expect(screen.getByText("Recommended next steps")).toBeInTheDocument();
     expect(screen.getByText(/5–9/)).toBeInTheDocument();
   });
 
@@ -180,10 +180,10 @@ describe("AIProjectBriefPanel", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Building the parcel and timeline brief",
+      "Building property notes and timeline",
     );
     expect(
-      screen.getByRole("button", { name: "Generate AI parcel and timeline brief" }),
+      screen.getByRole("button", { name: "Generate property notes and timeline" }),
     ).toBeDisabled();
 
     rerender(

@@ -4,7 +4,7 @@ import { StepProgress, StepRail, type Step } from "./StepRail";
 
 const steps: Step[] = [
   { id: "lot", label: "Your Lot", state: "done" },
-  { id: "feasibility", label: "Feasibility & Rules", state: "current" },
+  { id: "feasibility", label: "Rules & Fit", state: "current" },
   { id: "design", label: "Design", state: "upcoming" },
   { id: "certificate", label: "Certificate", state: "upcoming", revenue: true },
   { id: "builders", label: "Builders", state: "locked", revenue: true },
@@ -21,7 +21,7 @@ describe("StepRail", () => {
 
   it("marks the current step with aria-current=step", () => {
     render(<StepRail aria-label="Studio steps" steps={steps} onSelect={() => {}} />);
-    expect(screen.getByRole("button", { name: /Feasibility & Rules/ })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: /Rules & Fit/ })).toHaveAttribute("aria-current", "step");
   });
 
   it("selects an enabled step on click", () => {
@@ -47,7 +47,7 @@ describe("StepRail", () => {
 
   it("moves focus to the next enabled step with ArrowDown", () => {
     render(<StepRail aria-label="Studio steps" steps={steps} onSelect={() => {}} />);
-    const current = screen.getByRole("button", { name: /Feasibility & Rules/ });
+    const current = screen.getByRole("button", { name: /Rules & Fit/ });
     current.focus();
     fireEvent.keyDown(current, { key: "ArrowDown" });
     expect(document.activeElement).toBe(screen.getByRole("button", { name: /Design/ }));
@@ -58,7 +58,7 @@ describe("StepProgress", () => {
   it("is a navigation landmark with the current step marked", () => {
     render(<StepProgress aria-label="Studio progress" steps={steps} onSelect={() => {}} />);
     expect(screen.getByRole("navigation", { name: "Studio progress" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Feasibility & Rules/ })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: /Rules & Fit/ })).toHaveAttribute("aria-current", "step");
   });
 
   it("selects an enabled step on click", () => {

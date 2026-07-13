@@ -22,7 +22,7 @@ export interface DerivedStep extends StudioStepMeta {
 /** The ordered spine — the single source of truth for the studio's navigation. */
 export const STUDIO_STEPS: StudioStepMeta[] = [
   { id: "lot", label: "Your Lot", revenue: false, requiresParcel: false },
-  { id: "feasibility", label: "Feasibility & Rules", revenue: false, requiresParcel: false },
+  { id: "feasibility", label: "Rules & Fit", revenue: false, requiresParcel: false },
   { id: "design", label: "Design", revenue: false, requiresParcel: false },
   { id: "certificate", label: "Certificate", revenue: true, requiresParcel: true },
   { id: "builders", label: "Builders", revenue: true, requiresParcel: true },
