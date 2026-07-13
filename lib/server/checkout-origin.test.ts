@@ -15,11 +15,11 @@ describe("resolveCheckoutOrigin", () => {
     );
   });
 
-  it("falls back to the canonical Firebase Hosting origin in production", () => {
+  it("falls back to the canonical App Hosting origin in production", () => {
     vi.stubEnv("NODE_ENV", "production");
 
     expect(resolveCheckoutOrigin(new Headers({ origin: "https://evil.example" }))).toBe(
-      "https://yardup-2026.web.app",
+      "https://yardup-2026--yardup-2026.us-central1.hosted.app",
     );
   });
 
