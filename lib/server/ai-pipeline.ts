@@ -43,7 +43,7 @@ export type AIInputValidation<Input> =
 export interface AIPanelDefinition<Input, Output, Ctx> {
   /** Stable id, also used as the route segment and json_schema name. */
   id: string;
-  /** Rate-limit namespace, e.g. `"ai-permit-pathway"`. */
+  /** Rate-limit namespace, e.g. `"ai-project-brief"`. */
   namespace: string;
   rateLimit: { limit: number; windowMs: number };
   systemPrompt: string;
