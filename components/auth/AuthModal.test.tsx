@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthModal } from "./AuthModal";
+import { useAuth } from "@/lib/auth-context";
 
 const mocks = vi.hoisted(() => ({
   auth: { user: null as { uid: string } | null },
@@ -194,6 +195,85 @@ describe("AuthModal focus restore", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).not.toBe(
       screen.getByRole("button", { name: "Delete account" }),
+    );
+  });
+
+  it("recovers focus into a persisted shell when a parent (like the mobile wizard) tears down the trigger's whole subtree right after a completed sign-in", async () => {
+    // Mirrors WizardFlow: its own effect reacts to the same `user` change
+    // AuthModal does, and unmounts the wizard (trigger included) once
+    // sign-in completes — in the same commit as, but after, AuthModal's own
+    // child effects (WizardFlowLike is the parent here, same as WizardFlow
+    // is AuthModal's parent in the app).
+    function WizardFlowLike({ onComplete }: { onComplete: () => void }) {
+      const { user } = useAuth();
+      const [authOpen, setAuthOpen] = useState(false);
+      useEffect(() => {
+        if (user) onComplete();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [user]);
+      return (
+        <div data-testid="wizard">
+          <button type="button" onClick={() => setAuthOpen(true)}>
+            Create free account
+          </button>
+          <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+        </div>
+      );
+    }
+
+    function WizardLikeHost() {
+      const [showWizard, setShowWizard] = useState(true);
+      const [, forceRerender] = useState(0);
+      return (
+        <div>
+          <div data-testid="shell">
+            <button type="button">Shell Extra</button>
+          </div>
+          {showWizard && (
+            <WizardFlowLike onComplete={() => setShowWizard(false)} />
+          )}
+          <button
+            type="button"
+            onClick={() => forceRerender((n) => n + 1)}
+          >
+            Notice auth change
+          </button>
+        </div>
+      );
+    }
+
+    render(<WizardLikeHost />);
+    const trigger = screen.getByRole("button", { name: "Create free account" });
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByPlaceholderText("name@example.com"), {
+      target: { value: "person@example.com" },
+    });
+    fireEvent.change(within(dialog).getByPlaceholderText("••••••••"), {
+      target: { value: "hunter2" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sign In" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(trigger.isConnected).toBe(true);
+
+    // onAuthStateChanged lands: AuthModal's own recovery effect runs first
+    // (it's the child), sees the trigger still connected, and defers rather
+    // than declaring victory. The wizard's own effect (its parent) then
+    // unmounts the wizard's whole subtree in the same pass.
+    mocks.auth.user = { uid: "user-1" };
+    fireEvent.click(screen.getByRole("button", { name: "Notice auth change" }));
+
+    expect(screen.queryByTestId("wizard")).toBeNull();
+    expect(trigger.isConnected).toBe(false);
+    // The ordinal fallback isn't guaranteed to land on any *specific*
+    // surviving control (that's the separate, deferred "safe target" issue)
+    // — what this fix guarantees is that focus recovers into the persisted
+    // page instead of staying orphaned on the removed trigger or on body.
+    expect(document.activeElement).not.toBe(document.body);
+    expect(["Shell Extra", "Notice auth change"]).toContain(
+      (document.activeElement as HTMLElement | null)?.textContent,
     );
   });
 });

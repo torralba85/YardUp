@@ -134,11 +134,24 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const restored = restoredTriggerRef.current;
     if (restored && !restored.isConnected) {
       focusTriggerReplacement();
-    } else if (user && restored) {
-      // Sign-in settled and the restored control survived — release the
-      // captured DOM nodes so detached subtrees can be collected.
-      releaseTriggerRefs();
+      return;
     }
+    if (!user || !restored) return;
+    // The trigger looks fine from here, but a parent that reacts to this
+    // same auth change (e.g. the mobile wizard tearing down its whole
+    // subtree once sign-in completes) can still remove it in a later
+    // commit — including one that unmounts this component entirely. Don't
+    // declare it safe yet: this cleanup runs both on the next dependency
+    // change and on unmount, so either way it gets one more look at the
+    // real DOM before giving up the ability to recover.
+    return () => {
+      const stillRestored = restoredTriggerRef.current;
+      if (stillRestored && !stillRestored.isConnected) {
+        focusTriggerReplacement();
+      } else if (stillRestored) {
+        releaseTriggerRefs();
+      }
+    };
   }, [user, isOpen, focusTriggerReplacement, releaseTriggerRefs]);
 
   // Escape dismisses; Tab cycles inside the dialog while it is open.
