@@ -145,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: pendingAuthRoleRef.current ?? undefined,
           });
         } else {
+          // Every sign-out lands here, including external session drops (token
+          // expiry or revocation) that never call logout()/deleteAccount().
+          // Clear the stashed parcel so the next guest or account in this tab
+          // starts from demo data, not this session's lot.
+          clearInitialParcel();
           setProfile(null);
         }
       } finally {

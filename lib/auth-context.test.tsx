@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./auth-context";
@@ -20,10 +20,18 @@ const firestoreMocks = vi.hoisted(() => ({
   setDoc: vi.fn(),
 }));
 
+const parcelHandoffMocks = vi.hoisted(() => ({
+  clearInitialParcel: vi.fn(),
+}));
+
 vi.mock("@/lib/firebase", () => ({
   app: {},
   auth: {},
   db: {},
+}));
+
+vi.mock("@/lib/parcel-handoff", () => ({
+  clearInitialParcel: parcelHandoffMocks.clearInitialParcel,
 }));
 
 vi.mock("firebase/auth", () => ({
@@ -140,5 +148,30 @@ describe("AuthProvider profile creation", () => {
         { merge: true },
       );
     });
+  });
+
+  it("clears the stashed parcel when the auth session drops externally", async () => {
+    // Capture the onAuthStateChanged listener so we can simulate Firebase
+    // reporting a signed-out state that never went through logout().
+    let authListener: ((u: unknown) => void) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+
+    render(
+      <AuthProvider>
+        <div>ready</div>
+      </AuthProvider>,
+    );
+
+    expect(authListener).toBeDefined();
+
+    // Token expiry / revocation surfaces as onAuthStateChanged(..., null).
+    await act(async () => {
+      await authListener?.(null);
+    });
+
+    expect(parcelHandoffMocks.clearInitialParcel).toHaveBeenCalled();
   });
 });
