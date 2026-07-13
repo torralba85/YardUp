@@ -184,6 +184,43 @@ describe("fetchCountyParcel — response parsing", () => {
     expect(result!.lotAreaSqft).toBeLessThan(4600);
   });
 
+  it("groups a hole-first sloppy-wound shell before assigning its hole", async () => {
+    // Both rings use counterclockwise winding. The larger ring is a
+    // sloppily-wound exterior and must be promoted before the smaller hole.
+    const sloppyOuter = SEATTLE_POLYGON.coordinates[0];
+    const esriGeometry = { rings: [CCW_HOLE, sloppyOuter] };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual([sloppyOuter, CCW_HOLE]);
+    expect(result!.lotAreaSqft).toBeGreaterThan(3400);
+    expect(result!.lotAreaSqft).toBeLessThan(4600);
+  });
+
+  it("attaches an Esri hole to the smallest containing exterior", async () => {
+    const cwOuter = [...SEATTLE_POLYGON.coordinates[0]].reverse();
+    const island = [
+      [-122.32508, 47.68062],
+      [-122.32504, 47.68062],
+      [-122.32504, 47.68068],
+      [-122.32508, 47.68068],
+      [-122.32508, 47.68062],
+    ];
+    const cwIsland = [...island].reverse();
+    const islandHole = [
+      [-122.325075, 47.680625],
+      [-122.325065, 47.680625],
+      [-122.325065, 47.680635],
+      [-122.325075, 47.680635],
+      [-122.325075, 47.680625],
+    ];
+    const esriGeometry = {
+      rings: [cwOuter, cwIsland, CCW_HOLE, islandHole],
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual([cwIsland, islandHole]);
+  });
+
   it("prefers an island part over a donut whose hole contains the point", async () => {
     // The query point sits inside CCW_HOLE. Part A is a donut (Seattle outer
     // ring with that hole); part B is an island inside the hole around the

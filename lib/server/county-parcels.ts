@@ -232,11 +232,22 @@ function esriRingsToParts(rings: number[][][]): GeoJsonPolygon[] {
       holes.push(ring);
     }
   }
+  // Largest-first lets an uncontained, sloppily wound exterior become a
+  // shell before any smaller rings it contains are assigned.
+  holes.sort(
+    (a, b) => Math.abs(ringSignedArea(b)) - Math.abs(ringSignedArea(a)),
+  );
   for (const hole of holes) {
     const [lng, lat] = hole[0];
-    const host = parts.find((part) =>
-      ringContainsPoint(part.coordinates[0], lng, lat),
-    );
+    const host = parts
+      .filter((part) => ringContainsPoint(part.coordinates[0], lng, lat))
+      .reduce<GeoJsonPolygon | null>((smallest, part) => {
+        if (!smallest) return part;
+        return Math.abs(ringSignedArea(part.coordinates[0])) <
+          Math.abs(ringSignedArea(smallest.coordinates[0]))
+          ? part
+          : smallest;
+      }, null);
     if (host) {
       host.coordinates.push(hole);
     } else {
