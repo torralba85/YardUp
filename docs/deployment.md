@@ -67,8 +67,8 @@ Sets the default Firebase project ID to `yardup-2026`.
 
 Firebase Functions v2 HTTPS functions:
 - **`app`** — serves all Next.js SSR pages and static assets
-- **`apiAi`** — serves `/api/ai/*` routes with a longer timeout for OpenAI image generation
-- **`api`** — serves generic non-payment API routes such as `/api/parcel` and `/api/aerial`
+- **`apiAi`** — serves `/api/ai/*` routes with a longer timeout and an OpenAI Secret Manager binding
+- **`api`** — serves generic non-payment API routes with Google Maps and Regrid Secret Manager bindings
 - **`apiStripe`** — serves Stripe checkout and webhook routes with Stripe Secret Manager bindings
 
 ## CI/CD (GitHub Actions)
@@ -109,16 +109,27 @@ Firebase Functions v2 reads this file automatically. Do **not** commit `.env` �
 
 ### CI / production
 
-Set these secrets in your GitHub repository Settings → Secrets → Actions:
+Store server-only provider credentials in Google Secret Manager and bind them
+only to the Functions that use them:
+
+```bash
+firebase functions:secrets:set GOOGLE_MAPS_API_KEY_SECRET --project yardup-2026
+firebase functions:secrets:set REGRID_API_KEY_SECRET --project yardup-2026
+firebase functions:secrets:set OPENAI_API_KEY_SECRET --project yardup-2026
+firebase functions:secrets:set STRIPE_SECRET_KEY --project yardup-2026
+firebase functions:secrets:set STRIPE_WEBHOOK_SECRET --project yardup-2026
+```
+
+The `*_SECRET` names avoid collisions with the runtime variables consumed by
+Next.js; `functions/index.js` maps them inside the least-privilege Function.
+Do not duplicate these values in GitHub Actions secrets or `functions/.env` in
+production. GitHub Actions needs only deploy credentials and public build-time
+configuration:
 
 | Secret | Purpose |
 |---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | Service account JSON for Firebase deploy |
-| `GOOGLE_MAPS_API_KEY` | Server-side Maps Static, Geocoding, or related Google API key |
-| `GOOGLE_GEOCODING_KEY` | Server-side geocoding key when separate from Maps key |
 | `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places key restricted by HTTP referrer |
-| `REGRID_API_KEY` | Server-side Regrid parcel API key |
-| `OPENAI_API_KEY` | Server-side OpenAI API key for AI parcel insights and style-matched ADU concepts |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web API key |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |

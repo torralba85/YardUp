@@ -30,7 +30,7 @@ describe("Firebase AI API routing", () => {
     "utf8",
   );
 
-  it("routes AI API traffic to the long-timeout AI function and deploys the OpenAI env var", () => {
+  it("routes AI API traffic to the long-timeout AI function with an OpenAI secret", () => {
     const rewrites = firebaseConfig.hosting.rewrites;
     const aiRewriteIndex = rewrites.findIndex(
       (rewrite) => rewrite.source === "/api/ai/**",
@@ -46,7 +46,13 @@ describe("Firebase AI API routing", () => {
     expect(functionsSource).toContain("exports.apiAi = onRequest");
     expect(functionsSource).toContain("timeoutSeconds: 120");
     expect(functionsSource).toContain('invoker: "public"');
-    expect(ciWorkflow).toContain('OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"');
+    expect(functionsSource).toContain(
+      'defineSecret("OPENAI_API_KEY_SECRET")',
+    );
+    expect(functionsSource).toContain("secrets: [openAiApiKey]");
+    expect(ciWorkflow).not.toContain(
+      'OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"',
+    );
   });
 
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {

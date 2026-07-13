@@ -11,6 +11,12 @@ const { requestForNext } = require("./request-replay");
 //   firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
+// Provider secrets use distinct binding names so Firebase can migrate legacy
+// plaintext environment variables without a Cloud Run name collision. The
+// handlers copy each value into the variable expected by the Next.js routes.
+const googleMapsApiKey = defineSecret("GOOGLE_MAPS_API_KEY_SECRET");
+const regridApiKey = defineSecret("REGRID_API_KEY_SECRET");
+const openAiApiKey = defineSecret("OPENAI_API_KEY_SECRET");
 // Resolved from functions/node_modules, which Firebase installs server-side
 // from functions/package.json at deploy time. (Firebase strips all bundled
 // node_modules on upload — including the standalone build's own copy — so the
@@ -56,17 +62,27 @@ exports.app = onRequest(fnOpts, async (req, res) => {
   return handle(requestForNext(req), res);
 });
 
-exports.apiAi = onRequest(aiFnOpts, async (req, res) => {
-  await ready();
-  return handle(requestForNext(req), res);
-});
+exports.apiAi = onRequest(
+  { ...aiFnOpts, secrets: [openAiApiKey] },
+  async (req, res) => {
+    process.env.OPENAI_API_KEY = openAiApiKey.value();
+    await ready();
+    return handle(requestForNext(req), res);
+  },
+);
 
-// Non-payment API routes (parcel/geocode/suggest/aerial). No Stripe secrets in
+// Non-payment API routes (parcel/geocode/suggest/aerial). Bind only the
+// provider credentials used by these routes; no Stripe or OpenAI secrets enter
 // this process.
-exports.api = onRequest(fnOpts, async (req, res) => {
-  await ready();
-  return handle(requestForNext(req), res);
-});
+exports.api = onRequest(
+  { ...fnOpts, secrets: [googleMapsApiKey, regridApiKey] },
+  async (req, res) => {
+    process.env.GOOGLE_MAPS_API_KEY = googleMapsApiKey.value();
+    process.env.REGRID_API_KEY = regridApiKey.value();
+    await ready();
+    return handle(requestForNext(req), res);
+  },
+);
 
 // Stripe checkout + webhook only. firebase.json routes /api/stripe/** here so
 // the payment secrets are bound to this function alone (least privilege) and
