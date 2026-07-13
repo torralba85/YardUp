@@ -66,7 +66,7 @@ test.describe("desktop studio regression", () => {
     await page.goto("/studio");
 
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Feasibility & Rules" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Rules & Fit" })).toBeVisible();
     await expect(page.getByText(/could your backyard pay you rent/i)).not.toBeVisible();
     await expect(page.getByTestId("studio-sheet")).not.toBeVisible();
   });

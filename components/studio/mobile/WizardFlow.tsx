@@ -119,7 +119,16 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
                   setAddress(result);
                   setStep(nextStep("address"));
                 }}
-                onSubmitText={() => setFreeTextHint(true)}
+                onSubmitText={() => {
+                  // Guests get no live suggestions (AddressSearch gates the
+                  // metered sources), so a free-text submit routes to sign-up
+                  // instead of a lookup that could never resolve.
+                  if (!user) {
+                    setAuthOpen(true);
+                    return;
+                  }
+                  setFreeTextHint(true);
+                }}
                 placeholder="Start typing your address…"
               />
               {freeTextHint && (
@@ -151,7 +160,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <h1 className="font-display text-3xl font-bold text-lf-espresso">What size ADU?</h1>
             <p className="mt-1 text-sm text-lf-muted">
               {address?.formattedAddress}
-              <span className="ml-2 rounded bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-ink">
+              <span className="ml-2 rounded-md bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-ink">
                 lot: estimated
               </span>
             </p>
@@ -175,7 +184,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <button
               type="button"
               onClick={() => setStep(nextStep("size"))}
-              className="mt-6 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
+              className="mt-6 min-h-12 w-full rounded-full bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
             >
               See my results →
             </button>
@@ -187,7 +196,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             <h1 className="font-display text-2xl font-bold text-lf-espresso">Your lot looks promising</h1>
             <p className="mt-1 text-sm text-lf-muted">
               {address?.formattedAddress} · {footprint} ft²
-              <span className="ml-2 rounded bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-ink">
+              <span className="ml-2 rounded-md bg-lf-amber-soft px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-amber-ink">
                 estimated
               </span>
             </p>
@@ -208,12 +217,12 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
                 <Lock size={14} aria-hidden className="text-lf-clay" />
                 Unlock your exact numbers
               </p>
-              <p className="mt-1 text-xs text-lf-muted">Free account · real parcel data for your address</p>
+              <p className="mt-1 text-xs text-lf-muted">Free account · real property data for your address</p>
             </div>
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
-              className="mt-4 min-h-12 w-full rounded-xl bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
+              className="mt-4 min-h-12 w-full rounded-full bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
             >
               Create free account
             </button>

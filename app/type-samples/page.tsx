@@ -52,7 +52,7 @@ export default function TypeSamplesPage() {
               Cormorant Garamond
             </h2>
             <p className="mt-8 font-display text-5xl font-bold leading-[0.98] text-lf-espresso">
-              Your backyard is an asset.
+              See what your backyard can earn.
             </p>
             <div className="mt-10 border-t border-lf-hairline pt-5">
               <p className="lf-kicker-dense text-lf-muted">Estimated monthly rent</p>

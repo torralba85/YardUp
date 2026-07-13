@@ -91,11 +91,11 @@ export function buildReportText({
     `Estimated build cost: ${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`,
     `Monthly rent estimate: ${formatCurrency(result.monthlyRent)}`,
     `Annual net income estimate: ${formatCurrency(result.annualNoi)}`,
-    `Simple payback: ${result.paybackYears} years`,
+    `Payback: ${result.paybackYears} years`,
     "",
     ...(projectBrief
       ? [
-          "AI Parcel & Permit Brief",
+          "Property & Permit Brief",
           projectBrief.headline,
           projectBrief.summary,
           `Best fit: ${projectBrief.bestFit}`,
@@ -147,7 +147,7 @@ export function buildReportHtml({
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],
     ["Annual net income estimate", formatCurrency(result.annualNoi)],
-    ["Simple payback", `${result.paybackYears} years`],
+    ["Payback", `${result.paybackYears} years`],
   ];
 
   const reviewNote = result.warnings[0] ?? "No coverage warning for the current assumptions.";
@@ -410,7 +410,7 @@ export function buildReportHtml({
               <td class="amt">within allowance</td>
             </tr>
             <tr class="balance">
-              <td>Net operating income</td>
+              <td>Yearly net income</td>
               <td class="amt">${escapeHtml(formatCurrency(result.annualNoi))}</td>
               <td>Payback estimate</td>
               <td class="amt">${result.paybackYears} yrs</td>
@@ -435,7 +435,7 @@ export function buildReportHtml({
           ${nextSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
         </ol>
 
-        <div class="motto">&ldquo;Your backyard is an asset.&rdquo;</div>
+        <div class="motto">&ldquo;See what your backyard can earn.&rdquo;</div>
         <div class="stamp">Concept &middot; Not a Permit</div>
       </div>
     </div>

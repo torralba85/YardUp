@@ -183,7 +183,7 @@ export default function FeasibilityInspector({
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+            className="flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
@@ -211,7 +211,7 @@ export default function FeasibilityInspector({
                     <button
                       type="button"
                       onClick={handleResetToPreset}
-                      className="flex items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                      className="relative flex items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
                     >
                       <RefreshCcw size={12} />
                       Demo mode
@@ -283,7 +283,7 @@ export default function FeasibilityInspector({
               {parcelLoading && (
                 <div className="flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
                   <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
-                  Looking up parcel data…
+                  Looking up property data…
                 </div>
               )}
 
@@ -304,7 +304,7 @@ export default function FeasibilityInspector({
               <button
                 type="button"
                 onClick={() => handleNextStep(1, 2)}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 Next: Design your ADU
                 <ChevronDown size={15} className="-rotate-90" />
@@ -339,7 +339,7 @@ export default function FeasibilityInspector({
                         type="button"
                         onClick={() => onConfigChange(configForFootprint(option.value, config))}
                         aria-pressed={isPressed}
-                        className={`h-10 rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                        className={`h-11 rounded-full border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                           isPressed
                             ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                             : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -435,7 +435,7 @@ export default function FeasibilityInspector({
                 type="button"
                 onClick={() => onConfigChange({ ...config, includeOpenings: !config.includeOpenings })}
                 aria-pressed={config.includeOpenings}
-                className={`flex h-10 w-full items-center justify-center gap-2 rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                className={`flex h-11 w-full items-center justify-center gap-2 rounded-full border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                   config.includeOpenings
                     ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                     : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -448,7 +448,7 @@ export default function FeasibilityInspector({
               <button
                 type="button"
                 onClick={() => handleNextStep(2, 3)}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 Next: Run the numbers
                 <ChevronDown size={15} className="-rotate-90" />
@@ -476,7 +476,7 @@ export default function FeasibilityInspector({
                         onAssumptionsChange({ ...assumptions, rentScenario: scenario })
                       }
                       aria-pressed={assumptions.rentScenario === scenario}
-                      className={`h-10 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                      className={`h-11 rounded-full border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                         assumptions.rentScenario === scenario
                           ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                           : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
@@ -532,7 +532,7 @@ export default function FeasibilityInspector({
               type="button"
               onClick={onSaveScenario}
               disabled={savingScenario}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <BookmarkPlus size={16} />
               {saveNotice ?? (savingScenario ? "Saving..." : "Save this design")}

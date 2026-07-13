@@ -6,6 +6,7 @@ import { CheckCircle2, Sparkles, Camera, Layers } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import StyleMatchPanel from "./StyleMatchPanel";
+import { Button } from "@/components/ui/Button";
 
 /** Props for {@link InspirationGalleryPanel}. */
 export interface InspirationGalleryPanelProps {
@@ -120,7 +121,7 @@ export default function InspirationGalleryPanel({
                   </div>
 
                   {item.isStyleMatched && (
-                    <div className="absolute top-3 left-3 z-20 bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-md">
+                    <div className="absolute top-3 left-3 z-20 rounded-md bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-md">
                       <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-lf-sand">
                         Style-Matched
                       </span>
@@ -142,7 +143,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "image")}
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso ${
+                      className={`relative flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-3 before:-inset-x-1 ${
                         viewMode === "image"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -154,7 +155,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "diagram")}
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso ${
+                      className={`relative flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-3 before:-inset-x-1 ${
                         viewMode === "diagram"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -173,10 +174,10 @@ export default function InspirationGalleryPanel({
                       {item.title}
                     </h3>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted uppercase tracking-wider">
+                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted uppercase tracking-wider">
                         {item.style}
                       </span>
-                      <span className="rounded border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted">
+                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted">
                         {item.sqft} sf ({item.width}&apos;x{item.length}&apos;)
                       </span>
                     </div>
@@ -206,34 +207,22 @@ export default function InspirationGalleryPanel({
                           <button
                             type="button"
                             onClick={() => onViewComparison(item)}
-                            className="flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wider text-lf-clay hover:text-lf-espresso transition-colors cursor-pointer"
+                            className="relative flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wider text-lf-clay hover:text-lf-espresso transition-colors cursor-pointer before:absolute before:-inset-y-4 before:-inset-x-2"
                           >
                             Compare
                           </button>
                         </>
                       )}
                     </div>
-                    <button
+                    <Button
                       type="button"
+                      variant={appliedId === item.id ? "commit" : "primary"}
+                      size="md"
                       onClick={() => handleApply(item)}
-                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                        appliedId === item.id
-                          ? "bg-lf-forest text-lf-sand"
-                          : "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong"
-                      }`}
+                      leftIcon={appliedId === item.id ? <CheckCircle2 size={13} /> : <Sparkles size={13} />}
                     >
-                      {appliedId === item.id ? (
-                        <>
-                          <CheckCircle2 size={13} />
-                          Applied
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={13} />
-                          Apply to Studio
-                        </>
-                      )}
-                    </button>
+                      {appliedId === item.id ? "Applied" : "Apply to Studio"}
+                    </Button>
                   </div>
                 </div>
               </div>

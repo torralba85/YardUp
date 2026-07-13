@@ -1,6 +1,6 @@
-# LotFoundry — ADU Feasibility Studio
+# LotFoundry — ADU planning for homeowners
 
-A production-grade ADU feasibility studio. Search a real property address to pull live parcel data (lot dimensions, setbacks, zoning) via Regrid, visualize the lot on a satellite aerial map, and instantly see zoning coverage, build cost ranges, monthly rent, NOI, and a payback estimate. Generate a concept report you can print, save, or share.
+Check a real address for ADU rent, build cost, and payback estimates. LotFoundry pulls live parcel data (lot size, setbacks, zoning) via Regrid, shows the lot on a satellite map, and builds a shareable estimate report.
 
 ## Product Scope
 

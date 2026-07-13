@@ -67,7 +67,7 @@ describe("buildReportText", () => {
 
   it("records the merged AI parcel interpretation and permit timeline", () => {
     const text = buildReportText({ ...makeInput(), projectBrief: makeProjectBrief() });
-    expect(text).toContain("AI Parcel & Permit Brief");
+    expect(text).toContain("Property & Permit Brief");
     expect(text).toContain("Utility route");
     expect(text).toContain("Typical approval timeline: 5-9 weeks");
     expect(text).toContain("Pre-application check: 1-2 weeks");
@@ -84,7 +84,7 @@ describe("buildReportHtml", () => {
     expect(html).toContain("Project Snapshot");
     expect(html).toContain("Recommended Next Steps");
     expect(html).toContain("1234 Oak Street");
-    expect(html).toContain("Net operating income");
+    expect(html).toContain("Yearly net income");
     expect(html).toContain("Annual Ledger");
     expect(html).toContain("Recorded JUN 11, 2026");
     expect(html).toContain("Not a Permit");

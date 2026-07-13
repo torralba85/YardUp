@@ -168,7 +168,7 @@ export default function AerialView({
   return (
     <div
       className="relative h-full min-h-[460px] w-full overflow-hidden bg-lf-espresso"
-      aria-label="Aerial parcel view"
+      aria-label="Aerial lot view"
     >
       {aerialSrc ? (
         <>

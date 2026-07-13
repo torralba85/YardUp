@@ -108,10 +108,10 @@ export default function ReportPreview({
             Certificate of Feasibility
           </h2>
           <p className="lf-body-sm mt-1.5 max-w-xl text-lf-muted">
-            A recorded concept for this lot: the ADU, its site fit, estimated costs,
-            income ledger, AI parcel readout, and typical approval timeline — typeset as
-            one document you can print, share, or bring to a builder. Final scope and
-            approvals still require local review.
+            A recorded concept for this lot: the ADU, site fit, estimated costs,
+            income summary, property notes, and typical approval timeline—one
+            document you can print, share, or bring to a builder. Final scope and
+            approvals still need local review.
           </p>
           <div className="mt-3 grid gap-2.5 text-sm text-lf-muted sm:grid-cols-2">
             <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
@@ -137,9 +137,9 @@ export default function ReportPreview({
               "Rental analysis",
               "Assumptions",
               "Zoning & compliance",
-              "AI parcel interpretation",
+              "Property notes",
               "Typical approval timeline",
-              "Recorded next steps",
+              "Recommended next steps",
             ].map((item) => (
               <div key={item} className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="shrink-0 text-lf-mahogany" />
@@ -157,7 +157,7 @@ export default function ReportPreview({
               type="button"
               onClick={onClose}
               aria-label="Close report preview"
-              className="rounded-full p-1 text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <X size={16} aria-hidden="true" />
             </button>
@@ -166,7 +166,7 @@ export default function ReportPreview({
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-lf-clay text-[11px] font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-lf-clay text-[11px] font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <Printer size={14} />
               Print / Save
@@ -174,7 +174,7 @@ export default function ReportPreview({
             <button
               type="button"
               onClick={onDownload}
-              className="flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
             >
               <Download size={14} />
               Download
@@ -183,7 +183,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onExportCsv}
-                className="flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <FileSpreadsheet size={14} />
                 CSV Export
@@ -193,7 +193,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onShare}
-                className="flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <Share2 size={14} />
                 <span>{shareNotice ?? "Share Link"}</span>
@@ -203,7 +203,7 @@ export default function ReportPreview({
               <button
                 type="button"
                 onClick={onConnectBuilders}
-                className="col-span-2 flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-lf-clay text-[11px] font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                className="col-span-2 flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-lf-clay text-[11px] font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
               >
                 <Hammer size={14} />
                 Connect with local builders
@@ -260,7 +260,7 @@ function CertificateBriefSection({
         </div>
         {loading ? (
           <div className="mt-4 motion-safe:animate-pulse" role="status">
-            <span className="sr-only">Adding the parcel and timeline brief</span>
+            <span className="sr-only">Adding property notes and timeline</span>
             <div className="h-3 w-52 rounded bg-lf-taupe-soft" />
             <div className="mt-2 h-2.5 w-full rounded bg-lf-taupe-soft" />
             <div className="mt-1.5 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />

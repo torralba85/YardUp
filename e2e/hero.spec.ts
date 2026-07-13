@@ -1,17 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Blue Hour survey hero", () => {
-  test("shows the second-address headline, address instrument, and dusk scene", async ({ page }) => {
+test.describe("Landing survey hero", () => {
+  test("shows the earn headline, address instrument, and aerial scene", async ({ page }) => {
     await page.goto("/");
 
-    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    const hero = page.locator('section[aria-label="Lot survey"]');
     await expect(
-      hero.getByRole("heading", { name: /every backyard hides a second address/i }),
+      hero.getByRole("heading", { name: /see what your backyard can earn/i }),
     ).toBeVisible();
     await expect(hero.getByLabel(/property address/i)).toBeVisible();
     await expect(hero.getByRole("button", { name: /run feasibility/i })).toBeVisible();
 
-    // The dusk aerial poster is always present (no-JS/reduced motion floor);
+    // The aerial poster is always present (no-JS/reduced motion floor);
     // the Remotion composition draws its own copy on top, so match by alt.
     await expect(hero.getByRole("img", { name: /aerial view of a suburban lot/i })).toBeVisible();
     await expect(hero.locator("video")).toHaveCount(0);
@@ -22,16 +22,16 @@ test.describe("Blue Hour survey hero", () => {
 
   test("mounts the scroll-scrubbed Remotion player when motion is allowed", async ({ page }) => {
     await page.goto("/");
-    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    const hero = page.locator('section[aria-label="Lot survey"]');
     await expect(hero.getByTestId("blue-hour-player")).toBeVisible();
   });
 
-  test("leads the first viewport with the projected-rent verdict plate", async ({ page }) => {
+  test("leads the first viewport with the estimated-rent verdict plate", async ({ page }) => {
     await page.goto("/");
-    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    const hero = page.locator('section[aria-label="Lot survey"]');
     const verdict = hero.getByRole("complementary", { name: /projected rent verdict/i });
     await expect(verdict).toBeAttached();
-    await expect(verdict.getByText(/typical supported markets/i)).toBeAttached();
+    await expect(verdict.getByText(/sample for cities we cover/i)).toBeAttached();
 
     // Anchored inside the first viewport.
     const box = await verdict.boundingBox();
@@ -42,7 +42,7 @@ test.describe("Blue Hour survey hero", () => {
 
   test("counts the rent verdict up as the survey scrubs to its end", async ({ page }) => {
     await page.goto("/");
-    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    const hero = page.locator('section[aria-label="Lot survey"]');
     await hero.evaluate((element) => {
       const top = window.scrollY + element.getBoundingClientRect().top;
       const travel = element.clientHeight - window.innerHeight;
@@ -66,7 +66,7 @@ test.describe("Blue Hour survey hero", () => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
-    const hero = page.locator('section[aria-label="Blue hour lot survey"]');
+    const hero = page.locator('section[aria-label="Lot survey"]');
     await expect(hero.getByRole("img", { name: /aerial view of a suburban lot/i })).toBeVisible();
     await expect(hero.getByTestId("blue-hour-player")).toHaveCount(0);
     // No pin: the track collapses to a single viewport for reduced motion.

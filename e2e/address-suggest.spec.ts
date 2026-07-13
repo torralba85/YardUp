@@ -27,19 +27,17 @@ test.describe("address suggestions", () => {
     expect(suggestions.join(" "), bodyText).toMatch(/Pennsylvania|Washington|DC/i);
   });
 
-  test("local address search falls back to server suggestions", async ({ page }, testInfo) => {
+  test("guest address search never spends suggestion quota", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium", "desktop rail has the stable search");
 
-    const suggestion = "1600 Pennsylvania Avenue NW, Washington, DC, USA";
+    // Address suggestions (browser Places or /api/suggest) cost metered API
+    // quota, so signed-out visitors get neither source: typing must fire no
+    // suggest requests and the input must carry the sign-in note instead.
+    // The signed-in googleFailed → /api/suggest fallback wiring is covered by
+    // the AddressSearch unit tests.
     const suggestRequests: string[] = [];
 
-    // Aborting the Places bootstrap fails @googlemaps/js-api-loader's
-    // `script.onerror`, which rejects `importLibrary("places")`. AddressSearch
-    // catches that, sets `googleFailed`, and hands autocomplete to `/api/suggest`
-    // — the path we assert here — even when a real NEXT_PUBLIC_GOOGLE_PLACES_KEY
-    // is configured (`hasPlacesKey === true`). The loader (v2.0.2) rejects
-    // immediately with no retry; the generous timeout below absorbs the delay if
-    // a future loader ever retries script loads with backoff.
+    // Keep the run hermetic: never load real Google Maps JS.
     await page.route("https://maps.googleapis.com/**", (route) => route.abort());
     await page.route("https://maps.gstatic.com/**", (route) => route.abort());
     await page.route("**/api/suggest**", async (route) => {
@@ -47,18 +45,20 @@ test.describe("address suggestions", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ suggestions: [suggestion] }),
+        body: JSON.stringify({ suggestions: ["1600 Pennsylvania Avenue NW, Washington, DC, USA"] }),
       });
     });
 
     await page.goto("/studio");
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
 
-    await page.getByLabel("Search property address").fill("1600 Pennsylvania Ave");
+    const search = page.getByLabel("Search property address");
+    await search.fill("1600 Pennsylvania Ave");
 
-    await expect(page.getByRole("option", { name: suggestion })).toBeVisible({
-      timeout: 15_000,
-    });
-    expect(suggestRequests.some((url) => url.includes("/api/suggest"))).toBe(true);
+    await expect(page.getByText("Sign in to search a real address.").first()).toBeVisible();
+    // Wait out the 300ms suggestion debounce before asserting nothing fired.
+    await page.waitForTimeout(800);
+    expect(suggestRequests).toHaveLength(0);
+    await expect(page.getByRole("option")).toHaveCount(0);
   });
 });

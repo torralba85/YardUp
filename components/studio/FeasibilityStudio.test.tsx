@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
 import { WIZARD_SEEN_KEY } from "@/lib/wizard-state";
+import { clearInitialParcel } from "@/lib/parcel-handoff";
 import type { ReactNode } from "react";
 
 vi.mock("next/dynamic", () => ({
@@ -33,10 +34,22 @@ vi.mock("@/lib/firebase", () => ({
   app: {},
 }));
 
+// Resolved auth user for the mocked onAuthStateChanged below. Null = guest
+// (the default); live-lookup tests sign in, since address searches are gated
+// to signed-in users.
+const authMocks = vi.hoisted(() => ({
+  user: null as null | {
+    uid: string;
+    email: string;
+    displayName: string | null;
+    getIdToken: () => Promise<string>;
+  },
+}));
+
 vi.mock("firebase/auth", () => ({
   getAuth: () => ({}),
-  onAuthStateChanged: (_auth: unknown, cb: (u: null) => void) => {
-    Promise.resolve().then(() => cb(null));
+  onAuthStateChanged: (_auth: unknown, cb: (u: unknown) => void) => {
+    Promise.resolve().then(() => cb(authMocks.user));
     return () => {};
   },
   signInWithEmailAndPassword: vi.fn(),
@@ -73,6 +86,8 @@ describe("FeasibilityStudio (guided spine)", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
     window.localStorage.clear();
+    clearInitialParcel();
+    authMocks.user = null;
     // Simulate reduced motion so useCountUp snaps synchronously to its final
     // value, keeping assertions on count-up figures deterministic.
     vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({
@@ -92,14 +107,14 @@ describe("FeasibilityStudio (guided spine)", () => {
     vi.restoreAllMocks();
   });
 
-  it("presents a single spine navigation with the Feasibility & Rules step active", () => {
+  it("presents a single spine navigation with the Rules & Fit step active", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     // Exactly one navigation model — the spine. The old tab strip is gone.
     expect(stepRail()).toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
 
-    expect(stepButton(/Feasibility & Rules/)).toHaveAttribute("aria-current", "step");
+    expect(stepButton(/Rules & Fit/)).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
     expect(screen.getByText("Feasibility verdict")).toBeInTheDocument();
     expect(screen.getByText("Readiness")).toBeInTheDocument();
@@ -108,6 +123,13 @@ describe("FeasibilityStudio (guided spine)", () => {
   it("renders the searched live parcel's dimensions in the 3D scene", async () => {
     // Reproduces the demo-lot bug: after a live address search the 3D lot must
     // re-proportion to the fetched parcel, not keep the oak-street 40 × 125.
+    // Live lookups are signed-in only, so resolve an authenticated user.
+    authMocks.user = {
+      uid: "owner-1",
+      email: "owner@example.com",
+      displayName: "Owner",
+      getIdToken: async () => "token",
+    };
     const liveParcel = {
       address: "141 N Almaden Ave",
       city: "San Jose, CA 95110",
@@ -195,7 +217,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(within(stepRail()).getAllByText("$")).toHaveLength(2);
   });
 
-  it("folds the local permit guide into the Feasibility & Rules step", () => {
+  it("folds the local permit guide into the Rules & Fit step", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
       screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i }),
@@ -205,9 +227,9 @@ describe("FeasibilityStudio (guided spine)", () => {
   it("offers one AI action for the parcel interpretation and approval timeline", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    const brief = screen.getByRole("region", { name: "AI parcel and timeline brief" });
+    const brief = screen.getByRole("region", { name: "Property notes and timeline" });
     expect(
-      within(brief).getByRole("button", { name: "Generate AI parcel and timeline brief" }),
+      within(brief).getByRole("button", { name: "Generate property notes and timeline" }),
     ).toBeInTheDocument();
     expect(within(brief).getAllByRole("button")).toHaveLength(1);
     expect(screen.queryByText("Translate the parcel data")).not.toBeInTheDocument();
@@ -309,7 +331,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
     ).toBeInTheDocument();
 
-    await user.click(stepButton(/Feasibility & Rules/));
+    await user.click(stepButton(/Rules & Fit/));
     expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
   });
 

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   geocodeAddress: vi.fn(),
   fetchParcel: vi.fn(),
   stashInitialParcel: vi.fn(() => true),
+  peekInitialParcel: vi.fn<() => object | null>(() => null),
 }));
 
 vi.mock("@/components/FeasibilityStudio", () => ({
@@ -52,6 +53,7 @@ vi.mock("@/lib/parcel-api", () => ({
 
 vi.mock("@/lib/parcel-handoff", () => ({
   stashInitialParcel: mocks.stashInitialParcel,
+  peekInitialParcel: mocks.peekInitialParcel,
 }));
 
 vi.mock("./AddressSearch", () => ({
@@ -95,6 +97,8 @@ describe("SignedInStudioGate", () => {
     mocks.logout.mockClear();
     mocks.consumeAddressQuery.mockReset();
     mocks.consumeAddressQuery.mockReturnValue(null);
+    mocks.peekInitialParcel.mockReset();
+    mocks.peekInitialParcel.mockReturnValue(null);
     mocks.geocodeAddress.mockReset();
     mocks.fetchParcel.mockReset();
     mocks.stashInitialParcel.mockReset();
@@ -134,9 +138,19 @@ describe("SignedInStudioGate", () => {
     expect(mocks.stashInitialParcel).toHaveBeenCalledWith(parcel);
   });
 
-  it("prefers an explicit ?q= URL address over a stale landing-page handoff", async () => {
-    window.history.replaceState(null, "", "/studio?q=456+Oak+Ave");
-    mocks.consumeAddressQuery.mockReturnValue("123 Main St");
+  it("opens a stashed live parcel after hydration", async () => {
+    mocks.peekInitialParcel.mockReturnValue(parcel);
+
+    render(<SignedInStudioGate user={user} />);
+
+    expect(await screen.findByText("Real Parcel Studio")).toBeInTheDocument();
+    expect(mocks.geocodeAddress).not.toHaveBeenCalled();
+    expect(mocks.fetchParcel).not.toHaveBeenCalled();
+  });
+
+  it("uses a session handoff before reopening a stashed parcel", async () => {
+    mocks.consumeAddressQuery.mockReturnValue("456 Oak Ave");
+    mocks.peekInitialParcel.mockReturnValue(parcel);
     mocks.geocodeAddress.mockResolvedValue({
       lat: parcel.lat,
       lng: parcel.lng,
@@ -148,5 +162,17 @@ describe("SignedInStudioGate", () => {
 
     expect(await screen.findByText("Real Parcel Studio")).toBeInTheDocument();
     expect(mocks.geocodeAddress).toHaveBeenCalledWith("456 Oak Ave", "token");
+    expect(mocks.stashInitialParcel).toHaveBeenCalledWith(parcel);
+  });
+
+  it("ignores URL query addresses and reopens the stashed parcel", async () => {
+    window.history.replaceState(null, "", "/studio?q=456+Oak+Ave");
+    mocks.peekInitialParcel.mockReturnValue(parcel);
+
+    render(<SignedInStudioGate user={user} />);
+
+    expect(await screen.findByText("Real Parcel Studio")).toBeInTheDocument();
+    expect(mocks.geocodeAddress).not.toHaveBeenCalled();
+    expect(mocks.fetchParcel).not.toHaveBeenCalled();
   });
 });

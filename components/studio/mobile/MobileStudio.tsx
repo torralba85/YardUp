@@ -134,7 +134,7 @@ export default function MobileStudio({
           <button
             type="button"
             onClick={dismissCoach}
-            className="mt-2 min-h-11 rounded-lg bg-lf-clay px-4 text-sm font-semibold text-lf-sand"
+            className="mt-2 min-h-11 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand"
           >
             Got it
           </button>

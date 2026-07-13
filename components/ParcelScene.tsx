@@ -1154,7 +1154,7 @@ export default function ParcelScene({
         {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
         {viewMode === "overview" && (
           <SceneCallout
-            eyebrow="Buildable envelope"
+            eyebrow="Buildable area"
             title={isCompliant ? "Within declared limits" : "Local review likely"}
             detail={`${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side setbacks.`}
             // Anchored to the front-right of the lot (foreground/driveway) so the

@@ -88,7 +88,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-lf-hairline bg-lf-card px-2 py-0.5 font-mono text-[11px] text-lf-espresso">
+    <span className="rounded-md border border-lf-hairline bg-lf-card px-2 py-0.5 font-mono text-[11px] text-lf-espresso">
       {children}
     </span>
   );

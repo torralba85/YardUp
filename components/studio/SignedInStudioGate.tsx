@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
 import { geocodeAddress, GeocodeError } from "@/lib/geocode-api";
 import { fetchParcel, ParcelFetchError } from "@/lib/parcel-api";
-import { stashInitialParcel } from "@/lib/parcel-handoff";
+import { peekInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 
 /**
@@ -71,28 +71,23 @@ export default function SignedInStudioGate({ user }: { user: User }) {
     [lookupLoading, openWithParcel, user],
   );
 
-  // Landing address handoff intentionally starts the lookup during hydration.
-  // The state updates happen inside the async lookup rather than deriving render
-  // state from the effect itself, so keep this exception scoped to this effect.
+  // Resolve browser-only handoff state after hydration so the server and first
+  // client render stay identical. Address text is accepted only from the
+  // session-storage handoff, never URL query parameters.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (handoffStarted.current || typeof window === "undefined") return;
     handoffStarted.current = true;
 
-    const params = new URLSearchParams(window.location.search);
-    const urlAddress = params.get("q")?.trim() || null;
-    const pendingAddress = urlAddress ?? consumeAddressQuery();
-    if (!pendingAddress) return;
-
-    if (params.has("q")) {
-      params.delete("q");
-      const remaining = params.toString();
-      const next = remaining
-        ? `${window.location.pathname}?${remaining}`
-        : window.location.pathname;
-      window.history.replaceState(null, "", next);
+    const pendingAddress = consumeAddressQuery();
+    if (pendingAddress) {
+      void lookupText(pendingAddress);
+      return;
     }
-    void lookupText(pendingAddress);
+
+    if (peekInitialParcel() !== null) {
+      setStudioReady(true);
+    }
   }, [lookupText]);
   /* eslint-enable react-hooks/set-state-in-effect */
 

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "LotFoundry — ADU Feasibility Studio",
+  "name": "LotFoundry",
   "short_name": "LotFoundry",
-  "description": "ADU Feasibility Studio — evaluate your lot's earning potential",
+  "description": "See what your backyard can earn — ADU rent, build cost, and payback estimates",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

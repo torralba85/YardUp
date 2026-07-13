@@ -11,7 +11,7 @@ export default function LoginPage() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Open your saved ADU estimates and concept reports."
+      subtitle="Open your saved ADU estimates and reports."
     >
       <Suspense
         fallback={

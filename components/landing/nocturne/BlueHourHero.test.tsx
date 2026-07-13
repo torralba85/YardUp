@@ -61,11 +61,11 @@ describe("BlueHourHero", () => {
     vi.useRealTimers();
   });
 
-  it("renders the second-address headline, address instrument, and estimate-honest copy", () => {
+  it("renders the earn headline, address instrument, and estimate-honest copy", () => {
     render(<BlueHourHero />);
-    expect(screen.getByText(/lotfoundry · adu feasibility studio/i)).toBeInTheDocument();
+    expect(screen.getByText(/lotfoundry · adu planning tool/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /every backyard hides a second address/i }),
+      screen.getByRole("heading", { name: /see what your backyard can earn/i }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/property address/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /run feasibility/i })).toBeInTheDocument();
@@ -86,29 +86,29 @@ describe("BlueHourHero", () => {
     expect(verdict).toHaveTextContent(/estimate only/i);
   });
 
-  it("frames the verdict as a typical supported-market estimate", () => {
+  it("frames the verdict as a sample market estimate", () => {
     render(<BlueHourHero />);
     const verdict = screen.getByRole("complementary", { name: /projected rent verdict/i });
-    expect(verdict).toHaveTextContent(/typical supported markets/i);
+    expect(verdict).toHaveTextContent(/sample for cities we cover/i);
   });
 
   it("renders a keyboard-usable survey phase rail with the opening beat active", () => {
     render(<BlueHourHero />);
     const rail = screen.getByRole("navigation", { name: /survey phases/i });
     expect(rail).toBeInTheDocument();
-    const open = screen.getByRole("button", { name: /lot record opens/i });
+    const open = screen.getByRole("button", { name: /open lot map/i });
     expect(open).toHaveAttribute("aria-current", "step");
     expect(
-      screen.getByRole("button", { name: /jump to phase 01 · parcel boundary/i }),
+      screen.getByRole("button", { name: /jump to step 02 · property lines/i }),
     ).not.toHaveAttribute("aria-current");
     expect(
-      screen.getByRole("button", { name: /jump to phase 04 · verdict/i }),
+      screen.getByRole("button", { name: /jump to step 05 · rent estimate/i }),
     ).toBeInTheDocument();
   });
 
   it("passes hovered or focused survey geometry to the composition as highlight", () => {
     render(<BlueHourHero />);
-    const hotspot = screen.getByRole("button", { name: /highlight parcel boundary/i });
+    const hotspot = screen.getByRole("button", { name: /highlight property lines/i });
 
     fireEvent.focus(hotspot);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "parcel");
@@ -116,7 +116,7 @@ describe("BlueHourHero", () => {
     fireEvent.blur(hotspot);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
 
-    const adu = screen.getByRole("button", { name: /highlight adu cast/i });
+    const adu = screen.getByRole("button", { name: /highlight adu footprint/i });
     fireEvent.mouseEnter(adu);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "adu");
     fireEvent.mouseLeave(adu);
@@ -135,7 +135,7 @@ describe("BlueHourHero", () => {
     setMatchMedia(true);
     render(<BlueHourHero />);
     expect(
-      screen.queryByRole("button", { name: /highlight parcel boundary/i }),
+      screen.queryByRole("button", { name: /highlight property lines/i }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("navigation", { name: /survey phases/i }),

@@ -8,12 +8,12 @@ async function skipMobileFirstRunUi(page: Page) {
 }
 
 test.describe("Public LotFoundry flows", () => {
-  test("loads the landing page with the blue hour survey hero", async ({ page }, testInfo) => {
+  test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle(/LotFoundry \| ADU Feasibility & Income Estimates/);
+    await expect(page).toHaveTitle(/LotFoundry \| See what your backyard can earn/);
     await expect(
-      page.getByRole("heading", { name: /Every backyard hides a second address/i }),
+      page.getByRole("heading", { name: /See what your backyard can earn/i }),
     ).toBeVisible();
     // The rent verdict plate leads the first viewport.
     await expect(
@@ -21,7 +21,7 @@ test.describe("Public LotFoundry flows", () => {
     ).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
-      page.getByRole("heading", { name: /Know what to ask before you spend on plans/i }),
+      page.getByRole("heading", { name: /Check your address.*Get your numbers/i }),
     ).toBeVisible();
     // Survey-instrument search is the hero CTA.
     await expect(page.getByRole("button", { name: /Run feasibility/i })).toBeVisible();
@@ -52,7 +52,7 @@ test.describe("Public LotFoundry flows", () => {
       await expect(page.getByText(/could your backyard pay you rent/i)).toBeVisible();
     } else {
       await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Feasibility & Rules/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Rules & Fit/i })).toBeVisible();
     }
   });
 
@@ -78,7 +78,7 @@ test.describe("Public LotFoundry flows", () => {
       await page.waitForTimeout(500);
     } else {
       // Navigating via sidebar navigation button
-      await page.getByRole("button", { name: /Feasibility & Rules/i }).click();
+      await page.getByRole("button", { name: /Rules & Fit/i }).click();
     }
     await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();

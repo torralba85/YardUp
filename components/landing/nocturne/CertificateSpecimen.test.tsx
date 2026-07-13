@@ -8,10 +8,10 @@ describe("CertificateSpecimen", () => {
     render(<CertificateSpecimen />);
 
     expect(
-      screen.getByRole("heading", { name: /certificate meets your builder/i }),
+      screen.getByRole("heading", { name: /report you can keep/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Own the record")).toBeInTheDocument();
-    expect(screen.getByText("Meet your builders")).toBeInTheDocument();
+    expect(screen.getByText("Save your estimate")).toBeInTheDocument();
+    expect(screen.getByText("Meet local builders")).toBeInTheDocument();
   });
 
   it("renders the parchment specimen with typical figures and the honesty stamp", () => {
@@ -21,6 +21,6 @@ describe("CertificateSpecimen", () => {
     expect(screen.getByText(TYPICAL_MARKET.rentBand)).toBeInTheDocument();
     expect(screen.getByText(TYPICAL_MARKET.noi)).toBeInTheDocument();
     expect(screen.getByText(/concept · not a permit/i)).toBeInTheDocument();
-    expect(screen.getByText(/specimen — your address replaces this/i)).toBeInTheDocument();
+    expect(screen.getByText(/sample — your address replaces this/i)).toBeInTheDocument();
   });
 });

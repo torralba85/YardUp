@@ -62,7 +62,7 @@ export function DeleteAccountButton() {
           type="button"
           onClick={handleDelete}
           disabled={pending}
-          className="min-h-9 rounded-full bg-lf-brick px-3.5 py-1.5 text-[11px] font-semibold text-lf-sand transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-brick focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-60"
+          className="min-h-11 rounded-full bg-lf-brick px-4 py-2 text-[11px] font-semibold text-lf-sand transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-brick focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-60"
         >
           {pending ? "Deleting…" : "Delete permanently"}
         </button>
@@ -70,7 +70,7 @@ export function DeleteAccountButton() {
           type="button"
           onClick={() => setConfirming(false)}
           disabled={pending}
-          className="min-h-9 rounded-full px-3.5 py-1.5 text-[11px] font-medium text-lf-taupe transition hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-60"
+          className="min-h-11 rounded-full px-4 py-2 text-[11px] font-medium text-lf-taupe transition hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-60"
         >
           Cancel
         </button>

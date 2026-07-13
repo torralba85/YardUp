@@ -436,7 +436,7 @@ function FeasibilityStudioInner() {
         const message =
           err instanceof AIRequestError
             ? err.userMessage
-            : "The parcel and timeline brief is unavailable right now. Please try again.";
+            : "Property notes are unavailable right now. Please try again.";
         setProjectBriefState((current) =>
           current?.key === requestKey
             ? { key: requestKey, data: existingData, loading: false, error: message }
@@ -1126,7 +1126,7 @@ function LotStep({
           {parcelLoading && (
             <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
               <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
-              Looking up parcel data…
+              Looking up property data…
             </div>
           )}
           {parcelError && (

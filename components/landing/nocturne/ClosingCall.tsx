@@ -8,11 +8,11 @@ export function ClosingCall() {
     <section id="start" className="mx-auto max-w-7xl px-6 py-24 sm:py-32">
       <Reveal>
         <div className="rounded-lg border border-ln-hairline bg-ln-navy/50 p-8 sm:p-14">
-          <p className="lf-kicker text-ln-slate">Ready when the owner is</p>
+          <p className="lf-kicker text-ln-slate">Ready when you are</p>
           <h2 className="ln-section-heading mt-4 max-w-3xl text-ln-mist">
-            Know what to ask{" "}
-            <em className="italic text-ln-glow">before</em> you spend on
-            plans.
+            Check your address.{" "}
+            <em className="italic text-ln-glow">Get your numbers</em> before you
+            spend on plans.
           </h2>
           <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
             <DawnStudioLink

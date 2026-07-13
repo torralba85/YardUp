@@ -18,18 +18,25 @@ vi.mock("@/lib/auth-context", () => ({
 vi.mock("@/components/studio/AddressSearch", () => ({
   default: function MockAddressSearch({
     onSelect,
+    onSubmitText,
   }: {
     onSelect: (r: { lat: number; lng: number; formattedAddress: string }) => void;
+    onSubmitText?: (query: string) => void;
   }) {
     return (
-      <button
-        type="button"
-        onClick={() =>
-          onSelect({ lat: 47.68, lng: -122.3, formattedAddress: "123 Maple St, Seattle, WA 98115, USA" })
-        }
-      >
-        mock-address-select
-      </button>
+      <>
+        <button
+          type="button"
+          onClick={() =>
+            onSelect({ lat: 47.68, lng: -122.3, formattedAddress: "123 Maple St, Seattle, WA 98115, USA" })
+          }
+        >
+          mock-address-select
+        </button>
+        <button type="button" onClick={() => onSubmitText?.("123 Maple St")}>
+          mock-address-submit
+        </button>
+      </>
     );
   },
 }));
@@ -69,6 +76,27 @@ describe("WizardFlow", () => {
 
     await user.click(screen.getByRole("button", { name: /portland/i }));
     expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("free-text submit as a guest opens the auth modal instead of a lookup", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+
+    await user.click(screen.getByText("mock-address-submit"));
+
+    expect(screen.getByText("mock-auth-modal")).toBeInTheDocument();
+    expect(screen.queryByText(/pick a suggestion/i)).not.toBeInTheDocument();
+  });
+
+  it("free-text submit while signed in shows the pick-a-suggestion hint", async () => {
+    mocks.authState.user = { uid: "u1", getIdToken: async () => "token" };
+    const user = userEvent.setup();
+    renderWizard();
+
+    await user.click(screen.getByText("mock-address-submit"));
+
+    expect(screen.getByText(/pick a suggestion/i)).toBeInTheDocument();
+    expect(screen.queryByText("mock-auth-modal")).not.toBeInTheDocument();
   });
 
   it("address select advances to the size step", async () => {

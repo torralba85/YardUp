@@ -70,7 +70,7 @@ function SignupForm() {
   return (
     <AuthLayout
       title="Create account"
-      subtitle="Save ADU feasibility estimates and concept reports for your lot."
+      subtitle="Save ADU rent and build estimates for your lot."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (

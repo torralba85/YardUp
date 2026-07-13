@@ -8,6 +8,13 @@ import {
   BLUE_HOUR_HEIGHT,
   BLUE_HOUR_WIDTH,
 } from "./nocturne/constants";
+import { LotFoundryDemo } from "./demo/LotFoundryDemo";
+import {
+  DEMO_DURATION_IN_FRAMES,
+  DEMO_FPS,
+  DEMO_HEIGHT,
+  DEMO_WIDTH,
+} from "./demo/constants";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -27,6 +34,14 @@ export const RemotionRoot: React.FC = () => {
         fps={BLUE_HOUR_FPS}
         width={BLUE_HOUR_WIDTH}
         height={BLUE_HOUR_HEIGHT}
+      />
+      <Composition
+        id="LotFoundryDemo"
+        component={LotFoundryDemo}
+        durationInFrames={DEMO_DURATION_IN_FRAMES}
+        fps={DEMO_FPS}
+        width={DEMO_WIDTH}
+        height={DEMO_HEIGHT}
       />
     </>
   );

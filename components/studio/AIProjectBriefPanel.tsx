@@ -73,14 +73,14 @@ export default function AIProjectBriefPanel({
   }
 
   return (
-    <section aria-label="AI parcel and timeline brief" aria-busy={loading} className="space-y-3">
+    <section aria-label="Property notes and timeline" aria-busy={loading} className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-clay">
-            AI parcel + timeline
+            Property notes
           </p>
           <h3 className="mt-0.5 text-sm font-semibold text-lf-espresso">
-            One brief for the certificate
+            One brief for your certificate
           </h3>
         </div>
         <Button
@@ -91,7 +91,7 @@ export default function AIProjectBriefPanel({
           disabled={loading || authLoading}
           loading={loading}
           leftIcon={<Sparkles size={13} />}
-          aria-label={response ? "Refresh AI parcel and timeline brief" : "Generate AI parcel and timeline brief"}
+          aria-label={response ? "Refresh property notes and timeline" : "Generate property notes and timeline"}
           className="shrink-0"
         >
           {loading ? "Building" : !user ? "Sign in" : response ? "Refresh" : "Generate"}
@@ -246,7 +246,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
 
       <div className="border-b border-lf-hairline p-3.5">
         <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay">
-          Parcel readout
+          Property notes
         </p>
         <p className="mt-1.5 text-xs leading-5 text-lf-espresso">{brief.bestFit}</p>
         {risks.length > 0 && (
@@ -324,7 +324,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
       {nextSteps.length > 0 && (
         <div className="border-b border-lf-hairline p-3.5">
           <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay">
-            Recorded next steps
+            Recommended next steps
           </p>
           <ol className="mt-2 space-y-2">
             {nextSteps.map((step, index) => (
@@ -349,7 +349,7 @@ function ProjectBriefSkeleton() {
       aria-live="polite"
       className="rounded-lg border border-lf-hairline bg-lf-sand-2 p-3.5"
     >
-      <span className="sr-only">Building the parcel and timeline brief</span>
+      <span className="sr-only">Building property notes and timeline</span>
       <div className="motion-safe:animate-pulse">
         <div className="h-3 w-3/4 rounded bg-lf-taupe-soft" />
         <div className="mt-2 h-2.5 w-full rounded bg-lf-taupe-soft" />

@@ -221,7 +221,7 @@ export const projectBriefDef: AIPanelDefinition<
   },
   errorMessages: {
     config: "AI is not configured yet. Add OPENAI_API_KEY on the server.",
-    provider: "The parcel and timeline brief failed. Please try again.",
+    provider: "Property notes failed to generate. Please try again.",
     syntax: "AI returned an unreadable brief. Please try again.",
     unavailable: "AI is unavailable right now. Please try again.",
   },
