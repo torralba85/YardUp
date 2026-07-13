@@ -13,7 +13,7 @@ import {
 } from "@/lib/feasibility";
 import { buildReportCsv, buildReportHtml, downloadBlob } from "@/lib/report";
 import { AIRequestError, requestProjectBrief } from "@/lib/ai-api";
-import type { AIProjectBrief } from "@/lib/ai-types";
+import type { AIProjectBriefResponse } from "@/lib/ai-types";
 import {
   buildAIProjectBriefInput,
   createAIProjectBriefKey,
@@ -89,7 +89,7 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
 
 interface ProjectBriefState {
   key: string;
-  data: AIProjectBrief | null;
+  data: AIProjectBriefResponse | null;
   loading: boolean;
   error: string | null;
 }
@@ -145,7 +145,7 @@ function FeasibilityStudioInner() {
   const projectBriefRequestRef = useRef<{
     key: string;
     id: symbol;
-    promise: Promise<AIProjectBrief>;
+    promise: Promise<AIProjectBriefResponse>;
   } | null>(null);
 
   const handleGenerationComplete = (concept: {
@@ -257,8 +257,12 @@ function FeasibilityStudioInner() {
     () => createAIProjectBriefKey({ parcel: activeParcel, result, config }),
     [activeParcel, config, result],
   );
-  const projectBrief =
+  const projectBriefResponse =
     projectBriefState?.key === projectBriefKey ? projectBriefState.data : null;
+  // Only the complete tier is recorded into the certificate and its exports;
+  // the preview tier exists solely to sell that unlock in the rail panel.
+  const projectBrief =
+    projectBriefResponse?.tier === "full" ? projectBriefResponse.brief : null;
   const projectBriefLoading =
     projectBriefState?.key === projectBriefKey ? projectBriefState.loading : false;
   const projectBriefError =
@@ -409,7 +413,7 @@ function FeasibilityStudioInner() {
     setReportAutoFocus(true);
   }
 
-  function handleGenerateProjectBrief(idToken: string): Promise<AIProjectBrief> {
+  function handleGenerateProjectBrief(idToken: string): Promise<AIProjectBriefResponse> {
     const existingRequest = projectBriefRequestRef.current;
     if (existingRequest?.key === projectBriefKey) return existingRequest.promise;
 
@@ -659,7 +663,7 @@ function FeasibilityStudioInner() {
           assumptions={assumptions}
           onAssumptionsChange={setAssumptions}
           onViewCertificate={() => setActiveStep("certificate")}
-          projectBrief={projectBrief}
+          projectBriefResponse={projectBriefResponse}
           projectBriefLoading={projectBriefLoading}
           projectBriefError={projectBriefError}
           onGenerateProjectBrief={handleGenerateProjectBrief}
@@ -877,7 +881,7 @@ function FeasibilityStudioInner() {
                 assumptions={assumptions}
                 onAssumptionsChange={setAssumptions}
                 onViewCertificate={() => setActiveStep("certificate")}
-                projectBrief={projectBrief}
+                projectBriefResponse={projectBriefResponse}
                 projectBriefLoading={projectBriefLoading}
                 projectBriefError={projectBriefError}
                 onGenerateProjectBrief={handleGenerateProjectBrief}

@@ -40,10 +40,6 @@ export type AIInputValidation<Input> =
  * lives here; the shared runtime ({@link createAIPanelRoute}) handles auth,
  * rate limiting, the agentic tool loop, structured output, and error mapping.
  */
-// `Output` is a phantom type parameter: it has no runtime carrier in this
-// interface, but the runtime (runAgentic / createAIPanelRoute) infers it from
-// the definition to type the structured result and the route response.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface AIPanelDefinition<Input, Output, Ctx> {
   /** Stable id, also used as the route segment and json_schema name. */
   id: string;
@@ -66,6 +62,15 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
   deadlineMs?: number;
   /** Ordered tool names that must run before a final answer can be accepted. */
   requiredToolSequence?: string[];
+  /**
+   * Shape the structured output into the response payload for this caller —
+   * e.g. redact paid content when the authenticated user holds no purchase.
+   * Defaults to returning the output unchanged.
+   */
+  finalize?: (
+    output: Output,
+    meta: { uid: string; input: Input },
+  ) => Promise<unknown> | unknown;
 }
 
 /** Injectable side-effects, so the loop is unit-testable without the network. */
@@ -247,7 +252,10 @@ export function createAIPanelRoute<Input, Output, Ctx>(
     try {
       const ctx = def.buildContext(validated.value);
       const result = await runAgentic(def, validated.value, ctx, deps);
-      return NextResponse.json(result);
+      const payload = def.finalize
+        ? await def.finalize(result, { uid: auth.uid, input: validated.value })
+        : result;
+      return NextResponse.json(payload);
     } catch (err) {
       return createAIRouteErrorResponse(err, `/api/ai/${def.id}`, def.errorMessages);
     }

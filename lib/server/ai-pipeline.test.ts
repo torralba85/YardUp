@@ -239,6 +239,29 @@ describe("createAIPanelRoute", () => {
     expect(await res.json()).toEqual({ answer: "ok" });
   });
 
+  it("responds with the finalize hook's payload, passing the caller uid and input", async () => {
+    const meta: Array<{ uid: string; input: TestInput }> = [];
+    const finalizingDef: AIPanelDefinition<TestInput, TestOutput, TestCtx> = {
+      ...testDef,
+      finalize: (output, m) => {
+        meta.push(m);
+        return { tier: "preview", from: output.answer };
+      },
+    };
+    const { fn } = scriptedResponder([messageResponse({ answer: "ok" })]);
+    const POST = createAIPanelRoute(finalizingDef, {
+      createResponse: fn,
+      executeTool: async () => "{}",
+    });
+
+    const res = await POST(fakeRequest({ q: "hi" }));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ tier: "preview", from: "ok" });
+    // NODE_ENV=test resolves the stub local-dev uid; the hook still sees it.
+    expect(meta).toEqual([{ uid: "local-dev", input: { q: "hi" } }]);
+  });
+
   it("returns 400 when input validation fails", async () => {
     const POST = createAIPanelRoute(testDef, {
       createResponse: async () => messageResponse({ answer: "x" }) as never,

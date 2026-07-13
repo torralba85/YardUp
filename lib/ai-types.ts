@@ -53,3 +53,35 @@ export interface AIProjectBriefInput {
   config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
   result: Pick<FeasibilityResult, "aduSqft" | "allowedFootprint" | "remainingCapacity" | "coveragePercent" | "maxCoveragePercent" | "zoningStatus" | "costLow" | "costHigh" | "monthlyRent" | "annualNoi" | "paybackYears" | "warnings">;
 }
+
+/**
+ * The free teaser tier of the project brief, redacted server-side from the
+ * full brief so the preview can never contradict what the certificate
+ * records. `locked` carries honest counts of what the full brief contains.
+ */
+export interface AIProjectBriefPreview {
+  headline: string;
+  summary: string;
+  permitTrack: {
+    name: string;
+    type: "ministerial" | "discretionary";
+  };
+  totalEstWeeksLow: number;
+  totalEstWeeksHigh: number;
+  /** The single highest-ranked risk, shown in full. */
+  firstRisk: AIParcelRisk;
+  locked: {
+    riskCount: number;
+    stageCount: number;
+    nextStepCount: number;
+  };
+  disclaimer: string;
+}
+
+/**
+ * Tiered `/api/ai/project-brief` response: the complete brief only for
+ * verified certificate purchasers; everyone else gets the redacted preview.
+ */
+export type AIProjectBriefResponse =
+  | { tier: "full"; brief: AIProjectBrief }
+  | { tier: "preview"; preview: AIProjectBriefPreview };

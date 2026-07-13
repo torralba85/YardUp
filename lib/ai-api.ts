@@ -1,4 +1,8 @@
-import type { AIADUConcept, AIProjectBrief, AIProjectBriefInput } from "./ai-types";
+import type {
+  AIADUConcept,
+  AIProjectBriefInput,
+  AIProjectBriefResponse,
+} from "./ai-types";
 import type { ADUConfig, Parcel } from "./feasibility";
 
 export class AIRequestError extends Error {
@@ -14,7 +18,7 @@ export class AIRequestError extends Error {
 export async function requestProjectBrief(
   input: AIProjectBriefInput,
   idToken: string,
-): Promise<AIProjectBrief> {
+): Promise<AIProjectBriefResponse> {
   const res = await fetch("/api/ai/project-brief", {
     method: "POST",
     headers: {
@@ -25,7 +29,7 @@ export async function requestProjectBrief(
   });
 
   if (!res.ok) throw new AIRequestError(await readError(res));
-  return (await res.json()) as AIProjectBrief;
+  return (await res.json()) as AIProjectBriefResponse;
 }
 
 export async function requestADUConcept({

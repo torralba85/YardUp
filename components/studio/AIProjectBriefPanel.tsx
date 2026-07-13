@@ -1,17 +1,26 @@
 "use client";
 
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { AlertTriangle, Lock, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Button } from "@/components/ui/Button";
-import type { AIProjectBrief, AIPermitStage, AIRiskLevel } from "@/lib/ai-types";
+import type {
+  AIPermitStage,
+  AIProjectBrief,
+  AIProjectBriefPreview,
+  AIProjectBriefResponse,
+  AIRiskLevel,
+} from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
+import { formatCertificatePrice } from "@/lib/certificate-pricing";
 
 export interface AIProjectBriefPanelProps {
-  brief: AIProjectBrief | null;
+  response: AIProjectBriefResponse | null;
   loading: boolean;
   error: string | null;
-  onGenerate: (idToken: string) => Promise<AIProjectBrief>;
+  onGenerate: (idToken: string) => Promise<AIProjectBriefResponse>;
+  /** Route to the Certificate step — the preview tier's unlock CTA. */
+  onViewCertificate: () => void;
 }
 
 const RISK_TONE: Record<AIRiskLevel, string> = {
@@ -29,16 +38,23 @@ const STAGE_TONE: Record<AIPermitStage["status"], { label: string; className: st
   blocker: { label: "Blocker", className: "border-lf-brick/35 bg-lf-brick-soft text-lf-brick" },
 };
 
+/** "1 permit stage" / "3 permit stages" — the locked counts read as prose. */
+function countNoun(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
 /**
  * One interaction for the parcel interpretation and jurisdiction-grounded
- * approval timeline. The generated artifact is supplied by the studio so the
- * same object can flow into the paid certificate and its exports.
+ * approval timeline. The server tiers the response by certificate purchase:
+ * non-purchasers get a redacted preview whose locked card sells the unlock,
+ * purchasers get the complete brief the studio records into the certificate.
  */
 export default function AIProjectBriefPanel({
-  brief,
+  response,
   loading,
   error,
   onGenerate,
+  onViewCertificate,
 }: AIProjectBriefPanelProps) {
   const { user, loading: authLoading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
@@ -69,24 +85,25 @@ export default function AIProjectBriefPanel({
         </div>
         <Button
           type="button"
-          variant={brief ? "secondary" : "primary"}
+          variant={response ? "secondary" : "primary"}
           size="xs"
           onClick={handleGenerate}
           disabled={loading || authLoading}
           loading={loading}
           leftIcon={<Sparkles size={13} />}
-          aria-label={brief ? "Refresh AI parcel and timeline brief" : "Generate AI parcel and timeline brief"}
+          aria-label={response ? "Refresh AI parcel and timeline brief" : "Generate AI parcel and timeline brief"}
           className="shrink-0"
         >
-          {loading ? "Building" : !user ? "Sign in" : brief ? "Refresh" : "Generate"}
+          {loading ? "Building" : !user ? "Sign in" : response ? "Refresh" : "Generate"}
         </Button>
       </div>
 
-      {!brief && !loading && !error && (
+      {!response && !loading && !error && (
         <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 p-3">
           <p className="text-xs leading-5 text-lf-muted">
             Generate one readout that joins parcel fit, review flags, and a typical approval
-            timeline. The same brief will be recorded in your certificate.
+            timeline. You&rsquo;ll see a free preview here; the complete brief is recorded in
+            your Certificate of Feasibility.
           </p>
           <div className="mt-3 grid grid-cols-[20px_1fr] gap-x-2 gap-y-1.5 border-t border-lf-hairline pt-3">
             <span className="font-mono text-[9px] text-lf-taupe">01</span>
@@ -109,9 +126,105 @@ export default function AIProjectBriefPanel({
         </div>
       )}
 
-      {brief && <ProjectBriefContent brief={brief} />}
+      {response?.tier === "full" && <ProjectBriefContent brief={response.brief} />}
+      {response?.tier === "preview" && (
+        <ProjectBriefPreviewContent
+          preview={response.preview}
+          onViewCertificate={onViewCertificate}
+        />
+      )}
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </section>
+  );
+}
+
+/**
+ * The redacted free tier: the narrative hook plus a locked card carrying the
+ * honest contents of the complete brief and the certificate unlock CTA.
+ */
+export function ProjectBriefPreviewContent({
+  preview,
+  onViewCertificate,
+}: {
+  preview: AIProjectBriefPreview;
+  onViewCertificate: () => void;
+}) {
+  const price = formatCertificatePrice();
+  const lockedLine = [
+    countNoun(preview.locked.riskCount, "ranked risk"),
+    `${countNoun(preview.locked.stageCount, "permit stage")} with week-by-week timing`,
+    countNoun(preview.locked.nextStepCount, "recorded next step"),
+  ].join(" · ");
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-lf-hairline bg-lf-card">
+      <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="font-display text-xl font-bold leading-tight text-lf-espresso">
+            {preview.headline}
+          </h4>
+          <span className="shrink-0 rounded-md border border-lf-hairline px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            Preview
+          </span>
+        </div>
+        <p className="mt-1.5 text-xs leading-5 text-lf-muted">{preview.summary}</p>
+      </div>
+
+      <div className="border-b border-lf-hairline p-3.5">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay">
+              Typical approval path
+            </p>
+            <h5 className="mt-1 text-xs font-semibold text-lf-espresso">{preview.permitTrack.name}</h5>
+          </div>
+          <div className="shrink-0 text-right">
+            <span className="font-display text-[25px] font-bold leading-none text-lf-espresso">
+              {preview.totalEstWeeksLow}&ndash;{preview.totalEstWeeksHigh}
+            </span>
+            <span className="ml-1 font-mono text-[9px] uppercase text-lf-muted">weeks</span>
+          </div>
+        </div>
+        <div className="mt-3 border-t border-lf-hairline pt-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-lf-espresso">{preview.firstRisk.label}</span>
+            <span
+              className={`rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] ${RISK_TONE[preview.firstRisk.level]}`}
+            >
+              {preview.firstRisk.level}
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] leading-4 text-lf-muted">{preview.firstRisk.explanation}</p>
+        </div>
+      </div>
+
+      <div className="border-b border-lf-hairline p-3.5">
+        <div className="rounded-lg border border-dashed border-lf-taupe bg-lf-sand-2 p-3">
+          <div className="flex items-center gap-2">
+            <Lock size={14} className="shrink-0 text-lf-clay" aria-hidden="true" />
+            <p className="text-xs font-semibold text-lf-espresso">
+              The complete brief is recorded in your certificate
+            </p>
+          </div>
+          <p className="mt-1.5 text-[11px] leading-4 text-lf-muted">
+            {lockedLine} &mdash; attached to your engraved Certificate of Feasibility, ready to
+            print and share with builders and lenders.
+          </p>
+          <Button
+            type="button"
+            variant="commit"
+            size="xs"
+            fullWidth
+            onClick={onViewCertificate}
+            className="mt-2.5"
+          >
+            Unlock with the certificate &mdash; {price}
+          </Button>
+        </div>
+      </div>
+
+      <p className="p-3.5 text-[11px] leading-4 text-lf-muted">{preview.disclaimer}</p>
+    </div>
   );
 }
 
