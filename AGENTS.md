@@ -66,11 +66,11 @@ Key entry points:
 - `lib/feasibility.ts`, `lib/feasibility-verdict.ts` - core feasibility/financial calc and verdict logic
 - `lib/parcel-context.tsx`, `lib/parcel-api.ts`, `lib/parcel-types.ts` - parcel state and API boundary
 - `lib/market/*` - localized feasibility numbers (market basis, bedroom mix)
-- `lib/ai-api.ts`, `lib/ai-types.ts`, `lib/style-match-photo.ts`, `lib/server/openai.ts` - AI panels (parcel insights, style-matched ADU concepts)
+- `lib/ai-api.ts`, `lib/ai-types.ts`, `lib/style-match-photo.ts`, `lib/server/openai.ts` - AI panels (project brief, style-matched ADU concepts)
 - `lib/stripe.ts`, `lib/lead-unlock-*.ts`, `lib/marketplace*.ts`, `lib/server/lead-unlocks.ts` - payments + builder lead-unlock marketplace
 - `lib/saved-scenarios.ts`, `lib/scenarios-firestore.ts`, `lib/scenario-url.ts` - scenario persistence and sharing
 - `app/api/{parcel,aerial,geocode,suggest}/route.ts` - parcel/data server routes
-- `app/api/ai/{parcel-insights,adu-concept}/route.ts` - AI server routes (auth + rate-limited)
+- `app/api/ai/{project-brief,adu-concept}/route.ts` - AI server routes (auth + rate-limited)
 - `app/api/stripe/{checkout,webhook}/route.ts` - Stripe checkout session + webhook handler
 - `firebase.json`, `functions/index.js`, `scripts/prepare-firebase.js` - Firebase deployment path
 
