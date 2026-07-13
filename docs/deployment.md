@@ -100,6 +100,9 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<Firebase storage bucket>
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
 NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
+NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=<Firebase App Check reCAPTCHA Enterprise site key>
+# Local only; register this token in Firebase App Check and never deploy it.
+NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=<registered debug token>
 ```
 
 Firebase Functions v2 reads this file automatically. Do **not** commit `.env` — it's in `.gitignore`.
@@ -122,6 +125,14 @@ Set these secrets in your GitHub repository Settings → Secrets → Actions:
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app ID |
+| `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` | Public reCAPTCHA Enterprise site key used by Firebase App Check |
+
+Firebase App Check enforcement requires the client to initialize the registered
+reCAPTCHA Enterprise provider. Keep the production Hosting and App Hosting domains
+on that key's allowlist. For local authenticated testing, create a registered debug
+token and set `NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` only in `.env.local`; never
+store that token in GitHub Actions or production environment files unless a dedicated
+CI App Check flow explicitly needs it.
 
 The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result. The service account must be able to deploy Firebase Hosting, Cloud Functions v2, and Firestore rules in `yardup-2026`; if Cloud Billing API access or required Firebase/GCP APIs are disabled, the dry-run step fails before the live deploy command.
 
