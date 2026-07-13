@@ -15,7 +15,6 @@ import {
   AmbientOrbs,
   BodyLine,
   clamp,
-  DisplayLine,
   HairlineRule,
   Kicker,
   MoneyCount,

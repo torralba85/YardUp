@@ -229,7 +229,7 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     const brief = screen.getByRole("region", { name: "Property notes and timeline" });
     expect(
-      within(brief).getByRole("button", { name: "Generate Property notes and timeline" }),
+      within(brief).getByRole("button", { name: "Generate property notes and timeline" }),
     ).toBeInTheDocument();
     expect(within(brief).getAllByRole("button")).toHaveLength(1);
     expect(screen.queryByText("Translate the parcel data")).not.toBeInTheDocument();
