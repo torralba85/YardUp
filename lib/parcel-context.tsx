@@ -117,10 +117,14 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     async (query: string) => {
       const q = query.trim();
       if (!q) return;
+      if (!user) {
+        setParcelError("Sign in to search a real address.");
+        return;
+      }
       setParcelLoading(true);
       setParcelError(null);
       try {
-        const idToken = await user?.getIdToken();
+        const idToken = await user.getIdToken();
         const { lat, lng, formattedAddress } = await geocodeAddress(q, idToken);
         const data = await fetchParcel(lat, lng, idToken, formattedAddress.trim() || q);
         setParcel(data);
