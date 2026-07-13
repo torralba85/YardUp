@@ -23,6 +23,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { clearInitialParcel } from "./parcel-handoff";
 
 type UserRole = "user" | "builder";
 
@@ -186,7 +187,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => signOut(auth);
+  const logout = () => {
+    // The parcel stash mirrors this session's live lot; the next session
+    // (guest or another account) must start from demo data, not that parcel.
+    clearInitialParcel();
+    return signOut(auth);
+  };
 
   const sendPasswordReset = (email: string) =>
     sendPasswordResetEmail(auth, email);
@@ -218,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // The Auth user is gone server-side; drop any lingering local session.
+    clearInitialParcel();
     await signOut(auth).catch(() => undefined);
     setUser(null);
     setProfile(null);

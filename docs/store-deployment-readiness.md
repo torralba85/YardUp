@@ -1,9 +1,9 @@
 # Store Deployment Readiness — iOS App Store + Google Play
 
 **Date:** 2026-06-28
-**Updated:** 2026-07-08
-**Baseline health:** Last recorded broad gate: `lint` clean, `tsc --noEmit` clean, **408/408 Vitest pass**, `npm run build` clean, latest `master` CI run green. Re-run the release gate before submission.
-**Verdict:** The web app is production-healthy, but **not yet shippable to either store** — there is no native/store wrapper, the store signing/linking assets are still placeholder/incomplete, and live payment/store-console checks remain.
+**Updated:** 2026-07-13
+**Baseline health:** Remote `origin/master` at `27197f1` passed GitHub Actions run `29243888968`, including lint, Vitest, typecheck, build, Playwright, Firebase dry-run, Hosting + Firestore deploy, and Functions deploy. The current local checkout is 17 commits behind, dirty, missing `node_modules`, and fails `git diff --check` on two uncommitted `firestore.rules` lines; do not use it as the release baseline.
+**Verdict:** The deployed web app is production-healthy, but **not yet shippable to either store**. In addition to missing wrappers/signing/assets, it lacks Sign in with Apple, a Google Play web deletion resource, complete settings/help/legal surfaces, and store-compliant payment channels for digital certificate/lead-credit purchases.
 
 ---
 
@@ -51,7 +51,33 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 - **Google Play** accepts a PWA via a **TWA (Trusted Web Activity)** — generated with **PWABuilder** or **Bubblewrap**. Requires `/.well-known/assetlinks.json` (Digital Asset Links) and a signed `.aab`.
 - **Apple App Store** does **not** accept raw PWAs. You need a native wrapper (**PWABuilder iOS** = a Swift `WKWebView` project, or **Capacitor**). Apple enforces Guideline **4.2 (minimum functionality)** — a thin web wrapper risks rejection unless it offers real app value (offline shell, push, native affordances).
 
-**This is a user decision (wrapper strategy) and the critical-path blocker — see todo P0-2.**
+The active implementation path is Android TWA + Play Billing and an iOS native
+wrapper + StoreKit. See
+`docs/superpowers/plans/2026-07-13-launch-completion-program.md`.
+
+### 2A. Store-policy gaps found in the 2026-07-13 audit
+
+- **Payments are not wrapper-safe yet.** The current certificate, direct lead
+  unlock, and credit-pack flows use Stripe Checkout. Apple generally requires
+  StoreKit for digital functionality/content used in the app, and Google Play
+  generally requires Play Billing for digital in-app functionality. The launch
+  plan therefore keeps Stripe for open-web purchases and adds StoreKit/Play
+  Billing plus server-side receipt verification for store builds. Do not submit
+  a wrapper that simply exposes the existing Stripe CTAs.
+- **Sign in with Apple is missing.** The product offers Google as a social login;
+  the iOS submission needs an equivalent privacy-preserving login option. Add
+  Sign in with Apple through Firebase before TestFlight review.
+- **Google's external deletion URL is missing.** In-app deletion exists, but
+  Google Play also requires a functioning web resource usable after uninstall.
+  `/delete-account` is currently a 404 and must be live before submission.
+- **Minimum-functionality risk remains.** Apple Guideline 4.2 rejects a simple
+  repackaged website. The iOS release candidate must include native share,
+  native photo/camera handoff, offline certificate access, and explicit network
+  recovery, then document those features in review notes.
+- **Required consumer/support surfaces are incomplete.** `/about`, `/help`, and
+  `/feedback` are 404; there is no full settings destination; the current
+  privacy policy incorrectly names Vercel and omits several active processors.
+  These are launch P0s in the active completion plan.
 
 ---
 
@@ -66,30 +92,39 @@ LotFoundry is currently a **PWA** (`public/manifest.json`, `public/sw.js`, `publ
 ## 4. Prioritized Todo List
 
 ### P0 — Launch blockers
-1. **Verify `NEXT_PUBLIC_GOOGLE_PLACES_KEY`** in Google Cloud Console (browser Places key, referrer-restricted) and rotate/update the GitHub secret if it does not match the intended key.
-2. **Decide native-wrapper strategy** (PWABuilder TWA+iOS vs Capacitor) — drives the entire packaging path. *(user decision)*
-3. ~~**Regenerate `icon-180.png` (180²) and `icon-192.png` (192²)** at true sizes + a maskable-padded variant.~~ ✅ done 2026-06-28.
-4. **Set `NEXT_PUBLIC_APP_URL`** to the production custom domain (Stripe redirects).
-5. **Verify `GOOGLE_MAPS_API_KEY`** has Static + Geocoding + Places enabled and is server-safe (not referrer-locked).
+1. **Build the settings/support/legal baseline:** `/settings`, shared account menu, `/about`, `/help`, `/feedback`, current Terms/Privacy, explicit AI consent, and support ownership.
+2. **Complete deletion compliance:** remove/anonymize account-associated PII under the approved retention rule and ship `/delete-account` for Google Play.
+3. **Add Sign in with Apple** through Firebase and test private relay email, account linking, and deletion.
+4. **Implement store-compliant purchases:** Stripe web, StoreKit iOS, Play Billing Android, verified server-side with idempotent grants and revocation handling.
+5. **Verify `NEXT_PUBLIC_GOOGLE_PLACES_KEY`** in Google Cloud Console (browser Places key, referrer-restricted) and rotate/update the GitHub secret if it does not match the intended key.
+6. **Set `NEXT_PUBLIC_APP_URL`** to the production custom domain (Stripe redirects and owned app links).
+7. **Verify `GOOGLE_MAPS_API_KEY`** has Static + Geocoding + Places enabled and is server-safe (not referrer-locked).
+8. ~~**Regenerate `icon-180.png` (180²) and `icon-192.png` (192²)** at true sizes + a maskable-padded variant.~~ ✅ done 2026-06-28.
 
 ### P1 — Store packaging
-6. Replace the placeholder SHA-256 in `/.well-known/assetlinks.json` after the real Play signing fingerprint is supplied, then generate the **Android TWA** (PWABuilder/Bubblewrap) → signed `.aab`.
-7. Generate the **iOS wrapper** project; satisfy Apple 4.2 (offline shell / push / native value-add).
-8. Add `manifest.json` **screenshots** after final mobile/tablet/desktop store captures are checked into `public/`.
-9. **Privacy compliance:** App Store privacy "nutrition labels" + Play **Data Safety** form (you collect address, account email, payment via Stripe). Privacy policy `/privacy` ✅ and terms `/terms` ✅ already exist.
-10. Store metadata: name, subtitle, description, keywords, age rating, category (Finance/Business).
+9. Replace the placeholder SHA-256 in `/.well-known/assetlinks.json` after the real Play signing fingerprint is supplied, then generate the **Android TWA** with Play Billing → signed `.aab`.
+10. Generate the **iOS wrapper** with StoreKit, native share/photo handoff, offline certificate access, and network recovery to satisfy Apple 4.2.
+11. Add `manifest.json` **screenshots** after final mobile/tablet/desktop store captures are checked into `public/store/`.
+12. **Privacy compliance:** App Store privacy "nutrition labels" + Play **Data Safety** form for email/name/avatar, property address, saved scenarios, AI photos sent to OpenAI, purchase history, identifiers, and diagnostics. Privacy and terms must first be corrected and counsel-reviewed.
+13. Store metadata: name, subtitle, description, keywords, age rating, category, review notes, support URL `/help`, privacy URL `/privacy`, and deletion URL `/delete-account`.
 
 ### P2 — Functional / UX hardening
-11. Verify Stripe webhook registered + secret matches; run a live test checkout.
-12. **Real-device responsive QA** (iPhone SE/Pro, Pixel, iPad, Android tablet) — capture the store screenshots from this pass and document the capture flow.
-13. ~~Strengthen the service worker to precache the app shell (real offline launch).~~ ✅ done 2026-06-28.
-14. Run the Firebase smoke test with a dedicated user before promotion.
-15. ~~Add `OPENAI_API_KEY` to `functions/.env.example`~~ ✅ done 2026-06-28.
+14. Verify Stripe webhook registered + secret matches; run a live test checkout.
+15. **Real-device responsive QA** (iPhone SE/Pro, Pixel, iPad, Android tablet) — capture the store screenshots from this pass and document the capture flow.
+16. ~~Strengthen the service worker to precache the app shell (real offline launch).~~ ✅ done 2026-06-28.
+17. Run the Firebase smoke test with a dedicated user before promotion.
+18. ~~Add `OPENAI_API_KEY` to `functions/.env.example`~~ ✅ done 2026-06-28.
 
 ---
 
 ## 5. Recommended sequence
-1. Land P0-1, P0-4, P0-5 (config verification — fast, no architecture change).
-2. Get the P0-2 wrapper decision, then execute P1 packaging on that path.
-3. Run P2 device QA → use those screenshots for both store listings.
-4. Re-run the full release gate (`lint && test && tsc --noEmit && build`) + Firebase smoke, then submit.
+1. Execute `docs/superpowers/plans/2026-07-13-launch-completion-program.md`
+   Tasks 1–7 so settings, support, legal, deletion, and web reliability are live.
+2. Execute Task 8 before wrapper submission so native builds never expose an
+   unreviewed Stripe digital checkout path.
+3. Build Android TWA + Play Billing and iOS wrapper + StoreKit/native value;
+   complete internal-track and TestFlight QA.
+4. Run real-device QA and use the release candidates for store screenshots.
+5. Re-run the full web/native release gates plus Firebase smoke, deploy web,
+   submit both stores, and keep the register open until both listings are
+   actually available.

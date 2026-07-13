@@ -5,6 +5,7 @@ import {
 } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getAI, GoogleAIBackend } from "firebase/ai";
 
 // NEXT_PUBLIC_* vars must be referenced statically so Next.js inlines them
 // into the browser bundle at build time — a dynamic process.env[key] lookup
@@ -59,4 +60,6 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
 export const auth = getAuth(app);
 /** The Firestore database instance for the client app. */
 export const db = getFirestore(app);
+/** Firebase AI Logic handle (Gemini Developer API backend) for client-side AI calls. */
+export const ai = getAI(app, { backend: new GoogleAIBackend() });
 export { app };

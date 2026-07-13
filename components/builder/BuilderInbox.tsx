@@ -15,6 +15,7 @@ import BuilderMoneyBand from "./BuilderMoneyBand";
 import LeadCard, { type LeadAccess } from "./LeadCard";
 import UnlockSlip from "./UnlockSlip";
 import { Button } from "@/components/ui/Button";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -466,15 +467,23 @@ export default function BuilderInbox({
                               NO. {selectedItem.request.preview.previewSerial}
                               {recordedDate ? ` · RECORDED ${recordedDate}` : ""}
                             </span>
-                            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] ${
-                              itemAccess === "unlocked" 
-                                ? "bg-lf-forest-soft text-lf-forest" 
-                                : itemAccess === "confirming" 
-                                ? "bg-lf-amber-soft text-lf-amber-ink" 
-                                : "bg-lf-taupe-soft text-lf-muted"
-                            }`}>
-                              {itemAccess === "unlocked" ? "Unlocked" : itemAccess === "confirming" ? "Confirming" : "Locked"}
-                            </span>
+                            <StatusChip
+                              status={
+                                itemAccess === "unlocked"
+                                  ? "clear"
+                                  : itemAccess === "confirming"
+                                  ? "review"
+                                  : "info"
+                              }
+                              label={
+                                itemAccess === "unlocked"
+                                  ? "Unlocked"
+                                  : itemAccess === "confirming"
+                                  ? "Confirming"
+                                  : "Locked"
+                              }
+                              size="sm"
+                            />
                           </div>
 
                           {/* 1. Locked State Panel */}
@@ -697,24 +706,28 @@ export default function BuilderInbox({
 
                               {/* Report Actions */}
                               <div className="flex gap-2">
-                                <button
+                                <Button
                                   type="button"
+                                  variant="primary"
+                                  size="xs"
+                                  className="flex-1"
                                   onClick={handleDownloadHtml}
                                   disabled={!itemContact.snapshot?.result}
-                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-full bg-lf-clay text-[10px] font-semibold text-lf-sand-2 transition hover:bg-lf-clay-strong cursor-pointer disabled:opacity-50"
+                                  leftIcon={<Download size={11} />}
                                 >
-                                  <Download size={11} />
                                   Download HTML
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                   type="button"
+                                  variant="secondary"
+                                  size="xs"
+                                  className="flex-1"
                                   onClick={handleDownloadCsv}
                                   disabled={!itemContact.snapshot?.result}
-                                  className="flex-1 flex h-8 items-center justify-center gap-1 rounded-full border border-lf-hairline text-[10px] font-semibold text-lf-muted transition hover:bg-lf-sand-2 cursor-pointer disabled:opacity-50"
+                                  leftIcon={<FileSpreadsheet size={11} />}
                                 >
-                                  <FileSpreadsheet size={11} />
                                   CSV Export
-                                </button>
+                                </Button>
                               </div>
 
                               {/* Response triage inline buttons */}

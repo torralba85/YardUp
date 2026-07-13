@@ -15,7 +15,7 @@ export type ButtonVariant = "commit" | "primary" | "secondary" | "ghost";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  commit: "bg-lf-forest text-lf-sand hover:bg-lf-mahogany",
+  commit: "bg-lf-forest text-lf-sand hover:bg-lf-forest/90",
   primary: "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong",
   secondary:
     "border border-lf-hairline bg-lf-card text-lf-espresso hover:border-lf-taupe/50 hover:bg-lf-sand-2",
