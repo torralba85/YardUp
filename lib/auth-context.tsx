@@ -77,6 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const pendingAuthRoleRef = useRef<UserRole | null>(null);
+  // Tracks whether this tab has seen a signed-in user, so we only clear the
+  // parcel stash on a real sign-out (authed -> null), never on the initial
+  // guest/null state that fires before the studio's ParcelProvider mounts.
+  const hadUserRef = useRef(false);
 
   const ensureProfile = useCallback(async (
     u: User,
@@ -141,15 +145,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(u);
       try {
         if (u) {
+          hadUserRef.current = true;
           await ensureProfile(u, {
             role: pendingAuthRoleRef.current ?? undefined,
           });
         } else {
-          // Every sign-out lands here, including external session drops (token
-          // expiry or revocation) that never call logout()/deleteAccount().
-          // Clear the stashed parcel so the next guest or account in this tab
-          // starts from demo data, not this session's lot.
-          clearInitialParcel();
+          // Only clear the stashed parcel when a real session ends (a
+          // previously authed user going null — logout, deleteAccount, or an
+          // external token expiry/revocation), so the next guest or account in
+          // this tab starts from demo data, not this session's lot. Skip the
+          // initial guest/null state so a pending landing handoff survives for
+          // the studio's ParcelProvider to consume.
+          if (hadUserRef.current) {
+            hadUserRef.current = false;
+            clearInitialParcel();
+          }
           setProfile(null);
         }
       } finally {
