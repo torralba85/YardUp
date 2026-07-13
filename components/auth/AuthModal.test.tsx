@@ -141,4 +141,59 @@ describe("AuthModal focus restore", () => {
       screen.getByRole("button", { name: "Account" }),
     );
   });
+
+  it("does not clamp onto an unrelated (or destructive) action when the replacement cluster is shorter than the captured position", () => {
+    function ShellHost() {
+      const [phase, setPhase] = useState<"guest" | "account">("guest");
+      const [open, setOpen] = useState(false);
+      return (
+        <div>
+          <div data-testid="account-area">
+            {phase === "guest" ? (
+              <>
+                <button type="button">Extra A</button>
+                <button type="button">Extra B</button>
+                <button type="button" onClick={() => setOpen(true)}>
+                  Sign In
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button">Sign out</button>
+                <button type="button">Delete account</button>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setPhase("account");
+              setOpen(false);
+            }}
+          >
+            Simulate account swap
+          </button>
+          <AuthModal isOpen={open} onClose={() => setOpen(false)} />
+        </div>
+      );
+    }
+
+    render(<ShellHost />);
+    const trigger = screen.getByRole("button", { name: "Sign In" });
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    // "Extra A"/"Extra B" precede the trigger, so its captured position (2)
+    // no longer exists once the whole cluster shrinks to just two controls
+    // in the same host — the old clamp would land on the last one, "Delete
+    // account", instead of refusing to guess.
+    fireEvent.click(
+      screen.getByRole("button", { name: "Simulate account swap" }),
+    );
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).not.toBe(
+      screen.getByRole("button", { name: "Delete account" }),
+    );
+  });
 });

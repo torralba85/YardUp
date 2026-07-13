@@ -53,14 +53,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   }, []);
 
   // Focus the control standing where the trigger used to be: in the nearest
-  // surviving host, pick the focusable at the trigger's captured position
-  // (clamped), so sign-in's replacement account control wins over unrelated
-  // earlier controls that share the same subtree.
+  // surviving host, pick the focusable at the trigger's captured position, so
+  // sign-in's replacement account control wins over unrelated earlier
+  // controls that share the same subtree.
   const focusTriggerReplacement = useCallback(() => {
     for (const { el, index } of triggerHostsRef.current) {
       if (!el.isConnected) continue;
       const focusables = el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-      const target = focusables[Math.min(index, focusables.length - 1)];
+      // A single trigger can be replaced by a cluster of controls (e.g. the
+      // sidebar's "Sign out" + delete-account actions) that's shorter than
+      // the position we captured. Clamping to the last focusable in that
+      // case risks landing on an unrelated (or destructive) action, so only
+      // accept an in-range match and otherwise defer to a broader host.
+      const target = index < focusables.length ? focusables[index] : undefined;
       if (target) {
         target.focus();
         // A hidden or since-removed target won't actually take focus; try
