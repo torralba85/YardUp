@@ -4,12 +4,15 @@ import type { ReactNode } from "react";
 import type { LiveParcelData } from "./parcel-types";
 
 const mocks = vi.hoisted(() => ({
+  authState: {
+    user: null as null | { getIdToken: () => Promise<string> },
+  },
   geocodeAddress: vi.fn(),
   fetchParcel: vi.fn(),
 }));
 
 vi.mock("./auth-context", () => ({
-  useAuth: () => ({ user: null }),
+  useAuth: () => mocks.authState,
 }));
 
 vi.mock("./geocode-api", async () => {
@@ -36,7 +39,12 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   <ParcelProvider initialPreset={parcelPresets[0]}>{children}</ParcelProvider>
 );
 
+function signIn() {
+  mocks.authState.user = { getIdToken: async () => "token" };
+}
+
 beforeEach(() => {
+  mocks.authState.user = null;
   mocks.geocodeAddress.mockReset();
   mocks.fetchParcel.mockReset();
 });
@@ -76,7 +84,21 @@ describe("ParcelProvider estimated mode", () => {
     expect(result.current.parcelMode).toBe("preset");
   });
 
+  it("blocks guest free-text address lookups before any API call", async () => {
+    const { result } = renderHook(() => useParcel(), { wrapper });
+
+    await act(async () => {
+      await result.current.searchByAddress("100 Main Los Angeles");
+    });
+
+    expect(mocks.geocodeAddress).not.toHaveBeenCalled();
+    expect(mocks.fetchParcel).not.toHaveBeenCalled();
+    expect(result.current.parcelError).toBe("Sign in to search a real address.");
+    expect(result.current.parcelMode).toBe("preset");
+  });
+
   it("uses the geocoder formatted address for parcel lookup", async () => {
+    signIn();
     const formattedAddress = "100 Main St, Los Angeles, CA 90012, USA";
     const liveParcel: LiveParcelData = {
       address: "100 Main St",
@@ -107,10 +129,11 @@ describe("ParcelProvider estimated mode", () => {
       await result.current.searchByAddress("100 Main Los Angeles");
     });
 
+    expect(mocks.geocodeAddress).toHaveBeenCalledWith("100 Main Los Angeles", "token");
     expect(mocks.fetchParcel).toHaveBeenCalledWith(
       34.05,
       -118.25,
-      undefined,
+      "token",
       formattedAddress,
     );
     expect(result.current.parcelMode).toBe("live");
