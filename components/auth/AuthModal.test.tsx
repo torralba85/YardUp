@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { AuthModal } from "./AuthModal";
 
@@ -9,9 +9,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({
-    signIn: vi.fn(),
-    signUp: vi.fn(),
-    signInWithGoogle: vi.fn(),
+    signIn: vi.fn().mockResolvedValue(undefined),
+    signUp: vi.fn().mockResolvedValue(undefined),
+    signInWithGoogle: vi.fn().mockResolvedValue(undefined),
     user: mocks.auth.user,
   }),
 }));
@@ -30,9 +30,11 @@ function Host() {
       <div data-testid="slot">
         <button type="button">Reset</button>
         {signedIn ? (
-          <button type="button">Account</button>
+          <button key="account" type="button">
+            Account
+          </button>
         ) : (
-          <button type="button" onClick={() => setOpen(true)}>
+          <button key="sign-in" type="button" onClick={() => setOpen(true)}>
             Sign In
           </button>
         )}
@@ -88,15 +90,46 @@ describe("AuthModal focus restore", () => {
     );
   });
 
-  it("recovers focus when the auth render replaces the trigger after the modal closed", () => {
+  it("does not steal focus after a cancel close, even if the trigger is later unmounted", () => {
     render(<Host />);
     const trigger = screen.getByRole("button", { name: "Sign In" });
     trigger.focus();
     fireEvent.click(trigger);
 
-    // Email/password flow: the modal closes as soon as signIn resolves, while
-    // the trigger is still mounted — focus is restored to it.
+    // Cancel: Escape closes without signing in. Focus returns to the
+    // trigger, but this close must not arm delayed recovery for it.
     fireEvent.keyDown(document, { key: "Escape" });
+    expect(document.activeElement).toBe(trigger);
+
+    // Unrelated auth churn afterward (e.g. signing in from another tab or
+    // surface) unmounts the old trigger. Since this modal never completed a
+    // sign-in, it must not reach in and move focus to the replacement.
+    mocks.auth.user = { uid: "user-1" };
+    fireEvent.click(screen.getByRole("button", { name: "Swap trigger only" }));
+
+    expect(document.activeElement).not.toBe(
+      screen.getByRole("button", { name: "Account" }),
+    );
+  });
+
+  it("recovers focus when the auth render replaces the trigger after a completed sign-in closed the modal", async () => {
+    render(<Host />);
+    const trigger = screen.getByRole("button", { name: "Sign In" });
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByPlaceholderText("name@example.com"), {
+      target: { value: "person@example.com" },
+    });
+    fireEvent.change(within(dialog).getByPlaceholderText("••••••••"), {
+      target: { value: "hunter2" },
+    });
+
+    // Email/password flow: the modal closes as soon as signIn resolves,
+    // while the trigger is still mounted — focus is restored to it.
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sign In" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(document.activeElement).toBe(trigger);
 
     // A moment later onAuthStateChanged lands: the user appears and the

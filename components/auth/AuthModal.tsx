@@ -40,6 +40,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const triggerHostsRef = useRef<TriggerHost[]>([]);
   const restoredTriggerRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  // Set right before onClose() on a successful sign-in/sign-up, so the close
+  // effect can tell "this modal just signed someone in" apart from a plain
+  // cancel (Escape, backdrop, the X button) — only the former should arm the
+  // delayed post-auth recovery below.
+  const signInInitiatedCloseRef = useRef(false);
 
   const releaseTriggerRefs = useCallback(() => {
     triggerRef.current = null;
@@ -94,12 +99,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       panelRef.current?.querySelector<HTMLElement>("input")?.focus();
     } else {
       const trigger = triggerRef.current;
+      const initiatedBySignIn = signInInitiatedCloseRef.current;
+      signInInitiatedCloseRef.current = false;
       if (trigger?.isConnected) {
         trigger.focus();
         // The auth observer can replace the trigger a render after this
-        // close — remember what we restored to so the effect below can move
-        // focus to its replacement if it unmounts.
-        restoredTriggerRef.current = trigger;
+        // close — but only arm the delayed re-check below when this close
+        // was a completed sign-in, not a cancel. Otherwise unrelated auth
+        // churn later (a token refresh, signing in from another surface)
+        // could unmount this trigger and steal focus for a modal the user
+        // already dismissed.
+        if (initiatedBySignIn) {
+          restoredTriggerRef.current = trigger;
+        }
       } else if (trigger) {
         focusTriggerReplacement();
       }
@@ -110,6 +122,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   // onAuthStateChanged render swaps the trigger for account UI, so the
   // restore above can land on a control that unmounts a moment later. When
   // the auth user changes while closed, re-check and recover the focus.
+  // restoredTriggerRef is only ever armed for a close that completed a
+  // sign-in (see above), so this can't fire for a plain cancel.
   useEffect(() => {
     if (isOpen) return;
     const restored = restoredTriggerRef.current;
@@ -163,6 +177,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       } else {
         await signIn(email, password);
       }
+      signInInitiatedCloseRef.current = true;
       onClose();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -177,6 +192,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(true);
     try {
       await signInWithGoogle();
+      signInInitiatedCloseRef.current = true;
       onClose();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
