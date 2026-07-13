@@ -40,11 +40,17 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<Firebase storage bucket>
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
 NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
+NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=<Firebase App Check reCAPTCHA Enterprise site key>
+# Local only: a registered App Check debug token; never deploy or commit its value.
+NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=<registered debug token>
 ```
 
 Without parcel API keys the app runs in demo mode with the three built-in presets.
 Without `OPENAI_API_KEY`, the AI panels stay visible but return a setup message instead of generating content.
 Without Firebase overrides the app uses the checked-in `yardup-2026` web app config.
+Firebase App Check protects production Auth and Firestore requests. Local authenticated
+development requires a registered debug token in `.env.local`; the generic Playwright
+suite does not create accounts in the production Firebase project.
 
 ## Verification Commands
 

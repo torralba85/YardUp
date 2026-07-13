@@ -1,4 +1,8 @@
 import { initializeApp } from "firebase/app";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -26,6 +30,30 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+const appCheckSiteKey =
+  process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY?.trim() ||
+  "6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra";
+const appCheckDebugToken =
+  process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN?.trim();
+
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+  const appCheckGlobal = globalThis as typeof globalThis & {
+    FIREBASE_APPCHECK_DEBUG_TOKEN?: string;
+    __lotFoundryAppCheckInitialized?: boolean;
+  };
+
+  if (!appCheckGlobal.__lotFoundryAppCheckInitialized) {
+    if (appCheckDebugToken) {
+      appCheckGlobal.FIREBASE_APPCHECK_DEBUG_TOKEN = appCheckDebugToken;
+    }
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+    appCheckGlobal.__lotFoundryAppCheckInitialized = true;
+  }
+}
 
 /** The Firebase Authentication instance for the client app. */
 export const auth = getAuth(app);

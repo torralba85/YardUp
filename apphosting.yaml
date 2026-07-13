@@ -1,0 +1,9 @@
+env:
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://yardup-2026--yardup-2026.us-central1.hosted.app
+  - variable: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
+    value: 6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET

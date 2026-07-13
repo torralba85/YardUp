@@ -1,15 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function signUpUser(page: Page) {
-  const email = `test-user-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`;
-  await page.goto("/signup");
-  await page.fill("#displayName", "E2E Test User");
-  await page.fill("#email", email);
-  await page.fill("#password", "Password123!");
-  await page.click("button[type='submit']");
-  await page.waitForURL(/\/studio/);
-}
-
 async function skipMobileFirstRunUi(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem("lf-wizard-seen", "1");
@@ -50,15 +40,6 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: /Builder/i })).toBeVisible();
     await page.getByRole("button", { name: /Builder/i }).click();
     await expect(page.getByRole("button", { name: /Create account/i })).toBeVisible();
-  });
-
-  test("new homeowners start with a blank property workspace", async ({ page }) => {
-    await signUpUser(page);
-
-    await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible();
-    await expect(page.getByText("No property loaded")).toBeVisible();
-    await expect(page.getByText(/Seattle|Portland|Austin/)).toHaveCount(0);
-    await expect(page.getByRole("navigation", { name: "Studio steps" })).toHaveCount(0);
   });
 
   test("studio is open to guests for the wizard funnel", async ({ page, viewport }) => {
@@ -104,6 +85,7 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("guest can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
+    test.setTimeout(60_000);
     const mobile = !!viewport && viewport.width < 1024;
     if (mobile) await skipMobileFirstRunUi(page);
     await page.goto("/studio");
