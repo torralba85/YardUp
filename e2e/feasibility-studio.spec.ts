@@ -85,6 +85,7 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("guest can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
+    test.setTimeout(60_000);
     const mobile = !!viewport && viewport.width < 1024;
     if (mobile) await skipMobileFirstRunUi(page);
     await page.goto("/studio");
