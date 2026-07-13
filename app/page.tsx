@@ -21,15 +21,15 @@ const fraunces = Fraunces({
   variable: "--font-display-ln",
 });
 
-/** The landing runs nocturnal — match the browser chrome to the night ink. */
+/** Landing browser chrome matches the dark marketing ground. */
 export const viewport: Viewport = {
   themeColor: "#0A1120",
   viewportFit: "cover",
 };
 
 /**
- * Marketing landing page (`/`): the Blue Hour scroll-scrubbed survey hero,
- * ledger band, owner path, showcase, closing CTA, and footer.
+ * Marketing landing page (`/`): scroll-scrub hero, numbers band, how-it-works,
+ * showcase, certificate sample, closing CTA, and footer.
  */
 export default function LandingPage() {
   return (
@@ -56,7 +56,7 @@ export default function LandingPage() {
               className="h-7 w-auto"
             />
             <p className="text-sm text-ln-slate">
-              A foundry for lots. Estimates, not guarantees.
+              ADU planning for homeowners. Estimates only—not guarantees.
             </p>
             <div className="flex items-center gap-4 text-sm text-ln-slate">
               <Link

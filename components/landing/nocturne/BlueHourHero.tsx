@@ -29,9 +29,9 @@ const HOTSPOTS: ReadonlyArray<{
   label: string;
   polygon: ReadonlyArray<readonly [number, number]>;
 }> = [
-  { id: "parcel", label: "Highlight parcel boundary", polygon: GEOMETRY.parcel },
-  { id: "envelope", label: "Highlight setback envelope", polygon: GEOMETRY.envelope },
-  { id: "adu", label: "Highlight ADU cast", polygon: GEOMETRY.adu },
+  { id: "parcel", label: "Highlight property lines", polygon: GEOMETRY.parcel },
+  { id: "envelope", label: "Highlight setbacks", polygon: GEOMETRY.envelope },
+  { id: "adu", label: "Highlight ADU footprint", polygon: GEOMETRY.adu },
 ];
 
 /** Rent figure the verdict plate counts up to (typical supported-market midpoint). */
@@ -182,7 +182,7 @@ export function BlueHourHero() {
     <section
       ref={trackRef}
       className="relative h-svh min-h-[640px] motion-safe:h-[320svh]"
-      aria-label="Blue hour lot survey"
+      aria-label="Lot survey"
     >
       <div className="sticky top-0 h-svh min-h-[640px] overflow-hidden bg-ln-ink">
         {/* Parallax wrapper: the photograph and the scrubbed composition
@@ -285,18 +285,17 @@ export function BlueHourHero() {
           >
             <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
               <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
-              LotFoundry · ADU feasibility studio
+              LotFoundry · ADU planning tool
             </p>
 
             <h1 className="ln-display-hero mt-4 text-ln-mist">
-              Every backyard hides{" "}
-              <em className="italic text-ln-glow">a second address.</em>
+              See what your backyard{" "}
+              <em className="italic text-ln-glow">can earn.</em>
             </h1>
 
             <p className="lf-body-lg mt-5 max-w-[46ch] text-ln-slate">
-              LotFoundry surveys your parcel at blue hour - boundary, setbacks,
-              buildable envelope, projected rent - before you spend a dollar on
-              plans.
+              LotFoundry looks up your property and estimates rent, build cost,
+              and payback—before you spend money on plans.
             </p>
           </div>
 
@@ -405,7 +404,7 @@ export function BlueHourHero() {
           style={showPlayer ? { opacity: plateOpacity } : undefined}
         >
           <p className="lf-kicker-dense text-ln-slate">
-            Projected rent · typical supported markets
+            Estimated rent · sample for cities we cover
           </p>
           <p className="ln-money mt-2 text-4xl text-ln-money sm:text-5xl">
             ${(showPlayer ? rent : VERDICT_RENT).toLocaleString("en-US")}

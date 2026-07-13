@@ -29,31 +29,31 @@ function fraction(frames: number) {
 export const SURVEY_RAIL: ReadonlyArray<SurveyRailEntry> = [
   {
     id: "open",
-    label: "Blue hour · lot record opens",
+    label: "Step 01 · open lot map",
     until: fraction(PHASES.boundary.start),
     target: 0,
   },
   {
     id: "boundary",
-    label: "Phase 01 · parcel boundary",
+    label: "Step 02 · property lines",
     until: fraction(PHASES.boundary.end),
     target: fraction(PHASES.boundary.end - LANDING_MARGIN_FRAMES),
   },
   {
     id: "setbacks",
-    label: "Phase 02 · setback envelope",
+    label: "Step 03 · setbacks",
     until: fraction(PHASES.setbacks.end),
     target: fraction(PHASES.setbacks.end - LANDING_MARGIN_FRAMES),
   },
   {
     id: "cast",
-    label: "Phase 03 · ADU cast",
+    label: "Step 04 · place ADU",
     until: fraction(PHASES.cast.end),
     target: fraction(PHASES.cast.end - LANDING_MARGIN_FRAMES),
   },
   {
     id: "verdict",
-    label: "Phase 04 · verdict",
+    label: "Step 05 · rent estimate",
     until: Number.POSITIVE_INFINITY,
     target: fraction(PHASES.verdict.end - LANDING_MARGIN_FRAMES),
   },

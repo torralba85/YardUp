@@ -19,7 +19,10 @@
     "deploy:rules": "firebase deploy --only firestore:rules --project yardup-2026",
     "hero:mp4": "remotion render remotion/index.ts HeroLot public/hero/hero.mp4",
     "hero:still": "remotion still remotion/index.ts HeroLot public/hero/hero-poster.jpg --frame=179",
-    "hero:render": "npm run hero:mp4 && npm run hero:still"
+    "hero:render": "npm run hero:mp4 && npm run hero:still",
+    "demo:mp4": "remotion render remotion/index.ts LotFoundryDemo public/demo/lotfoundry-demo.mp4",
+    "demo:still": "remotion still remotion/index.ts LotFoundryDemo public/demo/lotfoundry-demo-poster.jpg --frame=55",
+    "demo:render": "npm run demo:mp4 && npm run demo:still"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",

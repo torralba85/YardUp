@@ -20,15 +20,15 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
-      await expect(page.getByRole("heading", { name: /Every backyard hides a second address/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /See what your backyard can earn/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.
-      const heading = page.getByRole("heading", { name: /Know what to ask before you spend on plans/i });
+      const heading = page.getByRole("heading", { name: /Check your address.*Get your numbers/i });
       await expect(heading).toBeVisible();
-      await expect(page.getByRole("heading", { name: /Take the studio to the yard/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Take the studio outside/i })).toBeVisible();
 
       // The certificate specimen (steps 04–05) must survive every breakpoint.
       await expect(
-        page.getByRole("heading", { name: /certificate meets your builder/i }),
+        page.getByRole("heading", { name: /report you can keep/i }),
       ).toBeVisible();
 
       const widths = await page.evaluate(() => ({

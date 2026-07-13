@@ -1,14 +1,8 @@
 import { Reveal } from "./Reveal";
 
 /**
- * Coming Soon banner — announces the iOS/Android apps ahead of the store
- * listings, slotted between the closing CTA and the footer. Blue Hour
- * restyling of the banner that shipped with the daylight landing.
- *
- * Deliberately uses custom badge chips with platform glyphs instead of the
- * official Apple/Google store badge artwork: both badge licenses require a
- * live, unmodified store listing, which doesn't exist yet (DESIGN.md Decisions
- * Log, 2026-07-03). Do not swap these for official badge PNGs until launch.
+ * Coming Soon banner — announces iOS/Android apps ahead of store listings.
+ * Uses custom badge chips (not official store art) until listings are live.
  */
 export function ComingSoonBanner() {
   return (
@@ -21,11 +15,11 @@ export function ComingSoonBanner() {
               Coming soon
             </p>
             <h2 id="coming-soon-heading" className="ln-card-heading mt-3 text-ln-mist">
-              Take the studio to the yard.
+              Take the studio outside.
             </h2>
             <p className="lf-body-sm mt-2 max-w-[52ch] text-ln-slate">
-              The LotFoundry app is on its way to iOS and Android — walk your
-              lot with parcel lines, setbacks, and rent potential in hand.
+              The LotFoundry app is coming to iOS and Android—walk your lot with
+              property lines, setbacks, and rent estimates in hand.
             </p>
           </div>
 

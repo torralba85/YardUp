@@ -13,14 +13,14 @@ import { Reveal } from "./Reveal";
 const DESTINATIONS = [
   {
     number: "04",
-    title: "Own the record",
-    body: "When the numbers hold, the studio engraves them: rent, build range, payback, and the assumptions behind them, recorded as a Certificate of Feasibility you keep and share.",
+    title: "Save your estimate",
+    body: "When the numbers look solid, save them: rent, build cost, payback, and the assumptions behind them—as a Certificate of Feasibility you keep and share.",
     record: "In the studio · certificate · paid",
   },
   {
     number: "05",
-    title: "Meet your builders",
-    body: "Matched local builders read the same certificate and answer with real bids — no cold calls, no catalog packages.",
+    title: "Meet local builders",
+    body: "Matched local builders review the same report and reply with real bids—no cold calls, no generic packages.",
     record: "In the studio · builder connect",
   },
 ] as const;
@@ -31,7 +31,7 @@ const RECORDED = [
   "Honest fine print instead of empty promises",
 ] as const;
 
-/** The lit-window section: parchment certificate specimen on the night ground. */
+/** Certificate specimen + builder handoff section on the marketing landing. */
 export function CertificateSpecimen() {
   return (
     <section aria-labelledby="specimen-heading" className="border-t border-ln-hairline/60">
@@ -39,10 +39,10 @@ export function CertificateSpecimen() {
         <Reveal>
           <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
             <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
-            Where the path leads
+            What you walk away with
           </p>
           <h2 id="specimen-heading" className="ln-section-heading mt-4 max-w-2xl text-ln-mist">
-            The survey ends in a certificate. The certificate meets your builder.
+            A report you can keep—and hand to a builder.
           </h2>
           <ul className="mt-12 space-y-9">
             {DESTINATIONS.map((step) => (
@@ -73,23 +73,23 @@ export function CertificateSpecimen() {
             <div className="rounded-lg border border-lf-hairline bg-lf-card p-6 text-lf-espresso shadow-[0_0_80px_rgba(245,181,74,0.16),0_24px_48px_rgba(0,0,0,0.55)] sm:p-8">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
                 <span>No. LF-042-0117-118</span>
-                <span>Typical · supported markets</span>
+                <span>Sample · cities we cover</span>
               </div>
               <div className="mt-4 border-t border-lf-hairline pt-4">
                 <p className="font-display text-2xl font-semibold leading-tight">
                   Certificate of Feasibility
                 </p>
                 <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
-                  Specimen — your address replaces this
+                  Sample — your address replaces this
                 </p>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-1">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
-                  Rent potential
+                  Est. rent
                 </p>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
-                  Build range
+                  Build cost
                 </p>
                 <p className="lf-money-md text-lf-forest">
                   {TYPICAL_MARKET.rentBand}

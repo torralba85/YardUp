@@ -2,9 +2,8 @@ import { DawnStudioLink } from "./DawnStudioLink";
 import { Reveal } from "./Reveal";
 
 /**
- * Feature showcase: the AI-concept panel (the generated blue-hour ADU) and
- * the studio panel (a real studio still). Photographs are read-only content,
- * so their frames stay rectangular per the pill-radius system.
+ * Feature showcase: AI concept panel and studio still. Photographs are
+ * read-only content frames (rectangular per the pill-radius system).
  */
 export function DuskShowcase() {
   return (
@@ -26,14 +25,14 @@ export function DuskShowcase() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/landing/adu-dusk.jpg"
-                alt="A small modern ADU at dusk: cedar siding, black steel frames, floor-to-ceiling glass glowing warm from a lit interior"
+                alt="A small modern backyard ADU with warm interior light, cedar siding, and black steel frames"
                 className="block w-full"
                 loading="lazy"
                 width={1920}
                 height={1280}
               />
               <figcaption className="border-t border-ln-hairline px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ln-slate">
-                Style-matched concept · rendered at blue hour
+                Style-matched concept · sample render
               </figcaption>
             </figure>
           </Reveal>
@@ -44,15 +43,15 @@ export function DuskShowcase() {
                 Concepts matched to your house, not a catalog.
               </h3>
               <p className="lf-body mt-4 max-w-[52ch] text-ln-slate">
-                Feed the studio a photo of your home and the AI drafts ADU
-                concepts in its materials and mood — so what you show a builder
-                already belongs on your lot.
+                Upload a photo of your home and the studio drafts ADU concepts
+                that match its materials and style—so what you show a builder
+                already feels like it belongs on your lot.
               </p>
               <ul className="mt-8 space-y-4">
                 {[
                   ["3D lot studio", "Your house, setbacks, and the proposed ADU on one interactive scene."],
-                  ["AI parcel insights", "Plain-language notes on what your parcel's numbers actually mean."],
-                  ["Owner report", "Rent, build range, payback, and assumptions — saved and shareable."],
+                  ["Plain-language insights", "Clear notes on what your lot’s numbers actually mean."],
+                  ["Owner report", "Rent, build cost, payback, and assumptions—saved and shareable."],
                 ].map(([title, body]) => (
                   <li key={title} className="flex gap-4">
                     <span aria-hidden="true" className="mt-2.5 h-px w-6 shrink-0 bg-ln-glow/70" />
@@ -71,12 +70,12 @@ export function DuskShowcase() {
           <Reveal className="order-last lg:order-first">
             <div>
               <h3 className="ln-card-heading text-ln-mist">
-                The studio works in daylight, too.
+                A full studio when you are ready to dig in.
               </h3>
               <p className="lf-body mt-4 max-w-[52ch] text-ln-slate">
-                Behind the hero is a working feasibility studio: drag the ADU
-                around your lot, watch setbacks and coverage respond, and keep
-                the fine print honest. Estimates, never guarantees.
+                Open the studio to drag the ADU around your lot, watch setbacks
+                and coverage update, and keep the fine print honest. Estimates
+                only—never guarantees.
               </p>
               <p className="mt-8">
                 <DawnStudioLink

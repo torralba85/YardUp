@@ -2,7 +2,7 @@
 
 LotFoundry turns land a homeowner already owns into earning potential, routing them to a builder who can act on it. The ADU is the first thing the foundry casts from a lot.
 
-**The memorable thing: "Your backyard is an asset."** Income framing, never permission/cost framing. Every design decision below serves this. When two options tie, pick the one that makes the money figure more prominent, more credible, or more ownable.
+**The memorable thing: "See what your backyard can earn."** Income framing, never permission/cost framing. Every design decision below serves this. When two options tie, pick the one that makes the money figure more prominent, more credible, or more ownable.
 
 ## Product Context
 
@@ -40,7 +40,7 @@ The signature gesture is the interlocking **L/F monogram** — two letterforms c
 - **Inverse (dark surfaces):** Mahogany tile, sand `#F2E5D5` + bronze monogram (`lotfoundry-mark-dark.svg`)
 - **Mono:** Single espresso monogram, transparent (`lotfoundry-mark-mono.svg`)
 - **Wordmark:** **LotFoundry** (one word, Libre Franklin Bold)
-- **Tagline:** `a foundry for lots` (IBM Plex Mono, lowercase, tracked)
+- **Tagline:** `ADU planning for homeowners` (IBM Plex Mono, lowercase or sentence case in UI; tracked when used as a kicker)
 
 ## Typography
 

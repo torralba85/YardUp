@@ -28,9 +28,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 /** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
 export const metadata: Metadata = {
-  title: "LotFoundry | ADU Feasibility & Income Estimates",
+  title: "LotFoundry | See what your backyard can earn",
   description:
-    "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
+    "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
   manifest: "/manifest.json",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
   appleWebApp: {
@@ -47,15 +47,15 @@ export const metadata: Metadata = {
     apple: "/icon-180.png",
   },
   openGraph: {
-    title: "LotFoundry | ADU Feasibility & Income Estimates",
+    title: "LotFoundry | See what your backyard can earn",
     description:
-      "Review owner-facing ADU feasibility and income estimates with projected rent, build range, payback, and lot fit before local review.",
+      "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
     images: [
       {
         url: "/lotfoundry-og.png",
         width: 1200,
         height: 630,
-        alt: "LotFoundry ADU Feasibility Studio",
+        alt: "LotFoundry — ADU planning for homeowners",
       },
     ],
     type: "website",

@@ -87,7 +87,7 @@ export default function StudioShell({
               className="h-8 w-auto self-start"
             />
             <p className="pl-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-taupe">
-              a foundry for lots
+              ADU planning
             </p>
           </div>
 
@@ -121,7 +121,7 @@ export default function StudioShell({
                 <button
                   type="button"
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   <MapPin size={13} />
                   Change address
@@ -130,7 +130,7 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-9 w-full rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="mt-3 h-11 w-full rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
@@ -142,7 +142,7 @@ export default function StudioShell({
                   type="button"
                   onClick={() => setScenariosOpen((o) => !o)}
                   aria-expanded={scenariosOpen}
-                  className="flex w-full items-center justify-between px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset"
+                  className="flex w-full min-h-11 items-center justify-between px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset"
                 >
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
                     Saved Concepts
@@ -162,7 +162,7 @@ export default function StudioShell({
                       {savedScenarios.slice(0, 5).map((scenario) => (
                         <li
                           key={scenario.id}
-                          className="flex items-center gap-2 rounded-md px-1 py-1 text-xs hover:bg-lf-sand/5"
+                          className="flex min-h-11 items-center gap-2 rounded-md px-1.5 py-1 text-xs hover:bg-lf-sand/5"
                         >
                           <button
                             type="button"
@@ -175,7 +175,7 @@ export default function StudioShell({
                             type="button"
                             onClick={() => onDeleteScenario?.(scenario.id)}
                             aria-label={`Delete saved concept ${scenario.name}`}
-                            className="rounded-md p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                            className="relative flex h-9 w-9 items-center justify-center rounded-md p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany before:absolute before:-inset-1"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -206,7 +206,7 @@ export default function StudioShell({
                     type="button"
                     onClick={logout}
                     aria-label="Sign out"
-                    className="rounded-md p-1.5 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lf-clay focus-visible:ring-offset-lf-mahogany"
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lf-clay focus-visible:ring-offset-lf-mahogany"
                   >
                     <LogOut size={14} />
                   </button>
@@ -217,7 +217,7 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-lf-sand py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-sand text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Sign In
               </button>
@@ -234,7 +234,7 @@ export default function StudioShell({
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto shrink-0" />
-          <Button variant="secondary" size="sm" onClick={onReset}>
+          <Button variant="secondary" size="md" onClick={onReset}>
             Reset
           </Button>
         </header>
