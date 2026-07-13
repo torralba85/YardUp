@@ -8,6 +8,21 @@ export interface AIParcelRisk {
   explanation: string;
 }
 
+export interface AIParcelInsights {
+  headline: string;
+  summary: string;
+  bestFit: string;
+  risks: AIParcelRisk[];
+  recommendedNextSteps: string[];
+  disclaimer: string;
+}
+
+export interface AIParcelInsightsInput {
+  parcel: Parcel & { zoning?: string; source?: string };
+  config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
+  result: Pick<FeasibilityResult, "aduSqft" | "allowedFootprint" | "remainingCapacity" | "coveragePercent" | "maxCoveragePercent" | "zoningStatus" | "costLow" | "costHigh" | "monthlyRent" | "annualNoi" | "paybackYears" | "warnings">;
+}
+
 export interface AIADUConcept {
   architecturalStyle: string;
   styleSummary: string;

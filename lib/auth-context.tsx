@@ -23,6 +23,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { clearInitialParcel } from "./parcel-handoff";
 
 type UserRole = "user" | "builder";
 
@@ -76,6 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const pendingAuthRoleRef = useRef<UserRole | null>(null);
+  // Tracks whether this tab has seen a signed-in user, so we only clear the
+  // parcel stash on a real sign-out (authed -> null), never on the initial
+  // guest/null state that fires before the studio's ParcelProvider mounts.
+  const hadUserRef = useRef(false);
 
   const ensureProfile = useCallback(async (
     u: User,
@@ -140,10 +145,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(u);
       try {
         if (u) {
+          hadUserRef.current = true;
           await ensureProfile(u, {
             role: pendingAuthRoleRef.current ?? undefined,
           });
         } else {
+          // Only clear the stashed parcel when a real session ends (a
+          // previously authed user going null — logout, deleteAccount, or an
+          // external token expiry/revocation), so the next guest or account in
+          // this tab starts from demo data, not this session's lot. Skip the
+          // initial guest/null state so a pending landing handoff survives for
+          // the studio's ParcelProvider to consume.
+          if (hadUserRef.current) {
+            hadUserRef.current = false;
+            clearInitialParcel();
+          }
           setProfile(null);
         }
       } finally {
@@ -186,7 +202,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => signOut(auth);
+  const logout = () => {
+    // The parcel stash mirrors this session's live lot; the next session
+    // (guest or another account) must start from demo data, not that parcel.
+    clearInitialParcel();
+    return signOut(auth);
+  };
 
   const sendPasswordReset = (email: string) =>
     sendPasswordResetEmail(auth, email);
@@ -218,6 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // The Auth user is gone server-side; drop any lingering local session.
+    clearInitialParcel();
     await signOut(auth).catch(() => undefined);
     setUser(null);
     setProfile(null);

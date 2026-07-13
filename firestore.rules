@@ -26,22 +26,35 @@ service cloud.firestore {
         "createdAt",
         "updatedAt"
       ]) &&
+      request.resource.data.keys().hasAll([
+        "ownerUid",
+        "companyName",
+        "contactEmail",
+        "serviceAreas",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]) &&
       request.resource.data.ownerUid == builderId &&
       request.resource.data.companyName is string &&
       request.resource.data.companyName.size() > 0 &&
       request.resource.data.companyName.size() <= 160 &&
       request.resource.data.contactEmail is string &&
       request.resource.data.contactEmail.size() > 3 &&
+      request.resource.data.contactEmail.size() <= 254 &&
       request.resource.data.serviceAreas is list &&
       request.resource.data.serviceAreas.size() > 0 &&
       request.resource.data.serviceAreas.size() <= 25 &&
       request.resource.data.active is bool &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
+      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
       (!("phone" in request.resource.data) ||
         request.resource.data.phone == null ||
-        request.resource.data.phone is string) &&
+        (request.resource.data.phone is string && request.resource.data.phone.size() <= 50)) &&
       (!("licenseNumber" in request.resource.data) ||
         request.resource.data.licenseNumber == null ||
-        request.resource.data.licenseNumber is string) &&
+        (request.resource.data.licenseNumber is string && request.resource.data.licenseNumber.size() <= 100)) &&
       (!("credits" in request.resource.data) ||
         (request.resource.data.credits is number &&
           ((resource == null && request.resource.data.credits == 0) ||
@@ -61,6 +74,15 @@ service cloud.firestore {
         "createdAt",
         "updatedAt"
       ]) &&
+      request.resource.data.keys().hasAll([
+        "ownerUid",
+        "preview",
+        "matchedBuilderIds",
+        "status",
+        "ownerVerified",
+        "createdAt",
+        "updatedAt"
+      ]) &&
       request.resource.data.ownerUid == request.auth.uid &&
       request.resource.data.preview is map &&
       !("ownerContact" in request.resource.data) &&
@@ -70,6 +92,8 @@ service cloud.firestore {
       request.resource.data.matchedBuilderIds.size() <= 25 &&
       request.resource.data.status == "submitted" &&
       request.resource.data.ownerVerified == true &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
       request.resource.data.headStartUntil == null;
     }
 
@@ -83,9 +107,20 @@ service cloud.firestore {
         "snapshot",
         "createdAt"
       ]) &&
+      request.resource.data.keys().hasAll([
+        "ownerContact",
+        "streetAddress",
+        "snapshot",
+        "createdAt"
+      ]) &&
       request.resource.data.ownerContact is map &&
       request.resource.data.streetAddress is string &&
-      request.resource.data.snapshot is map;
+      request.resource.data.streetAddress.size() <= 200 &&
+      request.resource.data.snapshot is map &&
+      request.resource.data.createdAt is timestamp &&
+      (!("exactAPN" in request.resource.data) ||
+        request.resource.data.exactAPN == null ||
+        (request.resource.data.exactAPN is string && request.resource.data.exactAPN.size() <= 100));
     }
 
     function hasUnlockGrant(requestId) {
@@ -99,7 +134,16 @@ service cloud.firestore {
         "createdAt",
         "updatedAt"
       ]) &&
+      request.resource.data.keys().hasAll([
+        "builderId",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]) &&
       request.resource.data.builderId == builderId &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
+      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
       request.resource.data.status in ["new", "interested", "not-a-fit"];
     }
 
@@ -115,13 +159,24 @@ service cloud.firestore {
         "createdAt",
         "updatedAt"
       ]) &&
+      request.resource.data.keys().hasAll([
+        "email",
+        "role",
+        "createdAt",
+        "updatedAt"
+      ]) &&
       request.resource.data.email is string &&
+      request.resource.data.email.size() > 3 &&
+      request.resource.data.email.size() <= 254 &&
       request.resource.data.role is string &&
       isValidRole() &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
+      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
       (
         !("displayName" in request.resource.data) ||
         request.resource.data.displayName == null ||
-        request.resource.data.displayName is string
+        (request.resource.data.displayName is string && request.resource.data.displayName.size() <= 100)
       ) &&
       (
         !exists(/databases/$(database)/documents/users/$(userId)) ||
@@ -302,11 +357,20 @@ service cloud.firestore {
         "createdAt",
         "updatedAt"
       ]) &&
+      request.resource.data.keys().hasAll([
+        "name",
+        "parcelId",
+        "config",
+        "assumptions",
+        "createdAt",
+        "updatedAt"
+      ]) &&
       request.resource.data.name is string &&
       request.resource.data.name.size() > 0 &&
       request.resource.data.name.size() <= 160 &&
       request.resource.data.parcelId is string &&
       request.resource.data.parcelId.size() > 0 &&
+      request.resource.data.parcelId.size() <= 100 &&
       (!("liveParcel" in request.resource.data) ||
         isValidLiveParcel(request.resource.data.liveParcel)) &&
       isValidAduConfig(request.resource.data.config) &&

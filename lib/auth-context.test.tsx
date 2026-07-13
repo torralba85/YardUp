@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./auth-context";
@@ -20,10 +20,18 @@ const firestoreMocks = vi.hoisted(() => ({
   setDoc: vi.fn(),
 }));
 
+const parcelHandoffMocks = vi.hoisted(() => ({
+  clearInitialParcel: vi.fn(),
+}));
+
 vi.mock("@/lib/firebase", () => ({
   app: {},
   auth: {},
   db: {},
+}));
+
+vi.mock("@/lib/parcel-handoff", () => ({
+  clearInitialParcel: parcelHandoffMocks.clearInitialParcel,
 }));
 
 vi.mock("firebase/auth", () => ({
@@ -140,5 +148,56 @@ describe("AuthProvider profile creation", () => {
         { merge: true },
       );
     });
+  });
+
+  it("clears the stashed parcel when an authenticated session drops externally", async () => {
+    // Capture the onAuthStateChanged listener so we can simulate Firebase
+    // reporting a signed-out state that never went through logout().
+    let authListener: ((u: unknown) => void) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+
+    render(
+      <AuthProvider>
+        <div>ready</div>
+      </AuthProvider>,
+    );
+
+    expect(authListener).toBeDefined();
+
+    // Establish an authenticated session first...
+    await act(async () => {
+      await authListener?.({ uid: "user-1", email: "a@example.com", displayName: null });
+    });
+    // ...then a token expiry / revocation surfaces as (..., null).
+    await act(async () => {
+      await authListener?.(null);
+    });
+
+    expect(parcelHandoffMocks.clearInitialParcel).toHaveBeenCalled();
+  });
+
+  it("keeps a stashed parcel on the initial guest/null auth state", async () => {
+    // The listener fires once with null before any sign-in; clearing here would
+    // wipe a landing address handoff before the studio's ParcelProvider reads it.
+    let authListener: ((u: unknown) => void) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+
+    render(
+      <AuthProvider>
+        <div>ready</div>
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await authListener?.(null);
+    });
+
+    expect(parcelHandoffMocks.clearInitialParcel).not.toHaveBeenCalled();
   });
 });
