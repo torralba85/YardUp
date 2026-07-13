@@ -1,4 +1,5 @@
-const DEFAULT_PRODUCTION_ORIGIN = "https://yardup-2026.web.app";
+const DEFAULT_PRODUCTION_ORIGIN =
+  "https://yardup-2026--yardup-2026.us-central1.hosted.app";
 
 /**
  * Resolve the absolute app origin used for Stripe Checkout success/cancel URLs.

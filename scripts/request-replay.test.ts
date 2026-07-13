@@ -27,7 +27,7 @@ describe("requestForNext", () => {
       [consumedBodySymbol]?: boolean;
     };
     req.method = "POST";
-    req.url = "/api/ai/parcel-insights";
+    req.url = "/api/ai/project-brief";
     req.headers = { "content-type": "application/json" };
     req.rawBody = Buffer.from('{"parcel":true}');
     req[consumedBodySymbol] = true;
@@ -36,7 +36,7 @@ describe("requestForNext", () => {
 
     expect(replay).not.toBe(req);
     expect(replay.method).toBe("POST");
-    expect(replay.url).toBe("/api/ai/parcel-insights");
+    expect(replay.url).toBe("/api/ai/project-brief");
     expect(Object.getOwnPropertySymbols(replay)).not.toContain(consumedBodySymbol);
     await expect(readStream(replay)).resolves.toBe('{"parcel":true}');
   });
@@ -49,7 +49,7 @@ describe("requestForNext", () => {
       body: Record<string, boolean>;
     };
     req.method = "POST";
-    req.url = "/api/ai/parcel-insights";
+    req.url = "/api/ai/project-brief";
     req.headers = { "content-type": "application/json" };
     req.body = { parcel: true };
 
