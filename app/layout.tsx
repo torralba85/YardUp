@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { SITE_URL } from "@/lib/site-url";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
   description:
     "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
   manifest: "/manifest.json",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
+  metadataBase: new URL(SITE_URL),
   appleWebApp: {
     // Run as a standalone iOS PWA (no Safari chrome) with a translucent status
     // bar so the espresso studio header reaches the top edge under the notch.

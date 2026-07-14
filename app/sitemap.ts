@@ -1,9 +1,5 @@
 import type { MetadataRoute } from "next";
-
-/** Canonical site origin, mirroring the `metadataBase` fallback in `app/layout.tsx`. */
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"
-).replace(/\/+$/, "");
+import { SITE_URL } from "@/lib/site-url";
 
 /**
  * Public, indexable routes for the sitemap. Auth-utility pages

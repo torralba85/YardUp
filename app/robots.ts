@@ -1,7 +1,5 @@
 import type { MetadataRoute } from "next";
-
-/** Canonical site origin, mirroring the `metadataBase` fallback in `app/layout.tsx`. */
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
+import { SITE_URL } from "@/lib/site-url";
 
 /**
  * `robots.txt` route. Allows crawling of the public product and marketing
@@ -15,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/api/",
     },
-    sitemap: `${SITE_URL.replace(/\/+$/, "")}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
