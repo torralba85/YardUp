@@ -46,22 +46,34 @@ export async function POST(request: NextRequest) {
 
     // Tear down the gated PII payloads on leads this owner submitted. The
     // redacted request root stays: it is the business record the marketplace
-    // and its ledgers reference.
+    // and its ledgers reference. Delete every contact in parallel and only then
+    // inspect the outcome, so one transient failure can't stop the loop and
+    // strand later contacts — surface the first failure to abort before the
+    // irreversible steps below; a retry re-attempts the survivors (each delete
+    // is an idempotent no-op).
     const ownedLeads = await db
       .collection("connectionRequests")
       .where("ownerUid", "==", uid)
       .get();
-    for (const leadSnap of ownedLeads.docs) {
-      await leadSnap.ref.collection("private").doc("contact").delete();
+    const contactResults = await Promise.allSettled(
+      ownedLeads.docs.map((leadSnap) =>
+        leadSnap.ref.collection("private").doc("contact").delete(),
+      ),
+    );
+    const failedContact = contactResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failedContact) {
+      throw failedContact.reason;
     }
 
-    // Remove the builder profile if this account had one, then the profile doc.
-    await db.collection("builders").doc(uid).delete();
-    await userRef.delete();
-
-    // Delete the Auth identity. Skip the dev/test stub uid (not a real Firebase
-    // user), and treat an already-deleted user as success so retries after a
-    // partial failure converge instead of erroring.
+    // Delete the Auth identity BEFORE removing the profile documents. The
+    // `users/{uid}` doc is what a subsequent sign-in would recreate, so if
+    // `deleteUser` fails transiently we return 500 with the profile still
+    // present for a clean retry, rather than leaving an active identity whose
+    // next login rebuilds an empty profile after the data was already gone.
+    // Skip the dev/test stub uid (not a real Firebase user), and treat an
+    // already-deleted user as success so retries converge instead of erroring.
     if (uid !== "local-dev") {
       try {
         await getAuth(getAdminApp()).deleteUser(uid);
@@ -71,6 +83,11 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
+    // Remove the builder profile if this account had one, then the profile doc.
+    // The identity is gone at this point, so a re-sign-in cannot recreate them.
+    await db.collection("builders").doc(uid).delete();
+    await userRef.delete();
 
     return NextResponse.json({ deleted: true });
   } catch (err) {

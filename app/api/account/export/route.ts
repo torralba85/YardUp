@@ -25,9 +25,10 @@ function toPortable(value: unknown): unknown {
 
 /**
  * Download the authenticated user's account data as portable JSON: profile,
- * saved scenarios, builder profile, their own lead submissions (id + redacted
- * preview + status only), and purchase records. Never includes other users'
- * PII, Firebase tokens, or payment provider secrets.
+ * saved scenarios, builder profile, their own lead submissions (id, redacted
+ * preview, status, and the contact details they submitted), and purchase
+ * records. Never includes other users' PII, Firebase tokens, or payment
+ * provider secrets.
  */
 export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -57,6 +58,28 @@ export async function GET(request: NextRequest) {
       builderRef.collection("ledger").get(),
     ]);
 
+    // Lead submissions: the redacted root (id, banded preview, status) plus the
+    // owner's own gated `private/contact` payload (name, phone, exact address,
+    // contact preferences). That contact PII lives only in the subcollection —
+    // not in the profile or scenarios — so a portable export must include it to
+    // be complete for the data the account owns and that deletion removes. Only
+    // the owner's own submissions are read; other users' contacts stay gated.
+    const connectionRequests = await Promise.all(
+      leadsSnap.docs.map(async (docSnap) => {
+        const data = docSnap.data();
+        const contactSnap = await docSnap.ref
+          .collection("private")
+          .doc("contact")
+          .get();
+        return {
+          id: docSnap.id,
+          preview: toPortable(data.preview) ?? null,
+          status: String(data.status ?? "unknown"),
+          contact: contactSnap.exists ? toPortable(contactSnap.data()) : null,
+        };
+      }),
+    );
+
     const payload = {
       exportedAt: new Date().toISOString(),
       profile: profileSnap.exists ? toPortable(profileSnap.data()) : null,
@@ -65,18 +88,7 @@ export async function GET(request: NextRequest) {
         ...(toPortable(docSnap.data()) as Record<string, unknown>),
       })),
       builderProfile: builderSnap.exists ? toPortable(builderSnap.data()) : null,
-      // Lead submissions are exported as the redacted record only: id, banded
-      // preview, and status. (The contact payload is the user's own input,
-      // already covered by profile/scenario data; keeping the export shape
-      // redacted means it can never leak a co-mingled record.)
-      connectionRequests: leadsSnap.docs.map((docSnap) => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          preview: toPortable(data.preview) ?? null,
-          status: String(data.status ?? "unknown"),
-        };
-      }),
+      connectionRequests,
       purchaseLedger: toPortable([
         ...certificatesSnap.docs.map((docSnap) => ({
           type: "certificate",

@@ -4,6 +4,12 @@ interface RateLimitOptions {
   limit: number;
   namespace: string;
   windowMs: number;
+  /**
+   * Fixed bucket identity, used instead of the request-derived client key. Set
+   * this to enforce a global (all-clients) ceiling that a caller cannot escape
+   * by rotating forwarding headers.
+   */
+  clientKey?: string;
 }
 
 interface Bucket {
@@ -28,6 +34,20 @@ export function getRateLimitClientKey(request: NextRequest, namespace: string): 
     request.headers.get("cf-connecting-ip") ||
     "unknown";
   return `${namespace}:${ip}`;
+}
+
+/**
+ * Resolves the bucket key for a limiter call: a caller-supplied fixed
+ * {@link RateLimitOptions.clientKey} (for global ceilings) takes precedence
+ * over the request-derived, forwarding-header-based client key.
+ */
+export function resolveRateLimitKey(
+  request: NextRequest,
+  options: RateLimitOptions,
+): string {
+  return options.clientKey
+    ? `${options.namespace}:${options.clientKey}`
+    : getRateLimitClientKey(request, options.namespace);
 }
 
 /**
@@ -62,7 +82,7 @@ export function checkRateLimit(
   options: RateLimitOptions,
 ): NextResponse | null {
   const now = Date.now();
-  const key = getRateLimitClientKey(request, options.namespace);
+  const key = resolveRateLimitKey(request, options);
   const bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {
@@ -78,6 +98,11 @@ export function checkRateLimit(
 
   const retryAfter = Math.ceil((bucket.resetAt - now) / 1000);
   return createRateLimitResponse(retryAfter);
+}
+
+/** Clear the in-memory buckets. Test-only: keeps limiter cases isolated. */
+export function resetRateLimitBuckets() {
+  buckets.clear();
 }
 
 function cleanupBuckets(now: number) {

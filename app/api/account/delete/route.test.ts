@@ -13,6 +13,7 @@ const ops = {
   connectionRequests: [] as { id: string; ownerUid: string }[],
   deletedPrivateContacts: [] as string[],
   deletedLeadRoots: [] as string[],
+  failContactId: null as string | null,
 };
 
 function makeDb() {
@@ -37,6 +38,9 @@ function makeDb() {
                     collection: () => ({
                       doc: () => ({
                         delete: async () => {
+                          if (ops.failContactId === request.id) {
+                            throw new Error("contact delete failed");
+                          }
                           ops.deletedPrivateContacts.push(request.id);
                         },
                       }),
@@ -93,6 +97,7 @@ describe("POST /api/account/delete", () => {
     ops.connectionRequests = [];
     ops.deletedPrivateContacts = [];
     ops.deletedLeadRoots = [];
+    ops.failContactId = null;
     throwOnDb = false;
     deleteUser.mockClear();
   });
@@ -132,6 +137,27 @@ describe("POST /api/account/delete", () => {
     // The redacted root is a shared business record a builder may have paid to
     // unlock — it must be retained.
     expect(ops.deletedLeadRoots).toEqual([]);
+  });
+
+  it("attempts every contact and preserves the profile when one delete fails", async () => {
+    // A transient failure on one lead's contact must not stop the others from
+    // being attempted, and must abort before the irreversible profile/identity
+    // removal so a retry can finish cleanly.
+    ops.connectionRequests = [
+      { id: "lead-1", ownerUid: "local-dev" },
+      { id: "lead-2", ownerUid: "local-dev" },
+    ];
+    ops.failContactId = "lead-2";
+
+    const res = await POST(postRequest());
+    expect(res.status).toBe(500);
+
+    // The healthy contact was still torn down (loop was not stopped at the
+    // failure)...
+    expect(ops.deletedPrivateContacts).toEqual(["lead-1"]);
+    // ...and the profile/identity remain for a clean retry.
+    expect(ops.builderDeleted).toBe(false);
+    expect(ops.userDeleted).toBe(false);
   });
 
   it("is safe to retry after account data is already gone", async () => {

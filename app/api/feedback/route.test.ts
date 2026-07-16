@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const state = {
   written: [] as Record<string, unknown>[],
@@ -45,6 +46,9 @@ describe("POST /api/feedback", () => {
   beforeEach(() => {
     state.written = [];
     state.throwOnDb = false;
+    // Isolate the shared in-memory limiter (per-client and global buckets)
+    // between cases.
+    resetRateLimitBuckets();
   });
 
   it("persists a valid submission and returns its ticket id", async () => {
@@ -110,6 +114,28 @@ describe("POST /api/feedback", () => {
     );
     expect(res.status).toBe(429);
     expect(state.written).toHaveLength(3);
+  });
+
+  it("enforces a global hourly ceiling that rotating client IPs cannot escape", async () => {
+    // Each request uses a fresh IP, so the per-client limit never trips; the
+    // global bucket must still bound total writes. The 61st write is refused.
+    for (let i = 0; i < 60; i += 1) {
+      const res = await POST(
+        postRequest(
+          { category: "idea", message: `Distinct suggestion number ${i + 1}.` },
+          { ip: `198.51.100.${i}` },
+        ),
+      );
+      expect(res.status).toBe(200);
+    }
+    const res = await POST(
+      postRequest(
+        { category: "idea", message: "The sixty-first, from yet another IP." },
+        { ip: "198.51.100.200" },
+      ),
+    );
+    expect(res.status).toBe(429);
+    expect(state.written).toHaveLength(60);
   });
 
   it("returns 500 when persistence fails", async () => {

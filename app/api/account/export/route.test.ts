@@ -9,6 +9,8 @@ const state = {
   builders: {} as Record<string, Record<string, unknown>>,
   ledger: [] as Array<{ id: string; data: Record<string, unknown> }>,
   connectionRequests: [] as Array<{ id: string; data: Record<string, unknown> }>,
+  // Gated per-lead contact PII, keyed by lead id.
+  contacts: {} as Record<string, Record<string, unknown>>,
   certificatePurchases: [] as Array<{ id: string; data: Record<string, unknown> }>,
   leadUnlocks: [] as Array<{ id: string; data: Record<string, unknown> }>,
   throwOnDb: false,
@@ -36,12 +38,35 @@ function makeDb() {
       }),
       where: (field: string, _op: string, value: string) => ({
         get: async () => {
+          if (name === "connectionRequests") {
+            const rows = state.connectionRequests.filter(
+              (row) => row.data[field] === value,
+            );
+            return {
+              docs: rows.map((row) => ({
+                id: row.id,
+                data: () => row.data,
+                ref: {
+                  collection: (sub: string) => ({
+                    doc: (docId: string) => ({
+                      get: async () => {
+                        const contact = state.contacts[row.id];
+                        const present =
+                          sub === "private" &&
+                          docId === "contact" &&
+                          contact != null;
+                        return { exists: present, data: () => contact };
+                      },
+                    }),
+                  }),
+                },
+              })),
+            };
+          }
           const rows =
-            name === "connectionRequests"
-              ? state.connectionRequests
-              : name === "certificatePurchases"
-                ? state.certificatePurchases
-                : state.leadUnlocks;
+            name === "certificatePurchases"
+              ? state.certificatePurchases
+              : state.leadUnlocks;
           return { docs: docsOf(rows.filter((row) => row.data[field] === value)) };
         },
       }),
@@ -70,6 +95,7 @@ describe("GET /api/account/export", () => {
     state.builders = {};
     state.ledger = [];
     state.connectionRequests = [];
+    state.contacts = {};
     state.certificatePurchases = [];
     state.leadUnlocks = [];
     state.throwOnDb = false;
@@ -91,6 +117,11 @@ describe("GET /api/account/export", () => {
       },
       { id: "lead-2", data: { ownerUid: "someone-else", preview: {}, status: "submitted" } },
     ];
+    // The owner's own gated contact PII (only stored in private/contact).
+    state.contacts["lead-1"] = {
+      ownerContact: { name: "Alma Reyes", phone: "206-555-0101" },
+      streetAddress: "123 Maple St",
+    };
     state.certificatePurchases = [
       { id: "cert-1", data: { uid: "local-dev", amount: 4900 } },
       { id: "cert-2", data: { uid: "someone-else", amount: 4900 } },
@@ -105,8 +136,18 @@ describe("GET /api/account/export", () => {
     const body = await res.json();
     expect(body.profile).toEqual({ email: "owner@example.com", role: "user" });
     expect(body.savedScenarios).toEqual([{ id: "s1", name: "Backyard studio" }]);
+    // The owner's own lead includes its gated contact PII; the lead owned by
+    // someone else is excluded entirely.
     expect(body.connectionRequests).toEqual([
-      { id: "lead-1", preview: { cityBand: "Seattle" }, status: "submitted" },
+      {
+        id: "lead-1",
+        preview: { cityBand: "Seattle" },
+        status: "submitted",
+        contact: {
+          ownerContact: { name: "Alma Reyes", phone: "206-555-0101" },
+          streetAddress: "123 Maple St",
+        },
+      },
     ]);
     expect(body.purchaseLedger).toEqual([
       { type: "certificate", id: "cert-1", uid: "local-dev", amount: 4900 },
