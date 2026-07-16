@@ -4,6 +4,10 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   triage-and-patch:
     runs-on: ubuntu-latest
@@ -11,22 +15,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Run AI Diagnostics
+      - name: Post maintainer intake
         uses: actions/github-script@v7
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
           script: |
-            const issueTitle = context.payload.issue.title;
-            const issueBody = context.payload.issue.body;
-            
-            // 1. Send the issueTitle, issueBody, and your System Prompt to your LLM API here
-            const aiAnalysis = "Automated AI Analysis: This issue appears to target the authentication module. Recommended patch: ...";
+            const issueNumber = context.payload.issue.number;
 
-            // 2. Automatically reply to the contributor on the issue thread
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body: `🤖 **AI Maintainer Bot Initial Assessment:**\n\n${aiAnalysis}`
+              issue_number: issueNumber,
+              body: [
+                "🤖 **AI Maintainer intake**",
+                "",
+                `Received issue #${issueNumber}.`,
+                "This workflow records the issue without making a generic diagnosis from untrusted issue text.",
+                "A maintainer run will classify the issue, identify the affected code, and report verified next steps.",
+              ].join("\n")
             });
