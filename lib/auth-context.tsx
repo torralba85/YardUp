@@ -23,6 +23,12 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import {
+  changeAccountEmail as changeAccountEmailAction,
+  changeAccountPassword as changeAccountPasswordAction,
+  sendVerification as sendVerificationAction,
+  updateAccountName as updateAccountNameAction,
+} from "./account-settings";
 import { clearInitialParcel } from "./parcel-handoff";
 
 type UserRole = "user" | "builder";
@@ -56,6 +62,14 @@ interface AuthContextType {
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
+  updateAccountName: (displayName: string) => Promise<void>;
+  changeAccountEmail: (email: string, currentPassword: string) => Promise<void>;
+  changeAccountPassword: (
+    currentPassword: string,
+    nextPassword: string,
+  ) => Promise<void>;
+  sendVerification: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -212,6 +226,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendPasswordReset = (email: string) =>
     sendPasswordResetEmail(auth, email);
 
+  /** Rename the account, mirroring the change into `users/{uid}`. */
+  const updateAccountName = async (displayName: string) => {
+    const current = auth.currentUser;
+    if (!current) throw new Error("You must be signed in to update your name.");
+    await updateAccountNameAction(current, displayName);
+    await ensureProfile(current, { displayName: displayName.trim() });
+  };
+
+  /**
+   * Start an email change. Firebase sends a verification link to the new
+   * address; the account email (and the Firestore mirror, via the next
+   * profile refresh) only changes after the user confirms it.
+   */
+  const changeAccountEmail = async (email: string, currentPassword: string) => {
+    const current = auth.currentUser;
+    if (!current) throw new Error("You must be signed in to change your email.");
+    await changeAccountEmailAction(current, email, currentPassword);
+  };
+
+  const changeAccountPassword = async (
+    currentPassword: string,
+    nextPassword: string,
+  ) => {
+    const current = auth.currentUser;
+    if (!current) {
+      throw new Error("You must be signed in to change your password.");
+    }
+    await changeAccountPasswordAction(current, currentPassword, nextPassword);
+  };
+
+  const sendVerification = async () => {
+    const current = auth.currentUser;
+    if (!current) {
+      throw new Error("You must be signed in to verify your email.");
+    }
+    await sendVerificationAction(current);
+  };
+
+  /** Reload the Auth user and re-sync the Firestore-backed profile state. */
+  const refreshProfile = async () => {
+    const current = auth.currentUser;
+    if (!current) return;
+    await current.reload().catch(() => undefined);
+    await ensureProfile(current);
+  };
+
   /**
    * Permanently delete the signed-in user's account and personal data.
    *
@@ -247,7 +307,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signInWithGoogle, logout, sendPasswordReset, deleteAccount }}
+      value={{
+        user,
+        profile,
+        loading,
+        signIn,
+        signUp,
+        signInWithGoogle,
+        logout,
+        sendPasswordReset,
+        deleteAccount,
+        updateAccountName,
+        changeAccountEmail,
+        changeAccountPassword,
+        sendVerification,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./auth-context";
+import { auth } from "./firebase";
 
 const authMocks = vi.hoisted(() => ({
   createUserWithEmailAndPassword: vi.fn(),
@@ -23,6 +24,15 @@ const firestoreMocks = vi.hoisted(() => ({
 const parcelHandoffMocks = vi.hoisted(() => ({
   clearInitialParcel: vi.fn(),
 }));
+
+const accountSettingsMocks = vi.hoisted(() => ({
+  changeAccountEmail: vi.fn(),
+  changeAccountPassword: vi.fn(),
+  sendVerification: vi.fn(),
+  updateAccountName: vi.fn(),
+}));
+
+vi.mock("./account-settings", () => accountSettingsMocks);
 
 vi.mock("@/lib/firebase", () => ({
   app: {},
@@ -199,5 +209,121 @@ describe("AuthProvider profile creation", () => {
     });
 
     expect(parcelHandoffMocks.clearInitialParcel).not.toHaveBeenCalled();
+  });
+});
+
+function AccountControls() {
+  const { updateAccountName, changeAccountEmail, profile } = useAuth();
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => updateAccountName("Alma Reyes").catch(() => undefined)}
+      >
+        Rename
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          changeAccountEmail("next@example.com", "current-pass").catch(
+            () => undefined,
+          )
+        }
+      >
+        Change email
+      </button>
+      <span data-testid="profile-name">{profile?.displayName ?? "none"}</span>
+    </>
+  );
+}
+
+describe("AuthProvider account settings actions", () => {
+  const currentUser = {
+    uid: "user-1",
+    email: "owner@example.com",
+    displayName: "Old Name",
+  };
+  let authListener: ((u: unknown) => void) | undefined;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authListener = undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb as (u: unknown) => void;
+      return () => {};
+    });
+    firestoreMocks.doc.mockReturnValue({ path: "users/user-1" });
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => false,
+      data: () => ({}),
+    });
+    firestoreMocks.serverTimestamp.mockReturnValue("server-time");
+    (auth as { currentUser?: unknown }).currentUser = currentUser;
+  });
+
+  it("updates the profile after a successful name write", async () => {
+    accountSettingsMocks.updateAccountName.mockResolvedValue(undefined);
+
+    render(
+      <AuthProvider>
+        <AccountControls />
+      </AuthProvider>,
+    );
+    await act(async () => {
+      await authListener?.(currentUser);
+    });
+    expect(screen.getByTestId("profile-name")).toHaveTextContent("Old Name");
+
+    await userEvent.click(screen.getByRole("button", { name: "Rename" }));
+
+    expect(accountSettingsMocks.updateAccountName).toHaveBeenCalledWith(
+      currentUser,
+      "Alma Reyes",
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("profile-name")).toHaveTextContent("Alma Reyes");
+    });
+  });
+
+  it("leaves the prior profile intact when the name write is rejected", async () => {
+    accountSettingsMocks.updateAccountName.mockRejectedValue(
+      new Error("auth/requires-recent-login"),
+    );
+
+    render(
+      <AuthProvider>
+        <AccountControls />
+      </AuthProvider>,
+    );
+    await act(async () => {
+      await authListener?.(currentUser);
+    });
+    const writesBeforeClick = firestoreMocks.setDoc.mock.calls.length;
+
+    await userEvent.click(screen.getByRole("button", { name: "Rename" }));
+
+    expect(screen.getByTestId("profile-name")).toHaveTextContent("Old Name");
+    expect(firestoreMocks.setDoc.mock.calls.length).toBe(writesBeforeClick);
+  });
+
+  it("delegates email changes to the account-settings boundary", async () => {
+    accountSettingsMocks.changeAccountEmail.mockResolvedValue(undefined);
+
+    render(
+      <AuthProvider>
+        <AccountControls />
+      </AuthProvider>,
+    );
+    await act(async () => {
+      await authListener?.(currentUser);
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Change email" }));
+
+    expect(accountSettingsMocks.changeAccountEmail).toHaveBeenCalledWith(
+      currentUser,
+      "next@example.com",
+      "current-pass",
+    );
   });
 });
