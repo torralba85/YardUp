@@ -26,9 +26,9 @@ function toPortable(value: unknown): unknown {
 /**
  * Download the authenticated user's account data as portable JSON: profile,
  * saved scenarios, builder profile, their own lead submissions (id, redacted
- * preview, status, and the contact details they submitted), and purchase
- * records. Never includes other users' PII, Firebase tokens, or payment
- * provider secrets.
+ * preview, status, and the contact details they submitted), the feedback they
+ * sent, and purchase records. Never includes other users' PII, Firebase tokens,
+ * or payment provider secrets.
  */
 export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       certificatesSnap,
       unlocksSnap,
       ledgerSnap,
+      feedbackSnap,
     ] = await Promise.all([
       userRef.get(),
       userRef.collection("savedScenarios").get(),
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       db.collection("certificatePurchases").where("uid", "==", uid).get(),
       db.collection("leadUnlocks").where("builderId", "==", uid).get(),
       builderRef.collection("ledger").get(),
+      db.collection("feedback").where("uid", "==", uid).get(),
     ]);
 
     // Lead submissions: the redacted root (id, banded preview, status) plus the
@@ -103,6 +105,10 @@ export async function GET(request: NextRequest) {
       })),
       builderProfile: builderSnap.exists ? toPortable(builderSnap.data()) : null,
       connectionRequests,
+      feedback: feedbackSnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(toPortable(docSnap.data()) as Record<string, unknown>),
+      })),
       purchaseLedger: toPortable([
         ...certificatesSnap.docs.map((docSnap) => ({
           type: "certificate",

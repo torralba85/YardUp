@@ -14,7 +14,8 @@ const SCENARIO_BATCH = 400;
  * Uses the Admin SDK (which bypasses Firestore rules — the `users/{uid}`
  * document is `delete: if false` for clients) to remove the user's saved
  * scenarios, any builder profile, the gated lead contact payloads the user
- * submitted, the profile document, and the Firebase Auth identity itself. On
+ * submitted, the feedback they sent, the profile document, and the Firebase
+ * Auth identity itself. On
  * Firebase infra the `api` function's Application Default Credentials supply
  * the admin identity; locally without ADC the Auth deletion step has no
  * credentials, so this route is exercised in production/CI.
@@ -65,6 +66,21 @@ export async function POST(request: NextRequest) {
     );
     if (failedContact) {
       throw failedContact.reason;
+    }
+
+    // Delete feedback this user submitted while signed in. Each doc carries the
+    // uid plus an optional reply email and free-form message — account-linked
+    // PII the deletion promise covers. Anonymous feedback (no uid) is untouched.
+    const feedback = await db
+      .collection("feedback")
+      .where("uid", "==", uid)
+      .get();
+    for (let i = 0; i < feedback.docs.length; i += SCENARIO_BATCH) {
+      const batch = db.batch();
+      for (const docSnap of feedback.docs.slice(i, i + SCENARIO_BATCH)) {
+        batch.delete(docSnap.ref);
+      }
+      await batch.commit();
     }
 
     // Remove the builder profile if this account had one, then the profile doc.

@@ -138,6 +138,31 @@ describe("POST /api/feedback", () => {
     expect(state.written).toHaveLength(60);
   });
 
+  it("does not let an over-limit client drain the shared ceiling", async () => {
+    const ip = "203.0.113.9";
+    // First three from this IP are accepted.
+    for (let i = 0; i < 3; i += 1) {
+      const res = await POST(
+        postRequest({ category: "idea", message: `Valid suggestion ${i + 1} here.` }, { ip }),
+      );
+      expect(res.status).toBe(200);
+    }
+    // Further valid submissions from the same IP are refused by the per-client
+    // limit and must NOT consume the shared global bucket.
+    for (let i = 0; i < 20; i += 1) {
+      const res = await POST(
+        postRequest({ category: "idea", message: `Over-limit attempt ${i + 1} here.` }, { ip }),
+      );
+      expect(res.status).toBe(429);
+    }
+    // A different client can still submit: the global ceiling was not drained.
+    const res = await POST(
+      postRequest({ category: "idea", message: "Fresh client, still allowed." }, { ip: "198.51.100.77" }),
+    );
+    expect(res.status).toBe(200);
+    expect(state.written).toHaveLength(4);
+  });
+
   it("returns 500 when persistence fails", async () => {
     state.throwOnDb = true;
     const res = await POST(

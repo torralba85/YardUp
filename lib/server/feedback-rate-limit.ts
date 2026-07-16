@@ -1,5 +1,5 @@
 import { type NextRequest, type NextResponse } from "next/server";
-import { checkAIRateLimit } from "@/lib/server/ai-rate-limit";
+import { checkCombinedAIRateLimit } from "@/lib/server/ai-rate-limit";
 
 const WINDOW_MS = 60 * 60 * 1000;
 const PER_CLIENT_LIMIT = 3;
@@ -16,29 +16,27 @@ const PER_CLIENT_LIMIT = 3;
 const GLOBAL_LIMIT = 60;
 
 /**
- * Abuse guard for the public feedback endpoint. Enforces an hourly global
- * ceiling that a forwarded-header rotation cannot escape, then a 3-per-client
- * limit. The global check runs first on purpose: the shared limiter only writes
- * its bucket doc when a request is under the limit, so once the ceiling is
- * saturated a rotating-IP flood is rejected here with no writes, instead of
- * minting (and persisting) a fresh per-client bucket on every request.
- * Delegates to the shared limiter (Firestore-backed in production, in-memory in
- * tests/dev).
+ * Abuse guard for the public feedback endpoint: 3 submissions per client per
+ * hour and a shared hourly ceiling a forwarded-header rotation cannot escape.
+ *
+ * Both are enforced in one atomic check so neither is charged when the other
+ * rejects: a client already over its per-client limit cannot drain the shared
+ * bucket, and a saturated shared bucket rejects without minting per-client
+ * entries. The shared ceiling fails closed if its Firestore backend is
+ * unreachable, so the global bound never widens to per-instance counters when
+ * cost protection matters most.
  */
-export async function checkFeedbackRateLimit(
+export function checkFeedbackRateLimit(
   request: NextRequest,
 ): Promise<NextResponse | null> {
-  const global = await checkAIRateLimit(request, {
-    limit: GLOBAL_LIMIT,
-    namespace: "feedback-global",
-    windowMs: WINDOW_MS,
-    clientKey: "all",
-  });
-  if (global) return global;
-
-  return checkAIRateLimit(request, {
-    limit: PER_CLIENT_LIMIT,
-    namespace: "feedback",
-    windowMs: WINDOW_MS,
-  });
+  return checkCombinedAIRateLimit(request, [
+    { limit: PER_CLIENT_LIMIT, namespace: "feedback", windowMs: WINDOW_MS },
+    {
+      limit: GLOBAL_LIMIT,
+      namespace: "feedback-global",
+      windowMs: WINDOW_MS,
+      clientKey: "all",
+      failClosed: true,
+    },
+  ]);
 }

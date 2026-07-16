@@ -13,6 +13,7 @@ const state = {
   contacts: {} as Record<string, Record<string, unknown>>,
   certificatePurchases: [] as Array<{ id: string; data: Record<string, unknown> }>,
   leadUnlocks: [] as Array<{ id: string; data: Record<string, unknown> }>,
+  feedback: [] as Array<{ id: string; data: Record<string, unknown> }>,
   throwOnDb: false,
 };
 
@@ -66,7 +67,9 @@ function makeDb() {
           const rows =
             name === "certificatePurchases"
               ? state.certificatePurchases
-              : state.leadUnlocks;
+              : name === "leadUnlocks"
+                ? state.leadUnlocks
+                : state.feedback;
           return { docs: docsOf(rows.filter((row) => row.data[field] === value)) };
         },
       }),
@@ -98,6 +101,7 @@ describe("GET /api/account/export", () => {
     state.contacts = {};
     state.certificatePurchases = [];
     state.leadUnlocks = [];
+    state.feedback = [];
     state.throwOnDb = false;
   });
 
@@ -126,6 +130,10 @@ describe("GET /api/account/export", () => {
       { id: "cert-1", data: { uid: "local-dev", amount: 4900 } },
       { id: "cert-2", data: { uid: "someone-else", amount: 4900 } },
     ];
+    state.feedback = [
+      { id: "fb-1", data: { uid: "local-dev", category: "bug", message: "Map tile is blank." } },
+      { id: "fb-2", data: { uid: "someone-else", category: "idea", message: "Not mine." } },
+    ];
 
     const res = await GET(getRequest());
     expect(res.status).toBe(200);
@@ -148,6 +156,9 @@ describe("GET /api/account/export", () => {
           streetAddress: "123 Maple St",
         },
       },
+    ]);
+    expect(body.feedback).toEqual([
+      { id: "fb-1", uid: "local-dev", category: "bug", message: "Map tile is blank." },
     ]);
     expect(body.purchaseLedger).toEqual([
       { type: "certificate", id: "cert-1", uid: "local-dev", amount: 4900 },

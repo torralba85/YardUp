@@ -14,6 +14,7 @@ const ops = {
   deletedPrivateContacts: [] as string[],
   deletedLeadRoots: [] as string[],
   failContactId: null as string | null,
+  feedbackDocs: [] as { id: string; uid: string }[],
 };
 
 function makeDb() {
@@ -50,6 +51,17 @@ function makeDb() {
                     },
                   },
                 })),
+            }),
+          }),
+        };
+      }
+      if (name === "feedback") {
+        return {
+          where: (_field: string, _op: string, uid: string) => ({
+            get: async () => ({
+              docs: ops.feedbackDocs
+                .filter((entry) => entry.uid === uid)
+                .map((entry) => ({ ref: `feedback:${entry.id}` })),
             }),
           }),
         };
@@ -98,6 +110,7 @@ describe("POST /api/account/delete", () => {
     ops.deletedPrivateContacts = [];
     ops.deletedLeadRoots = [];
     ops.failContactId = null;
+    ops.feedbackDocs = [];
     throwOnDb = false;
     deleteUser.mockClear();
   });
@@ -158,6 +171,19 @@ describe("POST /api/account/delete", () => {
     // ...and the profile/identity remain for a clean retry.
     expect(ops.builderDeleted).toBe(false);
     expect(ops.userDeleted).toBe(false);
+  });
+
+  it("deletes feedback the user submitted, leaving other users' feedback", async () => {
+    ops.feedbackDocs = [
+      { id: "fb-1", uid: "local-dev" },
+      { id: "fb-2", uid: "someone-else" },
+    ];
+
+    const res = await POST(postRequest());
+    expect(res.status).toBe(200);
+
+    expect(ops.batchDeletes).toContain("feedback:fb-1");
+    expect(ops.batchDeletes).not.toContain("feedback:fb-2");
   });
 
   it("is safe to retry after account data is already gone", async () => {
