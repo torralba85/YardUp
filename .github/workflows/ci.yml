@@ -54,7 +54,7 @@ jobs:
     concurrency:
       group: firebase-production-${{ github.ref }}
       cancel-in-progress: false
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,6 +68,7 @@ jobs:
         run: |
           cat > functions/.env <<EOF
           NEXT_PUBLIC_GOOGLE_PLACES_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_PLACES_KEY }}"
+          ENABLE_NATIVE_STORE_VERIFICATION="${{ secrets.ENABLE_NATIVE_STORE_VERIFICATION }}"
           EOF
           cat > .env.production.local <<EOF
           NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
@@ -89,17 +90,6 @@ jobs:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
       - name: Firebase deploy dry run
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
-      - name: Deploy Firebase Hosting + Firestore Rules
-        run: |
-          set -o pipefail
-          deploy_log="$(mktemp)"
-          firebase deploy --only hosting,firestore:rules --project yardup-2026 2>&1 | tee "$deploy_log" || {
-            if grep -F "is the current active version" "$deploy_log"; then
-              echo "::notice::Firebase Hosting version is already active; continuing."
-            else
-              exit 1
-            fi
-          }
       - name: Deploy Firebase Functions
         run: |
           set -o pipefail
@@ -133,7 +123,7 @@ jobs:
             return 1
           }
 
-          for target in functions:app functions:api functions:apiAi functions:apiStripe; do
+          for target in functions:app functions:api functions:apiAi functions:apiStripe functions:apiStore; do
             for attempt in 1 2 3; do
               deploy_log="$(mktemp)"
               deploy_started="$(date -u +%s)"
@@ -169,3 +159,14 @@ jobs:
               break
             done
           done
+      - name: Deploy Firebase Hosting + Firestore Rules
+        run: |
+          set -o pipefail
+          deploy_log="$(mktemp)"
+          firebase deploy --only hosting,firestore:rules --project yardup-2026 2>&1 | tee "$deploy_log" || {
+            if grep -F "is the current active version" "$deploy_log"; then
+              echo "::notice::Firebase Hosting version is already active; continuing."
+            else
+              exit 1
+            fi
+          }
