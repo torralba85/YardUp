@@ -16,25 +16,29 @@ const PER_CLIENT_LIMIT = 3;
 const GLOBAL_LIMIT = 60;
 
 /**
- * Abuse guard for the public feedback endpoint. First enforces 3 submissions
- * per client per hour, then an hourly global ceiling that a forwarded-header
- * rotation cannot escape. Delegates to the shared limiter (Firestore-backed in
- * production, in-memory in tests/dev).
+ * Abuse guard for the public feedback endpoint. Enforces an hourly global
+ * ceiling that a forwarded-header rotation cannot escape, then a 3-per-client
+ * limit. The global check runs first on purpose: the shared limiter only writes
+ * its bucket doc when a request is under the limit, so once the ceiling is
+ * saturated a rotating-IP flood is rejected here with no writes, instead of
+ * minting (and persisting) a fresh per-client bucket on every request.
+ * Delegates to the shared limiter (Firestore-backed in production, in-memory in
+ * tests/dev).
  */
 export async function checkFeedbackRateLimit(
   request: NextRequest,
 ): Promise<NextResponse | null> {
-  const perClient = await checkAIRateLimit(request, {
-    limit: PER_CLIENT_LIMIT,
-    namespace: "feedback",
-    windowMs: WINDOW_MS,
-  });
-  if (perClient) return perClient;
-
-  return checkAIRateLimit(request, {
+  const global = await checkAIRateLimit(request, {
     limit: GLOBAL_LIMIT,
     namespace: "feedback-global",
     windowMs: WINDOW_MS,
     clientKey: "all",
+  });
+  if (global) return global;
+
+  return checkAIRateLimit(request, {
+    limit: PER_CLIENT_LIMIT,
+    namespace: "feedback",
+    windowMs: WINDOW_MS,
   });
 }
