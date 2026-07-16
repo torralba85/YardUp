@@ -52,7 +52,7 @@ export function DeleteAccountPageClient() {
             </strong>
             . Confirm twice to permanently delete.
           </p>
-          <DeleteAccountButton />
+          <DeleteAccountButton tone="light" />
         </section>
       ) : (
         <section className="space-y-4 rounded-lg border border-lf-hairline bg-lf-card p-5">
