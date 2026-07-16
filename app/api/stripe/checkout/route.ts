@@ -11,11 +11,10 @@ export const runtime = "nodejs";
 /**
  * POST /api/stripe/checkout  { requestId }
  *
- * Starts a lead unlock. The authenticated builder must be matched to the lead.
- * With a Stripe key: creates a Checkout session and returns its URL. Without
- * one (demo): grants immediately and stamps the unlock `demo` — gated so a
- * production deploy (which always carries a key) can never reach the demo
- * branch (4A).
+ * Starts a lead unlock. The authenticated builder must be matched to an active
+ * lead. With a Stripe key: creates a Checkout session and returns its URL.
+ * Without one (demo): grants immediately and stamps the unlock `demo` — gated
+ * so a production deploy can never reach the demo branch accidentally.
  */
 export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -28,8 +27,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "requestId is required" }, { status: 400 });
   }
 
-  // The lead must exist and have offered itself to this builder — you cannot
-  // pay to unlock a lead you were never matched to.
+  // The lead must exist, still be active, and have offered itself to this
+  // builder — deleted/withdrawn owner submissions must never remain purchasable.
   const reqSnap = await getAdminDb()
     .collection("connectionRequests")
     .doc(requestId)
@@ -37,7 +36,11 @@ export async function POST(request: NextRequest) {
   if (!reqSnap.exists) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
-  const matched: string[] = reqSnap.data()?.matchedBuilderIds ?? [];
+  const requestData = reqSnap.data();
+  if (requestData?.status !== "submitted") {
+    return NextResponse.json({ error: "Lead is no longer available" }, { status: 409 });
+  }
+  const matched: string[] = requestData?.matchedBuilderIds ?? [];
   if (!matched.includes(builderId)) {
     return NextResponse.json({ error: "Not a matched builder for this lead" }, { status: 403 });
   }
@@ -70,9 +73,6 @@ export async function POST(request: NextRequest) {
 
   const origin = resolveCheckoutOrigin(request.headers);
   if (!origin) {
-    // Stripe requires absolute success/cancel URLs. With no Origin header and no
-    // NEXT_PUBLIC_APP_URL we would send a relative one and Stripe would reject the
-    // session — fail cleanly instead of throwing an opaque 500.
     console.error(
       "[stripe/checkout] No request Origin and NEXT_PUBLIC_APP_URL is unset; cannot build return URLs.",
     );
@@ -81,14 +81,11 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-  const previewSerial = reqSnap.data()?.preview?.previewSerial ?? requestId;
+  const previewSerial = requestData?.preview?.previewSerial ?? requestId;
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      // Card (incl. wallets) is immediate, so checkout.session.completed always
-      // means paid — the webhook needs no async-payment fulfilment. Enabling a
-      // delayed method would require handling async_payment_succeeded/failed.
       payment_method_types: ["card"],
       line_items: [
         {
@@ -100,7 +97,6 @@ export async function POST(request: NextRequest) {
           },
         },
       ],
-      // The webhook reads these back to write the grant (2A).
       metadata: { builderId, requestId },
       success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
       cancel_url: `${origin}/builder?lead=${requestId}`,
