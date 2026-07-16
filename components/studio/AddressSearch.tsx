@@ -51,8 +51,7 @@ let initialized = false;
 
 function initGoogleMaps(apiKey: string) {
   if (!initialized) {
-    // v2 functional API: set key/version before the first importLibrary call.
-    setOptions({ key: apiKey, v: "weekly" });
+    setOptions({ key: apiKey, libraries: ["places"] });
     initialized = true;
   }
 }
@@ -75,9 +74,10 @@ function looksLikeBrowserKey(value: string | undefined): value is string {
  * falls back to debounced server predictions from `/api/suggest`, submitted as
  * free text via {@link onSubmitText}. Both sources render into the same dropdown.
  *
- * Suggestions are available to guests and signed-in users. Live parcel lookup
- * still requires auth downstream; free-text submits always forward to
- * {@link onSubmitText} so the consumer can gate them.
+ * Signed-out visitors get neither source: every suggestion/resolve path spends
+ * metered Google quota, so guests see a sign-in note and no dropdown. Free-text
+ * submits still forward to {@link onSubmitText} so the consumer can gate them
+ * (parcel context answers with its own sign-in message).
  *
  * Migrated off the deprecated `google.maps.places.Autocomplete` widget, which
  * Google no longer offers to new Cloud projects.
@@ -112,11 +112,12 @@ export default function AddressSearch({
   const [activeIndex, setActiveIndex] = useState(-1);
 
   // Both sources feed the same dropdown. Google when a key is loaded and
-  // working; otherwise the server fallback (needs a free-text handler and a
-  // server Places key: GOOGLE_PLACES_SERVER_KEY or GOOGLE_MAPS_API_KEY).
-  const googleEnabled = hasPlacesKey && placesReady && !googleFailed && !disabled;
+  // working; otherwise the server fallback (needs a free-text handler). Either
+  // way suggestions cost metered API quota, so guests get neither source.
+  const signedIn = Boolean(user);
+  const googleEnabled = hasPlacesKey && placesReady && !googleFailed && !disabled && signedIn;
   const serverEnabled =
-    (!hasPlacesKey || googleFailed) && Boolean(onSubmitText) && !disabled;
+    (!hasPlacesKey || googleFailed) && Boolean(onSubmitText) && !disabled && signedIn;
   const dropdownEnabled = googleEnabled || serverEnabled;
 
   // Imperative focus when an outside action (e.g. sidebar "Change address")
@@ -428,16 +429,13 @@ export default function AddressSearch({
         </span>
       )}
 
-      {!loading && !dropdownEnabled ? (
+      {!signedIn ? (
+        <p className="mt-1.5 text-xs text-lf-muted" role="note">
+          Sign in to search a real address.
+        </p>
+      ) : !loading && !hasPlacesKey ? (
         <p className="mt-1.5 text-xs text-lf-muted" role="note">
           Type a full address (street, city, state) and press Search.
-          {hasPlacesKey && googleFailed
-            ? " Address suggestions are temporarily unavailable."
-            : ""}
-        </p>
-      ) : !loading && serverEnabled && !googleEnabled ? (
-        <p className="mt-1.5 text-xs text-lf-muted" role="note">
-          Start typing for address suggestions, or enter a full address and press Search.
         </p>
       ) : null}
     </form>

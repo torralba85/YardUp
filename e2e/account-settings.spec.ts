@@ -12,8 +12,8 @@ test.describe("account and support surfaces", () => {
     await expect(page.getByRole("heading", { name: /help/i })).toBeVisible();
     await page.goto("/feedback");
     await expect(page.getByRole("heading", { name: /feedback/i })).toBeVisible();
-    await expect(page.getByLabel(/message/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /submit feedback/i })).toBeVisible();
+    await expect(page.getByLabel(/what happened, or what should we build/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /send feedback/i })).toBeVisible();
   });
 
   test("delete-account explains retention and offers sign-in", async ({ page }) => {
