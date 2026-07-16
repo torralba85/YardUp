@@ -29,7 +29,11 @@ export async function POST(req: NextRequest) {
       if (!requestSnap.exists) {
         throw new Error("Lead not found");
       }
-      const matchedBuilderIds = requestSnap.data()?.matchedBuilderIds;
+      const requestData = requestSnap.data();
+      if (requestData?.status !== "submitted") {
+        throw new Error("Lead is no longer available");
+      }
+      const matchedBuilderIds = requestData?.matchedBuilderIds;
       if (!Array.isArray(matchedBuilderIds) || !matchedBuilderIds.includes(builderId)) {
         throw new Error("Lead is not matched to this builder");
       }
