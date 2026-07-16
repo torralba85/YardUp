@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import {
   fetchBuilderInbox,
   fetchBuilderProfile,
@@ -14,7 +14,6 @@ import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Button } from "@/components/ui/Button";
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -141,9 +140,10 @@ export default function BuilderDashboard({
 }
 
 /**
- * Slim app header for the builder desk: brand lockup home link plus the
- * signed-in identity and sign-out. Mirrors the studio's account affordance
- * (StudioShell / MobileHeader) so a builder is never stranded on /builder.
+ * Slim app header for the builder desk: brand lockup home link plus the shared
+ * {@link AccountMenu} (settings, help, feedback, legal, sign out, delete), so a
+ * builder is never stranded on /builder with sign-out as the only account
+ * action. Mirrors the studio's account affordance (StudioShell / MobileHeader).
  */
 function BuilderHeader({
   identity,
@@ -165,16 +165,13 @@ function BuilderHeader({
         </Link>
         <div className="flex min-w-0 items-center gap-3">
           <span className="hidden min-w-0 truncate text-sm text-lf-muted sm:block">{identity}</span>
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
-            onClick={onSignOut}
-            leftIcon={<LogOut size={13} />}
-            className="shrink-0"
-          >
-            Sign out
-          </Button>
+          <AccountMenu
+            displayName={identity}
+            roleLabel="Builder"
+            onSignOut={onSignOut}
+            surface="light"
+            compact
+          />
         </div>
       </div>
     </header>

@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
+/** Props for {@link DeleteAccountButton}. */
+export interface DeleteAccountButtonProps {
+  /**
+   * Tone of the surface the control sits on. `"dark"` (default) styles for the
+   * mahogany account block/menus; `"light"` styles for sand/card surfaces like
+   * the settings page.
+   */
+  surface?: "dark" | "light";
+}
+
 /**
  * Destructive "Delete account" affordance for the studio account block.
  *
@@ -10,11 +20,12 @@ import { useAuth } from "@/lib/auth-context";
  * (no separate modal), then calls {@link useAuth}'s `deleteAccount`. On success
  * the auth state clears and this component unmounts with the account block.
  */
-export function DeleteAccountButton() {
+export function DeleteAccountButton({ surface = "dark" }: DeleteAccountButtonProps) {
   const { deleteAccount } = useAuth();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dark = surface === "dark";
 
   async function handleDelete() {
     setPending(true);
@@ -38,7 +49,11 @@ export function DeleteAccountButton() {
             setError(null);
             setConfirming(true);
           }}
-          className="text-[11px] text-lf-taupe underline-offset-2 transition hover:text-lf-brick hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-brick focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+          className={`min-h-11 text-[11px] underline-offset-2 transition hover:text-lf-brick hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-brick focus-visible:ring-offset-2 ${
+            dark
+              ? "text-lf-taupe focus-visible:ring-offset-lf-mahogany"
+              : "text-lf-muted focus-visible:ring-offset-lf-card"
+          }`}
         >
           Delete account
         </button>
@@ -53,7 +68,7 @@ export function DeleteAccountButton() {
 
   return (
     <div className="rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-2.5">
-      <p className="text-[11px] leading-snug text-lf-sand-2">
+      <p className={`text-[11px] leading-snug ${dark ? "text-lf-sand-2" : "text-lf-espresso"}`}>
         Permanently delete your account, saved concepts, and profile? This can&rsquo;t
         be undone.
       </p>
@@ -62,7 +77,9 @@ export function DeleteAccountButton() {
           type="button"
           onClick={handleDelete}
           disabled={pending}
-          className="min-h-11 rounded-full bg-lf-brick px-4 py-2 text-[11px] font-semibold text-lf-sand transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-brick focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-60"
+          className={`min-h-11 rounded-full bg-lf-brick px-4 py-2 text-[11px] font-semibold text-lf-sand transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-brick focus-visible:ring-offset-2 disabled:opacity-60 ${
+            dark ? "focus-visible:ring-offset-lf-mahogany" : "focus-visible:ring-offset-lf-card"
+          }`}
         >
           {pending ? "Deleting…" : "Delete permanently"}
         </button>
@@ -70,7 +87,11 @@ export function DeleteAccountButton() {
           type="button"
           onClick={() => setConfirming(false)}
           disabled={pending}
-          className="min-h-11 rounded-full px-4 py-2 text-[11px] font-medium text-lf-taupe transition hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-60"
+          className={`min-h-11 rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 disabled:opacity-60 ${
+            dark
+              ? "text-lf-taupe hover:text-lf-sand focus-visible:ring-offset-lf-mahogany"
+              : "text-lf-muted hover:text-lf-espresso focus-visible:ring-offset-lf-card"
+          }`}
         >
           Cancel
         </button>
