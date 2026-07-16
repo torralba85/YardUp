@@ -12,7 +12,13 @@ const firestore = vi.hoisted(() => ({
   fetchUnlockedContact: vi.fn(),
 }));
 
-const unlockApi = vi.hoisted(() => ({ startLeadUnlock: vi.fn() }));
+const unlockApi = vi.hoisted(() => ({
+  startLeadUnlock: vi.fn(),
+  leadUnlockPayLabel: (hasCredits: boolean) =>
+    hasCredits ? "Unlock with 1 Credit" : "Pay with Stripe",
+  leadUnlockSecureNote: (hasCredits: boolean) =>
+    hasCredits ? "Uses 1 lead credit from your balance" : "Secure checkout — Stripe",
+}));
 
 vi.mock("@/lib/marketplace-firestore", () => firestore);
 vi.mock("@/lib/lead-unlock-api", () => unlockApi);

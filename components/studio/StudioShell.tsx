@@ -1,14 +1,14 @@
 "use client";
 
-import { ChevronDown, LogOut, MapPin, Trash2 } from "lucide-react";
+import { ChevronDown, MapPin, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { StepRail } from "@/components/ui/StepRail";
 import { Button } from "@/components/ui/Button";
 import type { DerivedStep, StudioStep } from "@/lib/studio-steps";
-import { DeleteAccountButton } from "./DeleteAccountButton";
 
 /** Props for {@link StudioShell}. */
 export interface StudioShellProps {
@@ -183,7 +183,7 @@ export default function StudioShell({
                       ))}
                     </ul>
                     {deleteNotice && (
-                      <p role="status" className="mt-2 text-[11px] text-lf-brick">
+                      <p role="status" className="mt-2 text-[11px] text-lf-brick-on-dark">
                         {deleteNotice}
                       </p>
                     )}
@@ -193,25 +193,20 @@ export default function StudioShell({
             )}
 
             {user ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 rounded-lg border border-lf-taupe/25 bg-lf-sand/[0.03] p-2">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
-                    {initials}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
-                    <div className="text-xs text-lf-taupe">{roleLabel}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={logout}
-                    aria-label="Sign out"
-                    className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lf-clay focus-visible:ring-offset-lf-mahogany"
-                  >
-                    <LogOut size={14} />
-                  </button>
+              <div className="flex items-center gap-2 rounded-lg border border-lf-taupe/25 bg-lf-sand/[0.03] p-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
+                  {initials}
                 </div>
-                <DeleteAccountButton />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
+                  <div className="text-xs text-lf-taupe">{roleLabel}</div>
+                </div>
+                <AccountMenu
+                  displayName={displayName}
+                  roleLabel={roleLabel}
+                  onSignOut={() => void logout()}
+                  tone="dark"
+                />
               </div>
             ) : (
               <button

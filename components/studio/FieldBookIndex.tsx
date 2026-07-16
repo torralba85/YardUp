@@ -12,7 +12,8 @@ import { PLATES, type PlateTick, type StudioPlate } from "@/lib/studio-plates";
 const TICK_META: Record<PlateTick, { glyph: string; label: string; className: string }> = {
   eligible: { glyph: "✓", label: "eligible", className: "text-lf-money-on-dark" },
   review: { glyph: "△", label: "review", className: "text-lf-amber-on-dark" },
-  unlikely: { glyph: "✕", label: "unlikely", className: "text-lf-brick" },
+  // On mahogany sidebar — use on-dark brick for AA contrast.
+  unlikely: { glyph: "✕", label: "unlikely", className: "text-lf-brick-on-dark" },
   pending: { glyph: "·", label: "not started", className: "text-lf-taupe/60" },
   ready: { glyph: "◦", label: "ready to record", className: "text-lf-money-on-dark" },
 };

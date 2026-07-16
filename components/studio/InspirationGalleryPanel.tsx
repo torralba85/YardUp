@@ -100,13 +100,13 @@ export default function InspirationGalleryPanel({
             return (
               <div
                 key={item.id}
-                className="group overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-lf-clay/50 hover:shadow-md"
+                className="group overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-sm motion-safe:transition-[border-color,box-shadow] motion-safe:duration-300 hover:border-lf-clay/50 hover:shadow-md"
               >
                 {/* Media area with toggling Views */}
                 <div className="relative h-44 w-full overflow-hidden bg-lf-sand-2 border-b border-lf-hairline">
-                  {/* Real View (Image) */}
+                  {/* Real View (Image) — photo cover only; no decorative gradient scrim. */}
                   <div
-                    className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
+                    className={`absolute inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-in-out ${
                       viewMode === "image" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                     }`}
                   >
@@ -115,14 +115,14 @@ export default function InspirationGalleryPanel({
                       alt={`${item.title} Real 3D Render`}
                       fill
                       sizes="(max-width: 768px) 100vw, 384px"
-                      className="object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
+                      className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:group-hover:scale-105"
                       unoptimized // Served locally, bypass dynamic resizing costs/issues
                     />
                   </div>
 
                   {item.isStyleMatched && (
                     <div className="absolute top-3 left-3 z-20 rounded-md bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-md">
-                      <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-lf-sand">
+                      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-sand">
                         Style-Matched
                       </span>
                     </div>
@@ -131,19 +131,19 @@ export default function InspirationGalleryPanel({
 
                   {/* 3D Massing View (SVG) */}
                   <div
-                    className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
+                    className={`absolute inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-in-out ${
                       viewMode === "diagram" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                     }`}
                   >
                     <ConceptDiagram item={item} />
                   </div>
 
-                  {/* Toggle Capsule */}
+                  {/* Toggle Capsule — min 44px touch via before: hit area on mobile. */}
                   <div className="absolute top-3 right-3 z-20 flex gap-0.5 rounded-full bg-lf-espresso/85 p-0.5 backdrop-blur-md border border-lf-sand/10 shadow-lg">
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "image")}
-                      className={`relative flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-3 before:-inset-x-1 ${
+                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
                         viewMode === "image"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -155,7 +155,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "diagram")}
-                      className={`relative flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-3 before:-inset-x-1 ${
+                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
                         viewMode === "diagram"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -170,14 +170,14 @@ export default function InspirationGalleryPanel({
                 {/* Card Details */}
                 <div className="space-y-3 p-4">
                   <div>
-                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso group-hover:text-lf-clay transition-colors duration-200">
+                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso motion-safe:transition-colors motion-safe:duration-200 group-hover:text-lf-clay">
                       {item.title}
                     </h3>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted uppercase tracking-wider">
+                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted uppercase tracking-[0.14em]">
                         {item.style}
                       </span>
-                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted">
+                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted tracking-[0.14em]">
                         {item.sqft} sf ({item.width}&apos;x{item.length}&apos;)
                       </span>
                     </div>
@@ -198,7 +198,8 @@ export default function InspirationGalleryPanel({
 
                   <div className="mt-1 flex items-center justify-between border-t border-lf-hairline pt-3 gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-lf-muted">
+                      {/* Build cost band is cost, not payable income — espresso ink. */}
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-lf-espresso">
                         {item.budgetBand}
                       </span>
                       {item.isStyleMatched && onViewComparison && (
@@ -207,7 +208,7 @@ export default function InspirationGalleryPanel({
                           <button
                             type="button"
                             onClick={() => onViewComparison(item)}
-                            className="relative flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wider text-lf-clay hover:text-lf-espresso transition-colors cursor-pointer before:absolute before:-inset-y-4 before:-inset-x-2"
+                            className="relative flex min-h-11 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-lf-clay hover:text-lf-clay-strong motion-safe:transition-colors cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-2"
                           >
                             Compare
                           </button>

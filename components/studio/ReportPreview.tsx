@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { AIPermitStage, AIProjectBrief, AIRiskLevel } from "@/lib/ai-types";
 import { formatCurrency } from "@/lib/feasibility";
+import { Button } from "@/components/ui/Button";
 import type { FeasibilityResult } from "./types";
 
 /** Props for {@link ReportPreview}. */
@@ -118,12 +119,18 @@ export default function ReportPreview({
             <ReportFact
               icon={Ruler}
               text={`${result.coveragePercent.toFixed(1)}% projected lot coverage`}
+              tone={result.remainingCapacity < 0 ? "blocked" : "default"}
             />
             <ReportFact
               icon={BarChart3}
               text={`${formatCurrency(result.annualNoi)} annual net income estimate`}
+              tone="money"
             />
-            <ReportFact icon={CheckCircle2} text={`${result.zoningStatus} feasibility status`} />
+            <ReportFact
+              icon={CheckCircle2}
+              text={`${result.zoningStatus} feasibility status`}
+              tone={result.zoningStatus === "Compliant" ? "clear" : "review"}
+            />
           </div>
           <div className="mt-5 border-t border-lf-hairline pt-4">
             <h3 className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
@@ -142,7 +149,7 @@ export default function ReportPreview({
               "Recommended next steps",
             ].map((item) => (
               <div key={item} className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="shrink-0 text-lf-mahogany" />
+                <CheckCircle2 size={14} className="shrink-0 text-lf-forest" />
                 {item}
               </div>
             ))}
@@ -163,51 +170,66 @@ export default function ReportPreview({
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="md"
+              fullWidth
+              className="text-[11px]"
               onClick={() => window.print()}
-              className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-lf-clay text-[11px] font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              leftIcon={<Printer size={14} />}
             >
-              <Printer size={14} />
               Print / Save
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
+              fullWidth
+              className="text-[11px]"
               onClick={onDownload}
-              className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              leftIcon={<Download size={14} />}
             >
-              <Download size={14} />
               Download
-            </button>
+            </Button>
             {onExportCsv && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
+                className="text-[11px]"
                 onClick={onExportCsv}
-                className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                leftIcon={<FileSpreadsheet size={14} />}
               >
-                <FileSpreadsheet size={14} />
                 CSV Export
-              </button>
+              </Button>
             )}
             {onShare && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
+                className="text-[11px]"
                 onClick={onShare}
-                className="flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-lf-hairline text-[11px] font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                leftIcon={<Share2 size={14} />}
               >
-                <Share2 size={14} />
-                <span>{shareNotice ?? "Share Link"}</span>
-              </button>
+                {shareNotice ?? "Share Link"}
+              </Button>
             )}
             {onConnectBuilders && (
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="md"
+                fullWidth
+                className="col-span-2 text-[11px]"
                 onClick={onConnectBuilders}
-                className="col-span-2 flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-lf-clay text-[11px] font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                leftIcon={<Hammer size={14} />}
               >
-                <Hammer size={14} />
                 Connect with local builders
-              </button>
+              </Button>
             )}
           </div>
           <div className="lf-caption rounded-md border border-lf-hairline/40 bg-lf-sand-2 p-2.5 text-lf-muted">
@@ -451,13 +473,35 @@ function CertificateBriefSection({
 function ReportFact({
   icon: Icon,
   text,
+  tone = "default",
 }: {
   icon: typeof FileText;
   text: string;
+  /** Semantic tone for money/status — DESIGN.md forest/amber/brick rules. */
+  tone?: "default" | "money" | "clear" | "review" | "blocked";
 }) {
+  const toneClass =
+    tone === "money"
+      ? "text-lf-forest font-semibold"
+      : tone === "clear"
+        ? "text-lf-forest font-semibold"
+        : tone === "review"
+          ? "text-lf-amber-ink font-semibold"
+          : tone === "blocked"
+            ? "text-lf-brick font-semibold"
+            : "text-lf-muted";
+  const iconClass =
+    tone === "money" || tone === "clear"
+      ? "text-lf-forest"
+      : tone === "review"
+        ? "text-lf-amber-ink"
+        : tone === "blocked"
+          ? "text-lf-brick"
+          : "text-lf-muted";
+
   return (
-    <div className="flex items-center gap-2">
-      <Icon size={16} className="text-lf-muted" />
+    <div className={`flex items-center gap-2 ${toneClass}`}>
+      <Icon size={16} className={`shrink-0 ${iconClass}`} />
       {text}
     </div>
   );

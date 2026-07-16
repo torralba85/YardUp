@@ -164,7 +164,7 @@ export default function ConstraintsPanel({
             <p className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
               Rent estimate
             </p>
-            <MoneyFigure value={result.monthlyRent} size="sm" className="text-lf-mahogany" />
+            <MoneyFigure value={result.monthlyRent} size="sm" tone="forest" />
           </div>
           <Segmented
             aria-label="Rent estimate basis"

@@ -5,7 +5,11 @@ const mocks = vi.hoisted(() => ({
   uid: "b1",
   leadDoc: {
     exists: true,
-    data: () => ({ matchedBuilderIds: ["b1"], preview: { previewSerial: "LF-X" } }),
+    data: () => ({
+      status: "submitted",
+      matchedBuilderIds: ["b1"],
+      preview: { previewSerial: "LF-X" },
+    }),
   } as { exists: boolean; data: () => Record<string, unknown> },
   unlocked: false,
   stripe: null as null | { checkout: { sessions: { create: ReturnType<typeof vi.fn> } } },
@@ -48,7 +52,11 @@ beforeEach(() => {
   mocks.stripe = null;
   mocks.leadDoc = {
     exists: true,
-    data: () => ({ matchedBuilderIds: ["b1"], preview: { previewSerial: "LF-X" } }),
+    data: () => ({
+      status: "submitted",
+      matchedBuilderIds: ["b1"],
+      preview: { previewSerial: "LF-X" },
+    }),
   };
   mocks.grant.mockClear();
 });
@@ -69,8 +77,21 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(404);
   });
 
+  it("409s when the lead has been withdrawn", async () => {
+    mocks.leadDoc = {
+      exists: true,
+      data: () => ({ status: "withdrawn", matchedBuilderIds: ["b1"] }),
+    };
+    const res = await POST(postRequest({ requestId: "r1" }));
+    expect(res.status).toBe(409);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
   it("403s when the builder is not matched to the lead", async () => {
-    mocks.leadDoc = { exists: true, data: () => ({ matchedBuilderIds: ["someone-else"] }) };
+    mocks.leadDoc = {
+      exists: true,
+      data: () => ({ status: "submitted", matchedBuilderIds: ["someone-else"] }),
+    };
     const res = await POST(postRequest({ requestId: "r1" }));
     expect(res.status).toBe(403);
     expect(mocks.grant).not.toHaveBeenCalled();

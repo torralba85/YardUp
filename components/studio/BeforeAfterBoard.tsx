@@ -250,8 +250,8 @@ export default function BeforeAfterBoard({
               onClick={onToggleAttach}
               className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold transition select-none rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay ${
                 isAttached
-                  ? "bg-lf-forest text-lf-sand hover:bg-lf-espresso"
-                  : "border-[1.5px] border-lf-espresso bg-lf-card text-lf-espresso hover:bg-lf-sand-2"
+                  ? "bg-lf-forest text-lf-sand hover:bg-lf-forest/90"
+                  : "border-[1.5px] border-lf-clay bg-lf-card text-lf-espresso hover:bg-lf-sand-2"
               }`}
             >
               {isAttached ? (

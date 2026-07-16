@@ -1,0 +1,47 @@
+{
+  "packageId": "com.lotfoundry.app",
+  "name": "LotFoundry",
+  "launcherName": "LotFoundry",
+  "display": "standalone",
+  "themeColor": "#F2E5D5",
+  "themeColorDark": "#261307",
+  "navigationColor": "#261307",
+  "backgroundColor": "#F2E5D5",
+  "enableNotifications": false,
+  "startUrl": "/studio",
+  "iconUrl": "https://yardup-2026.web.app/icon-512.png",
+  "maskableIconUrl": "https://yardup-2026.web.app/icon-maskable-512.png",
+  "monochromeIconUrl": "https://yardup-2026.web.app/icon-192.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://yardup-2026.web.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": true
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://yardup-2026.web.app/",
+  "minSdkVersion": 24,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "host": "yardup-2026.web.app"
+}

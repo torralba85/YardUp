@@ -43,6 +43,11 @@ NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=<Firebase App Check reCAPTCHA Enterprise site key>
 # Local only: a registered App Check debug token; never deploy or commit its value.
 NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=<registered debug token>
+# Native store receipt verification (server-side, production only):
+APPLE_BUNDLE_ID=<iOS bundle id, e.g. com.lotfoundry.app>
+APPLE_ROOT_CA_FINGERPRINT256=<SHA-256 fingerprint of the Apple root CA that anchors StoreKit x5c chains>
+GOOGLE_PLAY_PACKAGE_NAME=<Android package name, e.g. com.lotfoundry.app>
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=<raw service-account JSON with androidpublisher scope>
 ```
 
 Without parcel API keys the app runs in demo mode with the three built-in presets.

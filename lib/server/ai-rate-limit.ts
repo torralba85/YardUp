@@ -3,13 +3,15 @@ import { getAdminDb } from "@/lib/server/firebase-admin";
 import {
   checkRateLimit,
   createRateLimitResponse,
-  getRateLimitClientKey,
+  resolveRateLimitKey,
 } from "@/lib/server/rate-limit";
 
 interface RateLimitOptions {
   limit: number;
   namespace: string;
   windowMs: number;
+  /** Fixed bucket identity for a global ceiling; see {@link resolveRateLimitKey}. */
+  clientKey?: string;
 }
 
 interface RateLimitDoc {
@@ -40,7 +42,7 @@ async function checkFirestoreRateLimit(
   options: RateLimitOptions,
 ): Promise<NextResponse | null> {
   const now = Date.now();
-  const key = getRateLimitClientKey(request, options.namespace);
+  const key = resolveRateLimitKey(request, options);
   const ref = getAdminDb().collection("aiRateLimits").doc(documentIdForKey(key));
   let retryAfter = 0;
 

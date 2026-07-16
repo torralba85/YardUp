@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchBuilderInbox,
@@ -14,7 +13,7 @@ import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Button } from "@/components/ui/Button";
+import { AccountMenu } from "@/components/account/AccountMenu";
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -71,7 +70,11 @@ export default function BuilderDashboard({
   if (loading) {
     return (
       <div className="min-h-dvh bg-lf-sand text-lf-espresso">
-        <BuilderHeader identity={displayName || email} onSignOut={() => void logout()} />
+        <BuilderHeader
+          identity={displayName || email}
+          displayName={displayName || email}
+          onSignOut={() => void logout()}
+        />
         <main className="p-4 lg:p-8" aria-busy="true">
           <div
             role="status"
@@ -114,7 +117,11 @@ export default function BuilderDashboard({
 
   return (
     <div className="min-h-dvh bg-lf-sand text-lf-espresso">
-      <BuilderHeader identity={displayName || email} onSignOut={() => void logout()} />
+      <BuilderHeader
+        identity={displayName || email}
+        displayName={displayName || email}
+        onSignOut={() => void logout()}
+      />
       <main className="p-4 lg:p-8">
         <div className="mx-auto max-w-6xl">
           <h1 className="lf-section-heading">Builder dashboard</h1>
@@ -147,9 +154,11 @@ export default function BuilderDashboard({
  */
 function BuilderHeader({
   identity,
+  displayName,
   onSignOut,
 }: {
   identity: string;
+  displayName: string;
   onSignOut: () => void;
 }) {
   return (
@@ -165,16 +174,12 @@ function BuilderHeader({
         </Link>
         <div className="flex min-w-0 items-center gap-3">
           <span className="hidden min-w-0 truncate text-sm text-lf-muted sm:block">{identity}</span>
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
-            onClick={onSignOut}
-            leftIcon={<LogOut size={13} />}
-            className="shrink-0"
-          >
-            Sign out
-          </Button>
+          <AccountMenu
+            displayName={displayName}
+            roleLabel="Builder"
+            onSignOut={onSignOut}
+            tone="light"
+          />
         </div>
       </div>
     </header>

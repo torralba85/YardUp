@@ -157,7 +157,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           href={safeHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-clay hover:text-lf-mahogany transition"
+                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay transition hover:text-lf-clay-strong"
                         >
                           <BookOpen size={14} />
                           {citationLabel}

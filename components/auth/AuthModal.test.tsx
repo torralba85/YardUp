@@ -13,6 +13,7 @@ vi.mock("@/lib/auth-context", () => ({
     signIn: vi.fn().mockResolvedValue(undefined),
     signUp: vi.fn().mockResolvedValue(undefined),
     signInWithGoogle: vi.fn().mockResolvedValue(undefined),
+    signInWithApple: vi.fn().mockResolvedValue(undefined),
     user: mocks.auth.user,
   }),
 }));

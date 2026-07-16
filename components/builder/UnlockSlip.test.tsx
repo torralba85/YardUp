@@ -56,6 +56,38 @@ describe("UnlockSlip", () => {
     expect(screen.getByRole("button", { name: /Pay with Stripe/i })).toBeInTheDocument();
   });
 
+  it("labels App Store checkout on the app-store channel", () => {
+    render(
+      <UnlockSlip
+        item={item}
+        companyName="Ramos Build Co."
+        pending={false}
+        error={null}
+        onConfirm={() => {}}
+        onClose={() => {}}
+        purchaseChannel="app-store"
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Pay with App Store/i })).toBeInTheDocument();
+    expect(screen.getByText(/Secure checkout — App Store/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Pay with Stripe/i })).not.toBeInTheDocument();
+  });
+
+  it("labels Google Play checkout on the google-play channel", () => {
+    render(
+      <UnlockSlip
+        item={item}
+        companyName="Ramos Build Co."
+        pending={false}
+        error={null}
+        onConfirm={() => {}}
+        onClose={() => {}}
+        purchaseChannel="google-play"
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Pay with Google Play/i })).toBeInTheDocument();
+  });
+
   it("confirms via the pay button", async () => {
     const onConfirm = vi.fn();
     render(

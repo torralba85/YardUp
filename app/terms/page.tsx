@@ -1,144 +1,117 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 
-/** Page metadata for the terms of service route. */
 export const metadata: Metadata = {
-  title: "Terms of Service | LotFoundry",
-  description: "Terms governing your use of LotFoundry.",
+  title: "Terms & Conditions | LotFoundry",
+  description: "Terms governing your use of LotFoundry (Terms of Service).",
 };
 
-/** Static terms of service page (`/terms`). */
+/**
+ * Terms & Conditions — canonical `/terms` agreement (same as Terms of Service).
+ */
 export default function TermsPage() {
   return (
-    <div className="min-h-[100dvh] bg-lf-sand text-lf-espresso">
-      <header className="border-b border-lf-hairline/50">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-lf-mahogany font-sans text-xs font-bold text-lf-sand">
-              LF
-            </div>
-            <span className="font-sans font-bold tracking-tight text-lf-mahogany">LotFoundry</span>
+    <LegalPageShell title="Terms & Conditions" kicker="Last updated: July 13, 2026">
+      <LegalSection title="1. Acceptance">
+        <p>
+          By accessing LotFoundry (“the Service”), you agree to these Terms &amp; Conditions
+          (also referred to as Terms of Service). If you do not agree, do not use the Service.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="2. Description of Service">
+        <p>
+          LotFoundry provides ADU feasibility tools: parcel visualization, zoning and cost
+          estimates, rental income projections, AI concept imagery (optional), Certificates of
+          Feasibility, and a builder lead marketplace. All financial and feasibility outputs are
+          estimates only and are not engineering, architectural, legal, zoning, or financial advice.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="3. Accounts">
+        <p>
+          You must provide accurate information. You are responsible for credentials and activity
+          under your account. Notify{" "}
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
+            support@lotfoundry.com
+          </a>{" "}
+          of unauthorized access. You may delete your account via Settings or{" "}
+          <Link href="/delete-account" className="font-medium text-lf-clay underline">
+            /delete-account
           </Link>
-        </div>
-      </header>
+          .
+        </p>
+      </LegalSection>
 
-      <main className="mx-auto max-w-prose px-6 py-16">
-        <h1 className="lf-section-heading text-lf-espresso">
-          Terms of Service
-        </h1>
-        <p className="lf-kicker mt-3 text-lf-muted">Last updated: May 31, 2026</p>
+      <LegalSection title="4. Purchases &amp; Billing">
+        <p>
+          Web digital purchases use Stripe Checkout. iOS App Store and Android Play builds use
+          platform billing for digital goods (certificates and lead credits). Fees are disclosed
+          at checkout. Refunds and credits follow store policy and our support process; contact
+          support for billing issues. Demo environments may grant unlocks without payment.
+        </p>
+      </LegalSection>
 
-        <div className="mt-10 space-y-8">
-          <Section title="1. Acceptance of Terms">
-            By accessing or using LotFoundry (&ldquo;the Service&rdquo;), you agree to be bound
-            by these Terms of Service. If you do not agree, do not use the Service.
-          </Section>
+      <LegalSection title="5. Marketplace">
+        <p>
+          Homeowners control when to share a lead. Builders pay to unlock contact details. Lead
+          quality is not guaranteed. Misuse, spam, or resale of personal data is prohibited.
+        </p>
+      </LegalSection>
 
-          <Section title="2. Description of Service">
-            LotFoundry provides ADU (Accessory Dwelling Unit) feasibility analysis tools,
-            including parcel visualization, zoning analysis, cost estimation, and rental income
-            projection. All outputs are estimates only and are not a substitute for professional
-            engineering, architectural, legal, or financial advice.
-          </Section>
+      <LegalSection title="6. AI Concepts">
+        <p>
+          AI-generated ADU concepts are illustrative only. You must consent before a photo is sent
+          to OpenAI. Do not upload photos of others without rights/permission.
+        </p>
+      </LegalSection>
 
-          <Section title="3. No Professional Advice">
-            The estimates, projections, and information provided by LotFoundry are for
-            informational purposes only. They do not constitute professional engineering,
-            architectural, legal, zoning, financial, or any other professional advice. You
-            should consult licensed professionals before making decisions based on information
-            from the Service. LotFoundry explicitly disclaims any liability for decisions made
-            based on Service output.
-          </Section>
+      <LegalSection title="7. Acceptable Use">
+        <p>
+          You agree not to: use the Service unlawfully; attempt unauthorized access; reverse
+          engineer or bulk-scrape; transmit harmful or infringing content; or resell access without
+          written permission.
+        </p>
+      </LegalSection>
 
-          <Section title="4. User Accounts">
-            <>
-              You must provide accurate information when creating an account. You are responsible
-              for maintaining the confidentiality of your credentials and for all activity under
-              your account. Notify us immediately at{" "}
-              <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany">
-                support@lotfoundry.com
-              </a>{" "}
-              if you suspect unauthorized access.
-            </>
-          </Section>
+      <LegalSection title="8. Intellectual Property">
+        <p>
+          Service software, brand, and content are owned by or licensed to LotFoundry. You retain
+          ownership of data you upload, subject to the licenses needed to operate the Service.
+        </p>
+      </LegalSection>
 
-          <Section title="5. Acceptable Use">
-            You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to
-            gain unauthorized access to any part of the Service; (c) reverse-engineer, scrape,
-            or otherwise extract data from the Service in bulk; (d) use the Service to transmit
-            harmful, offensive, or infringing content; or (e) resell or sublicense access to
-            the Service without written permission.
-          </Section>
+      <LegalSection title="9. Data Accuracy">
+        <p>
+          Parcel, zoning, imagery, rent, and cost data come from third parties and models that may
+          be incomplete or outdated. Always verify with local authorities and licensed
+          professionals before building or investing.
+        </p>
+      </LegalSection>
 
-          <Section title="6. Intellectual Property">
-            All content, trademarks, and software comprising the Service are owned by or
-            licensed to LotFoundry. Nothing in these Terms transfers any intellectual property
-            rights to you. You retain ownership of any data you upload or create in the Service.
-          </Section>
+      <LegalSection title="10. Disclaimers &amp; Liability">
+        <p>
+          THE SERVICE IS PROVIDED “AS IS” WITHOUT WARRANTIES OF ANY KIND. TO THE MAXIMUM EXTENT
+          PERMITTED BY LAW, LOTFOUNDRY IS NOT LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+          DAMAGES, OR FOR DECISIONS MADE BASED ON ESTIMATES.
+        </p>
+      </LegalSection>
 
-          <Section title="7. Data Accuracy">
-            Parcel data, zoning information, and aerial imagery are sourced from third-party
-            providers and public records. LotFoundry does not warrant the accuracy,
-            completeness, or timeliness of this data. Always verify information with local
-            authorities before acting on it.
-          </Section>
+      <LegalSection title="11. Changes">
+        <p>
+          We may update these terms by changing the “Last updated” date. Continued use after
+          changes constitutes acceptance. Subject to legal review before store submission.
+        </p>
+      </LegalSection>
 
-          <Section title="8. Disclaimer of Warranties">
-            The Service is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without
-            warranty of any kind, express or implied, including merchantability, fitness for a
-            particular purpose, or non-infringement. LotFoundry does not warrant that the
-            Service will be uninterrupted or error-free.
-          </Section>
-
-          <Section title="9. Limitation of Liability">
-            To the maximum extent permitted by applicable law, LotFoundry shall not be liable
-            for any indirect, incidental, special, consequential, or punitive damages arising
-            from your use of the Service, even if advised of the possibility of such damages.
-            Our total liability to you for any claim shall not exceed the amount you paid us
-            in the twelve months preceding the claim, or $100, whichever is greater.
-          </Section>
-
-          <Section title="10. Changes to Terms">
-            We may revise these Terms at any time. Continued use of the Service after changes
-            are posted constitutes acceptance of the revised Terms. We will provide notice of
-            material changes by email or prominent notice on the Service.
-          </Section>
-
-          <Section title="11. Governing Law">
-            These Terms are governed by the laws of the State of California, without regard to
-            conflict-of-law provisions. Disputes shall be resolved in the courts of Los Angeles
-            County, California.
-          </Section>
-
-          <Section title="12. Contact">
-            <>
-              Questions about these Terms? Email us at{" "}
-              <a href="mailto:legal@lotfoundry.com" className="font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany">
-                legal@lotfoundry.com
-              </a>.
-            </>
-          </Section>
-        </div>
-      </main>
-
-      <footer className="border-t border-lf-hairline/50">
-        <div className="lf-caption mx-auto max-w-4xl px-6 py-8 text-center text-lf-muted">
-          <Link href="/" className="hover:text-lf-espresso">LotFoundry</Link>
-          {" · "}
-          <Link href="/terms" className="hover:text-lf-espresso">Terms</Link>
-          {" · "}
-          <Link href="/privacy" className="hover:text-lf-espresso">Privacy</Link>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h2 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{title}</h2>
-      <div className="lf-body mt-3 text-lf-muted">{children}</div>
-    </div>
+      <LegalSection title="12. Contact">
+        <p>
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
+            support@lotfoundry.com
+          </a>
+        </p>
+      </LegalSection>
+    </LegalPageShell>
   );
 }

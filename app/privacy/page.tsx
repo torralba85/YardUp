@@ -1,113 +1,125 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 
-/** Page metadata for the privacy policy route. */
 export const metadata: Metadata = {
   title: "Privacy Policy | LotFoundry",
   description: "How LotFoundry collects, uses, and protects your information.",
 };
 
-/** Static privacy policy page (`/privacy`). */
+/** Privacy policy — matches Firebase, Regrid, Google, OpenAI, Stripe, marketplace. */
 export default function PrivacyPage() {
   return (
-    <div className="min-h-[100dvh] bg-lf-sand text-lf-espresso">
-      <header className="border-b border-lf-hairline/50">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-lf-mahogany font-sans text-xs font-bold text-lf-sand">
-              LF
-            </div>
-            <span className="font-sans font-bold tracking-tight text-lf-mahogany">LotFoundry</span>
-          </Link>
-        </div>
-      </header>
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: July 13, 2026">
+      <LegalSection title="1. Information We Collect">
+        <p>
+          We collect information you provide when you create an account (name, email, password
+          or Sign in with Apple/Google), the role you select (homeowner or builder), parcel
+          addresses and ADU configurations you save, builder company details and service areas,
+          marketplace connection requests you submit, payment transaction metadata from Stripe
+          or the app stores, and feedback you send. We also collect standard server logs (IP
+          address, user agent, pages visited) to operate and secure the service.
+        </p>
+      </LegalSection>
 
-      <main className="mx-auto max-w-prose px-6 py-16">
-        <h1 className="lf-section-heading text-lf-espresso">
-          Privacy Policy
-        </h1>
-        <p className="lf-kicker mt-3 text-lf-muted">Last updated: May 31, 2026</p>
+      <LegalSection title="2. How We Use Your Information">
+        <p>
+          We use this information to provide LotFoundry, authenticate you, save feasibility
+          studies, process purchases and lead unlocks, match consented leads to builders, send
+          transactional messages, improve reliability, prevent fraud, and respond to support
+          requests. We do not sell your personal information.
+        </p>
+      </LegalSection>
 
-        <div className="mt-10 space-y-8">
-          <Section title="1. Information We Collect">
-            We collect information you provide directly when you create an account (name, email address,
-            password), the role you select (homeowner or builder), and the parcel addresses and ADU
-            configurations you save in the studio. We also collect standard server logs (IP address,
-            browser type, pages visited) to operate and improve the service.
-          </Section>
+      <LegalSection title="3. Infrastructure &amp; Third-Party Services">
+        <p>
+          LotFoundry is hosted on <strong>Firebase Hosting</strong> with{" "}
+          <strong>Cloud Functions</strong>, <strong>Firebase Authentication</strong>, and{" "}
+          <strong>Cloud Firestore</strong>. Parcel and map features use{" "}
+          <strong>Google Maps / Places / Geocoding</strong> and <strong>Regrid</strong> parcel
+          data. Payments use <strong>Stripe</strong> on the open web and{" "}
+          <strong>Apple App Store / Google Play Billing</strong> in store apps. Optional AI
+          style-match concepts use <strong>OpenAI</strong> when you consent to send a photo.
+        </p>
+      </LegalSection>
 
-          <Section title="2. How We Use Your Information">
-            We use the information we collect to provide and improve LotFoundry, authenticate your
-            account, save your feasibility studies, send transactional emails (password reset,
-            account notices), and understand how the service is used. We do not sell your personal
-            information to third parties.
-          </Section>
+      <LegalSection title="4. AI Photo Processing">
+        <p>
+          When you use style-match, you explicitly agree to send a prepared photo (downscaled,
+          re-encoded, with EXIF/GPS stripped on device) to OpenAI to generate a concept image.
+          LotFoundry does not store the original photo on our servers. Generation is optional;
+          declining does not block the rest of the studio.
+        </p>
+      </LegalSection>
 
-          <Section title="3. Data Storage and Security">
-            Your data is stored in Google Firebase (Firestore and Firebase Authentication), which
-            provides encryption at rest and in transit. We apply reasonable technical and
-            organizational measures to protect your information. No method of transmission over the
-            internet is 100% secure; we cannot guarantee absolute security.
-          </Section>
+      <LegalSection title="5. Marketplace Sharing">
+        <p>
+          Homeowner contact and lot details are shared with matched builders only after you
+          submit a connect request. Builders see a redacted preview until they unlock a lead.
+          Unlock and purchase ledgers may retain non-PII accounting records after account
+          deletion.
+        </p>
+      </LegalSection>
 
-          <Section title="4. Third-Party Services">
-            LotFoundry uses the following third-party services that may receive your data: Google
-            Firebase (authentication and data storage), Google Maps / aerial imagery APIs (parcel
-            display), and Vercel (hosting and edge delivery). Each of these services has its own
-            privacy policy.
-          </Section>
+      <LegalSection title="6. Retention &amp; Deletion">
+        <p>
+          You may export or delete your account from{" "}
+          <Link href="/settings" className="font-medium text-lf-clay underline">
+            Settings
+          </Link>{" "}
+          or the public{" "}
+          <Link href="/delete-account" className="font-medium text-lf-clay underline">
+            Delete account
+          </Link>{" "}
+          page (usable without reinstalling a mobile app). Deletion removes account-associated
+          PII and user-generated content. We may retain redacted transaction IDs, amounts, and
+          fraud/accounting records without direct contact details. Counsel may require a narrower
+          retention window; we will not expand retained PII silently.
+        </p>
+      </LegalSection>
 
-          <Section title="5. Cookies">
-            We use session cookies to keep you signed in and local storage to persist your studio
-            state across page refreshes. We do not use third-party advertising cookies.
-          </Section>
+      <LegalSection title="7. Cookies &amp; Local Storage">
+        <p>
+          We use session cookies / Firebase Auth state to keep you signed in, and local/session
+          storage for studio handoff and preferences. We do not use third-party advertising
+          cookies.
+        </p>
+      </LegalSection>
 
-          <Section title="6. Your Rights">
-            You may request access to, correction of, or deletion of your personal data at any
-            time by contacting us at the address below. You may also delete your account directly
-            from your account settings.
-          </Section>
+      <LegalSection title="8. Children">
+        <p>
+          LotFoundry is not directed at children under 13. We do not knowingly collect personal
+          information from children under 13.
+        </p>
+      </LegalSection>
 
-          <Section title="7. Children&apos;s Privacy">
-            LotFoundry is not directed at children under 13. We do not knowingly collect personal
-            information from children under 13. If you believe a child has provided us with
-            personal information, please contact us so we can delete it.
-          </Section>
+      <LegalSection title="9. Changes">
+        <p>
+          We may update this policy by revising the “Last updated” date. Material changes may also
+          be communicated by email when appropriate. This policy is subject to legal review before
+          store submission.
+        </p>
+      </LegalSection>
 
-          <Section title="8. Changes to This Policy">
-            We may update this policy from time to time. We will notify you of material changes
-            by updating the &ldquo;Last updated&rdquo; date above and, where appropriate, by email.
-          </Section>
-
-          <Section title="9. Contact">
-            <>
-              Questions about this policy? Email us at{" "}
-              <a href="mailto:privacy@lotfoundry.com" className="font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany">
-                privacy@lotfoundry.com
-              </a>.
-            </>
-          </Section>
-        </div>
-      </main>
-
-      <footer className="border-t border-lf-hairline/50">
-        <div className="lf-caption mx-auto max-w-4xl px-6 py-8 text-center text-lf-muted">
-          <Link href="/" className="hover:text-lf-espresso">LotFoundry</Link>
-          {" · "}
-          <Link href="/terms" className="hover:text-lf-espresso">Terms</Link>
-          {" · "}
-          <Link href="/privacy" className="hover:text-lf-espresso">Privacy</Link>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h2 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{title}</h2>
-      <div className="lf-body mt-3 text-lf-muted">{children}</div>
-    </div>
+      <LegalSection title="10. Contact">
+        <p>
+          Privacy questions:{" "}
+          <a
+            href="mailto:privacy@lotfoundry.com"
+            className="font-medium text-lf-clay underline"
+          >
+            privacy@lotfoundry.com
+          </a>
+          . Support:{" "}
+          <a
+            href="mailto:support@lotfoundry.com"
+            className="font-medium text-lf-clay underline"
+          >
+            support@lotfoundry.com
+          </a>
+          .
+        </p>
+      </LegalSection>
+    </LegalPageShell>
   );
 }

@@ -44,16 +44,29 @@ export function AuthLayout({
           </div>
         </Bezel>
 
-        {/* Footer links */}
-        <div className="lf-caption mt-6 flex justify-center gap-4 text-lf-muted">
-          <Link href="/terms" className="hover:text-lf-espresso transition-colors">
-            Terms
+        {/* Footer links — 44px touch targets on auth secondary links */}
+        <div className="lf-caption mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-lf-muted">
+          <Link
+            href="/terms"
+            className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso"
+          >
+            Terms &amp; Conditions
           </Link>
-          <span>/</span>
-          <Link href="/privacy" className="hover:text-lf-espresso transition-colors">
+          <span aria-hidden>/</span>
+          <Link
+            href="/privacy"
+            className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso"
+          >
             Privacy
           </Link>
-          <span>/</span>
+          <span aria-hidden>/</span>
+          <Link
+            href="/help"
+            className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso"
+          >
+            Help
+          </Link>
+          <span aria-hidden>/</span>
           <span>Estimates, not guarantees.</span>
         </div>
       </div>

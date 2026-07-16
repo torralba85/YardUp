@@ -38,20 +38,52 @@ const appCheckSiteKey =
 const appCheckDebugToken =
   process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN?.trim();
 
+/**
+ * App Check must initialize before Auth/Firestore usage when enforcement is on.
+ *
+ * Localhost cannot satisfy reCAPTCHA Enterprise without a **debug token**:
+ * 1. Run the app once with the debug flag (see below) and copy the UUID logged
+ *    as "App Check debug token".
+ * 2. Firebase Console → App Check → Manage debug tokens → register that UUID.
+ * 3. Put it in `.env.local` as NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=…
+ * 4. Restart `npm run dev`.
+ *
+ * Never ship a debug token in production builds.
+ */
 if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
   const appCheckGlobal = globalThis as typeof globalThis & {
-    FIREBASE_APPCHECK_DEBUG_TOKEN?: string;
+    FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;
     __lotFoundryAppCheckInitialized?: boolean;
   };
 
   if (!appCheckGlobal.__lotFoundryAppCheckInitialized) {
+    const isLocalHost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
     if (appCheckDebugToken) {
       appCheckGlobal.FIREBASE_APPCHECK_DEBUG_TOKEN = appCheckDebugToken;
+    } else if (isLocalHost || process.env.NODE_ENV === "development") {
+      // `true` makes the SDK mint a debug token and print it to the console
+      // once — register that value in Firebase App Check, then pin it in env.
+      appCheckGlobal.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      console.warn(
+        "[LotFoundry] App Check debug mode is on for local dev. " +
+          "Copy the App Check debug token from the console, register it in " +
+          "Firebase → App Check → Manage debug tokens, then set " +
+          "NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN in .env.local and restart. " +
+          "Without that, Google/email sign-in fails with recaptcha-error.",
+      );
     }
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
+
+    try {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } catch (err) {
+      console.error("[LotFoundry] App Check failed to initialize:", err);
+    }
     appCheckGlobal.__lotFoundryAppCheckInitialized = true;
   }
 }

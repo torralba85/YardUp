@@ -302,7 +302,9 @@ export default function AerialView({
       {/* Zoning badge */}
       <div
         className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 font-mono text-xs font-semibold shadow-md ${
-          isCompliant ? "bg-lf-forest text-lf-sand" : "bg-lf-amber text-lf-espresso"
+          isCompliant
+            ? "bg-lf-forest text-lf-sand"
+            : "border border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink"
         }`}
         aria-label={`Zoning status: ${isCompliant ? "Compliant" : "Review needed"}`}
       >
@@ -312,7 +314,7 @@ export default function AerialView({
       {/* Fallback notice */}
       {aerialError && (
         <div
-          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           Aerial imagery unavailable - showing the parcel overlay without a satellite base.
@@ -331,7 +333,7 @@ export default function AerialView({
 
       {parcel.source === "fallback" && (
         <div
-          className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-md border border-lf-amber/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-md border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-on-dark" aria-hidden="true" />

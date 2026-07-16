@@ -469,5 +469,24 @@ service cloud.firestore {
         && resource.data.uid == request.auth.uid;
       allow create, update, delete: if false;
     }
+
+    // Store purchase grants (Admin SDK only). Clients may read their own.
+    match /purchaseGrants/{grantId} {
+      allow read: if isSignedIn()
+        && resource != null
+        && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    // Certificate credit balance from store grants (Admin SDK only).
+    match /certificateCredits/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update, delete: if false;
+    }
+
+    // Feedback intake is server-only (Admin SDK).
+    match /feedback/{ticketId} {
+      allow read, write: if false;
+    }
   }
 }

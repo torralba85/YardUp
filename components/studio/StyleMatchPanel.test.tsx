@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+﻿import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StyleMatchPanel from "./StyleMatchPanel";
 import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
@@ -64,6 +64,14 @@ beforeEach(() => {
   requestADUConceptMock.mockResolvedValue(generatedConcept);
 });
 
+function consentToAi() {
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: /agree to send this photo to OpenAI/i,
+    }),
+  );
+}
+
 describe("StyleMatchPanel", () => {
   it("prepares a sanitized photo and requests a generated concept with active parcel and config", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
@@ -80,6 +88,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -136,6 +145,7 @@ describe("StyleMatchPanel", () => {
         />,
       );
 
+      consentToAi();
       const input = screen.getByLabelText(/Choose house photo/i);
 
       fireEvent.change(input, {
@@ -172,6 +182,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
       target: { files: [new File(["raw"], "broken.heic", { type: "image/heic" })] },
     });
@@ -179,6 +190,7 @@ describe("StyleMatchPanel", () => {
     expect(await screen.findByText(/could not decode/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Choose another photo/i }));
 
+    consentToAi();
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
 
@@ -200,6 +212,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
     });
@@ -233,6 +246,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -273,6 +287,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -308,6 +323,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -330,3 +346,4 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
 });
+

@@ -56,6 +56,9 @@ export function BlueHourHero() {
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [highlight, setHighlight] = useState<SurveyHighlight>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const router = useRouter();
 
   // Post-hydration gate: server and first client render agree (no Player),
@@ -78,6 +81,33 @@ export function BlueHourHero() {
 
   const progress = useHeroProgress(trackRef);
   const showPlayer = mounted && !reducedMotion;
+
+  // Debounced address suggestions for the hero field (server Places path).
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 3) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { suggestions?: string[] };
+        const next = Array.isArray(data.suggestions) ? data.suggestions : [];
+        setSuggestions(next);
+        setSuggestionsOpen(next.length > 0);
+        setActiveSuggestion(-1);
+      } catch {
+        // Aborted or network — leave prior list.
+      }
+    }, 300);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query]);
 
   // Scrub the Remotion timeline from scroll position.
   useEffect(() => {
@@ -301,7 +331,7 @@ export function BlueHourHero() {
 
           <form
             onSubmit={handleSubmit}
-            className={`flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-[margin-top,border-color,background-color,box-shadow] duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-2xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
+            className={`relative flex max-w-[35rem] items-center justify-between rounded-full border-[1.5px] border-ln-hairline bg-ln-navy/80 p-1.5 backdrop-blur-md transition-[margin-top,border-color,background-color,box-shadow] duration-300 focus-within:border-ln-glow/70 focus-within:shadow-[0_0_0_3px_rgba(245,181,74,0.16)] max-sm:flex-col max-sm:items-stretch max-sm:gap-1.5 max-sm:rounded-2xl ${copyDimmed ? "mt-0 max-sm:bg-ln-ink/88" : "mt-7"} ${verdictLanded ? "ln-cta-pulse" : ""}`}
           >
             <p
               className={`lf-kicker-dense hidden text-ln-glow ${copyDimmed ? "max-sm:mb-1 max-sm:flex" : "max-sm:hidden"}`}
@@ -321,11 +351,53 @@ export function BlueHourHero() {
                 type="text"
                 value={query}
                 onChange={(event) => {
-                  setQuery(event.target.value);
+                  const next = event.target.value;
+                  setQuery(next);
                   if (addressError) setAddressError(false);
+                  if (next.trim().length < 3) {
+                    setSuggestions([]);
+                    setSuggestionsOpen(false);
+                    setActiveSuggestion(-1);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (!suggestionsOpen || suggestions.length === 0) return;
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setActiveSuggestion((i) => (i + 1) % suggestions.length);
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setActiveSuggestion((i) =>
+                      i <= 0 ? suggestions.length - 1 : i - 1,
+                    );
+                  } else if (event.key === "Enter" && activeSuggestion >= 0) {
+                    event.preventDefault();
+                    setQuery(suggestions[activeSuggestion]);
+                    setSuggestionsOpen(false);
+                    setActiveSuggestion(-1);
+                  } else if (event.key === "Escape") {
+                    setSuggestionsOpen(false);
+                    setActiveSuggestion(-1);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay so a mousedown on an option can land first.
+                  window.setTimeout(() => {
+                    setSuggestionsOpen(false);
+                    setActiveSuggestion(-1);
+                  }, 120);
                 }}
                 placeholder="Enter your property address"
-                autoComplete="street-address"
+                autoComplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={suggestionsOpen}
+                aria-controls="hero-address-suggestions"
+                aria-activedescendant={
+                  activeSuggestion >= 0
+                    ? `hero-address-suggestion-${activeSuggestion}`
+                    : undefined
+                }
                 aria-invalid={addressError}
                 aria-describedby={addressError ? "hero-address-error" : undefined}
                 className="min-h-11 min-w-0 flex-1 rounded-full bg-transparent px-4 font-mono text-[11px] text-ln-mist placeholder:text-ln-slate/70 focus:outline-none sm:px-5 sm:text-xs max-sm:rounded-2xl"
@@ -337,6 +409,36 @@ export function BlueHourHero() {
             >
               Run feasibility
             </button>
+            {suggestionsOpen && suggestions.length > 0 ? (
+              <ul
+                id="hero-address-suggestions"
+                role="listbox"
+                aria-label="Address suggestions"
+                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-lg border border-ln-hairline bg-ln-navy shadow-xl"
+              >
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={suggestion}
+                    id={`hero-address-suggestion-${index}`}
+                    role="option"
+                    aria-selected={index === activeSuggestion}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      setQuery(suggestion);
+                      setSuggestionsOpen(false);
+                      setActiveSuggestion(-1);
+                      setAddressError(false);
+                    }}
+                    onMouseEnter={() => setActiveSuggestion(index)}
+                    className={`cursor-pointer px-4 py-3 font-mono text-[11px] text-ln-mist sm:text-xs ${
+                      index === activeSuggestion ? "bg-ln-card" : ""
+                    }`}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </form>
 
           {addressError ? (

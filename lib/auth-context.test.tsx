@@ -34,17 +34,39 @@ vi.mock("@/lib/parcel-handoff", () => ({
   clearInitialParcel: parcelHandoffMocks.clearInitialParcel,
 }));
 
+const oauthProvider = vi.hoisted(() => {
+  const instances: Array<{ providerId: string; scopes: string[] }> = [];
+  class OAuthProvider {
+    providerId: string;
+    scopes: string[] = [];
+    constructor(id: string) {
+      this.providerId = id;
+      instances.push(this);
+    }
+    addScope(scope: string) {
+      this.scopes.push(scope);
+    }
+  }
+  return { OAuthProvider, instances };
+});
+
 vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: authMocks.createUserWithEmailAndPassword,
   GoogleAuthProvider: class {
     setCustomParameters = vi.fn();
   },
+  OAuthProvider: oauthProvider.OAuthProvider,
   onAuthStateChanged: authMocks.onAuthStateChanged,
   sendPasswordResetEmail: authMocks.sendPasswordResetEmail,
   signInWithEmailAndPassword: authMocks.signInWithEmailAndPassword,
   signInWithPopup: authMocks.signInWithPopup,
   signOut: authMocks.signOut,
   updateProfile: authMocks.updateProfile,
+  sendEmailVerification: vi.fn(),
+  EmailAuthProvider: { credential: vi.fn() },
+  reauthenticateWithCredential: vi.fn(),
+  updatePassword: vi.fn(),
+  verifyBeforeUpdateEmail: vi.fn(),
 }));
 
 vi.mock("firebase/firestore", () => ({
@@ -73,6 +95,15 @@ function EmailBuilderButton() {
       }
     >
       Create builder
+    </button>
+  );
+}
+
+function AppleUserButton() {
+  const { signInWithApple } = useAuth();
+  return (
+    <button type="button" onClick={() => signInWithApple("user")}>
+      Continue with Apple
     </button>
   );
 }
@@ -199,5 +230,32 @@ describe("AuthProvider profile creation", () => {
     });
 
     expect(parcelHandoffMocks.clearInitialParcel).not.toHaveBeenCalled();
+  });
+
+  it("requests only name and email from Apple", async () => {
+    oauthProvider.instances.length = 0;
+    authMocks.signInWithPopup.mockResolvedValue({
+      user: {
+        uid: "user-1",
+        email: "relay@privaterelay.appleid.com",
+        displayName: null,
+      },
+    });
+
+    render(
+      <AuthProvider>
+        <AppleUserButton />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Apple" }));
+
+    await waitFor(() => {
+      expect(authMocks.signInWithPopup).toHaveBeenCalled();
+    });
+    expect(oauthProvider.instances[0]?.providerId).toBe("apple.com");
+    expect(oauthProvider.instances[0]?.scopes).toEqual(
+      expect.arrayContaining(["email", "name"]),
+    );
   });
 });
