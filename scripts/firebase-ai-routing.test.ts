@@ -91,6 +91,15 @@ describe("Firebase AI API routing", () => {
     expect(hostingDeployIndex).toBeLessThan(appDeployIndex);
   });
 
+  it("stops the release when any Firebase function target fails", () => {
+    expect(ciWorkflow).toContain(
+      "deploy_target functions:apiStore || exit $?",
+    );
+    expect(ciWorkflow).toContain(
+      'deploy_target "$target" || exit $?',
+    );
+  });
+
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {
     expect(ciWorkflow).toContain("group: firebase-production-${{ github.ref }}");
     expect(ciWorkflow).toContain("cancel-in-progress: false");
