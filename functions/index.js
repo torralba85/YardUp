@@ -17,6 +17,25 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const googleMapsApiKey = defineSecret("GOOGLE_MAPS_API_KEY_SECRET");
 const regridApiKey = defineSecret("REGRID_API_KEY_SECRET");
 const openAiApiKey = defineSecret("OPENAI_API_KEY_SECRET");
+
+// Native store verification is optional until the App Store / Play Console
+// credentials are provisioned. Keeping the bindings behind an explicit flag
+// prevents non-interactive CI deploys from prompting for secrets that do not
+// exist yet, while still isolating them from unrelated API routes when enabled.
+const nativeStoreVerificationEnabled =
+  process.env.ENABLE_NATIVE_STORE_VERIFICATION === "true";
+const nativeStoreSecretParams = nativeStoreVerificationEnabled
+  ? {
+      appleBundleId: defineSecret("APPLE_BUNDLE_ID"),
+      appleRootCaFingerprint256: defineSecret("APPLE_ROOT_CA_FINGERPRINT256"),
+      googlePlayPackageName: defineSecret("GOOGLE_PLAY_PACKAGE_NAME"),
+      googlePlayServiceAccountJson: defineSecret("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"),
+    }
+  : null;
+const nativeStoreSecrets = nativeStoreSecretParams
+  ? Object.values(nativeStoreSecretParams)
+  : [];
+
 // Resolved from functions/node_modules, which Firebase installs server-side
 // from functions/package.json at deploy time. (Firebase strips all bundled
 // node_modules on upload — including the standalone build's own copy — so the
@@ -53,10 +72,10 @@ const aiFnOpts = {
   timeoutSeconds: 120,
 };
 
-// One Next request handler backs all four exports. firebase.json routes
-// /api/ai/** to `apiAi`, /api/stripe/** to `apiStripe`, the rest of /api/** to
-// `api`, and everything else to `app`; all resolve to the same handler and
-// differ only in which secrets are bound to the process.
+// One Next request handler backs all five exports. firebase.json routes
+// /api/ai/** to `apiAi`, /api/stripe/** to `apiStripe`, /api/store/** to
+// `apiStore`, the rest of /api/** to `api`, and everything else to `app`; all
+// resolve to the same handler and differ only in which secrets are bound.
 exports.app = onRequest(fnOpts, async (req, res) => {
   await ready();
   return handle(requestForNext(req), res);
@@ -72,13 +91,33 @@ exports.apiAi = onRequest(
 );
 
 // Non-payment API routes (parcel/geocode/suggest/aerial). Bind only the
-// provider credentials used by these routes; no Stripe or OpenAI secrets enter
-// this process.
+// provider credentials used by these routes; no Stripe, OpenAI, or native-store
+// secrets enter this process.
 exports.api = onRequest(
   { ...fnOpts, secrets: [googleMapsApiKey, regridApiKey] },
   async (req, res) => {
     process.env.GOOGLE_MAPS_API_KEY = googleMapsApiKey.value();
     process.env.REGRID_API_KEY = regridApiKey.value();
+    await ready();
+    return handle(requestForNext(req), res);
+  },
+);
+
+// App Store and Google Play receipt verification. The function still deploys
+// while native commerce is disabled; the route then returns the existing
+// "not configured" response instead of exposing credentials or blocking CI.
+exports.apiStore = onRequest(
+  { ...fnOpts, secrets: nativeStoreSecrets },
+  async (req, res) => {
+    if (nativeStoreSecretParams) {
+      process.env.APPLE_BUNDLE_ID = nativeStoreSecretParams.appleBundleId.value();
+      process.env.APPLE_ROOT_CA_FINGERPRINT256 =
+        nativeStoreSecretParams.appleRootCaFingerprint256.value();
+      process.env.GOOGLE_PLAY_PACKAGE_NAME =
+        nativeStoreSecretParams.googlePlayPackageName.value();
+      process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON =
+        nativeStoreSecretParams.googlePlayServiceAccountJson.value();
+    }
     await ready();
     return handle(requestForNext(req), res);
   },
