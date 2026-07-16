@@ -19,6 +19,10 @@
         "function": "apiStripe"
       },
       {
+        "source": "/api/store/**",
+        "function": "apiStore"
+      },
+      {
         "source": "/api/**",
         "function": "api"
       },
