@@ -67,11 +67,17 @@ export async function POST(request: NextRequest) {
       throw failedContact.reason;
     }
 
-    // Delete the Auth identity BEFORE removing the profile documents. The
-    // `users/{uid}` doc is what a subsequent sign-in would recreate, so if
-    // `deleteUser` fails transiently we return 500 with the profile still
-    // present for a clean retry, rather than leaving an active identity whose
-    // next login rebuilds an empty profile after the data was already gone.
+    // Remove the builder profile if this account had one, then the profile doc.
+    await db.collection("builders").doc(uid).delete();
+    await userRef.delete();
+
+    // Delete the Auth identity LAST, once all Firestore PII is gone. Ordering it
+    // after the profile deletes keeps the authenticated retry path intact: while
+    // the identity exists the user (or their still-valid token) can re-invoke
+    // this route, and every prior step is an idempotent no-op, so a transient
+    // Firestore failure never strands PII behind a login the user can no longer
+    // perform. A briefly-recreated empty profile after a failed final step is
+    // self-healing on retry and holds no data, since the PII is already removed.
     // Skip the dev/test stub uid (not a real Firebase user), and treat an
     // already-deleted user as success so retries converge instead of erroring.
     if (uid !== "local-dev") {
@@ -83,11 +89,6 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-
-    // Remove the builder profile if this account had one, then the profile doc.
-    // The identity is gone at this point, so a re-sign-in cannot recreate them.
-    await db.collection("builders").doc(uid).delete();
-    await userRef.delete();
 
     return NextResponse.json({ deleted: true });
   } catch (err) {

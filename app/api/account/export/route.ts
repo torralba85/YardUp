@@ -64,21 +64,35 @@ export async function GET(request: NextRequest) {
     // not in the profile or scenarios — so a portable export must include it to
     // be complete for the data the account owns and that deletion removes. Only
     // the owner's own submissions are read; other users' contacts stay gated.
-    const connectionRequests = await Promise.all(
-      leadsSnap.docs.map(async (docSnap) => {
-        const data = docSnap.data();
-        const contactSnap = await docSnap.ref
-          .collection("private")
-          .doc("contact")
-          .get();
-        return {
-          id: docSnap.id,
-          preview: toPortable(data.preview) ?? null,
-          status: String(data.status ?? "unknown"),
-          contact: contactSnap.exists ? toPortable(contactSnap.data()) : null,
-        };
-      }),
-    );
+    // Read each lead's contact doc in bounded-concurrency batches instead of
+    // one simultaneous read per lead: a large lead history would otherwise fan
+    // out into hundreds of concurrent reads and risk the export timing out.
+    // Every lead is still read, so the export stays complete.
+    const CONTACT_READ_CONCURRENCY = 25;
+    const connectionRequests: Array<{
+      id: string;
+      preview: unknown;
+      status: string;
+      contact: unknown;
+    }> = [];
+    for (let i = 0; i < leadsSnap.docs.length; i += CONTACT_READ_CONCURRENCY) {
+      const batch = await Promise.all(
+        leadsSnap.docs.slice(i, i + CONTACT_READ_CONCURRENCY).map(async (docSnap) => {
+          const data = docSnap.data();
+          const contactSnap = await docSnap.ref
+            .collection("private")
+            .doc("contact")
+            .get();
+          return {
+            id: docSnap.id,
+            preview: toPortable(data.preview) ?? null,
+            status: String(data.status ?? "unknown"),
+            contact: contactSnap.exists ? toPortable(contactSnap.data()) : null,
+          };
+        }),
+      );
+      connectionRequests.push(...batch);
+    }
 
     const payload = {
       exportedAt: new Date().toISOString(),
