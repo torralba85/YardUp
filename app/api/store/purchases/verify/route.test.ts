@@ -23,6 +23,15 @@ describe("POST /api/store/purchases/verify", () => {
     verifyAndGrantPurchase.mockReset();
   });
 
+  it.each([null, [], "receipt", 7])(
+    "returns 400 for a non-object JSON body (%j)",
+    async (body) => {
+      const res = await POST(post(body));
+      expect(res.status).toBe(400);
+      expect(verifyAndGrantPurchase).not.toHaveBeenCalled();
+    },
+  );
+
   it("returns 400 for missing fields", async () => {
     const res = await POST(post({ platform: "app-store" }));
     expect(res.status).toBe(400);
