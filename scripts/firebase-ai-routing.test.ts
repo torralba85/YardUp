@@ -70,20 +70,25 @@ describe("Firebase AI API routing", () => {
     expect(rewrites[storeRewriteIndex].function).toBe("apiStore");
     expect(functionsSource).toContain("exports.apiStore = onRequest");
     expect(functionsSource).toContain("secrets: nativeStoreSecrets");
-    expect(ciWorkflow).toContain("functions:apiStore");
+    expect(ciWorkflow).toContain("deploy_target functions:apiStore");
   });
 
-  it("deploys functions before publishing hosting rewrites", () => {
-    const functionsDeployIndex = ciWorkflow.indexOf(
-      "- name: Deploy Firebase Functions",
+  it("creates the store target before its rewrite without exposing new asset URLs early", () => {
+    const storeDeployIndex = ciWorkflow.indexOf(
+      "deploy_target functions:apiStore",
     );
     const hostingDeployIndex = ciWorkflow.indexOf(
-      "- name: Deploy Firebase Hosting + Firestore Rules",
+      "firebase deploy --only hosting,firestore:rules",
+    );
+    const appDeployIndex = ciWorkflow.indexOf(
+      "for target in functions:app functions:api functions:apiAi functions:apiStripe",
     );
 
-    expect(functionsDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(storeDeployIndex).toBeGreaterThanOrEqual(0);
     expect(hostingDeployIndex).toBeGreaterThanOrEqual(0);
-    expect(functionsDeployIndex).toBeLessThan(hostingDeployIndex);
+    expect(appDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(storeDeployIndex).toBeLessThan(hostingDeployIndex);
+    expect(hostingDeployIndex).toBeLessThan(appDeployIndex);
   });
 
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {
