@@ -13,14 +13,17 @@ const SCENARIO_BATCH = 400;
  *
  * Uses the Admin SDK (which bypasses Firestore rules — the `users/{uid}`
  * document is `delete: if false` for clients) to remove the user's saved
- * scenarios, any builder profile, the profile document, and the Firebase Auth
- * identity itself. On Firebase infra the `api` function's Application Default
- * Credentials supply the admin identity; locally without ADC the Auth deletion
- * step has no credentials, so this route is exercised in production/CI.
+ * scenarios, any builder profile, the gated lead contact payloads the user
+ * submitted, the profile document, and the Firebase Auth identity itself. On
+ * Firebase infra the `api` function's Application Default Credentials supply
+ * the admin identity; locally without ADC the Auth deletion step has no
+ * credentials, so this route is exercised in production/CI.
  *
- * Marketplace connection requests are intentionally NOT removed here: they are
- * shared business records a builder may have paid to unlock, and their PII
- * retention is a separate policy decision (see docs/store-listing-copy.md).
+ * Retention rule: account-associated PII is deleted; redacted lead roots
+ * (shared business records a builder may have paid to unlock), builder ledger
+ * entries, `leadUnlocks`, and `certificatePurchases` are retained as non-PII
+ * accounting/fraud records (see docs/store-listing-copy.md). Every step is a
+ * no-op when the data is already gone, so retries are safe.
  */
 export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -41,14 +44,32 @@ export async function POST(request: NextRequest) {
       await batch.commit();
     }
 
+    // Tear down the gated PII payloads on leads this owner submitted. The
+    // redacted request root stays: it is the business record the marketplace
+    // and its ledgers reference.
+    const ownedLeads = await db
+      .collection("connectionRequests")
+      .where("ownerUid", "==", uid)
+      .get();
+    for (const leadSnap of ownedLeads.docs) {
+      await leadSnap.ref.collection("private").doc("contact").delete();
+    }
+
     // Remove the builder profile if this account had one, then the profile doc.
     await db.collection("builders").doc(uid).delete();
     await userRef.delete();
 
-    // Delete the Auth identity. Skip the dev/test stub uid, which is not a real
-    // Firebase user.
+    // Delete the Auth identity. Skip the dev/test stub uid (not a real Firebase
+    // user), and treat an already-deleted user as success so retries after a
+    // partial failure converge instead of erroring.
     if (uid !== "local-dev") {
-      await getAuth(getAdminApp()).deleteUser(uid);
+      try {
+        await getAuth(getAdminApp()).deleteUser(uid);
+      } catch (err) {
+        if ((err as { code?: string })?.code !== "auth/user-not-found") {
+          throw err;
+        }
+      }
     }
 
     return NextResponse.json({ deleted: true });

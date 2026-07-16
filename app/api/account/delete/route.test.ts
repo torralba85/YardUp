@@ -10,6 +10,9 @@ const ops = {
   builderDeleted: false,
   userDeleted: false,
   scenarioDocs: [] as { ref: unknown }[],
+  connectionRequests: [] as { id: string; ownerUid: string }[],
+  deletedPrivateContacts: [] as string[],
+  deletedLeadRoots: [] as string[],
 };
 
 function makeDb() {
@@ -22,11 +25,37 @@ function makeDb() {
     },
   };
   return {
-    collection: (name: string) => ({
-      doc: () => (name === "builders"
-        ? { delete: async () => { ops.builderDeleted = true; } }
-        : userRef),
-    }),
+    collection: (name: string) => {
+      if (name === "connectionRequests") {
+        return {
+          where: (_field: string, _op: string, uid: string) => ({
+            get: async () => ({
+              docs: ops.connectionRequests
+                .filter((request) => request.ownerUid === uid)
+                .map((request) => ({
+                  ref: {
+                    collection: () => ({
+                      doc: () => ({
+                        delete: async () => {
+                          ops.deletedPrivateContacts.push(request.id);
+                        },
+                      }),
+                    }),
+                    delete: async () => {
+                      ops.deletedLeadRoots.push(request.id);
+                    },
+                  },
+                })),
+            }),
+          }),
+        };
+      }
+      return {
+        doc: () => (name === "builders"
+          ? { delete: async () => { ops.builderDeleted = true; } }
+          : userRef),
+      };
+    },
     batch: () => ({
       delete: (ref: unknown) => ops.batchDeletes.push(ref),
       commit: async () => { ops.batchCommits += 1; },
@@ -61,6 +90,9 @@ describe("POST /api/account/delete", () => {
     ops.builderDeleted = false;
     ops.userDeleted = false;
     ops.scenarioDocs = [];
+    ops.connectionRequests = [];
+    ops.deletedPrivateContacts = [];
+    ops.deletedLeadRoots = [];
     throwOnDb = false;
     deleteUser.mockClear();
   });
@@ -83,6 +115,31 @@ describe("POST /api/account/delete", () => {
     // Firebase user, so the Auth deletion must be skipped.
     await POST(postRequest());
     expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("removes lead contact PII while retaining the redacted lead roots", async () => {
+    // requireApiAuth returns uid "local-dev" in test mode; only requests owned
+    // by that uid get their private contact payload torn down.
+    ops.connectionRequests = [
+      { id: "lead-1", ownerUid: "local-dev" },
+      { id: "lead-2", ownerUid: "someone-else" },
+    ];
+
+    const res = await POST(postRequest());
+    expect(res.status).toBe(200);
+
+    expect(ops.deletedPrivateContacts).toEqual(["lead-1"]);
+    // The redacted root is a shared business record a builder may have paid to
+    // unlock — it must be retained.
+    expect(ops.deletedLeadRoots).toEqual([]);
+  });
+
+  it("is safe to retry after account data is already gone", async () => {
+    // Everything already deleted: no scenarios, no leads, and every direct
+    // delete resolves as a no-op. The route must still report success.
+    const res = await POST(postRequest());
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ deleted: true });
   });
 
   it("returns 500 when the teardown fails", async () => {
