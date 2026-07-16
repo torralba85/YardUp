@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { marketBasisLabel } from "./market-basis";
+import { marketBasisLabel, marketProvenanceLine } from "./market-basis";
 
 describe("marketBasisLabel", () => {
   it("cites HUD FMR for static tiers with the area and bedroom", () => {
@@ -25,5 +25,42 @@ describe("marketBasisLabel", () => {
     expect(marketBasisLabel({ source: "heuristic", bedroom: "1br" })).toBe(
       "Rough lot-size estimate",
     );
+  });
+});
+
+describe("marketProvenanceLine", () => {
+  it("cites source, area, vintage, and confidence for HUD data", () => {
+    expect(
+      marketProvenanceLine({
+        source: "hud-county",
+        area: "Los Angeles County, CA",
+        asOf: "HUD FY2026 FMR",
+        confidence: "medium",
+        verified: true,
+      }),
+    ).toBe("HUD FMR · Los Angeles County, CA · HUD FY2026 FMR · Medium confidence");
+  });
+
+  it("includes comp counts for live sources", () => {
+    expect(
+      marketProvenanceLine({
+        source: "live",
+        area: "ZIP 98107",
+        comparableCount: 14,
+        confidence: "high",
+        verified: true,
+      }),
+    ).toBe("Live comps · ZIP 98107 · 14 comps · High confidence");
+  });
+
+  it("labels non-market sources honestly", () => {
+    expect(
+      marketProvenanceLine({
+        source: "preset",
+        area: "Curated demo estimate",
+        confidence: "medium",
+        verified: false,
+      }),
+    ).toBe("Curated demo estimate · Not a market source");
   });
 });

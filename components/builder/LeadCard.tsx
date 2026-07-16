@@ -91,6 +91,11 @@ export default function LeadCard({
           /mo rent potential
         </span>
       </p>
+      {preview.rentBasis && (
+        <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          {preview.rentBasis}
+        </p>
+      )}
 
       <div className="mt-2.5">
         <p className="font-semibold text-lf-espresso">

@@ -216,6 +216,8 @@ describe("lead preview redaction (1A paywall split)", () => {
     expect(preview.buildBandLow).toBe(200000);
     expect(preview.buildBandHigh).toBe(275000);
     expect(preview.rentBand).toBe(2000);
+    // The rent citation rides along so the builder card matches the studio.
+    expect(preview.rentBasis).toBe("Curated demo estimate");
     expect(preview.previewSerial).toBe("LF-abc123");
 
     const serialized = JSON.stringify(preview);

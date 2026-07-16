@@ -5,6 +5,7 @@ import {
   type ADUConfig,
   type FeasibilityResult,
 } from "./feasibility";
+import { marketProvenanceLine } from "./market/market-basis";
 import type { Parcel } from "./parcel-types";
 import type { AIProjectBrief } from "./ai-types";
 
@@ -92,6 +93,9 @@ export function buildReportText({
     `Monthly rent estimate: ${formatCurrency(result.monthlyRent)}`,
     `Annual net income estimate: ${formatCurrency(result.annualNoi)}`,
     `Payback: ${result.paybackYears} years`,
+    `Rent basis: ${result.rentBasis}`,
+    `Market source: ${marketProvenanceLine(result.market)}`,
+    `Operating expense ratio: ${(result.operatingExpenseRatio * 100).toFixed(1)}%`,
     "",
     ...(projectBrief
       ? [
@@ -148,6 +152,7 @@ export function buildReportHtml({
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],
     ["Annual net income estimate", formatCurrency(result.annualNoi)],
     ["Payback", `${result.paybackYears} years`],
+    ["Market basis", marketProvenanceLine(result.market)],
   ];
 
   const reviewNote = result.warnings[0] ?? "No coverage warning for the current assumptions.";
@@ -389,6 +394,7 @@ export function buildReportHtml({
         <div class="hero-money">
           <span class="figure">${escapeHtml(formatCurrency(result.monthlyRent))}</span><span class="unit">/mo</span>
           <div class="caption mono">Estimated rent &middot; ${result.aduSqft.toLocaleString()} sf ADU concept</div>
+          <div class="caption mono">${escapeHtml(result.rentBasis)}</div>
         </div>
 
         <h2>Annual Ledger</h2>
@@ -595,6 +601,9 @@ export function buildReportCsv({ parcel, config, result, projectBrief }: ReportI
     ["Monthly Rent ($)", String(result.monthlyRent)],
     ["Annual Net Income ($)", String(result.annualNoi)],
     ["Simple Payback (years)", String(result.paybackYears)],
+    ["Rent Basis", result.rentBasis],
+    ["Market Source", marketProvenanceLine(result.market)],
+    ["Operating Expense Ratio (%)", (result.operatingExpenseRatio * 100).toFixed(1)],
     ...aiRows,
     ["Disclaimer", DISCLAIMER],
   ];

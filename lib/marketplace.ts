@@ -243,6 +243,7 @@ export function buildLeadPreview(input: {
     buildBandLow: band.low,
     buildBandHigh: band.high,
     rentBand: bucketRentBand(snapshot.result.monthlyRent),
+    rentBasis: snapshot.result.rentBasis,
     paybackYears: snapshot.result.paybackYears,
     zoningStatus: snapshot.result.zoningStatus,
     matchReasons: input.matchReasons ?? defaultMatchReasons(snapshot),
