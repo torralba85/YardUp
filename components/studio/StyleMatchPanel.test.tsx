@@ -89,6 +89,7 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByText("2048 px")).toBeInTheDocument();
     expect(screen.getByText("Stripped")).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
 
     expect(onConfirm).toHaveBeenCalledWith(preparedPhoto);
@@ -115,6 +116,33 @@ describe("StyleMatchPanel", () => {
     });
 
     expect(screen.getByText(/Photo sealed for style match/i)).toBeInTheDocument();
+  });
+
+  it("keeps generation disabled until AI sharing consent is given", async () => {
+    const preparePhoto = vi.fn(async () => preparedPhoto);
+
+    render(
+      <StyleMatchPanel
+        preparePhoto={preparePhoto}
+        parcel={activeParcel}
+        config={activeConfig}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
+      target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
+    });
+    await screen.findByAltText(/Prepared house photo preview/i);
+
+    const useButton = screen.getByRole("button", { name: /Use this photo/i });
+    expect(useButton).toBeDisabled();
+    fireEvent.click(useButton);
+    expect(requestADUConceptMock).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /I agree to send this photo/i }),
+    );
+    expect(useButton).toBeEnabled();
   });
 
   it("revokes preview blob URLs when replacing the photo and on unmount", async () => {
@@ -205,6 +233,7 @@ describe("StyleMatchPanel", () => {
     });
     expect(await screen.findByAltText(/Prepared house photo preview/i)).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
 
     expect(await screen.findByText(/OPENAI_API_KEY/i)).toBeInTheDocument();
@@ -242,6 +271,7 @@ describe("StyleMatchPanel", () => {
 
     vi.useFakeTimers();
 
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
@@ -282,6 +312,7 @@ describe("StyleMatchPanel", () => {
 
     vi.useFakeTimers();
 
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
@@ -317,6 +348,7 @@ describe("StyleMatchPanel", () => {
 
     vi.useFakeTimers();
 
+    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 

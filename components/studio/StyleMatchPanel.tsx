@@ -103,6 +103,7 @@ export default function StyleMatchPanel({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generatingProgress, setGeneratingProgress] = useState(0);
+  const [aiConsent, setAiConsent] = useState(false);
 
   function clearGenerationTimer() {
     if (timerRef.current) {
@@ -414,11 +415,28 @@ export default function StyleMatchPanel({
                 </div>
               </div>
             ) : (
+              <>
+                {/* Explicit AI-sharing consent: generation is disabled until the
+                    user agrees to send this photo to OpenAI. Declining blocks
+                    only this feature, never the rest of the studio. */}
+                <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-lf-hairline bg-lf-card px-3 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={aiConsent}
+                    onChange={(e) => setAiConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay"
+                  />
+                  <span className="lf-body-sm text-lf-muted">
+                    I agree to send this photo to OpenAI to generate a concept.
+                    LotFoundry does not store the original photo.
+                  </span>
+                </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
+                  disabled={!aiConsent}
+                  className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <CheckCircle2 size={16} aria-hidden="true" />
                   Use this photo
@@ -432,6 +450,7 @@ export default function StyleMatchPanel({
                   <RotateCcw size={16} aria-hidden="true" />
                 </button>
               </div>
+              </>
             )}
           </div>
         )}

@@ -159,7 +159,7 @@ function SignupForm() {
         <p className="lf-caption text-lf-muted">
           By creating an account you agree to our{" "}
           <Link href="/terms" className="text-lf-clay hover:text-lf-mahogany">
-            Terms of Service
+            Terms &amp; Conditions
           </Link>{" "}
           and{" "}
           <Link href="/privacy" className="text-lf-clay hover:text-lf-mahogany">

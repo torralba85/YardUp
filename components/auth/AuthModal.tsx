@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
@@ -356,6 +357,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </svg>
               Google
             </button>
+
+            {/* Both paths here can create an account (email sign-up and a
+                first Google sign-in), so the legal disclosure covers both. */}
+            <p className="lf-caption mt-4 text-center text-lf-taupe">
+              By continuing, you agree to our{" "}
+              <Link
+                href="/terms"
+                target="_blank"
+                className="text-lf-sand underline decoration-lf-taupe/50 underline-offset-2 transition-colors hover:text-lf-card"
+              >
+                Terms &amp; Conditions
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="text-lf-sand underline decoration-lf-taupe/50 underline-offset-2 transition-colors hover:text-lf-card"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </div>
 
