@@ -55,6 +55,51 @@ describe("Firebase AI API routing", () => {
     );
   });
 
+  it("routes native store verification to its isolated optional-secret function", () => {
+    const rewrites = firebaseConfig.hosting.rewrites;
+    const storeRewriteIndex = rewrites.findIndex(
+      (rewrite) => rewrite.source === "/api/store/**",
+    );
+    const genericApiRewriteIndex = rewrites.findIndex(
+      (rewrite) => rewrite.source === "/api/**",
+    );
+
+    expect(storeRewriteIndex).toBeGreaterThanOrEqual(0);
+    expect(genericApiRewriteIndex).toBeGreaterThanOrEqual(0);
+    expect(storeRewriteIndex).toBeLessThan(genericApiRewriteIndex);
+    expect(rewrites[storeRewriteIndex].function).toBe("apiStore");
+    expect(functionsSource).toContain("exports.apiStore = onRequest");
+    expect(functionsSource).toContain("secrets: nativeStoreSecrets");
+    expect(ciWorkflow).toContain("deploy_target functions:apiStore");
+  });
+
+  it("creates the store target before its rewrite without exposing new asset URLs early", () => {
+    const storeDeployIndex = ciWorkflow.indexOf(
+      "deploy_target functions:apiStore",
+    );
+    const hostingDeployIndex = ciWorkflow.indexOf(
+      "firebase deploy --only hosting,firestore:rules",
+    );
+    const appDeployIndex = ciWorkflow.indexOf(
+      "for target in functions:app functions:api functions:apiAi functions:apiStripe",
+    );
+
+    expect(storeDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(hostingDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(appDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(storeDeployIndex).toBeLessThan(hostingDeployIndex);
+    expect(hostingDeployIndex).toBeLessThan(appDeployIndex);
+  });
+
+  it("stops the release when any Firebase function target fails", () => {
+    expect(ciWorkflow).toContain(
+      "deploy_target functions:apiStore || exit $?",
+    );
+    expect(ciWorkflow).toContain(
+      'deploy_target "$target" || exit $?',
+    );
+  });
+
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {
     expect(ciWorkflow).toContain("group: firebase-production-${{ github.ref }}");
     expect(ciWorkflow).toContain("cancel-in-progress: false");

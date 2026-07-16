@@ -15,6 +15,19 @@ describe("Firebase Functions provider secret bindings", () => {
     expect(functionsEntry).toContain(
       'defineSecret("OPENAI_API_KEY_SECRET")',
     );
+    expect(functionsEntry).toContain('defineSecret("APPLE_BUNDLE_ID")');
+    expect(functionsEntry).toContain(
+      'defineSecret("APPLE_ROOT_CA_FINGERPRINT256")',
+    );
+    expect(functionsEntry).toContain(
+      'defineSecret("GOOGLE_PLAY_PACKAGE_NAME")',
+    );
+    expect(functionsEntry).toContain(
+      'defineSecret("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")',
+    );
+    expect(functionsEntry).toContain(
+      "process.env.ENABLE_NATIVE_STORE_VERIFICATION === \"true\"",
+    );
     expect(functionsEntry).toContain(
       "{ ...aiFnOpts, secrets: [openAiApiKey] }",
     );
@@ -24,6 +37,9 @@ describe("Firebase Functions provider secret bindings", () => {
     expect(functionsEntry).toContain(
       "{ ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] }",
     );
+    expect(functionsEntry).toContain(
+      "{ ...fnOpts, secrets: nativeStoreSecrets }",
+    );
   });
 
   it("does not serialize server credentials into the CI environment file", () => {
@@ -32,8 +48,11 @@ describe("Firebase Functions provider secret bindings", () => {
     )?.[1];
 
     expect(envWrite).toBeDefined();
+    expect(envWrite).toContain(
+      'ENABLE_NATIVE_STORE_VERIFICATION="${{ secrets.ENABLE_NATIVE_STORE_VERIFICATION }}"',
+    );
     expect(envWrite).not.toMatch(
-      /GOOGLE_MAPS_API_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY/,
+      /GOOGLE_MAPS_API_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON/,
     );
   });
 });

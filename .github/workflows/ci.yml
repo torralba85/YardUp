@@ -54,7 +54,7 @@ jobs:
     concurrency:
       group: firebase-production-${{ github.ref }}
       cancel-in-progress: false
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,6 +68,7 @@ jobs:
         run: |
           cat > functions/.env <<EOF
           NEXT_PUBLIC_GOOGLE_PLACES_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_PLACES_KEY }}"
+          ENABLE_NATIVE_STORE_VERIFICATION="${{ secrets.ENABLE_NATIVE_STORE_VERIFICATION }}"
           EOF
           cat > .env.production.local <<EOF
           NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
@@ -89,18 +90,7 @@ jobs:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
       - name: Firebase deploy dry run
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
-      - name: Deploy Firebase Hosting + Firestore Rules
-        run: |
-          set -o pipefail
-          deploy_log="$(mktemp)"
-          firebase deploy --only hosting,firestore:rules --project yardup-2026 2>&1 | tee "$deploy_log" || {
-            if grep -F "is the current active version" "$deploy_log"; then
-              echo "::notice::Firebase Hosting version is already active; continuing."
-            else
-              exit 1
-            fi
-          }
-      - name: Deploy Firebase Functions
+      - name: Deploy Firebase safely
         run: |
           set -o pipefail
           wait_for_active_update() {
@@ -133,7 +123,8 @@ jobs:
             return 1
           }
 
-          for target in functions:app functions:api functions:apiAi functions:apiStripe; do
+          deploy_target() {
+            local target="$1"
             for attempt in 1 2 3; do
               deploy_log="$(mktemp)"
               deploy_started="$(date -u +%s)"
@@ -145,7 +136,7 @@ jobs:
 
               if grep -E "(HTTP Error: 409|unable to queue the operation)" "$deploy_log"; then
                 if wait_for_active_update "$target" "$deploy_started"; then
-                  break
+                  return 0
                 fi
                 if [ "$attempt" -lt 3 ]; then
                   echo "::notice::Firebase queue conflict while deploying $target; retrying in 120 seconds."
@@ -153,19 +144,38 @@ jobs:
                   continue
                 fi
                 echo "::error::Firebase queue conflict persisted while deploying $target."
-                exit 1
+                return 1
               fi
 
               if grep -E "failed to update function" "$deploy_log"; then
                 echo "::error::Firebase reported a function update failure while deploying $target."
-                exit 1
+                return 1
               fi
 
               if [ "$deploy_status" -ne 0 ]; then
                 echo "::error::Firebase deploy failed while deploying $target."
-                exit "$deploy_status"
+                return "$deploy_status"
               fi
 
-              break
+              return 0
             done
+          }
+
+          # Create/update the new target before Hosting publishes its rewrite.
+          # This API-only function does not reference browser static assets.
+          deploy_target functions:apiStore || exit $?
+
+          # Publish hashed assets and rewrites before updating the SSR app, so
+          # newly rendered asset URLs are already available to browsers.
+          hosting_log="$(mktemp)"
+          firebase deploy --only hosting,firestore:rules --project yardup-2026 2>&1 | tee "$hosting_log" || {
+            if grep -F "is the current active version" "$hosting_log"; then
+              echo "::notice::Firebase Hosting version is already active; continuing."
+            else
+              exit 1
+            fi
+          }
+
+          for target in functions:app functions:api functions:apiAi functions:apiStripe; do
+            deploy_target "$target" || exit $?
           done
