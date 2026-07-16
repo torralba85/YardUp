@@ -55,6 +55,37 @@ describe("Firebase AI API routing", () => {
     );
   });
 
+  it("routes native store verification to its isolated optional-secret function", () => {
+    const rewrites = firebaseConfig.hosting.rewrites;
+    const storeRewriteIndex = rewrites.findIndex(
+      (rewrite) => rewrite.source === "/api/store/**",
+    );
+    const genericApiRewriteIndex = rewrites.findIndex(
+      (rewrite) => rewrite.source === "/api/**",
+    );
+
+    expect(storeRewriteIndex).toBeGreaterThanOrEqual(0);
+    expect(genericApiRewriteIndex).toBeGreaterThanOrEqual(0);
+    expect(storeRewriteIndex).toBeLessThan(genericApiRewriteIndex);
+    expect(rewrites[storeRewriteIndex].function).toBe("apiStore");
+    expect(functionsSource).toContain("exports.apiStore = onRequest");
+    expect(functionsSource).toContain("secrets: nativeStoreSecrets");
+    expect(ciWorkflow).toContain("functions:apiStore");
+  });
+
+  it("deploys functions before publishing hosting rewrites", () => {
+    const functionsDeployIndex = ciWorkflow.indexOf(
+      "- name: Deploy Firebase Functions",
+    );
+    const hostingDeployIndex = ciWorkflow.indexOf(
+      "- name: Deploy Firebase Hosting + Firestore Rules",
+    );
+
+    expect(functionsDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(hostingDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(functionsDeployIndex).toBeLessThan(hostingDeployIndex);
+  });
+
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {
     expect(ciWorkflow).toContain("group: firebase-production-${{ github.ref }}");
     expect(ciWorkflow).toContain("cancel-in-progress: false");
