@@ -3,28 +3,37 @@ import { NextRequest } from "next/server";
 
 const deleteUser = vi.fn(async () => undefined);
 
-// Track the fake Firestore operations the route performs.
+type Ref = { kind: "scenario" | "contact" | "lead" | "feedback"; id: string };
+
 const ops = {
-  batchDeletes: [] as unknown[],
-  batchCommits: 0,
+  deleted: [] as Ref[],
+  updatedLeads: [] as Array<{ id: string; data: Record<string, unknown> }>,
   builderDeleted: false,
   userDeleted: false,
-  scenarioDocs: [] as { ref: unknown }[],
+  userSet: null as Record<string, unknown> | null,
+  scenarioIds: [] as string[],
+  feedbackIds: [] as string[],
   connectionRequests: [] as { id: string; ownerUid: string }[],
-  deletedPrivateContacts: [] as string[],
-  deletedLeadRoots: [] as string[],
-  failContactId: null as string | null,
+  failCommit: false,
 };
 
 function makeDb() {
   const userRef = {
     collection: (name: string) => ({
-      get: async () => ({ docs: name === "savedScenarios" ? ops.scenarioDocs : [] }),
+      get: async () => ({
+        docs: name === "savedScenarios"
+          ? ops.scenarioIds.map((id) => ({ ref: { kind: "scenario", id } as Ref }))
+          : [],
+      }),
     }),
+    set: async (data: Record<string, unknown>) => {
+      ops.userSet = data;
+    },
     delete: async () => {
       ops.userDeleted = true;
     },
   };
+
   return {
     collection: (name: string) => {
       if (name === "connectionRequests") {
@@ -34,22 +43,26 @@ function makeDb() {
               docs: ops.connectionRequests
                 .filter((request) => request.ownerUid === uid)
                 .map((request) => ({
+                  id: request.id,
                   ref: {
+                    kind: "lead",
+                    id: request.id,
                     collection: () => ({
-                      doc: () => ({
-                        delete: async () => {
-                          if (ops.failContactId === request.id) {
-                            throw new Error("contact delete failed");
-                          }
-                          ops.deletedPrivateContacts.push(request.id);
-                        },
-                      }),
+                      doc: () => ({ kind: "contact", id: request.id } as Ref),
                     }),
-                    delete: async () => {
-                      ops.deletedLeadRoots.push(request.id);
-                    },
                   },
                 })),
+            }),
+          }),
+        };
+      }
+      if (name === "feedback") {
+        return {
+          where: () => ({
+            get: async () => ({
+              docs: ops.feedbackIds.map((id) => ({
+                ref: { kind: "feedback", id } as Ref,
+              })),
             }),
           }),
         };
@@ -60,10 +73,23 @@ function makeDb() {
           : userRef),
       };
     },
-    batch: () => ({
-      delete: (ref: unknown) => ops.batchDeletes.push(ref),
-      commit: async () => { ops.batchCommits += 1; },
-    }),
+    batch: () => {
+      const deletes: Ref[] = [];
+      const updates: Array<{ ref: { id: string }; data: Record<string, unknown> }> = [];
+      return {
+        delete: (ref: Ref) => deletes.push(ref),
+        update: (ref: { id: string }, data: Record<string, unknown>) => {
+          updates.push({ ref, data });
+        },
+        commit: async () => {
+          if (ops.failCommit) throw new Error("batch failed");
+          ops.deleted.push(...deletes);
+          ops.updatedLeads.push(
+            ...updates.map(({ ref, data }) => ({ id: ref.id, data })),
+          );
+        },
+      };
+    },
   };
 }
 
@@ -81,6 +107,13 @@ vi.mock("firebase-admin/auth", () => ({
   getAuth: () => ({ deleteUser }),
 }));
 
+vi.mock("firebase-admin/firestore", () => ({
+  FieldValue: {
+    delete: () => "DELETE_FIELD",
+    serverTimestamp: () => "SERVER_TIMESTAMP",
+  },
+}));
+
 import { POST } from "./route";
 
 function postRequest() {
@@ -89,42 +122,44 @@ function postRequest() {
 
 describe("POST /api/account/delete", () => {
   beforeEach(() => {
-    ops.batchDeletes = [];
-    ops.batchCommits = 0;
+    ops.deleted = [];
+    ops.updatedLeads = [];
     ops.builderDeleted = false;
     ops.userDeleted = false;
-    ops.scenarioDocs = [];
+    ops.userSet = null;
+    ops.scenarioIds = [];
+    ops.feedbackIds = [];
     ops.connectionRequests = [];
-    ops.deletedPrivateContacts = [];
-    ops.deletedLeadRoots = [];
-    ops.failContactId = null;
+    ops.failCommit = false;
     throwOnDb = false;
     deleteUser.mockClear();
   });
 
-  it("deletes saved scenarios, the builder profile, and the user profile", async () => {
-    ops.scenarioDocs = [{ ref: "s1" }, { ref: "s2" }];
+  it("deletes saved scenarios, feedback, builder data, and the user tombstone", async () => {
+    ops.scenarioIds = ["s1", "s2"];
+    ops.feedbackIds = ["f1"];
 
     const res = await POST(postRequest());
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ deleted: true });
-
-    expect(ops.batchDeletes).toEqual(["s1", "s2"]);
-    expect(ops.batchCommits).toBe(1);
+    expect(ops.deleted).toEqual([
+      { kind: "scenario", id: "s1" },
+      { kind: "scenario", id: "s2" },
+      { kind: "feedback", id: "f1" },
+    ]);
     expect(ops.builderDeleted).toBe(true);
+    expect(ops.userSet).toEqual(
+      expect.objectContaining({ deletionPending: true }),
+    );
     expect(ops.userDeleted).toBe(true);
   });
 
   it("does not delete the Firebase Auth identity for the dev/test stub uid", async () => {
-    // In test mode requireApiAuth returns uid "local-dev", which is not a real
-    // Firebase user, so the Auth deletion must be skipped.
     await POST(postRequest());
     expect(deleteUser).not.toHaveBeenCalled();
   });
 
-  it("removes lead contact PII while retaining the redacted lead roots", async () => {
-    // requireApiAuth returns uid "local-dev" in test mode; only requests owned
-    // by that uid get their private contact payload torn down.
+  it("removes lead contacts and retires retained lead roots", async () => {
     ops.connectionRequests = [
       { id: "lead-1", ownerUid: "local-dev" },
       { id: "lead-2", ownerUid: "someone-else" },
@@ -132,43 +167,34 @@ describe("POST /api/account/delete", () => {
 
     const res = await POST(postRequest());
     expect(res.status).toBe(200);
-
-    expect(ops.deletedPrivateContacts).toEqual(["lead-1"]);
-    // The redacted root is a shared business record a builder may have paid to
-    // unlock — it must be retained.
-    expect(ops.deletedLeadRoots).toEqual([]);
+    expect(ops.deleted).toContainEqual({ kind: "contact", id: "lead-1" });
+    expect(ops.updatedLeads).toEqual([
+      expect.objectContaining({
+        id: "lead-1",
+        data: expect.objectContaining({ status: "withdrawn", ownerUid: "DELETE_FIELD" }),
+      }),
+    ]);
   });
 
-  it("attempts every contact and preserves the profile when one delete fails", async () => {
-    // A transient failure on one lead's contact must not stop the others from
-    // being attempted, and must abort before the irreversible profile/identity
-    // removal so a retry can finish cleanly.
-    ops.connectionRequests = [
-      { id: "lead-1", ownerUid: "local-dev" },
-      { id: "lead-2", ownerUid: "local-dev" },
-    ];
-    ops.failContactId = "lead-2";
+  it("keeps the account retryable when Firestore cleanup fails", async () => {
+    ops.connectionRequests = [{ id: "lead-1", ownerUid: "local-dev" }];
+    ops.failCommit = true;
 
     const res = await POST(postRequest());
     expect(res.status).toBe(500);
-
-    // The healthy contact was still torn down (loop was not stopped at the
-    // failure)...
-    expect(ops.deletedPrivateContacts).toEqual(["lead-1"]);
-    // ...and the profile/identity remain for a clean retry.
     expect(ops.builderDeleted).toBe(false);
+    expect(ops.userSet).toBeNull();
     expect(ops.userDeleted).toBe(false);
+    expect(deleteUser).not.toHaveBeenCalled();
   });
 
   it("is safe to retry after account data is already gone", async () => {
-    // Everything already deleted: no scenarios, no leads, and every direct
-    // delete resolves as a no-op. The route must still report success.
     const res = await POST(postRequest());
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ deleted: true });
   });
 
-  it("returns 500 when the teardown fails", async () => {
+  it("returns 500 when the teardown cannot start", async () => {
     throwOnDb = true;
     const res = await POST(postRequest());
     expect(res.status).toBe(500);
