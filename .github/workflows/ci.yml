@@ -163,7 +163,7 @@ jobs:
 
           # Create/update the new target before Hosting publishes its rewrite.
           # This API-only function does not reference browser static assets.
-          deploy_target functions:apiStore
+          deploy_target functions:apiStore || exit $?
 
           # Publish hashed assets and rewrites before updating the SSR app, so
           # newly rendered asset URLs are already available to browsers.
@@ -177,5 +177,5 @@ jobs:
           }
 
           for target in functions:app functions:api functions:apiAi functions:apiStripe; do
-            deploy_target "$target"
+            deploy_target "$target" || exit $?
           done
