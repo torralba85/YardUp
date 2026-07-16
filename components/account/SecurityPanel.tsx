@@ -21,7 +21,8 @@ export function SecurityPanel({
   onChangePassword,
 }: SecurityPanelProps) {
   const [email, setEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [passwordPassword, setPasswordPassword] = useState("");
   const [nextPassword, setNextPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export function SecurityPanel({
       setError(emailError);
       return;
     }
-    if (!currentPassword) {
+    if (!emailPassword) {
       setError("Enter your current password to change email.");
       return;
     }
@@ -55,9 +56,9 @@ export function SecurityPanel({
     setError(null);
     setStatus(null);
     try {
-      await onChangeEmail(email.trim(), currentPassword);
+      await onChangeEmail(email.trim(), emailPassword);
       setStatus("Check your inbox to confirm the new email.");
-      setCurrentPassword("");
+      setEmailPassword("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not change email.");
     } finally {
@@ -73,7 +74,7 @@ export function SecurityPanel({
       setError(pwError);
       return;
     }
-    if (!currentPassword) {
+    if (!passwordPassword) {
       setError("Enter your current password.");
       return;
     }
@@ -81,9 +82,9 @@ export function SecurityPanel({
     setError(null);
     setStatus(null);
     try {
-      await onChangePassword(currentPassword, nextPassword);
+      await onChangePassword(passwordPassword, nextPassword);
       setStatus("Password updated.");
-      setCurrentPassword("");
+      setPasswordPassword("");
       setNextPassword("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not change password.");
@@ -110,8 +111,8 @@ export function SecurityPanel({
           />
           <input
             type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
+            value={emailPassword}
+            onChange={(e) => setEmailPassword(e.target.value)}
             placeholder="Current password"
             autoComplete="current-password"
             className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
@@ -126,8 +127,8 @@ export function SecurityPanel({
           <h3 className="text-sm font-semibold text-lf-espresso">Change password</h3>
           <input
             type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
+            value={passwordPassword}
+            onChange={(e) => setPasswordPassword(e.target.value)}
             placeholder="Current password"
             autoComplete="current-password"
             className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
