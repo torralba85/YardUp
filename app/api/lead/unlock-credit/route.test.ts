@@ -49,13 +49,16 @@ describe("POST /api/lead/unlock-credit", () => {
 
   it("rejects when builder lacks credits", async () => {
     vi.mocked(requireApiAuth).mockResolvedValueOnce({ uid: "builder-123" });
-    
+
     mockGet.mockImplementation(async (ref) => {
       if (ref.path === "builders/builder-123") {
         return { exists: true, data: () => ({ credits: 0 }) };
       }
       if (ref.path === "connectionRequests/lead-123") {
-        return { exists: true, data: () => ({ matchedBuilderIds: ["builder-123"] }) };
+        return {
+          exists: true,
+          data: () => ({ status: "submitted", matchedBuilderIds: ["builder-123"] }),
+        };
       }
       return { exists: false };
     });
@@ -79,7 +82,10 @@ describe("POST /api/lead/unlock-credit", () => {
         return { exists: true, data: () => ({ credits: 5 }) };
       }
       if (ref.path === "connectionRequests/lead-123") {
-        return { exists: true, data: () => ({ matchedBuilderIds: ["other-builder"] }) };
+        return {
+          exists: true,
+          data: () => ({ status: "submitted", matchedBuilderIds: ["other-builder"] }),
+        };
       }
       return { exists: false };
     });
@@ -99,13 +105,16 @@ describe("POST /api/lead/unlock-credit", () => {
 
   it("successfully debits credits and returns the new credit balance", async () => {
     vi.mocked(requireApiAuth).mockResolvedValueOnce({ uid: "builder-123" });
-    
+
     mockGet.mockImplementation(async (ref) => {
       if (ref.path === "builders/builder-123") {
         return { exists: true, data: () => ({ credits: 5 }) };
       }
       if (ref.path === "connectionRequests/lead-123") {
-        return { exists: true, data: () => ({ matchedBuilderIds: ["builder-123"] }) };
+        return {
+          exists: true,
+          data: () => ({ status: "submitted", matchedBuilderIds: ["builder-123"] }),
+        };
       }
       if (ref.path === "leadUnlocks/builder-123_lead-123") {
         return { exists: false };
@@ -121,10 +130,10 @@ describe("POST /api/lead/unlock-credit", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     const data = await res.json();
-    
+
     expect(data.success).toBe(true);
     expect(data.newCredits).toBe(4);
-    
+
     expect(mockUpdate).toHaveBeenCalledWith(
       { path: "builders/builder-123" },
       expect.objectContaining({ credits: 4 })
