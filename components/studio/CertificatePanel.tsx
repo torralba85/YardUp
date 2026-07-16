@@ -302,7 +302,7 @@ export default function CertificatePanel({
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {CERTIFICATE_INCLUDES.map((item) => (
                 <li key={item} className="flex items-center gap-2 text-sm text-lf-muted">
-                  <CheckCircle2 size={15} className="shrink-0 text-lf-mahogany" />
+                  <CheckCircle2 size={15} className="shrink-0 text-lf-forest" />
                   {item}
                 </li>
               ))}

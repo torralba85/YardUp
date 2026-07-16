@@ -238,9 +238,9 @@ export default function BuilderInbox({
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition ${
+                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                       tab === t.key
-                        ? "border-lf-espresso bg-lf-espresso text-lf-sand"
+                        ? "border-lf-clay bg-lf-clay text-lf-sand"
                         : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
                     }`}
                   >
@@ -255,9 +255,9 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer ${
+                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay ${
                     viewMode === "cards"
-                      ? "bg-lf-espresso text-lf-sand font-semibold"
+                      ? "bg-lf-clay text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
                   }`}
                 >
@@ -267,9 +267,9 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className={`rounded-full px-3.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer ${
+                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay ${
                     viewMode === "table"
-                      ? "bg-lf-espresso text-lf-sand font-semibold"
+                      ? "bg-lf-clay text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
                   }`}
                 >
@@ -453,14 +453,16 @@ export default function BuilderInbox({
                       return (
                         <div className="flex flex-col gap-4">
                           {/* Mobile Back Button */}
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="self-start lg:hidden"
                             onClick={() => setSelectedItemId(null)}
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-lf-clay transition hover:text-lf-clay-strong lg:hidden self-start"
+                            leftIcon={<ArrowLeft size={14} />}
                           >
-                            <ArrowLeft size={14} />
                             Back to inbox list
-                          </button>
+                          </Button>
 
                           <div className="flex items-center justify-between border-b border-lf-hairline pb-3">
                             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
@@ -506,10 +508,12 @@ export default function BuilderInbox({
                                 </p>
                               </div>
 
-                              <div className="border border-dashed border-lf-taupe p-4 bg-lf-sand-2/30 text-center rounded-lg space-y-3">
+                              <div className="space-y-3 rounded-lg border border-dashed border-lf-taupe bg-lf-sand-2/30 p-4 text-center">
                                 <Lock size={24} className="mx-auto text-lf-taupe" />
-                                <h4 className="text-xs font-semibold text-lf-espresso uppercase tracking-wider">Feasibility Certificate Locked</h4>
-                                <p className="text-xs text-lf-muted max-w-xs mx-auto leading-relaxed">
+                                <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+                                  Feasibility Certificate Locked
+                                </h4>
+                                <p className="mx-auto max-w-xs text-xs leading-relaxed text-lf-muted">
                                   Unlock this lead to reveal the exact street address, parcel boundaries, zoning calculations, detailed finances ledger, and direct homeowner contact info.
                                 </p>
                                 <Button
@@ -526,42 +530,11 @@ export default function BuilderInbox({
                                 </Button>
                               </div>
 
-                              {/* Response triage inline buttons */}
-                              <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-                                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
-                                  Response: {selectedItem.response.status === "interested" ? "Interested" : selectedItem.response.status === "not-a-fit" ? "Archived" : "New"}
-                                </span>
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => respond(selectedItem.request.id, "interested")}
-                                    disabled={responding}
-                                    aria-pressed={selectedItem.response.status === "interested"}
-                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
-                                      selectedItem.response.status === "interested"
-                                        ? "bg-lf-clay text-lf-sand"
-                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                                    }`}
-                                  >
-                                    <CheckCircle2 size={12} />
-                                    Interested
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => respond(selectedItem.request.id, "not-a-fit")}
-                                    disabled={responding}
-                                    aria-pressed={selectedItem.response.status === "not-a-fit"}
-                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
-                                      selectedItem.response.status === "not-a-fit"
-                                        ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
-                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                                    }`}
-                                  >
-                                    <CircleSlash size={12} />
-                                    Not a fit
-                                  </button>
-                                </div>
-                              </div>
+                              <ResponseTriage
+                                status={selectedItem.response.status}
+                                responding={responding}
+                                onRespond={(status) => respond(selectedItem.request.id, status)}
+                              />
                             </div>
                           )}
 
@@ -609,26 +582,27 @@ export default function BuilderInbox({
                                 )}
                               </div>
 
-                              {/* Visual Certificate Section */}
+                              {/* Visual Certificate Section — single frame (no nested rounded cards). */}
                               <div className="space-y-3">
-                                <div className="text-xs font-semibold uppercase tracking-wider text-lf-espresso">Feasibility Certificate</div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+                                  Feasibility Certificate
+                                </div>
 
                                 {(!itemContact.snapshot?.result || !itemContact.snapshot?.parcel || !itemContact.snapshot?.config) ? (
                                   /* Defensively Fallback to Plain Text Report if structure is not present (e.g. tests) */
-                                  <div className="border border-lf-hairline bg-lf-card/60 p-3.5 rounded-lg max-h-[300px] overflow-y-auto">
-                                    <pre className="font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-lf-espresso">
+                                  <div className="max-h-[300px] overflow-y-auto border border-lf-hairline bg-lf-card/60 p-3.5">
+                                    <pre className="whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-lf-espresso">
                                       {itemContact.snapshot?.reportText || "Feasibility certificate data unavailable."}
                                     </pre>
                                   </div>
                                 ) : (
-                                  /* Full styled inline certificate report */
-                                  <div className="border-[1.5px] border-lf-espresso bg-lf-card p-1">
-                                    <div className="border border-lf-taupe p-4 space-y-4">
+                                  /* Full styled inline certificate — one instrument frame, not card-in-card. */
+                                  <div className="space-y-4 border-[1.5px] border-lf-espresso bg-lf-card p-4">
                                       {/* Monogram / Header */}
-                                      <div className="text-center border-b border-lf-hairline pb-2">
+                                      <div className="border-b border-lf-hairline pb-2 text-center">
                                         <div className="lf-dataprint text-lf-clay">LotFoundry</div>
-                                        <h5 className="font-display font-semibold text-sm text-lf-espresso leading-tight mt-0.5">Certificate of Feasibility</h5>
-                                        <p className="font-mono text-[9px] text-lf-muted mt-1 truncate">
+                                        <h5 className="mt-0.5 font-display text-sm font-semibold leading-tight text-lf-espresso">Certificate of Feasibility</h5>
+                                        <p className="mt-1 truncate font-mono text-[9px] text-lf-muted">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
                                         </p>
                                       </div>
@@ -677,9 +651,9 @@ export default function BuilderInbox({
                                         <div className="flex justify-between py-1">
                                           <span className="lf-dataprint text-lf-muted">Zoning Status</span>
                                           <span className={`font-semibold border px-1 text-[9px] ${
-                                            itemContact.snapshot.result.zoningStatus === "Compliant" 
-                                              ? "border-lf-forest text-lf-forest" 
-                                              : "border-lf-amber text-lf-amber-ink"
+                                            itemContact.snapshot.result.zoningStatus === "Compliant"
+                                              ? "border-lf-forest text-lf-forest"
+                                              : "border-lf-amber-ink/40 text-lf-amber-ink"
                                           }`}>
                                             {itemContact.snapshot.result.zoningStatus}
                                           </span>
@@ -696,10 +670,9 @@ export default function BuilderInbox({
                                         </div>
                                       </div>
 
-                                      <div className="lf-dataprint text-center border-2 border-lf-brick/30 py-1 font-bold text-lf-brick rotate-[-2deg]">
+                                      <div className="lf-dataprint rotate-[-2deg] border-2 border-lf-brick/30 py-1 text-center font-bold text-lf-brick">
                                         Concept &middot; Not a Permit
                                       </div>
-                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -730,42 +703,11 @@ export default function BuilderInbox({
                                 </Button>
                               </div>
 
-                              {/* Response triage inline buttons */}
-                              <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-                                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
-                                  Response: {selectedItem.response.status === "interested" ? "Interested" : selectedItem.response.status === "not-a-fit" ? "Archived" : "New"}
-                                </span>
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => respond(selectedItem.request.id, "interested")}
-                                    disabled={responding}
-                                    aria-pressed={selectedItem.response.status === "interested"}
-                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
-                                      selectedItem.response.status === "interested"
-                                        ? "bg-lf-clay text-lf-sand"
-                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                                    }`}
-                                  >
-                                    <CheckCircle2 size={12} />
-                                    Interested
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => respond(selectedItem.request.id, "not-a-fit")}
-                                    disabled={responding}
-                                    aria-pressed={selectedItem.response.status === "not-a-fit"}
-                                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold transition disabled:opacity-50 cursor-pointer ${
-                                      selectedItem.response.status === "not-a-fit"
-                                        ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
-                                        : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                                    }`}
-                                  >
-                                    <CircleSlash size={12} />
-                                    Not a fit
-                                  </button>
-                                </div>
-                              </div>
+                              <ResponseTriage
+                                status={selectedItem.response.status}
+                                responding={responding}
+                                onRespond={(status) => respond(selectedItem.request.id, status)}
+                              />
                             </div>
                           )}
                         </div>
@@ -857,6 +799,57 @@ function ZeroEverEmptyState() {
   );
 }
 
+/** Compact interested / not-a-fit controls shared by locked + unlocked detail panes. */
+function ResponseTriage({
+  status,
+  responding,
+  onRespond,
+}: {
+  status: BuilderInboxItem["response"]["status"];
+  responding: boolean;
+  onRespond: (status: "interested" | "not-a-fit") => void;
+}) {
+  const label =
+    status === "interested" ? "Interested" : status === "not-a-fit" ? "Archived" : "New";
+
+  return (
+    <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
+      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
+        Response: {label}
+      </span>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          size="xs"
+          variant={status === "interested" ? "primary" : "secondary"}
+          disabled={responding}
+          aria-pressed={status === "interested"}
+          onClick={() => onRespond("interested")}
+          leftIcon={<CheckCircle2 size={12} />}
+        >
+          Interested
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant="secondary"
+          disabled={responding}
+          aria-pressed={status === "not-a-fit"}
+          onClick={() => onRespond("not-a-fit")}
+          leftIcon={<CircleSlash size={12} />}
+          className={
+            status === "not-a-fit"
+              ? "border-lf-taupe bg-lf-taupe-soft text-lf-espresso hover:bg-lf-taupe-soft"
+              : undefined
+          }
+        >
+          Not a fit
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CreditShop() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<number | null>(null);
@@ -868,6 +861,23 @@ function CreditShop() {
     setError(null);
     try {
       const token = await user.getIdToken();
+      const { detectPurchaseChannel, requiresStoreBilling } = await import(
+        "@/lib/commerce/purchase-channel"
+      );
+      const channel = detectPurchaseChannel();
+      if (requiresStoreBilling(channel)) {
+        const { createPurchaseClient } = await import("@/lib/commerce/purchase-client");
+        const { STORE_PRODUCTS } = await import("@/lib/commerce/products");
+        const productId =
+          pack === 10 ? STORE_PRODUCTS.builder10.id : STORE_PRODUCTS.builder5.id;
+        const client = createPurchaseClient({
+          getIdToken: async () => token,
+        });
+        await client.purchase(productId);
+        window.location.reload();
+        return;
+      }
+
       const res = await fetch("/api/stripe/checkout-credits", {
         method: "POST",
         headers: {
@@ -900,35 +910,38 @@ function CreditShop() {
         Unlock leads instantly with credits. Save up to 25% by buying in bulk.
       </p>
       {error && (
-        <div className="mt-3 bg-lf-brick/10 p-2 text-xs text-lf-brick border border-lf-brick/20">
+        <div role="alert" className="mt-3 border border-lf-brick/30 bg-lf-brick-soft p-2 text-xs text-lf-brick">
           {error}
         </div>
       )}
       <div className="mt-4 space-y-3">
+        {/* Product rows are purchase instruments (ledger cards), not pill CTAs. */}
         <button
+          type="button"
           onClick={() => buyPack(5)}
           disabled={loading !== null}
-          className="w-full flex items-center justify-between rounded-lg border border-lf-hairline p-3 hover:bg-lf-sand-2 disabled:opacity-50 transition"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 disabled:opacity-50"
         >
-          <div className="text-left">
+          <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
             <div className="text-xs text-lf-muted">$35 / lead</div>
           </div>
-          <div className="font-display text-lg font-semibold text-lf-forest">
-            $175
+          <div className="lf-money-md text-lf-forest">
+            {loading === 5 ? "…" : "$175"}
           </div>
         </button>
         <button
+          type="button"
           onClick={() => buyPack(10)}
           disabled={loading !== null}
-          className="w-full flex items-center justify-between rounded-lg border border-lf-hairline bg-lf-espresso p-3 hover:bg-lf-espresso/90 disabled:opacity-50 transition"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 disabled:opacity-50"
         >
-          <div className="text-left">
+          <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>
-            <div className="text-xs text-lf-taupe">$30 / lead (Best Value)</div>
+            <div className="text-xs text-lf-sand/80">$30 / lead · Best value</div>
           </div>
-          <div className="font-display text-lg font-semibold text-lf-money-on-dark">
-            $300
+          <div className="lf-money-md text-lf-sand">
+            {loading === 10 ? "…" : "$300"}
           </div>
         </button>
       </div>

@@ -54,7 +54,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           displayName={displayName}
           roleLabel={roleLabel}
           onSignOut={() => void logout()}
-          compact
+          tone="dark"
         />
       ) : (
         <button

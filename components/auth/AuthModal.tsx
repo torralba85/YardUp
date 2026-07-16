@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
 /** Props for {@link AuthModal}. */
@@ -30,7 +30,7 @@ interface TriggerHost {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithApple, user } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +41,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const triggerHostsRef = useRef<TriggerHost[]>([]);
   const restoredTriggerRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  // Track open-edge so Strict Mode double-effects don't re-capture the
+  // trigger after focus has already moved into the dialog (which would make
+  // restore target the detached input and leave focus on <body>).
+  const wasOpenRef = useRef(false);
   // Set right before onClose() on a successful sign-in/sign-up, so the close
   // effect can tell "this modal just signed someone in" apart from a plain
   // cancel (Escape, backdrop, the X button) — only the former should arm the
@@ -85,42 +89,51 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   // be walked upward after React removes it.
   useEffect(() => {
     if (isOpen) {
-      const trigger = document.activeElement as HTMLElement | null;
-      triggerRef.current = trigger;
-      restoredTriggerRef.current = null;
-      const hosts: TriggerHost[] = [];
-      if (trigger) {
-        for (
-          let el = trigger.parentElement;
-          el && el !== document.body;
-          el = el.parentElement
-        ) {
-          const focusables = Array.from(
-            el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-          );
-          hosts.push({ el, index: Math.max(0, focusables.indexOf(trigger)) });
+      // Capture the opener only on the closed→open edge. A re-run while
+      // already open (Strict Mode, dependency churn) would otherwise snapshot
+      // the dialog's focused input as the "trigger".
+      if (!wasOpenRef.current) {
+        const trigger = document.activeElement as HTMLElement | null;
+        triggerRef.current = trigger;
+        restoredTriggerRef.current = null;
+        const hosts: TriggerHost[] = [];
+        if (trigger) {
+          for (
+            let el = trigger.parentElement;
+            el && el !== document.body;
+            el = el.parentElement
+          ) {
+            const focusables = Array.from(
+              el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+            );
+            hosts.push({ el, index: Math.max(0, focusables.indexOf(trigger)) });
+          }
         }
+        triggerHostsRef.current = hosts;
       }
-      triggerHostsRef.current = hosts;
+      wasOpenRef.current = true;
       panelRef.current?.querySelector<HTMLElement>("input")?.focus();
     } else {
-      const trigger = triggerRef.current;
-      const initiatedBySignIn = signInInitiatedCloseRef.current;
-      signInInitiatedCloseRef.current = false;
-      if (trigger?.isConnected) {
-        trigger.focus();
-        // The auth observer can replace the trigger a render after this
-        // close — but only arm the delayed re-check below when this close
-        // was a completed sign-in, not a cancel. Otherwise unrelated auth
-        // churn later (a token refresh, signing in from another surface)
-        // could unmount this trigger and steal focus for a modal the user
-        // already dismissed.
-        if (initiatedBySignIn) {
-          restoredTriggerRef.current = trigger;
+      if (wasOpenRef.current) {
+        const trigger = triggerRef.current;
+        const initiatedBySignIn = signInInitiatedCloseRef.current;
+        signInInitiatedCloseRef.current = false;
+        if (trigger?.isConnected) {
+          trigger.focus();
+          // The auth observer can replace the trigger a render after this
+          // close — but only arm the delayed re-check below when this close
+          // was a completed sign-in, not a cancel. Otherwise unrelated auth
+          // churn later (a token refresh, signing in from another surface)
+          // could unmount this trigger and steal focus for a modal the user
+          // already dismissed.
+          if (initiatedBySignIn) {
+            restoredTriggerRef.current = trigger;
+          }
+        } else if (trigger) {
+          focusTriggerReplacement();
         }
-      } else if (trigger) {
-        focusTriggerReplacement();
       }
+      wasOpenRef.current = false;
     }
   }, [isOpen, focusTriggerReplacement]);
 
@@ -199,8 +212,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       signInInitiatedCloseRef.current = true;
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message || "Authentication failed. Please try again.");
+      const code = getAuthErrorCode(err);
+      setError(
+        code
+          ? getAuthErrorMessage(code)
+          : err instanceof Error
+            ? err.message
+            : "Authentication failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -214,8 +233,35 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       signInInitiatedCloseRef.current = true;
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message || "Google sign-in failed. Please try again.");
+      const code = getAuthErrorCode(err);
+      setError(
+        code
+          ? getAuthErrorMessage(code)
+          : err instanceof Error
+            ? err.message
+            : "Google sign-in failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await signInWithApple();
+      signInInitiatedCloseRef.current = true;
+      onClose();
+    } catch (err: unknown) {
+      const code = getAuthErrorCode(err);
+      setError(
+        code
+          ? getAuthErrorMessage(code)
+          : err instanceof Error
+            ? err.message
+            : "Apple sign-in failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -310,10 +356,24 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             )}
 
+            {isSignUp && (
+              <p className="lf-caption text-lf-taupe">
+                By creating an account, you agree to our{" "}
+                <a href="/terms" className="text-lf-sand underline underline-offset-2">
+                  Terms &amp; Conditions
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" className="text-lf-sand underline underline-offset-2">
+                  Privacy Policy
+                </a>
+                .
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 min-h-11 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
             </button>
@@ -335,9 +395,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -357,28 +417,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </svg>
               Google
             </button>
-
-            {/* Both paths here can create an account (email sign-up and a
-                first Google sign-in), so the legal disclosure covers both. */}
-            <p className="lf-caption mt-4 text-center text-lf-taupe">
-              By continuing, you agree to our{" "}
-              <Link
-                href="/terms"
-                target="_blank"
-                className="text-lf-sand underline decoration-lf-taupe/50 underline-offset-2 transition-colors hover:text-lf-card"
-              >
-                Terms &amp; Conditions
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                target="_blank"
-                className="text-lf-sand underline decoration-lf-taupe/50 underline-offset-2 transition-colors hover:text-lf-card"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p>
+            <button
+              type="button"
+              onClick={handleAppleSignIn}
+              disabled={loading}
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
+              </svg>
+              Apple
+            </button>
           </div>
         </div>
 

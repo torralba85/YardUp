@@ -143,22 +143,35 @@ describe("AddressSearch", () => {
     );
   });
 
-  it("suppresses all suggestion sources for signed-out visitors", async () => {
-    // Guests must never spend metered suggestion quota (browser Places or
-    // /api/suggest); they see a sign-in note and no dropdown instead.
+  it("shows server-backed suggestions for signed-out visitors", async () => {
+    // Guests get rate-limited /api/suggest so address autofill works before
+    // sign-in (landing + studio handoff).
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_PLACES_KEY", "");
     const user = userEvent.setup();
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        suggestions: ["456 Pine St, Denver, CO, USA"],
+      }),
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
 
-    await user.type(screen.getByLabelText("Search property address"), "456 Pine St");
-    // Wait out the 300ms suggestion debounce before asserting nothing fired.
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await user.type(screen.getByLabelText("Search property address"), "456 Pine");
 
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.queryByRole("option")).not.toBeInTheDocument();
-    expect(screen.getByRole("note")).toHaveTextContent(/sign in to search a real address/i);
+    expect(
+      await screen.findByRole(
+        "option",
+        { name: /456 Pine St, Denver, CO, USA/ },
+        { timeout: 2000 },
+      ),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/api/suggest"),
+      expect.anything(),
+    );
   });
 
   it("falls back to server suggestions when the Places library fails to load", async () => {

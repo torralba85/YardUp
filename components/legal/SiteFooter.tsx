@@ -10,33 +10,43 @@ const FOOTER_LINKS = [
 ] as const;
 
 /**
- * The shared Golden Hour site footer for public legal/support/marketing
- * surfaces: brand line, the launch-required navigation set (About, Help,
- * Feedback, Terms & Conditions, Privacy, Delete account), and the
- * estimate-honest tagline. One component so footers never drift per-page.
+ * Shared public footer: About, Help, Feedback, Terms, Privacy, Delete account.
+ * Used on legal/support surfaces and any public shell that needs consistent nav.
  */
-export function SiteFooter() {
+export function SiteFooter({
+  tone = "light",
+}: {
+  /** `light` for Golden Hour sand pages; `dark` for Blue Hour landing. */
+  tone?: "light" | "dark";
+}) {
+  const muted = tone === "dark" ? "text-ln-slate" : "text-lf-muted";
+  const hover = tone === "dark" ? "hover:text-ln-mist" : "hover:text-lf-espresso";
+  const border = tone === "dark" ? "border-ln-hairline/60" : "border-lf-hairline/50";
+
   return (
-    <footer className="border-t border-lf-hairline/60 bg-lf-sand">
-      <div className="mx-auto max-w-4xl px-6 py-8">
-        <nav aria-label="Site" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
-          {FOOTER_LINKS.map(({ href, label }) => (
+    <footer className={`border-t ${border}`}>
+      <div
+        className={`lf-caption mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-3 gap-y-2 px-6 py-8 ${muted}`}
+      >
+        <Link href="/" className={hover}>
+          LotFoundry
+        </Link>
+        {FOOTER_LINKS.map((link) => (
+          <span key={link.href} className="contents">
+            <span aria-hidden className="text-lf-taupe/50">
+              ·
+            </span>
             <Link
-              key={href}
-              href={href}
-              className="lf-body-sm inline-flex min-h-11 items-center text-lf-muted transition-colors hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-sand"
+              href={link.href}
+              className={`inline-flex min-h-11 items-center ${hover}`}
             >
-              {label}
+              {link.label}
             </Link>
-          ))}
-        </nav>
-        <p className="lf-caption mt-4 text-center text-lf-muted">
-          <Link href="/" className="hover:text-lf-espresso">
-            LotFoundry
-          </Link>{" "}
-          · ADU planning for homeowners. Estimates only—not guarantees.
-        </p>
+          </span>
+        ))}
       </div>
     </footer>
   );
 }
+
+export { FOOTER_LINKS };

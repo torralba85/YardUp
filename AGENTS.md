@@ -128,6 +128,10 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
 NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
 NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=<Firebase App Check reCAPTCHA Enterprise site key>
 NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=<registered local debug token; never deploy>
+APPLE_BUNDLE_ID=<iOS bundle id for StoreKit receipt verification>
+APPLE_ROOT_CA_FINGERPRINT256=<SHA-256 fingerprint pinning the Apple root CA for StoreKit x5c chains>
+GOOGLE_PLAY_PACKAGE_NAME=<Android package name for Play Billing verification>
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=<service-account JSON with androidpublisher scope>
 ```
 
 Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit storage backend selection: in-memory vs Firestore). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.

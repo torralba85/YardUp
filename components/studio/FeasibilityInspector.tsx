@@ -12,6 +12,7 @@ import {
   roofLabels,
 } from "@/lib/feasibility";
 import { useParcel } from "@/lib/parcel-context";
+import { Button } from "@/components/ui/Button";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import type {
   ADUConfig,
@@ -211,7 +212,7 @@ export default function FeasibilityInspector({
                     <button
                       type="button"
                       onClick={handleResetToPreset}
-                      className="relative flex items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
+                      className="relative flex min-h-11 items-center gap-1 text-xs font-medium text-lf-clay transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
                     >
                       <RefreshCcw size={12} />
                       Demo mode
@@ -231,7 +232,7 @@ export default function FeasibilityInspector({
                   {"source" in displayParcel && displayParcel.source === "fallback" && (
                     <div
                       role="note"
-                      className="flex items-start gap-2 rounded-lg border border-lf-amber/40 bg-lf-amber/10 p-3 text-xs text-lf-muted"
+                      className="flex items-start gap-2 rounded-lg border border-lf-amber-ink/35 bg-lf-amber-soft p-3 text-xs text-lf-amber-ink"
                     >
                       <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-ink" />
                       Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
@@ -301,14 +302,16 @@ export default function FeasibilityInspector({
                 />
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
                 onClick={() => handleNextStep(1, 2)}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                rightIcon={<ChevronDown size={15} className="-rotate-90" />}
               >
                 Next: Design your ADU
-                <ChevronDown size={15} className="-rotate-90" />
-              </button>
+              </Button>
             </div>
           </AccordionStep>
 
@@ -445,14 +448,16 @@ export default function FeasibilityInspector({
                 {config.includeOpenings ? "Remove Entry & Windows" : "Add Entry & Windows"}
               </button>
 
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
                 onClick={() => handleNextStep(2, 3)}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-espresso/8 text-sm font-semibold text-lf-espresso transition hover:bg-lf-espresso/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                rightIcon={<ChevronDown size={15} className="-rotate-90" />}
               >
                 Next: Run the numbers
-                <ChevronDown size={15} className="-rotate-90" />
-              </button>
+              </Button>
             </div>
           </AccordionStep>
 
@@ -466,7 +471,11 @@ export default function FeasibilityInspector({
           >
             <div className="space-y-5">
               <div className="space-y-3">
-                <LabelRow label="Rental Estimate" value={formatCurrency(result.monthlyRent)} />
+                <LabelRow
+                  label="Rental Estimate"
+                  value={formatCurrency(result.monthlyRent)}
+                  valueClass="font-display text-lf-forest"
+                />
                 <div role="group" aria-label="Rental estimate" className="grid grid-cols-3 gap-2">
                   {(Object.keys(rentLabels) as RentScenario[]).map((scenario) => (
                     <button
@@ -517,26 +526,29 @@ export default function FeasibilityInspector({
               {nextActionByStep[openStep]}
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="commit"
+            size="lg"
+            fullWidth
             onClick={handleGenerateReportClick}
-            className="group flex h-12 w-full items-center justify-between gap-4 rounded-lg bg-lf-mahogany pl-6 pr-2.5 text-sm font-semibold text-lf-sand-2 shadow-sm transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 motion-safe:active:scale-[0.98]"
+            leftIcon={<Sparkles size={16} />}
           >
-            <span>Create my ADU report</span>
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-lf-sand/15 transition-transform duration-300 group-hover:translate-x-0.5">
-              <Sparkles size={16} />
-            </span>
-          </button>
+            Create my ADU report
+          </Button>
           {onSaveScenario && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
+              fullWidth
               onClick={onSaveScenario}
               disabled={savingScenario}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline text-sm font-semibold text-lf-muted transition hover:border-lf-taupe hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              loading={savingScenario}
+              leftIcon={<BookmarkPlus size={16} />}
             >
-              <BookmarkPlus size={16} />
-              {saveNotice ?? (savingScenario ? "Saving..." : "Save this design")}
-            </button>
+              {saveNotice ?? (savingScenario ? "Saving…" : "Save this design")}
+            </Button>
           )}
         </div>
 
@@ -678,7 +690,9 @@ function LabelRow({
   label,
   value,
   htmlFor,
-  valueClass = "font-display text-lf-mahogany",
+  // Default is espresso ink for non-money values. Money call sites pass
+  // `text-lf-forest` (DESIGN.md: green only for payable value).
+  valueClass = "font-display text-lf-espresso",
 }: {
   label: string;
   value?: string;

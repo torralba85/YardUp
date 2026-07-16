@@ -1,70 +1,97 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { AuthModal } from "@/components/auth/AuthModal";
-import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { DeleteAccountButton } from "@/components/studio/DeleteAccountButton";
 
-const LINK_CLASS =
-  "font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany";
-
 /**
- * Interactive half of the public `/delete-account` resource. Signed-in users
- * complete deletion right here with the standard two-step confirmation;
- * signed-out visitors get sign-in and password-reset paths so the flow never
- * requires reinstalling an app.
+ * Public web deletion resource: explains retention, offers in-page deletion for
+ * signed-in users, and login/reset paths for others.
  */
 export function DeleteAccountPageClient() {
   const { user, profile, loading } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
-
-  if (loading) {
-    return (
-      <div role="status" aria-label="Checking your session" className="py-2">
-        <span className="sr-only">Loading…</span>
-        <Skeleton className="h-11 w-48 rounded-full" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="space-y-3">
-        <p className="lf-body text-lf-muted">
-          Sign in to delete your account. Deleting requires proving it&rsquo;s your
-          account — that&rsquo;s the only step.
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={() => setAuthOpen(true)}>Sign in to continue</Button>
-          <Link href="/forgot-password" className={LINK_CLASS}>
-            Forgot your password?
-          </Link>
-        </div>
-        <p className="lf-body-sm text-lf-muted">
-          Can&rsquo;t access your sign-in email anymore? Contact{" "}
-          <a href="mailto:support@lotfoundry.com" className={LINK_CLASS}>
-            support@lotfoundry.com
-          </a>{" "}
-          from any address and we&rsquo;ll verify ownership another way.
-        </p>
-        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-3">
-      <p className="lf-body text-lf-muted">
-        You are signed in as{" "}
-        <span className="font-mono text-sm text-lf-espresso">
-          {profile?.email || user.email}
-        </span>
-        . Deleting is immediate and permanent.
-      </p>
-      <DeleteAccountButton surface="light" />
+    <div className="space-y-8">
+      <section className="space-y-3">
+        <h2 className="lf-card-heading">What LotFoundry deletes</h2>
+        <ul className="lf-body list-disc space-y-2 pl-5 text-lf-muted">
+          <li>Your Firebase Auth identity and profile (name, email, role)</li>
+          <li>Saved studio concepts and builder company profile fields</li>
+          <li>Homeowner private contact details on marketplace leads you created</li>
+        </ul>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="lf-card-heading">What may be retained</h2>
+        <ul className="lf-body list-disc space-y-2 pl-5 text-lf-muted">
+          <li>
+            Redacted lead roots and transaction records (IDs, amounts, fraud/accounting signals)
+            without direct contact PII
+          </li>
+          <li>Aggregated analytics that cannot identify you</li>
+        </ul>
+        <p className="lf-body-sm text-lf-muted">
+          Full details are in our{" "}
+          <Link href="/privacy" className="font-medium text-lf-clay underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+      </section>
+
+      {loading ? (
+        <p className="lf-body-sm text-lf-muted">Checking sign-in…</p>
+      ) : user ? (
+        <section className="space-y-3 rounded-lg border border-lf-brick/30 bg-lf-brick/5 p-5">
+          <h2 className="lf-card-heading">Delete now</h2>
+          <p className="lf-body-sm text-lf-muted">
+            Signed in as{" "}
+            <strong className="text-lf-espresso">
+              {profile?.email || user.email || "this account"}
+            </strong>
+            . Confirm twice to permanently delete.
+          </p>
+          <DeleteAccountButton />
+        </section>
+      ) : (
+        <section className="space-y-4 rounded-lg border border-lf-hairline bg-lf-card p-5">
+          <h2 className="lf-card-heading">Sign in to delete</h2>
+          <p className="lf-body-sm text-lf-muted">
+            Use the same email or Apple/Google account you registered with. You do not need to
+            reinstall the mobile app.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/login?next=/delete-account"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/forgot-password"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-lf-hairline px-5 text-sm font-semibold text-lf-espresso"
+            >
+              Reset password
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-2">
+        <h2 className="lf-card-heading">Need help?</h2>
+        <p className="lf-body-sm text-lf-muted">
+          If you cannot access your account, email{" "}
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
+            support@lotfoundry.com
+          </a>{" "}
+          from the address on the account. Support is a fallback — most users can complete
+          deletion above without waiting.
+        </p>
+        <Link href="/help" className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay">
+          Visit Help center
+        </Link>
+      </section>
     </div>
   );
 }

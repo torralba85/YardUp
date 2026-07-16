@@ -10,6 +10,7 @@ import type {
 } from "@/lib/feasibility";
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
+import { Button } from "@/components/ui/Button";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -171,13 +172,9 @@ export default function BuilderLeadPanel({
           />
           I agree to share my contact details, property address, and ADU snapshot with matched local builders.
         </label>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="h-11 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong disabled:opacity-50"
-        >
-          {isPending ? "Submitting..." : "Submit snapshot"}
-        </button>
+        <Button type="submit" variant="primary" size="md" loading={isPending}>
+          {isPending ? "Submitting…" : "Submit snapshot"}
+        </Button>
       </form>
     </section>
   );

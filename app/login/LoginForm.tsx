@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 
 /**
  * Email/password and Google sign-in form. On success, redirects to the
@@ -11,7 +12,7 @@ import { useAuth } from "@/lib/auth-context";
  * {@link safeRedirectPath}.
  */
 export default function LoginForm() {
-  const { signIn, signInWithGoogle, user, profile } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple, user, profile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -43,11 +44,8 @@ export default function LoginForm() {
         // but we can leave this here or rely on the effect. It's safer to rely on the effect
         // to avoid race conditions with profile loading, so we do nothing here on success!
       } catch (err: unknown) {
-        const message =
-          err instanceof Error && "code" in err
-            ? getAuthErrorMessage((err as { code: string }).code)
-            : "Something went wrong. Please try again.";
-        setError(message);
+        const code = getAuthErrorCode(err);
+        setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
       }
     });
   };
@@ -58,11 +56,30 @@ export default function LoginForm() {
       await signInWithGoogle();
       // Rely on the useEffect to handle redirect once profile loads
     } catch (err: unknown) {
-      const message =
-        err instanceof Error && "code" in err
-          ? getAuthErrorMessage((err as { code: string }).code)
-          : "Something went wrong. Please try again.";
-      setError(message);
+      const code = getAuthErrorCode(err);
+      setError(
+        code
+          ? getAuthErrorMessage(code)
+          : err instanceof Error
+            ? err.message
+            : "Google sign-in failed. Please try again.",
+      );
+    }
+  };
+
+  const handleApple = async () => {
+    setError(null);
+    try {
+      await signInWithApple();
+    } catch (err: unknown) {
+      const code = getAuthErrorCode(err);
+      setError(
+        code
+          ? getAuthErrorMessage(code)
+          : err instanceof Error
+            ? err.message
+            : "Apple sign-in failed. Please try again.",
+      );
     }
   };
 
@@ -140,10 +157,11 @@ export default function LoginForm() {
     </div>
 
     <button
+      type="button"
       onClick={handleGoogle}
-      className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
+      className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
     >
-      <svg className="h-4 w-4" viewBox="0 0 24 24">
+      <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
         <path
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
           fill="#4285F4"
@@ -162,6 +180,16 @@ export default function LoginForm() {
         />
       </svg>
       Google
+    </button>
+    <button
+      type="button"
+      onClick={handleApple}
+      className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2"
+    >
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
+      </svg>
+      Apple
     </button>
 
     <div className="mt-6 flex flex-col space-y-2">
@@ -192,7 +220,8 @@ function safeRedirectPath(value: string | null): string {
     if (parsed.origin !== "https://lotfoundry.local") {
       return "/studio";
     }
-    if (!["/studio", "/builder"].includes(parsed.pathname)) {
+    const allowed = ["/studio", "/builder", "/settings", "/delete-account", "/feedback"];
+    if (!allowed.includes(parsed.pathname)) {
       return "/studio";
     }
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
@@ -201,29 +230,4 @@ function safeRedirectPath(value: string | null): string {
   }
 }
 
-function getAuthErrorMessage(code: string): string {
-  switch (code) {
-    case "auth/invalid-credential":
-    case "auth/wrong-password":
-    case "auth/user-not-found":
-      return "Invalid email or password.";
-    case "auth/too-many-requests":
-      return "Too many failed attempts. Please try again later.";
-    case "auth/operation-not-allowed":
-      return "Google sign-in is not enabled for this project yet.";
-    case "auth/unauthorized-domain":
-      return "This domain is not authorized for Google sign-in.";
-    case "auth/popup-blocked":
-      return "Your browser blocked the Google sign-in popup.";
-    case "auth/popup-closed-by-user":
-      return "Google sign-in was closed before it finished.";
-    case "auth/account-exists-with-different-credential":
-      return "An account already exists for this email using another sign-in method.";
-    case "auth/network-request-failed":
-      return "Network error. Check your connection.";
-    case "permission-denied":
-      return "Signed in, but profile setup was blocked. Please try again.";
-    default:
-      return "Something went wrong. Please try again.";
-  }
-}
+

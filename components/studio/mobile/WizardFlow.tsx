@@ -17,6 +17,7 @@ import {
 import { nextStep, type WizardStep } from "@/lib/wizard-state";
 import AddressSearch, { type AddressSearchResult } from "@/components/studio/AddressSearch";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { Button } from "@/components/ui/Button";
 
 /** Props for {@link WizardFlow}. */
 export interface WizardFlowProps {
@@ -181,13 +182,16 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
                 </button>
               ))}
             </div>
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="mt-6"
               onClick={() => setStep(nextStep("size"))}
-              className="mt-6 min-h-12 w-full rounded-full bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
             >
               See my results →
-            </button>
+            </Button>
           </section>
         )}
 
@@ -202,7 +206,7 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
             </p>
             <div className="mt-5 rounded-2xl border border-lf-hairline bg-lf-card p-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-taupe">Rent potential</p>
-              <p className="lf-money-xl text-lf-espresso">
+              <p className="lf-money-xl text-lf-forest">
                 {roundedRent}
                 <span className="text-base font-medium text-lf-muted">/mo</span>
               </p>
@@ -219,13 +223,16 @@ export default function WizardFlow({ onComplete }: WizardFlowProps) {
               </p>
               <p className="mt-1 text-xs text-lf-muted">Free account · real property data for your address</p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="mt-4"
               onClick={() => setAuthOpen(true)}
-              className="mt-4 min-h-12 w-full rounded-full bg-lf-clay font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
             >
               Create free account
-            </button>
+            </Button>
           </section>
         )}
       </div>

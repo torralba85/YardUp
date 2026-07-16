@@ -1,3 +1,13 @@
+import { STORE_PRODUCTS } from "@/lib/commerce/products";
+import {
+  createPurchaseClient,
+  PurchaseClientError,
+} from "@/lib/commerce/purchase-client";
+import {
+  detectPurchaseChannel,
+  requiresStoreBilling,
+} from "@/lib/commerce/purchase-channel";
+
 /**
  * Error thrown by {@link startCertificateCheckout} when the purchase flow fails;
  * its message is user-facing.
@@ -30,13 +40,37 @@ export interface StartCertificateCheckoutInput {
 }
 
 /**
- * POST /api/stripe/checkout-certificate to begin a certificate purchase. Returns
- * whether to redirect to Stripe or unlock the certificate immediately (demo /
- * already-purchased grant).
+ * Begin a certificate purchase on the correct channel:
+ * - web → Stripe Checkout (`/api/stripe/checkout-certificate`)
+ * - iOS/Android store shells → StoreKit / Play Billing + server verify
+ *
+ * Returns whether to redirect to Stripe or unlock immediately (demo /
+ * already-purchased grant / store grant).
  */
 export async function startCertificateCheckout(
   input: StartCertificateCheckoutInput,
 ): Promise<CertificateCheckoutOutcome> {
+  const channel = detectPurchaseChannel();
+  if (requiresStoreBilling(channel)) {
+    try {
+      const client = createPurchaseClient({
+        getIdToken: async () => input.idToken,
+      });
+      // Pass certKey so server verify writes certificatePurchases/{uid}_{certKey}
+      // — the same doc useCertificateAccess reads for the unlock.
+      await client.purchase(STORE_PRODUCTS.certificate.id, {
+        certKey: input.certKey,
+      });
+      return { kind: "granted", demo: false };
+    } catch (err) {
+      const message =
+        err instanceof PurchaseClientError
+          ? err.message
+          : "Store purchase failed. Please try again.";
+      throw new CertificateCheckoutError(message);
+    }
+  }
+
   let res: Response;
   try {
     res = await fetch("/api/stripe/checkout-certificate", {

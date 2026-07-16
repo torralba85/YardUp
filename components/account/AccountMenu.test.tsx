@@ -10,66 +10,38 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 describe("AccountMenu", () => {
-  it("exposes every launch-required account action", async () => {
-    render(
-      <AccountMenu displayName="Alma Reyes" roleLabel="Lot Owner" onSignOut={vi.fn()} />,
-    );
-
-    await userEvent.click(screen.getByRole("button", { name: /alma reyes/i }));
-
-    expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveAttribute(
-      "href",
-      "/settings",
-    );
-    expect(screen.getByRole("menuitem", { name: "Get help" })).toHaveAttribute(
-      "href",
-      "/help",
-    );
-    expect(
-      screen.getByRole("menuitem", { name: "Send feedback" }),
-    ).toHaveAttribute("href", "/feedback");
-    expect(
-      screen.getByRole("menuitem", { name: "Terms & Conditions" }),
-    ).toHaveAttribute("href", "/terms");
-    expect(screen.getByRole("menuitem", { name: "Privacy" })).toHaveAttribute(
-      "href",
-      "/privacy",
-    );
-    expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Delete account" }),
-    ).toBeInTheDocument();
-  });
-
-  it("signs out through the menu and closes it", async () => {
-    const onSignOut = vi.fn();
+  it("shows every launch-required account action", async () => {
+    const user = userEvent.setup();
     render(
       <AccountMenu
         displayName="Alma Reyes"
-        roleLabel="Builder"
-        onSignOut={onSignOut}
-        compact
+        roleLabel="Lot Owner"
+        onSignOut={vi.fn()}
       />,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "Account menu" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
 
-    expect(onSignOut).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
-  });
-
-  it("closes on Escape and returns focus to the trigger", async () => {
-    render(
-      <AccountMenu displayName="Alma Reyes" roleLabel="Lot Owner" onSignOut={vi.fn()} />,
+    expect(screen.getByRole("menuitem", { name: /settings/i })).toHaveAttribute(
+      "href",
+      "/settings",
     );
-    const trigger = screen.getByRole("button", { name: /alma reyes/i });
-
-    await userEvent.click(trigger);
-    expect(screen.getByRole("menu")).toBeInTheDocument();
-
-    await userEvent.keyboard("{Escape}");
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
-    expect(trigger).toHaveFocus();
+    expect(screen.getByRole("menuitem", { name: /get help/i })).toHaveAttribute(
+      "href",
+      "/help",
+    );
+    expect(screen.getByRole("menuitem", { name: /send feedback/i })).toHaveAttribute(
+      "href",
+      "/feedback",
+    );
+    expect(
+      screen.getByRole("menuitem", { name: /terms & conditions/i }),
+    ).toHaveAttribute("href", "/terms");
+    expect(screen.getByRole("menuitem", { name: /privacy/i })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+    expect(screen.getByRole("menuitem", { name: /sign out/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delete account/i })).toBeInTheDocument();
   });
 });

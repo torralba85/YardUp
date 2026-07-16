@@ -25,6 +25,21 @@ All notable changes to LotFoundry are documented here. Format follows
 - Branded 404 (`app/not-found.tsx`), route and global error boundaries,
   `robots.txt`, and `sitemap.xml`; `e2e/site-completeness.spec.ts` covers the
   public routes, crawl metadata, and signed-out settings/deletion states.
+- Store-compliant purchase channels: canonical product IDs
+  (`lib/commerce/products.ts`), purchase-channel detection (web / App Store /
+  Google Play), channel-specific purchase clients (Stripe checkout, StoreKit
+  bridge, Digital Goods API), and server-side receipt verification with
+  idempotent `platform:transactionId` grants
+  (`POST /api/store/purchases/verify`, `lib/server/store-purchases.ts`,
+  `lib/server/store-receipt-verifiers.ts`). Certificate and builder
+  lead-unlock call sites route through the purchase client.
+- Sign in with Apple (`signInWithApple`, email/name scopes only) on the auth
+  modal, login, and signup surfaces, with shared auth error mapping in
+  `lib/auth-errors.ts`. Requires Apple Developer + Firebase console
+  configuration before production use.
+- Native shell groundwork: Bubblewrap TWA manifest (`native/android/`),
+  iOS shell with the `lotfoundryStore` StoreKit bridge stub
+  (`native/ios-shell/`), and `capacitor.config.ts`.
 
 ### Changed
 - Privacy Policy and Terms rewritten to match the deployed stack (Firebase
@@ -41,6 +56,11 @@ All notable changes to LotFoundry are documented here. Format follows
 - Legal/support pages share one `LegalPageShell` + `SiteFooter` (real brand
   lockup, About/Help/Feedback/Terms/Privacy/Delete-account navigation); the
   landing footer gained the same destinations in its nocturne styling.
+- Studio design audit applied (see
+  `docs/design-audits/2026-07-15-studio-color-ux.md`): Golden Hour money and
+  status colors aligned with `DESIGN.md`, studio CTAs migrated to the shared
+  `Button`, mobile touch targets expanded, and the nested certificate chrome
+  in `BuilderInbox` flattened.
 - Repository governance doc (`docs/repo-governance.md`) covering the issue
   priority matrix, debugging/bisect methodology, repo health routine, and
   release/changelog strategy.

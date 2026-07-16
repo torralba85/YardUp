@@ -19,6 +19,7 @@ import {
 import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
 import type { AIADUConcept } from "@/lib/ai-types";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import { Button } from "@/components/ui/Button";
 
 /** Props for {@link StyleMatchPanel}. */
 export interface StyleMatchPanelProps {
@@ -103,6 +104,7 @@ export default function StyleMatchPanel({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generatingProgress, setGeneratingProgress] = useState(0);
+  /** Required before OpenAI photo upload / generation. */
   const [aiConsent, setAiConsent] = useState(false);
 
   function clearGenerationTimer() {
@@ -126,6 +128,12 @@ export default function StyleMatchPanel({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
+    if (!aiConsent) {
+      setError("Confirm you agree to send this photo to OpenAI before uploading.");
+      setStatus("error");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
 
     setStatus("preparing");
     setError(null);
@@ -205,6 +213,10 @@ export default function StyleMatchPanel({
 
   function handleConfirm() {
     if (!prepared || !previewUrlRef.current) return;
+    if (!aiConsent) {
+      setError("Confirm you agree to send this photo to OpenAI before generating.");
+      return;
+    }
     onConfirm?.(prepared);
     void startGeneration();
   }
@@ -215,6 +227,7 @@ export default function StyleMatchPanel({
     setError(null);
     replacePreviewUrl(null);
     setGeneratingProgress(0);
+    setAiConsent(false);
     generationRunRef.current += 1;
     clearGenerationTimer();
     if (inputRef.current) inputRef.current.value = "";
@@ -271,9 +284,25 @@ export default function StyleMatchPanel({
                 <p>Used only to match your ADU&apos;s style. Never shown to builders.</p>
               </div>
             </div>
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-lf-espresso">
+              <input
+                type="checkbox"
+                checked={aiConsent}
+                onChange={(e) => setAiConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-lf-hairline text-lf-clay focus:ring-lf-clay"
+              />
+              <span>
+                I agree to send this photo to OpenAI to generate a concept. LotFoundry does not
+                store the original photo.
+              </span>
+            </label>
             <label
               htmlFor={inputId}
-              className="flex min-h-24 cursor-pointer flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center transition hover:bg-lf-sand focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2"
+              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2 ${
+                aiConsent
+                  ? "cursor-pointer hover:bg-lf-sand"
+                  : "cursor-not-allowed opacity-50"
+              }`}
             >
               <ImagePlus size={22} className="text-lf-clay" aria-hidden="true" />
               <span className="mt-2 text-sm font-semibold text-lf-espresso">
@@ -376,7 +405,7 @@ export default function StyleMatchPanel({
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="bg-lf-amber text-lf-espresso text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                    className="border border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
                   >
                     [Timeout]
                   </button>
@@ -415,42 +444,26 @@ export default function StyleMatchPanel({
                 </div>
               </div>
             ) : (
-              <>
-                {/* Explicit AI-sharing consent: generation is disabled until the
-                    user agrees to send this photo to OpenAI. Declining blocks
-                    only this feature, never the rest of the studio. */}
-                <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-lf-hairline bg-lf-card px-3 py-2.5">
-                  <input
-                    type="checkbox"
-                    checked={aiConsent}
-                    onChange={(e) => setAiConsent(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay"
-                  />
-                  <span className="lf-body-sm text-lf-muted">
-                    I agree to send this photo to OpenAI to generate a concept.
-                    LotFoundry does not store the original photo.
-                  </span>
-                </label>
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="commit"
+                  size="md"
+                  className="flex-1"
                   onClick={handleConfirm}
-                  disabled={!aiConsent}
-                  className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-lf-forest px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                  leftIcon={<CheckCircle2 size={16} />}
                 >
-                  <CheckCircle2 size={16} aria-hidden="true" />
                   Use this photo
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={handleReset}
-                  className="flex min-h-11 items-center justify-center rounded-full border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
                   aria-label="Choose another photo"
-                >
-                  <RotateCcw size={16} aria-hidden="true" />
-                </button>
+                  leftIcon={<RotateCcw size={16} />}
+                />
               </div>
-              </>
             )}
           </div>
         )}
@@ -475,21 +488,25 @@ export default function StyleMatchPanel({
             </div>
 
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="md"
+                className="flex-1"
                 onClick={() => void startGeneration()}
-                className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-lf-clay px-3 py-2 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
+                leftIcon={<RotateCcw size={16} />}
               >
-                <RotateCcw size={16} aria-hidden="true" />
                 Retry
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
+                className="flex-1"
                 onClick={handleReset}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-full border border-lf-hairline bg-lf-card px-3 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 cursor-pointer"
               >
                 Choose another photo
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -499,6 +516,7 @@ export default function StyleMatchPanel({
           id={inputId}
           type="file"
           accept={STYLE_MATCH_ACCEPT}
+          disabled={!aiConsent}
           className="sr-only"
           onChange={(event) => void handleFile(event.target.files?.[0])}
         />

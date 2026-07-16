@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#F2E5D5" />
+    <title>LotFoundry</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --sand: #f2e5d5;
+        --espresso: #261307;
+        --clay: #8c5b3f;
+        --muted: #6b5b4d;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 2rem;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--sand);
+        color: var(--espresso);
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin: 0;
+      }
+      p {
+        margin: 0;
+        max-width: 22rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      a {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 1.25rem;
+        border-radius: 9999px;
+        background: var(--clay);
+        color: var(--sand);
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>LotFoundry</h1>
+    <p>
+      Loading the ADU feasibility studio. If you stay on this page, open the app
+      on a network connection.
+    </p>
+    <a href="https://yardup-2026.web.app/studio">Open studio</a>
+    <script>
+      // Mark the runtime as iOS native for purchase-channel detection when the
+      // WKWebView message handlers are not yet injected (bootstrap shell only).
+      window.LotFoundryNative = { platform: "ios" };
+      // Capacitor production builds navigate to the HTTPS server.url; this shell
+      // is the offline bootstrap surface for archive validation.
+    </script>
+  </body>
+</html>

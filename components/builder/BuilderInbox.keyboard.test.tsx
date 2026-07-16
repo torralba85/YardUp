@@ -7,7 +7,12 @@ import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 vi.mock("@/lib/marketplace-firestore", () => ({
   fetchUnlockedContact: vi.fn(),
 }));
-vi.mock("@/lib/lead-unlock-api", () => ({ startLeadUnlock: vi.fn() }));
+vi.mock("@/lib/lead-unlock-api", () => ({
+  startLeadUnlock: vi.fn(),
+  leadUnlockPayLabel: (hasCredits: boolean) =>
+    hasCredits ? "Unlock with 1 Credit" : "Pay with Stripe",
+  leadUnlockSecureNote: () => "Secure checkout — Stripe",
+}));
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({ user: { uid: "builder-1", getIdToken: async () => "tok" } }),
 }));

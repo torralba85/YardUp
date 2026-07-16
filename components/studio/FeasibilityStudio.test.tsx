@@ -388,13 +388,14 @@ describe("FeasibilityStudio (guided spine)", () => {
     ).toBeInTheDocument();
   });
 
-  it("marks the lead money figures with the investment-grade accent", () => {
+  it("marks the lead money figures with the forest money accent", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     const summary = document.getElementById("summary");
     expect(summary).not.toBeNull();
     const leads = summary!.querySelectorAll('[data-metric-lead="true"]');
     // Exactly the two lead figures: Monthly Rent and Annual NOI.
     expect(leads).toHaveLength(2);
-    leads.forEach((el) => expect(el).toHaveAttribute("data-accent", "amber"));
+    // Positive financial value renders forest, never amber (amber = risk).
+    leads.forEach((el) => expect(el).toHaveAttribute("data-accent", "forest"));
   });
 });

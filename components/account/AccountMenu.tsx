@@ -1,188 +1,177 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
 import {
-  ChevronDown,
   FileText,
-  LifeBuoy,
+  HelpCircle,
   LogOut,
-  MessageSquarePlus,
+  MessageSquare,
   Settings,
-  ShieldCheck,
+  Shield,
+  Trash2,
 } from "lucide-react";
 import { DeleteAccountButton } from "@/components/studio/DeleteAccountButton";
+import { cn } from "@/lib/utils";
 
-/** Props for {@link AccountMenu}. */
 export interface AccountMenuProps {
-  /** Signed-in identity line (name or email). */
   displayName: string;
-  /** Role line under the name (e.g. "Lot Owner", "Builder"). */
   roleLabel: string;
-  /** Called when the user picks "Sign out". */
   onSignOut: () => void;
-  /** Popover opening direction; bottom-of-sidebar placements open `"up"`. */
-  direction?: "up" | "down";
-  /** Tone of the surface the trigger sits on; the popover is always mahogany. */
-  surface?: "dark" | "light";
-  /** Avatar-only trigger for space-constrained headers. */
-  compact?: boolean;
+  /** Visual tone for dark mahogany surfaces (studio/mobile) vs light builder. */
+  tone?: "dark" | "light";
+  /** Optional class on the trigger button. */
+  className?: string;
+  /** When true, render as an always-open panel (settings page embed). */
+  staticPanel?: boolean;
 }
 
 const MENU_LINKS = [
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/help", label: "Get help", icon: LifeBuoy },
-  { href: "/feedback", label: "Send feedback", icon: MessageSquarePlus },
+  { href: "/help", label: "Get help", icon: HelpCircle },
+  { href: "/feedback", label: "Send feedback", icon: MessageSquare },
   { href: "/terms", label: "Terms & Conditions", icon: FileText },
-  { href: "/privacy", label: "Privacy", icon: ShieldCheck },
+  { href: "/privacy", label: "Privacy", icon: Shield },
 ] as const;
 
-const MENU_ITEM_CLASS =
-  "flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-lf-sand transition hover:bg-lf-espresso/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany";
-
 /**
- * The shared signed-in account menu for owner desktop/mobile and builder
- * surfaces: identity, Settings, Get help, Send feedback, Terms & Conditions,
- * Privacy, Sign out, and Delete account. One component so no shell is a
- * sign-out-only dead end. The popover is a mahogany panel on every surface;
- * only the trigger adapts to its background.
+ * Shared owner/builder account menu: Settings, Help, Feedback, legal, Sign out,
+ * and Delete account. 44px interactive targets throughout.
  */
 export function AccountMenu({
   displayName,
   roleLabel,
   onSignOut,
-  direction = "down",
-  surface = "dark",
-  compact = false,
+  tone = "dark",
+  className,
+  staticPanel = false,
 }: AccountMenuProps) {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-
+  const [open, setOpen] = useState(staticPanel);
+  const menuId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   const initials =
     displayName
       .split(" ")
-      .map((part) => part[0])
+      .map((n) => n[0])
       .slice(0, 2)
       .join("")
       .toUpperCase() || "U";
 
   useEffect(() => {
-    if (!open) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
+    if (staticPanel || !open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
     }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+    function onPointer(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [open, staticPanel]);
 
-  const dark = surface === "dark";
+  const isDark = tone === "dark";
+  const panel = (
+    <div
+      id={menuId}
+      role="menu"
+      aria-label="Account"
+      className={cn(
+        "w-64 max-w-[calc(100vw-2rem)] space-y-1 rounded-lg border p-3 shadow-xl",
+        isDark
+          ? "border-lf-taupe/25 bg-lf-mahogany text-lf-sand"
+          : "border-lf-hairline bg-lf-card text-lf-espresso",
+        !staticPanel && "absolute right-0 top-12 z-(--z-index-sheet)",
+      )}
+    >
+      <div className="px-2 pb-2">
+        <div
+          className={cn(
+            "truncate text-sm font-medium",
+            isDark ? "text-lf-sand-2" : "text-lf-espresso",
+          )}
+        >
+          {displayName}
+        </div>
+        <div className={cn("text-xs", isDark ? "text-lf-taupe" : "text-lf-muted")}>
+          {roleLabel}
+        </div>
+      </div>
+      {MENU_LINKS.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          role="menuitem"
+          className={cn(
+            "flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay",
+            isDark
+              ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-offset-lf-mahogany"
+              : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-offset-lf-card",
+          )}
+          onClick={() => !staticPanel && setOpen(false)}
+        >
+          <Icon size={15} aria-hidden />
+          {label}
+        </Link>
+      ))}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          setOpen(false);
+          onSignOut();
+        }}
+        className={cn(
+          "flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay",
+          isDark
+            ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-offset-lf-mahogany"
+            : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-offset-lf-card",
+        )}
+      >
+        <LogOut size={15} aria-hidden />
+        Sign out
+      </button>
+      <div
+        className={cn(
+          "border-t pt-2",
+          isDark ? "border-lf-taupe/20" : "border-lf-hairline",
+        )}
+      >
+        <div className="flex items-center gap-2 px-2 pb-1 text-[11px] uppercase tracking-[0.14em] text-lf-muted">
+          <Trash2 size={12} aria-hidden />
+          Danger zone
+        </div>
+        <DeleteAccountButton tone={tone} />
+      </div>
+    </div>
+  );
+
+  if (staticPanel) {
+    return panel;
+  }
 
   return (
-    <div className="relative">
-      {compact ? (
-        <button
-          ref={triggerRef}
-          type="button"
-          aria-label="Account menu"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className={`flex h-11 w-11 items-center justify-center rounded-full bg-lf-clay text-sm font-bold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-            dark ? "focus-visible:ring-offset-lf-mahogany" : "focus-visible:ring-offset-lf-card"
-          }`}
-        >
-          {initials.slice(0, 1)}
-        </button>
-      ) : (
-        <button
-          ref={triggerRef}
-          type="button"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className={`flex min-h-11 w-full items-center gap-2 rounded-lg border p-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-            dark
-              ? "border-lf-taupe/25 bg-lf-sand/[0.03] hover:bg-lf-sand/[0.06] focus-visible:ring-offset-lf-mahogany"
-              : "border-lf-hairline bg-lf-card hover:bg-lf-sand-2 focus-visible:ring-offset-lf-card"
-          }`}
-        >
-          <span
-            aria-hidden
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-lf-sand ${
-              dark ? "bg-lf-espresso" : "bg-lf-clay"
-            }`}
-          >
-            {initials}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span
-              className={`block truncate text-sm font-medium ${dark ? "text-lf-sand-2" : "text-lf-espresso"}`}
-            >
-              {displayName}
-            </span>
-            <span className={`block text-xs ${dark ? "text-lf-taupe" : "text-lf-muted"}`}>
-              {roleLabel}
-            </span>
-          </span>
-          <ChevronDown
-            size={14}
-            aria-hidden
-            className={`shrink-0 transition-transform duration-200 ${dark ? "text-lf-taupe" : "text-lf-muted"} ${
-              open ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-      )}
-
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-(--z-index-nav)"
-            aria-hidden
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="menu"
-            aria-label="Account"
-            className={`absolute right-0 z-(--z-index-sheet) w-64 max-w-[calc(100vw-2rem)] space-y-1 rounded-lg border border-lf-taupe/25 bg-lf-mahogany p-3 text-left shadow-xl ${
-              direction === "up" ? "bottom-full mb-2" : "top-full mt-2"
-            }`}
-          >
-            <div className="px-2 pb-1">
-              <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
-              <div className="text-xs text-lf-taupe">{roleLabel}</div>
-            </div>
-            {MENU_LINKS.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className={MENU_ITEM_CLASS}
-              >
-                <Icon size={14} aria-hidden /> {label}
-              </Link>
-            ))}
-            <div className="border-t border-lf-taupe/20 pt-1" role="none">
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setOpen(false);
-                  onSignOut();
-                }}
-                className={MENU_ITEM_CLASS}
-              >
-                <LogOut size={14} aria-hidden /> Sign out
-              </button>
-              <DeleteAccountButton />
-            </div>
-          </div>
-        </>
-      )}
+    <div ref={rootRef} className={cn("relative", className)}>
+      <button
+        type="button"
+        aria-label="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay",
+          isDark
+            ? "bg-lf-clay text-lf-sand focus-visible:ring-offset-lf-mahogany"
+            : "bg-lf-clay text-lf-sand focus-visible:ring-offset-lf-card",
+        )}
+      >
+        {initials}
+      </button>
+      {open ? panel : null}
     </div>
   );
 }

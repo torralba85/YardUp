@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://yardup-2026.web.app";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
 
-/** Crawl rules: public pages open; authenticated dashboards and APIs closed. */
+/** Crawl rules: public marketing + legal; disallow member dashboards. */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/builder", "/settings", "/api/"],
     },
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

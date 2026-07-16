@@ -39,24 +39,30 @@ export default function EstimateSummaryPanel({
       value: formatCurrency(result.monthlyRent),
       detail: "Current rental assumption",
       icon: Home,
+      // Income figures: forest only (DESIGN.md money semantic).
+      valueClass: "lf-money-md text-lf-forest",
     },
     {
       label: "Annual Net Income",
       value: formatCurrency(result.annualNoi),
       detail: "After expenses and vacancy",
       icon: BarChart3,
+      valueClass: "lf-money-md text-lf-forest",
     },
     {
       label: "Build Range",
       value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
       detail: `${formatCurrency(result.costPerSqftLow)}-${formatCurrency(result.costPerSqftHigh)} / sf`,
       icon: Ruler,
+      // Cost is not payable income — keep espresso ledger ink.
+      valueClass: "lf-money-md text-lf-espresso",
     },
     {
       label: "Payback",
       value: `${result.paybackYears} yrs`,
       detail: "At mid-range cost",
       icon: SlidersHorizontal,
+      valueClass: "lf-money-md text-lf-espresso",
     },
   ] as const;
 
@@ -104,7 +110,7 @@ export default function EstimateSummaryPanel({
                   <Icon size={13} />
                   {metric.label}
                 </div>
-                <div className="mt-2 lf-money-md text-lf-espresso">
+                <div className={`mt-2 ${metric.valueClass}`}>
                   {metric.value}
                 </div>
                 <div className="mt-1 text-xs text-lf-muted">{metric.detail}</div>

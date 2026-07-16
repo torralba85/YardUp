@@ -55,7 +55,7 @@ export default function FeasibilityVerdictBand({
             {eyebrow}
           </p>
         )}
-        <h2 className="mt-[3px] font-display text-[32px] font-semibold leading-[1.08] text-lf-sand">
+        <h2 className="mt-[3px] font-display text-[31px] font-semibold leading-[1.08] text-lf-sand">
           {parcel.address}
         </h2>
         <p className="mt-[5px] font-mono text-[11px] text-lf-taupe">{lotLine}</p>
@@ -88,14 +88,19 @@ export default function FeasibilityVerdictBand({
           <div className="mt-1 flex items-center gap-2.5">
             <Icon size={24} style={{ color: tone.onDark }} />
             <span
-              className="whitespace-nowrap font-display text-[30px] font-semibold leading-none tracking-[-0.01em]"
+              className="whitespace-nowrap font-display text-[31px] font-semibold leading-none tracking-[-0.01em]"
               style={{ color: tone.onDark }}
             >
               {summary.verdict}
             </span>
           </div>
-          <div className="mt-[7px] flex items-center gap-1.5 font-mono text-[11px] text-lf-amber-on-dark">
-            <AlertTriangle size={13} />
+          {/* Amber only when residual review work remains; otherwise taupe note. */}
+          <div
+            className={`mt-[7px] flex items-center gap-1.5 font-mono text-[11px] ${
+              summary.openCount > 0 ? "text-lf-amber-on-dark" : "text-lf-taupe"
+            }`}
+          >
+            {summary.openCount > 0 ? <AlertTriangle size={13} /> : null}
             {summary.reviewNote}
           </div>
         </div>

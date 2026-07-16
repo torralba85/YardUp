@@ -1,136 +1,160 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { TriangleAlert } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
-import {
-  getAccountCapabilities,
-  validateNewPassword,
-} from "@/lib/account-settings";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import type { AccountCapabilities } from "@/lib/account-settings";
+import { validateEmail, validatePassword } from "@/lib/account-settings";
 
-const INPUT_CLASS =
-  "w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20";
+export interface SecurityPanelProps {
+  capabilities: AccountCapabilities;
+  onChangeEmail?: (email: string, currentPassword: string) => Promise<void>;
+  onChangePassword?: (currentPassword: string, nextPassword: string) => Promise<void>;
+}
 
 /**
- * Security section of the settings page: password change for password
- * accounts, or a provider-managed notice for Google/Apple sign-ins. Requires
- * the current password (reauthentication) before any change.
+ * Provider-aware security controls: password accounts can change email/password;
+ * OAuth accounts show managed-by guidance.
  */
-export function SecurityPanel() {
-  const { user, changeAccountPassword } = useAuth();
-  const capabilities = getAccountCapabilities(user?.providerData ?? []);
-
+export function SecurityPanel({
+  capabilities,
+  onChangeEmail,
+  onChangePassword,
+}: SecurityPanelProps) {
+  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [nextPassword, setNextPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setStatus(null);
-    const invalid = validateNewPassword(nextPassword);
-    if (invalid) {
-      setError(invalid);
-      return;
-    }
-    if (nextPassword !== confirmPassword) {
-      setError("New passwords do not match.");
-      return;
-    }
-    setError(null);
-    setPending(true);
-    try {
-      await changeAccountPassword(currentPassword, nextPassword);
-      setStatus("Password updated.");
-      setCurrentPassword("");
-      setNextPassword("");
-      setConfirmPassword("");
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Password change failed. Check your current password.",
-      );
-    } finally {
-      setPending(false);
-    }
-  }
-
-  if (!capabilities.canChangePassword) {
+  if (!capabilities.canChangeEmail && !capabilities.canChangePassword) {
     return (
-      <div className="px-6 py-5">
+      <div className="rounded-lg border border-lf-hairline bg-lf-card p-4">
         <p className="lf-body-sm text-lf-muted">
-          Your sign-in and password are managed by {capabilities.managedBy}. Manage
-          them in your {capabilities.managedBy} account settings.
+          Sign-in for this account is managed by{" "}
+          <strong className="text-lf-espresso">{capabilities.managedBy}</strong>. Update
+          your email or password in that provider&rsquo;s account settings.
         </p>
       </div>
     );
   }
 
+  async function handleEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!onChangeEmail) return;
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+    if (!currentPassword) {
+      setError("Enter your current password to change email.");
+      return;
+    }
+    setPending(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await onChangeEmail(email.trim(), currentPassword);
+      setStatus("Check your inbox to confirm the new email.");
+      setCurrentPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not change email.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handlePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!onChangePassword) return;
+    const pwError = validatePassword(nextPassword);
+    if (pwError) {
+      setError(pwError);
+      return;
+    }
+    if (!currentPassword) {
+      setError("Enter your current password.");
+      return;
+    }
+    setPending(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await onChangePassword(currentPassword, nextPassword);
+      setStatus("Password updated.");
+      setCurrentPassword("");
+      setNextPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not change password.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 px-6 py-5">
-      <label
-        htmlFor="settings-current-password"
-        className="lf-body-sm block font-medium text-lf-espresso"
-      >
-        Current password
-      </label>
-      <input
-        id="settings-current-password"
-        type="password"
-        autoComplete="current-password"
-        value={currentPassword}
-        onChange={(e) => setCurrentPassword(e.target.value)}
-        className={INPUT_CLASS}
-      />
-      <label
-        htmlFor="settings-new-password"
-        className="lf-body-sm block font-medium text-lf-espresso"
-      >
-        New password
-      </label>
-      <input
-        id="settings-new-password"
-        type="password"
-        autoComplete="new-password"
-        value={nextPassword}
-        onChange={(e) => setNextPassword(e.target.value)}
-        className={INPUT_CLASS}
-      />
-      <label
-        htmlFor="settings-confirm-password"
-        className="lf-body-sm block font-medium text-lf-espresso"
-      >
-        Confirm new password
-      </label>
-      <input
-        id="settings-confirm-password"
-        type="password"
-        autoComplete="new-password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        className={INPUT_CLASS}
-      />
-      <Button
-        type="submit"
-        loading={pending}
-        disabled={!currentPassword || !nextPassword || !confirmPassword}
-      >
-        Update password
-      </Button>
-      {error && (
-        <p role="alert" className="flex items-center gap-1.5 text-xs text-lf-brick">
-          <TriangleAlert size={12} aria-hidden /> {error}
+    <div className="space-y-6">
+      <p className="lf-body-sm text-lf-muted">
+        Managed by <strong className="text-lf-espresso">{capabilities.managedBy}</strong>.
+      </p>
+      {capabilities.canChangeEmail && onChangeEmail ? (
+        <form onSubmit={handleEmail} className="space-y-3">
+          <h3 className="text-sm font-semibold text-lf-espresso">Change email</h3>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="New email"
+            autoComplete="email"
+            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+          />
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Current password"
+            autoComplete="current-password"
+            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+          />
+          <Button type="submit" variant="secondary" loading={pending}>
+            Update email
+          </Button>
+        </form>
+      ) : null}
+      {capabilities.canChangePassword && onChangePassword ? (
+        <form onSubmit={handlePassword} className="space-y-3">
+          <h3 className="text-sm font-semibold text-lf-espresso">Change password</h3>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Current password"
+            autoComplete="current-password"
+            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+          />
+          <input
+            type="password"
+            value={nextPassword}
+            onChange={(e) => setNextPassword(e.target.value)}
+            placeholder="New password"
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+          />
+          <Button type="submit" variant="secondary" loading={pending}>
+            Update password
+          </Button>
+        </form>
+      ) : null}
+      {error ? (
+        <p role="alert" className="text-sm text-lf-brick">
+          {error}
         </p>
-      )}
-      {status && (
-        <p role="status" className="text-xs text-lf-muted">
+      ) : null}
+      {status ? (
+        <p role="status" className="text-sm text-lf-forest">
           {status}
         </p>
-      )}
-    </form>
+      ) : null}
+    </div>
   );
 }

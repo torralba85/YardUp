@@ -4,10 +4,11 @@ import { useEffect, useState, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
 function SignupForm() {
-  const { signUp, signInWithGoogle, user, profile } = useAuth();
+  const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -42,11 +43,8 @@ function SignupForm() {
         await signUp(email, password, displayName, role);
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
-        const message =
-          err instanceof Error && "code" in err
-            ? getAuthErrorMessage((err as { code: string }).code)
-            : "Something went wrong. Please try again.";
-        setError(message);
+        const code = getAuthErrorCode(err);
+        setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
       }
     });
   };
@@ -58,11 +56,21 @@ function SignupForm() {
         await signInWithGoogle(role);
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
-        const message =
-          err instanceof Error && "code" in err
-            ? getAuthErrorMessage((err as { code: string }).code)
-            : "Something went wrong. Please try again.";
-        setError(message);
+        const code = getAuthErrorCode(err);
+        setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
+      }
+    });
+  };
+
+  const handleApple = async () => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await signInWithApple(role);
+        router.push(role === "builder" ? "/builder" : "/studio");
+      } catch (err: unknown) {
+        const code = getAuthErrorCode(err);
+        setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
       }
     });
   };
@@ -157,7 +165,7 @@ function SignupForm() {
         </div>
 
         <p className="lf-caption text-lf-muted">
-          By creating an account you agree to our{" "}
+          By creating an account, you agree to our{" "}
           <Link href="/terms" className="text-lf-clay hover:text-lf-mahogany">
             Terms &amp; Conditions
           </Link>{" "}
@@ -171,7 +179,7 @@ function SignupForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
+          className="min-h-11 w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Creating account..." : "Create account"}
         </button>
@@ -187,11 +195,12 @@ function SignupForm() {
       </div>
 
       <button
+        type="button"
         onClick={handleGoogle}
         disabled={isPending}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
+        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
       >
-        <svg className="h-4 w-4" viewBox="0 0 24 24">
+        <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
             fill="#4285F4"
@@ -210,6 +219,17 @@ function SignupForm() {
           />
         </svg>
         {isPending ? "Connecting..." : "Google"}
+      </button>
+      <button
+        type="button"
+        onClick={handleApple}
+        disabled={isPending}
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
+        </svg>
+        {isPending ? "Connecting..." : "Apple"}
       </button>
 
       <p className="lf-body-sm mt-6 text-center text-lf-muted">
@@ -251,34 +271,6 @@ function RoleButton({
       <div className="lf-caption text-lf-muted">{description}</div>
     </button>
   );
-}
-
-function getAuthErrorMessage(code: string): string {
-  switch (code) {
-    case "auth/email-already-in-use":
-      return "An account with this email already exists.";
-    case "auth/invalid-email":
-      return "Please enter a valid email address.";
-    case "auth/weak-password":
-      return "Password must be at least 6 characters.";
-    case "auth/popup-blocked":
-      return "Google sign-in popup was blocked. Allow popups and try again.";
-    case "auth/popup-closed-by-user":
-    case "auth/cancelled-popup-request":
-      return "Google sign-in was closed before it finished.";
-    case "auth/operation-not-allowed":
-      return "Google sign-in is not enabled for this Firebase project.";
-    case "auth/unauthorized-domain":
-      return "This domain is not authorized for Firebase Google sign-in.";
-    case "auth/account-exists-with-different-credential":
-      return "An account already exists for this email using another sign-in method.";
-    case "auth/network-request-failed":
-      return "Network error. Check your connection.";
-    case "permission-denied":
-      return "Account created, but profile setup was blocked. Please try again.";
-    default:
-      return "Something went wrong. Please try again.";
-  }
 }
 
 /**

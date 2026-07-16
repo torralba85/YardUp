@@ -1,63 +1,48 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 
-/** Page metadata for the about route. */
 export const metadata: Metadata = {
   title: "About | LotFoundry",
   description:
-    "LotFoundry is an ADU feasibility studio: see what your backyard can earn.",
+    "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own.",
 };
 
-const LINK_CLASS =
-  "font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany";
-
-/** Static about page (`/about`). */
 export default function AboutPage() {
   return (
     <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners">
-      <LegalSection title="What LotFoundry is">
+      <LegalSection title="What we do">
         <p>
-          LotFoundry is a browser-based ADU (Accessory Dwelling Unit) feasibility
-          studio. Search your address or start from a sample lot, see your parcel in
-          3D, shape an ADU concept, and get instant estimates: what it could rent
-          for, what it might cost to build, and how the local rules apply. When a
-          concept looks worth pursuing, you can save it, share it as a feasibility
-          report, and connect with builders who work in your area.
+          LotFoundry is an ADU feasibility studio. Enter an address to explore estimated rent
+          potential, build cost ranges, and payback for an accessory dwelling unit on a lot you
+          already own — then connect with builders when you are ready.
         </p>
       </LegalSection>
-
-      <LegalSection title="Who it's for">
+      <LegalSection title="Who it is for">
         <p>
-          Homeowners in supported US markets deciding whether the land they already
-          own can earn — and, secondarily, the builders they bring that decision to.
-          No real-estate expertise is assumed; the studio walks you from address to
-          answer.
+          Homeowners deciding whether their backyard can earn, and builders who want consented
+          feasibility snapshots matched to their service areas.
         </p>
       </LegalSection>
-
-      <LegalSection title="What the numbers mean">
+      <LegalSection title="Honest estimates">
         <p>
-          Every figure LotFoundry shows is an estimate built from public parcel
-          records, local market data, and standard cost assumptions. Estimates are a
-          starting point for a conversation with licensed professionals — not a
-          quote, an appraisal, or a permit. A Certificate of Feasibility records a
-          concept; it does not approve one.
+          Every rent, cost, and timeline figure is an estimate, not a guarantee and not professional
+          engineering, legal, or financial advice. Local zoning, utilities, and permitting still
+          need verification with your city and licensed professionals.
         </p>
       </LegalSection>
-
-      <LegalSection title="Get in touch">
+      <LegalSection title="Contact">
         <p>
-          Questions or ideas? Visit the{" "}
-          <Link href="/help" className={LINK_CLASS}>
-            help center
+          Questions? Visit{" "}
+          <Link href="/help" className="font-medium text-lf-clay underline">
+            Help
           </Link>
-          , send us{" "}
-          <Link href="/feedback" className={LINK_CLASS}>
+          , send{" "}
+          <Link href="/feedback" className="font-medium text-lf-clay underline">
             feedback
           </Link>
           , or email{" "}
-          <a href="mailto:support@lotfoundry.com" className={LINK_CLASS}>
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
             support@lotfoundry.com
           </a>
           .

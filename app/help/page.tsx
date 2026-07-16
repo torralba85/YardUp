@@ -1,115 +1,88 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 
-/** Page metadata for the help route. */
 export const metadata: Metadata = {
   title: "Help | LotFoundry",
-  description: "Getting started, accounts, payments, builder leads, and support.",
+  description: "Getting started with LotFoundry: studio, account, payments, AI photos, and deletion.",
 };
 
-const LINK_CLASS =
-  "font-medium text-lf-clay underline decoration-lf-clay/40 underline-offset-4 hover:text-lf-mahogany";
-
-/** Static help center page (`/help`). */
 export default function HelpPage() {
   return (
-    <LegalPageShell title="Help Center" kicker="Support for LotFoundry">
+    <LegalPageShell title="Help center" kicker="Support for owners and builders">
       <LegalSection title="Getting started">
         <p>
-          Open the{" "}
-          <Link href="/studio" className={LINK_CLASS}>
+          From the{" "}
+          <Link href="/" className="font-medium text-lf-clay underline">
+            landing page
+          </Link>
+          , enter your address to open the{" "}
+          <Link href="/studio" className="font-medium text-lf-clay underline">
             studio
-          </Link>{" "}
-          and search your address, or pick a sample lot (Seattle, Portland, or
-          Austin) to explore without one. The studio walks five steps: Your Lot,
-          Feasibility &amp; Rules, Design, Certificate, and Builders. Adjust the ADU
-          size, roof, and finish in the inspector and the income, cost, and payback
-          figures update instantly.
+          </Link>
+          . You can explore demo lots without an account; sign in to save concepts and purchase a
+          Certificate of Feasibility.
         </p>
       </LegalSection>
-
-      <LegalSection title="Your account and settings">
+      <LegalSection title="Account & settings">
         <p>
-          Create an account to save concepts across devices. Manage your name, email,
-          password, and data from{" "}
-          <Link href="/settings" className={LINK_CLASS}>
+          Manage your profile, security, data export, and deletion from{" "}
+          <Link href="/settings" className="font-medium text-lf-clay underline">
             Settings
-          </Link>{" "}
-          (open the account menu in the studio header). Google-managed sign-ins
-          change their email and password with Google.
+          </Link>
+          . The account menu on studio and builder surfaces links here too.
         </p>
       </LegalSection>
-
-      <LegalSection title="Saved concepts and reports">
+      <LegalSection title="Saved concepts">
         <p>
-          Save a concept from the studio and reload it any time from the sidebar.
-          Reports can be printed, downloaded, or shared by link; a purchased
-          Certificate of Feasibility records the concept in a shareable document.
-          Everything remains an estimate — not a permit or approval.
+          Signed-in owners can save scenarios from the studio. They appear in the desktop sidebar
+          and can be deleted anytime. Exports include saved concepts via Settings → Export my data.
         </p>
       </LegalSection>
-
       <LegalSection title="Payments">
         <p>
-          Certificates and builder lead unlocks are one-time purchases processed by
-          Stripe on the web (mobile app editions use the app store&rsquo;s billing).
-          Receipts arrive by email from the payment provider. If a purchase
-          doesn&rsquo;t appear after checkout, refresh once, then contact support
-          with your receipt.
+          On the web, certificates and builder lead credits use Stripe Checkout. In the iOS and
+          Android apps, digital purchases use App Store and Google Play billing with server-side
+          verification. Demo environments may unlock without payment.
         </p>
       </LegalSection>
-
       <LegalSection title="Builder leads">
         <p>
-          Homeowners: submitting a connection request shares a redacted preview with
-          matched builders; your contact details are revealed only to builders who
-          unlock your request. Builders: unlocked leads are for responding to that
-          homeowner only, and lead credits are consumed per unlock. Report a
-          materially inaccurate lead to support for a possible replacement credit.
+          Builders complete a profile on{" "}
+          <Link href="/builder" className="font-medium text-lf-clay underline">
+            /builder
+          </Link>
+          , review redacted lead previews, and unlock contact details with credits. Homeowners
+          share leads only after an explicit connect form.
         </p>
       </LegalSection>
-
-      <LegalSection title="AI features and photos">
+      <LegalSection title="AI style-match photos">
         <p>
-          Parcel insights, project briefs, and ADU concepts are AI-generated
-          illustrations, not designs or approvals. If you upload a photo for style
-          matching, it is downscaled and its location metadata is stripped in your
-          browser before processing, and LotFoundry does not keep the original after
-          the concept is generated.
+          Style-match sends a photo you choose to OpenAI to generate a concept image. LotFoundry
+          does not store the original photo. Generation requires your consent checkbox on the Design
+          step and is optional — the rest of the studio works without it.
         </p>
       </LegalSection>
-
-      <LegalSection title="Deleting your account">
+      <LegalSection title="Delete your account">
         <p>
-          Delete your account from{" "}
-          <Link href="/settings" className={LINK_CLASS}>
-            Settings
+          You can delete in-app from Settings or the account menu, or use the public{" "}
+          <Link href="/delete-account" className="font-medium text-lf-clay underline">
+            delete-account
           </Link>{" "}
-          or the public{" "}
-          <Link href="/delete-account" className={LINK_CLASS}>
-            delete account
-          </Link>{" "}
-          page — no app reinstall needed. The{" "}
-          <Link href="/privacy" className={LINK_CLASS}>
-            Privacy Policy
-          </Link>{" "}
-          describes exactly what is removed and what non-personal records are
-          retained.
+          page (required for store users who have uninstalled the app).
         </p>
       </LegalSection>
-
-      <LegalSection title="Still stuck?">
+      <LegalSection title="Contact support">
         <p>
-          Send us a note through the{" "}
-          <Link href="/feedback" className={LINK_CLASS}>
-            feedback form
-          </Link>{" "}
-          or email{" "}
-          <a href="mailto:support@lotfoundry.com" className={LINK_CLASS}>
+          Email{" "}
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
             support@lotfoundry.com
-          </a>
-          . Include the address or lead involved and we can dig in faster.
+          </a>{" "}
+          or use{" "}
+          <Link href="/feedback" className="font-medium text-lf-clay underline">
+            Feedback
+          </Link>{" "}
+          to open a ticket.
         </p>
       </LegalSection>
     </LegalPageShell>

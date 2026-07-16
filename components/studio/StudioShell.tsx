@@ -63,6 +63,13 @@ export default function StudioShell({
   const [scenariosOpen, setScenariosOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const displayName = profile?.displayName || profile?.email?.split("@")[0] || "User";
+  const initials =
+    displayName
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
   const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
 
   return (
@@ -176,7 +183,7 @@ export default function StudioShell({
                       ))}
                     </ul>
                     {deleteNotice && (
-                      <p role="status" className="mt-2 text-[11px] text-lf-brick">
+                      <p role="status" className="mt-2 text-[11px] text-lf-brick-on-dark">
                         {deleteNotice}
                       </p>
                     )}
@@ -186,12 +193,21 @@ export default function StudioShell({
             )}
 
             {user ? (
-              <AccountMenu
-                displayName={displayName}
-                roleLabel={roleLabel}
-                onSignOut={() => void logout()}
-                direction="up"
-              />
+              <div className="flex items-center gap-2 rounded-lg border border-lf-taupe/25 bg-lf-sand/[0.03] p-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lf-espresso text-sm font-semibold text-lf-sand">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-lf-sand-2">{displayName}</div>
+                  <div className="text-xs text-lf-taupe">{roleLabel}</div>
+                </div>
+                <AccountMenu
+                  displayName={displayName}
+                  roleLabel={roleLabel}
+                  onSignOut={() => void logout()}
+                  tone="dark"
+                />
+              </div>
             ) : (
               <button
                 type="button"

@@ -1,166 +1,211 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { getAccountCapabilities } from "@/lib/account-settings";
 import { Button } from "@/components/ui/Button";
-import { Panel, PanelHeader } from "@/components/ui/Panel";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { AuthModal } from "@/components/auth/AuthModal";
-import { DeleteAccountButton } from "@/components/studio/DeleteAccountButton";
+import { Bezel } from "@/components/ui/Bezel";
 import { ProfileForm } from "./ProfileForm";
 import { SecurityPanel } from "./SecurityPanel";
 import { DataExportButton } from "./DataExportButton";
-
-const SETTINGS_LINK_CLASS =
-  "inline-flex min-h-11 items-center gap-1.5 text-sm text-lf-clay transition-colors hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card";
+import { DeleteAccountButton } from "@/components/studio/DeleteAccountButton";
+import { SiteFooter } from "@/components/legal/SiteFooter";
 
 /**
- * The member settings destination (`/settings`, Golden Hour): profile,
- * security, builder shortcut, data export, help & feedback, legal, and the
- * danger zone. Signed-out visitors get a sign-in action and land back here
- * once authenticated (the modal keeps them on this page).
+ * Authenticated settings destination: profile, security, data export, help,
+ * legal, and danger zone. Guests see a sign-in prompt.
  */
 export function SettingsClient() {
-  const { user, profile, loading, logout } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
+  const {
+    user,
+    profile,
+    loading,
+    logout,
+    updateAccountName,
+    changeAccountEmail,
+    changeAccountPassword,
+    sendVerification,
+  } = useAuth();
+
+  const capabilities = useMemo(
+    () =>
+      getAccountCapabilities(
+        user?.providerData?.map((p) => ({ providerId: p.providerId })) ?? [],
+      ),
+    [user],
+  );
 
   if (loading) {
     return (
-      <div
-        role="status"
-        aria-label="Loading account settings"
-        className="mx-auto w-full max-w-3xl px-4 py-16"
-      >
-        <span className="sr-only">Loading…</span>
-        <Skeleton className="h-8 w-56 rounded-md" />
-        <Skeleton className="mt-6 h-40 rounded-lg" />
+      <div className="mx-auto max-w-2xl px-4 py-16" aria-busy="true">
+        <p className="lf-body-sm text-lf-muted">Loading account…</p>
       </div>
     );
   }
 
-  if (!user) {
+  if (!user || !profile) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-16">
-        <p className="lf-kicker text-lf-clay">Account</p>
-        <h1 className="lf-section-heading mt-1 text-lf-espresso">Sign in to manage your account</h1>
-        <p className="lf-body mt-3 max-w-prose text-lf-muted">
-          Settings cover your profile, security, saved data, and account deletion.
-          Sign in and you&rsquo;ll return right here.
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <h1 className="lf-section-heading">Account settings</h1>
+        <p className="lf-body-sm mt-3 text-lf-muted">
+          Sign in to manage your profile, security, and data.
         </p>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Button onClick={() => setAuthOpen(true)}>Sign in</Button>
-          <Link href="/" className={SETTINGS_LINK_CLASS}>
-            <ArrowLeft size={14} aria-hidden /> Back to LotFoundry
+        <Link
+          href="/login?next=/settings"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-lf-forest px-5 text-sm font-semibold text-lf-sand"
+        >
+          Sign in
+        </Link>
+        <div className="mt-4">
+          <Link href="/signup?next=/settings" className="text-sm font-medium text-lf-clay">
+            Create account
           </Link>
         </div>
-        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
       </div>
     );
   }
 
-  const isBuilder = profile?.role === "builder";
+  const displayName = profile.displayName || profile.email?.split("@")[0] || "Member";
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10">
-      <div>
-        <Link href={isBuilder ? "/builder" : "/studio"} className={SETTINGS_LINK_CLASS}>
-          <ArrowLeft size={14} aria-hidden /> Back to {isBuilder ? "builder dashboard" : "studio"}
-        </Link>
-        <p className="lf-kicker mt-4 text-lf-clay">Account</p>
-        <h1 className="lf-section-heading mt-1 text-lf-espresso">Settings</h1>
+    <div className="min-h-dvh">
+      <header className="border-b border-lf-hairline bg-lf-card">
+        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between gap-4 px-4">
+          <Link href="/" className="shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lotfoundry-lockup-horizontal.svg"
+              alt="LotFoundry"
+              className="h-7 w-auto"
+            />
+          </Link>
+          <Link
+            href={profile.role === "builder" ? "/builder" : "/studio"}
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+          >
+            Back to {profile.role === "builder" ? "dashboard" : "studio"}
+          </Link>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-2xl space-y-8 px-4 py-10">
+        <div>
+          <h1 className="lf-section-heading">Settings</h1>
+          <p className="lf-body-sm mt-2 text-lf-muted">
+            {displayName}
+            {profile.role === "builder" ? " · Builder" : " · Lot owner"}
+          </p>
+        </div>
+
+        <Bezel>
+          <section className="space-y-4 p-6">
+            <h2 className="lf-card-heading">Profile</h2>
+            <ProfileForm
+              initialName={profile.displayName || ""}
+              email={profile.email}
+              emailVerified={Boolean(user.emailVerified)}
+              onSaveName={updateAccountName}
+              onSendVerification={sendVerification}
+            />
+          </section>
+        </Bezel>
+
+        <Bezel>
+          <section className="space-y-4 p-6">
+            <h2 className="lf-card-heading">Security</h2>
+            <SecurityPanel
+              capabilities={capabilities}
+              onChangeEmail={changeAccountEmail}
+              onChangePassword={changeAccountPassword}
+            />
+          </section>
+        </Bezel>
+
+        {profile.role === "builder" ? (
+          <Bezel>
+            <section className="space-y-3 p-6">
+              <h2 className="lf-card-heading">Builder profile</h2>
+              <p className="lf-body-sm text-lf-muted">
+                Update company details and service areas from the builder dashboard.
+              </p>
+              <Link
+                href="/builder"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+              >
+                Open builder dashboard
+              </Link>
+            </section>
+          </Bezel>
+        ) : null}
+
+        <Bezel>
+          <section className="space-y-4 p-6">
+            <h2 className="lf-card-heading">Your data</h2>
+            <p className="lf-body-sm text-lf-muted">
+              Download a portable JSON export of your profile, saved concepts, and
+              purchase ledger. Other users&rsquo; information is never included.
+            </p>
+            <DataExportButton />
+          </section>
+        </Bezel>
+
+        <Bezel>
+          <section className="space-y-3 p-6">
+            <h2 className="lf-card-heading">Help &amp; feedback</h2>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/help"
+                className="inline-flex min-h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+              >
+                Get help
+              </Link>
+              <Link
+                href="/feedback"
+                className="inline-flex min-h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+              >
+                Send feedback
+              </Link>
+            </div>
+          </section>
+        </Bezel>
+
+        <Bezel>
+          <section className="space-y-3 p-6">
+            <h2 className="lf-card-heading">Legal</h2>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/terms"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+              >
+                Terms &amp; Conditions
+              </Link>
+              <Link
+                href="/privacy"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+              >
+                Privacy Policy
+              </Link>
+            </div>
+          </section>
+        </Bezel>
+
+        <Bezel>
+          <section className="space-y-4 p-6">
+            <h2 className="lf-card-heading">Danger zone</h2>
+            <p className="lf-body-sm text-lf-muted">
+              Deleting your account removes saved concepts and profile data. Redacted
+              marketplace and payment ledgers may be retained without contact PII.
+            </p>
+            <DeleteAccountButton />
+            <Button type="button" variant="ghost" onClick={() => void logout()}>
+              Sign out
+            </Button>
+          </section>
+        </Bezel>
       </div>
 
-      <Panel aria-labelledby="settings-profile-heading">
-        <PanelHeader
-          id="settings-profile-heading"
-          title="Profile"
-          sub="Your name and the email on your account."
-        />
-        <ProfileForm />
-      </Panel>
-
-      <Panel aria-labelledby="settings-security-heading">
-        <PanelHeader
-          id="settings-security-heading"
-          title="Security"
-          sub="Password and sign-in management."
-        />
-        <SecurityPanel />
-      </Panel>
-
-      {isBuilder && (
-        <Panel aria-labelledby="settings-builder-heading">
-          <PanelHeader
-            id="settings-builder-heading"
-            title="Builder profile"
-            sub="Company details, service areas, and lead credits."
-          />
-          <div className="px-6 py-5">
-            <Link href="/builder" className={SETTINGS_LINK_CLASS}>
-              Open the builder dashboard <ExternalLink size={13} aria-hidden />
-            </Link>
-          </div>
-        </Panel>
-      )}
-
-      <Panel aria-labelledby="settings-data-heading">
-        <PanelHeader
-          id="settings-data-heading"
-          title="Your data"
-          sub="Download a portable copy of your account data as JSON."
-        />
-        <div className="px-6 py-5">
-          <DataExportButton />
-        </div>
-      </Panel>
-
-      <Panel aria-labelledby="settings-help-heading">
-        <PanelHeader
-          id="settings-help-heading"
-          title="Help & feedback"
-          sub="Support, questions, and ideas."
-        />
-        <div className="flex flex-wrap gap-x-8 gap-y-1 px-6 py-5">
-          <Link href="/help" className={SETTINGS_LINK_CLASS}>
-            Get help
-          </Link>
-          <Link href="/feedback" className={SETTINGS_LINK_CLASS}>
-            Send feedback
-          </Link>
-        </div>
-      </Panel>
-
-      <Panel aria-labelledby="settings-legal-heading">
-        <PanelHeader
-          id="settings-legal-heading"
-          title="Legal"
-          sub="The agreements that govern your account."
-        />
-        <div className="flex flex-wrap gap-x-8 gap-y-1 px-6 py-5">
-          <Link href="/terms" className={SETTINGS_LINK_CLASS}>
-            Terms &amp; Conditions
-          </Link>
-          <Link href="/privacy" className={SETTINGS_LINK_CLASS}>
-            Privacy Policy
-          </Link>
-        </div>
-      </Panel>
-
-      <Panel aria-labelledby="settings-danger-heading" className="border-lf-brick/30">
-        <PanelHeader
-          id="settings-danger-heading"
-          title="Danger zone"
-          sub="Sign out everywhere or permanently delete your account."
-        />
-        <div className="space-y-4 px-6 py-5">
-          <Button variant="secondary" onClick={() => void logout()}>
-            Sign out
-          </Button>
-          <DeleteAccountButton surface="light" />
-        </div>
-      </Panel>
+      <SiteFooter />
     </div>
   );
 }

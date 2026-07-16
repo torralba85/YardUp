@@ -58,28 +58,7 @@ export default function LandingPage() {
             <p className="text-sm text-ln-slate">
               ADU planning for homeowners. Estimates only—not guarantees.
             </p>
-            <nav
-              aria-label="Site"
-              className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-ln-slate"
-            >
-              <Link
-                href="/about"
-                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
-              >
-                About
-              </Link>
-              <Link
-                href="/help"
-                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
-              >
-                Help
-              </Link>
-              <Link
-                href="/feedback"
-                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
-              >
-                Feedback
-              </Link>
+            <div className="flex items-center gap-4 text-sm text-ln-slate">
               <Link
                 href="/terms"
                 className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
@@ -92,7 +71,7 @@ export default function LandingPage() {
               >
                 Privacy
               </Link>
-            </nav>
+            </div>
           </div>
         </div>
       </footer>

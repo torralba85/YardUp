@@ -16,20 +16,21 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  OAuthProvider,
   signOut,
   updateProfile,
   sendPasswordResetEmail,
+  sendEmailVerification,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+  verifyBeforeUpdateEmail,
   type UserCredential,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import {
-  changeAccountEmail as changeAccountEmailAction,
-  changeAccountPassword as changeAccountPasswordAction,
-  sendVerification as sendVerificationAction,
-  updateAccountName as updateAccountNameAction,
-} from "./account-settings";
 import { clearInitialParcel } from "./parcel-handoff";
+import { validateDisplayName, validateEmail, validatePassword } from "./account-settings";
 
 type UserRole = "user" | "builder";
 
@@ -59,15 +60,13 @@ interface AuthContextType {
     role: UserRole,
   ) => Promise<UserCredential>;
   signInWithGoogle: (role?: UserRole) => Promise<UserCredential>;
+  signInWithApple: (role?: UserRole) => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   updateAccountName: (displayName: string) => Promise<void>;
   changeAccountEmail: (email: string, currentPassword: string) => Promise<void>;
-  changeAccountPassword: (
-    currentPassword: string,
-    nextPassword: string,
-  ) => Promise<void>;
+  changeAccountPassword: (currentPassword: string, nextPassword: string) => Promise<void>;
   sendVerification: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -146,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email,
           role,
           createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         }, { merge: true });
         setProfile(fallbackProfile);
       }
@@ -216,6 +216,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithApple = async (role: UserRole = "user") => {
+    const provider = new OAuthProvider("apple.com");
+    provider.addScope("email");
+    provider.addScope("name");
+    pendingAuthRoleRef.current = role;
+    try {
+      const cred = await signInWithPopup(auth, provider);
+      await ensureProfile(cred.user, { role });
+      return cred;
+    } finally {
+      pendingAuthRoleRef.current = null;
+    }
+  };
+
   const logout = () => {
     // The parcel stash mirrors this session's live lot; the next session
     // (guest or another account) must start from demo data, not that parcel.
@@ -226,23 +240,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendPasswordReset = (email: string) =>
     sendPasswordResetEmail(auth, email);
 
-  /** Rename the account, mirroring the change into `users/{uid}`. */
-  const updateAccountName = async (displayName: string) => {
+  const refreshProfile = async () => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in to update your name.");
-    await updateAccountNameAction(current, displayName);
-    await ensureProfile(current, { displayName: displayName.trim() });
+    if (!current) return;
+    await current.reload();
+    setUser(auth.currentUser);
+    await ensureProfile(auth.currentUser!);
   };
 
-  /**
-   * Start an email change. Firebase sends a verification link to the new
-   * address; the account email (and the Firestore mirror, via the next
-   * profile refresh) only changes after the user confirms it.
-   */
+  const updateAccountName = async (displayName: string) => {
+    const current = auth.currentUser;
+    if (!current) throw new Error("You must be signed in.");
+    const error = validateDisplayName(displayName);
+    if (error) throw new Error(error);
+    const name = displayName.trim();
+    await updateProfile(current, { displayName: name });
+    await ensureProfile(current, { displayName: name });
+  };
+
+  const reauthWithPassword = async (currentPassword: string) => {
+    const current = auth.currentUser;
+    if (!current?.email) throw new Error("You must be signed in with email.");
+    const credential = EmailAuthProvider.credential(current.email, currentPassword);
+    await reauthenticateWithCredential(current, credential);
+  };
+
   const changeAccountEmail = async (email: string, currentPassword: string) => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in to change your email.");
-    await changeAccountEmailAction(current, email, currentPassword);
+    if (!current) throw new Error("You must be signed in.");
+    const emailError = validateEmail(email);
+    if (emailError) throw new Error(emailError);
+    await reauthWithPassword(currentPassword);
+    await verifyBeforeUpdateEmail(current, email.trim());
   };
 
   const changeAccountPassword = async (
@@ -250,26 +279,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     nextPassword: string,
   ) => {
     const current = auth.currentUser;
-    if (!current) {
-      throw new Error("You must be signed in to change your password.");
-    }
-    await changeAccountPasswordAction(current, currentPassword, nextPassword);
+    if (!current) throw new Error("You must be signed in.");
+    const pwError = validatePassword(nextPassword);
+    if (pwError) throw new Error(pwError);
+    await reauthWithPassword(currentPassword);
+    await updatePassword(current, nextPassword);
   };
 
   const sendVerification = async () => {
     const current = auth.currentUser;
-    if (!current) {
-      throw new Error("You must be signed in to verify your email.");
-    }
-    await sendVerificationAction(current);
-  };
-
-  /** Reload the Auth user and re-sync the Firestore-backed profile state. */
-  const refreshProfile = async () => {
-    const current = auth.currentUser;
-    if (!current) return;
-    await current.reload().catch(() => undefined);
-    await ensureProfile(current);
+    if (!current) throw new Error("You must be signed in.");
+    await sendEmailVerification(current);
   };
 
   /**
@@ -314,6 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signInWithGoogle,
+        signInWithApple,
         logout,
         sendPasswordReset,
         deleteAccount,
@@ -331,7 +352,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 /**
  * Access the current auth state (`user`, `profile`, `loading`) and actions
- * (`signIn`, `signUp`, `signInWithGoogle`, `logout`, `sendPasswordReset`).
+ * (`signIn`, `signUp`, `signInWithGoogle`, `signInWithApple`, `logout`, …).
  *
  * @returns The auth context value.
  * @throws {Error} If called outside an {@link AuthProvider}.

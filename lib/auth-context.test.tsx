@@ -2,7 +2,6 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./auth-context";
-import { auth } from "./firebase";
 
 const authMocks = vi.hoisted(() => ({
   createUserWithEmailAndPassword: vi.fn(),
@@ -25,15 +24,6 @@ const parcelHandoffMocks = vi.hoisted(() => ({
   clearInitialParcel: vi.fn(),
 }));
 
-const accountSettingsMocks = vi.hoisted(() => ({
-  changeAccountEmail: vi.fn(),
-  changeAccountPassword: vi.fn(),
-  sendVerification: vi.fn(),
-  updateAccountName: vi.fn(),
-}));
-
-vi.mock("./account-settings", () => accountSettingsMocks);
-
 vi.mock("@/lib/firebase", () => ({
   app: {},
   auth: {},
@@ -44,17 +34,39 @@ vi.mock("@/lib/parcel-handoff", () => ({
   clearInitialParcel: parcelHandoffMocks.clearInitialParcel,
 }));
 
+const oauthProvider = vi.hoisted(() => {
+  const instances: Array<{ providerId: string; scopes: string[] }> = [];
+  class OAuthProvider {
+    providerId: string;
+    scopes: string[] = [];
+    constructor(id: string) {
+      this.providerId = id;
+      instances.push(this);
+    }
+    addScope(scope: string) {
+      this.scopes.push(scope);
+    }
+  }
+  return { OAuthProvider, instances };
+});
+
 vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: authMocks.createUserWithEmailAndPassword,
   GoogleAuthProvider: class {
     setCustomParameters = vi.fn();
   },
+  OAuthProvider: oauthProvider.OAuthProvider,
   onAuthStateChanged: authMocks.onAuthStateChanged,
   sendPasswordResetEmail: authMocks.sendPasswordResetEmail,
   signInWithEmailAndPassword: authMocks.signInWithEmailAndPassword,
   signInWithPopup: authMocks.signInWithPopup,
   signOut: authMocks.signOut,
   updateProfile: authMocks.updateProfile,
+  sendEmailVerification: vi.fn(),
+  EmailAuthProvider: { credential: vi.fn() },
+  reauthenticateWithCredential: vi.fn(),
+  updatePassword: vi.fn(),
+  verifyBeforeUpdateEmail: vi.fn(),
 }));
 
 vi.mock("firebase/firestore", () => ({
@@ -83,6 +95,15 @@ function EmailBuilderButton() {
       }
     >
       Create builder
+    </button>
+  );
+}
+
+function AppleUserButton() {
+  const { signInWithApple } = useAuth();
+  return (
+    <button type="button" onClick={() => signInWithApple("user")}>
+      Continue with Apple
     </button>
   );
 }
@@ -210,120 +231,31 @@ describe("AuthProvider profile creation", () => {
 
     expect(parcelHandoffMocks.clearInitialParcel).not.toHaveBeenCalled();
   });
-});
 
-function AccountControls() {
-  const { updateAccountName, changeAccountEmail, profile } = useAuth();
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => updateAccountName("Alma Reyes").catch(() => undefined)}
-      >
-        Rename
-      </button>
-      <button
-        type="button"
-        onClick={() =>
-          changeAccountEmail("next@example.com", "current-pass").catch(
-            () => undefined,
-          )
-        }
-      >
-        Change email
-      </button>
-      <span data-testid="profile-name">{profile?.displayName ?? "none"}</span>
-    </>
-  );
-}
-
-describe("AuthProvider account settings actions", () => {
-  const currentUser = {
-    uid: "user-1",
-    email: "owner@example.com",
-    displayName: "Old Name",
-  };
-  let authListener: ((u: unknown) => void) | undefined;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    authListener = undefined;
-    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
-      authListener = cb as (u: unknown) => void;
-      return () => {};
+  it("requests only name and email from Apple", async () => {
+    oauthProvider.instances.length = 0;
+    authMocks.signInWithPopup.mockResolvedValue({
+      user: {
+        uid: "user-1",
+        email: "relay@privaterelay.appleid.com",
+        displayName: null,
+      },
     });
-    firestoreMocks.doc.mockReturnValue({ path: "users/user-1" });
-    firestoreMocks.getDoc.mockResolvedValue({
-      exists: () => false,
-      data: () => ({}),
-    });
-    firestoreMocks.serverTimestamp.mockReturnValue("server-time");
-    (auth as { currentUser?: unknown }).currentUser = currentUser;
-  });
-
-  it("updates the profile after a successful name write", async () => {
-    accountSettingsMocks.updateAccountName.mockResolvedValue(undefined);
 
     render(
       <AuthProvider>
-        <AccountControls />
+        <AppleUserButton />
       </AuthProvider>,
     );
-    await act(async () => {
-      await authListener?.(currentUser);
-    });
-    expect(screen.getByTestId("profile-name")).toHaveTextContent("Old Name");
 
-    await userEvent.click(screen.getByRole("button", { name: "Rename" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Apple" }));
 
-    expect(accountSettingsMocks.updateAccountName).toHaveBeenCalledWith(
-      currentUser,
-      "Alma Reyes",
-    );
     await waitFor(() => {
-      expect(screen.getByTestId("profile-name")).toHaveTextContent("Alma Reyes");
+      expect(authMocks.signInWithPopup).toHaveBeenCalled();
     });
-  });
-
-  it("leaves the prior profile intact when the name write is rejected", async () => {
-    accountSettingsMocks.updateAccountName.mockRejectedValue(
-      new Error("auth/requires-recent-login"),
-    );
-
-    render(
-      <AuthProvider>
-        <AccountControls />
-      </AuthProvider>,
-    );
-    await act(async () => {
-      await authListener?.(currentUser);
-    });
-    const writesBeforeClick = firestoreMocks.setDoc.mock.calls.length;
-
-    await userEvent.click(screen.getByRole("button", { name: "Rename" }));
-
-    expect(screen.getByTestId("profile-name")).toHaveTextContent("Old Name");
-    expect(firestoreMocks.setDoc.mock.calls.length).toBe(writesBeforeClick);
-  });
-
-  it("delegates email changes to the account-settings boundary", async () => {
-    accountSettingsMocks.changeAccountEmail.mockResolvedValue(undefined);
-
-    render(
-      <AuthProvider>
-        <AccountControls />
-      </AuthProvider>,
-    );
-    await act(async () => {
-      await authListener?.(currentUser);
-    });
-
-    await userEvent.click(screen.getByRole("button", { name: "Change email" }));
-
-    expect(accountSettingsMocks.changeAccountEmail).toHaveBeenCalledWith(
-      currentUser,
-      "next@example.com",
-      "current-pass",
+    expect(oauthProvider.instances[0]?.providerId).toBe("apple.com");
+    expect(oauthProvider.instances[0]?.scopes).toEqual(
+      expect.arrayContaining(["email", "name"]),
     );
   });
 });

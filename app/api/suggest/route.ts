@@ -42,9 +42,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ suggestions: [] } satisfies AddressSuggestions);
   }
 
+  // Prefer a server key (no HTTP-referrer restriction). The browser Places
+  // key is referrer-locked and will 403 from this route if reused.
   const googleKey =
-    process.env.GOOGLE_PLACES_SERVER_KEY || process.env.GOOGLE_MAPS_API_KEY;
+    process.env.GOOGLE_PLACES_SERVER_KEY?.trim() ||
+    process.env.GOOGLE_MAPS_API_KEY?.trim() ||
+    process.env.GOOGLE_GEOCODING_KEY?.trim() ||
+    "";
   if (!googleKey) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[/api/suggest] No server Places key. Set GOOGLE_PLACES_SERVER_KEY or GOOGLE_MAPS_API_KEY (IP/unrestricted application restriction, Places API New enabled). NEXT_PUBLIC_GOOGLE_PLACES_KEY alone cannot power this route when it is HTTP-referrer restricted.",
+      );
+    }
     return NextResponse.json({ suggestions: [] } satisfies AddressSuggestions);
   }
 
@@ -60,6 +70,9 @@ export async function GET(request: NextRequest) {
           // Key travels in a header, never the URL, so it stays out of
           // request logs.
           "X-Goog-Api-Key": googleKey,
+          // Places API (New) field mask — without it some projects return empty.
+          "X-Goog-FieldMask":
+            "suggestions.placePrediction.placeId,suggestions.placePrediction.text",
         },
         body: JSON.stringify({
           input: q,
@@ -73,7 +86,12 @@ export async function GET(request: NextRequest) {
     } finally {
       clearTimeout(timer);
     }
-    if (!res.ok) throw new Error(`Autocomplete returned ${res.status}`);
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      throw new Error(
+        `Autocomplete returned ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`,
+      );
+    }
 
     const json = (await res.json()) as {
       suggestions?: Array<{ placePrediction?: { text?: { text?: string } } }>;

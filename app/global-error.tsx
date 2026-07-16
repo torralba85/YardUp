@@ -2,11 +2,7 @@
 
 import { useEffect } from "react";
 
-/**
- * Root error boundary. Replaces the entire document when the root layout
- * itself fails, so it must render its own <html>/<body> and cannot rely on
- * the app's fonts or global CSS — plain system-safe styles only.
- */
+/** Root error boundary when the root layout itself fails. */
 export default function GlobalError({
   error,
   reset,
@@ -15,7 +11,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[global-error]", error);
+    console.error("[app/global-error]", error);
   }, [error]);
 
   return (
@@ -25,43 +21,55 @@ export default function GlobalError({
           margin: 0,
           minHeight: "100dvh",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          fontFamily: "system-ui, sans-serif",
           background: "#F2E5D5",
           color: "#261307",
-          fontFamily: "Georgia, 'Times New Roman', serif",
+          padding: "2rem",
+          textAlign: "center",
         }}
       >
-        <main id="main-content" style={{ maxWidth: 560, padding: "48px 24px" }}>
-          <h1 style={{ fontSize: 32, lineHeight: 1.1, margin: 0 }}>
-            LotFoundry hit an unexpected error.
-          </h1>
-          <p style={{ fontSize: 16, lineHeight: 1.6, color: "#6B5B4D" }}>
-            Your saved concepts are safe. Try again, or email{" "}
-            <a href="mailto:support@lotfoundry.com" style={{ color: "#8C5B3F" }}>
-              support@lotfoundry.com
-            </a>{" "}
-            if it keeps happening.
-          </p>
+        <h1 style={{ fontSize: "1.75rem", margin: 0 }}>Something went wrong</h1>
+        <p style={{ color: "#6B5B4D", maxWidth: "28rem" }}>
+          LotFoundry could not load this page. Retry or open Help.
+        </p>
+        <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
           <button
             type="button"
             onClick={reset}
             style={{
-              marginTop: 24,
-              height: 44,
-              padding: "0 24px",
+              minHeight: 44,
               borderRadius: 9999,
               border: "none",
-              background: "#8C5B3F",
+              background: "#2F4A38",
               color: "#F2E5D5",
-              fontSize: 14,
+              padding: "0 1.25rem",
               fontWeight: 600,
               cursor: "pointer",
             }}
           >
-            Try again
+            Retry
           </button>
-        </main>
+          <a
+            href="/help"
+            style={{
+              minHeight: 44,
+              display: "inline-flex",
+              alignItems: "center",
+              borderRadius: 9999,
+              border: "1px solid #E0CDB4",
+              background: "#FBF6EE",
+              color: "#261307",
+              padding: "0 1.25rem",
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            Get help
+          </a>
+        </div>
       </body>
     </html>
   );

@@ -2,12 +2,10 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
-/**
- * Branded route-level error boundary (Golden Hour): logs the error once,
- * offers Retry and Get help, and keeps a usable document shell.
- */
-export default function RouteError({
+/** Route-level error recovery with retry. */
+export default function Error({
   error,
   reset,
 }: {
@@ -15,34 +13,29 @@ export default function RouteError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[route-error]", error);
+    console.error("[app/error]", error);
   }, [error]);
 
   return (
-    <div className="lf-grain flex min-h-dvh flex-col bg-lf-sand text-lf-espresso">
-      <main id="main-content" className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-16">
-        <p className="lf-kicker text-lf-brick">Something broke</p>
-        <h1 className="lf-section-heading mt-2">This page hit an error.</h1>
-        <p className="lf-body mt-4 max-w-prose text-lf-muted">
-          Your saved concepts are safe. Try the page again — if it keeps failing,
-          tell us and we&rsquo;ll dig in.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-lf-clay px-5 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
-          >
-            Try again
-          </button>
-          <Link
-            href="/help"
-            className="inline-flex min-h-11 items-center text-sm font-medium text-lf-clay transition-colors hover:text-lf-mahogany focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-sand"
-          >
-            Get help
-          </Link>
-        </div>
-      </main>
-    </div>
+    <main
+      id="main-content"
+      className="flex min-h-dvh flex-col items-center justify-center bg-lf-sand px-6 py-16 text-center text-lf-espresso"
+    >
+      <h1 className="lf-section-heading">Something went wrong</h1>
+      <p className="lf-body-sm mx-auto mt-3 max-w-md text-lf-muted">
+        We hit an unexpected error. Try again, or visit Help if it keeps happening.
+      </p>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <Button type="button" variant="commit" onClick={reset}>
+          Retry
+        </Button>
+        <Link
+          href="/help"
+          className="inline-flex h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
+        >
+          Get help
+        </Link>
+      </div>
+    </main>
   );
 }

@@ -66,7 +66,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       detail: `of ${result.maxCoveragePercent}% max`,
       detailMono: true,
       valueClass: `font-mono font-semibold text-xl ${
-        result.remainingCapacity < 0 ? "text-lf-clay" : "text-lf-espresso"
+        result.remainingCapacity < 0 ? "text-lf-brick" : "text-lf-espresso"
       }`,
     },
     {
@@ -126,12 +126,12 @@ function LeadCell({
       <CellLabel icon={Icon} label={label} />
       <div
         data-metric-lead="true"
-        data-accent="amber"
-        className="mt-2 inline-block lf-money-lg text-lf-espresso"
+        data-accent="forest"
+        className="mt-2 inline-block lf-money-lg text-lf-forest"
       >
         {format(animated)}
-        {/* Gold-leaf value hairline — the signature "this is the money" tell. */}
-        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lf-amber" />
+        {/* Forest hairline — money figures carry the forest semantic (DESIGN.md). */}
+        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lf-forest" />
       </div>
       <div className="mt-2 text-[11px] text-lf-muted">{detail}</div>
     </div>

@@ -108,13 +108,21 @@ P0 - short, high-confidence fixes:
   export.~~ ✅ 2026-07-15 — deletion tears down lead `private/contact` PII,
   retains redacted roots/ledgers, retries idempotently; `GET
   /api/account/export` + Settings export button.
-- Add Sign in with Apple (needs Apple Developer + Firebase console
-  configuration before the button can ship). ~~Show Terms & Conditions +
-  Privacy on every account-creation path.~~ ✅ 2026-07-15 — AuthModal and the
-  signup page now both disclose.
-- Introduce purchase-channel routing and server verification: Stripe on web,
-  StoreKit on iOS, and Play Billing on Android. Native digital purchase grants
-  must be idempotent and must not trust client-supplied values.
+- ~~Add Sign in with Apple.~~ ✅ 2026-07-16 — `signInWithApple` in
+  `lib/auth-context.tsx` with Apple buttons on the auth modal, login, and
+  signup surfaces (email/name scopes only). Human gate: Apple Developer +
+  Firebase console configuration before the provider works in production.
+  ~~Show Terms & Conditions + Privacy on every account-creation path.~~
+  ✅ 2026-07-15 — AuthModal and the signup page now both disclose.
+- ~~Introduce purchase-channel routing and server verification: Stripe on web,
+  StoreKit on iOS, and Play Billing on Android.~~ ✅ 2026-07-16 — canonical
+  products in `lib/commerce/products.ts`, channel detection + clients
+  (Stripe / StoreKit bridge / Digital Goods API) in `lib/commerce/`, server
+  verification with idempotent `platform:transactionId` grants via
+  `POST /api/store/purchases/verify` + `lib/server/store-purchases.ts`;
+  certificate and lead-unlock call sites route through the purchase client.
+  Native digital purchase grants never trust client-supplied values. Human
+  gate: real Apple/Google API credentials and sandbox device validation.
 - ~~Reconcile the older `AIStyleMatchPanel` in `ConstraintsPanel` with the newer
   gallery-integrated `StyleMatchPanel`.~~ ✅ Retired 2026-07-08 — `AIStyleMatchPanel`
   deleted; style-match now lives only on the Design step via `StyleMatchPanel` inside

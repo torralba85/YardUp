@@ -65,7 +65,7 @@ In App Store Connect → App Privacy. For every type below: **Linked to You = Ye
 
 **Does your app collect or share user data?** Yes.
 **Is all data encrypted in transit?** Yes (HTTPS).
-**Do you provide a way to request data deletion?** Yes — in-app account deletion ("Delete account" in the studio account menu → `POST /api/account/delete`) **and** the public web deletion resource at `/delete-account` (works without the app installed; enter this as the Play data-deletion URL). Deletion removes profile, saved scenarios, builder profile, and lead contact PII; redacted lead roots and transaction records are retained as non-PII business/accounting records (documented in `/privacy`). Signed-in users can also export their data from `/settings` (`GET /api/account/export`). See section A-2.
+**Do you provide a way to request data deletion?** Yes — in-app account deletion ("Delete account" in the studio account menu → `POST /api/account/delete`). See section A-2.
 
 | Play category → type | Collected | Shared | Processing | Purpose |
 |---|---|---|---|---|

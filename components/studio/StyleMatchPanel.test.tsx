@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+﻿import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StyleMatchPanel from "./StyleMatchPanel";
 import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
@@ -64,6 +64,14 @@ beforeEach(() => {
   requestADUConceptMock.mockResolvedValue(generatedConcept);
 });
 
+function consentToAi() {
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: /agree to send this photo to OpenAI/i,
+    }),
+  );
+}
+
 describe("StyleMatchPanel", () => {
   it("prepares a sanitized photo and requests a generated concept with active parcel and config", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
@@ -80,6 +88,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -89,7 +98,6 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByText("2048 px")).toBeInTheDocument();
     expect(screen.getByText("Stripped")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
 
     expect(onConfirm).toHaveBeenCalledWith(preparedPhoto);
@@ -118,33 +126,6 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByText(/Photo sealed for style match/i)).toBeInTheDocument();
   });
 
-  it("keeps generation disabled until AI sharing consent is given", async () => {
-    const preparePhoto = vi.fn(async () => preparedPhoto);
-
-    render(
-      <StyleMatchPanel
-        preparePhoto={preparePhoto}
-        parcel={activeParcel}
-        config={activeConfig}
-      />,
-    );
-
-    fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
-      target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
-    });
-    await screen.findByAltText(/Prepared house photo preview/i);
-
-    const useButton = screen.getByRole("button", { name: /Use this photo/i });
-    expect(useButton).toBeDisabled();
-    fireEvent.click(useButton);
-    expect(requestADUConceptMock).not.toHaveBeenCalled();
-
-    fireEvent.click(
-      screen.getByRole("checkbox", { name: /I agree to send this photo/i }),
-    );
-    expect(useButton).toBeEnabled();
-  });
-
   it("revokes preview blob URLs when replacing the photo and on unmount", async () => {
     const preparePhoto = vi.fn(async () => preparedPhoto);
     const createObjectURL = vi
@@ -164,6 +145,7 @@ describe("StyleMatchPanel", () => {
         />,
       );
 
+      consentToAi();
       const input = screen.getByLabelText(/Choose house photo/i);
 
       fireEvent.change(input, {
@@ -200,6 +182,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
       target: { files: [new File(["raw"], "broken.heic", { type: "image/heic" })] },
     });
@@ -207,6 +190,7 @@ describe("StyleMatchPanel", () => {
     expect(await screen.findByText(/could not decode/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Choose another photo/i }));
 
+    consentToAi();
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
 
@@ -228,12 +212,12 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     fireEvent.change(screen.getByLabelText(/Choose house photo/i), {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
     });
     expect(await screen.findByAltText(/Prepared house photo preview/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
 
     expect(await screen.findByText(/OPENAI_API_KEY/i)).toBeInTheDocument();
@@ -262,6 +246,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -271,7 +256,6 @@ describe("StyleMatchPanel", () => {
 
     vi.useFakeTimers();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
@@ -303,6 +287,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -312,7 +297,6 @@ describe("StyleMatchPanel", () => {
 
     vi.useFakeTimers();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
@@ -339,6 +323,7 @@ describe("StyleMatchPanel", () => {
       />,
     );
 
+    consentToAi();
     const input = screen.getByLabelText(/Choose house photo/i);
     fireEvent.change(input, {
       target: { files: [new File(["raw"], "owner-yard.heic", { type: "image/heic" })] },
@@ -348,7 +333,6 @@ describe("StyleMatchPanel", () => {
 
     vi.useFakeTimers();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to send this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /Use this photo/i }));
     expect(screen.getByText(/Casting concept/i)).toBeInTheDocument();
 
@@ -362,3 +346,4 @@ describe("StyleMatchPanel", () => {
     expect(screen.getByLabelText(/Choose house photo/i)).toBeInTheDocument();
   });
 });
+

@@ -2,8 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import { formatCurrency } from "@/lib/feasibility";
+import {
+  leadUnlockPayLabel,
+  leadUnlockSecureNote,
+} from "@/lib/lead-unlock-api";
 import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
 import type { BuilderInboxItem } from "@/lib/marketplace-types";
+import {
+  detectPurchaseChannel,
+  type PurchaseChannel,
+} from "@/lib/commerce/purchase-channel";
 
 /** Props for {@link UnlockSlip}. */
 export interface UnlockSlipProps {
@@ -21,6 +29,11 @@ export interface UnlockSlipProps {
   onClose: () => void;
   /** Whether the builder has bulk credits available. */
   hasCredits?: boolean;
+  /**
+   * Billing channel for CTA copy. Defaults to runtime detection so store shells
+   * never show a Stripe-only pay label.
+   */
+  purchaseChannel?: PurchaseChannel;
 }
 
 /**
@@ -37,10 +50,14 @@ export default function UnlockSlip({
   onConfirm,
   onClose,
   hasCredits,
+  purchaseChannel,
 }: UnlockSlipProps) {
   const { preview } = item.request;
   const price = formatUnlockPrice();
   const priceWithCents = formatUnlockPrice({ cents: true });
+  const channel = purchaseChannel ?? detectPurchaseChannel();
+  const payLabel = leadUnlockPayLabel(Boolean(hasCredits), channel);
+  const secureNote = leadUnlockSecureNote(Boolean(hasCredits), channel);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -140,12 +157,12 @@ export default function UnlockSlip({
             disabled={pending}
             className="mt-4 flex w-full items-center justify-between bg-lf-forest px-4 py-3.5 text-sm font-semibold text-lf-sand transition hover:brightness-95 disabled:opacity-60"
           >
-            <span>{pending ? "Recording unlock…" : (hasCredits ? "Unlock with 1 Credit" : "Pay with Stripe")}</span>
+            <span>{pending ? "Recording unlock…" : payLabel}</span>
             <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>
           </button>
           <div className="mt-3 flex justify-center gap-3.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
             <span>Receipt emailed</span>
-            <span>Secure checkout — Stripe</span>
+            <span>{secureNote}</span>
           </div>
 
           <div className="mt-3.5 flex items-center gap-2.5 border border-lf-hairline px-3.5 py-2.5">

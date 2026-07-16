@@ -1,14 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Download, TriangleAlert } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
-import { downloadBlob } from "@/lib/report";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/lib/auth-context";
 
 /**
- * "Export my data" control: fetches the authenticated account export from
- * `/api/account/export` and downloads it as portable JSON.
+ * Downloads the authenticated account export as a JSON file.
  */
 export function DataExportButton() {
   const { user } = useAuth();
@@ -16,7 +13,10 @@ export function DataExportButton() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleExport() {
-    if (!user) return;
+    if (!user) {
+      setError("Sign in to export your data.");
+      return;
+    }
     setPending(true);
     setError(null);
     try {
@@ -25,12 +25,18 @@ export function DataExportButton() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        throw new Error("Export failed. Please try again.");
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error || "Export failed.");
       }
-      const body = await res.text();
-      downloadBlob("lotfoundry-account-export.json", body, "application/json");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lotfoundry-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed. Please try again.");
+      setError(err instanceof Error ? err.message : "Export failed.");
     } finally {
       setPending(false);
     }
@@ -39,18 +45,18 @@ export function DataExportButton() {
   return (
     <div>
       <Button
+        type="button"
         variant="secondary"
         onClick={() => void handleExport()}
         loading={pending}
-        leftIcon={<Download size={14} />}
       >
         Export my data
       </Button>
-      {error && (
-        <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs text-lf-brick">
-          <TriangleAlert size={12} aria-hidden /> {error}
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-lf-brick">
+          {error}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

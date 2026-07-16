@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { SettingsClient } from "@/components/account/SettingsClient";
 
 export const metadata: Metadata = {
-  title: "Account settings | LotFoundry",
-  description: "Manage your LotFoundry profile, security, data, and account.",
+  title: "Settings | LotFoundry",
+  description: "Manage your LotFoundry profile, security, and data.",
 };
 
-/** Authenticated member settings destination (Golden Hour). */
+/** Authenticated member settings route (`/settings`). */
 export default function SettingsPage() {
   return (
-    <main id="main-content" className="lf-grain min-h-dvh bg-lf-sand text-lf-espresso">
+    <main id="main-content" className="min-h-dvh bg-lf-sand text-lf-espresso">
       <SettingsClient />
     </main>
   );

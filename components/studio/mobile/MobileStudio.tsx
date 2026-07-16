@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import StudioSheet, { HALF_SNAP, PEEK_SNAP, type SheetSnap } from "./StudioSheet";
 import { StepProgress, type Step } from "@/components/ui/StepRail";
+import { Button } from "@/components/ui/Button";
 
 /** `localStorage` key marking that the mobile coach marks have been seen. */
 export const COACH_SEEN_KEY = "lf-coach-seen";
@@ -124,20 +125,19 @@ export default function MobileStudio({
       {coachVisible && (
         // aria-live keeps the note out of Radix's hideOthers sweep — vaul
         // mounts its dialog modal, which would otherwise aria-hide it.
+        // top offset clears the header + safe-area notch so the coach never
+        // sits under the status bar on notched phones.
         <div
           role="note"
           aria-live="polite"
-          className="absolute inset-x-4 top-16 z-(--z-index-coach) rounded-xl border border-lf-hairline bg-lf-card/95 p-3 text-sm text-lf-espresso shadow-lg"
+          className="absolute inset-x-4 z-(--z-index-coach) rounded-xl border border-lf-hairline bg-lf-card/95 p-3 text-sm text-lf-espresso shadow-lg"
+          style={{ top: "calc(4.5rem + env(safe-area-inset-top, 0px))" }}
         >
           <p className="font-semibold">Drag your ADU to place it on the lot.</p>
           <p className="mt-1 text-lf-muted">Swipe the bottom panel up for size, finish and full results.</p>
-          <button
-            type="button"
-            onClick={dismissCoach}
-            className="mt-2 min-h-11 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand"
-          >
+          <Button type="button" variant="primary" size="md" className="mt-2" onClick={dismissCoach}>
             Got it
-          </button>
+          </Button>
         </div>
       )}
 
