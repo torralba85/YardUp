@@ -8,9 +8,11 @@ const workflow = readFileSync(
 );
 
 describe("AI maintainer workflow", () => {
-  it("can post issue intake comments without a hard-coded diagnosis", () => {
+  it("can post safe, readable issue intake comments without a hard-coded diagnosis", () => {
     expect(workflow).toMatch(/permissions:\s*\n\s+contents: read\s*\n\s+issues: write/);
     expect(workflow).toContain("AI Maintainer intake");
+    expect(workflow).toContain('].join("\\n")');
+    expect(workflow).not.toContain("context.payload.issue.title");
     expect(workflow).not.toContain("authentication module");
     expect(workflow).not.toContain("OPENAI_API_KEY");
   });
