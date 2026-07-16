@@ -31,7 +31,7 @@ export function SettingsClient() {
   const capabilities = useMemo(
     () =>
       getAccountCapabilities(
-        user?.providerData?.map((p) => ({ providerId: p.providerId })) ?? [],
+        user?.providerData?.map((provider) => ({ providerId: provider.providerId })) ?? [],
       ),
     [user],
   );
@@ -197,7 +197,7 @@ export function SettingsClient() {
               Deleting your account removes saved concepts and profile data. Redacted
               marketplace and payment ledgers may be retained without contact PII.
             </p>
-            <DeleteAccountButton />
+            <DeleteAccountButton tone="light" />
             <Button type="button" variant="ghost" onClick={() => void logout()}>
               Sign out
             </Button>
