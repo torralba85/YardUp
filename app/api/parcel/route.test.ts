@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "./route";
+import { extractRegridLocation } from "@/lib/server/parcel-location";
 import type { LiveParcelData } from "@/lib/parcel-types";
 
 /**
@@ -273,5 +274,68 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     const data = (await res.json()) as LiveParcelData;
     expect(data.source).toBe("fallback");
     expect(data.zoning).toBe("R-1 (estimated)");
+  });
+});
+
+describe("GET /api/parcel — localized market data", () => {
+  it("attaches market data resolved from the Regrid location fields", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({
+          ll_gisacre: 0.25,
+          zoning: "R-1",
+          address: "123 Oak St",
+          city: "Seattle",
+          state2: "WA",
+          szip5: "98107",
+          county: "King County",
+        }),
+      ),
+    );
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.state).toBe("WA");
+    expect(data.zip).toBe("98107");
+    expect(data.county).toBe("King");
+    expect(data.marketData?.source).toBe("hud-zip");
+    expect(data.marketData?.rentByBedroom["1br"]).toBe(2050);
+  });
+
+  it("resolves fallback-parcel economics from the searched address, not the nearest preset", async () => {
+    // A Los Angeles address whose parcel lookup fails must keep California
+    // market economics — never inherit an Austin/Seattle preset's numbers.
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Network error")));
+
+    const res = await GET(
+      makeRequest(34.05, -118.24, "789 Sunset Blvd, Los Angeles, CA 90026, USA"),
+    );
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("fallback");
+    expect(data.state).toBe("CA");
+    expect(data.marketData?.geography?.state).toBe("CA");
+    // CA state-tier rent, not the Austin preset's Texas economics.
+    expect(data.marketData?.rentByBedroom["1br"]).toBe(2150);
+  });
+});
+
+describe("extractRegridLocation", () => {
+  it("pulls structured state/zip/county from Regrid fields", () => {
+    expect(
+      extractRegridLocation({ state2: "WA", szip5: "98107", county: "King County" }),
+    ).toEqual({ state: "WA", zip: "98107", county: "King" });
+  });
+
+  it("falls back across Regrid field aliases and strips the County suffix", () => {
+    expect(
+      extractRegridLocation({ state: "OR", zip: "97212", scounty: "Multnomah County" }),
+    ).toEqual({ state: "OR", zip: "97212", county: "Multnomah" });
+  });
+
+  it("returns empty strings when fields are missing", () => {
+    expect(extractRegridLocation({})).toEqual({ state: "", zip: "", county: undefined });
   });
 });

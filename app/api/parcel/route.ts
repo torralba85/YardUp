@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { parcelPresets } from "@/lib/feasibility";
+import { extractZip, parseParcelCityState } from "@/lib/marketplace";
 import { estimateLotDimensions, orientedLotDimensions } from "@/lib/parcel-geometry";
+import { resolveMarketData } from "@/lib/server/market/resolve-market";
+import { extractRegridLocation } from "@/lib/server/parcel-location";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
   if (!regridKey) {
     // Keyless demo: no Regrid configured. Keep the searched address visible
     // while using the nearest preset's typical dimensions/assumptions.
-    return successWithFallback(lat, lng, requestedAddress);
+    return await successWithFallback(lat, lng, requestedAddress);
   }
 
   try {
@@ -49,7 +52,7 @@ export async function GET(request: NextRequest) {
     url.searchParams.set("lon", String(lng));
     url.searchParams.set("token", regridKey);
     url.searchParams.set("limit", "1");
-    url.searchParams.set("fields", "ll_gisacre,ll_bldg_footprint_sqft,sqft,zoning,saddress,scity,state2,szip5,address,city,state,zip");
+    url.searchParams.set("fields", "ll_gisacre,ll_bldg_footprint_sqft,sqft,zoning,saddress,scity,state2,szip5,county,scounty,address,city,state,zip");
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -78,7 +81,7 @@ export async function GET(request: NextRequest) {
     const json = await regridRes.json();
     const parcels = json?.results?.features ?? [];
     if (parcels.length === 0) {
-      return successWithFallback(lat, lng, requestedAddress);
+      return await successWithFallback(lat, lng, requestedAddress);
     }
 
     const feature = parcels[0];
@@ -106,6 +109,11 @@ export async function GET(request: NextRequest) {
     // zoning data source can populate setbacks without touching the mapper.
     const setbacks = parseSetbacks(fields.zoning_setbacks);
 
+    // Financial figures must resolve to the address's own market — the
+    // Regrid location fields feed the server-side market index directly.
+    const loc = extractRegridLocation(fields);
+    const marketData = await resolveMarketData({ lat, lng, ...loc });
+
     const parcelData: LiveParcelData = {
       address: formatAddress(fields, requestedAddress, lat, lng),
       city: formatCity(fields) || cityFromRequestedAddress(requestedAddress),
@@ -121,6 +129,10 @@ export async function GET(request: NextRequest) {
       lat,
       lng,
       source: "regrid",
+      state: loc.state,
+      zip: loc.zip,
+      county: loc.county,
+      marketData,
     };
 
     return NextResponse.json(parcelData, {
@@ -128,7 +140,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("[/api/parcel] Regrid fetch failed:", err);
-    return successWithFallback(lat, lng, requestedAddress);
+    return await successWithFallback(lat, lng, requestedAddress);
   }
 }
 
@@ -136,13 +148,25 @@ export async function GET(request: NextRequest) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function successWithFallback(
+async function successWithFallback(
   lat: number,
   lng: number,
   requestedAddress?: string,
-): NextResponse {
+): Promise<NextResponse> {
   const preset = nearestPreset(lat, lng);
   const location = formatFallbackLocation(requestedAddress, preset);
+  // The preset only lends typical *dimensions*. Financial market data must
+  // still resolve from the searched address's own geography — a California
+  // address must never inherit Seattle/Portland/Austin economics just
+  // because the parcel lookup fell back.
+  const area = requestedAddress ? parseParcelCityState(location.city) : null;
+  const zip = requestedAddress ? extractZip(requestedAddress) : "";
+  const marketData = await resolveMarketData({
+    lat,
+    lng,
+    zip: zip || undefined,
+    state: area?.state || undefined,
+  });
   const fallback: LiveParcelData = {
     address: location.address,
     city: location.city,
@@ -157,6 +181,9 @@ function successWithFallback(
     lat,
     lng,
     source: "fallback",
+    state: area?.state ?? "",
+    zip,
+    marketData,
   };
   return NextResponse.json(fallback, {
     headers: { "Cache-Control": "public, max-age=300" },

@@ -1,0 +1,16 @@
+{
+  "asOf": "Regional construction cost factors (seed, 2026)",
+  "national": 1.0,
+  "states": { "WA": 1.12, "OR": 1.06, "TX": 0.94, "CA": 1.28 },
+  "counties": {
+    "CA/Los Angeles": 1.3,
+    "CA/San Diego": 1.26,
+    "CA/Santa Clara": 1.38,
+    "TX/Travis": 0.97,
+    "TX/Bexar": 0.9,
+    "TX/Dallas": 0.95,
+    "WA/King": 1.16,
+    "OR/Multnomah": 1.08
+  },
+  "zips": { "98115": 1.15, "98107": 1.15, "97212": 1.05, "78704": 0.96 }
+}

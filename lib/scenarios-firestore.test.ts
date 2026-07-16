@@ -51,6 +51,8 @@ const liveParcel: LiveParcelData = {
   lat: 37.335,
   lng: -121.889,
   source: "regrid",
+  state: "CA",
+  zip: "",
 };
 
 describe("saved scenario Firestore helpers", () => {

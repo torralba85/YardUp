@@ -1,0 +1,27 @@
+{
+  "asOf": "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
+  "sourceUrl": "https://www.huduser.gov/portal/datasets/fmr.html",
+  "national": { "studio": 1400, "1br": 1500, "2br": 1750 },
+  "states": {
+    "WA": { "studio": 1650, "1br": 1800, "2br": 2200 },
+    "OR": { "studio": 1450, "1br": 1600, "2br": 1900 },
+    "TX": { "studio": 1250, "1br": 1450, "2br": 1780 },
+    "CA": { "studio": 1900, "1br": 2150, "2br": 2700 }
+  },
+  "counties": {
+    "WA/King": { "studio": 1800, "1br": 1980, "2br": 2400 },
+    "OR/Multnomah": { "studio": 1500, "1br": 1680, "2br": 2010 },
+    "TX/Travis": { "studio": 1328, "1br": 1562, "2br": 1984 },
+    "TX/Bexar": { "studio": 1000, "1br": 1177, "2br": 1495 },
+    "TX/Dallas": { "studio": 1401, "1br": 1648, "2br": 2093 },
+    "CA/Los Angeles": { "studio": 1979, "1br": 2328, "2br": 2957 },
+    "CA/San Diego": { "studio": 2090, "1br": 2459, "2br": 3123 },
+    "CA/Santa Clara": { "studio": 2535, "1br": 2982, "2br": 3787 }
+  },
+  "zips": {
+    "98115": { "area": "NE Seattle WA (ZIP 98115)", "studio": 1820, "1br": 2000, "2br": 2430 },
+    "98107": { "area": "Ballard, Seattle WA (ZIP 98107)", "studio": 1850, "1br": 2050, "2br": 2500 },
+    "97212": { "area": "NE Portland OR (ZIP 97212)", "studio": 1550, "1br": 1720, "2br": 2060 },
+    "78704": { "area": "South Austin TX (ZIP 78704)", "studio": 1500, "1br": 1700, "2br": 2050 }
+  }
+}

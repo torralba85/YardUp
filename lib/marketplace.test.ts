@@ -132,6 +132,14 @@ describe("marketplace domain helpers", () => {
       annualNoi: 16605,
       paybackYears: 15.7,
       warnings: [],
+      rentBasis: "Curated demo estimate",
+      market: {
+        source: "preset" as const,
+        area: "Curated demo estimate",
+        confidence: "medium" as const,
+        verified: false,
+      },
+      operatingExpenseRatio: 0.325,
     };
 
     const snapshot = buildConnectionSnapshot({
@@ -165,6 +173,14 @@ describe("lead preview redaction (1A paywall split)", () => {
     annualNoi: 16605,
     paybackYears: 15.7,
     warnings: [],
+    rentBasis: "Curated demo estimate",
+    market: {
+      source: "preset" as const,
+      area: "Curated demo estimate",
+      confidence: "medium" as const,
+      verified: false,
+    },
+    operatingExpenseRatio: 0.325,
   };
 
   const snapshot = buildConnectionSnapshot({

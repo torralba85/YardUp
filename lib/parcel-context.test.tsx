@@ -114,6 +114,8 @@ describe("ParcelProvider estimated mode", () => {
       lat: 34.05,
       lng: -118.25,
       source: "fallback",
+      state: "CA",
+      zip: "90012",
     };
 
     mocks.geocodeAddress.mockResolvedValueOnce({

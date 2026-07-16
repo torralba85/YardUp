@@ -16,6 +16,8 @@ const parcel: LiveParcelData = {
   lat: 32.7157,
   lng: -117.1611,
   source: "regrid",
+  state: "CA",
+  zip: "",
 };
 
 describe("parcel-handoff", () => {

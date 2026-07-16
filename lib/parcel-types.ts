@@ -7,6 +7,8 @@
  * either without branching.
  */
 
+import type { MarketData } from "@/lib/market/market-types";
+
 export interface Parcel {
   address: string;
   city: string;
@@ -33,6 +35,18 @@ export interface LiveParcelData extends Parcel {
   lat: number;
   lng: number;
   source: "regrid" | "fallback";
+  /** Two-letter state, e.g. "WA". Empty when the lookup could not resolve it. */
+  state: string;
+  /** 5-digit ZIP. Empty when the lookup could not resolve it. */
+  zip: string;
+  /** County name without "County", e.g. "King". Not always present. */
+  county?: string;
+  /**
+   * Localized market figures resolved server-side for this address. Optional
+   * for back-compat with scenarios saved before market resolution existed —
+   * the engine marks financials unverified when it is absent.
+   */
+  marketData?: MarketData;
 }
 
 /** Minimal GeoJSON Polygon shape (avoids importing a full types package). */

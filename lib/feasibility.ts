@@ -13,6 +13,14 @@ import type { Parcel } from "./parcel-types";
 export type { Parcel } from "./parcel-types";
 import { calculateZoning } from "./zoning";
 import { calculateFinance } from "./finance";
+import type {
+  MarketData,
+  MarketProvenance,
+  OperatingExpenseBreakdown,
+} from "./market/market-types";
+import { bedroomClassForFootprint } from "./market/bedroom";
+import { marketBasisLabel } from "./market/market-basis";
+import { NATIONAL_MARKET_BASELINE } from "./market/national-baseline";
 
 /** Roof geometry of the ADU; affects per-square-foot construction premium. */
 export type RoofStyle = "shed" | "gable" | "flat";
@@ -105,6 +113,14 @@ export interface FeasibilityResult {
   paybackYears: number;
   /** Human-readable cautions (coverage overage, height review, etc.). */
   warnings: string[];
+  /** One-line citation for the rent figure (source + area + bedroom). */
+  rentBasis: string;
+  /** Provenance of the financial figures: source, freshness, confidence. */
+  market: MarketProvenance;
+  /** The operating-expense ratio actually applied to gross rent (0–1). */
+  operatingExpenseRatio: number;
+  /** Component shares behind {@link operatingExpenseRatio}, when localized. */
+  opexBreakdown?: OperatingExpenseBreakdown;
 }
 
 /**
@@ -313,21 +329,103 @@ export function calculateFeasibility(
   expectedRent?: Record<RentScenario, number>,
 ): FeasibilityResult {
   const zoning = calculateZoning(parcel, config);
+  const bedroom = bedroomClassForFootprint(config.footprint);
 
-  // For live parcels, expectedRent is passed separately or estimated from lotArea.
-  const rentTable = expectedRent ?? ("expectedRent" in parcel ? (parcel as ParcelPreset).expectedRent : estimateRent(parcel.lotArea));
+  // A parcel resolved from a real address (Regrid or fallback geometry).
+  const isLiveParcel = "source" in parcel;
+  const attachedMarket =
+    "marketData" in parcel ? (parcel as { marketData?: MarketData }).marketData : undefined;
+  // Live parcels without resolved market data (scenarios saved before market
+  // resolution existed) get the national public benchmark — never the retired
+  // lot-size heuristic, and never another metro's preset economics.
+  const marketData = attachedMarket ?? (isLiveParcel ? NATIONAL_MARKET_BASELINE : undefined);
 
-  const finance = calculateFinance(zoning.aduSqft, config, assumptions, rentTable);
+  // Rent resolution, most specific wins: explicit preset rent → localized
+  // market data → parcel-embedded preset rent → lot-size heuristic (demo-only
+  // estimated parcels; live parcels can never reach it).
+  let rentTable: Record<RentScenario, number>;
+  let market: MarketProvenance;
+  if (expectedRent) {
+    rentTable = expectedRent;
+    market = presetProvenance();
+  } else if (marketData) {
+    const anchor = marketData.rentByBedroom[bedroom];
+    rentTable = {
+      conservative: anchor,
+      market: Math.round(anchor * 1.12),
+      optimistic: Math.round(anchor * 1.25),
+    };
+    market = provenanceFromMarketData(marketData);
+  } else if ("expectedRent" in parcel) {
+    rentTable = (parcel as ParcelPreset).expectedRent;
+    market = presetProvenance();
+  } else {
+    rentTable = estimateRent(parcel.lotArea);
+    market = {
+      source: "heuristic",
+      area: "Lot-size heuristic",
+      confidence: "low",
+      verified: false,
+    };
+  }
+  const rentBasis = marketBasisLabel({ source: market.source, area: market.area, bedroom });
+
+  // A user-tuned expense ratio wins; otherwise the localized ratio replaces
+  // the nationwide default when market data carries one.
+  const userTunedOpex =
+    assumptions.operatingExpenseRatio !== defaultFinancialAssumptions.operatingExpenseRatio;
+  const finance = calculateFinance(zoning.aduSqft, config, assumptions, rentTable, {
+    costMultiplier: marketData?.costMultiplier,
+    operatingExpenseRatio: userTunedOpex ? undefined : marketData?.operatingExpenseRatio,
+  });
+
+  const warnings = [...zoning.warnings];
+  if (isLiveParcel && !market.verified) {
+    warnings.push(
+      `Verified local market data is unavailable for this address — rent, cost, and payback use the ${market.area} benchmark. Confirm local comps before acting.`,
+    );
+  }
 
   return {
     ...zoning,
     ...finance,
+    warnings,
+    rentBasis,
+    market,
+    opexBreakdown: userTunedOpex ? undefined : marketData?.opexBreakdown,
+  };
+}
+
+/** Provenance for curated demo-preset rent tables. */
+function presetProvenance(): MarketProvenance {
+  return {
+    source: "preset",
+    area: "Curated demo estimate",
+    confidence: "medium",
+    verified: false,
+  };
+}
+
+/** Provenance summary derived from resolved market data. */
+function provenanceFromMarketData(data: MarketData): MarketProvenance {
+  const verified =
+    data.source === "live" || data.source === "hud-zip" || data.source === "hud-county";
+  return {
+    source: data.source,
+    area: data.area,
+    asOf: data.asOf,
+    sourceUrl: data.sourceUrl,
+    retrievedAt: data.retrievedAt,
+    comparableCount: data.comparableCount,
+    confidence: data.confidence,
+    verified,
   };
 }
 
 /**
- * Estimate expected rent for a live parcel that doesn't have preset rent data.
- * Uses a simple lot-size heuristic — callers should treat this as a rough estimate.
+ * Estimate expected rent from lot size. Retired for live parcels (they always
+ * resolve a market source or the national benchmark); retained only for the
+ * anonymous wizard's estimated parcels, which have no address to localize.
  */
 function estimateRent(lotArea: number): Record<RentScenario, number> {
   const base = lotArea < 5000 ? 1800 : lotArea < 7000 ? 2100 : 2400;
