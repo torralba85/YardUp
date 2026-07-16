@@ -59,6 +59,7 @@ firestore.rules, firestore.indexes.json   Firestore security rules and indexes
 Key entry points:
 - `app/page.tsx` and `app/studio/page.tsx` - primary product surfaces; `app/builder/page.tsx` - builder dashboard
 - `app/login`, `app/signup`, `app/forgot-password`, `app/privacy`, `app/terms` - auth + legal pages
+- `app/settings`, `app/about`, `app/help`, `app/feedback`, `app/delete-account` - member settings + support/deletion surfaces (shared `components/legal/SiteFooter`, `components/account/AccountMenu`)
 - `components/FeasibilityStudio.tsx` - studio orchestrator
 - `components/ParcelScene.tsx` - 3D scene and ADU placement
 - `components/studio/*` - inspector, metrics, report, AI panels, mobile studio, builder lead panels

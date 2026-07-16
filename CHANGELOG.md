@@ -7,6 +7,40 @@ All notable changes to LotFoundry are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Member settings destination (`/settings`): profile (name, email +
+  verification state, verified email change), security (password change with
+  reauthentication), builder shortcut, data export, help/feedback/legal links,
+  and the danger zone (sign out, delete account).
+- Shared `AccountMenu` (Settings, Get help, Send feedback, Terms & Conditions,
+  Privacy, Sign out, Delete account) mounted on the studio sidebar, the mobile
+  header, and the builder dashboard header — no shell is a sign-out-only dead
+  end anymore.
+- Public support and legal surfaces: `/about`, `/help`, `/feedback` (with
+  `POST /api/feedback` intake: validation, hidden honeypot, 3/hour rate
+  limit, ticket IDs), and the Google Play-compliant web deletion resource
+  `/delete-account`.
+- Authenticated data export: `GET /api/account/export` returns portable JSON
+  (profile, saved scenarios, builder profile, redacted lead submissions,
+  purchase ledger) wired to a Settings "Export my data" button.
+- Branded 404 (`app/not-found.tsx`), route and global error boundaries,
+  `robots.txt`, and `sitemap.xml`; `e2e/site-completeness.spec.ts` covers the
+  public routes, crawl metadata, and signed-out settings/deletion states.
+
+### Changed
+- Privacy Policy and Terms rewritten to match the deployed stack (Firebase
+  Hosting/Auth/Firestore/Functions, Google Maps, Regrid, OpenAI, Stripe),
+  including marketplace contact sharing, AI photo handling, and the
+  deletion/retention policy; page label unified to "Terms & Conditions".
+- Account deletion now also removes the gated `private/contact` payloads on
+  the user's lead submissions, retains redacted lead roots and transaction
+  ledgers per the retention rule, and treats retries as success when data is
+  already gone.
+- AI style-match generation is gated behind an explicit consent checkbox
+  ("send this photo to OpenAI"); the auth modal and signup page both show the
+  Terms & Conditions + Privacy disclosure on account creation.
+- Legal/support pages share one `LegalPageShell` + `SiteFooter` (real brand
+  lockup, About/Help/Feedback/Terms/Privacy/Delete-account navigation); the
+  landing footer gained the same destinations in its nocturne styling.
 - Repository governance doc (`docs/repo-governance.md`) covering the issue
   priority matrix, debugging/bisect methodology, repo health routine, and
   release/changelog strategy.

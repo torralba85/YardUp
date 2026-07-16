@@ -87,20 +87,31 @@ healthy, and both store listings are actually available to users.
 
 P0 - short, high-confidence fixes:
 
-- Build `/settings` and one shared account menu for owner desktop/mobile and
+- ~~Build `/settings` and one shared account menu for owner desktop/mobile and
   builder surfaces: profile, email/security, builder details, data export,
-  Help, Feedback, Terms & Conditions, Privacy, sign-out, and account deletion.
-- Add `/about`, `/help`, `/feedback`, and `/delete-account`; replace duplicated
-  footers with shared navigation and add branded 404/error, robots, and sitemap
-  routes.
-- Update Privacy and Terms to match Firebase Hosting/Auth/Firestore/Functions,
+  Help, Feedback, Terms & Conditions, Privacy, sign-out, and account
+  deletion.~~ ✅ 2026-07-15 — `/settings` + `AccountMenu` shared across
+  StudioShell, MobileHeader, and BuilderDashboard.
+- ~~Add `/about`, `/help`, `/feedback`, and `/delete-account`; replace
+  duplicated footers with shared navigation and add branded 404/error, robots,
+  and sitemap routes.~~ ✅ 2026-07-15 — all routes live with `SiteFooter` /
+  `LegalPageShell`; `/api/feedback` intake with honeypot + rate limit;
+  `e2e/site-completeness.spec.ts` covers them.
+- ~~Update Privacy and Terms to match Firebase Hosting/Auth/Firestore/Functions,
   Regrid, Google, OpenAI, Stripe, AI-photo processing, marketplace sharing,
   store billing, and the approved deletion/retention policy. Add explicit AI
-  photo-sharing consent.
-- Complete account deletion across account-associated PII while retaining only
-  approved non-PII accounting/fraud records; add authenticated account export.
-- Add Sign in with Apple and show Terms & Conditions + Privacy on every
-  account-creation path.
+  photo-sharing consent.~~ ✅ 2026-07-15 — rewritten (Vercel removed); AI
+  photo consent checkbox gates style-match generation. Counsel review before
+  store submission still required.
+- ~~Complete account deletion across account-associated PII while retaining
+  only approved non-PII accounting/fraud records; add authenticated account
+  export.~~ ✅ 2026-07-15 — deletion tears down lead `private/contact` PII,
+  retains redacted roots/ledgers, retries idempotently; `GET
+  /api/account/export` + Settings export button.
+- Add Sign in with Apple (needs Apple Developer + Firebase console
+  configuration before the button can ship). ~~Show Terms & Conditions +
+  Privacy on every account-creation path.~~ ✅ 2026-07-15 — AuthModal and the
+  signup page now both disclose.
 - Introduce purchase-channel routing and server verification: Stripe on web,
   StoreKit on iOS, and Play Billing on Android. Native digital purchase grants
   must be idempotent and must not trust client-supplied values.
