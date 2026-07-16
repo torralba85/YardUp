@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
+import { resetFeedbackRateLimitBuckets } from "@/lib/server/feedback-rate-limit";
 
 const state = {
   written: [] as Record<string, unknown>[],
@@ -46,9 +46,7 @@ describe("POST /api/feedback", () => {
   beforeEach(() => {
     state.written = [];
     state.throwOnDb = false;
-    // Isolate the shared in-memory limiter (per-client and global buckets)
-    // between cases.
-    resetRateLimitBuckets();
+    resetFeedbackRateLimitBuckets();
   });
 
   it("persists a valid submission and returns its ticket id", async () => {
