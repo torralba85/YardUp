@@ -1,29 +1,37 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
+import { FieldValue } from "firebase-admin/firestore";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminApp, getAdminDb } from "@/lib/server/firebase-admin";
 
 /** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
 export const runtime = "nodejs";
 
-const SCENARIO_BATCH = 400;
+const DELETE_BATCH = 400;
+
+async function deleteQueryInBatches(
+  db: ReturnType<typeof getAdminDb>,
+  query: FirebaseFirestore.Query,
+) {
+  const snapshot = await query.get();
+  for (let i = 0; i < snapshot.docs.length; i += DELETE_BATCH) {
+    const batch = db.batch();
+    for (const docSnap of snapshot.docs.slice(i, i + DELETE_BATCH)) {
+      batch.delete(docSnap.ref);
+    }
+    await batch.commit();
+  }
+}
 
 /**
  * Permanently delete the authenticated user's account and personal data.
  *
- * Uses the Admin SDK (which bypasses Firestore rules — the `users/{uid}`
- * document is `delete: if false` for clients) to remove the user's saved
- * scenarios, any builder profile, the gated lead contact payloads the user
- * submitted, the profile document, and the Firebase Auth identity itself. On
- * Firebase infra the `api` function's Application Default Credentials supply
- * the admin identity; locally without ADC the Auth deletion step has no
- * credentials, so this route is exercised in production/CI.
- *
- * Retention rule: account-associated PII is deleted; redacted lead roots
- * (shared business records a builder may have paid to unlock), builder ledger
- * entries, `leadUnlocks`, and `certificatePurchases` are retained as non-PII
- * accounting/fraud records (see docs/store-listing-copy.md). Every step is a
- * no-op when the data is already gone, so retries are safe.
+ * All fallible Firestore PII cleanup happens before the irreversible Auth
+ * deletion. The profile is replaced with a non-PII `deletionPending` tombstone
+ * immediately before deleting Auth; if Auth deletion fails, the same user can
+ * authenticate a retry without their old profile data being recreated. Once
+ * Auth deletion succeeds, removing that tombstone is best-effort because it no
+ * longer contains personal fields.
  */
 export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -34,46 +42,46 @@ export async function POST(request: NextRequest) {
     const db = getAdminDb();
     const userRef = db.collection("users").doc(uid);
 
-    // Delete the savedScenarios subcollection in bounded batches.
-    const scenarios = await userRef.collection("savedScenarios").get();
-    for (let i = 0; i < scenarios.docs.length; i += SCENARIO_BATCH) {
-      const batch = db.batch();
-      for (const docSnap of scenarios.docs.slice(i, i + SCENARIO_BATCH)) {
-        batch.delete(docSnap.ref);
-      }
-      await batch.commit();
-    }
+    await deleteQueryInBatches(db, userRef.collection("savedScenarios"));
 
-    // Tear down the gated PII payloads on leads this owner submitted. The
-    // redacted request root stays: it is the business record the marketplace
-    // and its ledgers reference. Delete every contact in parallel and only then
-    // inspect the outcome, so one transient failure can't stop the loop and
-    // strand later contacts — surface the first failure to abort before the
-    // irreversible steps below; a retry re-attempts the survivors (each delete
-    // is an idempotent no-op).
+    // Remove contact PII and retire retained lead roots in the same batch. A
+    // withdrawn lead cannot be bought/unlocked, and removing ownerUid prevents
+    // the retained business record from identifying the deleted account.
     const ownedLeads = await db
       .collection("connectionRequests")
       .where("ownerUid", "==", uid)
       .get();
-    const contactResults = await Promise.allSettled(
-      ownedLeads.docs.map((leadSnap) =>
-        leadSnap.ref.collection("private").doc("contact").delete(),
-      ),
-    );
-    const failedContact = contactResults.find(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
-    if (failedContact) {
-      throw failedContact.reason;
+    for (let i = 0; i < ownedLeads.docs.length; i += DELETE_BATCH / 2) {
+      const batch = db.batch();
+      for (const leadSnap of ownedLeads.docs.slice(i, i + DELETE_BATCH / 2)) {
+        batch.delete(leadSnap.ref.collection("private").doc("contact"));
+        batch.update(leadSnap.ref, {
+          ownerUid: FieldValue.delete(),
+          ownerVerified: false,
+          status: "withdrawn",
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
     }
 
-    // Delete the Auth identity BEFORE removing the profile documents. The
-    // `users/{uid}` doc is what a subsequent sign-in would recreate, so if
-    // `deleteUser` fails transiently we return 500 with the profile still
-    // present for a clean retry, rather than leaving an active identity whose
-    // next login rebuilds an empty profile after the data was already gone.
-    // Skip the dev/test stub uid (not a real Firebase user), and treat an
-    // already-deleted user as success so retries converge instead of erroring.
+    // Signed-in feedback can contain reply email and free-form personal data.
+    await deleteQueryInBatches(
+      db,
+      db.collection("feedback").where("uid", "==", uid),
+    );
+
+    // Remove the builder profile before Auth deletion so a failure is retryable.
+    await db.collection("builders").doc(uid).delete();
+
+    // Replace the user profile with a retry marker containing no email/name.
+    await userRef.set({
+      deletionPending: true,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Skip the dev/test stub uid, and treat an already-deleted identity as a
+    // successful retry.
     if (uid !== "local-dev") {
       try {
         await getAuth(getAdminApp()).deleteUser(uid);
@@ -84,10 +92,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Remove the builder profile if this account had one, then the profile doc.
-    // The identity is gone at this point, so a re-sign-in cannot recreate them.
-    await db.collection("builders").doc(uid).delete();
-    await userRef.delete();
+    // The Auth identity is gone. A failed tombstone cleanup cannot strand PII,
+    // so log it without turning a completed deletion into an unretryable error.
+    await userRef.delete().catch((err) => {
+      console.warn("[account/delete] could not remove deletion tombstone", uid, err);
+    });
 
     return NextResponse.json({ deleted: true });
   } catch (err) {
