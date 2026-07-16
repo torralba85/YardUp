@@ -244,8 +244,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const current = auth.currentUser;
     if (!current) return;
     await current.reload();
-    setUser(auth.currentUser);
-    await ensureProfile(auth.currentUser!);
+    const refreshed = auth.currentUser;
+    setUser(refreshed);
+    if (refreshed) {
+      await ensureProfile(refreshed, { email: refreshed.email });
+    }
   };
 
   const updateAccountName = async (displayName: string) => {
