@@ -24,7 +24,11 @@ export async function POST(request: NextRequest) {
     certKey?: string;
   };
   try {
-    body = (await request.json()) as typeof body;
+    const parsed = (await request.json()) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    }
+    body = parsed as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
