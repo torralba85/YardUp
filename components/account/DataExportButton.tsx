@@ -4,9 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
 
-/**
- * Downloads the authenticated account export as a JSON file.
- */
+/** Downloads the authenticated account export as a JSON file. */
 export function DataExportButton() {
   const { user } = useAuth();
   const [pending, setPending] = useState(false);
@@ -30,10 +28,12 @@ export function DataExportButton() {
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `lotfoundry-export-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `lotfoundry-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed.");
