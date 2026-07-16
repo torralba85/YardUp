@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ticketId: "received" });
   }
 
-  const limited = await checkFeedbackRateLimit(request);
-  if (limited) return limited;
-
   const validation = validateFeedback(body);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
+
+  const limited = await checkFeedbackRateLimit(request);
+  if (limited) return limited;
 
   const uid = await getOptionalUid(request);
 
