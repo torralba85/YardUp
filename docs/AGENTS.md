@@ -205,15 +205,15 @@ See `DESIGN.md` for the full brand spec and use it as the source of truth before
 
 ## Current Status
 
-_Last updated 2026-07-07 (P5 landing handoff)._
+_Last updated 2026-07-16 (mobile five-reveal journey + localized market data)._
 
 | Dimension | Status | Notes |
 |---|---|---|
 | Brand/Identity | ✅ Complete | LotFoundry fully integrated; field-book design system (`DESIGN.md`) |
-| Core Feasibility Logic | ✅ Complete | 3 presets + live parcel (Regrid) + wizard estimates; market-basis rents |
+| Core Feasibility Logic | ✅ Complete | 3 presets + live parcel (Regrid); address-specific market rents/costs/opex (HUD FMR index + key-gated live seam, `lib/server/market/`); provenance stamped on every result |
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
-| Guided Spine (P0–P4) | ✅ Landed | Single step model: Lot → Feasibility → Design → Certificate → Builders on desktop rail + mobile progress spine; step-scoped mobile bottom sheet |
-| Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; wizard yields to a pending handoff; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
+| Guided Spine (P0–P4) | ✅ Landed | Desktop: Lot → Feasibility → Design → Certificate → Builders rail. Mobile: five-reveal journey Find → Earn → Shape → Check → Act (`components/studio/mobile/journey/`, issue #130) — replaced the bottom sheet + first-run wizard |
+| Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; a handed-off address resolves straight into the journey's Earn reveal; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
 | Monetization | ✅ Implemented | Stripe paid certificate purchase (P3) + builder lead-unlock marketplace; `LOTFOUNDRY_DEMO_UNLOCKS` for dev |
 | AI Panels | ✅ Implemented | Parcel insights + style-matched ADU concepts (auth + rate-limited server routes) |
 | Testing | ✅ ~400 Vitest tests + Playwright desktop/mobile | Full gate green 2026-07-02 |
@@ -233,6 +233,7 @@ _Last updated 2026-07-07 (P5 landing handoff)._
 5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md` (pill-radius system, amber/brick semantics, typography trio) on landing, studio, builder dashboard.
 6. **Builder network growth** — real builder onboarding flow; zero-state city coverage is honest but the network is empty.
 7. **Solar simulation / view modes / aerial polish** — deferred scene enhancements from the earlier audit.
+8. **Full HUD FMR coverage** — the checked-in market index (`lib/server/market/data/fmr.json`) is a seed extract (demo metros + CA/TX benchmark counties); run `scripts/build-market-data.js` against a full HUD release for nationwide ZIP/county coverage. Out-of-seed addresses resolve at the state/national tier, surfaced as low-confidence.
 
 ---
 

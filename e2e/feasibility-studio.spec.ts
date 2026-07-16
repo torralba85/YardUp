@@ -1,11 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
-
-async function skipMobileFirstRunUi(page: Page) {
-  await page.addInitScript(() => {
-    localStorage.setItem("lf-wizard-seen", "1");
-    localStorage.setItem("lf-coach-seen", "1");
-  });
-}
+import { expect, test } from "@playwright/test";
 
 test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
@@ -42,14 +35,16 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: /Create account/i })).toBeVisible();
   });
 
-  test("studio is open to guests for the wizard funnel", async ({ page, viewport }) => {
+  test("studio is open to guests", async ({ page, viewport }) => {
     await page.goto("/studio");
 
-    // Guests are no longer redirected — mobile gets the first-run wizard,
+    // Guests are no longer redirected — mobile gets the five-reveal journey,
     // desktop gets the dashboard.
     await expect(page).toHaveURL(/\/studio/);
     if (viewport && viewport.width < 1024) {
-      await expect(page.getByText(/could your backyard pay you rent/i)).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /start with your address/i }),
+      ).toBeVisible();
     } else {
       await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
       await expect(page.getByRole("button", { name: /Rules & Fit/i })).toBeVisible();
@@ -64,43 +59,23 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("guest can navigate to Permit Guide and view demo rules", async ({ page, viewport }) => {
-    const mobile = !!viewport && viewport.width < 1024;
-    // Mobile shows the first-run wizard on a fresh profile — skip it so the
-    // test lands in the sheet studio directly.
-    if (mobile) await skipMobileFirstRunUi(page);
+    // Desktop-only: the mobile journey surfaces permit caveats as the Check
+    // reveal's verify items instead of the full permit guide panel (#130).
+    test.skip(!viewport || viewport.width < 1024, "desktop-only");
     await page.goto("/studio");
-    if (mobile) {
-      // Mobile renders the permit guide inside the bottom sheet's sections —
-      // expand to full snap (peek → half → full) to reach it.
-      await page.getByRole("button", { name: /expand panel/i }).click();
-      await page.getByRole("button", { name: /expand panel/i }).click();
-      // Wait for the animation to complete
-      await page.waitForTimeout(500);
-    } else {
-      // Navigating via sidebar navigation button
-      await page.getByRole("button", { name: /Rules & Fit/i }).click();
-    }
+    await page.getByRole("button", { name: /Rules & Fit/i }).click();
     await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();
   });
 
   test("guest can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
     test.setTimeout(60_000);
-    const mobile = !!viewport && viewport.width < 1024;
-    if (mobile) await skipMobileFirstRunUi(page);
+    // Desktop-only: the mobile journey keeps Shape to broad size/style
+    // choices; the gallery is not part of the default mobile path (#130).
+    test.skip(!viewport || viewport.width < 1024, "desktop-only");
     await page.goto("/studio");
-    if (mobile) {
-      // Mobile renders the gallery inside the Design step's sheet sections.
-      await page.locator("nav button").filter({ hasText: /^Design/ }).click();
-      await expect(page.getByRole("dialog", { name: /Design step/i })).toBeVisible();
-      // Step selection opens the sheet to half; expand once more to reach full.
-      await page.getByRole("button", { name: /expand panel/i }).click();
-      // Wait for the animation to complete
-      await page.waitForTimeout(500);
-    } else {
-      // Navigating via sidebar navigation button
-      await page.getByRole("button", { name: /Design/i }).click();
-    }
+    // Navigating via sidebar navigation button
+    await page.getByRole("button", { name: /Design/i }).click();
     await expect(page.getByRole("heading", { name: /Inspiration Gallery/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/Courtyard Studio with Clerestory Light/i)).toBeVisible();
 
