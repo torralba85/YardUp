@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const getAdminDb = vi.fn();
+const { getAdminDb } = vi.hoisted(() => ({ getAdminDb: vi.fn() }));
 
 vi.mock("@/lib/server/firebase-admin", () => ({ getAdminDb }));
 
