@@ -70,12 +70,15 @@ interface StoreKitBridge {
 interface DigitalGoodsService {
   getDetails: (productIds: string[]) => Promise<Array<{ itemId: string }>>;
   listPurchases?: () => Promise<Array<{ itemId: string; purchaseToken: string }>>;
-  acknowledge?: (token: string, optionalArgs?: { force?: boolean }) => Promise<void>;
+  consume?: (token: string) => Promise<void>;
 }
 
-/**
- * Build a purchase client for the current runtime channel.
- */
+interface DigitalGoodsPaymentResponse {
+  details: { purchaseToken?: string; token?: string };
+  complete: (result: string) => Promise<void>;
+}
+
+/** Build a purchase client for the current runtime channel. */
 export function createPurchaseClient(
   options: CreatePurchaseClientOptions = {},
 ): PurchaseClient {
@@ -223,56 +226,59 @@ function createGooglePlayClient(
       const service = (await Promise.resolve(
         getService("https://play.google.com/billing"),
       )) as DigitalGoodsService | null;
-      if (!service?.getDetails) {
+      if (!service?.getDetails || !service.consume) {
         throw new PurchaseClientError("Google Play billing service is not available.");
       }
 
       await service.getDetails([productId]);
 
-      // PaymentRequest is the user-facing purchase UI for TWA Digital Goods.
       const paymentMethodData = [
         {
           supportedMethods: "https://play.google.com/billing",
           data: { sku: productId },
         },
       ];
-      // Prefer native PaymentRequest when present; fall back to listPurchases
-      // for test doubles that only implement the goods service.
       const PaymentRequestCtor = (globalThis as { PaymentRequest?: new (
         methodData: unknown[],
         details: unknown,
-      ) => { show: () => Promise<{ details: { purchaseToken?: string; token?: string }; complete: (result: string) => Promise<void> }> } }).PaymentRequest;
+      ) => { show: () => Promise<DigitalGoodsPaymentResponse> } }).PaymentRequest;
 
       let token: string;
+      let paymentResponse: DigitalGoodsPaymentResponse | null = null;
       if (PaymentRequestCtor) {
         const request = new PaymentRequestCtor(paymentMethodData, {
           total: { label: "Total", amount: { currency: "USD", value: "0" } },
         });
-        const response = await request.show();
+        paymentResponse = await request.show();
         token =
-          response.details.purchaseToken ||
-          response.details.token ||
+          paymentResponse.details.purchaseToken ||
+          paymentResponse.details.token ||
           "";
-        await response.complete(token ? "success" : "fail");
       } else if (service.listPurchases) {
         const purchases = await service.listPurchases();
-        const match = purchases.find((p) => p.itemId === productId);
+        const match = purchases.find((purchase) => purchase.itemId === productId);
         token = match?.purchaseToken ?? "";
       } else {
         throw new PurchaseClientError("Could not complete the Google Play purchase.");
       }
 
       if (!token) {
+        await paymentResponse?.complete("fail").catch(() => undefined);
         throw new PurchaseClientError("Google Play returned an empty purchase token.");
       }
 
-      await verifyOnServer(
-        { platform: "google-play", productId, token, certKey: context?.certKey },
-        options,
-      );
-
-      if (service.acknowledge) {
-        await service.acknowledge(token).catch(() => undefined);
+      try {
+        await verifyOnServer(
+          { platform: "google-play", productId, token, certKey: context?.certKey },
+          options,
+        );
+        // Every catalog item is a repeatable credit. Consume only after the
+        // server records the idempotent grant so the SKU can be purchased again.
+        await service.consume(token);
+        await paymentResponse?.complete("success");
+      } catch (err) {
+        await paymentResponse?.complete("fail").catch(() => undefined);
+        throw err;
       }
 
       return {
