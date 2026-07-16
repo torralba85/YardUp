@@ -5,9 +5,10 @@ import { getAdminDb } from "@/lib/server/firebase-admin";
 /** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
 export const runtime = "nodejs";
 
-/** Recursively convert Firestore Timestamps to ISO strings for portability. */
+/** Recursively convert Firestore Timestamps and native Dates to ISO strings. */
 function toPortable(value: unknown): unknown {
   if (value == null) return value;
+  if (value instanceof Date) return value.toISOString();
   if (typeof (value as { toDate?: unknown }).toDate === "function") {
     return (value as { toDate: () => Date }).toDate().toISOString();
   }
@@ -23,12 +24,23 @@ function toPortable(value: unknown): unknown {
   return value;
 }
 
+async function mapInBatches<T, R>(
+  items: T[],
+  batchSize: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    results.push(...(await Promise.all(items.slice(i, i + batchSize).map(mapper))));
+  }
+  return results;
+}
+
 /**
  * Download the authenticated user's account data as portable JSON: profile,
- * saved scenarios, builder profile, their own lead submissions (id, redacted
- * preview, status, and the contact details they submitted), and purchase
- * records. Never includes other users' PII, Firebase tokens, or payment
- * provider secrets.
+ * saved scenarios, builder profile, their own lead submissions and contact
+ * details, feedback, store/Stripe purchase records, and credit balances. Never
+ * includes other users' PII, Firebase tokens, or payment-provider secrets.
  */
 export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -48,6 +60,9 @@ export async function GET(request: NextRequest) {
       certificatesSnap,
       unlocksSnap,
       ledgerSnap,
+      feedbackSnap,
+      purchaseGrantsSnap,
+      certificateCreditsSnap,
     ] = await Promise.all([
       userRef.get(),
       userRef.collection("savedScenarios").get(),
@@ -56,16 +71,17 @@ export async function GET(request: NextRequest) {
       db.collection("certificatePurchases").where("uid", "==", uid).get(),
       db.collection("leadUnlocks").where("builderId", "==", uid).get(),
       builderRef.collection("ledger").get(),
+      db.collection("feedback").where("uid", "==", uid).get(),
+      db.collection("purchaseGrants").where("uid", "==", uid).get(),
+      db.collection("certificateCredits").doc(uid).get(),
     ]);
 
-    // Lead submissions: the redacted root (id, banded preview, status) plus the
-    // owner's own gated `private/contact` payload (name, phone, exact address,
-    // contact preferences). That contact PII lives only in the subcollection —
-    // not in the profile or scenarios — so a portable export must include it to
-    // be complete for the data the account owns and that deletion removes. Only
-    // the owner's own submissions are read; other users' contacts stay gated.
-    const connectionRequests = await Promise.all(
-      leadsSnap.docs.map(async (docSnap) => {
+    // Read gated contact payloads with bounded concurrency so large lead histories
+    // do not create an unbounded Firestore fan-out or memory spike.
+    const connectionRequests = await mapInBatches(
+      leadsSnap.docs,
+      20,
+      async (docSnap) => {
         const data = docSnap.data();
         const contactSnap = await docSnap.ref
           .collection("private")
@@ -77,7 +93,7 @@ export async function GET(request: NextRequest) {
           status: String(data.status ?? "unknown"),
           contact: contactSnap.exists ? toPortable(contactSnap.data()) : null,
         };
-      }),
+      },
     );
 
     const payload = {
@@ -89,6 +105,13 @@ export async function GET(request: NextRequest) {
       })),
       builderProfile: builderSnap.exists ? toPortable(builderSnap.data()) : null,
       connectionRequests,
+      feedback: feedbackSnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(toPortable(docSnap.data()) as Record<string, unknown>),
+      })),
+      certificateCreditBalance: certificateCreditsSnap.exists
+        ? toPortable(certificateCreditsSnap.data())
+        : null,
       purchaseLedger: toPortable([
         ...certificatesSnap.docs.map((docSnap) => ({
           type: "certificate",
@@ -102,6 +125,11 @@ export async function GET(request: NextRequest) {
         })),
         ...ledgerSnap.docs.map((docSnap) => ({
           type: "builder-ledger",
+          id: docSnap.id,
+          ...docSnap.data(),
+        })),
+        ...purchaseGrantsSnap.docs.map((docSnap) => ({
+          type: "store-grant",
           id: docSnap.id,
           ...docSnap.data(),
         })),
