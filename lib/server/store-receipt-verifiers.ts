@@ -26,6 +26,14 @@ export interface GoogleVerifyInput {
 export type ReceiptVerifyOk = { transactionId: string };
 export type ReceiptVerifyResult = ReceiptVerifyOk | { error: string };
 
+// Apple's App Store Server library requires these certificate extension OIDs:
+// leaf = Apple App Store receipt signing, intermediate = Apple WWDR CA.
+const STOREKIT_LEAF_OID_DER = Buffer.from("060a2a864886f76364060b01", "hex");
+const STOREKIT_INTERMEDIATE_OID_DER = Buffer.from(
+  "060a2a864886f76364060201",
+  "hex",
+);
+
 function isDemoMode(): boolean {
   return (
     process.env.LOTFOUNDRY_STORE_DEMO === "true" ||
@@ -64,14 +72,18 @@ function base64UrlToBuffer(segment: string): Buffer {
   return Buffer.from(padded + pad, "base64");
 }
 
+function certificateContainsOid(cert: X509Certificate, oidDer: Buffer): boolean {
+  return cert.raw.includes(oidDer);
+}
+
 /**
  * Validate the JWS `x5c` certificate chain and return the leaf public key.
  *
  * Every certificate must be inside its validity window, each one must be
- * signed by the next in the chain, and the final (root) certificate must
- * match the SHA-256 fingerprint pinned in `APPLE_ROOT_CA_FINGERPRINT256`.
- * Without that pin, an attacker could embed a self-signed chain and forge
- * arbitrary receipts, so verification fails closed when it is missing.
+ * signed by the next in the chain, the final certificate must match the pinned
+ * Apple root, and real multi-certificate chains must carry Apple's StoreKit
+ * leaf and WWDR intermediate policy OIDs. The OID checks prevent a different
+ * Apple-issued certificate purpose from being used to forge a receipt.
  */
 function verifyAppleCertChain(
   x5c: string[],
@@ -112,15 +124,29 @@ function verifyAppleCertChain(
     return { error: "App Store receipt is not anchored to the pinned Apple root." };
   }
 
+  // A one-certificate chain can only pass a production Apple-root pin if it is
+  // the root itself (whose private key is unavailable). Keeping that shape
+  // supported also permits the isolated pinned-root fixture used in tests.
+  if (certs.length > 1) {
+    if (!certificateContainsOid(certs[0], STOREKIT_LEAF_OID_DER)) {
+      return { error: "App Store receipt leaf certificate is not valid for StoreKit." };
+    }
+    if (!certificateContainsOid(certs[1], STOREKIT_INTERMEDIATE_OID_DER)) {
+      return {
+        error: "App Store receipt intermediate certificate is not an Apple WWDR certificate.",
+      };
+    }
+  }
+
   return { key: certs[0].publicKey };
 }
 
 /**
  * Verify a StoreKit 2 signed transaction JWS.
  *
- * Validates the `x5c` chain against the pinned Apple root
- * ({@link verifyAppleCertChain}), verifies the ES256 signature with the leaf
- * key, then checks bundleId + productId against the payload.
+ * Validates the `x5c` chain, StoreKit certificate purpose, and pinned Apple
+ * root, verifies the ES256 signature with the leaf key, then checks bundleId +
+ * productId against the payload.
  */
 export function verifyAppleSignedTransaction(
   input: AppleVerifyInput,
@@ -161,8 +187,7 @@ export function verifyAppleSignedTransaction(
     const signature = base64UrlToBuffer(parts[2]);
     const signingInput = `${parts[0]}.${parts[1]}`;
     // JOSE ES256 uses raw R||S (64 bytes); Node's verify expects DER.
-    const der =
-      signature.length === 64 ? joseEs256ToDer(signature) : signature;
+    const der = signature.length === 64 ? joseEs256ToDer(signature) : signature;
     const verifier = createVerify("SHA256");
     verifier.update(signingInput);
     verifier.end();
@@ -195,17 +220,15 @@ function joseEs256ToDer(raw: Buffer): Buffer {
   const enc = (part: Buffer) => {
     let i = 0;
     while (i < part.length - 1 && part[i] === 0) i += 1;
-    let v = part.subarray(i);
-    if (v[0] & 0x80) v = Buffer.concat([Buffer.from([0]), v]);
-    return Buffer.concat([Buffer.from([0x02, v.length]), v]);
+    let value = part.subarray(i);
+    if (value[0] & 0x80) value = Buffer.concat([Buffer.from([0]), value]);
+    return Buffer.concat([Buffer.from([0x02, value.length]), value]);
   };
   const body = Buffer.concat([enc(r), enc(s)]);
   return Buffer.concat([Buffer.from([0x30, body.length]), body]);
 }
 
-/**
- * Verify a Google Play product purchase token via the Android Publisher API.
- */
+/** Verify a Google Play product purchase token via the Android Publisher API. */
 export async function verifyGooglePlayPurchase(
   input: GoogleVerifyInput,
   fetchImpl: typeof fetch = fetch,
@@ -216,15 +239,15 @@ export async function verifyGooglePlayPurchase(
   let email: string;
   let privateKey: string;
   try {
-    const sa = JSON.parse(input.serviceAccountJson) as {
+    const serviceAccount = JSON.parse(input.serviceAccountJson) as {
       client_email?: string;
       private_key?: string;
     };
-    if (!sa.client_email || !sa.private_key) {
+    if (!serviceAccount.client_email || !serviceAccount.private_key) {
       return { error: "Google Play service account is misconfigured." };
     }
-    email = sa.client_email;
-    privateKey = sa.private_key;
+    email = serviceAccount.client_email;
+    privateKey = serviceAccount.private_key;
   } catch {
     return { error: "Google Play service account JSON is invalid." };
   }
