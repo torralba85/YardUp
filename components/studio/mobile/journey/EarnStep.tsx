@@ -31,7 +31,11 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
     result.market.source !== "heuristic";
 
   return (
-    <section aria-label="What your backyard could earn" className="flex min-h-full flex-col px-5 pb-8 pt-7">
+    <section
+      aria-label="What your backyard could earn"
+      className="flex min-h-full flex-col px-5 pt-7"
+      style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <p className="lf-kicker text-lf-clay">Step 2 · Earn</p>
       <h1 className="mt-2 font-display text-[31px] font-semibold leading-[1.08] text-lf-espresso">
         Your backyard could earn

@@ -1207,10 +1207,10 @@ export default function ParcelScene({
       </Canvas>
       </ErrorBoundary>
 
-      {/* View-mode toggle. On mobile the bottom sheet's peek strip (148px)
-          overlays the bottom of the scene, so the toggle docks above it;
-          buttons meet the 44px touch floor below the `sm` breakpoint. */}
-      <div className="absolute bottom-44 right-4 lg:bottom-24 lg:right-5 z-(--z-index-scene) flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm">
+      {/* View-mode toggle. Docked to the scene bottom — the old bottom-sheet
+          offset (bottom-44) clipped these controls inside the mobile journey's
+          34dvh Shape reveal. 44px touch floor below `sm`. */}
+      <div className="absolute bottom-3 right-3 z-(--z-index-scene) flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm lg:bottom-6 lg:right-5">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -1236,8 +1236,8 @@ export default function ParcelScene({
         })}
       </div>
 
-      {/* Mobile-only gesture hint — also docked above the sheet's peek strip. */}
-      <div className="pointer-events-none absolute bottom-44 left-4 z-(--z-index-scene) rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
+      {/* Mobile gesture hint — sits above the view toggle in the thumb zone. */}
+      <div className="pointer-events-none absolute bottom-16 left-3 z-(--z-index-scene) max-w-[min(16rem,calc(100%-5.5rem))] rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
         Drag ADU to move · Pinch to zoom
       </div>
 

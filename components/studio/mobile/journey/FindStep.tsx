@@ -39,7 +39,11 @@ export default function FindStep({
   onReveal,
 }: FindStepProps) {
   return (
-    <section aria-label="Find your property" className="flex min-h-full flex-col px-5 pb-8 pt-7">
+    <section
+      aria-label="Find your property"
+      className="flex min-h-full flex-col px-5 pt-7"
+      style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <p className="lf-kicker text-lf-clay">Step 1 · Find</p>
       <h1 className="mt-2 font-display text-[31px] font-semibold leading-[1.08] text-lf-espresso">
         Start with your address.
