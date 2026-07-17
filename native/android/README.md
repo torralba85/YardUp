@@ -23,9 +23,10 @@ Suggested values:
 
 ## Digital Asset Links
 
-`public/.well-known/assetlinks.json` ships with a fingerprint placeholder until the
-human Play App Signing SHA-256 is supplied. Replace
-`REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT` before production release.
+`public/.well-known/assetlinks.json` includes the **upload key** SHA-256 so
+locally signed TWAs can verify. After Play App Signing enrollment, **add** the
+Play Console signing certificate fingerprint as a second array entry (keep the
+upload key). Redeploy Hosting before relying on Digital Asset Links.
 
 ## Play Billing
 

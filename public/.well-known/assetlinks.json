@@ -4,7 +4,9 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.lotfoundry.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT"]
+      "sha256_cert_fingerprints": [
+        "E7:B3:6E:54:38:69:D5:AF:1D:D1:2B:3B:A6:8B:58:E4:29:D4:9E:AB:57:6F:38:69:50:A5:40:3B:DD:92:F6:90"
+      ]
     }
   }
 ]

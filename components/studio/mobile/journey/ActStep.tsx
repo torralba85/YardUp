@@ -41,7 +41,11 @@ export default function ActStep({
   onConnectBuilders,
 }: ActStepProps) {
   return (
-    <section aria-label="Your study is complete" className="flex min-h-full flex-col pb-8">
+    <section
+      aria-label="Your study is complete"
+      className="flex min-h-full flex-col"
+      style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <div className="border-b border-lf-hairline bg-lf-sand-2 px-5 pb-6 pt-7">
         <p className="lf-kicker flex items-center gap-1.5 text-lf-forest">
           <Sparkles size={13} aria-hidden="true" />

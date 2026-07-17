@@ -53,8 +53,14 @@ export default function ShapeStep({
   onContinue,
 }: ShapeStepProps) {
   return (
-    <section aria-label="Shape your ADU" className="flex min-h-full flex-col pb-8">
-      <div className="relative h-[34dvh] min-h-[200px] shrink-0 overflow-hidden bg-lf-espresso">
+    <section
+      aria-label="Shape your ADU"
+      className="flex min-h-full flex-col"
+      style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+    >
+      {/* Taller scene band so massing, gesture hint, and view chrome all fit
+          without clipping on modern phones; still leaves room for controls. */}
+      <div className="relative h-[38dvh] min-h-[220px] max-h-[320px] shrink-0 overflow-hidden bg-lf-espresso">
         {scene}
       </div>
 

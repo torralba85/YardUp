@@ -31,7 +31,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
         aria-label="Back to previous step"
         onClick={onBack}
         disabled={!onBack}
-        className={`flex h-11 w-9 shrink-0 items-center justify-center rounded-full text-lf-muted transition hover:text-lf-espresso ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lf-muted transition hover:text-lf-espresso ${
           onBack ? "" : "invisible"
         }`}
       >
@@ -79,7 +79,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
         })}
       </ol>
       {/* Spacer balancing the back chevron so the dots stay centered. */}
-      <span aria-hidden className="w-9 shrink-0" />
+      <span aria-hidden className="w-11 shrink-0" />
     </nav>
   );
 }
