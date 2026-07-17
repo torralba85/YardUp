@@ -77,6 +77,7 @@ export default function FeasibilityVerdictBand({
             tone="onDark"
             className="mt-1"
           />
+          <p className="mt-1 font-mono text-[10px] text-lf-taupe">{result.rentBasis}</p>
         </div>
 
         <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />

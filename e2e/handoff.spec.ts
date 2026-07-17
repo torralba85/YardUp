@@ -36,7 +36,7 @@ test.describe("landing → studio handoff", () => {
     expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });
 
-  test("mobile: the first-run wizard yields to the handed-off address", async ({
+  test("mobile: the journey absorbs the handed-off address", async ({
     page,
     viewport,
   }) => {
@@ -46,19 +46,19 @@ test.describe("landing → studio handoff", () => {
     await page.getByRole("button", { name: /run feasibility/i }).click();
 
     await expect(page).toHaveURL(/\/studio/);
-    // The studio sheet renders first… (15s: the dawn arrival plate holds the
-    // screen until Firebase auth resolves, same budget as the other arrivals)
-    await expect(page.getByTestId("studio-sheet")).toBeVisible({ timeout: 15000 });
-    // …and the wizard never interrupts an arrival that brought an address.
-    await expect(page.getByText(/could your backyard pay you rent/i)).not.toBeVisible();
-    await expect(page.getByText("Rent potential / mo")).toBeVisible();
-    // The handed-off search ran and failed: the parcel error surfaces as a
-    // role="alert" banner (PeekMetrics and the constraints panel both carry
-    // one). Filter out Next.js's empty route-announcer alert, then take the
-    // first since several error surfaces may show the message at once.
+    // The five-reveal journey renders (15s: the dawn arrival plate holds the
+    // screen until Firebase auth resolves, same budget as the other arrivals).
+    await expect(page.getByTestId("mobile-journey")).toBeVisible({ timeout: 15000 });
+    // The handed-off search ran and failed for this unresolvable address, so
+    // the journey stays on the Find reveal with its error banner — the
+    // visitor can retry or pick a demo lot. Filter out Next.js's empty
+    // route-announcer alert.
     await expect(
       page.getByRole("alert").filter({ hasText: /\S/ }).first(),
     ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole("heading", { name: /start with your address/i }),
+    ).toBeVisible();
     expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });
 });

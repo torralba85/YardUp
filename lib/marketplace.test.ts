@@ -132,6 +132,14 @@ describe("marketplace domain helpers", () => {
       annualNoi: 16605,
       paybackYears: 15.7,
       warnings: [],
+      rentBasis: "Curated demo estimate",
+      market: {
+        source: "preset" as const,
+        area: "Curated demo estimate",
+        confidence: "medium" as const,
+        verified: false,
+      },
+      operatingExpenseRatio: 0.325,
     };
 
     const snapshot = buildConnectionSnapshot({
@@ -165,6 +173,14 @@ describe("lead preview redaction (1A paywall split)", () => {
     annualNoi: 16605,
     paybackYears: 15.7,
     warnings: [],
+    rentBasis: "Curated demo estimate",
+    market: {
+      source: "preset" as const,
+      area: "Curated demo estimate",
+      confidence: "medium" as const,
+      verified: false,
+    },
+    operatingExpenseRatio: 0.325,
   };
 
   const snapshot = buildConnectionSnapshot({
@@ -200,6 +216,8 @@ describe("lead preview redaction (1A paywall split)", () => {
     expect(preview.buildBandLow).toBe(200000);
     expect(preview.buildBandHigh).toBe(275000);
     expect(preview.rentBand).toBe(2000);
+    // The rent citation rides along so the builder card matches the studio.
+    expect(preview.rentBasis).toBe("Curated demo estimate");
     expect(preview.previewSerial).toBe("LF-abc123");
 
     const serialized = JSON.stringify(preview);

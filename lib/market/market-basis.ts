@@ -1,4 +1,4 @@
-import type { BedroomClass, MarketSource } from "./market-types";
+import type { BedroomClass, MarketProvenance, MarketSource } from "./market-types";
 
 const BEDROOM_LABEL: Record<BedroomClass, string> = {
   studio: "studio",
@@ -31,4 +31,30 @@ export function marketBasisLabel(input: {
     default:
       return "Rough lot-size estimate";
   }
+}
+
+const CONFIDENCE_LABEL: Record<MarketProvenance["confidence"], string> = {
+  high: "High confidence",
+  medium: "Medium confidence",
+  low: "Low confidence",
+};
+
+/**
+ * Full provenance citation for the financial figures — source + area, data
+ * vintage, and confidence — shown beside metrics and recorded into exports.
+ */
+export function marketProvenanceLine(market: MarketProvenance): string {
+  if (market.source === "preset") {
+    return "Curated demo estimate · Not a market source";
+  }
+  if (market.source === "heuristic") {
+    return "Rough lot-size estimate · Not a market source";
+  }
+  const parts = [
+    market.source === "live" ? `Live comps · ${market.area}` : `HUD FMR · ${market.area}`,
+  ];
+  if (market.asOf) parts.push(market.asOf);
+  if (market.comparableCount) parts.push(`${market.comparableCount} comps`);
+  parts.push(CONFIDENCE_LABEL[market.confidence]);
+  return parts.join(" · ");
 }

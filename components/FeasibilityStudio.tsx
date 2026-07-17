@@ -36,7 +36,7 @@ import {
   deleteSavedScenario,
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
-import { consumeAddressQuery, peekAddressQuery } from "@/lib/address-handoff";
+import { consumeAddressQuery } from "@/lib/address-handoff";
 import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
@@ -54,11 +54,19 @@ import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import type { InspirationItem } from "@/lib/inspiration-data";
 import { configForFootprint } from "@/lib/feasibility";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { markWizardSeen, shouldShowWizard } from "@/lib/wizard-state";
-import MobileStudio from "./studio/mobile/MobileStudio";
 import MobileHeader from "./studio/mobile/MobileHeader";
-import PeekMetrics from "./studio/mobile/PeekMetrics";
-import WizardFlow from "./studio/mobile/WizardFlow";
+import MobileJourney from "./studio/mobile/journey/MobileJourney";
+import FindStep from "./studio/mobile/journey/FindStep";
+import EarnStep from "./studio/mobile/journey/EarnStep";
+import ShapeStep from "./studio/mobile/journey/ShapeStep";
+import CheckStep from "./studio/mobile/journey/CheckStep";
+import ActStep from "./studio/mobile/journey/ActStep";
+import FineTuneDrawer from "./studio/mobile/journey/FineTuneDrawer";
+import {
+  deriveJourneySteps,
+  prevJourneyStep,
+  type MobileJourneyStep,
+} from "@/lib/mobile-journey";
 // ── Redesign: guided-spine studio ───────────────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
@@ -269,48 +277,31 @@ function FeasibilityStudioInner() {
     projectBriefState?.key === projectBriefKey ? projectBriefState.error : null;
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
-  const [wizardOpen, setWizardOpen] = useState(false);
   // The handed-off address once consumed from session storage. `undefined`
   // means "not consumed yet". A ref (not module state) so it survives Strict
   // Mode's dev-only remount — the second effects pass finds session storage
-  // already emptied by the first, and without this memo the wizard gate below
-  // would wrongly conclude no handoff is pending — while still resetting on a
-  // real refresh or back-navigation, which must not re-run the search.
+  // already emptied by the first — while still resetting on a real refresh or
+  // back-navigation, which must not re-run the search.
   const incomingAddressRef = useRef<string | null | undefined>(undefined);
 
-  // First-run wizard decision — mount-only, before the URL-write effect adds
-  // scenario params, mirroring the existing post-hydration URL sync pattern.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(min-width: 1024px)").matches) return; // desktop never sees the wizard
-    const hasUrlScenario = window.location.search.length > 1;
-    setWizardOpen(
-      shouldShowWizard({
-        hasUrlScenario,
-        // A landing handoff is about to run its own search — the wizard must
-        // yield or it would ask for the address the visitor already typed.
-        // Peek, don't consume: the hydration effect below still needs it. On a
-        // Strict Mode re-run storage is already consumed, so also honor the
-        // ref the hydration effect filled on the first pass.
-        hasPendingAddress:
-          peekAddressQuery() !== null || incomingAddressRef.current != null,
-        // The signed-in blank-slate gate hands off an already-resolved live
-        // parcel before this component mounts — the wizard must yield to it
-        // too, or it re-asks for an address that's already been found (and a
-        // Skip tap would reset the resolved parcel back to a demo lot).
-        hasResolvedParcel: parcelMode === "live",
-        storage: window.localStorage,
-      }),
-    );
-    // Mount-only by design (see comment above); parcelMode is read once to
-    // reflect whatever ParcelProvider initialized from, not on every change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function handleWizardComplete(nextConfig?: ADUConfig) {
-    if (nextConfig) setConfig(nextConfig);
-    markWizardSeen(window.localStorage);
-    setWizardOpen(false);
+  // ── Mobile five-reveal journey (find → earn → shape → check → act) ──────
+  // Separate from the desktop StudioStep spine by design (issue #130). An
+  // already-resolved parcel (signed-in handoff) starts at the Earn reveal.
+  const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() =>
+    parcelMode !== "preset" ? "earn" : "find",
+  );
+  // A demo lot counts as the find decision only once the user commits to it.
+  const [demoCommitted, setDemoCommitted] = useState(false);
+  const [fineTuneOpen, setFineTuneOpen] = useState(false);
+  // Render-phase adjustment (not an effect): the money reveal must appear
+  // immediately after address resolution, so a parcel-mode change while on
+  // Find advances the journey to Earn in the same pass.
+  const [prevParcelMode, setPrevParcelMode] = useState(parcelMode);
+  if (parcelMode !== prevParcelMode) {
+    setPrevParcelMode(parcelMode);
+    if (parcelMode !== "preset" && journeyStep === "find") {
+      setJourneyStep("earn");
+    }
   }
 
   // Deliberate post-hydration sync from URL: server renders defaults so the
@@ -379,6 +370,9 @@ function FeasibilityStudioInner() {
     setReportOpen(false);
     setBuilderLeadOpen(false);
     setActiveStep("lot");
+    setJourneyStep("find");
+    setDemoCommitted(false);
+    setFineTuneOpen(false);
     setReportAutoFocus(false);
     setProjectBriefState(null);
   }
@@ -604,135 +598,69 @@ function FeasibilityStudioInner() {
     );
 
   if (!isDesktop) {
-    // The wizard replaces the studio rather than overlaying it: the studio's
-    // always-open vaul sheet is a modal Radix dialog that would aria-hide and
-    // focus-trap anything rendered outside it (including the wizard).
-    if (wizardOpen) {
-      return <WizardFlow onComplete={handleWizardComplete} />;
-    }
-    const mobileSteps = deriveStepStates(activeStep, { hasParcel: true });
-    const mobileStepLabel = STUDIO_STEPS.find((step) => step.id === activeStep)?.label ?? "Studio";
+    // The five-reveal journey (issue #130): one decision and one payoff per
+    // screen, with the advanced inspector behind an optional fine-tune drawer.
+    const found = parcelMode !== "preset" || demoCommitted;
+    const journeySteps = deriveJourneySteps(journeyStep, { found });
+    const previousStep = prevJourneyStep(journeyStep);
     const mobileParcelName = `${activeParcel.address}, ${activeParcel.city}`;
-    // Step-scoped sheet content: the full sheet shows only the active step's
-    // panels rather than stacking every panel at once (the old mobile overload).
-    let mobileControls: ReactNode;
-    let mobileSections: ReactNode = null;
-    if (activeStep === "lot") {
-      mobileControls = (
-        <div className="pt-1">
-          <p className="lf-kicker pb-2 text-lf-clay">Your lot</p>
-          <AddressSearch
-            onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
-            onSubmitText={(query) => searchByAddress(query)}
-            autoFocusSignal={addressFocusSignal}
-          />
-          <p className="mt-2 text-xs text-lf-muted">
-            Search your address to pull parcel, zoning, and local rents.
-          </p>
-          <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
-            Or use a demo lot
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">
-            {parcelPresets.map((preset) => {
-              const selected = parcelMode === "preset" && parcelId === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => handleMobilePresetSelect(preset.id)}
-                  aria-pressed={selected}
-                  className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                    selected
-                      ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
-                      : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe hover:bg-lf-sand-2"
-                  }`}
-                >
-                  {preset.city.split(",")[0]}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      );
-    } else if (activeStep === "feasibility") {
-      mobileControls = (
-        <ConstraintsPanel
-          parcel={activeParcel}
-          result={result}
-          config={config}
-          assumptions={assumptions}
-          onAssumptionsChange={setAssumptions}
-          onViewCertificate={() => setActiveStep("certificate")}
-          projectBriefResponse={projectBriefResponse}
-          projectBriefLoading={projectBriefLoading}
-          projectBriefError={projectBriefError}
-          onGenerateProjectBrief={handleGenerateProjectBrief}
-          addressFocusSignal={addressFocusSignal}
+
+    let stepContent: ReactNode;
+    if (journeyStep === "find") {
+      stepContent = (
+        <FindStep
+          onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
+          onSubmitText={(query) => searchByAddress(query)}
+          parcelLoading={parcelLoading}
+          parcelError={parcelError}
+          selectedPresetId={parcelMode === "preset" ? parcelId : null}
+          onPresetSelect={handleMobilePresetSelect}
+          onReveal={() => {
+            setDemoCommitted(true);
+            setJourneyStep("earn");
+          }}
         />
       );
-      mobileSections = (
-        <>
-          <PermitGuidePanel address={mobileParcelName} />
-          <MetricsSummary result={result} />
-        </>
-      );
-    } else if (activeStep === "design") {
-      mobileControls = (
-        <FeasibilityInspector
-          parcelId={parcelId}
-          config={config}
-          assumptions={assumptions}
-          result={result}
-          onParcelChange={setParcelId}
-          onConfigChange={setConfig}
-          onAssumptionsChange={setAssumptions}
-          onReset={resetScenario}
-          onGenerateReport={() => setActiveStep("certificate")}
-          onSaveScenario={handleSaveScenario}
-          savingScenario={savingScenario}
-          saveNotice={saveNotice}
-        />
-      );
-      mobileSections = (
-        <>
-          <InspirationGalleryPanel
-            parcel={activeParcel}
-            config={config}
-            generatedConcepts={generatedConcepts}
-            onGenerationComplete={handleGenerationComplete}
-            onViewComparison={handleViewComparison}
-            styleMatchKey={styleMatchKey}
-            onApply={(item) => {
-              const baseConfig = configForFootprint(item.sqft, config);
-              setConfig({
-                ...baseConfig,
-                width: item.width,
-                length: item.length,
-                roof: item.roof,
-                finish: item.finish,
-              });
-            }}
-          />
-          <MetricsSummary result={result} />
-        </>
-      );
-    } else if (activeStep === "certificate") {
-      mobileControls = (
-        <CertificatePanel
-          parcel={activeParcel}
-          result={result}
+    } else if (journeyStep === "earn") {
+      stepContent = (
+        <EarnStep
           parcelName={mobileParcelName}
-          onOpenCertificate={handleGenerateReport}
-          projectBrief={projectBrief}
-          projectBriefLoading={projectBriefLoading}
-          projectBriefError={projectBriefError}
-          onGenerateProjectBrief={handleGenerateProjectBrief}
+          result={result}
+          estimated={parcelMode !== "live"}
+          onContinue={() => setJourneyStep("shape")}
+        />
+      );
+    } else if (journeyStep === "shape") {
+      stepContent = (
+        <ShapeStep
+          config={config}
+          onConfigChange={setConfig}
+          result={result}
+          scene={
+            <SceneViewport
+              sceneNode={sceneNode}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          }
+          onFineTune={() => setFineTuneOpen(true)}
+          onContinue={() => setJourneyStep("check")}
+        />
+      );
+    } else if (journeyStep === "check") {
+      stepContent = (
+        <CheckStep
+          parcel={activeParcel}
+          result={result}
+          config={config}
+          onFineTune={() => setFineTuneOpen(true)}
+          onContinue={() => setJourneyStep("act")}
         />
       );
     } else {
-      // The connect form must render inside the sheet: the mobile shell is a
-      // fixed h-dvh viewport, so a panel mounted after it is unreachable.
-      mobileControls = builderLeadOpen ? (
+      // The connect form takes over the Act screen as a focused destination —
+      // never content appended below the journey.
+      stepContent = builderLeadOpen ? (
         <BuilderLeadPanel
           open
           userDefaults={{
@@ -748,16 +676,33 @@ function FeasibilityStudioInner() {
           onSubmit={handleBuilderLeadSubmit}
         />
       ) : (
-        <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
+        <ActStep
+          parcelName={mobileParcelName}
+          certificate={
+            <CertificatePanel
+              parcel={activeParcel}
+              result={result}
+              parcelName={mobileParcelName}
+              onOpenCertificate={handleGenerateReport}
+              projectBrief={projectBrief}
+              projectBriefLoading={projectBriefLoading}
+              projectBriefError={projectBriefError}
+              onGenerateProjectBrief={handleGenerateProjectBrief}
+            />
+          }
+          onSaveScenario={() => void handleSaveScenario()}
+          savingScenario={savingScenario}
+          saveNotice={saveNotice}
+          onShare={() => void handleShareLink()}
+          shareNotice={shareNotice}
+          onConnectBuilders={() => setBuilderLeadOpen(true)}
+        />
       );
     }
+
     return (
       <>
-        <MobileStudio
-          steps={mobileSteps}
-          onStepSelect={(id) => handleStepSelect(id as StudioStep)}
-          activeStepLabel={mobileStepLabel}
-          activeStepId={activeStep}
+        <MobileJourney
           header={
             <MobileHeader
               address={activeParcel.address}
@@ -765,32 +710,34 @@ function FeasibilityStudioInner() {
               onReset={resetScenario}
             />
           }
-          scene={
-            <SceneViewport
-              sceneNode={sceneNode}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-          }
-          peek={
-            <PeekMetrics
-              result={result}
-              config={config}
-              estimated={parcelMode === "estimated"}
-              parcelError={parcelError}
-              onRetry={
-                "lat" in activeParcel
-                  ? () => void searchParcel(activeParcel.lat, activeParcel.lng, activeParcel.address)
-                  : undefined
-              }
-            />
-          }
-          controls={mobileControls}
-          sections={mobileSections}
-        />
+          steps={journeySteps}
+          onBack={previousStep ? () => setJourneyStep(previousStep) : undefined}
+          onStepSelect={setJourneyStep}
+        >
+          {stepContent}
+        </MobileJourney>
+        <FineTuneDrawer open={fineTuneOpen} onClose={() => setFineTuneOpen(false)}>
+          <FeasibilityInspector
+            parcelId={parcelId}
+            config={config}
+            assumptions={assumptions}
+            result={result}
+            onParcelChange={setParcelId}
+            onConfigChange={setConfig}
+            onAssumptionsChange={setAssumptions}
+            onReset={resetScenario}
+            onGenerateReport={() => {
+              setFineTuneOpen(false);
+              setJourneyStep("act");
+            }}
+            onSaveScenario={handleSaveScenario}
+            savingScenario={savingScenario}
+            saveNotice={saveNotice}
+          />
+        </FineTuneDrawer>
         {reportOpen && (
           <ReportPreview
-            parcelName={`${activeParcel.address}, ${activeParcel.city}`}
+            parcelName={mobileParcelName}
             result={result}
             projectBrief={projectBrief}
             projectBriefLoading={projectBriefLoading}
@@ -800,10 +747,10 @@ function FeasibilityStudioInner() {
             onExportCsv={exportCsv}
             onShare={handleShareLink}
             onConnectBuilders={() => {
-              // The form lives on the Builders step's sheet — close the report
+              // The connect form lives on the Act screen — close the report
               // and land there with the form open.
               setReportOpen(false);
-              setActiveStep("builders");
+              setJourneyStep("act");
               setBuilderLeadOpen(true);
             }}
             shareNotice={shareNotice}

@@ -1,0 +1,60 @@
+{
+  "asOf": "Regional operating-expense factors (seed, 2026)",
+  "national": {
+    "ratio": 0.325,
+    "breakdown": {
+      "vacancy": 0.05,
+      "management": 0.08,
+      "maintenance": 0.07,
+      "insurance": 0.04,
+      "utilities": 0.03,
+      "propertyTax": 0.055
+    }
+  },
+  "states": {
+    "CA": {
+      "ratio": 0.305,
+      "breakdown": {
+        "vacancy": 0.04,
+        "management": 0.08,
+        "maintenance": 0.07,
+        "insurance": 0.055,
+        "utilities": 0.03,
+        "propertyTax": 0.03
+      }
+    },
+    "TX": {
+      "ratio": 0.365,
+      "breakdown": {
+        "vacancy": 0.05,
+        "management": 0.08,
+        "maintenance": 0.07,
+        "insurance": 0.05,
+        "utilities": 0.03,
+        "propertyTax": 0.085
+      }
+    },
+    "WA": {
+      "ratio": 0.315,
+      "breakdown": {
+        "vacancy": 0.05,
+        "management": 0.08,
+        "maintenance": 0.07,
+        "insurance": 0.04,
+        "utilities": 0.03,
+        "propertyTax": 0.045
+      }
+    },
+    "OR": {
+      "ratio": 0.32,
+      "breakdown": {
+        "vacancy": 0.05,
+        "management": 0.08,
+        "maintenance": 0.07,
+        "insurance": 0.04,
+        "utilities": 0.03,
+        "propertyTax": 0.05
+      }
+    }
+  }
+}

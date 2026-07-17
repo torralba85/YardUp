@@ -122,6 +122,8 @@ export interface LeadPreview {
   buildBandHigh: number;
   /** Monthly rent bucketed to $250 bands. */
   rentBand: number;
+  /** Citation for the rent figure — preview-safe, no PII. Optional for back-compat. */
+  rentBasis?: string;
   paybackYears: number;
   zoningStatus: FeasibilityResult["zoningStatus"];
   /** Why this lead matched the builder — service-area / config reasons. */

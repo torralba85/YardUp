@@ -3,7 +3,6 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
-import { WIZARD_SEEN_KEY } from "@/lib/wizard-state";
 import { clearInitialParcel } from "@/lib/parcel-handoff";
 import type { ReactNode } from "react";
 
@@ -236,7 +235,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByText("Map the approval timeline")).not.toBeInTheDocument();
   });
 
-  it("scopes mobile sheet content to the selected spine step", async () => {
+  it("walks the mobile five-reveal journey from find to act", async () => {
     vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("prefers-reduced-motion"),
       media: query,
@@ -247,19 +246,65 @@ describe("FeasibilityStudio (guided spine)", () => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     } as unknown as MediaQueryList)));
-    window.localStorage.setItem(WIZARD_SEEN_KEY, "1");
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole("navigation", { name: "Studio progress", hidden: true })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Inspiration Gallery" })).not.toBeInTheDocument();
+    // Reveal 1 · Find — the journey shell replaces the old sheet composition.
+    expect(screen.getByTestId("mobile-journey")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Journey progress" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Design/, hidden: true }));
+    // Reveal 2 · Earn — the money payoff with a confidence teaser.
+    expect(
+      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("earn-confidence")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Shape your ADU/i }));
 
-    expect(await screen.findByRole("heading", { name: "Feasibility Studio" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Inspiration Gallery" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /Seattle ADU Starter Guide/i })).not.toBeInTheDocument();
+    // Reveal 3 · Shape — broad size/style choices only, one primary CTA.
+    const sizeGroup = await screen.findByRole("radiogroup", { name: "ADU size" });
+    fireEvent.click(within(sizeGroup).getByRole("radio", { name: /2 Bedroom/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Check feasibility/i }));
+
+    // Reveal 4 · Check — plain-language verdict before any permit detail.
+    expect(await screen.findByText(/Verify before permit/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /See your certificate/i }));
+
+    // Reveal 5 · Act — the completion artifact plus the two next actions.
+    expect(
+      await screen.findByRole("heading", { name: /Your feasibility study is ready/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Connect with matched builders/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Save scenario/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Share link/i })).toBeInTheDocument();
+  });
+
+  it("opens the fine-tune drawer from the Shape reveal", async () => {
+    vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("prefers-reduced-motion"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as unknown as MediaQueryList)));
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Fine-tune dimensions & assumptions/i }),
+    );
+
+    const drawer = await screen.findByTestId("fine-tune-drawer");
+    // The advanced inspector is progressive disclosure, never the default path.
+    expect(
+      within(drawer).getByRole("heading", { name: "Feasibility Studio", hidden: true }),
+    ).toBeInTheDocument();
   });
 
   it("exposes massing controls on the Design step", async () => {
@@ -358,9 +403,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByRole("button", { name: /Connect with builders/i })).toBeInTheDocument();
   });
 
-  it("opens the builder connect form inside the mobile sheet", async () => {
-    // Non-desktop matchMedia: the studio renders the mobile shell, whose
-    // fixed-viewport layout would hide any panel mounted outside the sheet.
+  it("opens the builder connect form as a focused Act destination on mobile", async () => {
     vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("prefers-reduced-motion"),
       media: query,
@@ -371,21 +414,23 @@ describe("FeasibilityStudio (guided spine)", () => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     } as unknown as MediaQueryList)));
-    window.localStorage.setItem(WIZARD_SEEN_KEY, "1");
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    fireEvent.click(screen.getByRole("button", { name: /Builders/, hidden: true }));
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See your certificate/i }));
     fireEvent.click(
-      await screen.findByRole("button", { name: /Connect with builders/i, hidden: true }),
+      await screen.findByRole("button", { name: /Connect with matched builders/i }),
     );
 
-    const sheet = screen.getByTestId("studio-sheet");
     expect(
-      within(sheet).getByRole("button", {
-        name: /Close builder connection form/i,
-        hidden: true,
-      }),
+      await screen.findByRole("button", { name: /Close builder connection form/i }),
     ).toBeInTheDocument();
+    // The form replaces the Act content — a focused destination, not an append.
+    expect(
+      screen.queryByRole("heading", { name: /Your feasibility study is ready/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("marks the lead money figures with the forest money accent", () => {

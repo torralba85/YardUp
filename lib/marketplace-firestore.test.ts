@@ -88,6 +88,14 @@ const snapshot = buildConnectionSnapshot({
     annualNoi: 16605,
     paybackYears: 15.7,
     warnings: [],
+    rentBasis: "Curated demo estimate",
+    market: {
+      source: "preset" as const,
+      area: "Curated demo estimate",
+      confidence: "medium" as const,
+      verified: false,
+    },
+    operatingExpenseRatio: 0.325,
   },
 });
 

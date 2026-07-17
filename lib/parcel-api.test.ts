@@ -16,6 +16,8 @@ const mockParcel: LiveParcelData = {
   lat: 47.65,
   lng: -122.31,
   source: "regrid",
+  state: "WA",
+  zip: "98105",
 };
 
 describe("fetchParcel", () => {

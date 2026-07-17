@@ -1,73 +1,98 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("mobile studio", () => {
+test.describe("mobile studio journey", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 1024, "mobile-only suite");
 
-  test("first-run wizard skips into the bottom-sheet studio", async ({ page }) => {
+  test("golden path: five reveals from find to act", async ({ page }) => {
     await page.goto("/studio");
 
-    await expect(page.getByText(/could your backyard pay you rent/i)).toBeVisible();
+    // Reveal 1 · Find — the journey replaces the old sheet composition.
+    await expect(page.getByTestId("mobile-journey")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Journey progress" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /start with your address/i }),
+    ).toBeVisible();
+    // A demo lot is preselected; the single primary action reveals the payoff.
+    await page.getByRole("button", { name: /reveal my backyard/i }).click();
 
-    await page.getByRole("button", { name: /skip/i }).click();
+    // Reveal 2 · Earn — the money figure appears immediately with a
+    // confidence teaser citing the market basis.
+    await expect(
+      page.getByRole("heading", { name: /your backyard could earn/i }),
+    ).toBeVisible();
+    await expect(page.getByTestId("earn-confidence")).toBeVisible();
+    await page.getByRole("button", { name: /shape your adu/i }).click();
 
-    await expect(page.getByTestId("studio-sheet")).toBeVisible();
-    await expect(page.locator('nav[aria-label="Studio progress"]')).toBeVisible();
-    await expect(page.getByText("Rent potential / mo")).toBeVisible();
-    // Coach marks appear once on a fresh profile. The inspector renders its
-    // own role="note" hint, so filter to the coach mark.
-    await expect(page.getByRole("note").filter({ hasText: /drag your adu/i })).toBeVisible();
-    await page.getByRole("button", { name: /got it/i }).click();
+    // Reveal 3 · Shape — broad size/style directions only by default.
+    await page.getByRole("radio", { name: /2 bedroom/i }).click();
+    await page.getByRole("radio", { name: /stucco/i }).click();
+    await page.getByRole("button", { name: /check feasibility/i }).click();
+
+    // Reveal 4 · Check — the plain-language verdict leads, then the
+    // verification items follow it.
+    await expect(page.getByText(/verify before permit/i)).toBeVisible();
+    await page.getByRole("button", { name: /see your certificate/i }).click();
+
+    // Reveal 5 · Act — completion artifact plus the two next actions.
+    await expect(
+      page.getByRole("heading", { name: /your feasibility study is ready/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /connect with matched builders/i }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /save scenario/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /share link/i })).toBeVisible();
   });
 
-  test("design step controls update metrics from the mobile spine", async ({ page }) => {
-    // This flow drives a vaul sheet snap plus an accordion before asserting; it
-    // can run close to the default 30s budget on slower CI runners.
-    test.slow();
+  test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
     await page.goto("/studio");
-    await page.getByRole("button", { name: /skip/i }).click();
-    const note = page.getByRole("note").filter({ hasText: /drag your adu/i });
-    if (await note.isVisible()) {
-      await page.getByRole("button", { name: /got it/i }).click();
-    }
+    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await page.getByRole("button", { name: /shape your adu/i }).click();
 
-    // Monthly rent is scenario-driven and ignores footprint, so watch the
-    // build-cost range; it scales with ADU size.
-    const buildRange = page.getByTestId("studio-sheet").getByText(/\$\d+K-\$\d+K/).first();
-    const buildBefore = await buildRange.textContent();
+    await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
+    const drawer = page.getByTestId("fine-tune-drawer");
+    await expect(drawer).toBeVisible();
+    await expect(
+      drawer.getByRole("heading", { name: /feasibility studio/i }),
+    ).toBeVisible();
 
-    // P2 scopes mobile sheet content by the guided spine. Move to Design before
-    // driving the inspector; Feasibility no longer dumps every panel at once.
-    await page.locator('nav[aria-label="Studio progress"] button').filter({ hasText: "Design" }).click();
-    await page.getByRole("button", { name: /expand panel/i }).click();
-
-    // The inspector is an accordion: open step 2 to reach the footprint presets.
-    await page.getByRole("button", { name: "2 Design Your ADU" }).click();
-    await page.getByRole("button", { name: /800 sf/i }).click();
-
-    await expect(page.getByTestId("studio-sheet").getByText(/800 ft/).first()).toBeVisible();
-    await expect(buildRange).not.toHaveText(buildBefore ?? "");
+    await page.getByRole("button", { name: /close fine-tune panel/i }).click();
+    await expect(drawer).not.toBeVisible();
+    // Closing the drawer lands back on the Shape reveal's default path.
+    await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();
   });
 
-  test("wizard does not reappear after being skipped", async ({ page }) => {
+  test("the rail travels back to completed reveals only", async ({ page }) => {
     await page.goto("/studio");
-    await page.getByRole("button", { name: /skip/i }).click();
-    await expect(page.getByTestId("studio-sheet")).toBeVisible();
+    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await expect(
+      page.getByRole("heading", { name: /your backyard could earn/i }),
+    ).toBeVisible();
 
-    await page.reload();
-    await expect(page.getByTestId("studio-sheet")).toBeVisible();
-    await expect(page.getByText(/could your backyard pay you rent/i)).not.toBeVisible();
+    // Back chevron returns to Find.
+    await page.getByRole("button", { name: /back to previous step/i }).click();
+    await expect(
+      page.getByRole("heading", { name: /start with your address/i }),
+    ).toBeVisible();
+
+    // Forward travel happens only through the step's primary action — the
+    // rail's upcoming steps are inert.
+    await expect(
+      page.getByRole("navigation", { name: "Journey progress" }).getByRole("button", {
+        name: /check/i,
+      }),
+    ).toBeDisabled();
   });
 });
 
 test.describe("desktop studio regression", () => {
   test.skip(({ viewport }) => !viewport || viewport.width < 1024, "desktop-only suite");
 
-  test("desktop shows the guided spine and never the mobile wizard", async ({ page }) => {
+  test("desktop shows the guided spine and never the mobile journey", async ({ page }) => {
     await page.goto("/studio");
 
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Rules & Fit" })).toBeVisible();
-    await expect(page.getByText(/could your backyard pay you rent/i)).not.toBeVisible();
-    await expect(page.getByTestId("studio-sheet")).not.toBeVisible();
+    await expect(page.getByTestId("mobile-journey")).not.toBeVisible();
   });
 });

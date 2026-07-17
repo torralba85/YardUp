@@ -1,5 +1,6 @@
-import { BarChart3, CheckCircle2, Home, Layers3, Ruler, SlidersHorizontal } from "lucide-react";
+import { BarChart3, CheckCircle2, Home, Layers3, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { marketProvenanceLine } from "@/lib/market/market-basis";
 import type { FeasibilityResult } from "./types";
 import { useCountUp } from "./use-count-up";
 
@@ -26,7 +27,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       label: "Monthly Rent",
       value: result.monthlyRent,
       format: formatCurrency,
-      detail: "Local demo estimate",
+      detail: result.rentBasis,
     },
     {
       key: "annual-noi",
@@ -34,7 +35,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       label: "Annual NOI",
       value: result.annualNoi,
       format: formatCurrency,
-      detail: "After expenses & vacancy",
+      detail: `After ${formatPercent(result.operatingExpenseRatio)} operating expenses`,
     },
   ] as const;
 
@@ -82,29 +83,57 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
     },
   ] as const;
 
+  // Sources that never carry a verified-data warning: presets and heuristics
+  // are demo territory; live/HUD tiers speak through `verified` instead.
+  const unverifiedMarket =
+    !result.market.verified &&
+    result.market.source !== "preset" &&
+    result.market.source !== "heuristic";
+
   return (
     <section
       id="summary"
       aria-label="Feasibility metrics"
-      className="lf-stagger grid grid-cols-2 gap-px border-t border-lf-hairline bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6"
+      className="border-t border-lf-hairline"
     >
-      {leads.map(({ key, ...metric }) => (
-        <LeadCell key={key} {...metric} />
-      ))}
-      {support.map(({ key, ...metric }) => {
-        const Icon = metric.icon;
-        return (
-          <div key={key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
-            <CellLabel icon={Icon} label={metric.label} />
-            <div className={`mt-2 tabular-nums ${metric.valueClass}`}>{metric.value}</div>
-            <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-mono" : ""}`}>
-              {metric.detail}
+      <div className="lf-stagger grid grid-cols-2 gap-px bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6">
+        {leads.map(({ key, ...metric }) => (
+          <LeadCell key={key} {...metric} />
+        ))}
+        {support.map(({ key, ...metric }) => {
+          const Icon = metric.icon;
+          return (
+            <div key={key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+              <CellLabel icon={Icon} label={metric.label} />
+              <div className={`mt-2 tabular-nums ${metric.valueClass}`}>{metric.value}</div>
+              <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-mono" : ""}`}>
+                {metric.detail}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      {/* Provenance ledger line: where the money figures come from, how fresh
+          they are, and whether they trace to a verified local source. */}
+      <div
+        data-testid="market-provenance"
+        className={`flex items-start gap-1.5 border-t border-lf-hairline px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] sm:px-5 lg:px-6 ${
+          unverifiedMarket ? "bg-lf-amber-soft text-lf-amber-ink" : "bg-lf-sand-2 text-lf-muted"
+        }`}
+      >
+        {unverifiedMarket && <TriangleAlert size={12} className="mt-px shrink-0" aria-hidden="true" />}
+        <span>
+          {unverifiedMarket ? "Verified market data unavailable — " : ""}
+          {marketProvenanceLine(result.market)}
+        </span>
+      </div>
     </section>
   );
+}
+
+/** "32.5%" with the trailing .0 trimmed ("31%", not "31.0%"). */
+function formatPercent(ratio: number): string {
+  return `${String(Math.round(ratio * 1000) / 10)}%`;
 }
 
 function LeadCell({

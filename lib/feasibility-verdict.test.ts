@@ -35,6 +35,14 @@ function baseResult(overrides: Partial<FeasibilityResult> = {}): FeasibilityResu
     annualNoi: 16600,
     paybackYears: 13,
     warnings: [],
+    rentBasis: "Curated demo estimate",
+    market: {
+      source: "preset",
+      area: "Curated demo estimate",
+      confidence: "medium",
+      verified: false,
+    },
+    operatingExpenseRatio: 0.325,
     ...overrides,
   };
 }
