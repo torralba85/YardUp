@@ -143,7 +143,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "image")}
-                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
+                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
                         viewMode === "image"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -155,7 +155,7 @@ export default function InspirationGalleryPanel({
                     <button
                       type="button"
                       onClick={() => setCardView(item.id, "diagram")}
-                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
+                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
                         viewMode === "diagram"
                           ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
                           : "text-lf-sand/60 hover:text-lf-sand"
@@ -170,7 +170,7 @@ export default function InspirationGalleryPanel({
                 {/* Card Details */}
                 <div className="space-y-3 p-4">
                   <div>
-                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso motion-safe:transition-colors motion-safe:duration-200 group-hover:text-lf-clay">
+                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso motion-safe:transition-colors motion-safe:duration-200 group-hover:text-lf-clay-ink">
                       {item.title}
                     </h3>
                     <div className="mt-1 flex flex-wrap gap-1">
@@ -208,7 +208,7 @@ export default function InspirationGalleryPanel({
                           <button
                             type="button"
                             onClick={() => onViewComparison(item)}
-                            className="relative flex min-h-11 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-lf-clay hover:text-lf-clay-strong motion-safe:transition-colors cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-2"
+                            className="relative flex min-h-11 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink hover:text-lf-clay-strong motion-safe:transition-colors cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-2"
                           >
                             Compare
                           </button>

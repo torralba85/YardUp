@@ -15,11 +15,11 @@ export type ButtonVariant = "commit" | "primary" | "secondary" | "ghost";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  commit: "bg-lf-forest text-lf-sand hover:bg-lf-forest/90",
+  commit: "bg-lf-forest text-lf-sand hover:bg-lf-forest-strong",
   primary: "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong",
   secondary:
     "border border-lf-hairline bg-lf-card text-lf-espresso hover:border-lf-taupe/50 hover:bg-lf-sand-2",
-  ghost: "text-lf-clay hover:bg-lf-taupe-soft",
+  ghost: "text-lf-clay-ink hover:bg-lf-clay-soft",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
@@ -49,7 +49,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 /**
  * The one button. Pill radius (clickable controls are pills per DESIGN.md),
- * clay focus ring (never amber — amber is a status color), and a settle-not-
+ * accessible clay-ink focus ring (never amber — amber is a status color), and a settle-not-
  * bounce active press guarded by `motion-safe`. `loading` disables the control
  * and swaps the leading icon for a spinner without shifting the label.
  */
@@ -78,7 +78,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={loading || undefined}
         className={cn(
           "inline-flex select-none items-center justify-center rounded-full font-semibold transition",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2",
           "motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
           VARIANT_CLASS[variant],
           SIZE_CLASS[size],

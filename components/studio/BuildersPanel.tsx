@@ -61,7 +61,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
       <div className="text-center">
-        <p className="lf-kicker text-lf-clay">Step 5 · Builders</p>
+        <p className="lf-kicker text-lf-clay-ink">Step 5 · Builders</p>
         <h2 className="lf-section-heading mt-2 text-lf-espresso">Connect with local builders.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
           Share your concept with vetted builders in your area. They reach out with quotes and the real next steps.

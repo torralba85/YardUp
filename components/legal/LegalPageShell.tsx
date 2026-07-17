@@ -21,7 +21,7 @@ export function LegalPageShell({
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="flex min-h-11 items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay"
+            className="flex min-h-11 items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -32,7 +32,7 @@ export function LegalPageShell({
           </Link>
           <Link
             href="/studio"
-            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-lf-clay transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay"
+            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-lf-clay-ink transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
             Open studio
           </Link>

@@ -82,7 +82,7 @@ function SignupForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-xl border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-xl border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -166,11 +166,11 @@ function SignupForm() {
 
         <p className="lf-caption text-lf-muted">
           By creating an account, you agree to our{" "}
-          <Link href="/terms" className="text-lf-clay hover:text-lf-mahogany">
+          <Link href="/terms" className="text-lf-clay-ink hover:text-lf-mahogany">
             Terms &amp; Conditions
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="text-lf-clay hover:text-lf-mahogany">
+          <Link href="/privacy" className="text-lf-clay-ink hover:text-lf-mahogany">
             Privacy Policy
           </Link>
           .
@@ -234,7 +234,7 @@ function SignupForm() {
 
       <p className="lf-body-sm mt-6 text-center text-lf-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-lf-clay hover:text-lf-mahogany">
+        <Link href="/login" className="font-medium text-lf-clay-ink hover:text-lf-mahogany">
           Sign in
         </Link>
       </p>
@@ -259,12 +259,12 @@ function RoleButton({
       onClick={onClick}
       className={`rounded-lg border p-3 text-left transition ${
         selected
-          ? "border-lf-clay bg-lf-clay/5 ring-2 ring-lf-clay/20"
+          ? "border-lf-clay bg-lf-clay-soft ring-2 ring-lf-clay/20"
           : "border-lf-hairline bg-lf-card hover:border-lf-taupe"
       }`}
     >
       <div
-        className={`text-sm font-semibold ${selected ? "text-lf-clay" : "text-lf-espresso"}`}
+        className={`text-sm font-semibold ${selected ? "text-lf-clay-ink" : "text-lf-espresso"}`}
       >
         {label}
       </div>

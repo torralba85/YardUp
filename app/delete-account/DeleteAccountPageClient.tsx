@@ -33,7 +33,7 @@ export function DeleteAccountPageClient() {
         </ul>
         <p className="lf-body-sm text-lf-muted">
           Full details are in our{" "}
-          <Link href="/privacy" className="font-medium text-lf-clay underline">
+          <Link href="/privacy" className="font-medium text-lf-clay-ink underline">
             Privacy Policy
           </Link>
           .
@@ -43,7 +43,7 @@ export function DeleteAccountPageClient() {
       {loading ? (
         <p className="lf-body-sm text-lf-muted">Checking sign-in…</p>
       ) : user ? (
-        <section className="space-y-3 rounded-lg border border-lf-brick/30 bg-lf-brick/5 p-5">
+        <section className="space-y-3 rounded-lg border border-lf-brick/30 bg-lf-brick-soft p-5">
           <h2 className="lf-card-heading">Delete now</h2>
           <p className="lf-body-sm text-lf-muted">
             Signed in as{" "}
@@ -82,13 +82,13 @@ export function DeleteAccountPageClient() {
         <h2 className="lf-card-heading">Need help?</h2>
         <p className="lf-body-sm text-lf-muted">
           If you cannot access your account, email{" "}
-          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
             support@lotfoundry.com
           </a>{" "}
           from the address on the account. Support is a fallback — most users can complete
           deletion above without waiting.
         </p>
-        <Link href="/help" className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay">
+        <Link href="/help" className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink">
           Visit Help center
         </Link>
       </section>

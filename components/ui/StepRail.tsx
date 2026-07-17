@@ -59,11 +59,16 @@ function useArrowNav(steps: Step[], orientation: "vertical" | "horizontal") {
 }
 
 /** The revenue `$` signifier (hidden from assistive tech; label carries meaning). */
-function RevenueMark() {
+function RevenueMark({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
     <span
       aria-hidden
-      className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-lf-forest/15 font-mono text-[10px] font-bold text-lf-forest"
+      className={cn(
+        "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-bold",
+        tone === "dark"
+          ? "bg-lf-espresso/45 text-lf-money-on-dark"
+          : "bg-lf-forest-soft text-lf-forest",
+      )}
     >
       $
     </span>
@@ -118,9 +123,9 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "group flex items-center gap-3 rounded-full px-2.5 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2",
-              step.state === "current" && "bg-lf-taupe-soft",
-              !locked && step.state !== "current" && "hover:bg-lf-sand-2",
+              "group flex items-center gap-3 rounded-full px-2.5 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany",
+              step.state === "current" && "bg-lf-sand/10",
+              !locked && step.state !== "current" && "hover:bg-lf-sand/5",
               locked && "cursor-not-allowed opacity-55",
             )}
           >
@@ -129,13 +134,13 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
               <span
                 className={cn(
                   "block truncate text-sm font-semibold",
-                  step.state === "current" ? "text-lf-espresso" : "text-lf-muted",
+                  step.state === "current" ? "text-lf-sand" : "text-lf-taupe",
                 )}
               >
                 {step.label}
               </span>
             </span>
-            {step.revenue ? <RevenueMark /> : null}
+            {step.revenue ? <RevenueMark tone="dark" /> : null}
             <span className="sr-only">, {STATE_SR[step.state]}</span>
           </button>
         );
@@ -167,7 +172,7 @@ export function StepProgress({ steps, onSelect, className, ...aria }: StepNavPro
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset",
+              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-inset",
               locked && "cursor-not-allowed opacity-55",
             )}
           >

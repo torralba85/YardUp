@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthLayout title="Check your email" subtitle="Password reset instructions sent.">
         <div className="flex flex-col items-center gap-4 py-4 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lf-clay/10 text-lf-clay">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lf-clay-soft text-lf-clay-ink">
             <CheckCircle className="h-6 w-6" />
           </div>
           <p className="lf-body-sm text-lf-muted">
@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link
             href="/login"
-            className="lf-body-sm mt-2 font-medium text-lf-clay hover:text-lf-mahogany"
+            className="lf-body-sm mt-2 font-medium text-lf-clay-ink hover:text-lf-mahogany"
           >
             Back to sign in
           </Link>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-md border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-md border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-lf-taupe/30 bg-lf-sand px-3 py-2.5 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
             placeholder="you@example.com"
           />
         </div>
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-md bg-lf-mahogany py-2.5 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay disabled:opacity-50"
+          className="min-h-11 w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           {isPending ? "Sending…" : "Send reset link"}
         </button>
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
 
       <p className="lf-body-sm mt-6 text-center text-lf-muted">
         Remembered it?{" "}
-        <Link href="/login" className="font-medium text-lf-clay hover:text-lf-mahogany">
+        <Link href="/login" className="font-medium text-lf-clay-ink hover:text-lf-mahogany">
           Back to sign in
         </Link>
       </p>

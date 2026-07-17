@@ -216,7 +216,7 @@ export default function BuilderInbox({
       </div>
 
       {error && (
-        <div role="alert" className="mt-4 border border-lf-brick/20 bg-lf-brick/5 p-3 text-sm text-lf-brick">
+        <div role="alert" className="mt-4 border border-lf-brick/20 bg-lf-brick-soft p-3 text-sm text-lf-brick">
           {error}
         </div>
       )}
@@ -238,7 +238,7 @@ export default function BuilderInbox({
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
                       tab === t.key
                         ? "border-lf-clay bg-lf-clay text-lf-sand"
                         : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
@@ -255,7 +255,7 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay ${
+                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
                     viewMode === "cards"
                       ? "bg-lf-clay text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
@@ -267,7 +267,7 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay ${
+                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
                     viewMode === "table"
                       ? "bg-lf-clay text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
@@ -341,7 +341,7 @@ export default function BuilderInbox({
                           }`}
                         >
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-mono text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay transition">
+                            <div className="font-mono text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay-ink transition">
                               {item.request.preview.previewSerial}
                             </div>
                             <div className="font-mono text-[9px] text-lf-muted mt-0.5">{dateStr}</div>
@@ -600,7 +600,7 @@ export default function BuilderInbox({
                                   <div className="space-y-4 border-[1.5px] border-lf-espresso bg-lf-card p-4">
                                       {/* Monogram / Header */}
                                       <div className="border-b border-lf-hairline pb-2 text-center">
-                                        <div className="lf-dataprint text-lf-clay">LotFoundry</div>
+                                        <div className="lf-dataprint text-lf-clay-ink">LotFoundry</div>
                                         <h5 className="mt-0.5 font-display text-sm font-semibold leading-tight text-lf-espresso">Certificate of Feasibility</h5>
                                         <p className="mt-1 truncate font-mono text-[9px] text-lf-muted">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
@@ -609,7 +609,7 @@ export default function BuilderInbox({
 
                                       {/* Annual Ledger T-Account */}
                                       <div className="space-y-1">
-                                        <div className="lf-dataprint text-lf-clay">Ledger Balance</div>
+                                        <div className="lf-dataprint text-lf-clay-ink">Ledger Balance</div>
                                         <div className="border border-lf-hairline text-[10px] divide-y divide-lf-hairline bg-lf-sand-2/20">
                                           <div className="grid grid-cols-2 p-1.5">
                                             <div>
@@ -920,7 +920,7 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(5)}
           disabled={loading !== null}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
@@ -934,7 +934,7 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(10)}
           disabled={loading !== null}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>

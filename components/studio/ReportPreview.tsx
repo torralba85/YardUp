@@ -83,7 +83,7 @@ export default function ReportPreview({
       <div className="grid gap-5 lg:grid-cols-[130px_minmax(260px,1fr)_220px] xl:grid-cols-[140px_minmax(280px,1fr)_230px]">
         <div className="hidden border-[1.5px] border-lf-espresso bg-lf-card p-1 lg:block">
           <div className="border border-lf-taupe px-2.5 py-3 text-center">
-            <div className="lf-kicker-dense text-lf-clay">LotFoundry</div>
+            <div className="lf-kicker-dense text-lf-clay-ink">LotFoundry</div>
             <div className="mt-1.5 font-display text-sm font-semibold leading-tight text-lf-espresso">
               Certificate of Feasibility
             </div>
@@ -133,7 +133,7 @@ export default function ReportPreview({
             />
           </div>
           <div className="mt-5 border-t border-lf-hairline pt-4">
-            <h3 className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+            <h3 className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
               Certificate includes
             </h3>
             <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(118px,1fr))] gap-x-4 gap-y-2 text-xs leading-5 text-lf-muted">
@@ -164,7 +164,7 @@ export default function ReportPreview({
               type="button"
               onClick={onClose}
               aria-label="Close report preview"
-              className="flex h-11 w-11 items-center justify-center rounded-full text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
             >
               <X size={16} aria-hidden="true" />
             </button>
@@ -277,7 +277,7 @@ function CertificateBriefSection({
     return (
       <div className="mt-6 border-t border-lf-hairline pt-5">
         <div className="flex items-center gap-2">
-          <Sparkles size={15} className="text-lf-clay" aria-hidden="true" />
+          <Sparkles size={15} className="text-lf-clay-ink" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-lf-espresso">AI Parcel &amp; Permit Brief</h3>
         </div>
         {loading ? (
@@ -319,8 +319,8 @@ function CertificateBriefSection({
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles size={15} className="text-lf-clay" aria-hidden="true" />
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+            <Sparkles size={15} className="text-lf-clay-ink" aria-hidden="true" />
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
               AI-assisted · Recorded in this certificate
             </p>
           </div>
@@ -350,7 +350,7 @@ function CertificateBriefSection({
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(300px,0.88fr)] lg:gap-0">
         <div className="lg:pr-8">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
             Parcel interpretation
           </p>
           <h4 className="mt-2 text-base font-semibold leading-snug text-lf-espresso">
@@ -392,7 +392,7 @@ function CertificateBriefSection({
         <div className="border-t border-lf-hairline pt-5 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
                 Typical approval path
               </p>
               <h4 className="mt-1 text-sm font-semibold text-lf-espresso">
@@ -447,7 +447,7 @@ function CertificateBriefSection({
 
       {nextSteps.length > 0 && (
         <div className="mt-6 border-t border-lf-hairline pt-5">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
             Recorded next steps
           </p>
           <ol className="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">

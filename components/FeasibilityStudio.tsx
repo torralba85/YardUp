@@ -1063,7 +1063,7 @@ function LotStep({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-b border-lf-hairline bg-lf-sand px-6 py-8 lg:px-10">
-        <p className="lf-kicker text-lf-clay">Step 1 · Your Lot</p>
+        <p className="lf-kicker text-lf-clay-ink">Step 1 · Your Lot</p>
         <h2 className="lf-section-heading mt-2 text-lf-espresso">Start with your address.</h2>
         <p className="lf-body mt-2 max-w-[60ch] text-lf-muted">
           We&rsquo;ll pull your parcel, local zoning, and market rents to show what an ADU could add to your property.
@@ -1079,7 +1079,7 @@ function LotStep({
           {parcelError && (
             <div
               role="alert"
-              className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+              className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
             >
               <Search size={14} className="mt-0.5 shrink-0" />
               {parcelError}

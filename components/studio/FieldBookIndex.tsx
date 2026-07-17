@@ -59,7 +59,7 @@ export default function FieldBookIndex({
               type="button"
               onClick={() => onNavigate(plate.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex w-full min-h-11 items-center gap-3 rounded-lg py-2 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset ${
+              className={`relative flex w-full min-h-11 items-center gap-3 rounded-lg py-2 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-inset ${
                 isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-lf-sand/5"
               }`}
             >

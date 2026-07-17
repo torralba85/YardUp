@@ -262,7 +262,7 @@ export default function StyleMatchPanel({
       <div className="border-b-4 border-double border-lf-espresso px-4 py-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
               Your house / your ADU
             </p>
             <h3 className="mt-1 font-display text-xl font-semibold leading-tight text-lf-espresso">
@@ -289,7 +289,7 @@ export default function StyleMatchPanel({
                 type="checkbox"
                 checked={aiConsent}
                 onChange={(e) => setAiConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-lf-hairline text-lf-clay focus:ring-lf-clay"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-lf-hairline text-lf-clay-ink focus:ring-lf-clay-ink"
               />
               <span>
                 I agree to send this photo to OpenAI to generate a concept. LotFoundry does not
@@ -304,7 +304,7 @@ export default function StyleMatchPanel({
                   : "cursor-not-allowed opacity-50"
               }`}
             >
-              <ImagePlus size={22} className="text-lf-clay" aria-hidden="true" />
+              <ImagePlus size={22} className="text-lf-clay-ink" aria-hidden="true" />
               <span className="mt-2 text-sm font-semibold text-lf-espresso">
                 Choose house photo
               </span>
@@ -319,7 +319,7 @@ export default function StyleMatchPanel({
           <div className="flex min-h-32 items-center justify-center border border-lf-hairline bg-lf-card px-4 py-6 text-lf-espresso">
             <Loader2
               size={20}
-              className="mr-2 animate-spin text-lf-clay motion-reduce:animate-none"
+              className="mr-2 animate-spin text-lf-clay-ink motion-reduce:animate-none"
               aria-hidden="true"
             />
             <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em]">
@@ -340,7 +340,7 @@ export default function StyleMatchPanel({
                 <img src={previewUrl} alt="Uploading house" className="h-full w-full object-cover opacity-60" />
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-lf-espresso/10">
-                <Loader2 className="animate-spin text-lf-clay" size={24} />
+                <Loader2 className="animate-spin text-lf-clay-ink" size={24} />
               </div>
             </div>
 
@@ -354,7 +354,7 @@ export default function StyleMatchPanel({
                   icon = <CheckCircle2 size={16} className="text-lf-forest shrink-0" aria-hidden="true" />;
                   textColor = "text-lf-forest font-semibold";
                 } else if (state === "current") {
-                  icon = <Loader2 size={16} className="animate-spin text-lf-clay shrink-0" aria-hidden="true" />;
+                  icon = <Loader2 size={16} className="animate-spin text-lf-clay-ink shrink-0" aria-hidden="true" />;
                   textColor = "text-lf-espresso font-semibold";
                 } else {
                   icon = (
@@ -384,7 +384,7 @@ export default function StyleMatchPanel({
 
             {showDeveloperTestControls && (
               <div className="mt-4 border border-dashed border-lf-hairline p-2 flex flex-col gap-1.5 bg-lf-sand-2">
-                <div className="font-mono text-[9px] uppercase text-lf-clay text-center font-bold">
+                <div className="font-mono text-[9px] uppercase text-lf-clay-ink text-center font-bold">
                   Dev Test Controls
                 </div>
                 <div className="flex gap-1 justify-center">
