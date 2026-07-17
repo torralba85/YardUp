@@ -1,141 +1,128 @@
-# Store Listing Copy — App Store + Google Play
+# Store Listing Copy - App Store and Google Play
 
-**Date:** 2026-06-28
-**Updated:** 2026-07-08
-**App:** LotFoundry — ADU Feasibility Studio · package `com.lotfoundry.app`
-**Status:** DRAFT for review. Privacy answers are grounded in the current codebase (no analytics/tracking SDKs; Firebase Auth incl. Google sign-in; Regrid/Google/OpenAI/Stripe as processors). The two earlier open items (photo retention, in-app deletion path) are now resolved — see section A. Store screenshots, feature graphic, wrapper packages, and the real Play signing fingerprint are still not final.
+**Updated:** 2026-07-17
+**App:** LotFoundry - ADU Feasibility Studio (`com.lotfoundry.app`)
+**Status:** Draft for product, privacy, and counsel review. This file describes
+current code paths; console declarations must be checked against the final
+native build, provider contracts, and store guidance before submission.
 
----
+## A. Data-processing inventory
 
-## A. Data-collection reality (source of truth for both forms)
+| Data | Current code path | Purpose | Notes for review |
+|---|---|---|---|
+| Email, name, avatar, Firebase UID | Firebase Auth, including email/password, Google, and Apple sign-in | Account management | Confirm final provider scopes and account-linking behavior |
+| Property address | User input sent to Regrid and Google Maps/Geocoding/Places | Feasibility and parcel lookup | Required only to use address-based estimates |
+| Home photo | Client removes EXIF/GPS, then sends an in-memory upload to OpenAI for style matching | AI concept generation | The app does not persist the original upload to Firestore or Storage; confirm processor terms and disclosure wording |
+| Saved scenarios | Firestore under the authenticated user | Save, share, and restore estimates | Account deletion removes account-associated scenario data |
+| Purchase and lead-unlock history | Stripe and Firestore ledger on the web; platform purchase proof for native stores | Purchases and entitlement grants | The application never accepts raw card numbers |
+| Feedback | `/api/feedback` intake | Support and product feedback | Confirm support retention and access policy |
+| Server diagnostics | Firebase Hosting and Cloud Functions logs | Reliability and security operations | Confirm platform retention settings |
 
-| Data | Collected? | Where | Linked to user | Purpose |
-|---|---|---|---|---|
-| Email address | Yes | Firebase Auth (email + Google sign-in) | Yes | Account, App Functionality |
-| Name | Yes | Google sign-in `displayName` | Yes | Account |
-| Profile photo (avatar) | Yes | Google sign-in `photoURL` | Yes | Account |
-| Property address | Yes | Entered → Regrid + Google Geocoding/Places | Yes | App Functionality (feasibility) |
-| Photos (uploaded home photo) | Yes | Style-match flow → OpenAI | Yes | App Functionality (AI concept) |
-| Saved scenarios (lot/ADU inputs + outputs) | Yes | Firestore per user | Yes | App Functionality |
-| Purchase / lead-unlock history | Yes | Stripe + Firestore ledger (builders) | Yes | App Functionality, Purchases |
-| Payment info (card) | By Stripe only | Stripe Checkout (hosted) — never touches the app | — | Payments (processor) |
-| User ID (Firebase UID) | Yes | Firebase Auth | Yes | App Functionality |
-| Crash/diagnostic logs | Yes | Firebase Hosting / Cloud Functions server logs | Linked (server-side) | App Functionality, diagnostics |
-| Advertising / tracking identifiers | **No** | — | — | — |
+There are no advertising or analytics SDKs in the current codebase. This is not
+a claim that no processor collects operational logs; verify each processor's
+current policy before completing App Privacy or Play Data Safety.
 
-**Used to track you (cross-app/3rd-party ads): NONE.** No analytics SDK, no ad SDK, no cross-site tracking.
+### Third-party processors
 
-**Third parties data is shared with (as processors, not for their own ads):** Google (Maps/Geocoding/Places, Firebase), Regrid (parcel lookup by address), OpenAI (address context + uploaded photo for AI concepts), Stripe (payments).
+- Google: Firebase Auth/Firestore, Maps, Geocoding, and Places.
+- Regrid: parcel lookup.
+- OpenAI: address context and optional style-match photo generation.
+- Stripe: web Checkout and payment processing.
+- Apple and Google: native digital purchases only when a store build uses
+  StoreKit or Play Billing.
 
-✅ **Resolved (2026-06-28):**
-1. **Photo retention — NOT persisted.** `app/api/ai/adu-concept/route.ts` reads the upload into memory, base64-encodes it inline to OpenAI, and returns the result — no Firestore/Storage/disk write. The client (`lib/style-match-photo.ts`) also strips EXIF before upload. So the photo is transient; OpenAI is the only third party that receives it (as an API processor). Declare Photos as *collected → App Functionality*, **not stored** by LotFoundry.
-2. **In-app data-deletion path — built.** `POST /api/account/delete` (Admin SDK) deletes the user's saved scenarios, builder profile, `users/{uid}` profile doc, and the Firebase Auth identity. Reachable in-app from the studio account block (desktop sidebar + mobile account menu) via "Delete account" with a two-step confirm. Individual scenarios are also deletable. Use this as the Play "data deletion" answer (in-app route). **Note:** marketplace `connectionRequests` (homeowner leads a builder may have paid to unlock) are intentionally retained as shared business records — decide their PII retention policy separately before launch.
+## B. Account, support, and deletion resources
 
----
+- Support URL: `/help`
+- Privacy URL: `/privacy`
+- Terms URL: `/terms`
+- Web deletion URL: `/delete-account`
+- Authenticated account settings, data export, and deletion: `/settings`
 
-## B. Apple App Store — App Privacy ("nutrition labels")
+The deletion flow removes account-associated PII while retaining intentional
+redacted roots and ledger records. The marketplace `connectionRequests` retention
+policy is a business and counsel decision that must be finalized before store
+submission. Do not describe retained records as deleted or anonymous unless the
+approved policy and implementation say so.
 
-In App Store Connect → App Privacy. For every type below: **Linked to You = Yes**, **Used for Tracking = No**.
+## C. Purchase wording
 
-**Contact Info**
-- Email Address — App Functionality, Account Management
-- Name — App Functionality, Account Management
+LotFoundry uses the purchase channel available to the user:
 
-**User Content**
-- Photos or Videos — App Functionality *(the uploaded home photo)*
-- Other User Content — App Functionality *(property address, saved scenarios)*
+- Open web: Stripe Checkout.
+- iOS store build: StoreKit.
+- Android store build: Play Billing through the Digital Goods API.
 
-**Identifiers**
-- User ID — App Functionality
+Native receipts are sent to `POST /api/store/purchases/verify` and must be
+verified server-side before a certificate or builder entitlement is granted. Do
+not use web Stripe test results as proof that native purchases, restore,
+refund, or revocation behavior works.
 
-**Purchases**
-- Purchase History — App Functionality *(builder lead unlocks)*
+## D. App Store privacy and Play Data Safety preparation
 
-**Financial Info**
-- Payment Info — App Functionality *(declare only if you consider Stripe-collected card data in scope; the app itself never receives card numbers — Stripe Checkout does. Most teams declare Payment Info here because the purchase happens in-context.)*
+Use this as a review checklist, not a submission answer key:
 
-**Diagnostics**
-- Crash Data / Performance Data — App Functionality *(server logs)*
+- Confirm which data categories are collected, shared, linked to the user, and
+  used for tracking from the final release build and current provider terms.
+- Evaluate email/name/avatar, property address, optional photos, saved
+  scenarios, purchase history, user ID, feedback, and operational diagnostics.
+- Explain that payment credentials are handled by the chosen payment processor;
+  do not claim the app stores card data.
+- Verify data deletion is available both in-app and at `/delete-account` after
+  uninstall.
+- Confirm Apple's privacy labels and Google's Data Safety form with counsel,
+  especially for photo processing, purchase history, server logs, and retained
+  shared marketplace records.
 
-> Everything is **Linked to the user** (tied to the account). **Nothing is used to track.** No "Data Not Linked to You" categories and no Tracking section.
-
----
-
-## C. Google Play — Data Safety form
-
-**Does your app collect or share user data?** Yes.
-**Is all data encrypted in transit?** Yes (HTTPS).
-**Do you provide a way to request data deletion?** Yes — in-app account deletion ("Delete account" in the studio account menu → `POST /api/account/delete`). See section A-2.
-
-| Play category → type | Collected | Shared | Processing | Purpose |
-|---|---|---|---|---|
-| Personal info → Email address | Yes | Yes (Firebase) | Required* | Account management, App functionality |
-| Personal info → Name | Yes | Yes (Firebase) | Optional | Account management |
-| Personal info → Address (property) | Yes | Yes (Regrid, Google) | Required* | App functionality |
-| Photos and videos → Photos | Yes | Yes (OpenAI) | Optional | App functionality |
-| Financial info → Purchase history | Yes | Yes (Stripe) | Optional | App functionality |
-| App activity → Saved scenarios (other user-generated content) | Yes | No | Optional | App functionality |
-| App info & performance → Crash logs / Diagnostics | Yes | No | Optional | App functionality |
-| Device or other IDs → User ID | Yes | Yes (Firebase) | Required* | App functionality |
-
-\* "Required" = needed to use the feature (e.g. address is required to run a feasibility estimate).
-**Payment info (card):** handled entirely by Stripe Checkout; declare per Play guidance for payment processors (collected by the processor, not stored by the app).
-
----
-
-## D. Metadata copy
+## E. Metadata copy
 
 ### App Store
+
 - **App Name (30):** `LotFoundry: ADU Feasibility`
 - **Subtitle (30):** `Your lot's ADU income, fast`
-- **Primary Category:** Finance · **Secondary:** Business
+- **Primary Category:** Finance
+- **Secondary Category:** Business
 - **Promotional Text (170):**
-  `Type your address and see whether a backyard ADU pencils out — projected rent, build range, payback, and lot fit — before you spend a dollar on plans.`
+  `Type your address and see whether a backyard ADU pencils out: projected rent, build range, payback, and lot fit before you spend on plans.`
 - **Keywords (100):**
   `ADU,accessory dwelling,backyard,feasibility,rent,zoning,setback,property,real estate,granny flat,income,lot`
-- **Description:**
-```
-LotFoundry turns your property address into a clear, honest read on whether a backyard ADU (accessory dwelling unit) is worth pursuing — before you hire anyone.
-
-Start with your real address and LotFoundry pulls your lot's dimensions, setbacks, and zoning, then shows what fits and what doesn't in an interactive 3D view of your parcel. In seconds you see the numbers that matter:
-
-• Projected monthly rent for your market
-• Build cost range
-• Net operating income and payback estimate
-• Zoning coverage and setback fit
-
-WHY OWNERS USE IT
-• Address-first — grounded in your actual parcel, not a generic catalog example
-• Estimate-honest — clear assumptions and caveats, never a false promise
-• Builder-ready — a shareable concept report for your next conversation
-
-A complete owner path, not a rendering that leaves you guessing. Save scenarios, compare options, and share a report with your family, planner, lender, or builder when you're ready.
-
-LotFoundry is a feasibility and estimation tool. Outputs are early estimates only — confirm zoning, build costs, financing, and rents with local professionals before design, permitting, or investment decisions. It is not a permit approval, appraisal, or investment guarantee.
-```
 
 ### Google Play
+
 - **App title (30):** `LotFoundry: ADU Feasibility`
 - **Short description (80):**
-  `See if a backyard ADU pencils out — rent, build cost, payback, and lot fit.`
-- **Full description (≤4000):** *(reuse the App Store description above; Play allows the same copy.)*
-- **Category:** Finance · **Tags:** Finance, Real Estate, Productivity
-- **Content rating:** Everyone (questionnaire: no objectionable content; app handles financial estimates + user accounts).
+  `See if a backyard ADU pencils out: rent, build cost, payback, and lot fit.`
+- **Category:** Finance
+- **Suggested tags:** Finance, Real Estate, Productivity
 
-### Shared assets still needed (P1/P2)
-- Screenshots: iPhone 6.7" + 6.5", iPad 12.9", Android phone + 7"/10" tablet, plus desktop/wide PWA captures if used in the manifest. Capture from real devices where possible, check the final files into `public/`, then add `public/manifest.json` `screenshots` entries that point at those exact files.
-- App Store: 1024×1024 icon (use `icon-512.png` master upscaled / re-exported at 1024). Play: 512×512 icon + 1024×500 feature graphic. Current `public/` assets include `icon-180.png`, `icon-192.png`, `icon-512.png`, and `icon-maskable-512.png`.
-- Android Digital Asset Links: `public/.well-known/assetlinks.json` still contains `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT`; replace it only after the human supplies the real Play signing SHA-256.
-- Support URL, marketing URL, and the privacy policy URL → `/privacy` (already live).
+### Long description
 
----
+```text
+LotFoundry turns your property address into a clear, early read on whether a
+backyard ADU (accessory dwelling unit) is worth pursuing before you hire anyone.
 
-## E. Pre-submission checklist
-- [ ] Verify `NEXT_PUBLIC_GOOGLE_PLACES_KEY` in Google Cloud Console + set `NEXT_PUBLIC_APP_URL` (see store-deployment-readiness.md).
-- [x] Confirm photo retention (A-1 — not persisted) and wire a data-deletion path (A-2 — `POST /api/account/delete` + in-app UI).
-- [ ] Decide retention policy for marketplace `connectionRequests` PII (shared lead records).
-- [ ] Generate packages in PWABuilder; replace the placeholder Play signing SHA-256 in `public/.well-known/assetlinks.json`.
-- [ ] Capture device screenshots; check final files into `public/`; add manifest screenshot entries; export 1024² / 512² icons + feature graphic.
-- [ ] Run the focused address-suggest smoke before store submission: `LOTFOUNDRY_E2E_LIVE_SUGGEST=1 npx playwright test e2e/address-suggest.spec.ts --project=desktop-chromium`. The `LOTFOUNDRY_E2E_LIVE_SUGGEST=1` prefix is **required** — without it the production `/api/suggest` test is skipped. (The local fallback test in the same file also runs and needs the `localhost:3000` dev server from `playwright.config.ts`.)
-- [ ] Fill App Privacy (B) and Data Safety (C) exactly as above.
-- [ ] Submit.
+Start with your address and LotFoundry brings together parcel dimensions,
+setbacks, zoning context, a configurable ADU concept, and the numbers that
+matter: projected monthly rent, build cost range, net operating income, payback,
+and lot fit. Save scenarios and share a concept report with your family,
+planner, lender, or builder when you are ready.
+
+LotFoundry is a feasibility and estimation tool. Outputs are early estimates,
+not permit approvals, appraisals, construction documents, or investment
+guarantees. Confirm zoning, build costs, financing, and rents with qualified
+local professionals before design, permitting, or investment decisions.
+```
+
+## F. Assets and pre-submission gates
+
+- Capture current iPhone, iPad, Android phone, and Android tablet screenshots
+  from release candidates; check the selected assets into `public/` and then
+  add exact `manifest.json` screenshot references.
+- Export the required App Store and Play icons and the Play feature graphic from
+  final source assets.
+- Replace `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT` in
+  `public/.well-known/assetlinks.json` only after Play App Signing provides the
+  final SHA-256.
+- Use `/help`, `/privacy`, and `/delete-account` in store-console metadata.
+- Complete a counsel review, live/sandbox purchase validation, and real-device
+  account-deletion test before submitting.

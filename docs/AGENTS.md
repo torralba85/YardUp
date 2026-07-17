@@ -1,6 +1,6 @@
 # LotFoundry — Agent Guide
 
-**Last updated:** 2026-07-06 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
+**Last updated:** 2026-07-17 | **Repo:** `urbanlens-landing` | **Project ID:** `yardup-2026`
 
 ---
 
@@ -11,9 +11,9 @@
 **Architecture:**
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4
 - **3D Scene:** `@react-three/fiber` + `@react-three/drei` + Three.js 0.164
-- **Backend API:** Firebase Cloud Functions (nodejs22) proxying Regrid parcel data and Google Maps Static aerial images
+- **Backend API:** Firebase Cloud Functions (nodejs22) serving parcel, AI, Stripe, account, feedback, and native-store verification routes
 - **Hosting:** Firebase Hosting + Cloud Functions
-- **Testing:** Vitest (~400 tests passing) + Playwright E2E coverage
+- **Testing:** Vitest + Playwright desktop/mobile coverage; use the current GitHub `verify` job as release evidence
 
 **What this app IS:**
 - Local-first investor-demo with optional live parcel data via API keys
@@ -22,7 +22,7 @@
 
 **What this app is NOT:**
 - Not a GIS platform, permitting system, or AR app
-- Not a full SaaS platform; Firebase Auth and role-aware routes exist, but production account operations still need smoke coverage
+- Not a permitting system, appraisal, or investment guarantee; feasibility outputs remain planning estimates
 - Not a full real estate marketplace; builder dashboard/routing surfaces exist, but the partner network workflow is still early
 
 ---
@@ -74,7 +74,7 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 
 | File | Purpose |
 |---|---|
-| `app/page.tsx` | Renders `<FeasibilityStudio />` |
+| `app/page.tsx` | Blue Hour landing and address handoff into the studio journey |
 | `app/layout.tsx` | Root layout with fonts, metadata, theme-color |
 | `app/globals.css` | Tailwind import + LotFoundry theme tokens + print rules |
 
@@ -92,6 +92,7 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 | `components/studio/ReportPreview.tsx` | Expandable report export panel: print/PDF, download text/CSV, share link |
 | `components/studio/AerialView.tsx` | Satellite aerial view with parcel boundary + ADU SVG overlay (live mode) |
 | `components/studio/AddressSearch.tsx` | Google Places Autocomplete address input |
+| `components/studio/mobile/journey/MobileJourney.tsx` | Five-reveal mobile journey: Find → Earn → Shape → Check → Act |
 
 ### Library Modules
 
@@ -106,6 +107,7 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 | `lib/report.ts` | Report text/CSV builder + download helpers |
 | `lib/map-utils.ts` | Web Mercator projection: lat/lng → SVG pixel coordinates |
 | `lib/utils.ts` | Shared formatting utilities |
+| `lib/commerce/*` | Channel-aware purchases: Stripe on web, StoreKit on iOS, and Play Billing on Android |
 
 ### API Routes
 
@@ -113,14 +115,19 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 |---|---|
 | `app/api/parcel/route.ts` | GET: Proxies Regrid parcel data by lat/lng, falls back to preset defaults |
 | `app/api/aerial/route.ts` | GET: Proxies Google Maps Static satellite image by lat/lng, falls back to keyless Esri World Imagery, then an SVG placeholder |
+| `app/api/account/{delete,export}/route.ts` | Authenticated account deletion and data export |
+| `app/api/ai/{project-brief,adu-concept}/route.ts` | Authenticated, rate-limited AI project brief and ADU concept generation |
+| `app/api/feedback/route.ts` | Feedback intake with honeypot and rate limiting |
+| `app/api/store/purchases/verify/route.ts` | Verifies StoreKit or Play Billing purchases and grants idempotently |
+| `app/api/stripe/*` | Stripe certificate, lead-unlock, and credit checkout plus webhook handling |
 
 ### Firebase
 
 | File | Purpose |
 |---|---|
-| `firebase.json` | Hosting + Functions config: `/api/**` → `api` function, `/**` → `app` function |
+| `firebase.json` | Hosting rewrites: `/api/ai/**` → `apiAi`, `/api/stripe/**` → `apiStripe`, `/api/store/**` → `apiStore`, other `/api/**` → `api`, and `/**` → `app` |
 | `.firebaserc` | Firebase project ID (`yardup-2026`) |
-| `functions/index.js` | Two Cloud Functions: `app` (Next.js SSR), `api` (API routes) |
+| `functions/index.js` | Five Functions: `app`, `apiAi`, `apiStripe`, `apiStore`, and least-privilege `api` |
 | `functions/package.json` | Functions dependencies (firebase-functions, next, react, react-dom) |
 | `scripts/prepare-firebase.js` | Build helper: copies `.next/standalone` → `dist/` and `functions/.next/` |
 
@@ -146,8 +153,10 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 See `DESIGN.md` for the full brand spec and use it as the source of truth before visual or UI changes. Key rules:
 
 ### Colors
-- **Forest green** (`--lf-forest`) = positive financial value only
-- **Clay** (`--lf-clay`) = interactive accent, actions
+- **Base clay** (`--lf-clay`) = interactive fills, borders, and large accents
+- **Clay ink** (`--lf-clay-ink`) = interactive text, icons, and focus on light surfaces
+- **Clay on dark** (`--lf-clay-on-dark`) = interactive text and focus on mahogany or espresso
+- **Forest** (`--lf-forest`) = money, eligibility, completed/readiness states, and commit CTAs; current/selected states remain clay and commit hover uses `--lf-forest-strong`
 - **Mahogany** (`--lf-mahogany`) = dark panels, rails
 - **Amber** (`--lf-amber`) = permit risk, review needed
 - **Amber ink** (`--lf-amber-ink`) = amber text/icons on light surfaces
@@ -205,7 +214,7 @@ See `DESIGN.md` for the full brand spec and use it as the source of truth before
 
 ## Current Status
 
-_Last updated 2026-07-16 (mobile five-reveal journey + localized market data)._
+_Last updated 2026-07-17 (accessible color roles and operational-documentation sync)._
 
 | Dimension | Status | Notes |
 |---|---|---|
@@ -216,21 +225,21 @@ _Last updated 2026-07-16 (mobile five-reveal journey + localized market data)._
 | Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; a handed-off address resolves straight into the journey's Earn reveal; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
 | Monetization | ✅ Implemented | Stripe paid certificate purchase (P3) + builder lead-unlock marketplace; `LOTFOUNDRY_DEMO_UNLOCKS` for dev |
 | AI Panels | ✅ Implemented | Parcel insights + style-matched ADU concepts (auth + rate-limited server routes) |
-| Testing | ✅ ~400 Vitest tests + Playwright desktop/mobile | Full gate green 2026-07-02 |
+| Testing | ✅ Vitest + Playwright desktop/mobile | Use the current branch's GitHub `verify` job for release evidence |
 | Deployment | ✅ Configured | Firebase Hosting + Functions, CI deploys master; see `docs/deployment.md` |
-| Auth / User Accounts | ✅ Implemented | Login, signup, password reset, Google sign-in, role-aware redirects, in-app account deletion |
+| Auth / User Accounts | ✅ Implemented | Login, signup, password reset, Google and Apple flows, settings, export, shared account navigation, support, feedback, legal, and deletion surfaces |
 | Builder Marketplace | ✅ V1 | Builder dashboard, inbox, lead cards, unlock ledger; BuildersPanel matches by service area |
-| Store Packaging (iOS/Play) | ⚠️ Blocked on decisions | PWA is healthy; no TWA/wrapper project yet — see `docs/store-deployment-readiness.md` |
+| Store Packaging (iOS/Play) | ⚠️ Groundwork present | Android TWA manifest and iOS Capacitor shell exist; signing, console configuration, sandbox validation, store assets, and review remain human gates |
 
 ---
 
-## Next Priorities (deployment audit 2026-07-02)
+## Next Priorities (deployment audit 2026-07-17)
 
 1. **Production Places key verification** — `NEXT_PUBLIC_GOOGLE_PLACES_KEY` exists in GitHub Actions metadata and the 2026-07-04 live smoke against `https://yardup-2026.web.app/studio` returned `/api/suggest` suggestions for `1600 Pennsylvania Ave`. Still verify in Google Cloud Console that the secret value is the intended browser key, referrer-restricted to production domains + localhost, with Places (New) enabled.
 2. **`NEXT_PUBLIC_APP_URL`** — set to the real domain or Stripe redirects land on `yardup-2026.web.app`.
 3. **Stripe live-mode verification** — webhook endpoint registered in the dashboard, one live test checkout for certificate + lead-unlock flows.
-4. **Store packaging** — wrapper strategy decided (PWABuilder); `assetlinks.json` exists but still has the placeholder Play signing SHA-256; needs manifest screenshots, signed `.aab`, iOS wrapper project (`docs/store-deployment-readiness.md` §2–3).
-5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md` (pill-radius system, amber/brick semantics, typography trio) on landing, studio, builder dashboard.
+4. **Store packaging** — generate the Android TWA and iOS project from the checked-in manifests/shell, replace the placeholder Play signing SHA-256, validate sandbox purchases, and produce signed artifacts (`docs/store-deployment-readiness.md`).
+5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md`, including base clay fills, clay-ink light focus, clay-on-dark focus, selected clay, completed/readiness forest, and solid semantic hover roles.
 6. **Builder network growth** — real builder onboarding flow; zero-state city coverage is honest but the network is empty.
 7. **Solar simulation / view modes / aerial polish** — deferred scene enhancements from the earlier audit.
 8. **Full HUD FMR coverage** — the checked-in market index (`lib/server/market/data/fmr.json`) is a seed extract (demo metros + CA/TX benchmark counties); run `scripts/build-market-data.js` against a full HUD release for nationwide ZIP/county coverage. Out-of-seed addresses resolve at the state/national tier, surfaced as low-confidence.
@@ -248,6 +257,6 @@ If `firebase deploy` fails:
 5. **Check CI workflow** — view at https://github.com/torralba85/YardUp/actions
 
 If the site deploys but API routes return 404:
-- Verify `firebase.json` rewrites: `/api/**` → `api` function
-- Verify `functions/index.js` exports both `app` and `api`
+- Verify `firebase.json` rewrites: `/api/ai/**` → `apiAi`, `/api/stripe/**` → `apiStripe`, `/api/store/**` → `apiStore`, remaining `/api/**` → `api`
+- Verify `functions/index.js` exports `app`, `apiAi`, `apiStripe`, `apiStore`, and `api`
 - Verify `prepare-firebase.js` copied `.next/` into `functions/.next/`

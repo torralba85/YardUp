@@ -1,5 +1,10 @@
 # Daylight ADU Deconstruction Hero
 
+> Historical concept specification. The production landing is the Blue Hour
+> experience in `components/landing/nocturne/`; `DESIGN.md` is the current visual
+> source of truth. Keep this document for the daylight deconstruction rationale,
+> not as implementation guidance.
+
 ## Source of truth
 
 The production implementation lives in:

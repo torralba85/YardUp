@@ -96,8 +96,8 @@ Key entry points:
 Always read `DESIGN.md` before making visual or UI changes. Fonts, colors, spacing, layout direction, and brand tone are defined there. Do not deviate without explicit user approval. In QA or review mode, flag code that does not match `DESIGN.md`.
 
 Project-specific design rules:
-- Forest green is for positive financial value only.
-- Clay is the interactive/action accent.
+- `DESIGN.md` is the shared semantic-color reference. Use base clay (`lf-clay`) for interactive fills, borders, and large accents; use `lf-clay-ink` for interactive text, icons, and focus on light surfaces; use `lf-clay-on-dark` for interactive text and focus on mahogany or espresso.
+- Forest is reserved for positive financial value, eligibility, completed/readiness states, and commit CTAs. Current or selected states remain clay; forest commit CTAs use the solid `lf-forest-strong` hover role.
 - Amber signals permit risk or review-needed states.
 - Use base amber for fills/accents, `lf-amber-ink` for warning text/icons on light surfaces, and `lf-amber-on-dark` for warning text/icons on mahogany or espresso.
 - Brick signals genuine blockers.

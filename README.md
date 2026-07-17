@@ -12,6 +12,8 @@ Check a real address for ADU rent, build cost, and payback estimates. LotFoundry
 - **Demo mode:** Three hardcoded presets (Seattle, Portland, Austin) for offline / API-less use
 - **Scenario persistence:** Authenticated users save scenarios to Firebase; guest users keep local browser saves; shareable deep-link URLs
 - **Concept report:** Printable / downloadable Certificate of Feasibility with the financial ledger, AI parcel interpretation, and typical permit timeline
+- **Account and support:** Settings, data export, account deletion, About, Help, and Feedback routes with shared account and legal navigation
+- **Purchase channels:** Stripe on the web, with StoreKit and Play Billing verification paths prepared for native store builds
 
 ## Run Locally
 
@@ -29,11 +31,16 @@ Open `http://localhost:3000`.
 Create `.env.local`:
 ```
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
+GOOGLE_GEOCODING_KEY=<optional dedicated server-side Geocoding key>
+GOOGLE_PLACES_SERVER_KEY=<optional server-side Places key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
 OPENAI_API_KEY=<server-side OpenAI API key>
 OPENAI_TEXT_MODEL=gpt-5.5
 OPENAI_IMAGE_MODEL=gpt-5.5
+STRIPE_SECRET_KEY=<server-side Stripe secret key>
+STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
+NEXT_PUBLIC_APP_URL=<canonical app URL for Stripe redirects>
 NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
@@ -94,3 +101,12 @@ The app deploys to Firebase Hosting + Cloud Functions. Set the required server-s
 - Feasibility and financial outputs are estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents with local professionals before investing.
 - Parcel data is sourced from Regrid and may not reflect recent changes. Always verify with your local jurisdiction.
 - AI parcel interpretations, permit timelines, and style-matched ADU images are conceptual planning aids, not permit approvals, construction documents, or architectural advice.
+
+## Documentation
+
+Start with [DESIGN.md](DESIGN.md) for the shared design system and semantic color roles.
+
+- **Getting started and contribution:** [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/AGENTS.md](docs/AGENTS.md)
+- **Release and operations:** [docs/deployment.md](docs/deployment.md), [docs/release-checklist.md](docs/release-checklist.md), [docs/debugging-guide.md](docs/debugging-guide.md), [docs/repo-health-routine.md](docs/repo-health-routine.md), [docs/repo-governance.md](docs/repo-governance.md), and [TODOS.md](TODOS.md)
+- **Security and product policy:** [SECURITY.md](SECURITY.md), [docs/store-deployment-readiness.md](docs/store-deployment-readiness.md), [docs/store-listing-copy.md](docs/store-listing-copy.md), [docs/ai-integration-plan.md](docs/ai-integration-plan.md), and [docs/plans/monetization-marketplace-ai.md](docs/plans/monetization-marketplace-ai.md)
+- **History and proposals:** [DESIGN-AUDIT-2026.md](DESIGN-AUDIT-2026.md), [CROSS-PLATFORM-VIEWING-AUDIT.md](CROSS-PLATFORM-VIEWING-AUDIT.md), [docs/hero-exploded-feasibility-layers.md](docs/hero-exploded-feasibility-layers.md), [docs/feasibility-engine-interface.md](docs/feasibility-engine-interface.md), and dated material under [docs/superpowers/](docs/superpowers/)

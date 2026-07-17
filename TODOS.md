@@ -1,6 +1,6 @@
 # LotFoundry Completion Register
 
-Last audited: 2026-07-13
+Last audited: 2026-07-17
 
 This file is the top-level completion and backlog register for LotFoundry. It
 separates shipped work, AI-agent-manageable work, human-required launch tasks,
@@ -9,34 +9,28 @@ enough to scan during maintainer passes.
 
 ## Current Assessment
 
-LotFoundry is app-complete for a production web/PWA beta: the core owner studio,
-live parcel/address paths, demo mode, feasibility engine, report/certificate
-flows, auth, saved scenarios, builder marketplace, Stripe routes, AI routes, and
-Firebase deployment wiring are all present, and the deployed `origin/master`
-baseline is green.
+LotFoundry is app-complete for a production web/PWA beta: the owner studio, live
+parcel/address paths, demo mode, feasibility engine, report/certificate flows,
+auth, saved scenarios, builder marketplace, Stripe routes, AI routes, account
+settings, data export, support, legal, feedback, deletion, and Firebase deployment
+wiring are present. Purchase routing is also in place for web Stripe, iOS StoreKit,
+and Android Play Billing, with server-side verification for native grants.
 
-It is not launch-complete. The current product still lacks a full member settings
-destination, shared account/help/legal navigation, About/Help/Feedback routes, a
-Google Play-compliant web deletion resource, current legal disclosures, Sign in
-with Apple, store-compliant native billing, native packages, and accepted store
-listings. Stripe live-mode checks, Firebase smoke credentials, production domain
-decisions, signing work, and real builder-network operations also need human
-console access or business decisions.
+It is not launch-complete. Stripe live-mode checks, Firebase smoke credentials,
+production-domain decisions, Apple and Google console configuration, signing,
+native sandbox validation, store assets/listings, legal review, and real
+builder-network operations still need human access or business decisions.
 
 Latest verification in this audit:
 
-- Remote release truth: `origin/master` at `27197f1`; GitHub run `29243888968`
-  passed lint, Vitest, typecheck, build, Playwright, Firebase dry-run, Hosting +
-  Firestore deployment, and Functions deployment.
-- GitHub: default branch `master`; no open issues and no open pull requests.
-- Live HTTP smoke: `/`, `/studio`, `/privacy`, and `/terms` return 200;
-  `/about`, `/help`, and `/delete-account` return 404.
-- Local checkout is not a release baseline: it is 17 commits behind
-  `origin/master`, has 35 modified tracked files plus untracked `.grok/`, and
-  `git diff --check` reports two trailing-space errors in the uncommitted
-  `firestore.rules` edit.
-- Local lint, unit tests, and typecheck were unavailable because `node_modules`
-  is absent. Use a clean worktree and `npm ci` before local verification.
+- Remote release truth: `origin/master` at `08e1ee5`; GitHub run `29544591559`
+  passed verification and deployed Hosting, Functions, and Firestore rules.
+- GitHub: default branch `master`; PR work must compare against live
+  `origin/master`, not a potentially stale local `master`.
+- Live HTTP smoke: `/`, `/studio`, `/settings`, `/about`, `/help`, `/feedback`,
+  `/delete-account`, `/privacy`, and `/terms` return 200.
+- Use a clean worktree and `npm ci` for local release verification. Do not use
+  untracked tooling directories or another worktree's changes as release evidence.
 
 ## Planning Authority
 
@@ -80,8 +74,8 @@ healthy, and both store listings are actually available to users.
   `public/.well-known/assetlinks.json`, privacy policy, terms, and draft store
   listing/privacy-copy docs exist.
 - Deployment: Firebase Hosting + Functions + Firestore rules path is configured;
-  CI verifies and deploys `master`; `apiAi`, `apiStripe`, and generic `api`
-  rewrites are separated.
+  CI verifies and deploys `master`; `apiAi`, `apiStripe`, `apiStore`, and generic
+  `api` rewrites are separated.
 
 ## To Complete - AI-Agent Manageable
 

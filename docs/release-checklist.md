@@ -14,6 +14,10 @@ Run against a clean install: `rm -rf node_modules .next && npm ci`
 
 ## Manual QA
 
+- [ ] Semantic-color check: base clay is used for interactive fills and borders; clay-ink is used for interactive text and focus on light surfaces; clay-on-dark is used on mahogany or espresso.
+- [ ] State-color check: current/selected controls are clay, completed/readiness states are forest, and forest commit CTAs use their solid semantic hover role.
+- [ ] Account/support flow: `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`, `/privacy`, and `/terms` load; test-account export and deletion are understandable and complete.
+
 - [ ] Desktop visual check at 1440x900 — no clipped UI, no blank scene
 - [ ] Tablet visual check at 768x1024 — no horizontal overflow
 - [ ] Mobile visual check at 390x844 — no horizontal overflow
@@ -38,6 +42,8 @@ Run against a clean install: `rm -rf node_modules .next && npm ci`
 - [ ] Firestore rules deployed - `users/{uid}/savedScenarios` allows owner create/read/delete and rejects malformed scenario payloads
 
 ## Firebase Deploy (if applicable)
+
+- [ ] If native-store verification is enabled, validate StoreKit and Play Billing sandbox receipts through `/api/store/purchases/verify`; do not substitute an unverified web Stripe flow for native purchase testing.
 
 - [ ] `npm run build:firebase` succeeds
 - [ ] `firebase deploy --only hosting,functions` succeeds
