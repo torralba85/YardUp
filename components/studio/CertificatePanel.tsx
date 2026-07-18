@@ -212,7 +212,7 @@ export default function CertificatePanel({
     // right-rail sidebar; the estimate and the unlock offer are its content.
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
       <div className="text-center">
-        <p className="lf-kicker text-lf-clay">Step 4 · Certificate</p>
+        <p className="lf-kicker text-lf-clay-ink">Step 4 · Certificate</p>
         <h2 className="lf-section-heading mt-2 text-lf-espresso">Your Certificate of Feasibility.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
           Review your estimate, then create one recorded parcel, income, and approval-timeline
@@ -290,7 +290,7 @@ export default function CertificatePanel({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <Lock size={16} className="shrink-0 text-lf-clay" />
+              <Lock size={16} className="shrink-0 text-lf-clay-ink" />
               <h3 className="text-sm font-semibold text-lf-espresso">
                 The complete certificate is a one-time {price}
               </h3>

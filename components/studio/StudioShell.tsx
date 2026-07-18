@@ -121,7 +121,7 @@ export default function StudioShell({
                 <button
                   type="button"
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   <MapPin size={13} />
                   Change address
@@ -130,7 +130,7 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-11 w-full rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="mt-3 h-11 w-full rounded-full border border-lf-taupe/25 text-xs font-medium text-lf-sand transition hover:border-lf-taupe/40 motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Reset Project
               </button>
@@ -142,7 +142,7 @@ export default function StudioShell({
                   type="button"
                   onClick={() => setScenariosOpen((o) => !o)}
                   aria-expanded={scenariosOpen}
-                  className="flex w-full min-h-11 items-center justify-between px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-inset"
+                  className="flex w-full min-h-11 items-center justify-between px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-inset"
                 >
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
                     Saved Concepts
@@ -167,7 +167,7 @@ export default function StudioShell({
                           <button
                             type="button"
                             onClick={() => onLoadScenario?.(scenario.id)}
-                            className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-lf-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                            className="min-w-0 flex-1 truncate text-left text-lf-sand hover:text-lf-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                           >
                             {scenario.name}
                           </button>
@@ -175,7 +175,7 @@ export default function StudioShell({
                             type="button"
                             onClick={() => onDeleteScenario?.(scenario.id)}
                             aria-label={`Delete saved concept ${scenario.name}`}
-                            className="relative flex h-9 w-9 items-center justify-center rounded-md p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany before:absolute before:-inset-1"
+                            className="relative flex h-9 w-9 items-center justify-center rounded-md p-1 text-lf-taupe transition hover:bg-lf-espresso/60 hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany before:absolute before:-inset-1"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -212,7 +212,7 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-sand text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lf-sand text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               >
                 Sign In
               </button>

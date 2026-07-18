@@ -110,7 +110,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                   type="checkbox"
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-lf-clay rounded focus:ring-lf-clay"
+                  className="mt-0.5 h-4 w-4 accent-lf-clay rounded focus:ring-lf-clay-ink"
                 />
                 <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
                   {step}
@@ -157,7 +157,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           href={safeHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay transition hover:text-lf-clay-strong"
+                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay-ink transition hover:text-lf-clay-strong"
                         >
                           <BookOpen size={14} />
                           {citationLabel}

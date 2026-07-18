@@ -33,7 +33,7 @@ export default function TypeSamplesPage() {
 
         <header className="grid gap-8 border-b border-lf-hairline py-14 lg:grid-cols-[1.08fr_0.92fr] lg:items-end lg:py-20">
           <div>
-            <p className="lf-kicker text-lf-clay">Current production system</p>
+            <p className="lf-kicker text-lf-clay-ink">Current production system</p>
             <h1 className="lf-display-hero mt-4 max-w-4xl text-lf-espresso">
               Three families. Three jobs.
             </h1>
@@ -47,7 +47,7 @@ export default function TypeSamplesPage() {
 
         <div className="grid gap-px border-x border-b border-lf-hairline bg-lf-hairline lg:grid-cols-3">
           <article className="bg-lf-card p-6 sm:p-8">
-            <p className="lf-kicker-dense text-lf-clay">01 / Display and money</p>
+            <p className="lf-kicker-dense text-lf-clay-ink">01 / Display and money</p>
             <h2 className="lf-card-heading mt-3 text-lf-espresso">
               Cormorant Garamond
             </h2>
@@ -64,7 +64,7 @@ export default function TypeSamplesPage() {
           </article>
 
           <article className="bg-lf-card p-6 sm:p-8">
-            <p className="lf-kicker-dense text-lf-clay">02 / Body and controls</p>
+            <p className="lf-kicker-dense text-lf-clay-ink">02 / Body and controls</p>
             <h2 className="lf-card-heading mt-3 text-lf-espresso">
               Libre Franklin
             </h2>
@@ -75,7 +75,7 @@ export default function TypeSamplesPage() {
             <div className="mt-8 space-y-3">
               <Link
                 href="/studio"
-                className="flex min-h-12 items-center justify-between bg-lf-mahogany px-5 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay"
+                className="flex min-h-12 items-center justify-between bg-lf-clay px-5 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
               >
                 Check my address
                 <ArrowRight className="h-4 w-4" />
@@ -103,7 +103,7 @@ export default function TypeSamplesPage() {
         <section className="py-16 lg:py-20">
           <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
             <div>
-              <p className="lf-kicker text-lf-clay">Production scale</p>
+              <p className="lf-kicker text-lf-clay-ink">Production scale</p>
               <h2 className="lf-section-heading mt-3 text-lf-espresso">
                 Fewer styles, clearer hierarchy.
               </h2>

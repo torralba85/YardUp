@@ -1225,7 +1225,7 @@ export default function ParcelScene({
               aria-pressed={active}
               className={`inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded px-2.5 text-xs font-semibold leading-none transition-colors sm:h-9 sm:min-w-[86px] ${
                 active
-                  ? "bg-lf-mahogany text-lf-sand"
+                  ? "bg-lf-clay text-lf-sand"
                   : "text-lf-espresso hover:bg-lf-taupe/10 focus-visible:bg-lf-taupe/10"
               }`}
             >

@@ -2,6 +2,11 @@
 
 **Supersedes:** `VISUAL-DESIGN-AUDIT.md` (deleted — it audited the pre-Blue Hour system: Outfit/Manrope/Geist Mono, no dual-lighting split. `DESIGN.md` v3 replaced that system on 2026-06-10 through 2026-07-05; this audit checks the codebase against the *current* doc.)
 
+> Historical audit snapshot. It records findings from the 2026-07-05 surface;
+> `DESIGN.md` and `docs/design-audits/2026-07-15-studio-color-ux.md` are the
+> current references. PR #139 resolves the accessibility color-role and focus
+> guidance that this snapshot predates.
+
 **Scope:** `app/**`, `components/**` (TSX + CSS), cross-referenced against `DESIGN.md` v3.
 **Method:** Five parallel searches — typography/color, spacing/radius/layout, responsiveness/mobile, accessibility (WCAG 2.2 AA), component consistency/motion — each grepping and reading source, verified with file:line citations below.
 

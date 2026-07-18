@@ -1,5 +1,10 @@
 # LotFoundry — Cross-Platform Viewing Audit (Mobile · Desktop · iOS)
 
+> Historical audit. This predates the 2026-07 mobile journey and references the
+> retired `AppShell`, `MobileStudio`, `StudioSheet`, and `WizardFlow` paths.
+> Preserve its findings as a record, but use `DESIGN.md`, `docs/AGENTS.md`, and
+> `components/studio/mobile/journey/MobileJourney.tsx` for current behavior.
+
 **Method:** Source-grounded review of every responsive surface. Live multi-breakpoint
 screenshots were attempted via the preview harness but could not be captured — the preview
 server dropped from tracking immediately after each start (two launch configs tried), while

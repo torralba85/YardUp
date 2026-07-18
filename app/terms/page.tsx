@@ -33,11 +33,11 @@ export default function TermsPage() {
         <p>
           You must provide accurate information. You are responsible for credentials and activity
           under your account. Notify{" "}
-          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
             support@lotfoundry.com
           </a>{" "}
           of unauthorized access. You may delete your account via Settings or{" "}
-          <Link href="/delete-account" className="font-medium text-lf-clay underline">
+          <Link href="/delete-account" className="font-medium text-lf-clay-ink underline">
             /delete-account
           </Link>
           .
@@ -107,7 +107,7 @@ export default function TermsPage() {
 
       <LegalSection title="12. Contact">
         <p>
-          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay underline">
+          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
             support@lotfoundry.com
           </a>
         </p>

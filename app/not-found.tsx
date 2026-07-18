@@ -33,7 +33,7 @@ export default function NotFound() {
         </Link>
         <Link
           href="/help"
-          className="inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-lf-clay"
+          className="inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-lf-clay-ink"
         >
           Get help
         </Link>

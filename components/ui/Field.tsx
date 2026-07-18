@@ -121,7 +121,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "h-9 rounded-full border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2",
+              "h-9 rounded-full border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2",
               checked
                 ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
                 : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2",
@@ -164,7 +164,7 @@ export function Slider({ label, valueText, id, className, ...props }: SliderProp
         aria-valuetext={valueText}
         className={cn(
           "h-11 w-full cursor-pointer appearance-none bg-transparent",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay-ink",
           "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-lf-hairline",
           "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lf-card [&::-webkit-slider-thumb]:bg-lf-clay",
           "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-lf-hairline",

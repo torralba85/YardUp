@@ -58,7 +58,7 @@ export function SettingsClient() {
           Sign in
         </Link>
         <div className="mt-4">
-          <Link href="/signup?next=/settings" className="text-sm font-medium text-lf-clay">
+          <Link href="/signup?next=/settings" className="text-sm font-medium text-lf-clay-ink">
             Create account
           </Link>
         </div>
@@ -82,7 +82,7 @@ export function SettingsClient() {
           </Link>
           <Link
             href={profile.role === "builder" ? "/builder" : "/studio"}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
           >
             Back to {profile.role === "builder" ? "dashboard" : "studio"}
           </Link>
@@ -131,7 +131,7 @@ export function SettingsClient() {
               </p>
               <Link
                 href="/builder"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
               >
                 Open builder dashboard
               </Link>
@@ -176,13 +176,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/terms"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
               >
                 Terms &amp; Conditions
               </Link>
               <Link
                 href="/privacy"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
               >
                 Privacy Policy
               </Link>

@@ -86,7 +86,7 @@ export default function LoginForm() {
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-lg border border-lf-brick/20 bg-lf-brick/5 px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-lg border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -120,7 +120,7 @@ export default function LoginForm() {
             </label>
             <Link
               href="/forgot-password"
-              className="lf-body-sm text-lf-clay transition-colors hover:text-lf-mahogany"
+              className="lf-body-sm text-lf-clay-ink transition-colors hover:text-lf-mahogany"
             >
               Forgot password?
             </Link>
@@ -196,7 +196,7 @@ export default function LoginForm() {
       <div className="mt-6 flex flex-col space-y-2">
         <p className="lf-body-sm text-center text-lf-muted">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-lf-clay hover:text-lf-mahogany">
+          <Link href="/signup" className="font-medium text-lf-clay-ink hover:text-lf-mahogany">
             Sign up
           </Link>
         </p>
@@ -204,7 +204,7 @@ export default function LoginForm() {
           Are you a builder?{" "}
           <Link
             href="/signup?role=builder"
-            className="font-medium text-lf-clay hover:text-lf-mahogany"
+            className="font-medium text-lf-clay-ink hover:text-lf-mahogany"
           >
             Register here
           </Link>

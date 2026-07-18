@@ -71,7 +71,7 @@ export function PanelHeader({ eyebrow, title, sub, actions, as: Heading = "h2", 
   return (
     <div className={cn("flex items-start justify-between gap-4 border-b border-lf-hairline px-6 pb-4 pt-5", className)}>
       <div className="min-w-0">
-        {eyebrow ? <p className="lf-kicker pb-1 text-lf-clay">{eyebrow}</p> : null}
+        {eyebrow ? <p className="lf-kicker pb-1 text-lf-clay-ink">{eyebrow}</p> : null}
         <Heading id={id} className="lf-panel-heading text-lf-espresso">
           {title}
         </Heading>

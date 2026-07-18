@@ -22,12 +22,24 @@ describe("Button", () => {
 
   it("applies the commit (forest) variant for money actions", () => {
     render(<Button variant="commit">Generate certificate</Button>);
-    expect(screen.getByRole("button", { name: "Generate certificate" })).toHaveClass("bg-lf-forest");
+    expect(screen.getByRole("button", { name: "Generate certificate" })).toHaveClass(
+      "bg-lf-forest",
+      "hover:bg-lf-forest-strong",
+    );
   });
 
   it("applies the primary (clay) variant by default", () => {
     render(<Button>Primary</Button>);
     expect(screen.getByRole("button", { name: "Primary" })).toHaveClass("bg-lf-clay");
+  });
+
+  it("uses accessible clay ink for ghost actions and focus", () => {
+    render(<Button variant="ghost">Ghost</Button>);
+    expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
+      "text-lf-clay-ink",
+      "hover:bg-lf-clay-soft",
+      "focus-visible:ring-lf-clay-ink",
+    );
   });
 
   it("marks itself busy and disabled while loading", () => {

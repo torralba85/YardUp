@@ -1,5 +1,11 @@
 # Feasibility Engine — Interface Spec (synthesis)
 
+> Proposal, not the current interface. The production implementation is in
+> `lib/feasibility.ts`, which currently exposes the positional
+> `calculateFeasibility(parcel, config, assumptions, expectedRent?)` API and
+> market provenance. Retain this document as design rationale until an explicit
+> interface migration is approved.
+>
 > Output of a "Design It Twice" exercise on `lib/feasibility.ts`. Four designs were
 > generated under different constraints (minimal surface / max flexibility /
 > common-case / auditable graph). This spec is the recommended blend:

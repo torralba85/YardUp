@@ -121,7 +121,7 @@ export function CertificateSpecimen() {
             </div>
             <div
               aria-hidden="true"
-              className="absolute -top-3 right-8 rotate-6 rounded-sm border-2 border-lf-brick/80 bg-lf-brick/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-brick"
+              className="absolute -top-3 right-8 rotate-6 rounded-sm border-2 border-lf-brick/80 bg-lf-brick-soft px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-brick"
             >
               Concept · not a permit
             </div>

@@ -146,7 +146,7 @@ export default function UnlockSlip({
           </div>
 
           {error && (
-            <div role="alert" className="mt-3 border border-lf-brick/40 bg-lf-brick/5 px-3 py-2 text-xs text-lf-brick">
+            <div role="alert" className="mt-3 border border-lf-brick/40 bg-lf-brick-soft px-3 py-2 text-xs text-lf-brick">
               {error}
             </div>
           )}

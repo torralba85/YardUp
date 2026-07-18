@@ -372,7 +372,7 @@ export default function AddressSearch({
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-sand enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-1"
+        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-sand enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search
@@ -401,7 +401,7 @@ export default function AddressSearch({
                 index === activeIndex ? "bg-lf-sand-2" : ""
               }`}
             >
-              <MapPin size={13} className="shrink-0 text-lf-clay" aria-hidden="true" />
+              <MapPin size={13} className="shrink-0 text-lf-clay-ink" aria-hidden="true" />
               <span className="truncate">{suggestion.text}</span>
             </li>
           ))}
@@ -422,7 +422,7 @@ export default function AddressSearch({
       {/* Pin icon on the right when Places is active and a value is entered */}
       {googleEnabled && inputValue && !onSubmitText && (
         <span
-          className="pointer-events-none absolute right-3 top-5.5 -translate-y-1/2 text-lf-clay"
+          className="pointer-events-none absolute right-3 top-5.5 -translate-y-1/2 text-lf-clay-ink"
           aria-hidden="true"
         >
           <MapPin size={15} />

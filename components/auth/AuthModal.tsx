@@ -273,7 +273,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1 text-lf-taupe hover:bg-lf-sand/10 hover:text-lf-sand transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+          className="absolute right-4 top-4 rounded-full p-1 text-lf-taupe hover:bg-lf-sand/10 hover:text-lf-sand transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
         >
           <X size={20} />
           <span className="sr-only">Close</span>
@@ -304,7 +304,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     required
-                    className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/40"
+                    className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
                     placeholder="Alma Reyes"
                   />
                 </div>
@@ -324,7 +324,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/40"
+                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
                   placeholder="name@example.com"
                 />
               </div>
@@ -343,7 +343,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/40"
+                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
                   placeholder="••••••••"
                 />
               </div>
@@ -359,11 +359,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {isSignUp && (
               <p className="lf-caption text-lf-taupe">
                 By creating an account, you agree to our{" "}
-                <a href="/terms" className="text-lf-sand underline underline-offset-2">
+                <a
+                  href="/terms"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
                   Terms &amp; Conditions
                 </a>{" "}
                 and{" "}
-                <a href="/privacy" className="text-lf-sand underline underline-offset-2">
+                <a
+                  href="/privacy"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
                   Privacy Policy
                 </a>
                 .
@@ -373,7 +379,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 min-h-11 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 min-h-11 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
             </button>
@@ -395,7 +401,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
                 <path
@@ -421,7 +427,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               type="button"
               onClick={handleAppleSignIn}
               disabled={loading}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
@@ -435,7 +441,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="rounded-full text-sm text-lf-taupe transition-colors hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+            className="rounded-full text-sm text-lf-taupe transition-colors hover:text-lf-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
           >
             {isSignUp
               ? "Already have an account? Sign In"

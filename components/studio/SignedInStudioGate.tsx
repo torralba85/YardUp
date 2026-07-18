@@ -108,7 +108,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
             <button
               type="button"
               onClick={() => void logout()}
-              className="flex min-h-11 items-center gap-2 rounded-full border border-lf-hairline px-4 text-sm font-semibold transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay"
+              className="flex min-h-11 items-center gap-2 rounded-full border border-lf-hairline px-4 text-sm font-semibold transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
             >
               <LogOut size={15} />
               Sign out
@@ -120,7 +120,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       <main className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-4 py-12 lg:px-8">
         <section className="w-full rounded-2xl border border-lf-hairline bg-lf-card p-6 shadow-sm sm:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] lg:gap-12">
           <div>
-            <p className="lf-kicker text-lf-clay">Your workspace</p>
+            <p className="lf-kicker text-lf-clay-ink">Your workspace</p>
             <h1 className="lf-section-heading mt-3">Start with your property.</h1>
             <p className="lf-body mt-3 max-w-[58ch] text-lf-muted">
               Your account starts empty. Search an address to load its parcel, zoning, and local market data.
@@ -141,7 +141,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
               {lookupError && (
                 <div
                   role="alert"
-                  className="mt-3 flex items-start gap-2 rounded-lg border border-lf-brick/30 bg-lf-brick/5 p-3 text-sm text-lf-brick"
+                  className="mt-3 flex items-start gap-2 rounded-lg border border-lf-brick/30 bg-lf-brick-soft p-3 text-sm text-lf-brick"
                 >
                   <Search size={16} className="mt-0.5 shrink-0" />
                   {lookupError}
@@ -152,7 +152,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
 
           <div className="mt-10 flex min-h-52 items-center justify-center rounded-xl border border-dashed border-lf-hairline bg-lf-sand-2 p-8 text-center lg:mt-0">
             <div>
-              <Search size={28} className="mx-auto text-lf-clay" aria-hidden="true" />
+              <Search size={28} className="mx-auto text-lf-clay-ink" aria-hidden="true" />
               <p className="mt-4 font-semibold">No property loaded</p>
               <p className="mt-2 text-sm text-lf-muted">Your analysis will appear here after you choose an address.</p>
             </div>

@@ -1,155 +1,102 @@
 # Deployment Guide
 
-LotFoundry ships as a Next.js 16 app deployed to **Firebase Hosting + Cloud Functions**.
+LotFoundry is a Next.js 16 app deployed to Firebase Hosting and Cloud Functions.
+The production Firebase project is `yardup-2026`.
 
 ## Architecture
 
-| Layer | Firebase Service | Purpose |
+| Layer | Firebase service | Purpose |
 |---|---|---|
-| Static assets & SPA | Firebase Hosting | Serves the Next.js standalone build, fonts, icons, manifest |
-| AI API routes (`/api/ai/*`) | Cloud Functions (nodejs22) | Runs OpenAI-backed parcel insights and style-matched ADU concepts |
-| Other API routes (`/api/*`) | Cloud Functions (nodejs22) | Proxies Regrid parcel data and Google Maps Static aerial images |
+| Web app | Hosting + `app` | Serves all non-API Next.js routes and static assets |
+| AI API | `apiAi` | Serves `/api/ai/**` with the OpenAI secret and a longer timeout |
+| Stripe API | `apiStripe` | Serves `/api/stripe/**` with Stripe secrets only |
+| Native-store API | `apiStore` | Serves `/api/store/**` receipt verification with native-store secrets only when enabled |
+| General API | `api` | Serves remaining `/api/**` routes with Google Maps and Regrid secrets only |
+
+All five Functions use the same prepared Next.js handler. The rewrite selects the
+least-privilege function rather than a different application bundle.
 
 ## Prerequisites
 
-- Node.js 22 or newer locally.
-- Firebase CLI installed: `npm install -g firebase-tools`
-- Firebase project access for `yardup-2026` (or update `.firebaserc` and the `NEXT_PUBLIC_FIREBASE_*` values for another project).
-- A service account key with the **Firebase Hosting Admin** role for CI deployment.
+- Node.js 22 or newer.
+- Firebase CLI: `npm install -g firebase-tools`.
+- Access to `yardup-2026`, or a consciously updated `.firebaserc` and public Firebase configuration.
+- CI service account permissions to deploy Firebase Hosting, Cloud Functions v2, and Firestore rules.
 
-## Local Deploy
+## Local deploy
 
 ```bash
-# 1. Install dependencies
 npm ci
-
-# 2. Build the app + prepare Firebase output
 npm run build:firebase
-
-# 3. Login to Firebase (first time only)
 firebase login
-
-# 4. Validate and deploy hosting + functions + Firestore rules
 npm run deploy:dry-run
 npm run deploy
-# or: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026
 ```
 
-## Build Configuration
+`npm run deploy` covers Hosting, Functions, and Firestore rules. Deploy rules only
+with `npm run deploy:rules` when that is the explicitly intended scope.
 
-The project's `next.config.ts` exports:
+## Firebase configuration
 
-```ts
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  output: "standalone",
-  transpilePackages: ["motion"],
-};
+`firebase.json` uses these rewrite boundaries:
+
+```text
+/api/ai/**      -> apiAi
+/api/stripe/**  -> apiStripe
+/api/store/**   -> apiStore
+/api/**         -> api
+**              -> app
 ```
 
-- `output: "standalone"` produces a self-contained server bundle that the Cloud Function uses.
-- `scripts/prepare-firebase.js` copies the standalone output into `dist/` (for Hosting) and `functions/.next/` (for Functions).
+Keep `firebase.json`, `functions/index.js`, and `scripts/prepare-firebase.js`
+aligned whenever a function boundary changes.
 
-## Firebase Configuration
+## Environment and secrets
 
-### `firebase.json`
+For local development, use `.env.local` and/or `functions/.env`; never commit
+either file. The full variable reference is in [README.md](../README.md) and
+[AGENTS.md](../AGENTS.md). The server-side variables most relevant to deploys are:
 
-- `hosting.public`: `dist` — the prepared static + standalone output.
-- `hosting.rewrites`: `/api/ai/**` routes to the longer-timeout `apiAi` Cloud Function, `/api/**` routes to the generic `api` Cloud Function, and all other routes serve the Next.js app function.
-- `functions.source`: `functions` — the Node.js function directory.
-- `functions.runtime`: `nodejs22`.
-
-### `.firebaserc`
-
-Sets the default Firebase project ID to `yardup-2026`.
-
-### `functions/index.js`
-
-Firebase Functions v2 HTTPS functions:
-- **`app`** — serves all Next.js SSR pages and static assets
-- **`apiAi`** — serves `/api/ai/*` routes with a longer timeout and an OpenAI Secret Manager binding
-- **`api`** — serves generic non-payment API routes with Google Maps and Regrid Secret Manager bindings
-- **`apiStripe`** — serves Stripe checkout and webhook routes with Stripe Secret Manager bindings
-
-## CI/CD (GitHub Actions)
-
-`.github/workflows/ci.yml` runs two jobs:
-
-1. **verify** — lint, test, typecheck, build, and Playwright E2E (runs on every push and PR).
-2. **deploy** — runs only on pushes to `master` after `verify` passes. Builds with `build:firebase`, authenticates via `google-github-actions/auth`, dry-runs the same Firebase target set, and then runs `firebase deploy --only hosting,functions,firestore:rules`.
-
-### Required CI Secrets
-
-| Secret | Purpose |
-|---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | JSON service account key with **Firebase Admin** role. Generate in Firebase Console → Project Settings → Service Accounts → Generate new private key. |
-
-## Environment Variables
-
-### Local development
-
-Create `functions/.env` (copied from `functions/.env.example`):
-```
-GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
-NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
-REGRID_API_KEY=<server-side Regrid Parcel API key>
-OPENAI_API_KEY=<server-side OpenAI API key>
-NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<Firebase storage bucket>
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
-NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
-NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=<Firebase App Check reCAPTCHA Enterprise site key>
-# Local only; register this token in Firebase App Check and never deploy it.
-NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=<registered debug token>
+```text
+GOOGLE_MAPS_API_KEY
+GOOGLE_GEOCODING_KEY                 # optional dedicated key
+GOOGLE_PLACES_SERVER_KEY             # optional dedicated key
+REGRID_API_KEY
+OPENAI_API_KEY
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+NEXT_PUBLIC_APP_URL
+APPLE_BUNDLE_ID                      # native verification only
+APPLE_ROOT_CA_FINGERPRINT256         # native verification only
+GOOGLE_PLAY_PACKAGE_NAME             # native verification only
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON     # native verification only
 ```
 
-Firebase Functions v2 reads this file automatically. Do **not** commit `.env` — it's in `.gitignore`.
+Store production server-only values in Google Secret Manager. `functions/index.js`
+binds `OPENAI_API_KEY` only to `apiAi`, Stripe values only to `apiStripe`, Google
+Maps/Regrid values only to `api`, and native-store credentials only to `apiStore`
+when `ENABLE_NATIVE_STORE_VERIFICATION=true`. Do not place server credentials in
+GitHub Actions secrets or `NEXT_PUBLIC_*` variables.
 
-### CI / production
+CI also needs `FIREBASE_SERVICE_ACCOUNT` and the browser-safe public Firebase and
+Places configuration. Restrict the browser Places key by HTTP referrer. Keep
+server-side Maps keys server-safe rather than referrer-locked.
 
-Store server-only provider credentials in Google Secret Manager and bind them
-only to the Functions that use them:
+## CI/CD
 
-```bash
-firebase functions:secrets:set GOOGLE_MAPS_API_KEY_SECRET --project yardup-2026
-firebase functions:secrets:set REGRID_API_KEY_SECRET --project yardup-2026
-firebase functions:secrets:set OPENAI_API_KEY_SECRET --project yardup-2026
-firebase functions:secrets:set STRIPE_SECRET_KEY --project yardup-2026
-firebase functions:secrets:set STRIPE_WEBHOOK_SECRET --project yardup-2026
-```
+`.github/workflows/ci.yml` runs:
 
-The `*_SECRET` names avoid collisions with the runtime variables consumed by
-Next.js; `functions/index.js` maps them inside the least-privilege Function.
-Do not duplicate these values in GitHub Actions secrets or `functions/.env` in
-production. GitHub Actions needs only deploy credentials and public build-time
-configuration:
+1. `verify` on every pull request and push: lint, unit tests, typecheck, build,
+   and Playwright.
+2. `deploy` only after `verify` passes on `master`: `build:firebase`, deploy
+   dry-run, then Hosting, Functions, and Firestore rules deployment.
 
-| Secret | Purpose |
-|---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | Service account JSON for Firebase deploy |
-| `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places key restricted by HTTP referrer |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web API key |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app ID |
-| `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` | Public reCAPTCHA Enterprise site key used by Firebase App Check |
+Pull-request deploys are intentionally skipped. A green historical run does not
+replace the `verify` run created by the commit under review.
 
-Firebase App Check enforcement requires the client to initialize the registered
-reCAPTCHA Enterprise provider. Keep the production Hosting and App Hosting domains
-on that key's allowlist. For local authenticated testing, create a registered debug
-token and set `NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` only in `.env.local`; never
-store that token in GitHub Actions or production environment files unless a dedicated
-CI App Check flow explicitly needs it.
+## Release verification
 
-The CI workflow writes `functions/.env` from these secrets before building, and the Firebase action deploys the result. The service account must be able to deploy Firebase Hosting, Cloud Functions v2, and Firestore rules in `yardup-2026`; if Cloud Billing API access or required Firebase/GCP APIs are disabled, the dry-run step fails before the live deploy command.
-
-## Release Verification
-
-Before promoting a deploy run the local release gate:
+Before a production deploy, run the release gate from a clean worktree:
 
 ```bash
 npm ci
@@ -163,47 +110,32 @@ npm run deploy:dry-run
 FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
 ```
 
-All commands must pass before promotion. CI (`.github/workflows/ci.yml`) runs the non-credentialed gates; run the Firebase smoke command with a dedicated test user before or after deploy.
+After deployment, confirm:
 
-## Post-Deploy Smoke Test
-
-After deployment, manually verify:
-
-- Title `LotFoundry | ADU Feasibility Studio` loads on the Firebase Hosting URL.
-- The default feasibility workflow is visible.
-- The report preview is visible at the bottom of the page.
-- Selecting `compact-lot` and `1,000 sf` displays the `Review needed` alert.
-- No console errors in the browser devtools.
-- The Share Link button copies the current scenario URL.
-- `FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase` signs in, saves a scenario to Firestore, loads it, and deletes it.
-- (If API keys configured) Address search returns parcel data via `/api/parcel`.
-
-## Production Acceptance Criteria
-
-- Firebase deploy dry-run passes before live deploy.
-- Live deploy includes Hosting, Functions, and Firestore rules.
-- Firestore rules tests pass before deploy.
-- Dedicated Firebase smoke user can sign in, save a scenario, load it, and delete it.
-- Production URL loads `/`, `/privacy`, `/terms`, `/login`, `/signup`, `/studio`, and `/builder` (account management lives inside the studio AppShell, not a standalone `/account` route).
-- Browser console has no release-blocking errors during the estimate and save/load flows.
-- API keys are restricted in Google Cloud Console to the minimum required referrers or server contexts.
+- `/`, `/studio`, `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`,
+  `/privacy`, and `/terms` load successfully.
+- Address search works with the configured provider keys and preserves a usable
+  fallback without them.
+- A dedicated Firebase smoke user can sign in, save, load, and delete a scenario.
+- Authenticated data export and deletion work with a dedicated test account.
+- Stripe checkout/webhook and native-store verification are tested only with the
+  configured credentials and their respective sandbox or live test flows.
 
 ## Rollback
 
-Firebase Hosting:
 ```bash
 firebase hosting:rollback
-```
-
-Cloud Functions:
-```bash
-git revert <commit> && git push
+git revert <commit>
+git push
 firebase deploy --only functions
 firebase deploy --only firestore:rules
 ```
 
-Saved scenarios for authenticated users live in Firestore under `users/{uid}/savedScenarios`; rollback does not require a schema migration for the current create/load/delete flow.
+Saved scenarios live under `users/{uid}/savedScenarios`; the current create/load/delete
+flow does not require a rollback schema migration.
 
-## Audit Note
+## Dependency audit note
 
-`npm audit --audit-level=moderate` currently reports a Next.js nested PostCSS advisory whose automatic fix proposes a breaking Next.js downgrade. Do **not** run `npm audit fix --force`. Track this through Next.js upstream releases and apply once a non-breaking fix is available.
+`npm audit --audit-level=moderate` currently reports transitive
+`websocket-driver@0.7.4` advisories. Update it to `0.7.5` in a dedicated,
+reviewed dependency PR. Do not use `npm audit fix --force`.

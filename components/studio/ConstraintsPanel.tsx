@@ -108,7 +108,7 @@ export default function ConstraintsPanel({
       className="flex w-full shrink-0 flex-col border-t border-lf-hairline bg-lf-card lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
     >
       <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
-        <p className="pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+        <p className="pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
           Your property
         </p>
         <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} autoFocusSignal={addressFocusSignal} />
@@ -121,7 +121,7 @@ export default function ConstraintsPanel({
         {parcelError && (
           <div
             role="alert"
-            className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+            className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
           >
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             {parcelError}
@@ -130,7 +130,7 @@ export default function ConstraintsPanel({
       </div>
 
       <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
           Property constraints
         </p>
         <h2 className="mt-1 font-display text-2xl font-bold leading-[1.15] text-lf-espresso">

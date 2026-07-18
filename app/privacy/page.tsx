@@ -64,11 +64,11 @@ export default function PrivacyPage() {
       <LegalSection title="6. Retention &amp; Deletion">
         <p>
           You may export or delete your account from{" "}
-          <Link href="/settings" className="font-medium text-lf-clay underline">
+          <Link href="/settings" className="font-medium text-lf-clay-ink underline">
             Settings
           </Link>{" "}
           or the public{" "}
-          <Link href="/delete-account" className="font-medium text-lf-clay underline">
+          <Link href="/delete-account" className="font-medium text-lf-clay-ink underline">
             Delete account
           </Link>{" "}
           page (usable without reinstalling a mobile app). Deletion removes account-associated
@@ -106,14 +106,14 @@ export default function PrivacyPage() {
           Privacy questions:{" "}
           <a
             href="mailto:privacy@lotfoundry.com"
-            className="font-medium text-lf-clay underline"
+            className="font-medium text-lf-clay-ink underline"
           >
             privacy@lotfoundry.com
           </a>
           . Support:{" "}
           <a
             href="mailto:support@lotfoundry.com"
-            className="font-medium text-lf-clay underline"
+            className="font-medium text-lf-clay-ink underline"
           >
             support@lotfoundry.com
           </a>

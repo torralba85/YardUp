@@ -17,6 +17,13 @@
   --color-lf-taupe: #BFA58E;
   --color-lf-taupe-soft: #BFA58E2E;
   --color-lf-clay: #8C5B3F;
+  --color-lf-clay-soft: #8C5B3F14;
+  /* Accessible clay roles: base clay remains the fill/accent hue, clay-ink
+     carries small interactive text on light surfaces, and clay-on-dark keeps
+     focus/interaction visible on mahogany and espresso. */
+  --color-lf-clay-ink: #6F3F28;
+  --color-lf-clay-strong: #6F3F28;
+  --color-lf-clay-on-dark: #D09A78;
   --color-lf-mahogany: #592A0F;
   --color-lf-espresso: #261307;
   --color-lf-muted: #6B5B4D;
@@ -24,13 +31,13 @@
 
   /* On-dark accents (money band, instrument rail) */
   --color-lf-money-on-dark: #9DC4A8;
-  --color-lf-clay-strong: #6F3F28;
   /* Raised dark surface — the mahogany-family "#2A1A10 surface" from the
      DESIGN.md dark-mode spec, for cards/panels sitting on espresso/mahogany. */
   --color-lf-dark-surface: #2A1A10;
 
   /* Semantic colors */
   --color-lf-forest: #2F4A38;
+  --color-lf-forest-strong: #263D2F;
   --color-lf-forest-soft: #2F4A381A;
   --color-lf-amber: #C8922A;
   --color-lf-amber-soft: #C8922A1A;
@@ -42,6 +49,7 @@
   --color-lf-amber-ink: #745A00;
   --color-lf-amber-on-dark: #D9AA4A;
   --color-lf-brick: #A23B26;
+  --color-lf-brick-strong: #842F1F;
   --color-lf-brick-soft: #A23B261A;
   /* Brick tuned for text/icons on the dark espresso/mahogany surfaces
      (verdict band, constraint list) — mirrors --color-lf-amber-on-dark's role
@@ -309,8 +317,9 @@ button:focus-visible {
   /* Clay is the interactive accent ("the hand you click with"). Focus rings
      must not use amber — amber is reserved for "review needed / permit risk"
      status, so an amber focus ring collides with a meaning-bearing color.
-     This also unifies with the component-level `ring-lf-clay` focus styles. */
-  outline: 2px solid var(--color-lf-clay);
+     The ink role keeps the same hue while raising light-surface contrast from
+     4.60:1 to 7.01:1; dark surfaces use `clay-on-dark`. */
+  outline: 2px solid var(--color-lf-clay-ink);
   outline-offset: 3px;
 }
 
