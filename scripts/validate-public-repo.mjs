@@ -23,6 +23,7 @@ if (result.status !== 0 || deletedResult.status !== 0) {
 const deleted = new Set(deletedResult.stdout.split("\0").filter(Boolean));
 const files = result.stdout.split("\0").filter((path) => path && !deleted.has(path));
 const fileSet = new Set(files);
+const fileSizes = new Map();
 const errors = [];
 const warnings = [];
 
@@ -58,6 +59,7 @@ for (const path of files) {
   }
 
   const size = statSync(path).size;
+  fileSizes.set(path, size);
   if (size > 10 * 1024 * 1024) {
     warnings.push(`Large tracked file (${Math.round(size / 1024 / 1024)} MiB): ${path}`);
   }
@@ -89,7 +91,7 @@ const secretPatterns = [
 for (const path of files) {
   if (path === "scripts/validate-public-repo.mjs") continue;
   if (!textExtensions.has(extname(path).toLowerCase())) continue;
-  if (statSync(path).size > 5 * 1024 * 1024) continue;
+  if (fileSizes.get(path) > 5 * 1024 * 1024) continue;
 
   const content = readFileSync(path, "utf8");
   for (const [label, pattern] of secretPatterns) {

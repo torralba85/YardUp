@@ -8,8 +8,15 @@ const errors = [];
 const warnings = [];
 
 const pathFromRoot = (path) => resolve(repoRoot, path);
-const readJson = (path) =>
-  JSON.parse(readFileSync(pathFromRoot(path), "utf8"));
+const readJson = (path) => {
+  try {
+    return JSON.parse(readFileSync(pathFromRoot(path), "utf8"));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    errors.push(`Could not parse ${path} as JSON: ${message}`);
+    return undefined;
+  }
+};
 const expect = (condition, message) => {
   if (!condition) errors.push(message);
 };
@@ -19,8 +26,8 @@ const releaseExpect = (condition, message) => {
   else warnings.push(message);
 };
 
-const twa = readJson("native/android/twa-manifest.json");
-const webManifest = readJson("public/manifest.json");
+const twa = readJson("native/android/twa-manifest.json") ?? {};
+const webManifest = readJson("public/manifest.json") ?? {};
 const assetLinks = readJson("public/.well-known/assetlinks.json");
 
 expect(twa.packageId === "com.lotfoundry.app", "Package ID must be com.lotfoundry.app.");
@@ -35,19 +42,36 @@ expect(twa.features?.playBilling?.enabled === true, "Play Billing must remain en
 expect(twa.alphaDependencies?.enabled === true, "Bubblewrap alpha dependencies are required for Play Billing.");
 expect(webManifest.scope === "/", "Web manifest scope must include /studio.");
 
-const statement = assetLinks.find(
+expect(Array.isArray(assetLinks), "Digital Asset Links must be a JSON array.");
+const assetLinkEntries = Array.isArray(assetLinks) ? assetLinks : [];
+const statement = assetLinkEntries.find(
   (entry) =>
     entry?.target?.namespace === "android_app" &&
-    entry.target.package_name === twa.packageId,
+    entry?.target?.package_name === twa.packageId,
 );
 expect(Boolean(statement), "Digital Asset Links must include com.lotfoundry.app.");
 
-const fingerprints = statement?.target?.sha256_cert_fingerprints ?? [];
-const twaFingerprints = twa.fingerprints ?? [];
+const rawFingerprints = statement?.target?.sha256_cert_fingerprints;
+const rawTwaFingerprints = twa.fingerprints;
+expect(
+  Array.isArray(rawFingerprints),
+  "Digital Asset Links fingerprints must be an array.",
+);
+expect(
+  Array.isArray(rawTwaFingerprints),
+  "TWA manifest fingerprints must be an array.",
+);
+const fingerprints = Array.isArray(rawFingerprints) ? rawFingerprints : [];
+const twaFingerprints = Array.isArray(rawTwaFingerprints)
+  ? rawTwaFingerprints
+  : [];
 const sha256Pattern = /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/i;
 
 expect(
-  fingerprints.length > 0 && fingerprints.every((value) => sha256Pattern.test(value)),
+  fingerprints.length > 0 &&
+    fingerprints.every(
+      (value) => typeof value === "string" && sha256Pattern.test(value),
+    ),
   "Digital Asset Links must contain valid colon-separated SHA-256 fingerprints.",
 );
 expect(
@@ -55,13 +79,24 @@ expect(
   "Every TWA upload-key fingerprint must also appear in Digital Asset Links.",
 );
 expect(
-  !fingerprints.some((value) => value.includes("REPLACE_WITH")),
+  fingerprints.every((value) => twaFingerprints.includes(value)),
+  "Every Digital Asset Links fingerprint must also appear in the TWA manifest.",
+);
+expect(
+  !fingerprints.some(
+    (value) => typeof value === "string" && value.includes("REPLACE_WITH"),
+  ),
   "Digital Asset Links still contains a placeholder.",
 );
 
+const distinctFingerprints = new Set(
+  fingerprints
+    .filter((value) => typeof value === "string")
+    .map((value) => value.toUpperCase()),
+);
 releaseExpect(
-  fingerprints.length >= 2,
-  "Add the Play App Signing SHA-256 as a second Digital Asset Links fingerprint.",
+  distinctFingerprints.size >= 2,
+  "Add a distinct Play App Signing SHA-256 alongside the upload-key fingerprint.",
 );
 releaseExpect(
   existsSync(pathFromRoot("native/android/gradlew")) &&
