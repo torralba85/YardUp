@@ -359,11 +359,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {isSignUp && (
               <p className="lf-caption text-lf-taupe">
                 By creating an account, you agree to our{" "}
-                <a href="/terms" className="text-lf-sand underline underline-offset-2">
+                <a
+                  href="/terms"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
                   Terms &amp; Conditions
                 </a>{" "}
                 and{" "}
-                <a href="/privacy" className="text-lf-sand underline underline-offset-2">
+                <a
+                  href="/privacy"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
                   Privacy Policy
                 </a>
                 .

@@ -101,7 +101,7 @@ function SignupForm() {
             autoComplete="name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay-ink focus:outline-none focus:ring-2 focus:ring-lf-clay-ink/20"
             placeholder="Alma Reyes"
           />
         </div>
@@ -120,7 +120,7 @@ function SignupForm() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay-ink focus:outline-none focus:ring-2 focus:ring-lf-clay-ink/20"
             placeholder="you@example.com"
           />
         </div>
@@ -139,7 +139,7 @@ function SignupForm() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay-ink focus:outline-none focus:ring-2 focus:ring-lf-clay-ink/20"
             placeholder="At least 8 characters"
           />
         </div>
@@ -259,7 +259,7 @@ function RoleButton({
       onClick={onClick}
       className={`rounded-lg border p-3 text-left transition ${
         selected
-          ? "border-lf-clay bg-lf-clay-soft ring-2 ring-lf-clay/20"
+          ? "border-lf-clay bg-lf-clay-soft ring-2 ring-lf-clay-ink/20"
           : "border-lf-hairline bg-lf-card hover:border-lf-taupe"
       }`}
     >

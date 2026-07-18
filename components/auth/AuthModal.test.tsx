@@ -75,6 +75,20 @@ describe("AuthModal focus restore", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("uses the on-dark focus token for signup legal links", () => {
+    render(<AuthModal isOpen onClose={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));
+
+    expect(screen.getByRole("link", { name: /terms & conditions/i })).toHaveClass(
+      "focus-visible:ring-lf-clay-on-dark",
+      "focus-visible:ring-offset-lf-mahogany",
+    );
+    expect(screen.getByRole("link", { name: /privacy policy/i })).toHaveClass(
+      "focus-visible:ring-lf-clay-on-dark",
+      "focus-visible:ring-offset-lf-mahogany",
+    );
+  });
+
   it("moves focus to the trigger's replacement, not an earlier control, when sign-in unmounts it", () => {
     render(<Host />);
     const trigger = screen.getByRole("button", { name: "Sign In" });
