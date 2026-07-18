@@ -104,7 +104,7 @@ Warm by default, never white. Sand is the world, clay is the hand you click with
   --color-ln-navy:      #121D33; /* Twilight surface */
   --color-ln-card:      #16233C; /* Raised night card */
   --color-ln-mist:      #EAF0FA; /* Primary text on night */
-  --color-ln-slate:     #93A3C0; /* Muted text on night */
+  --color-ln-slate:     #BCC6DA; /* Muted text on night; AA-safe at 60% on ink */
   --color-ln-glow:      #F5B54A; /* Window-glow — landing CTA/interactive accent. NOT warning amber. */
   --color-ln-glow-deep: #B87E14; /* Glow hover/deep variant */
   --color-ln-money:     #7ED4A6; /* Patina — money on night (same semantic as forest) */

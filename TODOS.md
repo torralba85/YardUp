@@ -158,6 +158,12 @@ P1 - release-hardening tasks an agent can prepare:
   preserving the compact Golden Hour auth layout.
 - Audit shared studio controls and tabs for 44px interaction targets; keep
   read-only data chips compact per the pill-radius system.
+- Associate every `AuthModal` field label with its input via `htmlFor`/`id`,
+  then verify the modal with keyboard and screen-reader navigation.
+- Reconcile builder-only microtype utilities with the canonical `lf-*`
+  typography scale so ledger labels do not drift across inbox surfaces.
+- Replace remaining layout/paint-heavy landing motion with transform/opacity
+  equivalents where practical, preserving the Blue Hour scroll narrative.
 
 P2 - larger agent work that needs a focused branch:
 
