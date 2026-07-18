@@ -42,8 +42,8 @@ for (const path of required) {
 }
 
 const forbidden = [
-  /^\.env(?:\.local)?$/,
-  /^functions\/\.env$/,
+  /(?:^|\/)\.env$/,
+  /(?:^|\/)\.env(?:\.(?!example$)[^/]+)+$/,
   /^\.playwright-cli\//,
   /^\.grok\//,
   /^terminals\//,

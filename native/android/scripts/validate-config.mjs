@@ -66,6 +66,12 @@ const twaFingerprints = Array.isArray(rawTwaFingerprints)
   ? rawTwaFingerprints
   : [];
 const sha256Pattern = /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/i;
+const normalizeFingerprints = (values) =>
+  values
+    .filter((value) => typeof value === "string")
+    .map((value) => value.toUpperCase());
+const normalizedFingerprints = normalizeFingerprints(fingerprints);
+const normalizedTwaFingerprints = normalizeFingerprints(twaFingerprints);
 
 expect(
   fingerprints.length > 0 &&
@@ -75,11 +81,15 @@ expect(
   "Digital Asset Links must contain valid colon-separated SHA-256 fingerprints.",
 );
 expect(
-  twaFingerprints.every((value) => fingerprints.includes(value)),
+  normalizedTwaFingerprints.every((value) =>
+    normalizedFingerprints.includes(value),
+  ),
   "Every TWA upload-key fingerprint must also appear in Digital Asset Links.",
 );
 expect(
-  fingerprints.every((value) => twaFingerprints.includes(value)),
+  normalizedFingerprints.every((value) =>
+    normalizedTwaFingerprints.includes(value),
+  ),
   "Every Digital Asset Links fingerprint must also appear in the TWA manifest.",
 );
 expect(
@@ -89,11 +99,7 @@ expect(
   "Digital Asset Links still contains a placeholder.",
 );
 
-const distinctFingerprints = new Set(
-  fingerprints
-    .filter((value) => typeof value === "string")
-    .map((value) => value.toUpperCase()),
-);
+const distinctFingerprints = new Set(normalizedFingerprints);
 releaseExpect(
   distinctFingerprints.size >= 2,
   "Add a distinct Play App Signing SHA-256 alongside the upload-key fingerprint.",
@@ -106,6 +112,14 @@ releaseExpect(
 releaseExpect(
   Array.isArray(webManifest.screenshots) && webManifest.screenshots.length >= 2,
   "Add final phone/tablet screenshots to public/manifest.json before release.",
+);
+releaseExpect(
+  existsSync(
+    pathFromRoot(
+      "native/android/app/build/outputs/bundle/release/app-release.aab",
+    ),
+  ),
+  "Build the signed Android App Bundle at native/android/app/build/outputs/bundle/release/app-release.aab before release.",
 );
 
 if (errors.length > 0) {
