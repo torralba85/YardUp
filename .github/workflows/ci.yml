@@ -19,6 +19,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Validate public repository hygiene
+        run: npm run repo:public-check
       - run: npm run lint
       - name: Run unit tests
         run: |

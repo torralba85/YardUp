@@ -307,6 +307,5 @@ tracked(draw, (q(176), q(1474)), "LF", NPB(12), CLAY + (255,), 1.0, "mm")
 
 # ---------------------------------------------------- finish ---------------
 out = img.convert("RGB").resize((FW, FH), Image.LANCZOS)
-out.save("brand/_plate_render.png")
 out.save("public/hero-cadastral-plate.png")
 print("rendered", out.size)

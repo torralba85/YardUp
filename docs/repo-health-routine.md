@@ -1,9 +1,9 @@
 # Repository Health Routine
 
 A recurring maintenance schedule for `torralba85/YardUp`, on top of the
-per-PR release gate in `docs/release-checklist.md`. This is a two-owner,
-closed-collaborator repo deploying continuously to production — the routine
-below is sized for that, not for a large OSS project.
+per-PR release gate in `docs/release-checklist.md`. This is a small-team,
+source-available evaluation repo deploying continuously to production — the
+routine below is sized for that, not for a large open-source project.
 
 ## Weekly
 
@@ -40,10 +40,9 @@ below is sized for that, not for a large OSS project.
   `release-please`/conventional-commit automation — if that manual upkeep
   starts slipping, consider adopting `release-please` since PR titles
   already follow Conventional Commits.
-- **Secrets scanning:** CI does not currently run a dedicated secrets
-  scanner (GitHub's push-protection/secret-scanning-for-public-repos does
-  not apply to a private repo by default). Until one is added, manually spot
-  check recent commits for accidentally committed keys:
+- **Secrets scanning:** run `npm run repo:public-check`, verify GitHub secret
+  scanning and push protection are enabled for the repository's current
+  visibility, and manually spot-check recent commits for accidentally committed keys:
   `git log -p --since="1 month ago" -- '*.env*' '*.json' | grep -iE 'api[_-]?key|secret|token'`
   against the tracked env var list in `CLAUDE.md`. Recommended next step:
   add a `gitleaks`/`trufflehog` job to `.github/workflows/ci.yml` — this is

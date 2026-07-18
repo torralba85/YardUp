@@ -173,26 +173,27 @@ required in `CONTRIBUTING.md`/`CLAUDE.md`:
   subfolder with a one-line header noting the date and replacement, rather
   than deleting — these are historical design records, not code.
 
-## OSS vs. private repo considerations
+## Source-available vs. open-source considerations
 
-`torralba85/YardUp` is currently a **small, closed-collaborator private
-repo** (see `CONTRIBUTING.md`) — most OSS-specific ceremony below does not
-apply today. Documented here so it's a checklist, not a redesign, if the
-repo is ever opened up:
+`torralba85/YardUp` is maintained by a small collaborator team and is
+source-available for OpenAI Build Week evaluation under the LotFoundry
+Evaluation License. Public visibility does not make it open source or open
+external contribution rights. The comparison below records what would change if
+the owner later adopts an OSI-approved license and accepts community work:
 
-| Area | Private repo (current state) | If opened to OSS |
+| Area | Source-available evaluation repo | If opened to OSS |
 |---|---|---|
 | Contribution agreement | None needed — both collaborators are known/trusted (`CODEOWNERS`) | Add a DCO bot (`Signed-off-by` on commits) or a CLA-assistant bot before accepting external PRs |
 | Code of conduct | Not required for a 2-person team | Add `CODE_OF_CONDUCT.md` (e.g. Contributor Covenant) — required by most OSS communities and by GitHub's community profile check |
 | Vulnerability disclosure | `SECURITY.md` + GitHub Security Advisories (already correct for OSS too) | Keep as-is; consider a disclosure timeline (e.g. 90 days) once there are external users to protect |
 | Review requirements | Self-review checklist acceptable given team size (`CONTRIBUTING.md`) | Require review from a non-author for every external PR; CODEOWNERS becomes mandatory, not advisory |
-| CI/CD secrets | GitHub Actions secrets deploy straight to production `yardup-2026` | Never expose deploy secrets to workflows triggered by `pull_request` from forks — split into a `pull_request` (build/test only, no secrets) and a `pull_request_target`/manual-approval deploy step |
+| CI/CD secrets | GitHub Actions deploy secrets are limited to trusted `master` runs | Never expose deploy secrets to workflows triggered by fork pull requests; keep pull-request verification secret-free and protect deployment environments |
 | Issue/PR volume | Handled ad hoc, weekly review is enough | Add `good-first-issue`/`help-wanted` grooming, a public roadmap, and possibly a bot (e.g. Dependabot + a stale-issue Action) to keep volume manageable |
-| Governance docs | This file + `CONTRIBUTING.md` | Add a `GOVERNANCE.md` covering maintainer promotion, decision-making (lazy consensus vs. BDFL), and how forks/derivatives should attribute the project |
+| Governance docs | This file + `CONTRIBUTING.md` + evaluation license | Add a `GOVERNANCE.md` covering maintainer promotion, decision-making, and attribution expectations |
 
 ## Related tooling by context
 
-| Need | Private/internal repo (this one) | Public OSS repo |
+| Need | Source-available evaluation repo | Public OSS repo |
 |---|---|---|
 | Dependency updates | Dependabot (already configured) | Dependabot or Renovate (Renovate scales better with many ecosystems/monorepos) |
 | Required reviewers | `CODEOWNERS` (already configured) | `CODEOWNERS` + branch protection requiring review from a team, not just an individual |

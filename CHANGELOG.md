@@ -7,6 +7,9 @@ All notable changes to LotFoundry are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Public-release foundations: a safe environment template, evaluation license,
+  documentation index, Devpost evidence guide, Android configuration validator,
+  and automated public-repository hygiene check.
 - Member settings destination (`/settings`): profile (name, email +
   verification state, verified email change), security (password change with
   reauthentication), builder shortcut, data export, help/feedback/legal links,
@@ -42,6 +45,12 @@ All notable changes to LotFoundry are documented here. Format follows
   (`native/ios-shell/`), and `capacitor.config.ts`.
 
 ### Changed
+- Authenticated OpenAI project-brief and style-match workflows now default to
+  GPT-5.6 Sol while retaining the existing Responses API tool loop and
+  structured-output contracts.
+- Generated demo media, a duplicate brand render, and an obsolete discarded-WIP
+  patch are no longer tracked; reproducible source and canonical public assets
+  remain.
 - Privacy Policy and Terms rewritten to match the deployed stack (Firebase
   Hosting/Auth/Firestore/Functions, Google Maps, Regrid, OpenAI, Stripe),
   including marketplace contact sharing, AI photo handling, and the
@@ -68,7 +77,6 @@ All notable changes to LotFoundry are documented here. Format follows
   (`e2e/address-suggest.spec.ts`): a mocked local `/api/suggest` fallback test,
   plus an opt-in production smoke gated behind `LOTFOUNDRY_E2E_LIVE_SUGGEST=1`.
 
-### Changed
 - Replaced the landing-page hero video with an interactive daylight ADU scene
   that deconstructs into five feasibility layers as the user scrolls.
 - Added responsive layer navigation, a no-WebGL illustration fallback, and an

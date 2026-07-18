@@ -214,7 +214,7 @@ See `DESIGN.md` for the full brand spec and use it as the source of truth before
 
 ## Current Status
 
-_Last updated 2026-07-17 (accessible color roles and operational-documentation sync)._
+_Last updated 2026-07-18 (accessible color roles, mobile release configuration, and public submission preparation)._
 
 | Dimension | Status | Notes |
 |---|---|---|
@@ -229,7 +229,7 @@ _Last updated 2026-07-17 (accessible color roles and operational-documentation s
 | Deployment | ✅ Configured | Firebase Hosting + Functions, CI deploys master; see `docs/deployment.md` |
 | Auth / User Accounts | ✅ Implemented | Login, signup, password reset, Google and Apple flows, settings, export, shared account navigation, support, feedback, legal, and deletion surfaces |
 | Builder Marketplace | ✅ V1 | Builder dashboard, inbox, lead cards, unlock ledger; BuildersPanel matches by service area |
-| Store Packaging (iOS/Play) | ⚠️ Groundwork present | Android TWA manifest and iOS Capacitor shell exist; signing, console configuration, sandbox validation, store assets, and review remain human gates |
+| Store Packaging (iOS/Play) | ⚠️ Configuration only | Android TWA configuration and upload-key association are checked in; the generated/signed AAB, Play App Signing certificate, store assets, and macOS-built iOS project remain external release gates |
 
 ---
 
@@ -238,8 +238,8 @@ _Last updated 2026-07-17 (accessible color roles and operational-documentation s
 1. **Production Places key verification** — `NEXT_PUBLIC_GOOGLE_PLACES_KEY` exists in GitHub Actions metadata and the 2026-07-04 live smoke against `https://yardup-2026.web.app/studio` returned `/api/suggest` suggestions for `1600 Pennsylvania Ave`. Still verify in Google Cloud Console that the secret value is the intended browser key, referrer-restricted to production domains + localhost, with Places (New) enabled.
 2. **`NEXT_PUBLIC_APP_URL`** — set to the real domain or Stripe redirects land on `yardup-2026.web.app`.
 3. **Stripe live-mode verification** — webhook endpoint registered in the dashboard, one live test checkout for certificate + lead-unlock flows.
-4. **Store packaging** — generate the Android TWA and iOS project from the checked-in manifests/shell, replace the placeholder Play signing SHA-256, validate sandbox purchases, and produce signed artifacts (`docs/store-deployment-readiness.md`).
-5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md`, including base clay fills, clay-ink light focus, clay-on-dark focus, selected clay, completed/readiness forest, and solid semantic hover roles.
+4. **Store packaging** — Android TWA configuration and upload-key association exist; generate and review the Bubblewrap project, add the Play App Signing SHA-256, capture manifest/store screenshots, build a signed `.aab`, and generate the iOS project on macOS (`docs/store-deployment-readiness.md` §2–3).
+5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md`, covering clay interaction and focus roles, forest readiness, amber/brick status semantics, the pill-radius system, and the typography trio across landing, studio, and builder dashboard.
 6. **Builder network growth** — real builder onboarding flow; zero-state city coverage is honest but the network is empty.
 7. **Solar simulation / view modes / aerial polish** — deferred scene enhancements from the earlier audit.
 8. **Full HUD FMR coverage** — the checked-in market index (`lib/server/market/data/fmr.json`) is a seed extract (demo metros + CA/TX benchmark counties); run `scripts/build-market-data.js` against a full HUD release for nationwide ZIP/county coverage. Out-of-seed addresses resolve at the state/national tier, surfaced as low-confidence.

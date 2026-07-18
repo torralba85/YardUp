@@ -58,8 +58,8 @@ OPENAI_API_KEY=<server-side OpenAI API key>
 Optional model overrides:
 
 ```bash
-OPENAI_TEXT_MODEL=gpt-5.5
-OPENAI_IMAGE_MODEL=gpt-5.5
+OPENAI_TEXT_MODEL=gpt-5.6-sol
+OPENAI_IMAGE_MODEL=gpt-5.6-sol
 ```
 
 ## Verification

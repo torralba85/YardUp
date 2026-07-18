@@ -1,0 +1,22 @@
+LotFoundry Evaluation License
+
+Copyright (c) 2026 Andrew Torralba. All rights reserved.
+
+Permission is granted to access, clone, install, run, and make temporary local
+modifications to this software solely to evaluate the LotFoundry submission for
+OpenAI Build Week 2026, including judging, security review, and functional
+testing.
+
+No permission is granted to publish, redistribute, sublicense, sell, offer as a
+service, use commercially, or create and distribute derivative works based on
+this software or its original visual assets.
+
+Third-party packages and generated Android components remain subject to their
+own licenses and notices. This license does not restrict rights granted by
+those third-party licenses.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+This is a source-available evaluation license, not an open-source license.

@@ -1,112 +1,124 @@
-# LotFoundry — ADU planning for homeowners
+# LotFoundry
 
-Check a real address for ADU rent, build cost, and payback estimates. LotFoundry pulls live parcel data (lot size, setbacks, zoning) via Regrid, shows the lot on a satellite map, and builds a shareable estimate report.
+LotFoundry is an AI-assisted ADU feasibility studio for homeowners. Enter an
+address—or use a built-in demo parcel—to explore what may fit, what it may cost,
+what it may earn, and which questions still need a local professional.
 
-## Product Scope
+[Try the live app](https://yardup-2026.web.app) ·
+[Read the documentation](docs/README.md) ·
+[Review the Build Week submission notes](docs/devpost-submission.md)
 
-- **Live parcel search:** Enter any US residential address → Regrid parcel API returns actual lot dimensions, setbacks, and zoning
-- **Aerial visualization:** Google Maps Static satellite view with parcel boundary + ADU footprint overlay
-- **Feasibility engine:** Instant NOI, payback, build cost ranges, and zoning compliance
-- **AI parcel + permit brief:** One authenticated OpenAI response joins parcel fit, review risks, a jurisdiction-grounded approval timeline, and recorded next steps; the same brief is included in the certificate and exports
-- **AI style-matched concepts:** Upload a home photo and generate a conceptual ADU mockup that matches visible exterior style cues
-- **Demo mode:** Three hardcoded presets (Seattle, Portland, Austin) for offline / API-less use
-- **Scenario persistence:** Authenticated users save scenarios to Firebase; guest users keep local browser saves; shareable deep-link URLs
-- **Concept report:** Printable / downloadable Certificate of Feasibility with the financial ledger, AI parcel interpretation, and typical permit timeline
-- **Account and support:** Settings, data export, account deletion, About, Help, and Feedback routes with shared account and legal navigation
-- **Purchase channels:** Stripe on the web, with StoreKit and Play Billing verification paths prepared for native store builds
+## What it does
 
-## Run Locally
+- Searches real residential parcels through Regrid and Google Maps integrations.
+- Visualizes the lot, existing home, setbacks, and a movable ADU concept in 3D.
+- Estimates build cost, rent, annual NOI, payback, and basic zoning fit.
+- Uses authenticated OpenAI Responses API workflows for a parcel-and-permit
+  brief and style-matched ADU concepts.
+- Produces a shareable, printable Certificate of Feasibility.
+- Saves scenarios with Firebase Auth and Firestore, while guest scenarios stay
+  local to the browser.
+- Supports homeowner-to-builder handoff and verified web/native purchase
+  channels.
+- Runs without paid API keys using Seattle, Portland, and Austin demo parcels.
+
+LotFoundry is an early planning instrument, not a permit decision, appraisal,
+construction document, or substitute for professional advice.
+
+## OpenAI Build Week 2026
+
+LotFoundry is entered in the **Apps for Your Life** track. The project existed
+before Build Week, so the submission evidence clearly separates the baseline
+from the work completed during the July 13–21 event window.
+
+During Build Week, Codex was used as a hands-on engineering collaborator to:
+
+- complete account, support, consent, recovery, and deletion trust flows;
+- add mobile-store purchase routing and server-side receipt verification;
+- prepare Android TWA and iOS shell configuration;
+- improve responsive studio behavior and accessibility;
+- add release, repository-health, and public-submission checks; and
+- migrate the authenticated OpenAI workflows to GPT-5.6 Sol defaults.
+
+Human decisions remained explicit: product scope, legal language, visual
+direction, architecture, release boundaries, and every external submission or
+deployment decision were reviewed by the project owner. See
+[docs/devpost-submission.md](docs/devpost-submission.md) for the evidence map,
+remaining assets, and final submission checklist.
+
+## Run locally
 
 Prerequisite: Node.js 20 or newer.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. The built-in demo parcels work without API keys.
 
-### Environment Variables (optional — enables live parcel data and AI)
-
-Create `.env.local`:
-```
-GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
-GOOGLE_GEOCODING_KEY=<optional dedicated server-side Geocoding key>
-GOOGLE_PLACES_SERVER_KEY=<optional server-side Places key>
-NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
-REGRID_API_KEY=<server-side Regrid Parcel API key>
-OPENAI_API_KEY=<server-side OpenAI API key>
-OPENAI_TEXT_MODEL=gpt-5.5
-OPENAI_IMAGE_MODEL=gpt-5.5
-STRIPE_SECRET_KEY=<server-side Stripe secret key>
-STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
-NEXT_PUBLIC_APP_URL=<canonical app URL for Stripe redirects>
-NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<Firebase storage bucket>
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<Firebase messaging sender ID>
-NEXT_PUBLIC_FIREBASE_APP_ID=<Firebase web app ID>
-NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=<Firebase App Check reCAPTCHA Enterprise site key>
-# Local only: a registered App Check debug token; never deploy or commit its value.
-NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=<registered debug token>
-# Native store receipt verification (server-side, production only):
-APPLE_BUNDLE_ID=<iOS bundle id, e.g. com.lotfoundry.app>
-APPLE_ROOT_CA_FINGERPRINT256=<SHA-256 fingerprint of the Apple root CA that anchors StoreKit x5c chains>
-GOOGLE_PLAY_PACKAGE_NAME=<Android package name, e.g. com.lotfoundry.app>
-GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=<raw service-account JSON with androidpublisher scope>
-```
-
-Without parcel API keys the app runs in demo mode with the three built-in presets.
-Without `OPENAI_API_KEY`, the AI panels stay visible but return a setup message instead of generating content.
-Without Firebase overrides the app uses the checked-in `yardup-2026` web app config.
-Firebase App Check protects production Auth and Firestore requests. Local authenticated
-development requires a registered debug token in `.env.local`; the generic Playwright
-suite does not create accounts in the production Firebase project.
-
-## Verification Commands
+For live parcel data, authenticated saves, AI generation, and payments:
 
 ```bash
-npm run lint
-npm run test
-npm run test:e2e
-FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
-npx tsc --noEmit
-npm run build
+cp .env.example .env.local
 ```
 
-## Release Command Sequence
+Fill only the services you intend to test. Never commit `.env.local`,
+`functions/.env`, signing keys, or store-service credentials.
+
+## Verify
 
 ```bash
-npm ci
-npm run lint
-npm run test
+npm run repo:public-check
+npm run check
 npm run test:e2e
-npx tsc --noEmit
-npm run build
 ```
 
-See `docs/release-checklist.md` for the full manual sign-off list and `docs/deployment.md` for deployment steps.
+The public-repository check catches common secret formats, generated release
+binaries, accidental local-agent state, and large tracked files. The core check
+runs lint, unit tests, TypeScript, and the production build.
 
-## Continuous Integration
+## Android release status
 
-CI runs on every push to `main`/`master` and on every pull request via `.github/workflows/ci.yml`. The workflow runs lint, unit tests, typecheck, build, and Playwright end-to-end tests against Chromium. Do not merge a pull request whose CI run is failing.
+`native/android/` contains the source-of-truth Trusted Web Activity
+configuration for package `com.lotfoundry.app`, including Digital Asset Links
+for the current upload key and Play Billing bridge dependencies.
 
-## Deployment
+```bash
+npm run android:validate
+npm run android:validate:release
+```
 
-The app deploys to Firebase Hosting + Cloud Functions. Set the required server-side variables in the Firebase Functions config. See `docs/deployment.md` for the full deployment guide, including CI setup, post-deploy smoke checks, and rollback steps.
+The normal validator checks the committed configuration. The strict release
+validator intentionally stays red until the generated Bubblewrap project,
+Google Play App Signing fingerprint, required store screenshots, and signed AAB
+are present. Build artifacts and signing material are ignored by Git.
 
-## Scope Notes
+## Architecture
 
-- Feasibility and financial outputs are estimates only. Confirm zoning, utility constraints, build costs, financing, tax treatment, and rents with local professionals before investing.
-- Parcel data is sourced from Regrid and may not reflect recent changes. Always verify with your local jurisdiction.
-- AI parcel interpretations, permit timelines, and style-matched ADU images are conceptual planning aids, not permit approvals, construction documents, or architectural advice.
+| Area | Technology |
+|---|---|
+| Web app | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
+| Spatial UI | Three.js, React Three Fiber, Google Maps |
+| Data and auth | Firebase Hosting, Functions, Auth, Firestore |
+| AI | OpenAI Responses API with GPT-5.6 Sol; Firebase AI Logic for parcel insights |
+| Commerce | Stripe plus App Store / Google Play receipt-verification paths |
+| Mobile | PWA, Android TWA configuration, iOS Capacitor shell scaffold |
+| Quality | ESLint, Vitest, Playwright, TypeScript, GitHub Actions |
 
-## Documentation
+The repository map and deeper architecture links are maintained in
+[docs/README.md](docs/README.md).
 
-Start with [DESIGN.md](DESIGN.md) for the shared design system and semantic color roles.
+## Security and privacy
 
-- **Getting started and contribution:** [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/AGENTS.md](docs/AGENTS.md)
-- **Release and operations:** [docs/deployment.md](docs/deployment.md), [docs/release-checklist.md](docs/release-checklist.md), [docs/debugging-guide.md](docs/debugging-guide.md), [docs/repo-health-routine.md](docs/repo-health-routine.md), [docs/repo-governance.md](docs/repo-governance.md), and [TODOS.md](TODOS.md)
-- **Security and product policy:** [SECURITY.md](SECURITY.md), [docs/store-deployment-readiness.md](docs/store-deployment-readiness.md), [docs/store-listing-copy.md](docs/store-listing-copy.md), [docs/ai-integration-plan.md](docs/ai-integration-plan.md), and [docs/plans/monetization-marketplace-ai.md](docs/plans/monetization-marketplace-ai.md)
-- **History and proposals:** [DESIGN-AUDIT-2026.md](DESIGN-AUDIT-2026.md), [CROSS-PLATFORM-VIEWING-AUDIT.md](CROSS-PLATFORM-VIEWING-AUDIT.md), [docs/hero-exploded-feasibility-layers.md](docs/hero-exploded-feasibility-layers.md), [docs/feasibility-engine-interface.md](docs/feasibility-engine-interface.md), and dated material under [docs/superpowers/](docs/superpowers/)
+- Server secrets stay server-side and must never use a `NEXT_PUBLIC_*` name.
+- AI photo upload requires explicit consent.
+- Account export and deletion are available from Settings.
+- Security reports should follow [SECURITY.md](SECURITY.md), not a public issue.
+
+## License
+
+Copyright © 2026 Andrew Torralba. This repository is source-available for
+OpenAI Build Week evaluation under the [LotFoundry Evaluation License](LICENSE);
+it is not an open-source license and does not grant redistribution or commercial
+use.

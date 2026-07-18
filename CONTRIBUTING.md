@@ -1,7 +1,9 @@
 # Contributing to YardUp / LotFoundry
 
-This is a small, closed-collaborator repo (`torralba85/YardUp`), not a public
-OSS project. These are the working conventions for anyone with push access.
+This repository is source-available for OpenAI Build Week evaluation under the
+LotFoundry Evaluation License; it is not an open-source project. Contributions
+are currently accepted by invitation. These are the working conventions for
+collaborators with push access.
 
 ## Branch strategy: GitHub Flow
 

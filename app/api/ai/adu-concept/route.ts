@@ -13,8 +13,8 @@ export const runtime = "nodejs";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
-const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-5.5";
+const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-sol";
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-5.6-sol";
 
 interface StyleAnalysis {
   architecturalStyle: string;
