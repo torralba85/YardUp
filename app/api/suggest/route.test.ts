@@ -48,6 +48,60 @@ describe("GET /api/suggest", () => {
     expect(url).not.toContain("test-key");
   });
 
+  it("uses runtime OAuth on Google Cloud so Places App Check stays enforced", async () => {
+    vi.stubEnv("GOOGLE_CLOUD_PROJECT", "yardup-2026");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          access_token: "runtime-oauth-token",
+          expires_in: 3600,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          suggestions: [
+            {
+              placePrediction: {
+                text: { text: "1600 Pennsylvania Ave NW, Washington, DC, USA" },
+              },
+            },
+          ],
+        }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeRequest("1600 Pennsylvania Ave"));
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as AddressSuggestions;
+    expect(data.suggestions).toHaveLength(1);
+
+    const [metadataUrl, metadataInit] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(metadataUrl).toContain("metadata.google.internal");
+    expect(
+      (metadataInit.headers as Record<string, string>)["Metadata-Flavor"],
+    ).toBe("Google");
+
+    const [placesUrl, placesInit] = fetchMock.mock.calls[1] as [
+      string,
+      RequestInit,
+    ];
+    expect(placesUrl).toBe(
+      "https://places.googleapis.com/v1/places:autocomplete",
+    );
+    const headers = placesInit.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer runtime-oauth-token");
+    expect(headers["X-Goog-User-Project"]).toBe("yardup-2026");
+    expect(headers["X-Goog-Api-Key"]).toBeUndefined();
+  });
+
   it("caps the number of suggestions at 5", async () => {
     vi.stubGlobal(
       "fetch",

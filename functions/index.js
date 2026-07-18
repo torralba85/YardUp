@@ -15,6 +15,7 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 // plaintext environment variables without a Cloud Run name collision. The
 // handlers copy each value into the variable expected by the Next.js routes.
 const googleMapsApiKey = defineSecret("GOOGLE_MAPS_API_KEY_SECRET");
+const googlePlacesServerKey = defineSecret("GOOGLE_PLACES_SERVER_KEY_SECRET");
 const regridApiKey = defineSecret("REGRID_API_KEY_SECRET");
 const openAiApiKey = defineSecret("OPENAI_API_KEY_SECRET");
 
@@ -94,9 +95,10 @@ exports.apiAi = onRequest(
 // provider credentials used by these routes; no Stripe, OpenAI, or native-store
 // secrets enter this process.
 exports.api = onRequest(
-  { ...fnOpts, secrets: [googleMapsApiKey, regridApiKey] },
+  { ...fnOpts, secrets: [googleMapsApiKey, googlePlacesServerKey, regridApiKey] },
   async (req, res) => {
     process.env.GOOGLE_MAPS_API_KEY = googleMapsApiKey.value();
+    process.env.GOOGLE_PLACES_SERVER_KEY = googlePlacesServerKey.value();
     process.env.REGRID_API_KEY = regridApiKey.value();
     await ready();
     return handle(requestForNext(req), res);

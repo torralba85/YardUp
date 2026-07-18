@@ -10,6 +10,9 @@ describe("Firebase Functions provider secret bindings", () => {
       'defineSecret("GOOGLE_MAPS_API_KEY_SECRET")',
     );
     expect(functionsEntry).toContain(
+      'defineSecret("GOOGLE_PLACES_SERVER_KEY_SECRET")',
+    );
+    expect(functionsEntry).toContain(
       'defineSecret("REGRID_API_KEY_SECRET")',
     );
     expect(functionsEntry).toContain(
@@ -32,7 +35,7 @@ describe("Firebase Functions provider secret bindings", () => {
       "{ ...aiFnOpts, secrets: [openAiApiKey] }",
     );
     expect(functionsEntry).toContain(
-      "{ ...fnOpts, secrets: [googleMapsApiKey, regridApiKey] }",
+      "{ ...fnOpts, secrets: [googleMapsApiKey, googlePlacesServerKey, regridApiKey] }",
     );
     expect(functionsEntry).toContain(
       "{ ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] }",
@@ -52,7 +55,7 @@ describe("Firebase Functions provider secret bindings", () => {
       'ENABLE_NATIVE_STORE_VERIFICATION="${{ secrets.ENABLE_NATIVE_STORE_VERIFICATION }}"',
     );
     expect(envWrite).not.toMatch(
-      /GOOGLE_MAPS_API_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON/,
+      /GOOGLE_MAPS_API_KEY|GOOGLE_PLACES_SERVER_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON/,
     );
   });
 });
