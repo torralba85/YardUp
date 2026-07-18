@@ -11,7 +11,7 @@ The production Firebase project is `yardup-2026`.
 | AI API | `apiAi` | Serves `/api/ai/**` with the OpenAI secret and a longer timeout |
 | Stripe API | `apiStripe` | Serves `/api/stripe/**` with Stripe secrets only |
 | Native-store API | `apiStore` | Serves `/api/store/**` receipt verification with native-store secrets only when enabled |
-| General API | `api` | Serves remaining `/api/**` routes with Google Maps, server Places, and Regrid secrets only |
+| General API | `api` | Serves remaining `/api/**` routes with Google Maps, server Places fallback, and Regrid secrets; production Places calls use the Function's OAuth identity so App Check can remain enforced |
 
 All five Functions use the same prepared Next.js handler. The rewrite selects the
 least-privilege function rather than a different application bundle.
@@ -74,12 +74,17 @@ GOOGLE_PLAY_SERVICE_ACCOUNT_JSON     # native verification only
 
 Store production server-only values in Google Secret Manager. `functions/index.js`
 binds `OPENAI_API_KEY` only to `apiAi`, Stripe values only to `apiStripe`, Google
-Maps/server Places/Regrid values only to `api`, and native-store credentials only
+Maps/server Places fallback/Regrid values only to `api`, and native-store credentials only
 to `apiStore` when `ENABLE_NATIVE_STORE_VERIFICATION=true`. The production secret
 IDs are `OPENAI_API_KEY_SECRET`, `GOOGLE_MAPS_API_KEY_SECRET`,
 `GOOGLE_PLACES_SERVER_KEY_SECRET`, and `REGRID_API_KEY_SECRET`; the handler maps
 those values to the runtime variable names consumed by Next.js. Do not place
 server credentials in GitHub Actions secrets or `NEXT_PUBLIC_*` variables.
+
+Places API (New) App Check is enforced in `yardup-2026`. The production
+`/api/suggest` route therefore authenticates server-to-server with the `api`
+Function's short-lived OAuth token and `X-Goog-User-Project`; the dedicated
+Places key is a local/non-enforced fallback, not the production auth path.
 
 CI also needs `FIREBASE_SERVICE_ACCOUNT` and the browser-safe public Firebase and
 Places configuration. Restrict the browser Places key by HTTP referrer. Keep
