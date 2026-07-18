@@ -361,7 +361,7 @@ export default function AddressSearch({
         className={[
           "h-11 w-full rounded-full border pl-9 pr-26 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-taupe",
-          "outline-none transition",
+          "outline-none transition-[border-color,box-shadow]",
           "focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15",
           isDisabled
             ? "cursor-not-allowed border-lf-hairline opacity-60"
@@ -372,7 +372,7 @@ export default function AddressSearch({
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-sand enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
+        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition-colors before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-sand enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search

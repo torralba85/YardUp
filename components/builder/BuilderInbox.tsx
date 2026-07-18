@@ -238,7 +238,7 @@ export default function BuilderInbox({
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
+                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
                       tab === t.key
                         ? "border-lf-clay bg-lf-clay text-lf-sand"
                         : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
@@ -255,7 +255,7 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
+                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
                     viewMode === "cards"
                       ? "bg-lf-clay text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
@@ -267,7 +267,7 @@ export default function BuilderInbox({
                   type="button"
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
+                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
                     viewMode === "table"
                       ? "bg-lf-clay text-lf-sand font-semibold"
                       : "text-lf-muted hover:bg-lf-sand-2"
@@ -336,12 +336,12 @@ export default function BuilderInbox({
                               setSelectedItemId(item.request.id);
                             }
                           }}
-                          className={`group border-b border-lf-hairline cursor-pointer transition hover:bg-lf-sand-2/50 ${
+                          className={`group border-b border-lf-hairline cursor-pointer transition-colors hover:bg-lf-sand-2/50 ${
                             isSelected ? "bg-lf-sand-2 border-l-[3px] border-l-lf-clay" : ""
                           }`}
                         >
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-mono text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay-ink transition">
+                            <div className="font-mono text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay-ink transition-colors">
                               {item.request.preview.previewSerial}
                             </div>
                             <div className="font-mono text-[9px] text-lf-muted mt-0.5">{dateStr}</div>
@@ -920,7 +920,7 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(5)}
           disabled={loading !== null}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition-colors hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
@@ -934,7 +934,7 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(10)}
           disabled={loading !== null}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>

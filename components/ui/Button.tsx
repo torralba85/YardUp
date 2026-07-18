@@ -77,9 +77,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         className={cn(
-          "inline-flex select-none items-center justify-center rounded-full font-semibold transition",
+          "inline-flex select-none items-center justify-center rounded-full font-semibold transition-[color,background-color,border-color,scale]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2",
-          "motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
+          "motion-safe:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60",
           VARIANT_CLASS[variant],
           SIZE_CLASS[size],
           fullWidth && "w-full",

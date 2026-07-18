@@ -148,7 +148,7 @@ export default function BeforeAfterBoard({
           ref={closeButtonRef}
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-lf-hairline text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
+          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-lf-hairline text-lf-muted transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
           aria-label="Close dialog"
         >
           <X size={20} aria-hidden="true" />
@@ -248,7 +248,7 @@ export default function BeforeAfterBoard({
             <button
               type="button"
               onClick={onToggleAttach}
-              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold transition select-none rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink ${
+              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold transition-colors select-none rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink ${
                 isAttached
                   ? "bg-lf-forest text-lf-sand hover:bg-lf-forest-strong"
                   : "border-[1.5px] border-lf-clay bg-lf-card text-lf-espresso hover:bg-lf-sand-2"
@@ -269,7 +269,7 @@ export default function BeforeAfterBoard({
             <button
               type="button"
               onClick={onRecast}
-              className="flex min-h-11 items-center justify-center gap-2 border border-lf-hairline bg-lf-card px-5 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay hover:bg-lf-sand-2 rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
+              className="flex min-h-11 items-center justify-center gap-2 border border-lf-hairline bg-lf-card px-5 py-2 text-sm font-semibold text-lf-espresso transition-colors hover:border-lf-clay hover:bg-lf-sand-2 rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
             >
               <RefreshCcw size={16} aria-hidden="true" />
               Cast another
@@ -278,7 +278,7 @@ export default function BeforeAfterBoard({
           <button
             type="button"
             onClick={onDelete}
-            className="flex min-h-11 items-center justify-center gap-2 border border-lf-brick bg-lf-card px-5 py-2 text-sm font-semibold text-lf-brick transition hover:bg-lf-brick-soft rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-brick"
+            className="flex min-h-11 items-center justify-center gap-2 border border-lf-brick bg-lf-card px-5 py-2 text-sm font-semibold text-lf-brick transition-colors hover:bg-lf-brick-soft rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-brick"
           >
             <XCircle size={16} aria-hidden="true" />
             Delete photo & renders

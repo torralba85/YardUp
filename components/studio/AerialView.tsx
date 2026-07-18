@@ -180,7 +180,7 @@ export default function AerialView({
                 ? `Fallback parcel map for ${parcel.address}`
                 : `Satellite view of ${parcel.address}`
             }
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover outline outline-white/10 -outline-offset-1"
             width={IMG_W}
             height={IMG_H}
             draggable={false}

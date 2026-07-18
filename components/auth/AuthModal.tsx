@@ -379,7 +379,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 min-h-11 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition hover:bg-lf-card motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 min-h-11 w-full rounded-full bg-lf-sand px-4 py-2.5 text-sm font-semibold text-lf-espresso transition-[background-color,scale] hover:bg-lf-card motion-safe:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
             </button>

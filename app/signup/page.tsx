@@ -82,7 +82,7 @@ function SignupForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-xl border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-lg border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -179,7 +179,7 @@ function SignupForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="min-h-11 w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
+          className="min-h-11 w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition-[background-color,scale] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.96] disabled:opacity-50"
         >
           {isPending ? "Creating account..." : "Create account"}
         </button>
@@ -257,7 +257,7 @@ function RoleButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-lg border p-3 text-left transition ${
+      className={`rounded-lg border p-3 text-left transition-colors ${
         selected
           ? "border-lf-clay bg-lf-clay-soft ring-2 ring-lf-clay-ink/20"
           : "border-lf-hairline bg-lf-card hover:border-lf-taupe"

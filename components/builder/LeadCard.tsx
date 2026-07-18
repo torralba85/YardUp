@@ -144,7 +144,7 @@ export default function LeadCard({
             onClick={() => onRespond("interested")}
             disabled={responding}
             aria-pressed={item.response.status === "interested"}
-            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
+            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
               item.response.status === "interested"
                 ? "bg-lf-clay text-lf-sand"
                 : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
@@ -158,7 +158,7 @@ export default function LeadCard({
             onClick={() => onRespond("not-a-fit")}
             disabled={responding}
             aria-pressed={item.response.status === "not-a-fit"}
-            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
+            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
               item.response.status === "not-a-fit"
                 ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
                 : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"

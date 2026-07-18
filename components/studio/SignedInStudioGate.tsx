@@ -108,7 +108,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
             <button
               type="button"
               onClick={() => void logout()}
-              className="flex min-h-11 items-center gap-2 rounded-full border border-lf-hairline px-4 text-sm font-semibold transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="flex min-h-11 items-center gap-2 rounded-full border border-lf-hairline px-4 text-sm font-semibold transition-colors hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
             >
               <LogOut size={15} />
               Sign out

@@ -39,7 +39,7 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
               type="button"
               aria-label="Close fine-tune panel"
               onClick={onClose}
-              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-espresso"
+              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition-colors hover:text-lf-espresso"
             >
               <X size={20} />
             </button>

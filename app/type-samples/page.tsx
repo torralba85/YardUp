@@ -21,7 +21,7 @@ export default function TypeSamplesPage() {
         <nav className="flex items-center justify-between gap-4">
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center gap-2 border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso transition hover:bg-lf-sand-2"
+            className="inline-flex min-h-11 items-center gap-2 border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso transition-colors hover:bg-lf-sand-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Home
@@ -75,7 +75,7 @@ export default function TypeSamplesPage() {
             <div className="mt-8 space-y-3">
               <Link
                 href="/studio"
-                className="flex min-h-12 items-center justify-between bg-lf-clay px-5 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong"
+                className="flex min-h-12 items-center justify-between bg-lf-clay px-5 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay-strong"
               >
                 Check my address
                 <ArrowRight className="h-4 w-4" />

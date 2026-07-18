@@ -298,7 +298,7 @@ export default function StyleMatchPanel({
             </label>
             <label
               htmlFor={inputId}
-              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2 ${
+              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2 ${
                 aiConsent
                   ? "cursor-pointer hover:bg-lf-sand"
                   : "cursor-not-allowed opacity-50"

@@ -104,7 +104,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
             {guide.permitSteps.map((step, idx) => (
               <label
                 key={idx}
-                className="flex items-start gap-3 rounded-lg border border-lf-hairline bg-lf-sand/20 p-3 hover:bg-lf-sand/40 transition cursor-pointer"
+                className="flex items-start gap-3 rounded-lg border border-lf-hairline bg-lf-sand/20 p-3 hover:bg-lf-sand/40 transition-colors cursor-pointer"
               >
                 <input
                   type="checkbox"
@@ -157,7 +157,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           href={safeHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay-ink transition hover:text-lf-clay-strong"
+                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay-ink transition-colors hover:text-lf-clay-strong"
                         >
                           <BookOpen size={14} />
                           {citationLabel}

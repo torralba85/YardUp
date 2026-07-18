@@ -16,7 +16,7 @@ export function ClosingCall() {
           </h2>
           <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
             <DawnStudioLink
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-ln-glow px-8 text-sm font-semibold text-ln-ink transition duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-ln-glow px-8 text-sm font-semibold text-ln-ink transition-[background-color,scale] duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.96]"
             >
               Check my address
             </DawnStudioLink>

@@ -83,7 +83,7 @@ export default function FindStep({
               type="button"
               onClick={() => onPresetSelect(preset.id)}
               aria-pressed={selected}
-              className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+              className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                 selected
                   ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
                   : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe hover:bg-lf-sand-2"

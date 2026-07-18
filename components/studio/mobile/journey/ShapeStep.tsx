@@ -90,7 +90,7 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
-                className={`min-h-14 rounded-lg border-2 bg-lf-card px-4 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                className={`min-h-14 rounded-lg border-2 bg-lf-card px-4 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                   selected ? "border-lf-clay bg-lf-clay/5" : "border-lf-hairline"
                 }`}
               >
@@ -114,7 +114,7 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange({ ...config, finish })}
-                className={`flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
+                className={`flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
                   selected
                     ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
                     : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe"
@@ -134,7 +134,7 @@ export default function ShapeStep({
         <button
           type="button"
           onClick={onFineTune}
-          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-semibold text-lf-clay transition hover:bg-lf-taupe-soft"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-semibold text-lf-clay transition-colors hover:bg-lf-taupe-soft"
         >
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions

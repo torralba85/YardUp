@@ -32,7 +32,7 @@ export function NocturneNav() {
             Sign in
           </Link>
           <DawnStudioLink
-            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full bg-ln-glow px-4 text-xs font-semibold text-ln-ink transition duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.98] sm:px-5 sm:text-sm"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full bg-ln-glow px-4 text-xs font-semibold text-ln-ink transition-[background-color,scale] duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.96] sm:px-5 sm:text-sm"
           >
             <span className="sm:hidden">Check address</span>
             <span className="hidden sm:inline">Check my address</span>

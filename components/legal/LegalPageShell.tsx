@@ -32,7 +32,7 @@ export function LegalPageShell({
           </Link>
           <Link
             href="/studio"
-            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-lf-clay-ink transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-lf-clay-ink transition-colors hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
             Open studio
           </Link>

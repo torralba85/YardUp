@@ -45,7 +45,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
         type="button"
         aria-label="Reset scenario"
         onClick={onReset}
-        className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-sand"
+        className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition-colors hover:text-lf-sand"
       >
         <RotateCcw size={17} />
       </button>
@@ -61,7 +61,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           type="button"
           aria-label="Sign in"
           onClick={() => setAuthOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-sand"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition-colors hover:text-lf-sand"
         >
           <UserRound size={18} />
         </button>

@@ -123,7 +123,7 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "group flex items-center gap-3 rounded-full px-2.5 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany",
+              "group flex items-center gap-3 rounded-full px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany",
               step.state === "current" && "bg-lf-sand/10",
               !locked && step.state !== "current" && "hover:bg-lf-sand/5",
               locked && "cursor-not-allowed opacity-55",

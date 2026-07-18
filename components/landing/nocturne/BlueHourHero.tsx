@@ -405,7 +405,7 @@ export function BlueHourHero() {
             </div>
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-glow px-5 text-xs font-semibold text-ln-ink transition duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-glow focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-ln-glow px-5 text-xs font-semibold text-ln-ink transition-[background-color,scale] duration-300 hover:bg-ln-mist motion-safe:active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ln-glow focus-visible:ring-offset-2 focus-visible:ring-offset-ln-ink max-sm:w-full max-sm:rounded-2xl"
             >
               Run feasibility
             </button>

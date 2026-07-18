@@ -106,7 +106,7 @@ export function AccountMenu({
           href={href}
           role="menuitem"
           className={cn(
-            "flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm transition focus-visible:outline-none focus-visible:ring-2",
+            "flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2",
             isDark
               ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-lf-mahogany"
               : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
@@ -125,7 +125,7 @@ export function AccountMenu({
           onSignOut();
         }}
         className={cn(
-          "flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm transition focus-visible:outline-none focus-visible:ring-2",
+          "flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2",
           isDark
             ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-lf-mahogany"
             : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
@@ -168,7 +168,7 @@ export function AccountMenu({
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2",
+          "flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2",
           isDark
             ? "bg-lf-clay text-lf-sand focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-lf-mahogany"
             : "bg-lf-clay text-lf-sand focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",

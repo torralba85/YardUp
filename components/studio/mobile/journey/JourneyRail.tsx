@@ -31,7 +31,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
         aria-label="Back to previous step"
         onClick={onBack}
         disabled={!onBack}
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lf-muted transition hover:text-lf-espresso ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lf-muted transition-colors hover:text-lf-espresso ${
           onBack ? "" : "invisible"
         }`}
       >
@@ -57,7 +57,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 disabled={!isDone && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : ""}`}
-                className={`flex min-h-11 items-center gap-1.5 rounded-full px-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:px-2 ${
+                className={`flex min-h-11 items-center gap-1.5 rounded-full px-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] transition-colors sm:px-2 ${
                   isCurrent
                     ? "text-lf-clay"
                     : isDone

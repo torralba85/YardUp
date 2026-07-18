@@ -164,7 +164,7 @@ export default function ReportPreview({
               type="button"
               onClick={onClose}
               aria-label="Close report preview"
-              className="flex h-11 w-11 items-center justify-center rounded-full text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-lf-muted transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
             >
               <X size={16} aria-hidden="true" />
             </button>
