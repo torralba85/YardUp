@@ -9,13 +9,8 @@ import type { LiveParcelData } from "@/lib/parcel-types";
  * transform and its fallback/error paths. lib/parcel-api.test.ts only covers
  * the client fetch; this covers the server-side mapper.
  *
- * IMPORTANT — scope: the mock uses the field NAMES the route currently requests
- * (`address`, `city`, `state`, `zip`, `ll_gisacre`, ...). Those names are
- * ASSUMED, not verified against the live Regrid v2 API. This test proves the
- * transform is correct *given those keys*; it does NOT prove the keys are the
- * ones Regrid actually returns. Confirming the real response schema (and thus
- * that production won't silently fall back) is a separate task — see handoff
- * item #5, which needs a live REGRID_API_KEY.
+ * The mock follows Regrid's documented v2 point-query response shape:
+ * `parcels.features[].properties.fields`.
  */
 
 function makeRequest(lat: number, lng: number, address?: string): NextRequest {
@@ -32,7 +27,10 @@ function regridResponse(fields: Record<string, unknown>, geometry: unknown = nul
     ok: true,
     status: 200,
     json: async () => ({
-      results: { features: [{ properties: { fields }, geometry }] },
+      parcels: {
+        type: "FeatureCollection",
+        features: [{ properties: { fields }, geometry }],
+      },
     }),
   };
 }
@@ -76,6 +74,22 @@ afterEach(() => {
 });
 
 describe("GET /api/parcel — Regrid field mapping", () => {
+  it("uses Regrid's current v2 point endpoint and supported parameters", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(regridResponse({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await GET(makeRequest(47.65, -122.31));
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const requestedUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(requestedUrl.pathname).toBe("/api/v2/parcels/point");
+    expect(requestedUrl.searchParams.get("lat")).toBe("47.65");
+    expect(requestedUrl.searchParams.get("lon")).toBe("-122.31");
+    expect(requestedUrl.searchParams.get("token")).toBe("test-token");
+    expect(requestedUrl.searchParams.get("limit")).toBe("1");
+    expect(requestedUrl.searchParams.has("fields")).toBe(false);
+  });
+
   it("maps Regrid fields to LiveParcelData", async () => {
     vi.stubGlobal(
       "fetch",
@@ -183,7 +197,9 @@ describe("GET /api/parcel — Regrid field mapping", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ results: { features: [] } }),
+        json: async () => ({
+          parcels: { type: "FeatureCollection", features: [] },
+        }),
       }),
     );
 

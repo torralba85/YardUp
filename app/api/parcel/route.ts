@@ -8,7 +8,7 @@ import { extractRegridLocation } from "@/lib/server/parcel-location";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
-const REGRID_API = "https://app.regrid.com/api/v2/query.json";
+const REGRID_API = "https://app.regrid.com/api/v2/parcels/point";
 const TIMEOUT_MS = 5000;
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
     url.searchParams.set("lon", String(lng));
     url.searchParams.set("token", regridKey);
     url.searchParams.set("limit", "1");
-    url.searchParams.set("fields", "ll_gisacre,ll_bldg_footprint_sqft,sqft,zoning,saddress,scity,state2,szip5,county,scounty,address,city,state,zip");
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -79,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     const json = await regridRes.json();
-    const parcels = json?.results?.features ?? [];
+    const parcels = json?.parcels?.features ?? json?.results?.features ?? [];
     if (parcels.length === 0) {
       return await successWithFallback(lat, lng, requestedAddress);
     }
