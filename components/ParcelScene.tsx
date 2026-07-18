@@ -1210,7 +1210,7 @@ export default function ParcelScene({
       {/* View-mode toggle. Docked to the scene bottom — the old bottom-sheet
           offset (bottom-44) clipped these controls inside the mobile journey's
           34dvh Shape reveal. 44px touch floor below `sm`. */}
-      <div className="absolute bottom-3 right-3 z-(--z-index-scene) flex rounded-md border border-lf-hairline/70 bg-lf-card p-1 shadow-sm lg:bottom-6 lg:right-5">
+      <div className="absolute bottom-3 right-3 z-(--z-index-scene) flex rounded-full border border-lf-hairline/70 bg-lf-card p-1 shadow-sm lg:bottom-6 lg:right-5">
         {[
           { mode: "overview" as const, label: "Overview", icon: Home },
           { mode: "adu" as const, label: "ADU", icon: Box },
@@ -1223,7 +1223,7 @@ export default function ParcelScene({
               type="button"
               onClick={() => setViewMode(mode)}
               aria-pressed={active}
-              className={`inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded px-2.5 text-xs font-semibold leading-none transition-colors sm:h-9 sm:min-w-[86px] ${
+              className={`inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-2.5 text-xs font-semibold leading-none transition-colors sm:h-9 sm:min-w-[86px] ${
                 active
                   ? "bg-lf-clay text-lf-sand"
                   : "text-lf-espresso hover:bg-lf-taupe/10 focus-visible:bg-lf-taupe/10"

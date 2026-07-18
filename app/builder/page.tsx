@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import BuilderDashboard from "@/components/builder/BuilderDashboard";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/lib/auth-context";
 
 /**
@@ -25,13 +26,45 @@ export default function BuilderPage() {
 
   if (loading || !user || !profile || profile.role !== "builder") {
     return (
-      <div className="flex h-[100dvh] items-center justify-center bg-lf-sand">
-        <div className="text-center">
-          <div className="font-sans text-2xl font-bold tracking-tight text-lf-mahogany">
-            LotFoundry
+      <div className="min-h-dvh bg-lf-sand text-lf-espresso">
+        <header className="border-b border-lf-hairline bg-lf-card">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lotfoundry-lockup-horizontal.svg"
+              alt="LotFoundry"
+              className="h-7 w-auto"
+            />
+            <Skeleton className="h-9 w-9 rounded-full" />
           </div>
-          <p className="lf-body-sm mt-2 text-lf-muted">Loading builder dashboard...</p>
-        </div>
+        </header>
+        <main className="p-4 lg:p-8" aria-busy="true">
+          <div
+            role="status"
+            aria-label="Loading the builder dashboard"
+            className="mx-auto max-w-6xl"
+          >
+            <p className="lf-kicker text-lf-clay">Builder workspace</p>
+            <Skeleton className="mt-3 h-9 w-64 max-w-full" />
+            <Skeleton className="mt-3 h-4 w-[28rem] max-w-full" />
+            <div className="mt-8 border-y border-lf-hairline bg-lf-card">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="grid min-h-32 gap-5 border-b border-lf-hairline p-5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-center"
+                >
+                  <div>
+                    <Skeleton className="h-5 w-44 max-w-full" />
+                    <Skeleton className="mt-3 h-4 w-72 max-w-full" />
+                    <Skeleton className="mt-2 h-4 w-52 max-w-full" />
+                  </div>
+                  <Skeleton className="h-11 w-full rounded-full" />
+                </div>
+              ))}
+            </div>
+            <span className="sr-only">Loading...</span>
+          </div>
+        </main>
       </div>
     );
   }

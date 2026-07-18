@@ -8,14 +8,20 @@ import { DawnStudioLink } from "./DawnStudioLink";
  */
 export function NocturneNav() {
   return (
-    <header className="fixed inset-x-0 top-0 z-(--z-index-nav) border-b border-ln-hairline/40 bg-ln-ink/55 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-(--z-index-nav) border-b border-ln-hairline/40 bg-ln-ink/55 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" aria-label="LotFoundry home" className="flex shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            src="/lotfoundry-mark-dark.svg"
+            alt=""
+            className="h-8 w-8 sm:hidden"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/lotfoundry-lockup-horizontal-inverse.svg"
-            alt="LotFoundry"
-            className="h-4 w-auto min-[360px]:h-5 sm:h-7"
+            alt=""
+            className="hidden h-7 w-auto sm:block"
           />
         </Link>
         <nav className="flex items-center gap-1 sm:gap-3" aria-label="Primary">
