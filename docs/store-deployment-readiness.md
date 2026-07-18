@@ -1,7 +1,7 @@
 # Store Deployment Readiness - iOS App Store and Google Play
 
 **Updated:** 2026-07-17
-**Web baseline:** `origin/master` at `08e1ee5`; GitHub Actions run `29544591559`
+**Web baseline:** `origin/master` at `c76f936`; GitHub Actions run `29599585306`
 passed verification and deployed Hosting, Functions, and Firestore rules.
 **Verdict:** The web app is production-healthy. Native store submission is not
 ready until human-owned signing, console, sandbox, asset, and review gates are
@@ -44,7 +44,7 @@ complete. Use a clean worktree and live `origin/master` for release evidence.
 | Server Maps and Regrid | Bound only to generic `api` in `functions/index.js` | Verify API restrictions are server-safe and required APIs are enabled |
 | Stripe | `apiStripe` isolates checkout/webhook secrets | Register webhook, validate signing secret, and run certificate, lead-unlock, and credit tests |
 | Native purchase verification | `apiStore` is separate and activates native secret bindings only with `ENABLE_NATIVE_STORE_VERIFICATION=true` | Provision Apple/Google credentials and complete sandbox device tests |
-| Digital Asset Links | `public/.well-known/assetlinks.json` exists | Replace its placeholder SHA-256 only after Play App Signing provides the value |
+| Digital Asset Links | Upload-key SHA-256 is checked into `public/.well-known/assetlinks.json` | Add the Play App Signing SHA-256 alongside it after Play Console provides the certificate |
 | Canonical app URL | Falls back to `https://yardup-2026.web.app` | Set `NEXT_PUBLIC_APP_URL` when the owned production domain is chosen |
 
 ## Store-policy readiness
@@ -68,7 +68,8 @@ photo-picker handoff, offline certificates, and network-recovery behavior.
 1. Complete the production domain, provider-key, Stripe, and Firebase smoke
    gates for the web release.
 2. Provision App Store Connect and Play Console products, roles, test accounts,
-   and signing. Replace the Play signing fingerprint only after it is issued.
+   and signing. Add the Play App Signing fingerprint alongside the upload-key
+   fingerprint after Play Console issues it.
 3. Generate the Android TWA and iOS Capacitor projects, then implement and test
    the native-value features documented in `native/`.
 4. Run StoreKit and Play Billing sandbox purchase, restore, refund/revocation,

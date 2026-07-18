@@ -62,8 +62,8 @@ describe("POST /api/ai/adu-concept", () => {
       model: string;
       tools: Array<{ type: string }>;
     };
-    expect(styleRequestBody.model).toBe("gpt-5.5");
-    expect(imageRequestBody.model).toBe("gpt-5.5");
+    expect(styleRequestBody.model).toBe("gpt-5.6-sol");
+    expect(imageRequestBody.model).toBe("gpt-5.6-sol");
     expect(imageRequestBody.tools).toEqual([{ type: "image_generation" }]);
   });
 });

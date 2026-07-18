@@ -1,53 +1,74 @@
 # Release Checklist
 
-Run against a clean install: `rm -rf node_modules .next && npm ci`
+Start from a clean worktree. Remove local build caches using your platform's
+normal filesystem command, then run `npm ci`. Do not delete signing keys,
+environment files, sibling worktrees, or agent configuration.
 
-## Automated Gates
+## Automated gates
 
+- [ ] `npm run repo:public-check`
 - [ ] `npm ci`
-- [ ] `npm run lint` — zero warnings, zero errors
-- [ ] `npm run test` — all unit tests passing
-- [ ] `npm run test:e2e` — all Playwright tests passing
+- [ ] `npm run lint` — zero warnings and zero errors
+- [ ] `npm run test` — all unit tests pass
 - [ ] `npx tsc --noEmit` — zero type errors
 - [ ] `npm run build` — production build succeeds
-- [ ] `FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase` - Firebase Auth sign-in and scenario save/load/delete pass against the deploy project
+- [ ] `npm run test:e2e` — desktop and mobile Playwright projects pass
+- [ ] `FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase` — dedicated test account can save, load, and delete a scenario
 
-## Manual QA
+## Manual web QA
 
 - [ ] Semantic-color check: base clay is used for interactive fills and borders; clay-ink is used for interactive text and focus on light surfaces; clay-on-dark is used on mahogany or espresso.
 - [ ] State-color check: current/selected controls are clay, completed/readiness states are forest, and forest commit CTAs use their solid semantic hover role.
-- [ ] Account/support flow: `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`, `/privacy`, and `/terms` load; test-account export and deletion are understandable and complete.
+- [ ] Desktop at 1440×900 — no clipped UI or blank scene
+- [ ] Tablet at 768×1024 — no horizontal overflow
+- [ ] Mobile at 390×844 and 320×568 — no horizontal overflow
+- [ ] Keyboard navigation — controls are reachable and no focus trap exists
+- [ ] Report print/save — print stylesheet hides controls and shows the report
+- [ ] Text and CSV exports download with the active scenario
+- [ ] Share action copies a restorable scenario URL
+- [ ] 3D scene, keyboard placement, and drag placement stay within setbacks
+- [ ] Address search works with live keys and degrades honestly without them
+- [ ] Account settings, export, support, feedback, sign-out, and deletion work
+- [ ] AI photo generation requires consent and handles missing configuration
 
-- [ ] Desktop visual check at 1440x900 — no clipped UI, no blank scene
-- [ ] Tablet visual check at 768x1024 — no horizontal overflow
-- [ ] Mobile visual check at 390x844 — no horizontal overflow
-- [ ] Mobile visual check at 320x568 — no horizontal overflow
-- [ ] Keyboard navigation — Tab cycles through controls, no focus traps
-- [ ] Report print/save — print stylesheet hides controls, shows report
-- [ ] Download summary — `.txt` file downloads with scenario data
-- [ ] Export CSV — `.csv` file downloads
-- [ ] Share link — copies current scenario URL to clipboard
-- [ ] 3D scene renders — house, ADU, trees, fences visible
-- [ ] Arrow keys move ADU — within setback bounds, clamped
-- [ ] Drag to place ADU — mouse drag repositions within buildable area
-- [ ] Address search renders — input appears (disabled without API key)
-- [ ] Live parcel flow — with API keys, address search → aerial view
+## Security and privacy
 
-## Security
+- [ ] `.env.local`, `functions/.env`, signing files, and service-account JSON are not staged
+- [ ] `npm audit` is reviewed without `npm audit fix --force`
+- [ ] Browser and server API-key restrictions are verified in their consoles
+- [ ] Firebase Auth providers and App Check production settings are verified
+- [ ] Firestore rules are deployed and owner-isolation tests pass
+- [ ] Privacy, Terms & Conditions, Help, and Delete Account URLs are live
 
-- [ ] No secrets committed — check `.env.local`, `functions/.env` not staged
-- [ ] `npm audit` reviewed — no unsafe forced downgrade applied
-- [ ] API keys restricted — Google Places key restricted by HTTP referrer in GCP Console
-- [ ] Firebase Auth provider enabled - email/password sign-in works for the smoke test user
-- [ ] Firestore rules deployed - `users/{uid}/savedScenarios` allows owner create/read/delete and rejects malformed scenario payloads
-
-## Firebase Deploy (if applicable)
+## Firebase deploy
 
 - [ ] If native-store verification is enabled, validate StoreKit and Play Billing sandbox receipts through `/api/store/purchases/verify`; do not substitute an unverified web Stripe flow for native purchase testing.
 
-- [ ] `npm run build:firebase` succeeds
-- [ ] `firebase deploy --only hosting,functions` succeeds
-- [ ] Site loads on Firebase Hosting URL
-- [ ] API routes return 200 on Firebase Functions URL
-- [ ] Address search works with live API keys
-- [ ] Scenario smoke command passes after deploy
+- [ ] `npm run build:firebase`
+- [ ] `npm run deploy:dry-run`
+- [ ] `npm run deploy`
+- [ ] Hosting and API routes answer successfully after deployment
+- [ ] Address search and the Firebase scenario smoke pass against production
+- [ ] The newest `master` GitHub Actions run finishes successfully
+
+## Android release
+
+- [ ] `npm run android:validate`
+- [ ] Generated Bubblewrap/Gradle project is reviewed against `twa-manifest.json`
+- [ ] Play App Signing SHA-256 is added alongside the upload-key fingerprint
+- [ ] Play Billing products and license testers are configured
+- [ ] Required phone/tablet screenshots are referenced by the web manifest
+- [ ] `npm run android:validate:release`
+- [ ] Signed `.aab` is built outside Git and tested on the internal track
+- [ ] Purchase, restore, refund/revocation, account export, and deletion pass on a real device
+
+## Public repository and Devpost
+
+- [ ] Repository description, homepage, topics, license, and README are current
+- [ ] Existing work and Build Week additions are clearly distinguished
+- [ ] Repository is public, or both judging accounts have private access
+- [ ] Public demo works without payment through the judging period
+- [ ] Public YouTube demo is under three minutes, includes audio, and shows Codex/GPT-5.6
+- [ ] Gallery assets, track, technologies, and required submission fields are complete
+- [ ] A representative Codex Session ID is copied from `/feedback`
+- [ ] Final Devpost submission is reviewed by the owner before pressing Submit

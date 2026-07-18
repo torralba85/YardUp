@@ -1,7 +1,9 @@
-# Store Listing Copy - App Store and Google Play
+# Store Listing Copy — App Store + Google Play
 
 **Updated:** 2026-07-17
-**App:** LotFoundry - ADU Feasibility Studio (`com.lotfoundry.app`)
+
+**App:** LotFoundry — ADU Feasibility Studio (`com.lotfoundry.app`)
+
 **Status:** Draft for product, privacy, and counsel review. This file describes
 current code paths; console declarations must be checked against the final
 native build, provider contracts, and store guidance before submission.
@@ -120,9 +122,8 @@ local professionals before design, permitting, or investment decisions.
   add exact `manifest.json` screenshot references.
 - Export the required App Store and Play icons and the Play feature graphic from
   final source assets.
-- Replace `REPLACE_WITH_PLAY_SIGNING_SHA256_FINGERPRINT` in
-  `public/.well-known/assetlinks.json` only after Play App Signing provides the
-  final SHA-256.
+- Add the Play App Signing SHA-256 alongside the upload-key fingerprint in both
+  `public/.well-known/assetlinks.json` and `native/android/twa-manifest.json`.
 - Use `/help`, `/privacy`, and `/delete-account` in store-console metadata.
 - Complete a counsel review, live/sandbox purchase validation, and real-device
   account-deletion test before submitting.

@@ -14,7 +14,7 @@ import {
   type OpenAIResponseShape,
 } from "@/lib/server/openai";
 
-const DEFAULT_TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
+const DEFAULT_TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-sol";
 const DEFAULT_MAX_OUTPUT_TOKENS = 1000;
 const DEFAULT_MAX_TOOL_ROUNDS = 4;
 const DEFAULT_DEADLINE_MS = 75_000;

@@ -35,6 +35,24 @@ firebase-debug.log
 firebase-debug.*.log
 firestore-debug.log
 
+# Local agent / terminal state
+.codex/
+.grok/
+terminals/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# Generated media and release binaries
+brand/_plate_render.png
+public/demo/*.mp4
+*.apk
+*.aab
+*.ipa
+
 # Android signing keys / Bubblewrap build output (never commit)
 *.keystore
 *.jks

@@ -23,7 +23,7 @@ builder-network operations still need human access or business decisions.
 
 Latest verification in this audit:
 
-- Remote release truth: `origin/master` at `08e1ee5`; GitHub run `29544591559`
+- Remote release truth: `origin/master` at `c76f936`; GitHub run `29599585306`
   passed verification and deployed Hosting, Functions, and Firestore rules.
 - GitHub: default branch `master`; PR work must compare against live
   `origin/master`, not a potentially stale local `master`.
@@ -59,7 +59,7 @@ healthy, and both store listings are actually available to users.
   deletion are implemented.
 - AI backend: server-only OpenAI client, authenticated/rate-limited AI parcel
   insights, ADU concept generation route, gallery-integrated style-match
-  requests, and friendly setup/error handling are present.
+  requests, friendly setup/error handling, and GPT-5.6 Sol defaults are present.
 - AI upload/privacy groundwork: HEIC/HEIF acceptance, downscale to a 2048px max
   edge, JPEG re-encode, EXIF/GPS stripping, preview-confirm, generation states,
   before/after board, and gallery insertion plumbing exist.
@@ -72,7 +72,9 @@ healthy, and both store listings are actually available to users.
   Function secret binding; and demo unlock path are implemented.
 - PWA/store groundwork: manifest, icons, service worker/offline page,
   `public/.well-known/assetlinks.json`, privacy policy, terms, and draft store
-  listing/privacy-copy docs exist.
+  listing/privacy-copy docs exist. Android TWA configuration, Play Billing
+  dependencies, and the upload-key Digital Asset Links fingerprint are checked
+  in; the generated/signed AAB and Play App Signing fingerprint are still gates.
 - Deployment: Firebase Hosting + Functions + Firestore rules path is configured;
   CI verifies and deploys `master`; `apiAi`, `apiStripe`, `apiStore`, and generic
   `api` rewrites are separated.
@@ -128,7 +130,7 @@ P0 - short, high-confidence fixes:
 
 P1 - release-hardening tasks an agent can prepare:
 
-- Generate and test the Android Trusted Web Activity and iOS native wrapper;
+- Generate and test the Android Trusted Web Activity project and iOS native wrapper;
   add native share/photo/offline-certificate value on iOS for App Review 4.2.
 - Add Android/iOS sandbox purchase, restore, refund/revocation, and account-
   deletion E2E coverage before internal-track/TestFlight promotion.

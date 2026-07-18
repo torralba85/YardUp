@@ -84,7 +84,7 @@ Fonts: Libre Franklin body, Cormorant Garamond money/display, IBM Plex Mono kick
 | D-01 | `InspirationGalleryPanel` photo gradient + unguarded transitions | Confirm scrim exception; add `motion-safe:` |
 | D-02 | Hand-rolled buttons still in several studio panels | Adopt `Button` |
 | D-03 | StyleMatch debug chips use base amber as interactive fill | Gate behind env or use clay |
-| D-04 | Prior `DESIGN-AUDIT-2026.md` kicker tracking / BuilderInbox issues | Separate builder pass |
+| D-04 | Prior `2026-07-05-design-audit.md` kicker tracking / BuilderInbox issues | Separate builder pass |
 | D-05 | Mobile header fixed `w-60` menu on 320px | `max-w-[calc(100vw-2rem)]` |
 | D-06 | DeleteAccountButton touch targets ~28px | `min-h-11` |
 
