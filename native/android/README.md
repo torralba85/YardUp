@@ -21,12 +21,17 @@ Suggested values:
 | Start URL | `/studio` |
 | Display mode | standalone |
 
+The generated Bubblewrap/Gradle project is checked in. Refresh it only when the
+web manifest, package identity, Bubblewrap configuration, or native bridge
+requirements change, then review the generated diff before committing.
+
 ## Digital Asset Links
 
-`public/.well-known/assetlinks.json` includes the **upload key** SHA-256 so
-locally signed TWAs can verify. After Play App Signing enrollment, **add** the
-Play Console signing certificate fingerprint as a second array entry (keep the
-upload key). Redeploy Hosting before relying on Digital Asset Links.
+`public/.well-known/assetlinks.json` and `twa-manifest.json` include both the
+upload-key and Google Play App Signing SHA-256 fingerprints. Keep both entries
+synchronized. After changing either certificate, redeploy Hosting and verify the
+served statement against the Play Console App integrity page before relying on
+full-screen TWA verification.
 
 ## Play Billing
 
@@ -47,4 +52,8 @@ cd native/android
 ./gradlew test bundleRelease
 ```
 
-Do not commit signing keys or keystores.
+Run `npm run android:validate` for committed configuration checks. Run
+`npm run android:validate:release` from the prepared release workspace after the
+signed AAB exists at
+`native/android/app/build/outputs/bundle/release/app-release.aab`. The AAB,
+signing keys, and keystores are intentionally not committed.

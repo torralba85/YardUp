@@ -1,6 +1,6 @@
 # LotFoundry Completion Register
 
-Last audited: 2026-07-17
+Last audited: 2026-07-19
 
 This file is the top-level completion and backlog register for LotFoundry. It
 separates shipped work, AI-agent-manageable work, human-required launch tasks,
@@ -18,17 +18,22 @@ and Android Play Billing, with server-side verification for native grants.
 
 It is not launch-complete. Stripe live-mode checks, Firebase smoke credentials,
 production-domain decisions, Apple and Google console configuration, signing,
-native sandbox validation, store assets/listings, legal review, and real
+native sandbox validation, store submission, legal review, and real
 builder-network operations still need human access or business decisions.
 
 Latest verification in this audit:
 
-- Remote release truth: `origin/master` at `c76f936`; GitHub run `29599585306`
-  passed verification and deployed Hosting, Functions, and Firestore rules.
+- Repository truth: `origin/master` reached `4a5da14` after PRs #147 and #148;
+  both pull-request CI runs passed before merge.
+- Last explicitly documented production deployment evidence remains
+  `origin/master` at `c76f936`; GitHub run `29599585306` passed verification and
+  deployed Hosting, Functions, and Firestore rules. Confirm the newest `master`
+  deploy in Actions before using it as release evidence.
 - GitHub: default branch `master`; PR work must compare against live
   `origin/master`, not a potentially stale local `master`.
-- Live HTTP smoke: `/`, `/studio`, `/settings`, `/about`, `/help`, `/feedback`,
-  `/delete-account`, `/privacy`, and `/terms` return 200.
+- The prior live HTTP smoke recorded 200 responses for `/`, `/studio`,
+  `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`, `/privacy`, and
+  `/terms`; rerun smoke checks against the current deployment before release.
 - Use a clean worktree and `npm ci` for local release verification. Do not use
   untracked tooling directories or another worktree's changes as release evidence.
 
@@ -72,9 +77,10 @@ healthy, and both store listings are actually available to users.
   Function secret binding; and demo unlock path are implemented.
 - PWA/store groundwork: manifest, icons, service worker/offline page,
   `public/.well-known/assetlinks.json`, privacy policy, terms, and draft store
-  listing/privacy-copy docs exist. Android TWA configuration, Play Billing
-  dependencies, and the upload-key Digital Asset Links fingerprint are checked
-  in; the generated/signed AAB and Play App Signing fingerprint are still gates.
+  listing/privacy-copy docs exist. The generated Android TWA/Gradle project,
+  Play Billing dependencies, upload-key and Play App Signing fingerprints, and
+  manifest screenshots are checked in; signed binaries and signing material
+  remain intentionally untracked release artifacts.
 - Deployment: Firebase Hosting + Functions + Firestore rules path is configured;
   CI verifies and deploys `master`; `apiAi`, `apiStripe`, `apiStore`, and generic
   `api` rewrites are separated.
@@ -130,18 +136,25 @@ P0 - short, high-confidence fixes:
 
 P1 - release-hardening tasks an agent can prepare:
 
-- Generate and test the Android Trusted Web Activity project and iOS native wrapper;
-  add native share/photo/offline-certificate value on iOS for App Review 4.2.
+- ~~Generate and review the Android Trusted Web Activity project.~~ ✅ 2026-07-18
+  — Bubblewrap/Gradle source is checked in under `native/android/`; committed
+  configuration is covered by `npm run android:validate`.
+- Build the iOS native wrapper and add native share/photo/offline-certificate
+  value for App Review 4.2.
 - Add Android/iOS sandbox purchase, restore, refund/revocation, and account-
   deletion E2E coverage before internal-track/TestFlight promotion.
-- Add manifest `screenshots` entries once final mobile/tablet/desktop store
-  screenshots are captured and checked into `public/`.
-- ~~Seed upload-key fingerprint in `public/.well-known/assetlinks.json` and
-  TWA manifests.~~ ✅ 2026-07-17. Human still adds Play App Signing SHA-256
-  as a second entry after console enrollment, then redeploys hosting.
+- ~~Add manifest `screenshots` entries once final mobile/tablet/desktop store
+  screenshots are captured and checked into `public/`.~~ ✅ 2026-07-18 — phone
+  and tablet screenshots are referenced by `public/manifest.json`.
+- ~~Seed upload-key and Play App Signing fingerprints in
+  `public/.well-known/assetlinks.json` and TWA manifests.~~ ✅ 2026-07-18 — both
+  distinct SHA-256 fingerprints are present and the validator checks parity.
 - Mobile studio refresh (2026-07-17): scene chrome no longer clipped by the
   retired bottom-sheet offset; journey CTAs respect home-indicator safe area;
   journey back control is a true 44×44 target.
+- Mobile auth/landing refresh (2026-07-19): address and auth inputs use a 16px
+  mobile font to prevent iOS auto-zoom; the Blue Hour fade remains animated;
+  narrow navigation keeps Sign in visible.
 - Add or extend e2e coverage for certificate purchase return, builder lead
   unlock return, bulk credit purchase return, and credit unlock reveal.
 - Add a dashboard billing-ledger surface if the current right-rail purchase
@@ -156,8 +169,8 @@ P1 - release-hardening tasks an agent can prepare:
 - Honor parcel query and address handoff on mobile/tablet studio entry so the
   first visible state includes the selected lot and a money figure, not the
   generic onboarding plate.
-- Expand auth secondary links and footer links to 44px tap targets while
-  preserving the compact Golden Hour auth layout.
+- Expand remaining auth secondary links and footer links to 44px tap targets
+  while preserving the compact Golden Hour auth layout.
 - Audit shared studio controls and tabs for 44px interaction targets; keep
   read-only data chips compact per the pill-radius system.
 - Associate every `AuthModal` field label with its input via `htmlFor`/`id`,
@@ -196,11 +209,12 @@ P2 - larger agent work that needs a focused branch:
   run smoke:firebase` with a dedicated smoke user against `yardup-2026`.
 - Provision Apple Developer/App Store Connect and Play Console organization,
   tax, banking, signing, Sign in with Apple, StoreKit, and Play Billing access.
-- Generate signing keys and the Play signing SHA-256, upload release candidates,
-  provide reviewer credentials, and complete App Store / Play Console reviews.
-- Capture real-device screenshots and export store graphics: iPhone, iPad,
-  Android phone, Android tablet, 1024x1024 App Store icon, 512x512 Play icon,
-  and 1024x500 Play feature graphic.
+- Keep signing keys secure, upload release candidates, provide reviewer
+  credentials, and complete App Store / Play Console reviews and internal-track
+  validation.
+- Capture real-device screenshots and export final store graphics: iPhone,
+  iPad, Android phone, Android tablet, 1024x1024 App Store icon, 512x512 Play
+  icon, and 1024x500 Play feature graphic.
 - Fill App Store privacy labels and Google Play Data Safety forms using
   `docs/store-listing-copy.md`; confirm whether Stripe-collected card data is
   declared as payment info.

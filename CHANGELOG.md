@@ -101,6 +101,13 @@ All notable changes to LotFoundry are documented here. Format follows
   Regrid within the cache window (#146).
 - Re-exported all four public app icons with the LF monogram properly centered;
   the previous set was cropped off-center on home screens and splash surfaces.
+- Updated mobile address and auth inputs to a 16px minimum font size to prevent
+  iOS Safari from auto-zooming while preserving the compact size at `sm` and
+  above (#147).
+- Preserved the mobile Blue Hour copy fade, normalized auth error-banner radii,
+  and kept the landing-page Sign in action visible at narrow widths (#148).
+- Cleared Android release configuration blockers, aligned the trusted Firebase
+  origin, and pinned both dependency trees to `websocket-driver@^0.7.5` (#145).
 
 ## [1.0.1] - 2026-06-10
 

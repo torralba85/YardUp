@@ -15,14 +15,15 @@ this repository.
   dependency updates; do not use `npm audit fix --force` as a substitute for a
   reviewed dependency change.
 
-### GHSA-mp7j-qc5w-4988 and GHSA-xv26-6w52-cph6 - `websocket-driver` (current)
+### Resolved: GHSA-mp7j-qc5w-4988 and GHSA-xv26-6w52-cph6 - `websocket-driver`
 
-- **Status:** Tracked. `npm audit --audit-level=moderate` currently reports
-  the transitive `websocket-driver@0.7.4` through the Firebase database tree.
-- **Impact:** Resource-limit bypass through message compression (moderate) and
-  protocol-length-header message corruption (critical) affect versions below
-  `0.7.5`.
-- **Action:** Open a separate, immediate dependency-fix PR to update the
-  resolved package path to `websocket-driver@0.7.5`, verify the lockfile and
-  release gates, then remove this entry. This documentation release does not
-  modify dependencies or `package-lock.json`.
+- **Status:** Resolved. The root and Functions package manifests override the
+  transitive dependency to `websocket-driver@^0.7.5`, which contains the fixes
+  for the resource-limit bypass and protocol-length-header advisories affecting
+  earlier versions.
+- **Verification:** The mobile store release fix in PR #145 updated both
+  dependency trees and reported clean production audits. Keep reviewing root
+  and Functions audit output after dependency updates.
+- **Record:** Retained for audit history. Do not remove or weaken the override
+  without confirming the resolved lockfile version and rerunning the release
+  gates.
