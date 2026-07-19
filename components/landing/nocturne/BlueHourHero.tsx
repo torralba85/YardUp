@@ -310,7 +310,7 @@ export function BlueHourHero() {
           className="absolute left-[clamp(20px,5vw,72px)] top-[clamp(96px,16vh,160px)] z-10 w-[min(600px,84vw)] max-sm:top-24"
         >
           <div
-            className={`transition-opacity duration-500 ${copyDimmed ? "max-sm:hidden" : ""}`}
+            className={`transition-opacity duration-500 ${copyDimmed ? "max-sm:pointer-events-none max-sm:opacity-0" : ""}`}
           >
             <p className="lf-kicker flex items-center gap-2.5 text-ln-glow">
               <span aria-hidden="true" className="h-px w-6 bg-ln-glow/70" />
