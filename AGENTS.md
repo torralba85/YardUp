@@ -168,7 +168,7 @@ Without parcel API keys, the app must still run in demo mode with Seattle, Portl
 - Use Conventional Commits such as `fix(landing): ...`, `feat(parcel): ...`, `style(studio): ...`, `chore(ci): ...`.
 - Keep commits focused to one logical change.
 - Pull requests should describe behavior, list verification commands, link issues when relevant, and include screenshots/recordings for landing, studio, or responsive UI changes.
-- CI (`.github/workflows/ci.yml`) runs lint, Vitest, `tsc --noEmit`, build, and Playwright; on `master` it then writes env from secrets and deploys Hosting + Functions + Firestore rules. `ai-maintainer.yml` runs scheduled AI maintenance.
+- CI (`.github/workflows/ci.yml`) runs lint, Vitest, `tsc --noEmit`, build, and Playwright; on `master` it then writes env from secrets and deploys Hosting + Functions + Firestore rules. `ai-maintainer.yml` records intake on newly opened issues; it does not run on a schedule or make autonomous code changes.
 - Do not merge with failing CI.
 
 ## Obsidian Second Brain
