@@ -1,6 +1,6 @@
 # Store Deployment Readiness - iOS App Store and Google Play
 
-**Updated:** 2026-07-17
+**Updated:** 2026-07-18
 **Web baseline:** `origin/master` at `c76f936`; GitHub Actions run `29599585306`
 passed verification and deployed Hosting, Functions, and Firestore rules.
 **Verdict:** The web app is production-healthy. Native store submission is not
@@ -17,7 +17,15 @@ complete. Use a clean worktree and live `origin/master` for release evidence.
   are verified by `POST /api/store/purchases/verify` before an idempotent grant.
 - Android groundwork: `native/android/twa-manifest.json` and
   `native/android/README.md` define a Bubblewrap Trusted Web Activity with Play
-  Billing enabled.
+  Billing enabled. The generated Gradle project is checked in under
+  `native/android/`, a signed v1.0.2 (versionCode 3) AAB passes
+  `npm run android:validate:release`, both the upload-key and Play App Signing
+  SHA-256 fingerprints are served from `public/.well-known/assetlinks.json`,
+  and `public/manifest.json` carries phone/tablet screenshots (regenerate via
+  `node scripts/capture-store-screenshots.mjs`). The upload keystore password
+  was rotated on 2026-07-18 and the keystore/password files are ACL-restricted
+  to the owner account. Declarations and closed-testing steps are pre-drafted
+  in `docs/play-declarations.md`.
 - iOS groundwork: `capacitor.config.ts` and `native/ios-shell/README.md` define
   the Capacitor shell, StoreKit bridge requirement, share/photo handoff, and
   offline certificate library requirement.
@@ -44,7 +52,7 @@ complete. Use a clean worktree and live `origin/master` for release evidence.
 | Server Maps and Regrid | Bound only to generic `api` in `functions/index.js` | Verify API restrictions are server-safe and required APIs are enabled |
 | Stripe | `apiStripe` isolates checkout/webhook secrets | Register webhook, validate signing secret, and run certificate, lead-unlock, and credit tests |
 | Native purchase verification | `apiStore` is separate and activates native secret bindings only with `ENABLE_NATIVE_STORE_VERIFICATION=true` | Provision Apple/Google credentials and complete sandbox device tests |
-| Digital Asset Links | Upload-key SHA-256 is checked into `public/.well-known/assetlinks.json` | Add the Play App Signing SHA-256 alongside it after Play Console provides the certificate |
+| Digital Asset Links | Upload-key and Play App Signing SHA-256 fingerprints are both checked into `public/.well-known/assetlinks.json` and mirrored in `native/android/twa-manifest.json` | Deploy so the served statement matches; re-verify with the Play Console App integrity page after upload |
 | Canonical app URL | Falls back to `https://yardup-2026.web.app` | Set `NEXT_PUBLIC_APP_URL` when the owned production domain is chosen |
 
 ## Store-policy readiness

@@ -1,25 +1,41 @@
 {
   "packageId": "com.lotfoundry.app",
+  "host": "yardup-2026.web.app",
   "name": "LotFoundry",
   "launcherName": "LotFoundry",
   "display": "standalone",
   "themeColor": "#F2E5D5",
-  "themeColorDark": "#261307",
-  "navigationColor": "#261307",
+  "themeColorDark": "#F2E5D5",
+  "navigationColor": "#F2E5D5",
+  "navigationColorDark": "#F2E5D5",
+  "navigationDividerColor": "#33261307",
+  "navigationDividerColorDark": "#33261307",
   "backgroundColor": "#F2E5D5",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/studio",
   "iconUrl": "https://yardup-2026.web.app/icon-512.png",
   "maskableIconUrl": "https://yardup-2026.web.app/icon-maskable-512.png",
-  "monochromeIconUrl": "https://yardup-2026.web.app/icon-192.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "android.keystore",
+    "path": "./android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.1",
-  "appVersionCode": 2,
-  "shortcuts": [],
+  "appVersionName": "1.0.2",
+  "appVersionCode": 3,
+  "shortcuts": [
+    {
+      "name": "New Study",
+      "shortName": "Study",
+      "url": "/studio",
+      "chosenIconUrl": "https://yardup-2026.web.app/icon-512.png"
+    },
+    {
+      "name": "Builder Dashboard",
+      "shortName": "Builder",
+      "url": "/builder",
+      "chosenIconUrl": "https://yardup-2026.web.app/icon-512.png"
+    }
+  ],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://yardup-2026.web.app/manifest.json",
   "fallbackType": "customtabs",
@@ -43,8 +59,5 @@
   ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "protocolHandlers": [],
-  "fileHandlers": [],
-  "launchHandlerClientMode": "",
-  "host": "yardup-2026.web.app"
+  "appVersion": "1.0.2"
 }
