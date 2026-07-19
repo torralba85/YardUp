@@ -48,7 +48,7 @@ remaining assets, and final submission checklist.
 
 ## Run locally
 
-Prerequisite: Node.js 22, matching CI and the Firebase Functions runtime.
+Prerequisite: Node.js 22.12 or newer, matching CI and the Firebase Functions runtime.
 
 ```bash
 npm ci
