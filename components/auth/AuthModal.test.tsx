@@ -89,6 +89,20 @@ describe("AuthModal focus restore", () => {
     );
   });
 
+  it("associates visible labels with the email/password fields in both auth modes", () => {
+    render(<AuthModal isOpen onClose={() => {}} />);
+
+    expect(screen.getByLabelText("Email")).toHaveAttribute("id", "auth-email");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("id", "auth-password");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+
+    fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));
+
+    expect(screen.getByLabelText("Name")).toHaveAttribute("id", "auth-display-name");
+    expect(screen.getByLabelText("Name")).toHaveAttribute("autocomplete", "name");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "new-password");
+  });
+
   it("moves focus to the trigger's replacement, not an earlier control, when sign-in unmounts it", () => {
     render(<Host />);
     const trigger = screen.getByRole("button", { name: "Sign In" });

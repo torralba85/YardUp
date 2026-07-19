@@ -133,10 +133,8 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(200);
     expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        success_url:
-          "https://yardup-2026--yardup-2026.us-central1.hosted.app/builder?lead=r1&unlocked=1",
-        cancel_url:
-          "https://yardup-2026--yardup-2026.us-central1.hosted.app/builder?lead=r1",
+        success_url: "https://yardup-2026.web.app/builder?lead=r1&unlocked=1",
+        cancel_url: "https://yardup-2026.web.app/builder?lead=r1",
       }),
     );
   });

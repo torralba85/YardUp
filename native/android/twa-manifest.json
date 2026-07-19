@@ -1,25 +1,41 @@
 {
   "packageId": "com.lotfoundry.app",
+  "host": "yardup-2026.web.app",
   "name": "LotFoundry",
   "launcherName": "LotFoundry",
   "display": "standalone",
   "themeColor": "#F2E5D5",
-  "themeColorDark": "#261307",
-  "navigationColor": "#261307",
+  "themeColorDark": "#F2E5D5",
+  "navigationColor": "#F2E5D5",
+  "navigationColorDark": "#F2E5D5",
+  "navigationDividerColor": "#33261307",
+  "navigationDividerColorDark": "#33261307",
   "backgroundColor": "#F2E5D5",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/studio",
   "iconUrl": "https://yardup-2026.web.app/icon-512.png",
   "maskableIconUrl": "https://yardup-2026.web.app/icon-maskable-512.png",
-  "monochromeIconUrl": "https://yardup-2026.web.app/icon-192.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "android.keystore",
+    "path": "./android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.1",
-  "appVersionCode": 2,
-  "shortcuts": [],
+  "appVersionName": "1.0.2",
+  "appVersionCode": 3,
+  "shortcuts": [
+    {
+      "name": "New Study",
+      "shortName": "Study",
+      "url": "/studio",
+      "chosenIconUrl": "https://yardup-2026.web.app/icon-512.png"
+    },
+    {
+      "name": "Builder Dashboard",
+      "shortName": "Builder",
+      "url": "/builder",
+      "chosenIconUrl": "https://yardup-2026.web.app/icon-512.png"
+    }
+  ],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://yardup-2026.web.app/manifest.json",
   "fallbackType": "customtabs",
@@ -38,12 +54,10 @@
   "minSdkVersion": 24,
   "orientation": "default",
   "fingerprints": [
-    "E7:B3:6E:54:38:69:D5:AF:1D:D1:2B:3B:A6:8B:58:E4:29:D4:9E:AB:57:6F:38:69:50:A5:40:3B:DD:92:F6:90"
+    "E7:B3:6E:54:38:69:D5:AF:1D:D1:2B:3B:A6:8B:58:E4:29:D4:9E:AB:57:6F:38:69:50:A5:40:3B:DD:92:F6:90",
+    "03:12:00:71:08:87:DD:21:17:EA:42:D1:E2:25:76:B8:BF:C4:DD:94:56:08:C8:BE:2F:DD:AB:9B:EA:AD:5A:CE"
   ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "protocolHandlers": [],
-  "fileHandlers": [],
-  "launchHandlerClientMode": "",
-  "host": "yardup-2026.web.app"
+  "appVersion": "1.0.2"
 }

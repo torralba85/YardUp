@@ -44,4 +44,23 @@ describe("AccountMenu", () => {
     expect(screen.getByRole("menuitem", { name: /sign out/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /delete account/i })).toBeInTheDocument();
   });
+
+  it("portals the open menu as a fixed layer so sidebar overflow cannot clip it", async () => {
+    const user = userEvent.setup();
+    render(
+      <AccountMenu
+        displayName="Alma Reyes"
+        roleLabel="Lot Owner"
+        onSignOut={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+
+    const menu = screen.getByRole("menu", { name: /account/i });
+    expect(menu.style.position).toBe("fixed");
+    expect(menu.style.maxHeight).toBeTruthy();
+    // Portaled to document.body, not trapped inside the trigger wrapper.
+    expect(menu.parentElement).toBe(document.body);
+  });
 });

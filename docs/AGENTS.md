@@ -52,6 +52,7 @@ npm run deploy          # Deploy Hosting + Functions
 **Local (`.env.local`):**
 ```
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
+GOOGLE_PLACES_SERVER_KEY=<server-side Places API (New) key>
 NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
 ```
@@ -60,9 +61,10 @@ REGRID_API_KEY=<server-side Regrid Parcel API key>
 | Secret | Purpose |
 |---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | JSON key with Firebase Admin role |
-| `GOOGLE_MAPS_API_KEY` | Server-side Maps Static + Geocoding key |
 | `NEXT_PUBLIC_GOOGLE_PLACES_KEY` | Browser-safe Places Autocomplete key |
-| `REGRID_API_KEY` | Regrid Parcel API key |
+
+Server-side provider credentials are stored in Google Secret Manager and bound
+only to the Functions that use them; they are not duplicated in GitHub Actions.
 
 Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Austin).
 

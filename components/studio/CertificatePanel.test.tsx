@@ -102,6 +102,18 @@ describe("CertificatePanel", () => {
     window.history.replaceState(null, "", "/");
   });
 
+  it("uses a contextual eyebrow without changing the desktop step label by default", () => {
+    const props = createProps();
+    const { rerender } = render(<CertificatePanel {...props} />);
+
+    expect(screen.getByText("Step 4 · Certificate")).toBeInTheDocument();
+
+    rerender(<CertificatePanel {...props} eyebrow="Certificate of Feasibility" />);
+
+    expect(screen.getByText("Certificate of Feasibility")).toBeInTheDocument();
+    expect(screen.queryByText("Step 4 · Certificate")).not.toBeInTheDocument();
+  });
+
   it("prepares the combined AI brief before automatically opening a newly unlocked certificate", async () => {
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();
