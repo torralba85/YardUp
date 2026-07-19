@@ -112,9 +112,9 @@ Order of operations before touching code:
 - Review open Dependabot PRs (`.github/dependabot.yml` runs weekly for
   root, `functions/`, and GitHub Actions); merge grouped minor/patch PRs
   after CI passes, review major-version bumps manually.
-- Confirm the latest `master` CI run (`.github/workflows/ci.yml`) and the
-  scheduled `ai-maintainer.yml` run are green; investigate the first
-  failure rather than re-running blind.
+- Confirm the latest `master` CI run (`.github/workflows/ci.yml`) is green;
+  review newly opened issues and the issue-triggered `ai-maintainer.yml`
+  intake comments, and investigate the first failure rather than re-running blind.
 - Skim new issues against `.github/triage_checklist.md`; nothing should sit
   in `status: triage` for more than a week.
 
