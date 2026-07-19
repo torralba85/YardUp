@@ -21,23 +21,26 @@ const shots = [
 ];
 
 const browser = await chromium.launch();
-for (const shot of shots) {
-  const context = await browser.newContext({
-    viewport: { width: shot.width, height: shot.height },
-    deviceScaleFactor: shot.scale,
-    isMobile: shot.scale > 1,
-  });
-  const page = await context.newPage();
-  await page.goto(baseUrl + shot.url, { waitUntil: "networkidle" });
-  // Let fonts, the hero, and any entry animation settle before capturing.
-  await page.waitForTimeout(2500);
-  // Strip the Next.js dev-mode indicator so it never appears in store art.
-  await page.evaluate(() => document.querySelector("nextjs-portal")?.remove());
-  const path = resolve(outDir, `${shot.name}.png`);
-  await page.screenshot({ path });
-  console.log(
-    `captured ${shot.name}.png (${shot.width * shot.scale}x${shot.height * shot.scale})`,
-  );
-  await context.close();
+try {
+  for (const shot of shots) {
+    const context = await browser.newContext({
+      viewport: { width: shot.width, height: shot.height },
+      deviceScaleFactor: shot.scale,
+      isMobile: shot.scale > 1,
+    });
+    const page = await context.newPage();
+    await page.goto(baseUrl + shot.url, { waitUntil: "networkidle" });
+    // Let fonts, the hero, and any entry animation settle before capturing.
+    await page.waitForTimeout(2500);
+    // Strip the Next.js dev-mode indicator so it never appears in store art.
+    await page.evaluate(() => document.querySelector("nextjs-portal")?.remove());
+    const path = resolve(outDir, `${shot.name}.png`);
+    await page.screenshot({ path });
+    console.log(
+      `captured ${shot.name}.png (${shot.width * shot.scale}x${shot.height * shot.scale})`,
+    );
+    await context.close();
+  }
+} finally {
+  await browser.close();
 }
-await browser.close();
