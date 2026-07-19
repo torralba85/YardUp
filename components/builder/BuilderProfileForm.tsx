@@ -95,51 +95,71 @@ export default function BuilderProfileForm({
           {error}
         </div>
       )}
-      <label className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-company-name" className="lf-body-sm font-medium text-lf-espresso">
         Company name <span aria-hidden="true">*</span>
         <input
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
+          id="builder-company-name"
+          type="text"
+          autoComplete="organization"
+          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
           aria-required="true"
         />
       </label>
-      <label className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-contact-email" className="lf-body-sm font-medium text-lf-espresso">
         Contact email <span aria-hidden="true">*</span>
         <input
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
+          id="builder-contact-email"
+          type="email"
+          autoComplete="email"
+          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
           aria-required="true"
         />
       </label>
-      <label className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-phone" className="lf-body-sm font-medium text-lf-espresso">
         Phone (optional)
         <input
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
+          id="builder-phone"
+          type="tel"
+          autoComplete="tel"
+          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
         />
       </label>
-      <label className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-license" className="lf-body-sm font-medium text-lf-espresso">
         License number (optional)
         <input
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
+          id="builder-license"
+          type="text"
+          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={licenseNumber}
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
       </label>
-      <label className="lf-body-sm font-medium text-lf-espresso md:col-span-2">
+      <label
+        htmlFor="builder-service-areas"
+        className="lf-body-sm font-medium text-lf-espresso md:col-span-2"
+      >
         Service areas
         <input
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-sm"
+          id="builder-service-areas"
+          type="text"
+          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           placeholder="Seattle WA, Portland OR"
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}
         />
       </label>
-      <label className="flex items-center gap-2 text-sm text-lf-muted md:col-span-2">
+      <label
+        htmlFor="builder-active"
+        className="flex items-center gap-2 text-sm text-lf-muted md:col-span-2"
+      >
         <input
+          id="builder-active"
           type="checkbox"
           className="accent-lf-clay"
           checked={active}
@@ -150,7 +170,7 @@ export default function BuilderProfileForm({
       <button
         type="submit"
         disabled={isPending}
-        className="h-10 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand transition hover:bg-lf-clay-strong disabled:opacity-50"
+        className="min-h-11 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
       >
         {isPending ? "Saving..." : "Save builder profile"}
       </button>
