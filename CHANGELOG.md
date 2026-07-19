@@ -43,6 +43,10 @@ All notable changes to LotFoundry are documented here. Format follows
 - Native shell groundwork: Bubblewrap TWA manifest (`native/android/`),
   iOS shell with the `lotfoundryStore` StoreKit bridge stub
   (`native/ios-shell/`), and `capacitor.config.ts`.
+- Optional voiceover track for the Devpost demo composition (`voiceoverSrc`
+  prop rendered as a Remotion `Audio` layer), fed by
+  `remotion/demo/devpost-props.json`; generated narration audio stays
+  untracked.
 
 ### Changed
 - Authenticated OpenAI project-brief and style-match workflows now default to
@@ -91,6 +95,12 @@ All notable changes to LotFoundry are documented here. Format follows
 ### Fixed
 - Kept the landing ADU fully framed and unobstructed on narrow screens while
   reducing mobile WebGL load to avoid silent renderer failures.
+- Client fetches to `/api/geocode`, `/api/parcel`, `/api/aerial`, and
+  `/api/suggest` no longer send `cache: "no-store"`, so the browser honors the
+  server's `Cache-Control` max-age and repeat views stop re-billing Google and
+  Regrid within the cache window (#146).
+- Re-exported all four public app icons with the LF monogram properly centered;
+  the previous set was cropped off-center on home screens and splash surfaces.
 
 ## [1.0.1] - 2026-06-10
 
