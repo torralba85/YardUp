@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle,
@@ -75,8 +75,16 @@ export default function ReportPreview({
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  // Client-only portal gate — avoids SSR HTML mismatch when createPortal runs.
+  const isClient = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
+    if (!isClient) return;
+
     previouslyFocused.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
@@ -90,9 +98,11 @@ export default function ReportPreview({
       document.body.style.overflow = previousOverflow;
       previouslyFocused.current?.focus();
     };
-  }, [autoFocus]);
+  }, [autoFocus, isClient]);
 
   useEffect(() => {
+    if (!isClient) return;
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
@@ -119,9 +129,9 @@ export default function ReportPreview({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, [isClient, onClose]);
 
-  if (typeof document === "undefined") return null;
+  if (!isClient) return null;
 
   return createPortal(
     <div
