@@ -132,9 +132,10 @@ export default function BuilderLeadPanel({
             {success}
           </div>
         )}
-        <label className="text-sm font-medium text-lf-espresso">
+        <label htmlFor="builder-lead-name" className="text-sm font-medium text-lf-espresso">
           Name
           <input
+            id="builder-lead-name"
             type="text"
             autoComplete="name"
             className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
@@ -142,9 +143,10 @@ export default function BuilderLeadPanel({
             onChange={(event) => setName(event.target.value)}
           />
         </label>
-        <label className="text-sm font-medium text-lf-espresso">
+        <label htmlFor="builder-lead-email" className="text-sm font-medium text-lf-espresso">
           Email
           <input
+            id="builder-lead-email"
             type="email"
             autoComplete="email"
             className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
@@ -152,9 +154,10 @@ export default function BuilderLeadPanel({
             onChange={(event) => setEmail(event.target.value)}
           />
         </label>
-        <label className="text-sm font-medium text-lf-espresso">
+        <label htmlFor="builder-lead-phone" className="text-sm font-medium text-lf-espresso">
           Phone optional
           <input
+            id="builder-lead-phone"
             type="tel"
             autoComplete="tel"
             className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
@@ -162,16 +165,24 @@ export default function BuilderLeadPanel({
             onChange={(event) => setPhone(event.target.value)}
           />
         </label>
-        <label className="text-sm font-medium text-lf-espresso md:col-span-2">
+        <label
+          htmlFor="builder-lead-message"
+          className="text-sm font-medium text-lf-espresso md:col-span-2"
+        >
           Message optional
           <textarea
+            id="builder-lead-message"
             className="mt-1 min-h-20 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
           />
         </label>
-        <label className="flex gap-2 text-sm leading-6 text-lf-muted md:col-span-2">
+        <label
+          htmlFor="builder-lead-consent"
+          className="flex gap-2 text-sm leading-6 text-lf-muted md:col-span-2"
+        >
           <input
+            id="builder-lead-consent"
             type="checkbox"
             checked={consent}
             onChange={(event) => setConsent(event.target.checked)}
