@@ -40,7 +40,6 @@ export async function geocodeAddress(
   let res: Response;
   try {
     res = await fetch(url, {
-      cache: "no-store",
       headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
     });
   } catch {

@@ -57,7 +57,6 @@ export default function AerialView({
           `/api/aerial?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&w=${IMG_W}&h=${IMG_H}`,
           {
             headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
-            cache: "no-store",
           },
         );
         if (!res.ok) {

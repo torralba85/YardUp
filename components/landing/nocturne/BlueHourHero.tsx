@@ -90,7 +90,6 @@ export function BlueHourHero() {
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}`, {
-          cache: "no-store",
           signal: controller.signal,
         });
         if (!res.ok) return;

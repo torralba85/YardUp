@@ -204,7 +204,6 @@ export default function AddressSearch({
         } else {
           const idToken = await user?.getIdToken();
           const res = await fetch(`/api/suggest?q=${encodeURIComponent(query)}`, {
-            cache: "no-store",
             signal: controller.signal,
             headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
           });
