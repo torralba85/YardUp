@@ -37,7 +37,9 @@ export default function MobileJourney({
       <div className="relative z-(--z-index-header) shrink-0">
         <JourneyRail steps={steps} onBack={onBack} onStepSelect={onStepSelect} />
       </div>
-      <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+      <main id="main-content" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }

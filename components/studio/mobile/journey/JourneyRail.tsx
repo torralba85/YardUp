@@ -72,7 +72,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                     isCurrent ? "bg-lf-clay" : isDone ? "bg-lf-forest" : "bg-lf-taupe/40"
                   }`}
                 />
-                <span className="hidden min-[360px]:inline">{step.label}</span>
+                <span className="hidden min-[440px]:inline">{step.label}</span>
               </button>
             </li>
           );
