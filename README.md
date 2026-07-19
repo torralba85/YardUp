@@ -48,7 +48,7 @@ remaining assets, and final submission checklist.
 
 ## Run locally
 
-Prerequisite: Node.js 20 or newer.
+Prerequisite: Node.js 22, matching CI and the Firebase Functions runtime.
 
 ```bash
 npm ci
@@ -80,19 +80,20 @@ runs lint, unit tests, TypeScript, and the production build.
 
 ## Android release status
 
-`native/android/` contains the source-of-truth Trusted Web Activity
-configuration for package `com.lotfoundry.app`, including Digital Asset Links
-for the current upload key and Play Billing bridge dependencies.
+`native/android/` contains the generated Trusted Web Activity project and its
+source-of-truth configuration for package `com.lotfoundry.app`, including
+Digital Asset Links for both the upload key and Play App Signing certificate,
+Play Billing bridge dependencies, and manifest screenshots.
 
 ```bash
 npm run android:validate
 npm run android:validate:release
 ```
 
-The normal validator checks the committed configuration. The strict release
-validator intentionally stays red until the generated Bubblewrap project,
-Google Play App Signing fingerprint, required store screenshots, and signed AAB
-are present. Build artifacts and signing material are ignored by Git.
+The normal validator checks committed configuration. The strict release
+validator must be run from the prepared release workspace after the signed AAB
+exists. A clean checkout is expected to fail the final AAB-presence check because
+release binaries and signing material are intentionally excluded from Git.
 
 ## Architecture
 
