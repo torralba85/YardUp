@@ -310,7 +310,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     required
-                    className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
+                    className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-base sm:text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
                     placeholder="Alma Reyes"
                   />
                 </div>
@@ -336,7 +336,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
+                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-base sm:text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
                   placeholder="name@example.com"
                 />
               </div>
@@ -361,7 +361,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
+                  className="w-full bg-lf-espresso/40 border border-lf-taupe/25 rounded-md py-2 pl-10 pr-3 text-base sm:text-sm text-lf-sand placeholder:text-lf-taupe/80 transition-colors focus:outline-none focus:border-lf-clay-on-dark focus:ring-2 focus:ring-lf-clay-on-dark/35"
                   placeholder="••••••••"
                 />
               </div>
