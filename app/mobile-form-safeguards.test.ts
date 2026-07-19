@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const css = readFileSync(new URL("./mobile-form-safeguards.css", import.meta.url), "utf8");
-const layout = readFileSync(new URL("./layout.tsx", import.meta.url), "utf8");
+const css = readFileSync(resolve(process.cwd(), "app/mobile-form-safeguards.css"), "utf8");
+const layout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8");
 
 describe("mobile form safeguards", () => {
   it("loads after global styles and enforces a 16px mobile text-control floor", () => {
