@@ -34,6 +34,8 @@ export interface CertificatePanelProps {
   result: FeasibilityResult;
   /** Display name of the lot. */
   parcelName: string;
+  /** Context-specific label above the certificate artifact. */
+  eyebrow?: string;
   /** Open the unlocked certificate artifact, optionally carrying an AI setup error. */
   onOpenCertificate: (projectBriefError?: string) => void;
   /** Unified AI interpretation recorded in the certificate when available. */
@@ -56,6 +58,7 @@ export default function CertificatePanel({
   parcel,
   result,
   parcelName,
+  eyebrow = "Step 4 · Certificate",
   onOpenCertificate,
   projectBrief,
   projectBriefLoading,
@@ -208,11 +211,10 @@ export default function CertificatePanel({
       : `Generate complete certificate — ${price}`;
 
   return (
-    // Step 4 destination layout — a centered column like BuildersPanel, not a
-    // right-rail sidebar; the estimate and the unlock offer are its content.
+    // Centered artifact layout; the estimate and the unlock offer are its content.
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
       <div className="text-center">
-        <p className="lf-kicker text-lf-clay-ink">Step 4 · Certificate</p>
+        <p className="lf-kicker text-lf-clay-ink">{eyebrow}</p>
         <h2 className="lf-section-heading mt-2 text-lf-espresso">Your Certificate of Feasibility.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
           Review your estimate, then create one recorded parcel, income, and approval-timeline

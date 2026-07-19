@@ -292,7 +292,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
-                <label className="lf-caption mb-1 block font-medium text-lf-taupe">
+                <label
+                  htmlFor="auth-display-name"
+                  className="lf-caption mb-1 block font-medium text-lf-taupe"
+                >
                   Name
                 </label>
                 <div className="relative">
@@ -300,7 +303,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <UserIcon size={16} />
                   </div>
                   <input
+                    id="auth-display-name"
+                    name="name"
                     type="text"
+                    autoComplete="name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     required
@@ -312,7 +318,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             )}
 
             <div>
-              <label className="lf-caption mb-1 block font-medium text-lf-taupe">
+              <label
+                htmlFor="auth-email"
+                className="lf-caption mb-1 block font-medium text-lf-taupe"
+              >
                 Email
               </label>
               <div className="relative">
@@ -320,7 +329,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <Mail size={16} />
                 </div>
                 <input
+                  id="auth-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -331,7 +343,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <label className="lf-caption mb-1 block font-medium text-lf-taupe">
+              <label
+                htmlFor="auth-password"
+                className="lf-caption mb-1 block font-medium text-lf-taupe"
+              >
                 Password
               </label>
               <div className="relative">
@@ -339,7 +354,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <Lock size={16} />
                 </div>
                 <input
+                  id="auth-password"
+                  name="password"
                   type="password"
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

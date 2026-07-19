@@ -683,6 +683,7 @@ function FeasibilityStudioInner() {
               parcel={activeParcel}
               result={result}
               parcelName={mobileParcelName}
+              eyebrow="Certificate of Feasibility"
               onOpenCertificate={handleGenerateReport}
               projectBrief={projectBrief}
               projectBriefLoading={projectBriefLoading}
