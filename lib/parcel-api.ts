@@ -40,8 +40,6 @@ export async function fetchParcel(
   let res: Response;
   try {
     res = await fetch(url, {
-      // Avoid Next.js fetch caching so different addresses always fetch fresh
-      cache: "no-store",
       headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
     });
   } catch {
