@@ -144,6 +144,8 @@ flow does not require a rollback schema migration.
 
 ## Dependency audit note
 
-`npm audit --audit-level=moderate` currently reports transitive
-`websocket-driver@0.7.4` advisories. Update it to `0.7.5` in a dedicated,
-reviewed dependency PR. Do not use `npm audit fix --force`.
+The root and Functions manifests override the transitive `websocket-driver`
+dependency to `^0.7.5`, resolving the advisories previously tracked in this
+guide. Continue running `npm audit --audit-level=moderate` against both dependency
+trees after updates, reconcile the result with [SECURITY.md](../SECURITY.md), and
+do not use `npm audit fix --force`.
