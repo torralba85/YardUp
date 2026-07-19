@@ -27,7 +27,7 @@ export function NocturneNav() {
         <nav className="flex items-center gap-1 sm:gap-3" aria-label="Primary">
           <Link
             href="/login"
-            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium text-ln-mist transition-colors hover:bg-ln-mist/10 min-[360px]:inline-flex sm:px-4 sm:text-sm"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium text-ln-mist transition-colors hover:bg-ln-mist/10 sm:px-4 sm:text-sm"
           >
             Sign in
           </Link>

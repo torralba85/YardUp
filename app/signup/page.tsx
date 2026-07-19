@@ -82,7 +82,7 @@ function SignupForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-xl border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-lg border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
