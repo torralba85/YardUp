@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Series } from "remotion";
+import { AbsoluteFill, Audio, Series, staticFile } from "remotion";
 import { DEMO_PALETTE, SCENES } from "./constants";
 import {
   BrandScene,
@@ -16,11 +16,14 @@ import {
  * LotFoundry product demo (~46s @ 30fps, with short scene overlaps).
  * Dark campaign palette + Fraunces display; settle-and-stamp motion.
  */
-export const LotFoundryDemo: React.FC = () => {
+export const LotFoundryDemo: React.FC<{ voiceoverSrc?: string }> = ({
+  voiceoverSrc,
+}) => {
   const overlap = -12;
 
   return (
     <AbsoluteFill style={{ backgroundColor: DEMO_PALETTE.ink }}>
+      {voiceoverSrc ? <Audio src={staticFile(voiceoverSrc)} /> : null}
       <Series>
         <Series.Sequence durationInFrames={SCENES.brand} premountFor={18}>
           <BrandScene />

@@ -49,6 +49,7 @@ desktop.ini
 # Generated media and release binaries
 brand/_plate_render.png
 public/demo/*.mp4
+public/demo/*.wav
 *.apk
 *.aab
 *.ipa
