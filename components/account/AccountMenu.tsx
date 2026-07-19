@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText,
   HelpCircle,
@@ -34,9 +35,24 @@ const MENU_LINKS = [
   { href: "/privacy", label: "Privacy", icon: Shield },
 ] as const;
 
+const MENU_WIDTH = 280;
+const VIEWPORT_PAD = 12;
+const GAP = 8;
+
+interface MenuCoords {
+  top: number;
+  left: number;
+  maxHeight: number;
+  transformOrigin: string;
+}
+
 /**
  * Shared owner/builder account menu: Settings, Help, Feedback, legal, Sign out,
  * and Delete account. 44px interactive targets throughout.
+ *
+ * Dropdowns render through a portal with fixed coordinates so sidebar
+ * `overflow` never clips the panel, and placement flips above the trigger when
+ * space below is tight (the studio account block lives at the bottom of the rail).
  */
 export function AccountMenu({
   displayName,
@@ -47,8 +63,11 @@ export function AccountMenu({
   staticPanel = false,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(staticPanel);
+  const [coords, setCoords] = useState<MenuCoords | null>(null);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const initials =
     displayName
       .split(" ")
@@ -57,13 +76,59 @@ export function AccountMenu({
       .join("")
       .toUpperCase() || "U";
 
+  // Measure trigger → fixed coords. Layout effect is intentional: position must
+  // sync from DOM geometry (viewport collision), not from React state alone.
+  useLayoutEffect(() => {
+    if (staticPanel || !open) return;
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const viewportW = window.innerWidth;
+      const viewportH = window.innerHeight;
+      const spaceBelow = viewportH - rect.bottom - VIEWPORT_PAD;
+      const spaceAbove = rect.top - VIEWPORT_PAD;
+      // Prefer opening upward in the studio rail (trigger sits near the bottom).
+      const openUp = spaceBelow < 320 && spaceAbove > spaceBelow;
+      const available = Math.max(openUp ? spaceAbove : spaceBelow, 180) - GAP;
+      const maxHeight = Math.min(available, viewportH - VIEWPORT_PAD * 2);
+
+      let left = rect.right - MENU_WIDTH;
+      left = Math.max(VIEWPORT_PAD, Math.min(left, viewportW - MENU_WIDTH - VIEWPORT_PAD));
+
+      const top = openUp
+        ? Math.max(VIEWPORT_PAD, rect.top - GAP - maxHeight)
+        : Math.min(rect.bottom + GAP, viewportH - VIEWPORT_PAD - 120);
+
+      setCoords({
+        top,
+        left,
+        maxHeight,
+        transformOrigin: openUp ? "bottom right" : "top right",
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, staticPanel]);
+
   useEffect(() => {
     if (staticPanel || !open) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
     function onPointer(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
     }
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onPointer);
@@ -74,19 +139,9 @@ export function AccountMenu({
   }, [open, staticPanel]);
 
   const isDark = tone === "dark";
-  const panel = (
-    <div
-      id={menuId}
-      role="menu"
-      aria-label="Account"
-      className={cn(
-        "w-64 max-w-[calc(100vw-2rem)] space-y-1 rounded-lg border p-3 shadow-xl",
-        isDark
-          ? "border-lf-taupe/25 bg-lf-mahogany text-lf-sand"
-          : "border-lf-hairline bg-lf-card text-lf-espresso",
-        !staticPanel && "absolute right-0 top-12 z-(--z-index-sheet)",
-      )}
-    >
+
+  const panelBody = (
+    <>
       <div className="px-2 pb-2">
         <div
           className={cn(
@@ -151,16 +206,61 @@ export function AccountMenu({
         </div>
         <DeleteAccountButton tone={tone} />
       </div>
-    </div>
+    </>
   );
 
   if (staticPanel) {
-    return panel;
+    return (
+      <div
+        id={menuId}
+        role="menu"
+        aria-label="Account"
+        className={cn(
+          "w-64 max-w-[calc(100vw-2rem)] space-y-1 rounded-lg border p-3 shadow-xl",
+          isDark
+            ? "border-lf-taupe/25 bg-lf-mahogany text-lf-sand"
+            : "border-lf-hairline bg-lf-card text-lf-espresso",
+        )}
+      >
+        {panelBody}
+      </div>
+    );
   }
+
+  const floatingPanel =
+    open && coords && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={panelRef}
+            id={menuId}
+            role="menu"
+            aria-label="Account"
+            style={{
+              position: "fixed",
+              top: coords.top,
+              left: coords.left,
+              width: MENU_WIDTH,
+              maxHeight: coords.maxHeight,
+              transformOrigin: coords.transformOrigin,
+              zIndex: "var(--z-index-sheet)",
+            }}
+            className={cn(
+              "flex flex-col overflow-y-auto overscroll-contain rounded-xl border p-3 shadow-[0_18px_48px_rgba(38,19,7,0.28)] motion-safe:animate-[lf-fade-in_140ms_ease-out]",
+              isDark
+                ? "border-lf-taupe/30 bg-lf-mahogany text-lf-sand"
+                : "border-lf-hairline bg-lf-card text-lf-espresso",
+            )}
+          >
+            {panelBody}
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <div ref={rootRef} className={cn("relative", className)}>
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Account menu"
         aria-haspopup="menu"
@@ -176,7 +276,7 @@ export function AccountMenu({
       >
         {initials}
       </button>
-      {open ? panel : null}
+      {floatingPanel}
     </div>
   );
 }

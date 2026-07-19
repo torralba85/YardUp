@@ -44,6 +44,33 @@ const brief: AIProjectBrief = {
 };
 
 describe("ReportPreview", () => {
+  it("opens as a viewport modal dialog so studio flex layout cannot clip it", () => {
+    const parcel = parcelPresets[0];
+    const result = calculateFeasibility(
+      parcel,
+      defaultAduConfig,
+      defaultFinancialAssumptions,
+    );
+
+    render(
+      <ReportPreview
+        parcelName={`${parcel.address}, ${parcel.city}`}
+        result={result}
+        onClose={vi.fn()}
+        onDownload={vi.fn()}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog", { name: /certificate of feasibility/i });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAttribute("id", "export");
+    // Viewport modal: max-height + internal scroll so content is never clipped.
+    expect(dialog.className).toMatch(/max-h/);
+    expect(dialog.className).toMatch(/overflow/);
+    // Overlay is portaled to body so studio overflow cannot trap it.
+    expect(dialog.closest("body")).toBe(document.body);
+  });
+
   it("renders the AI parcel assessment and approval timeline inside one certificate", () => {
     const parcel = parcelPresets[0];
     const result = calculateFeasibility(
