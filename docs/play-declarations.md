@@ -22,22 +22,37 @@ no analytics SDK.
 | Is all of the user data collected by your app encrypted in transit? | Yes (HTTPS everywhere) |
 | Do you provide a way for users to request that their data is deleted? | Yes — in-app via Settings, and `https://yardup-2026.web.app/delete-account` |
 
-Data types to declare (all **collected**, none **shared**, none used for ads):
+Data types to declare (see Shared column — builder-marketplace fields ARE
+shared with a third party; everything else is collected only):
 
-| Data type | Collected | Purpose | Optional? |
-|---|---|---|---|
-| Personal info → Email address | Yes | Account management | No (required for accounts) |
-| Personal info → Name | Yes | Account management, personalization | Yes (display name) |
-| Personal info → Address | Yes | App functionality (property feasibility lookup) | Yes (demo lots work without) |
-| Financial info → Purchase history | Yes | App functionality (certificate/lead unlock grants) | Yes |
-| App activity → Other user-generated content | Yes | App functionality (saved studies/scenarios) | Yes |
-| Device or other IDs | Yes | Fraud prevention/security (reCAPTCHA Enterprise) | No |
+| Data type | Collected | Shared | Purpose | Optional? |
+|---|---|---|---|---|
+| Personal info → Email address | Yes | Yes — with matched builders after a connect request | Account management; builder lead marketplace | No (required for accounts) |
+| Personal info → Name | Yes | No | Account management, personalization | Yes (display name) |
+| Personal info → Phone number | Yes | Yes — with matched builders after a connect request | Builder lead marketplace (owner-provided callback number) | Yes |
+| Personal info → Address | Yes | Yes — lot address shared with matched builders after a connect request | App functionality (property feasibility lookup); builder lead marketplace | Yes (demo lots work without) |
+| Location → Precise location | Yes | No | App functionality (typed address is geocoded to lat/lng for the parcel lookup API; no device GPS permission is requested) | Yes (demo lots work without) |
+| Photos | Yes | No | App functionality (optional AI style-match: user photo sent to OpenAI for analysis/generation, not stored on our servers) | Yes (feature is opt-in) |
+| Financial info → Purchase history | Yes | No | App functionality (certificate/lead unlock grants) | Yes |
+| App activity → Other user-generated content | Yes | No | App functionality (saved studies/scenarios) | Yes |
+| Device or other IDs | Yes | No | Fraud prevention/security (reCAPTCHA Enterprise) | No |
 
 Notes for the form:
 - Firebase and Stripe act as service providers (processing on the developer's
   behalf), which Play does not count as "sharing."
-- No location permission is requested; addresses are typed by the user, so
-  declare them under Personal info → Address, not Location.
+- The homeowner's email, phone (if provided), and lot address ARE shared with
+  a third party — matched builders — once the homeowner submits a connect
+  request (`app/privacy/page.tsx` § Marketplace Sharing, `lib/marketplace.ts`).
+  Declare these under the Shared column, purpose "App functionality," basis
+  "User provided."
+- No device location permission is requested, but the typed address is
+  geocoded server-side to latitude/longitude and sent to `/api/parcel`
+  (`lib/parcel-api.ts`) for the feasibility lookup — declare this under
+  Location → Precise location in addition to Personal info → Address.
+- The optional AI style-match feature uploads a home photo to
+  `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
+  generation — declare Photos as collected. The photo is not stored on our
+  servers (processed and discarded), matching `app/privacy/page.tsx`.
 - No crash/analytics SDK ships in the app bundle; do not declare App info and
   performance.
 
