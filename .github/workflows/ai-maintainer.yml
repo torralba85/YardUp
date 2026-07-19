@@ -1,4 +1,4 @@
-name: "AI Autonomous Maintainer"
+name: "AI Maintainer Intake"
 
 on:
   issues:
@@ -9,7 +9,7 @@ permissions:
   issues: write
 
 jobs:
-  triage-and-patch:
+  record-intake:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -30,6 +30,6 @@ jobs:
                 "",
                 `Received issue #${issueNumber}.`,
                 "This workflow records the issue without making a generic diagnosis from untrusted issue text.",
-                "A maintainer run will classify the issue, identify the affected code, and report verified next steps.",
+                "A maintainer can classify the issue, identify the affected code, and report verified next steps.",
               ].join("\n")
             });
