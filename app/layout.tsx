@@ -3,6 +3,7 @@ import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/goo
 import { AuthProvider } from "@/lib/auth-context";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
+import "./mobile-form-safeguards.css";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],

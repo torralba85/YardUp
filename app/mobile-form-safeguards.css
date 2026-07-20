@@ -1,0 +1,14 @@
+/*
+ * iOS Safari zooms the viewport when an editable control below 16px receives
+ * focus. Keep mobile text-entry controls at the 16px floor while leaving
+ * desktop typography and non-text input controls unchanged. `!important` is
+ * intentional here so component-level Tailwind text utilities cannot bypass
+ * this accessibility safeguard.
+ */
+@media (max-width: 639px) {
+  input:not([type="button"]):not([type="checkbox"]):not([type="color"]):not([type="file"]):not([type="hidden"]):not([type="image"]):not([type="radio"]):not([type="range"]):not([type="reset"]):not([type="submit"]),
+  select,
+  textarea {
+    font-size: 1rem !important;
+  }
+}
