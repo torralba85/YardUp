@@ -19,6 +19,7 @@ import {
   createAIProjectBriefKey,
 } from "@/lib/ai-project-brief";
 import {
+  isNonDefaultScenario,
   mergeScenarioPartial,
   parseScenarioParams,
   serializeScenarioParams,
@@ -310,7 +311,8 @@ function FeasibilityStudioInner() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const merged = mergeScenarioPartial(parseScenarioParams(params));
+    const parsed = parseScenarioParams(params);
+    const merged = mergeScenarioPartial(parsed);
     setParcelId(merged.parcelId);
     setConfig(merged.config);
     setAssumptions(merged.assumptions);
@@ -327,6 +329,14 @@ function FeasibilityStudioInner() {
     const incomingAddress = incomingAddressRef.current;
     if (incomingAddress) {
       setPendingAddressQuery(incomingAddress);
+    }
+    // A restored or shared non-default scenario proves the find decision was
+    // already made — start the mobile journey at the Earn reveal instead of
+    // the onboarding plate. A pending address handoff owns its own advance
+    // (the parcel-mode render adjustment fires when the search resolves).
+    if (!incomingAddress && isNonDefaultScenario(parsed)) {
+      setDemoCommitted(true);
+      setJourneyStep((step) => (step === "find" ? "earn" : step));
     }
     setHydratedFromUrl(true);
   }, []);

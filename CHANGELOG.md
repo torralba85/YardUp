@@ -108,6 +108,10 @@ All notable changes to LotFoundry are documented here. Format follows
   above (#147).
 - Preserved the mobile Blue Hour copy fade, normalized auth error-banner radii,
   and kept the landing-page Sign in action visible at narrow widths (#148).
+- Mobile/tablet studio entry now honors restored and shared scenario URLs: a
+  non-default `?parcel=…` scenario opens on the Earn money reveal with the
+  selected lot instead of the generic Find onboarding plate
+  (`isNonDefaultScenario` in `lib/scenario-url.ts`).
 - Cleared Android release configuration blockers, aligned the trusted Firebase
   origin, and pinned both dependency trees to `websocket-driver@^0.7.5` (#145).
 - Finished the shared authentication modal's iOS-safe input sizing, retained

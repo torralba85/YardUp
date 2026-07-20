@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultScenarioState,
+  isNonDefaultScenario,
   mergeScenarioPartial,
   parseScenarioParams,
   serializeScenarioParams,
@@ -150,5 +151,42 @@ describe("mergeScenarioPartial", () => {
     expect(result.parcelId).toBe(defaultScenarioState.parcelId);
     expect(result.config).toEqual(defaultScenarioState.config);
     expect(result.assumptions).toEqual(customAssumptions);
+  });
+});
+
+describe("isNonDefaultScenario", () => {
+  it("is false for an empty partial (first visit, no params)", () => {
+    expect(isNonDefaultScenario({})).toBe(false);
+  });
+
+  it("is false when params only restate the default scenario", () => {
+    const partial = parseScenarioParams(
+      new URLSearchParams(serializeScenarioParams(defaultScenarioState)),
+    );
+    expect(isNonDefaultScenario(partial)).toBe(false);
+  });
+
+  it("is true for an explicit non-default parcel", () => {
+    const partial = parseScenarioParams(new URLSearchParams("parcel=corner-lot"));
+    expect(isNonDefaultScenario(partial)).toBe(true);
+  });
+
+  it("is true for the default parcel with a customized config", () => {
+    const partial = parseScenarioParams(
+      new URLSearchParams("parcel=oak-street&size=800"),
+    );
+    expect(isNonDefaultScenario(partial)).toBe(true);
+  });
+
+  it("is true for the default parcel with a non-default rent scenario", () => {
+    const partial = parseScenarioParams(
+      new URLSearchParams("parcel=oak-street&rent=optimistic"),
+    );
+    expect(isNonDefaultScenario(partial)).toBe(true);
+  });
+
+  it("is false without an explicit parcel even when config differs", () => {
+    const partial = parseScenarioParams(new URLSearchParams("size=800"));
+    expect(isNonDefaultScenario(partial)).toBe(false);
   });
 });
