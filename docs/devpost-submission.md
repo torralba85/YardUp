@@ -108,109 +108,111 @@ honest setup state rather than fabricated results.
 
 ## Inspiration
 
-Accessory dwelling units can add housing, rental income, and flexibility to a
-property, but the first step is needlessly fragmented. Homeowners bounce between
-zoning documents, parcel maps, cost calculators, design inspiration, and
-contractor conversations before they can answer a basic question: is this worth
-pursuing?
+ADUs are a big deal for homeowners — extra rental income, a place for family,
+added property value. But when you actually try to figure out if you can build
+one, everything is scattered. Zoning docs on one site, cost calculators on
+another, contractors telling you different things. I got frustrated trying to
+answer the basic question: "is this even worth pursuing on my lot?"
 
-We built LotFoundry to turn that uncertainty into one visual, evidence-aware
-decision journey.
+That's the question LotFoundry answers.
 
 ## What it does
 
-LotFoundry starts with an address or a built-in demo parcel and organizes the
-decision into five reveals: **Find, Earn, Shape, Check, and Act**.
+You give LotFoundry an address (or use a demo one). It pulls the property data
+and walks you through five things:
 
-- Find the parcel and its recorded context.
-- Earn with localized cost, rent, NOI, and payback estimates.
-- Shape an ADU concept directly on an interactive 3D lot.
-- Check setbacks, lot coverage, zoning signals, and permit questions.
-- Act with a shareable Certificate of Feasibility and a builder handoff.
+- **Find** — what your lot actually looks like on paper.
+- **Earn** — realistic rent, income, and payback numbers for your area.
+- **Shape** — drag an ADU around your lot in 3D, watch setbacks update in real
+  time.
+- **Check** — the zoning and permit questions you'll hit.
+- **Act** — a shareable feasibility report you can hand to a builder.
 
-Authenticated users can save scenarios, request an AI parcel-and-permit brief,
-and create a style-matched ADU concept from a consented home photo. The
-deterministic feasibility engine remains the source of truth; AI explains and
-organizes the evidence instead of silently changing the numbers.
+If you're signed in, you can save runs, get an AI-written summary of your
+parcel and permit situation, and even upload a photo of your house to get an
+ADU concept that matches its style. The math is deterministic — the AI just
+explains what the numbers mean, it doesn't change them.
 
 ## What changed during Build Week
 
-LotFoundry existed before July 13, so we treated Build Week as a real product
-extension rather than a relabeling exercise. The dated commit history shows the
-new work:
+LotFoundry already existed before Build Week (I'd been working on it for
+months), so I used the week to finish loose ends. In seven days I:
 
-- completed account settings, support, feedback, export, and deletion flows;
-- added explicit AI-photo consent and current legal/privacy surfaces;
-- built web, StoreKit, and Play Billing purchase routing with server-side,
-  idempotent receipt verification;
-- prepared Android TWA and iOS shell configuration;
-- redesigned the mobile studio into the five-reveal homeowner journey;
-- localized market estimates and strengthened responsive/accessibility QA;
-- migrated authenticated OpenAI workflows to GPT-5.6 Sol defaults; and
-- added public-repository, release, and Android validation.
+- Finished the account settings, support, and account-deletion flows.
+- Added explicit consent for the AI photo feature — I felt weird shipping
+  without it.
+- Wired up Stripe purchases with server-side receipt verification.
+- Got the Android TWA wrapper and iOS shell to a state where they'll actually
+  build for the stores.
+- Rebuilt the mobile studio around the five-step journey above (it was messy
+  before).
+- Localized the market estimates so they aren't just Bay Area numbers.
+- Migrated the OpenAI calls to gpt-5.6-sol.
+- Set up release automation and a public-repo checklist so I couldn't
+  accidentally ship a secret.
 
 ## How we built it
 
-The app uses Next.js 16, React 19, TypeScript, Firebase Hosting and Functions,
-Firebase Auth and Firestore, Three.js with React Three Fiber, Regrid parcel data,
-Google Maps, and Stripe.
+Stack: Next.js 16, React 19, TypeScript, Firebase (auth, Firestore, hosting,
+functions), Three.js + React Three Fiber for the 3D lot view, Regrid for parcel
+data, Google Maps, Stripe.
 
-The core feasibility engine is deterministic: parcel dimensions, setbacks,
-coverage, ADU geometry, construction assumptions, rent, and operating costs
-produce reproducible outputs. The authenticated AI pipeline uses the OpenAI
-Responses API with GPT-5.6 Sol, structured outputs, and a bounded tool loop. A
-parcel/permit tool joins jurisdiction context to the project brief, while the
-style-match path uses image understanding and image generation after explicit
-user consent.
+The feasibility engine is deterministic — same inputs always give the same
+numbers out. No AI in that path.
+
+The AI parts use OpenAI's Responses API with gpt-5.6-sol, structured outputs,
+and a bounded tool loop. There's a parcel/permit tool the model can call to
+bring in local jurisdiction info. The style-match feature uses image
+understanding + image generation, only after the user opts in.
 
 ## How Codex helped
 
-Codex worked as an engineering collaborator across the repository: tracing
-behavior through multiple worktrees, implementing release slices, writing
-regression tests, validating Firebase packaging, reviewing mobile layouts, and
-auditing the public repository. Codex also helped expose uncomfortable release
-truths—such as the difference between a valid TWA configuration and a signed,
-store-tested AAB—instead of papering over them.
+Codex was like a really fast pair-programmer. I'd give it a task — "figure out
+why the deploy is failing" or "add server-side receipt verification for
+Stripe" — and it would dig through the code, propose a fix, and often catch
+things I would've missed. It wrote most of the regression tests. It walked me
+through why my TWA config wasn't the same as a store-signed AAB. I didn't know
+the difference before.
 
-The human owner made the product, design, architecture, legal, licensing,
-privacy, and release decisions. Codex accelerated implementation and evidence
-collection; it did not make the final submission or store-release decision.
+The product and design decisions were still mine. Codex made me faster, not
+different.
 
 ## Challenges
 
-The hardest problem was keeping three kinds of truth separate:
+The hardest part was keeping three kinds of information from bleeding into
+each other: real recorded data (parcel dimensions, zoning), estimates the code
+calculates (rent, payback), and things the AI generates (explanations, concept
+images). Homeowners will trust the wrong number if you don't visually separate
+them.
 
-1. recorded parcel and jurisdiction data;
-2. deterministic estimates and geometry; and
-3. generative explanation and concepts.
+Two runners-up: making the 3D studio actually usable on a phone screen (it
+kept feeling like a spreadsheet), and making the demo mode good enough to show
+the product off without pretending demo parcels are real data.
 
-We also had to keep a dense 3D workspace usable on small phones, make
-store-specific purchases fail closed, and support a convincing no-key demo
-without pretending the demo parcels are live data.
+## Accomplishments that we're proud of
 
-## Accomplishments
+Honestly, I'm just proud that this feels like a single product now instead of
+a pile of calculators taped together. An address goes in, and the person walks
+out with a 3D model, real numbers, permit context, an AI-drafted concept, and a
+report they can share. That was the goal.
 
-We are proud that LotFoundry now feels like a coherent homeowner journey rather
-than a collection of calculators. It connects an address, spatial design,
-financial evidence, risk signals, AI explanation, a portable certificate, and a
-next action in one product.
-
-We are equally proud of the trust layer: explicit consent, export and deletion,
-honest fallbacks, server-side purchase verification, and clear release gates.
+The other thing I care about: the trust layer. Explicit consent for AI, export
+and delete your data, honest fallbacks when a feature isn't configured, real
+receipt verification on the server side. No dark patterns.
 
 ## What we learned
 
-Homeowners rarely need another wall of raw data. They need a legible distinction
-between what is known, what is estimated, what is generated, and what must be
-confirmed locally. AI is most useful here when it translates and connects
-evidence while deterministic systems keep authority over the math.
+Homeowners don't need more data. They need to know which number to trust.
+Separating "recorded fact" from "our estimate" from "AI-generated" ended up
+mattering more than the numbers themselves. When people can tell what kind of
+answer they're looking at, they trust the tool.
 
-## What's next
+## What's next for LotFoundry
 
-Next we will complete Play App Signing and internal-track Android testing,
-capture final store assets, expand nationwide jurisdiction coverage, validate
-native purchase restoration and revocation on real devices, and onboard the
-first verified builder network.
+Get the Android version signed and into internal testing on Play. Ship real
+store assets. Expand parcel coverage past the current cities. Test purchase
+restoration on actual iOS/Android devices. Start onboarding real builders so
+the "builder connect" side has someone on the other end.
 
 ## Three-minute demo outline
 

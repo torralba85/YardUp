@@ -50,6 +50,12 @@ During Build Week, Codex was used as a hands-on engineering collaborator to:
 - add release, repository-health, and public-submission checks; and
 - migrate the authenticated OpenAI workflows to GPT-5.6 Sol defaults.
 
+The authenticated AI workflows themselves run on GPT-5.6 Sol through the OpenAI
+Responses API, using structured outputs and a bounded tool loop. A parcel/permit
+tool joins jurisdiction context to the project brief, and the style-matched ADU
+concept path adds image understanding and image generation, used only after
+explicit user consent.
+
 Human decisions remained explicit: product scope, legal language, visual
 direction, architecture, release boundaries, and every external submission or
 deployment decision were reviewed by the project owner. See
