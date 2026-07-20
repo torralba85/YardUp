@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "LotFoundry type samples",
+  robots: { index: false, follow: false },
+};
 
 const TYPE_SCALE = [
   ["Hero display", "48-76 px", "Cormorant Garamond 700"],

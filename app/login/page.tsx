@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
+
+export const metadata: Metadata = {
+  title: "Sign in — LotFoundry",
+};
 
 /**
  * Login route (`/login`). Renders the {@link LoginForm} inside the shared
