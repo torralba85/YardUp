@@ -29,25 +29,22 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
 
-/** Site-wide JSON-LD: SoftwareApplication + Organization, no fabricated ratings. */
-const jsonLd = [
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "LotFoundry",
-    description:
-      "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
-    url: appUrl,
-    applicationCategory: "RealEstateApplication",
-    operatingSystem: "Web",
-  },
-  {
-    "@context": "https://schema.org",
+/** Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no fabricated ratings. */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "LotFoundry",
+  description:
+    "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
+  url: appUrl,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  publisher: {
     "@type": "Organization",
     name: "LotFoundry",
     url: appUrl,
   },
-];
+};
 
 /** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
 export const metadata: Metadata = {
