@@ -83,6 +83,33 @@ test.describe("mobile studio journey", () => {
       }),
     ).toBeDisabled();
   });
+
+  test("a shared scenario link opens on the money reveal, not onboarding", async ({ page }) => {
+    await page.goto("/studio?parcel=corner-lot&size=800&roof=gable&finish=board&rent=market&openings=1");
+
+    // The restored lot's money figure is the first visible state.
+    await expect(
+      page.getByRole("heading", { name: /your backyard could earn/i }),
+    ).toBeVisible();
+    await expect(page.getByText("812 Linden Avenue", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /start with your address/i }),
+    ).not.toBeVisible();
+
+    // Find stays reachable for choosing a different lot.
+    await page.getByRole("button", { name: /back to previous step/i }).click();
+    await expect(
+      page.getByRole("heading", { name: /start with your address/i }),
+    ).toBeVisible();
+  });
+
+  test("a default-scenario URL still begins at the Find reveal", async ({ page }) => {
+    await page.goto("/studio?parcel=oak-street&size=600&roof=shed&finish=cedar&rent=conservative&openings=1");
+
+    await expect(
+      page.getByRole("heading", { name: /start with your address/i }),
+    ).toBeVisible();
+  });
 });
 
 test.describe("desktop studio regression", () => {

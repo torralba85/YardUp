@@ -170,9 +170,12 @@ P1 - release-hardening tasks an agent can prepare:
 - Run an agency-bar visual QA sweep against `DESIGN.md` for landing, studio,
   builder, auth, certificate/report, and mobile breakpoints; file issues for
   any typography, radius, or semantic-color drift.
-- Honor parcel query and address handoff on mobile/tablet studio entry so the
+- ~~Honor parcel query and address handoff on mobile/tablet studio entry so the
   first visible state includes the selected lot and a money figure, not the
-  generic onboarding plate.
+  generic onboarding plate.~~ ✅ 2026-07-19 — address handoff already advanced
+  the journey on resolution; restored/shared non-default scenario URLs now also
+  open on the Earn reveal (`isNonDefaultScenario`), with mobile e2e coverage
+  in `e2e/mobile-studio.spec.ts`.
 - Expand remaining auth secondary links and footer links to 44px tap targets
   while preserving the compact Golden Hour auth layout.
 - Audit shared studio controls and tabs for 44px interaction targets; keep

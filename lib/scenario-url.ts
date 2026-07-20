@@ -115,6 +115,28 @@ export function serializeScenarioParams(state: ScenarioState): string {
 }
 
 /**
+ * Whether parsed URL params describe an explicitly chosen, non-default
+ * scenario — a shared link or a restored mid-session URL — rather than a
+ * first visit.
+ *
+ * Requires an explicit valid `parcel` param: the studio rewrites the URL with
+ * default params as soon as any visitor lands, so param presence alone proves
+ * nothing, and config-only marketing links (`?size=800`) never carried a lot
+ * choice. A scenario identical to the defaults is treated as a first visit
+ * because the two are indistinguishable in the URL.
+ *
+ * @param partial - Parsed params (typically from {@link parseScenarioParams}).
+ * @returns True when the params encode a deliberate, non-default scenario.
+ */
+export function isNonDefaultScenario(partial: Partial<ScenarioState>): boolean {
+  if (!partial.parcelId) return false;
+  return (
+    serializeScenarioParams(mergeScenarioPartial(partial)) !==
+    serializeScenarioParams(defaultScenarioState)
+  );
+}
+
+/**
  * Fill a partial scenario state with defaults to produce a complete state.
  *
  * Missing `config`/`assumptions` are deep-cloned from the defaults so callers
