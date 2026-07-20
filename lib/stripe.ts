@@ -22,6 +22,6 @@ export async function getStripe(): Promise<Stripe | null> {
   if (!key) return null;
   if (cached) return cached;
   const { default: StripeCtor } = await import("stripe");
-  cached = new StripeCtor(key);
+  cached = new StripeCtor(key, { apiVersion: "2026-05-27.dahlia" });
   return cached;
 }
