@@ -27,6 +27,25 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
+
+/** Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no fabricated ratings. */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "LotFoundry",
+  description:
+    "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
+  url: appUrl,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  publisher: {
+    "@type": "Organization",
+    name: "LotFoundry",
+    url: appUrl,
+  },
+};
+
 /** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
 export const metadata: Metadata = {
   title: "LotFoundry | See what your backyard can earn",
@@ -89,6 +108,10 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <a
           href="#main-content"
           className="sr-only rounded-full focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lf-espresso focus:px-5 focus:py-2.5 focus:font-mono focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.14em] focus:text-lf-sand focus:outline-2 focus:outline-offset-2 focus:outline-lf-clay-on-dark"

@@ -22,11 +22,11 @@ test.describe("landing → studio handoff", () => {
     await expect(page.locator("[data-money]").first()).toBeVisible({ timeout: 3000 });
     // The handed-off search ran and failed for this unresolvable address
     // (15s absorbs the geocode round trip; the banner surfaces with or without
-    // keys). Filter to the alert that carries text: Next.js also renders an
-    // empty role="alert" route announcer, so a bare getByRole("alert") is
-    // ambiguous under Playwright strict mode.
+    // keys). Filter to the alert that carries text: Next.js's route announcer
+    // is also role="alert" and, once a route sets a title, carries that title
+    // as text too, so take the first match like the mobile case below.
     await expect(
-      page.getByRole("alert").filter({ hasText: /\S/ }),
+      page.getByRole("alert").filter({ hasText: /\S/ }).first(),
     ).toBeVisible({ timeout: 15000 });
     // Money moment survives: the desktop studio opens on Feasibility with the
     // demo preset, so its "If built" income figure stays on screen after the

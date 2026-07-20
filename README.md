@@ -8,6 +8,16 @@ what it may earn, and which questions still need a local professional.
 [Read the documentation](docs/README.md) ·
 [Review the Build Week submission notes](docs/devpost-submission.md)
 
+## Preview
+
+<p>
+  <img src="public/screenshots/phone-home.png" width="240" alt="LotFoundry home screen on mobile" />
+  <img src="public/screenshots/phone-studio.png" width="240" alt="LotFoundry feasibility studio on mobile" />
+  <img src="public/screenshots/tablet-studio.png" width="400" alt="LotFoundry feasibility studio on tablet" />
+</p>
+
+Home and feasibility studio on phone, and the studio on tablet.
+
 ## What it does
 
 - Searches real residential parcels through Regrid and Google Maps integrations.
