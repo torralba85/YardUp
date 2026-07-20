@@ -80,6 +80,8 @@ All notable changes to LotFoundry are documented here. Format follows
 - Focused Playwright coverage for the address-suggest flow
   (`e2e/address-suggest.spec.ts`): a mocked local `/api/suggest` fallback test,
   plus an opt-in production smoke gated behind `LOTFOUNDRY_E2E_LIVE_SUGGEST=1`.
+- Local setup now requires Node.js 22.12 or newer within the Node 22 line,
+  matching the current Vite/Vitest toolchain requirement (#151).
 
 - Replaced the landing-page hero video with an interactive daylight ADU scene
   that deconstructs into five feasibility layers as the user scrolls.
@@ -108,6 +110,15 @@ All notable changes to LotFoundry are documented here. Format follows
   and kept the landing-page Sign in action visible at narrow widths (#148).
 - Cleared Android release configuration blockers, aligned the trusted Firebase
   origin, and pinned both dependency trees to `websocket-driver@^0.7.5` (#145).
+- Finished the shared authentication modal's iOS-safe input sizing, retained
+  explicit labels and keyboard focus behavior, and synchronized maintainer
+  workflow documentation with the actual issue-intake behavior (#152).
+- Hardened the builder handoff and profile forms with 44px controls, 16px mobile
+  field text, semantic input metadata, explicit label associations, and focused
+  regression coverage (#153).
+- Added a mobile-only 16px floor for editable text controls across the app,
+  excluding non-text input types, so current and future forms cannot reintroduce
+  iOS Safari focus zoom (#154).
 
 ## [1.0.1] - 2026-06-10
 

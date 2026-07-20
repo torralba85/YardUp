@@ -23,8 +23,9 @@ builder-network operations still need human access or business decisions.
 
 Latest verification in this audit:
 
-- Repository truth: `origin/master` reached `4a5da14` after PRs #147 and #148;
-  both pull-request CI runs passed before merge.
+- Repository truth: `origin/master` reached `837bf90` after PRs #151–#154; each
+  pull request passed repository hygiene, lint, unit tests, TypeScript, production
+  build, and Playwright before merge.
 - Last explicitly documented production deployment evidence remains
   `origin/master` at `c76f936`; GitHub run `29599585306` passed verification and
   deployed Hosting, Functions, and Firestore rules. Confirm the newest `master`
@@ -131,8 +132,10 @@ P0 - short, high-confidence fixes:
   `InspirationGalleryPanel`.
 - Keep `docs/store-deployment-readiness.md` and `docs/store-listing-copy.md`
   current as store assets and cloud settings change.
-- Add focused Playwright coverage for the live `/api/suggest` production path
-  and the local address-search fallback state.
+- ~~Add focused Playwright coverage for the live `/api/suggest` production path
+  and the local address-search fallback state.~~ ✅ 2026-07-15 —
+  `e2e/address-suggest.spec.ts` covers the mocked local fallback and an opt-in
+  live production smoke via `LOTFOUNDRY_E2E_LIVE_SUGGEST=1`.
 
 P1 - release-hardening tasks an agent can prepare:
 
@@ -152,9 +155,10 @@ P1 - release-hardening tasks an agent can prepare:
 - Mobile studio refresh (2026-07-17): scene chrome no longer clipped by the
   retired bottom-sheet offset; journey CTAs respect home-indicator safe area;
   journey back control is a true 44×44 target.
-- Mobile auth/landing refresh (2026-07-19): address and auth inputs use a 16px
-  mobile font to prevent iOS auto-zoom; the Blue Hour fade remains animated;
-  narrow navigation keeps Sign in visible.
+- Mobile form refresh (2026-07-19): landing, standalone auth, shared auth,
+  builder, studio, settings, security, and feedback text controls are protected
+  from iOS focus zoom; builder close/submit controls meet the 44×44 target; the
+  Blue Hour fade remains animated and narrow navigation keeps Sign in visible.
 - Add or extend e2e coverage for certificate purchase return, builder lead
   unlock return, bulk credit purchase return, and credit unlock reveal.
 - Add a dashboard billing-ledger surface if the current right-rail purchase
@@ -173,8 +177,10 @@ P1 - release-hardening tasks an agent can prepare:
   while preserving the compact Golden Hour auth layout.
 - Audit shared studio controls and tabs for 44px interaction targets; keep
   read-only data chips compact per the pill-radius system.
-- Associate every `AuthModal` field label with its input via `htmlFor`/`id`,
-  then verify the modal with keyboard and screen-reader navigation.
+- ~~Associate every `AuthModal` field label with its input via `htmlFor`/`id`,
+  then verify the modal with keyboard and screen-reader navigation.~~ ✅
+  2026-07-19 — explicit label associations, focus trapping/restoration, Escape
+  dismissal, and keyboard coverage are present in `AuthModal` and its tests.
 - Reconcile builder-only microtype utilities with the canonical `lf-*`
   typography scale so ledger labels do not drift across inbox surfaces.
 - Replace remaining layout/paint-heavy landing motion with transform/opacity
