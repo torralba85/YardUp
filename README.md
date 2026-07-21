@@ -62,6 +62,23 @@ deployment decision were reviewed by the project owner. See
 [docs/devpost-submission.md](docs/devpost-submission.md) for the evidence map,
 remaining assets, and final submission checklist.
 
+### Judge test accounts
+
+The core feasibility journey (Seattle, Portland, Austin) needs no login. To try
+the authenticated paths — saved scenarios, the AI project brief, style-match
+concepts, and the builder dashboard — sign in at
+[yardup-2026.web.app/login](https://yardup-2026.web.app/login) with one of two
+dedicated judge accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| Homeowner | `torralba85+judge-homeowner@gmail.com` | `U5NYPBvBPuSZ54g!9` |
+| Builder | `torralba85+judge-builder@gmail.com` | `etDVfW89qAhxDUf!9` |
+
+These credentials are intentionally provided for OpenAI Build Week judges. The
+accounts are dedicated to judging only; all prior development seed accounts
+have been removed from Firebase Auth.
+
 ## Run locally
 
 Prerequisite: Node.js 22.12 or newer, matching CI and the Firebase Functions runtime.

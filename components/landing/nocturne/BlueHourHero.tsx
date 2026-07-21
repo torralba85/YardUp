@@ -470,7 +470,6 @@ export function BlueHourHero() {
                     key={entry.id}
                     type="button"
                     aria-current={active ? "step" : undefined}
-                    aria-label={index === 0 ? entry.label : `Jump to ${entry.label}`}
                     onClick={() => jumpToPhase(entry.target)}
                     className={`inline-flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3 font-mono text-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ln-glow ${
                       active
@@ -479,6 +478,9 @@ export function BlueHourHero() {
                     }`}
                   >
                     {index === 0 ? "◦" : String(index).padStart(2, "0")}
+                    <span className="sr-only">
+                      {index === 0 ? entry.label : `Jump to ${entry.label}`}
+                    </span>
                   </button>
                 );
               })}

@@ -98,9 +98,13 @@ describe("BlueHourHero", () => {
     expect(rail).toBeInTheDocument();
     const open = screen.getByRole("button", { name: /open lot map/i });
     expect(open).toHaveAttribute("aria-current", "step");
-    expect(
-      screen.getByRole("button", { name: /jump to step 02 · property lines/i }),
-    ).not.toHaveAttribute("aria-current");
+    const propertyLines = screen.getByRole("button", {
+      name: /01\s*jump to step 02 · property lines/i,
+    });
+    expect(propertyLines).not.toHaveAttribute("aria-current");
+    expect(propertyLines).toHaveAccessibleName(
+      /01\s*jump to step 02 · property lines/i,
+    );
     expect(
       screen.getByRole("button", { name: /jump to step 05 · rent estimate/i }),
     ).toBeInTheDocument();

@@ -115,7 +115,7 @@ npx tsc --noEmit
 npm run build
 npm run build:firebase
 npm run deploy:dry-run
-FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> npm run smoke:firebase
+FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN=<registered UUID4> npm run smoke:firebase
 ```
 
 After deployment, confirm:

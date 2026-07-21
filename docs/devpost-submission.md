@@ -54,8 +54,11 @@ calculations remain the source of truth, and AI output is labeled as conceptual.
   explains the Codex/GPT-5.6 collaboration.
 - [x] Repository includes an evaluation license and secret-safe setup template.
 - [x] Demo mode lets judges test core feasibility without private API keys.
-- [ ] Make the repository public, or keep it private and share it with
-  `testing@devpost.com` and `build-week-event@openai.com`.
+- [x] Dedicated homeowner and builder judge accounts are provisioned (see the
+  Judge instructions below); development seed accounts have been purged from
+  Firebase Auth.
+- [ ] Keep the repository private and share it with `testing@devpost.com` and
+  `build-week-event@openai.com`.
 - [ ] Record a public YouTube demo under three minutes with audio, covering the
   product, Build Week work, and Codex/GPT-5.6 usage.
 - [ ] Run `/feedback` in the primary Codex build task and place that Codex
@@ -103,6 +106,22 @@ Move and resize the ADU, compare the financial and rule signals, and open the
 certificate. Live address, authenticated AI, cloud-save, and purchase paths
 depend on configured third-party services; missing configuration degrades to an
 honest setup state rather than fabricated results.
+
+To try the authenticated paths (saved scenarios, AI project brief, style-match
+concepts, and the builder dashboard), sign in with one of the two dedicated
+judge accounts instead of creating your own:
+
+| Role | Email | Password |
+|---|---|---|
+| Homeowner | `torralba85+judge-homeowner@gmail.com` | `U5NYPBvBPuSZ54g!9` |
+| Builder | `torralba85+judge-builder@gmail.com` | `etDVfW89qAhxDUf!9` |
+
+Sign in at [yardup-2026.web.app/login](https://yardup-2026.web.app/login). The
+homeowner account lands in the feasibility studio; the builder account lands on
+the builder dashboard at `/builder`. These credentials are intentionally
+provided for OpenAI Build Week judges. Both accounts are dedicated to judging
+and contain no other users' data — the previous ~1,600 development seed
+accounts were deleted from Firebase Auth ahead of submission.
 
 ### Project story
 

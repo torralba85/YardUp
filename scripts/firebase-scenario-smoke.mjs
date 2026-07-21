@@ -1,6 +1,7 @@
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
   projectId: "yardup-2026",
+  appId: "1:166268911022:web:08b5493550c6f176305c3f",
 };
 
 const apiKey =
@@ -11,8 +12,13 @@ const projectId =
   process.env.FIREBASE_SMOKE_PROJECT_ID ||
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
   DEFAULT_FIREBASE_CONFIG.projectId;
+const appId =
+  process.env.FIREBASE_SMOKE_APP_ID ||
+  process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
+  DEFAULT_FIREBASE_CONFIG.appId;
 const email = process.env.FIREBASE_SMOKE_EMAIL;
 const password = process.env.FIREBASE_SMOKE_PASSWORD;
+const appCheckDebugToken = process.env.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN;
 
 if (!email || !password) {
   console.error(
@@ -26,9 +32,31 @@ if (!email || !password) {
 }
 
 const scenarioId = `smoke-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+let appCheckToken;
+
+async function exchangeAppCheckDebugToken() {
+  if (!appCheckDebugToken) return null;
+
+  const response = await fetch(
+    `https://firebaseappcheck.googleapis.com/v1/projects/${projectId}/apps/${appId}:exchangeDebugToken?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ debugToken: appCheckDebugToken, limitedUse: false }),
+    },
+  );
+  const body = await response.json().catch(() => null);
+  if (!response.ok || !body?.token) {
+    const message = body?.error?.message || response.statusText;
+    throw new Error(`App Check debug token exchange failed: ${response.status} ${message}`);
+  }
+  return body.token;
+}
 
 async function requestJson(url, init) {
-  const response = await fetch(url, init);
+  const headers = new Headers(init?.headers);
+  if (appCheckToken) headers.set("X-Firebase-AppCheck", appCheckToken);
+  const response = await fetch(url, { ...init, headers });
   const text = await response.text();
   let body = null;
 
@@ -194,6 +222,8 @@ async function deleteScenario({ idToken, documentName }) {
 let smokeDocument;
 
 try {
+  appCheckToken = await exchangeAppCheckDebugToken();
+  if (appCheckToken) console.log("[smoke] App Check token acquired.");
   const session = await signIn();
   console.log(`[smoke] Signed in ${email} (${session.uid}).`);
   smokeDocument = await commitScenario(session);
