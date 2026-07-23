@@ -121,8 +121,7 @@ explains what the numbers mean, it doesn't change them.
 
 ## What changed during Build Week
 
-LotFoundry already existed before Build Week (I'd been working on it for
-months), so I used the week to finish loose ends. In seven days I:
+In seven days I:
 
 - Finished the account settings, support, and account-deletion flows.
 - Added explicit consent for the AI photo feature — I felt weird shipping
