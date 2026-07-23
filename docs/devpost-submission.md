@@ -1,36 +1,3 @@
-# OpenAI Build Week 2026 submission
-
-**Official rules:** [openai.devpost.com/rules](https://openai.devpost.com/rules)
-**Submission deadline:** July 21, 2026 at 5:00 PM Pacific
-**Recommended track:** Apps for Your Life
-
-LotFoundry existed before the submission window. Only work meaningfully added
-during the July 13–21 Build Week window should be presented as the eligible
-extension.
-
-## Existing baseline before July 13
-
-- Browser-based ADU feasibility studio with deterministic parcel, zoning,
-  coverage, cost, rent, NOI, and payback calculations.
-- 3D parcel visualization, Firebase auth and persistence, builder marketplace,
-  Stripe checkout, reports, PWA support, and initial AI panels.
-
-## Build Week extension
-
-The dated `master` history provides the primary evidence:
-
-- `fe26bfe`–`c755b1b` (July 13): AI and auth integration work landed from the
-  preserved local implementation branch.
-- `eab5e7b` (July 16): account, feedback, deletion, and commerce flows hardened.
-- `f059f5d` and `0727519` (July 16): native store verification and Firebase CI
-  were made fail-closed.
-- `08e1ee5` (July 16): the five-reveal mobile journey and address-specific
-  market data landed.
-- `c76f936` (July 17): mobile safe-area/touch-target fixes and the Android
-  upload-key Digital Asset Link landed.
-- The public-release cleanup updates active OpenAI routes to GPT-5.6 Sol,
-  removes generated repository clutter, and adds repeatable public/Android
-  validation.
 
 ## How Codex and GPT-5.6 are used
 
