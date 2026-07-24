@@ -99,6 +99,51 @@ expect(
   "Digital Asset Links still contains a placeholder.",
 );
 
+const buildGradlePath = "native/android/app/build.gradle";
+const buildGradle = existsSync(pathFromRoot(buildGradlePath))
+  ? readFileSync(pathFromRoot(buildGradlePath), "utf8")
+  : undefined;
+const gradleNumberValue = (key) => {
+  const match = buildGradle?.match(new RegExp(`^\\s*${key}\\s+(\\d+)\\s*$`, "m"));
+  return match ? Number(match[1]) : undefined;
+};
+const gradleStringValue = (key) => {
+  const match = buildGradle?.match(
+    new RegExp(`^\\s*${key}\\s+"([^"]*)"\\s*$`, "m"),
+  );
+  return match ? match[1] : undefined;
+};
+
+if (buildGradle !== undefined) {
+  const gradleVersionCode = gradleNumberValue("versionCode");
+  const gradleVersionName = gradleStringValue("versionName");
+  const gradleTargetSdk = gradleNumberValue("targetSdkVersion");
+  expect(
+    gradleVersionCode !== undefined,
+    `Could not read versionCode from ${buildGradlePath}.`,
+  );
+  expect(
+    gradleVersionName !== undefined,
+    `Could not read versionName from ${buildGradlePath}.`,
+  );
+  expect(
+    gradleTargetSdk !== undefined,
+    `Could not read targetSdkVersion from ${buildGradlePath}.`,
+  );
+  expect(
+    gradleVersionCode === undefined || gradleVersionCode === twa.appVersionCode,
+    `build.gradle versionCode (${gradleVersionCode}) must match twa-manifest.json appVersionCode (${twa.appVersionCode}).`,
+  );
+  expect(
+    gradleVersionName === undefined || gradleVersionName === twa.appVersionName,
+    `build.gradle versionName (${gradleVersionName}) must match twa-manifest.json appVersionName (${twa.appVersionName}).`,
+  );
+  expect(
+    gradleTargetSdk === undefined || gradleTargetSdk >= 36,
+    `build.gradle targetSdkVersion (${gradleTargetSdk}) must be at least API 36 (Google Play requirement starting Aug 31, 2026).`,
+  );
+}
+
 const distinctFingerprints = new Set(normalizedFingerprints);
 releaseExpect(
   distinctFingerprints.size >= 2,
