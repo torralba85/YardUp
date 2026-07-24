@@ -61,9 +61,9 @@ android {
     defaultConfig {
         applicationId "com.lotfoundry.app"
         minSdkVersion 24
-        targetSdkVersion 35
-        versionCode 3
-        versionName "1.0.2"
+        targetSdkVersion 36
+        versionCode 4
+        versionName "1.0.3"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
