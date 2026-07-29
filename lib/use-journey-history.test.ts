@@ -75,6 +75,30 @@ describe("useJourneyHistory", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("pushes again for a forward move that follows a popstate restore", () => {
+    // Regression: handlePopState used to set syncedRef.current = restored
+    // directly, which let the popstate-driven re-render's early-return guard
+    // (`syncedRef.current === step`) fire before the restoringRef cleanup
+    // branch ever ran, leaving restoringRef stuck true. The next distinct
+    // forward move then wrongly took the "just restored" branch and silently
+    // dropped its pushState.
+    const onRestore = vi.fn();
+    const { rerender } = renderHook(
+      ({ step }: { step: MobileJourneyStep }) => useJourneyHistory(step, onRestore),
+      { initialProps: { step: "find" as MobileJourneyStep } },
+    );
+    rerender({ step: "earn" });
+    rerender({ step: "shape" });
+
+    act(() => popTo("earn"));
+    rerender({ step: "earn" });
+
+    const push = vi.spyOn(window.history, "pushState");
+    rerender({ step: "shape" });
+
+    expect(push).toHaveBeenCalledTimes(1);
+  });
+
   it("ignores a popstate entry with no journey state", () => {
     // CertificatePanel.tsx:135 calls replaceState and can drop our key.
     // A missing key must never be interpreted as a step change.
@@ -86,7 +110,7 @@ describe("useJourneyHistory", () => {
     expect(onRestore).not.toHaveBeenCalled();
   });
 
-  it("reset() replaces in place so back after a reset does not resurrect a stale step", () => {
+  it("reset() calls replaceState once and never pushState", () => {
     const { result, rerender } = renderHook(
       ({ step }: { step: MobileJourneyStep }) => useJourneyHistory(step, vi.fn()),
       { initialProps: { step: "find" as MobileJourneyStep } },

@@ -16,9 +16,16 @@ interface JourneyHistoryState {
 /** What {@link useJourneyHistory} hands back to the caller. */
 export interface JourneyHistoryControls {
   /**
-   * Collapse the journey's history back to the current entry. Call from a
-   * "start over" reset: without it, the back gesture would return to a step
-   * whose underlying parcel state no longer exists.
+   * Stamp the current history entry's step as "find" so the post-reset
+   * position is recorded. Call from a "start over" reset.
+   *
+   * This does **not** unwind entries pushed earlier in the abandoned journey
+   * — `history.go(-n)` is async, generates popstate churn, and risks
+   * overshooting out of the app entirely in a TWA. Those stale entries are
+   * left in the stack; they become inert because the consumer refuses to
+   * restore to a step `deriveJourneySteps` reports as `locked`, and after a
+   * reset nothing past Find is reachable. Neutralized by unreachability, not
+   * by removal.
    */
   reset: () => void;
 }
@@ -83,9 +90,14 @@ export function useJourneyHistory(
       // No key means the entry is not ours — `CertificatePanel.tsx:135`
       // calls replaceState and can drop it. Never guess a step from a
       // stateless entry; leaving the journey put is the safe fallback.
-      if (!restored) return;
+      if (restored === undefined) return;
+      // Only flag that a restore is in flight — do not also touch syncedRef
+      // here. The sync effect's `restoringRef` branch (below) is the sole
+      // place that advances syncedRef for a restore; setting it from both
+      // places let the popstate-driven re-render's `syncedRef.current ===
+      // step` guard fire first, leaving restoringRef stuck true and silently
+      // swallowing the next real forward push.
       restoringRef.current = true;
-      syncedRef.current = restored;
       onRestoreRef.current(restored);
     }
 
