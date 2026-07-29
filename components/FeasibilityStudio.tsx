@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -68,6 +68,7 @@ import {
   prevJourneyStep,
   type MobileJourneyStep,
 } from "@/lib/mobile-journey";
+import { useJourneyHistory } from "@/lib/use-journey-history";
 // ── Redesign: guided-spine studio ───────────────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
@@ -293,6 +294,32 @@ function FeasibilityStudioInner() {
   );
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(false);
+
+  // Session-history mirror so the Android back gesture steps back through the
+  // journey instead of exiting the TWA. All ~13 setJourneyStep call sites stay
+  // untouched — the hook observes the resulting state instead.
+  //
+  // A step restored by a back/forward press is only applied if it is still
+  // reachable: this mirrors the exact `found` derivation the journey rail
+  // uses below (parcelMode !== "preset" || demoCommitted) so a step the rail
+  // currently shows as locked is refused here too. This matters after
+  // "start over" — reset() only stamps the current history entry, so stale
+  // entries deeper in the stack (e.g. "check") stay in the browser's history
+  // but must not snap the screen to a step whose parcel data has already
+  // moved on.
+  const handleJourneyRestore = useCallback(
+    (restored: MobileJourneyStep) => {
+      const found = parcelMode !== "preset" || demoCommitted;
+      const restoredState = deriveJourneySteps(journeyStep, { found }).find(
+        (candidate) => candidate.id === restored,
+      )?.state;
+      if (restoredState === "locked") return;
+      setJourneyStep(restored);
+    },
+    [journeyStep, parcelMode, demoCommitted],
+  );
+  const journeyHistory = useJourneyHistory(journeyStep, handleJourneyRestore);
+
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   // Render-phase adjustment (not an effect): the money reveal must appear
   // immediately after address resolution, so a parcel-mode change while on
@@ -381,6 +408,7 @@ function FeasibilityStudioInner() {
     setBuilderLeadOpen(false);
     setActiveStep("lot");
     setJourneyStep("find");
+    journeyHistory.reset();
     setDemoCommitted(false);
     setFineTuneOpen(false);
     setReportAutoFocus(false);
@@ -722,7 +750,7 @@ function FeasibilityStudioInner() {
             />
           }
           steps={journeySteps}
-          onBack={previousStep ? () => setJourneyStep(previousStep) : undefined}
+          onBack={previousStep ? () => window.history.back() : undefined}
           onStepSelect={setJourneyStep}
         >
           {stepContent}
