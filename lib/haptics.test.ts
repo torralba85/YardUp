@@ -98,4 +98,19 @@ describe("haptics", () => {
       expect(HAPTIC_PATTERNS[event]).toBeDefined();
     }
   });
+
+  it("does not throw when navigator.vibrate itself throws when invoked (Requirement D)", () => {
+    // Permission errors and buggy WebView shims can make the call itself
+    // throw, not just be absent. haptic() is wired into Button's onClick,
+    // so a throw here would abort the click handler and the CTA's real
+    // action would never run — haptics must never be a hard dependency.
+    stubVibrate(
+      vi.fn(() => {
+        throw new Error("vibrate permission denied");
+      }),
+    );
+    stubReducedMotion(false);
+
+    expect(() => haptic("commit")).not.toThrow();
+  });
 });

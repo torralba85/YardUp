@@ -57,6 +57,23 @@ function prefersReducedMotion(): boolean {
  * product decides haptics should survive it, delete the condition below.
  */
 export function haptic(event: HapticEvent): void {
-  if (!canVibrate() || prefersReducedMotion()) return;
-  navigator.vibrate(HAPTIC_PATTERNS[event]);
+  // Structural "never throw": haptics are a decorative progressive
+  // enhancement (see file doc comment), and callers such as Button's
+  // onClick run their real action immediately after this call — a throw
+  // here would abort that handler and turn a missing buzz into a missing
+  // click. `canVibrate()`/the matchMedia guard above already cover the
+  // known "unsupported" shapes, but `navigator.vibrate(...)` can still
+  // throw synchronously when *called* (permission errors, buggy WebView
+  // shims), and `window.matchMedia(...)` can throw when called instead of
+  // returning `undefined` (sandboxed/restricted contexts). Swallowing those
+  // is deliberate and correct here: the failure must stay unobservable to
+  // the caller, and there is no recovery worth attempting for a vibration
+  // that didn't fire. This is defense in depth on top of the guards above,
+  // not a replacement for them.
+  try {
+    if (!canVibrate() || prefersReducedMotion()) return;
+    navigator.vibrate(HAPTIC_PATTERNS[event]);
+  } catch {
+    // Intentionally empty — see comment above.
+  }
 }
