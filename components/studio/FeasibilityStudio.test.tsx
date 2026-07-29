@@ -33,6 +33,21 @@ function popToJourneyStep(step: string) {
   window.dispatchEvent(new PopStateEvent("popstate", { state }));
 }
 
+/**
+ * Dispatch a popstate carrying an arbitrary raw history-state object (or
+ * null), matching real navigation by also stamping window.history.state
+ * first. Distinct from popToJourneyStep above: this replays whatever state a
+ * real entry actually holds (captured live from window.history.state),
+ * rather than constructing a fresh `{ lfJourneyStep: step }` object — needed
+ * to test that a third-party history writer preserves (or clobbers) that
+ * key, since the point of that test is to observe the entry's real,
+ * possibly-null shape rather than assume it.
+ */
+function popToRawState(state: Record<string, unknown> | null) {
+  window.history.replaceState(state, "", window.location.href);
+  window.dispatchEvent(new PopStateEvent("popstate", { state }));
+}
+
 vi.mock("next/dynamic", () => ({
   default: () => {
     // Expose the dims the scene receives so tests can assert the 3D lot
@@ -533,5 +548,59 @@ describe("FeasibilityStudio (guided spine)", () => {
       screen.getByRole("heading", { name: /Your backyard could earn/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Verify before permit/i)).not.toBeInTheDocument();
+  });
+
+  it("does not let the scenario URL sync effect erase the journey's history-state key", async () => {
+    // Regression: the scenario-URL sync effect (below, fires on every
+    // parcelId/config/assumptions change) called
+    // window.history.replaceState(null, "", next) — the `null` wipes the
+    // *entire* state object on the current entry, including the
+    // lfJourneyStep key the journey hook wrote there. It is not a rare
+    // collision: selecting a preset, resizing the ADU, or changing
+    // finish/roof all trigger it.
+    //
+    // This test triggers the real effect via a real interaction (selecting
+    // a different demo preset while still on Find, changing parcelId) so
+    // its outcome is actually driven by FeasibilityStudio.tsx's own
+    // replaceState(null, ...) line rather than by an assumption baked into
+    // the test. A hook-level test cannot reproduce this: the hook's own
+    // sync effect has always correctly spread existing state
+    // (`{ ...window.history.state, [KEY]: step }`); the bug is a second,
+    // unrelated effect in FeasibilityStudio.tsx overwriting that state with
+    // `null` entirely, which only exists at the studio level.
+    stubMobileMatchMedia();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    // Select a different demo preset while still on Find — changes
+    // parcelId, which is one of the scenario-URL sync effect's deps. This
+    // is the exact action from the live-browser repro that found this bug.
+    fireEvent.click(screen.getByRole("button", { name: /Portland/i }));
+
+    // Capture what that effect actually left on the current (launch)
+    // entry's state, right before burying it under a new push below. This
+    // is what a real Back press will deliver once the journey advances
+    // past it — reading it here (rather than assuming its shape) is what
+    // makes the assertion below depend on the real source line under test.
+    const launchEntryState = window.history.state as { lfJourneyStep?: string } | null;
+
+    // Advance the journey one step: pushes a new entry for "earn", burying
+    // the (possibly now-stateless) launch entry beneath it.
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    expect(
+      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+    ).toBeInTheDocument();
+
+    // Simulate a real Back press landing on the launch entry, carrying
+    // whatever state it actually holds.
+    act(() => popToRawState(launchEntryState));
+
+    // Back must actually navigate. Against the unfixed
+    // replaceState(null, ...), the launch entry has no lfJourneyStep key,
+    // so handlePopState's (correct, unchanged) `restored === undefined`
+    // guard silently no-ops and the screen stays on Earn — the browser
+    // moves, the UI does not.
+    expect(
+      screen.getByRole("heading", { name: "Start with your address." }),
+    ).toBeInTheDocument();
   });
 });

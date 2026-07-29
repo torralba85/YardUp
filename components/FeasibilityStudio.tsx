@@ -398,7 +398,12 @@ function FeasibilityStudioInner() {
     if (!hydratedFromUrl || typeof window === "undefined") return;
     const serialized = serializeScenarioParams({ parcelId, config, assumptions });
     const next = `${window.location.pathname}?${serialized}`;
-    window.history.replaceState(null, "", next);
+    // Preserve the current entry's state — never pass `null` here. This
+    // effect only means to rewrite the URL; a null state would also erase
+    // the journey hook's lfJourneyStep key (use-journey-history.ts) and
+    // Next.js's own router state on this entry, since replaceState's first
+    // argument replaces the whole state object, not just the URL.
+    window.history.replaceState(window.history.state, "", next);
   }, [assumptions, config, hydratedFromUrl, parcelId]);
 
   // Managed focus: when the active step changes, move focus to the new step's
