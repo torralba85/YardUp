@@ -22,9 +22,23 @@ function stubReducedMotion(reduce: boolean) {
   });
 }
 
+function restoreMatchMedia() {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  });
+}
+
 describe("haptics", () => {
   afterEach(() => {
     stubVibrate(undefined);
+    restoreMatchMedia();
     vi.restoreAllMocks();
   });
 
@@ -62,6 +76,20 @@ describe("haptics", () => {
     haptic("commit");
 
     expect(vibrate).not.toHaveBeenCalled();
+  });
+
+  it("fires despite incomplete matchMedia polyfill returning undefined", () => {
+    const vibrate = vi.fn(() => true);
+    stubVibrate(vibrate);
+    // matchMedia exists as a function but returns undefined (broken polyfill)
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => undefined),
+    });
+
+    expect(() => haptic("commit")).not.toThrow();
+    expect(vibrate).toHaveBeenCalledWith(HAPTIC_PATTERNS.commit);
   });
 
   it("defines a pattern for every event in the vocabulary", () => {
