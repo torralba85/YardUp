@@ -423,6 +423,40 @@ button:focus-visible {
   .lf-stagger > *:nth-child(6) { animation-delay: 225ms; }
 }
 
+/* ── Installed-app touch chrome ────────────────────────────────
+   The TWA runs this same CSS with no browser UI around it, so web
+   defaults that are invisible in a tab read as "web page" in the app.
+   Scoped to the mobile journey; desktop is untouched. */
+
+/* Chrome paints a translucent box on every tap. In a standalone app
+   that flash is the loudest remaining "this is a website" tell. */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Journey chrome must not long-press-select like a document. Content
+   stays selectable on purpose — users copy addresses, money figures,
+   and APNs, and taking that away would be a real regression. */
+.lf-journey-surface nav,
+.lf-journey-surface button,
+.lf-journey-surface .lf-kicker {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Contain overscroll so Chrome's pull-to-refresh cannot fire inside the
+   TWA. Journey position lives in React state, so a reload would drop the
+   user back to Find and lose the study. */
+.lf-journey-surface {
+  overscroll-behavior-y: contain;
+}
+
 /* ── Blue Hour landing type roles ─────────────────────────────
    The landing's display face is Fraunces (loaded per-page via next/font as
    --font-display-ln on the landing wrapper); the studio keeps Cormorant.
