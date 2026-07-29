@@ -1,6 +1,25 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "./Button";
+import { HAPTIC_PATTERNS } from "@/lib/haptics";
+
+function stubVibrate() {
+  const vibrate = vi.fn(() => true);
+  Object.defineProperty(navigator, "vibrate", {
+    configurable: true,
+    writable: true,
+    value: vibrate,
+  });
+  return vibrate;
+}
+
+function restoreVibrate() {
+  Object.defineProperty(navigator, "vibrate", {
+    configurable: true,
+    writable: true,
+    value: undefined,
+  });
+}
 
 describe("Button", () => {
   it("renders a button that defaults to type=button", () => {
@@ -76,5 +95,74 @@ describe("Button", () => {
     const ref = { current: null as HTMLButtonElement | null };
     render(<Button ref={ref}>Ref</Button>);
     expect(ref.current).toBeInstanceOf(HTMLButtonElement);
+  });
+
+  describe("haptics", () => {
+    afterEach(() => {
+      restoreVibrate();
+    });
+
+    it("fires the commit pattern for the commit variant", () => {
+      const vibrate = stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="commit" onClick={onClick}>
+          Commit
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Commit" }));
+      expect(vibrate).toHaveBeenCalledWith(HAPTIC_PATTERNS.commit);
+    });
+
+    it("fires the tap pattern for the primary variant", () => {
+      const vibrate = stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="primary" onClick={onClick}>
+          Primary
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Primary" }));
+      expect(vibrate).toHaveBeenCalledWith(HAPTIC_PATTERNS.tap);
+    });
+
+    it("stays silent for the secondary variant", () => {
+      const vibrate = stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="secondary" onClick={onClick}>
+          Secondary
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Secondary" }));
+      expect(vibrate).not.toHaveBeenCalled();
+    });
+
+    it("stays silent for the ghost variant", () => {
+      const vibrate = stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="ghost" onClick={onClick}>
+          Ghost
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Ghost" }));
+      expect(vibrate).not.toHaveBeenCalled();
+    });
+
+    it("still passes the original click event through to the caller's onClick", () => {
+      stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="commit" onClick={onClick}>
+          Commit
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Commit" }));
+      expect(onClick).toHaveBeenCalledTimes(1);
+      const receivedEvent = onClick.mock.calls[0][0];
+      expect(receivedEvent).toBeDefined();
+      expect(receivedEvent.type).toBe("click");
+    });
   });
 });
