@@ -162,4 +162,56 @@ describe("useJourneyHistory", () => {
     expect(replace).toHaveBeenCalledTimes(1);
     expect(push).not.toHaveBeenCalled();
   });
+
+  it("does nothing while disabled: no replaceState, no pushState, popstate never reaches onRestore", () => {
+    // Desktop passes enabled: !isDesktop (always false on desktop). Desktop
+    // must not observe any side effect of this hook at all — not even the
+    // "first sync" replaceState a mount normally performs.
+    const push = vi.spyOn(window.history, "pushState");
+    const replace = vi.spyOn(window.history, "replaceState");
+    const onRestore = vi.fn();
+    const { rerender } = renderHook(
+      ({ step }: { step: MobileJourneyStep }) => useJourneyHistory(step, onRestore, false),
+      { initialProps: { step: "find" as MobileJourneyStep } },
+    );
+    rerender({ step: "earn" });
+
+    // Dispatched directly rather than via the shared popTo() helper: popTo
+    // also calls replaceState to model realistic browser semantics for the
+    // *other* tests, which would itself show up on the `replace` spy and
+    // confound this assertion. This test's own point is that the disabled
+    // hook never even attaches a popstate listener, so history.state's
+    // actual contents don't matter here.
+    act(() => {
+      window.dispatchEvent(
+        new PopStateEvent("popstate", { state: { [JOURNEY_STEP_STATE_KEY]: "shape" } }),
+      );
+    });
+
+    expect(replace).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    expect(onRestore).not.toHaveBeenCalled();
+  });
+
+  it("performs a correct first replaceState (not a push) once re-enabled, even after steps changed while disabled", () => {
+    // The hook must leave syncedRef untouched while disabled so that
+    // enabling later (e.g. useMediaQuery correcting from its SSR default to
+    // the real mobile viewport) still looks like a first sync, not a
+    // forward move needing a push. Exercise this with a step change that
+    // happens entirely while disabled, matching the real isDesktop-flips-
+    // after-hydration sequence.
+    const { rerender } = renderHook(
+      ({ step, enabled }: { step: MobileJourneyStep; enabled: boolean }) =>
+        useJourneyHistory(step, vi.fn(), enabled),
+      { initialProps: { step: "find" as MobileJourneyStep, enabled: false } },
+    );
+    rerender({ step: "earn", enabled: false });
+
+    const push = vi.spyOn(window.history, "pushState");
+    const replace = vi.spyOn(window.history, "replaceState");
+    rerender({ step: "earn", enabled: true });
+
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+  });
 });

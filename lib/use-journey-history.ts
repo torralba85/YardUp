@@ -44,12 +44,19 @@ export interface JourneyHistoryControls {
  * must never reach the URL or history.
  *
  * Syncing happens in an effect rather than at the ~13 `setJourneyStep` call
- * sites: one of them runs during render (`FeasibilityStudio.tsx:301`), where
+ * sites: one of them is FeasibilityStudio's render-phase parcelMode-change
+ * adjustment, which advances the journey synchronously during render, where
  * a `pushState` would be a side effect in the render phase.
+ *
+ * @param enabled - Pass `false` to make every side effect (sync, popstate
+ * listening, `reset()`) a no-op — used to disable this entirely on desktop,
+ * which never renders the journey and must not observe any of its side
+ * effects either. Defaults to `true`.
  */
 export function useJourneyHistory(
   step: MobileJourneyStep,
   onRestore: (step: MobileJourneyStep) => void,
+  enabled = true,
 ): JourneyHistoryControls {
   // The step history already reflects. `null` means "nothing written yet".
   const syncedRef = useRef<MobileJourneyStep | null>(null);
@@ -60,6 +67,15 @@ export function useJourneyHistory(
   }, [onRestore]);
 
   useEffect(() => {
+    // Bail out before touching syncedRef — not after — so a disabled pass
+    // leaves it exactly as it found it. This matters because `isDesktop`
+    // (this hook's real-world `enabled` source) reports its SSR/first-paint
+    // default before `useMediaQuery` corrects to the real viewport: every
+    // mobile page load runs this effect once disabled, then once enabled.
+    // Leaving syncedRef untouched on the disabled pass means the enabled
+    // pass still finds `syncedRef.current === null` and performs a correct
+    // first replaceState instead of a spurious push.
+    if (!enabled) return;
     if (syncedRef.current === step) return;
 
     // If the current entry already records this step, we arrived here by a
@@ -82,9 +98,11 @@ export function useJourneyHistory(
       window.history.pushState(next, "", window.location.href);
     }
     syncedRef.current = step;
-  }, [step]);
+  }, [step, enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
+
     function handlePopState(event: PopStateEvent) {
       const state = event.state as JourneyHistoryState | null;
       const restored = state?.[JOURNEY_STEP_STATE_KEY];
@@ -97,10 +115,10 @@ export function useJourneyHistory(
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [enabled]);
 
   const reset = useCallback(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !enabled) return;
     const next: JourneyHistoryState = {
       ...window.history.state,
       [JOURNEY_STEP_STATE_KEY]: "find",
@@ -108,7 +126,7 @@ export function useJourneyHistory(
     window.history.replaceState(next, "", window.location.href);
     // Mark "find" as already synced so the reset render does not push it.
     syncedRef.current = "find";
-  }, []);
+  }, [enabled]);
 
   return { reset };
 }
