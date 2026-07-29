@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/haptics";
 
 /**
  * Visual intent:
@@ -66,6 +67,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       type,
       className,
       children,
+      onClick,
       ...props
     },
     ref,
@@ -85,6 +87,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           fullWidth && "w-full",
           className,
         )}
+        onClick={(event) => {
+          // Only the two weightiest intents buzz. Secondary and ghost stay
+          // silent — buzzing every control is what makes haptics feel cheap.
+          if (variant === "commit") {
+            haptic("commit");
+          } else if (variant === "primary") {
+            haptic("tap");
+          }
+          onClick?.(event);
+        }}
         {...props}
       >
         {loading ? (

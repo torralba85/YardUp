@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Button } from "@/components/ui/Button";
+import { haptic } from "@/lib/haptics";
 
 /** Props for {@link EarnStep}. */
 export interface EarnStepProps {
@@ -29,6 +31,12 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
     !result.market.verified &&
     result.market.source !== "preset" &&
     result.market.source !== "heuristic";
+
+  // The journey's peak moment: the figure landing gets its own haptic, fired
+  // once per mount rather than on every rent recalculation.
+  useEffect(() => {
+    haptic("reveal");
+  }, []);
 
   return (
     <section
