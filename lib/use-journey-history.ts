@@ -53,9 +53,6 @@ export function useJourneyHistory(
 ): JourneyHistoryControls {
   // The step history already reflects. `null` means "nothing written yet".
   const syncedRef = useRef<MobileJourneyStep | null>(null);
-  // Set while applying a popstate, so the resulting render does not push the
-  // step we just travelled back to as if it were a new forward move.
-  const restoringRef = useRef(false);
   const onRestoreRef = useRef(onRestore);
 
   useEffect(() => {
@@ -65,8 +62,12 @@ export function useJourneyHistory(
   useEffect(() => {
     if (syncedRef.current === step) return;
 
-    if (restoringRef.current) {
-      restoringRef.current = false;
+    // If the current entry already records this step, we arrived here by a
+    // back/forward navigation rather than a forward move — adopt it without
+    // adding an entry. Deriving this from history itself (instead of a flag
+    // the consumer must cooperate to clear) keeps the sync self-correcting.
+    const recorded = (window.history.state as JourneyHistoryState | null)?.[JOURNEY_STEP_STATE_KEY];
+    if (recorded === step) {
       syncedRef.current = step;
       return;
     }
@@ -91,13 +92,6 @@ export function useJourneyHistory(
       // calls replaceState and can drop it. Never guess a step from a
       // stateless entry; leaving the journey put is the safe fallback.
       if (restored === undefined) return;
-      // Only flag that a restore is in flight — do not also touch syncedRef
-      // here. The sync effect's `restoringRef` branch (below) is the sole
-      // place that advances syncedRef for a restore; setting it from both
-      // places let the popstate-driven re-render's `syncedRef.current ===
-      // step` guard fire first, leaving restoringRef stuck true and silently
-      // swallowing the next real forward push.
-      restoringRef.current = true;
       onRestoreRef.current(restored);
     }
 
