@@ -294,31 +294,45 @@ function FeasibilityStudioInner() {
   );
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(false);
+  // Whether the find decision has been made — an address resolved (live or
+  // estimated) or a demo lot explicitly committed to. Shared by the journey
+  // rail's reachability derivation below and the restore guard just below so
+  // the two cannot drift out of agreement with each other.
+  const found = parcelMode !== "preset" || demoCommitted;
 
   // Session-history mirror so the Android back gesture steps back through the
   // journey instead of exiting the TWA. All ~13 setJourneyStep call sites stay
-  // untouched — the hook observes the resulting state instead.
+  // untouched — the hook observes the resulting state instead. Disabled on
+  // desktop (`enabled: !isDesktop`): desktop never renders the journey and
+  // must not observe any of this hook's side effects either — a live address
+  // search still flips `journeyStep` from "find" to "earn" behind the scenes
+  // (the render-phase adjustment below is not itself gated to mobile), and an
+  // enabled hook would push a history entry desktop's own Back button would
+  // then have to silently consume, with no visible change, before it could
+  // actually leave /studio.
   //
-  // A step restored by a back/forward press is only applied if it is still
-  // reachable: this mirrors the exact `found` derivation the journey rail
-  // uses below (parcelMode !== "preset" || demoCommitted) so a step the rail
-  // currently shows as locked is refused here too. This matters after
-  // "start over" — reset() only stamps the current history entry, so stale
-  // entries deeper in the stack (e.g. "check") stay in the browser's history
-  // but must not snap the screen to a step whose parcel data has already
-  // moved on.
+  // A step restored by a back/forward press is only applied when it is a
+  // completed ("done") step relative to where the journey currently stands —
+  // deliberately narrower than "not locked". JourneyRail only ever makes
+  // "done" chips clickable (forward travel always happens through each
+  // screen's one primary action, never the rail), so tapping an earlier done
+  // chip pushes a *new* forward entry, leaving the step the user tapped away
+  // from still sitting ahead of it in the stack. Relative to the new
+  // position, that abandoned step reads as merely "upcoming" (found is true,
+  // so nothing is "locked"), and "upcoming" is reachable going forward but
+  // must never become reachable via Back. Do not relax this back to "not
+  // locked" — that reopens exactly this hole.
   const handleJourneyRestore = useCallback(
     (restored: MobileJourneyStep) => {
-      const found = parcelMode !== "preset" || demoCommitted;
       const restoredState = deriveJourneySteps(journeyStep, { found }).find(
         (candidate) => candidate.id === restored,
       )?.state;
-      if (restoredState === "locked") return;
+      if (restoredState !== "done") return;
       setJourneyStep(restored);
     },
-    [journeyStep, parcelMode, demoCommitted],
+    [journeyStep, found],
   );
-  const journeyHistory = useJourneyHistory(journeyStep, handleJourneyRestore);
+  const journeyHistory = useJourneyHistory(journeyStep, handleJourneyRestore, !isDesktop);
 
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   // Render-phase adjustment (not an effect): the money reveal must appear
@@ -638,7 +652,6 @@ function FeasibilityStudioInner() {
   if (!isDesktop) {
     // The five-reveal journey (issue #130): one decision and one payoff per
     // screen, with the advanced inspector behind an optional fine-tune drawer.
-    const found = parcelMode !== "preset" || demoCommitted;
     const journeySteps = deriveJourneySteps(journeyStep, { found });
     const previousStep = prevJourneyStep(journeyStep);
     const mobileParcelName = `${activeParcel.address}, ${activeParcel.city}`;
