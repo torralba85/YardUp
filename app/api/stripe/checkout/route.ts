@@ -4,6 +4,7 @@ import { getAdminDb } from "@/lib/server/firebase-admin";
 import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
+import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -22,9 +23,13 @@ export async function POST(request: NextRequest) {
   const builderId = auth.uid;
 
   const body = await request.json().catch(() => null);
-  const requestId = typeof body?.requestId === "string" ? body.requestId.trim() : "";
+  const requestId =
+    typeof body?.requestId === "string" ? body.requestId.trim() : "";
   if (!requestId) {
-    return NextResponse.json({ error: "requestId is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "requestId is required" },
+      { status: 400 },
+    );
   }
 
   // The lead must exist, still be active, and have offered itself to this
@@ -38,11 +43,17 @@ export async function POST(request: NextRequest) {
   }
   const requestData = reqSnap.data();
   if (requestData?.status !== "submitted") {
-    return NextResponse.json({ error: "Lead is no longer available" }, { status: 409 });
+    return NextResponse.json(
+      { error: "Lead is no longer available" },
+      { status: 409 },
+    );
   }
   const matched: string[] = requestData?.matchedBuilderIds ?? [];
   if (!matched.includes(builderId)) {
-    return NextResponse.json({ error: "Not a matched builder for this lead" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Not a matched builder for this lead" },
+      { status: 403 },
+    );
   }
 
   // Already unlocked — idempotent success, never a second charge.
@@ -59,7 +70,10 @@ export async function POST(request: NextRequest) {
       process.env.NODE_ENV === "production" &&
       process.env.LOTFOUNDRY_DEMO_UNLOCKS !== "true"
     ) {
-      return NextResponse.json({ error: "Payments are not available." }, { status: 503 });
+      return NextResponse.json(
+        { error: "Payments are not available." },
+        { status: 503 },
+      );
     }
     await grantLeadUnlock({
       builderId,
@@ -84,23 +98,36 @@ export async function POST(request: NextRequest) {
   const previewSerial = requestData?.preview?.previewSerial ?? requestId;
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: LEAD_UNLOCK_PRICE_CENTS,
-            product_data: { name: `LotFoundry lead unlock — ${previewSerial}` },
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        submit_type: "pay",
+        payment_method_types: ["card"],
+        payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: LEAD_UNLOCK_PRICE_CENTS,
+              product_data: {
+                name: `LotFoundry lead unlock — ${previewSerial}`,
+              },
+            },
           },
-        },
-      ],
-      metadata: { builderId, requestId },
-      success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
-      cancel_url: `${origin}/builder?lead=${requestId}`,
-    });
+        ],
+        metadata: { purchaseType: "lead_unlock", builderId, requestId },
+        success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
+        cancel_url: `${origin}/builder?lead=${requestId}`,
+      },
+      {
+        idempotencyKey: createStripeIdempotencyKey(
+          "lead_unlock",
+          builderId,
+          requestId,
+        ),
+      },
+    );
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
