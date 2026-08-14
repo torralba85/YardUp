@@ -8,8 +8,10 @@ function source(path: string) {
 
 describe("auth focus color roles", () => {
   it("uses clay ink for light-surface auth inputs and selected roles", () => {
-    const forgotPassword = source("app/forgot-password/page.tsx");
-    const signup = source("app/signup/page.tsx");
+    // These live in the `(firebase)` route group; the parentheses are part of
+    // the on-disk path even though the URLs are unchanged.
+    const forgotPassword = source("app/(firebase)/forgot-password/page.tsx");
+    const signup = source("app/(firebase)/signup/page.tsx");
 
     expect(forgotPassword).toContain("focus:border-lf-clay-ink");
     expect(forgotPassword).toContain("focus:ring-lf-clay-ink/20");

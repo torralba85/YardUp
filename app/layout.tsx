@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/google";
-import { AuthProvider } from "@/lib/auth-context";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
@@ -91,8 +90,11 @@ export const viewport: Viewport = {
 };
 
 /**
- * Root layout for the App Router. Loads the brand fonts as CSS variables, wraps
- * the app in {@link AuthProvider}, and registers the service worker.
+ * Root layout for the App Router. Loads the brand fonts as CSS variables and
+ * registers the service worker.
+ *
+ * Deliberately Firebase-free: `AuthProvider` lives in the `(firebase)` route
+ * group so the marketing and legal surfaces never pull in the client SDK.
  *
  * @param props.children - The routed page content.
  */
@@ -118,7 +120,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <AuthProvider>{children}</AuthProvider>
+        {children}
         <ServiceWorkerRegistration />
       </body>
     </html>

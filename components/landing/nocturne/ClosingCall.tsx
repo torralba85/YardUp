@@ -22,6 +22,8 @@ export function ClosingCall() {
             </DawnStudioLink>
             <Link
               href="/login"
+              // See NocturneNav: keep the Firebase bundle off the landing.
+              prefetch={false}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-ln-hairline px-8 text-sm font-semibold text-ln-mist transition-colors hover:border-ln-glow/60 hover:text-ln-glow"
             >
               Sign in
