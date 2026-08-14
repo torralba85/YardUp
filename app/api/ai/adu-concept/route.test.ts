@@ -1,19 +1,58 @@
-import { NextRequest } from "next/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { NextRequest, NextResponse } from "next/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 
-function makeConceptRequest(): NextRequest {
-  const formData = new FormData();
-  formData.set("image", new File(["home-photo"], "home.jpg", { type: "image/jpeg" }));
-  formData.set("parcel", JSON.stringify(parcelPresets[0]));
-  formData.set("config", JSON.stringify(defaultAduConfig));
+const { checkAIRateLimitMock, consumeOpenAIProviderQuotaMock, requireApiAuthMock } =
+  vi.hoisted(() => ({
+    checkAIRateLimitMock: vi.fn(),
+    consumeOpenAIProviderQuotaMock: vi.fn(),
+    requireApiAuthMock: vi.fn(),
+  }));
 
-  return new NextRequest("http://localhost/api/ai/adu-concept", {
-    method: "POST",
-    headers: { "x-forwarded-for": "203.0.113.60" },
-    body: formData,
-  });
+vi.mock("@/lib/server/ai-rate-limit", () => ({
+  checkAIRateLimit: checkAIRateLimitMock,
+  consumeOpenAIProviderQuota: consumeOpenAIProviderQuotaMock,
+  OpenAIProviderRateLimitError: class OpenAIProviderRateLimitError extends Error {},
+}));
+
+vi.mock("@/lib/server/api-auth", () => ({
+  requireApiAuth: requireApiAuthMock,
+}));
+
+const JPEG_BYTES = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+
+function makeConceptRequest({
+  consent = "true",
+  imageBytes = JPEG_BYTES,
+}: {
+  consent?: string | null;
+  imageBytes?: Uint8Array;
+} = {}): NextRequest {
+  const fields = new Map<string, FormDataEntryValue>([
+    [
+      "image",
+      {
+        type: "image/jpeg",
+        size: imageBytes.byteLength,
+        arrayBuffer: async () => imageBytes.slice().buffer,
+      } as File,
+    ],
+    ["parcel", JSON.stringify(parcelPresets[0])],
+    ["config", JSON.stringify(defaultAduConfig)],
+  ]);
+  if (consent !== null) fields.set("consent", consent);
+
+  return {
+    headers: new Headers({ "x-forwarded-for": "203.0.113.60" }),
+    formData: async () => ({ get: (key: string) => fields.get(key) ?? null }) as FormData,
+  } as unknown as NextRequest;
 }
+
+beforeEach(() => {
+  requireApiAuthMock.mockReset().mockResolvedValue({ uid: "user-1" });
+  consumeOpenAIProviderQuotaMock.mockReset().mockResolvedValue(undefined);
+  checkAIRateLimitMock.mockReset().mockResolvedValue(null);
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -23,6 +62,49 @@ afterEach(() => {
 });
 
 describe("POST /api/ai/adu-concept", () => {
+  it("requires authentication before parsing or sending the photo", async () => {
+    requireApiAuthMock.mockResolvedValue(
+      NextResponse.json({ error: "Authentication required" }, { status: 401 }),
+    );
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { POST } = await import("./route");
+
+    const res = await POST(makeConceptRequest());
+
+    expect(res.status).toBe(401);
+    expect(consumeOpenAIProviderQuotaMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("requires explicit server-visible consent before sending the photo", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { POST } = await import("./route");
+
+    const res = await POST(makeConceptRequest({ consent: null }));
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: "Consent is required before sending a photo to OpenAI.",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a file whose bytes do not match its declared image type", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { POST } = await import("./route");
+
+    const res = await POST(
+      makeConceptRequest({ imageBytes: new TextEncoder().encode("not-a-jpeg") }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Photo contents do not match its file type." });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("uses the Responses image-generation tool with the documented model fallbacks", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-openai-key");
     vi.stubEnv("OPENAI_TEXT_MODEL", "");
@@ -45,7 +127,7 @@ describe("POST /api/ai/adu-concept", () => {
       )
       .mockResolvedValueOnce(
         Response.json({
-          output: [{ type: "image_generation_call", result: "generated-image-base64" }],
+          output: [{ type: "image_generation_call", result: "aW1hZ2U=" }],
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
@@ -54,6 +136,8 @@ describe("POST /api/ai/adu-concept", () => {
 
     const responseBody = await res.clone().json().catch(() => ({}));
     expect(res.status, JSON.stringify(responseBody)).toBe(200);
+    expect(requireApiAuthMock).toHaveBeenCalledOnce();
+    expect(consumeOpenAIProviderQuotaMock).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const styleRequestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string) as {
       model: string;
@@ -65,5 +149,29 @@ describe("POST /api/ai/adu-concept", () => {
     expect(styleRequestBody.model).toBe("gpt-5.6-sol");
     expect(imageRequestBody.model).toBe("gpt-5.6-sol");
     expect(imageRequestBody.tools).toEqual([{ type: "image_generation" }]);
+  });
+
+  it("rejects malformed provider output before requesting image generation", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "test-openai-key");
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        output_text: JSON.stringify({
+          architecturalStyle: "Craftsman",
+          styleSummary: "Warm wood trim.",
+          matchedElements: ["only-one"],
+          recommendedConfig: { roof: "gable", finish: "lap" },
+          imagePrompt: "Craftsman backyard ADU",
+          disclaimer: "Concept image only.",
+        }),
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { POST } = await import("./route");
+
+    const res = await POST(makeConceptRequest());
+
+    expect(res.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(consumeOpenAIProviderQuotaMock).toHaveBeenCalledOnce();
   });
 });
