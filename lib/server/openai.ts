@@ -1,3 +1,5 @@
+import { consumeOpenAIProviderQuota } from "@/lib/server/ai-rate-limit";
+
 const OPENAI_RESPONSES_API = "https://api.openai.com/v1/responses";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
@@ -50,6 +52,8 @@ export async function createOpenAIResponse(
 ): Promise<OpenAIResponseShape> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new OpenAIConfigError();
+
+  await consumeOpenAIProviderQuota();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
