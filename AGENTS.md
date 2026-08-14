@@ -132,6 +132,7 @@ APPLE_BUNDLE_ID=<iOS bundle id for StoreKit receipt verification>
 APPLE_ROOT_CA_FINGERPRINT256=<SHA-256 fingerprint pinning the Apple root CA for StoreKit x5c chains>
 GOOGLE_PLAY_PACKAGE_NAME=<Android package name for Play Billing verification>
 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=<service-account JSON with androidpublisher scope>
+PLAY_RTDN_VERIFICATION_TOKEN=<shared secret in the Pub/Sub push URL for /api/store/rtdn/google>
 ```
 
 Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit storage backend selection: in-memory vs Firestore). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.

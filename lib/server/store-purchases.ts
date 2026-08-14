@@ -12,6 +12,7 @@ import { getStoreProduct } from "@/lib/commerce/products";
 import type { PurchaseChannel } from "@/lib/commerce/purchase-channel";
 import { grantCertificate } from "./certificate-purchases";
 import { getAdminDb } from "./firebase-admin";
+import { purchaseTokenHash } from "./purchase-token-hash";
 import {
   parseDemoReceiptToken,
   verifyAppleSignedTransaction,
@@ -189,6 +190,10 @@ export async function verifyAndGrantPurchase(
 
       tx.create(grantRef, {
         ...grant,
+        // Indexed so a voided-purchase notification — which carries only a
+        // purchase token and order id — can find this grant even when the
+        // grant was keyed by something other than the order id.
+        purchaseTokenHash: purchaseTokenHash(input.token),
         createdAtServer: FieldValue.serverTimestamp(),
       });
 

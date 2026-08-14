@@ -488,5 +488,11 @@ service cloud.firestore {
     match /feedback/{ticketId} {
       allow read, write: if false;
     }
+
+    // Play RTDN dedupe ledger (Admin SDK only). Pub/Sub message ids are an
+    // internal idempotency record; no client ever reads or writes them.
+    match /rtdnEvents/{messageId} {
+      allow read, write: if false;
+    }
   }
 }
