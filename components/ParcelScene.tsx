@@ -1228,7 +1228,10 @@ export default function ParcelScene({
         <Sun className="h-4 w-4 shrink-0 text-lf-clay-ink" aria-hidden="true" />
         <span className="flex min-w-16 flex-col leading-none">
           <span className="lf-dataprint text-lf-muted">Shadow preview</span>
-          <output htmlFor="shadow-preview-hour" className="mt-1 font-mono text-xs font-semibold">
+          <output
+            htmlFor="shadow-preview-hour"
+            className="mt-1 font-mono text-xs font-semibold tracking-[0.14em]"
+          >
             {formatPreviewHour(sunHour)}
           </output>
         </span>

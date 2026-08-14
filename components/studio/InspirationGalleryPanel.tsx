@@ -235,12 +235,19 @@ export default function InspirationGalleryPanel({
   );
 }
 
+/** Parcel outline of the diagram, and its untokenized warm-earth fill. */
+const LOT_PATH = "M46 22 294 34 278 138 34 126Z";
+const LOT_FILL = "#E9D4B7";
+
 function ConceptDiagram({ item }: { item: InspirationItem }) {
   const aduWidth = Math.max(48, Math.min(104, item.width * 3.1));
   const aduLength = Math.max(54, Math.min(118, item.length * 2.4));
   const aduX = 168 - aduWidth / 2;
   const aduY = 88 - aduLength / 2;
   const roofPeak = item.roof === "gable" ? aduY - 16 : aduY + 10;
+  // Component-local material swatches. These are illustration colours for the
+  // cedar/lap/stucco/board finishes, not semantic UI roles — forcing them into
+  // brand tokens would weaken the token model.
   const finishFill: Record<InspirationItem["finish"], string> = {
     cedar: "#B16C39",
     lap: "#CFC8B8",
@@ -258,21 +265,22 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
       <defs>
         {/* Adds a soft 3D-like depth to the massing model */}
         <filter id="adu-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="#261307" floodOpacity="0.22" />
+          <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="var(--color-lf-espresso)" floodOpacity="0.22" />
         </filter>
         <filter id="roof-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="2" floodColor="#261307" floodOpacity="0.3" />
+          <feDropShadow dx="0" dy="4" stdDeviation="2" floodColor="var(--color-lf-espresso)" floodOpacity="0.3" />
         </filter>
       </defs>
-      <rect width="336" height="160" fill="#F8F0E4" />
+      <rect width="336" height="160" fill="var(--color-lf-sand-2)" />
       {/* Parcel Lot */}
-      <path d="M46 22 294 34 278 138 34 126Z" fill="#E9D4B7" stroke="#8C5B3F" strokeWidth="1.5" />
+      {/* LOT_FILL sits between sand and hairline; no exact brand token. */}
+      <path d={LOT_PATH} fill={LOT_FILL} stroke="var(--color-lf-clay)" strokeWidth="1.5" />
       {/* Setback lines */}
       <path
         d="M70 42 268 51 256 118 58 110Z"
-        fill="#FBF6EE"
+        fill="var(--color-lf-card)"
         fillOpacity="0.45"
-        stroke="#8C5B3F"
+        stroke="var(--color-lf-clay)"
         strokeDasharray="6 6"
         strokeWidth="1.2"
       />
@@ -284,7 +292,7 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
         height={aduLength}
         rx="3"
         fill={finishFill[item.finish]}
-        stroke="#592A0F"
+        stroke="var(--color-lf-mahogany)"
         strokeWidth="1.5"
         filter="url(#adu-shadow)"
       />
@@ -293,7 +301,7 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
         <path
           d={`M${aduX - 6} ${aduY + 8} L168 ${roofPeak} L${aduX + aduWidth + 6} ${aduY + 8}`}
           fill="none"
-          stroke="#592A0F"
+          stroke="var(--color-lf-mahogany)"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="5"
@@ -303,26 +311,26 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
         <path
           d={`M${aduX - 4} ${aduY + 12} L${aduX + aduWidth + 4} ${roofPeak}`}
           fill="none"
-          stroke="#592A0F"
+          stroke="var(--color-lf-mahogany)"
           strokeLinecap="round"
           strokeWidth="5"
           filter="url(#roof-shadow)"
         />
       )}
       {/* Door and Window representation */}
-      <rect x={aduX + aduWidth * 0.2} y={aduY + aduLength * 0.38} width="16" height="22" rx="2" fill="#F2E5D5" opacity="0.82" />
-      <rect x={aduX + aduWidth * 0.58} y={aduY + aduLength * 0.42} width="18" height="28" rx="2" fill="#F2E5D5" opacity="0.82" />
+      <rect x={aduX + aduWidth * 0.2} y={aduY + aduLength * 0.38} width="16" height="22" rx="2" fill="var(--color-lf-sand)" opacity="0.82" />
+      <rect x={aduX + aduWidth * 0.58} y={aduY + aduLength * 0.42} width="18" height="28" rx="2" fill="var(--color-lf-sand)" opacity="0.82" />
       {/* Trees & Landscaping paths */}
-      <path d="M60 116 C112 106 133 121 168 124 C205 128 228 116 270 122" fill="none" stroke="#2F4A38" strokeOpacity="0.34" strokeWidth="8" strokeLinecap="round" />
-      <circle cx="70" cy="52" r="10" fill="#2F4A38" opacity="0.85" />
-      <circle cx="286" cy="64" r="13" fill="#2F4A38" opacity="0.72" />
+      <path d="M60 116 C112 106 133 121 168 124 C205 128 228 116 270 122" fill="none" stroke="var(--color-lf-forest)" strokeOpacity="0.34" strokeWidth="8" strokeLinecap="round" />
+      <circle cx="70" cy="52" r="10" fill="var(--color-lf-forest)" opacity="0.85" />
+      <circle cx="286" cy="64" r="13" fill="var(--color-lf-forest)" opacity="0.72" />
       {/* Dimension badge */}
       <g transform="translate(18 18)">
-        <rect width="78" height="28" rx="4" fill="#261307" />
-        <text x="10" y="12" fill="#F2E5D5" fontSize="7" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }} letterSpacing="1.1">
+        <rect width="78" height="28" rx="4" fill="var(--color-lf-espresso)" />
+        <text x="10" y="12" fill="var(--color-lf-sand)" fontSize="7" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }} letterSpacing="1.1">
           TEMPLATE
         </text>
-        <text x="10" y="23" fill="#F2E5D5" fontSize="10" fontWeight="800" style={{ fontFamily: "var(--font-mono)" }}>
+        <text x="10" y="23" fill="var(--color-lf-sand)" fontSize="10" fontWeight="800" style={{ fontFamily: "var(--font-mono)" }}>
           {item.sqft} sf
         </text>
       </g>
