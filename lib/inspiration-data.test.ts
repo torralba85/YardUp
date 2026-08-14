@@ -12,6 +12,6 @@ describe("inspiration data layer", () => {
     expect(item.sqft).toBe(640);
     expect(item.roof).toBe("shed");
     expect(item.finish).toBe("cedar");
-    expect(item.imagePath).toBe("/inspiration/canyon-courtyard.png");
+    expect(item.imagePath).toBe("/inspiration/canyon-courtyard.webp");
   });
 });
