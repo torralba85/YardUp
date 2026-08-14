@@ -6,6 +6,9 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export const metadata: Metadata = {
   title: "Sign in — LotFoundry",
+  // Account-utility page: nothing to rank for, and we don't want it competing
+  // in search. Kept crawlable and reachable — de-indexed, not hidden.
+  robots: { index: false, follow: true },
 };
 
 /**

@@ -17,8 +17,13 @@ const TYPE_SCALE = [
 ] as const;
 
 /**
- * Internal typography specimen page (`/type-samples`): renders candidate font
- * pairings and scale samples used while designing the brand type system.
+ * Internal typography specimen: renders candidate font pairings and scale
+ * samples used while designing the brand type system.
+ *
+ * Parked outside `app/` on purpose — it used to build and deploy as a public
+ * `/type-samples` route, and a `robots.txt` disallow does not reliably keep a
+ * reachable URL out of the index. Drop it back into `app/type-samples/page.tsx`
+ * temporarily when you need to look at it, and take it back out afterwards.
  */
 export default function TypeSamplesPage() {
   return (
