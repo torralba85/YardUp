@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Player, type PlayerRef } from "@remotion/player";
-import { BlueHourLot } from "@/remotion/nocturne/BlueHourLot";
+import type { PlayerRef } from "@remotion/player";
 import {
   BLUE_HOUR_DURATION_IN_FRAMES,
-  BLUE_HOUR_FPS,
   BLUE_HOUR_HEIGHT,
   BLUE_HOUR_WIDTH,
   GEOMETRY,
@@ -22,6 +21,13 @@ import {
   activeRailPhase,
   nocturneParallax,
 } from "./hero-phases";
+
+/**
+ * The Remotion Player and the composition it renders are ~242 KB and are only
+ * ever mounted after hydration for motion-tolerant visitors, so they load as a
+ * separate chunk instead of riding the landing's critical path.
+ */
+const ScrubbedLot = dynamic(() => import("./ScrubbedLot"), { ssr: false });
 
 /** Hotspot definitions: composition geometry + how the page names each layer. */
 const HOTSPOTS: ReadonlyArray<{
@@ -236,21 +242,7 @@ export function BlueHourHero() {
               data-testid="blue-hour-player"
               className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%]"
             >
-              <Player
-                ref={playerRef}
-                component={BlueHourLot}
-                inputProps={{ highlight }}
-                durationInFrames={BLUE_HOUR_DURATION_IN_FRAMES}
-                fps={BLUE_HOUR_FPS}
-                compositionWidth={BLUE_HOUR_WIDTH}
-                compositionHeight={BLUE_HOUR_HEIGHT}
-                controls={false}
-                clickToPlay={false}
-                doubleClickToFullscreen={false}
-                spaceKeyToPlayOrPause={false}
-                acknowledgeRemotionLicense
-                style={{ width: "100%", height: "100%" }}
-              />
+              <ScrubbedLot playerRef={playerRef} highlight={highlight} />
             </div>
           ) : null}
 

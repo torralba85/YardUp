@@ -110,12 +110,17 @@ describe("BlueHourHero", () => {
     ).toBeInTheDocument();
   });
 
-  it("passes hovered or focused survey geometry to the composition as highlight", () => {
+  it("passes hovered or focused survey geometry to the composition as highlight", async () => {
     render(<BlueHourHero />);
     const hotspot = screen.getByRole("button", { name: /highlight property lines/i });
 
     fireEvent.focus(hotspot);
-    expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "parcel");
+    // The composition is behind a `next/dynamic` boundary, so the first read
+    // has to wait for that chunk to resolve; later reads are synchronous.
+    expect(await screen.findByTestId("mock-player")).toHaveAttribute(
+      "data-highlight",
+      "parcel",
+    );
 
     fireEvent.blur(hotspot);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
