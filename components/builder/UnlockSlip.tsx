@@ -88,13 +88,13 @@ export default function UnlockSlip({
           type="button"
           onClick={onClose}
           disabled={pending}
-          className="absolute right-4 top-3.5 z-10 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted disabled:opacity-40"
+          className="absolute right-4 top-3.5 z-10 lf-kicker-dense text-lf-muted disabled:opacity-40"
         >
           Esc · Close
         </button>
 
         <div className="relative px-8 py-7">
-          <div className="flex justify-between border-b-4 border-double border-lf-espresso pb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <div className="flex justify-between border-b-4 border-double border-lf-espresso pb-3 lf-kicker-dense text-lf-muted">
             <span>Unlock slip · {preview.previewSerial}</span>
           </div>
 

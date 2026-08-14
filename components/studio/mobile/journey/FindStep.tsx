@@ -71,7 +71,7 @@ export default function FindStep({
         )}
       </div>
 
-      <p className="mt-7 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+      <p className="mt-7 lf-kicker-dense text-lf-muted">
         Or explore a demo lot
       </p>
       <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">

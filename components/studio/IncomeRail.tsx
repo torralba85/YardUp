@@ -34,7 +34,7 @@ export default function IncomeRail({ monthlyRent, verdict }: IncomeRailProps) {
       className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-lf-espresso px-7 py-2.5 text-lf-sand"
     >
       <div className="flex items-baseline gap-3">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+        <span className="lf-kicker-dense text-lf-taupe">
           If built
         </span>
         <span
@@ -47,7 +47,7 @@ export default function IncomeRail({ monthlyRent, verdict }: IncomeRailProps) {
       </div>
 
       <span
-        className="inline-flex items-center gap-1.5 rounded-md px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em]"
+        className="inline-flex items-center gap-1.5 rounded-md px-3 py-1 lf-kicker-dense"
         style={{ backgroundColor: tone.soft, color: tone.onDark }}
       >
         <Icon size={13} />

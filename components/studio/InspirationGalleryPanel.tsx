@@ -189,7 +189,7 @@ export default function InspirationGalleryPanel({
                     {item.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-lf-taupe-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted"
+                        className="rounded-md bg-lf-taupe-soft px-2 py-0.5 lf-dataprint text-lf-muted"
                       >
                         {tag}
                       </span>

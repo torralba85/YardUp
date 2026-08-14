@@ -99,7 +99,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
         </div>
       ) : (
         <>
-          <p className="text-center font-mono text-[11px] uppercase tracking-[0.14em] text-lf-muted">
+          <p className="text-center lf-kicker text-lf-muted">
             {matched.length} builder{matched.length === 1 ? "" : "s"} serve{matched.length === 1 ? "s" : ""}{" "}
             {parcelCity}
           </p>

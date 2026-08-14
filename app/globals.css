@@ -128,7 +128,12 @@ p {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  /* 0.14em across all three mono steps (2026-08-14). The 11px step carried
+     0.16em from an earlier pass and was never reconciled with the 2026-07-04
+     snap, leaving the layer with two tracking values — and the split ran
+     backwards from optical practice, since the smaller steps were the tighter
+     ones. One value now; see the DESIGN.md decisions log. */
+  letter-spacing: 0.14em;
   line-height: 1rem;
   text-transform: uppercase;
 }

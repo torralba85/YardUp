@@ -163,7 +163,7 @@ export function ProjectBriefPreviewContent({
           <h4 className="font-display text-xl font-bold leading-tight text-lf-espresso">
             {preview.headline}
           </h4>
-          <span className="shrink-0 rounded-md border border-lf-hairline px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+          <span className="shrink-0 rounded-md border border-lf-hairline px-1.5 py-0.5 lf-dataprint text-lf-muted">
             Preview
           </span>
         </div>

@@ -281,7 +281,7 @@ export default function ReportPreview({
               </div>
 
               <div className="mt-6 border-t border-lf-hairline pt-5">
-                <h3 className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
+                <h3 className="lf-dataprint text-lf-clay-ink">
                   Certificate includes
                 </h3>
                 <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4 gap-y-2 text-xs leading-5 text-lf-muted">
@@ -406,7 +406,7 @@ function CertificateBriefSection({
         <div>
           <div className="flex items-center gap-2">
             <Sparkles size={15} className="text-lf-clay-ink" aria-hidden="true" />
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
+            <p className="lf-dataprint text-lf-clay-ink">
               AI-assisted · Recorded in this certificate
             </p>
           </div>
@@ -418,7 +418,7 @@ function CertificateBriefSection({
           <span className="font-display text-[31px] font-bold leading-none text-lf-espresso">
             {brief.totalEstWeeksLow}&ndash;{brief.totalEstWeeksHigh}
           </span>
-          <span className="ml-1 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+          <span className="ml-1 lf-dataprint text-lf-muted">
             weeks typical
           </span>
         </div>
@@ -436,7 +436,7 @@ function CertificateBriefSection({
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(280px,0.88fr)] lg:gap-0">
         <div className="lg:pr-8">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
+          <p className="lf-dataprint text-lf-clay-ink">
             Parcel interpretation
           </p>
           <h4 className="mt-2 text-base font-semibold leading-snug text-lf-espresso">
@@ -445,7 +445,7 @@ function CertificateBriefSection({
           <p className="mt-2 text-sm leading-6 text-lf-muted">{brief.summary}</p>
 
           <div className="mt-4 border-y border-lf-hairline py-3">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <p className="lf-dataprint text-lf-muted">
               Best-fit concept
             </p>
             <p className="mt-1.5 text-sm leading-6 text-lf-espresso">{brief.bestFit}</p>
@@ -453,7 +453,7 @@ function CertificateBriefSection({
 
           {risks.length > 0 && (
             <div className="mt-4">
-              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+              <p className="lf-dataprint text-lf-muted">
                 Items to verify
               </p>
               <div className="mt-2 divide-y divide-lf-hairline border-y border-lf-hairline">
@@ -478,14 +478,14 @@ function CertificateBriefSection({
         <div className="border-t border-lf-hairline pt-5 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
+              <p className="lf-dataprint text-lf-clay-ink">
                 Typical approval path
               </p>
               <h4 className="mt-1 text-sm font-semibold text-lf-espresso">
                 {brief.permitTrack.name}
               </h4>
             </div>
-            <span className="rounded-md border border-lf-hairline bg-lf-sand-2 px-2 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <span className="rounded-md border border-lf-hairline bg-lf-sand-2 px-2 py-1 lf-dataprint text-lf-muted">
               {brief.permitTrack.type}
             </span>
           </div>
@@ -533,7 +533,7 @@ function CertificateBriefSection({
 
       {nextSteps.length > 0 && (
         <div className="mt-6 border-t border-lf-hairline pt-5">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
+          <p className="lf-dataprint text-lf-clay-ink">
             Recorded next steps
           </p>
           <ol className="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">

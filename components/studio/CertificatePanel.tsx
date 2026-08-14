@@ -251,7 +251,7 @@ export default function CertificatePanel({
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-forest">
+                    <p className="lf-dataprint text-lf-forest">
                       AI brief recorded
                     </p>
                     <p className="mt-1 text-xs font-semibold text-lf-espresso">

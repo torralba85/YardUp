@@ -86,13 +86,13 @@ export default function StudioShell({
               alt="LotFoundry"
               className="h-8 w-auto self-start"
             />
-            <p className="pl-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-taupe">
+            <p className="pl-0.5 lf-dataprint text-lf-taupe">
               ADU planning
             </p>
           </div>
 
           <div className="mt-6">
-            <p className="px-2 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+            <p className="px-2 pb-2 lf-kicker-dense text-lf-taupe">
               Your path
             </p>
             <StepRail
@@ -144,7 +144,7 @@ export default function StudioShell({
                   aria-expanded={scenariosOpen}
                   className="flex w-full min-h-11 items-center justify-between px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-inset"
                 >
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+                  <span className="lf-kicker text-lf-taupe">
                     Saved Concepts
                     <span className="ml-1.5 rounded-md bg-lf-sand/10 px-1.5 py-0.5 text-[10px] font-bold text-lf-taupe">
                       {savedScenarios.length}

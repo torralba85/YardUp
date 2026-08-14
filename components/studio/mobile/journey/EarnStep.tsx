@@ -77,7 +77,7 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
         </span>
       </div>
       {estimated && (
-        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-2 lf-kicker-dense text-lf-muted">
           Demo figures — search your address for your own number.
         </p>
       )}

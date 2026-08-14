@@ -160,6 +160,9 @@ export default function BeforeAfterBoard({
             <h2 id="board-title" className="font-display text-2xl md:text-3xl font-semibold">
               Your house → your ADU
             </h2>
+            {/* Hand-rolled on purpose: this serial line steps 10px -> 12px at md, and
+                the mono utilities are single-size (and unlayered, so they would
+                override the responsive step). */}
             <div className="font-mono text-[10px] md:text-xs font-semibold uppercase tracking-[0.14em] text-lf-muted">
               NO. {serialNo} · {finalDateStr}
             </div>
@@ -170,7 +173,7 @@ export default function BeforeAfterBoard({
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-6 mb-6">
           {/* Left Pane: Before */}
           <div className="flex flex-col gap-2">
-            <h3 className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <h3 className="lf-kicker text-lf-muted">
               Before — your photo
             </h3>
             <div className="relative aspect-[4/3] w-full overflow-hidden border border-lf-hairline bg-lf-sand-2">
@@ -192,7 +195,7 @@ export default function BeforeAfterBoard({
 
           {/* Right Pane: After */}
           <div className="flex flex-col gap-2 relative">
-            <h3 className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <h3 className="lf-kicker text-lf-muted">
               After — ADU concept, matched style
             </h3>
             <div className="relative aspect-[4/3] w-full overflow-hidden border border-lf-hairline bg-lf-sand-2">
@@ -223,7 +226,7 @@ export default function BeforeAfterBoard({
               {styleTraits.map((trait) => (
                 <span
                   key={trait}
-                  className="bg-lf-card border border-lf-hairline px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-lf-muted"
+                  className="bg-lf-card border border-lf-hairline px-2 py-0.5 lf-kicker-dense text-lf-muted"
                 >
                   {trait.toUpperCase()}
                 </span>

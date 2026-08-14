@@ -73,7 +73,7 @@ export default function ShapeStep({
             </h1>
           </div>
           <div className="text-right">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <p className="lf-dataprint text-lf-muted">
               Now earning
             </p>
             <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
@@ -101,7 +101,7 @@ export default function ShapeStep({
           })}
         </div>
 
-        <p className="mt-5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-5 lf-kicker-dense text-lf-muted">
           Style
         </p>
         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Exterior style">

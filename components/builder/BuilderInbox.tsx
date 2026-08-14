@@ -201,7 +201,7 @@ export default function BuilderInbox({
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
-          <span className="self-start rounded-md border border-lf-hairline px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="self-start rounded-md border border-lf-hairline px-2 py-1 lf-kicker-dense text-lf-muted">
             {profile.active ? "Active" : "Inactive"}
           </span>
         </div>
@@ -308,12 +308,12 @@ export default function BuilderInbox({
                 <table className="w-full text-left border-collapse" aria-label="Inbox Leads Ledger">
                   <thead>
                     <tr className="border-b border-lf-hairline bg-lf-sand-2">
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Lead / Recorded</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Location</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted text-right">Rent Potential</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Specs</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Economics</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted text-center">Status</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Lead / Recorded</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Location</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted text-right">Rent Potential</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Specs</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Economics</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -379,7 +379,7 @@ export default function BuilderInbox({
                               {itemAccess === "confirming" && (
                                 <span className="h-2 w-2 rounded-full bg-lf-amber animate-pulse" />
                               )}
-                              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted ml-0.5">
+                              <span className="lf-dataprint text-lf-muted ml-0.5">
                                 {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
                               </span>
                             </div>
@@ -465,7 +465,7 @@ export default function BuilderInbox({
                           </Button>
 
                           <div className="flex items-center justify-between border-b border-lf-hairline pb-3">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                            <span className="lf-kicker-dense text-lf-muted">
                               NO. {selectedItem.request.preview.previewSerial}
                               {recordedDate ? ` · RECORDED ${recordedDate}` : ""}
                             </span>
@@ -494,14 +494,14 @@ export default function BuilderInbox({
                               <div>
                                 <p className="lf-money-md text-lf-forest">
                                   {formatCurrency(selectedItem.request.preview.rentBand)}
-                                  <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                                  <span className="ml-1.5 lf-kicker-dense text-lf-muted">
                                     /mo rent potential
                                   </span>
                                 </p>
                                 <p className="mt-2 font-semibold text-lf-espresso text-sm">
                                   {selectedItem.request.preview.neighborhood}
                                 </p>
-                                <p className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                                <p className="mt-1 flex flex-wrap gap-2.5 lf-kicker-dense text-lf-muted">
                                   <span>{selectedItem.request.preview.lotSqft.toLocaleString()} sqft lot</span>
                                   <span>{selectedItem.request.preview.aduSqft.toLocaleString()} sf ADU</span>
                                   <span>{finishLabels[selectedItem.request.preview.config.finish]}</span>
@@ -556,7 +556,7 @@ export default function BuilderInbox({
                             <div className="space-y-4 lf-stamp">
                               {/* Homeowner Info Block */}
                               <div className="border border-lf-forest bg-lf-forest-soft p-4 rounded-lg">
-                                <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.14em] text-lf-forest font-semibold">
+                                <div className="flex items-center justify-between lf-dataprint text-lf-forest">
                                   <span>Owner Contact Unlocked{demo ? " · Demo" : ""}</span>
                                 </div>
                                 <address className="mt-2 font-mono text-xs not-italic leading-relaxed text-lf-espresso">
@@ -761,7 +761,7 @@ function ZeroEverEmptyState() {
         </p>
       </div>
 
-      <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+      <p className="mt-5 lf-kicker-dense text-lf-muted">
         Example · this is what a lead looks like
       </p>
       <article
@@ -769,10 +769,10 @@ function ZeroEverEmptyState() {
         className="mt-2 border border-dashed border-lf-taupe bg-lf-card/70 p-5"
       >
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="lf-kicker-dense text-lf-muted">
             NO. LF-EXAMPLE
           </span>
-          <span className="rounded-md bg-lf-taupe-soft px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="rounded-md bg-lf-taupe-soft px-2.5 py-1 lf-kicker-dense text-lf-muted">
             Example
           </span>
         </div>
@@ -787,11 +787,11 @@ function ZeroEverEmptyState() {
         </p>
         <p className="mt-2 lf-money-md text-lf-forest">
           $2,500
-          <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="ml-1.5 lf-kicker-dense text-lf-muted">
             /mo rent potential
           </span>
         </p>
-        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 lf-kicker-dense text-lf-muted">
           Owner contact unlocks for {formatUnlockPrice()} — once you have real leads
         </p>
       </article>
@@ -814,7 +814,7 @@ function ResponseTriage({
 
   return (
     <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
+      <span className="lf-dataprint text-lf-muted">
         Response: {label}
       </span>
       <div className="flex gap-2">

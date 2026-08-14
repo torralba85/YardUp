@@ -34,7 +34,7 @@ export default function FieldBookIndex({
   return (
     <div>
       <div className="px-2 pb-4">
-        <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+        <p className="lf-dataprint text-lf-taupe">
           Survey of
         </p>
         <p className="mt-1 truncate font-display text-base font-semibold text-lf-sand">

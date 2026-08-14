@@ -51,7 +51,7 @@ export default function FeasibilityVerdictBand({
     <div className="flex flex-wrap items-center justify-between gap-6 gap-y-3.5 bg-lf-espresso px-7 py-[18px] text-lf-sand">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+          <p className="lf-kicker-dense text-lf-taupe">
             {eyebrow}
           </p>
         )}
@@ -67,7 +67,7 @@ export default function FeasibilityVerdictBand({
             previously hidden below `xl` — re-promoted here so the asset value
             never drops off the studio's lead element. */}
         <div>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+          <p className="lf-kicker-dense text-lf-taupe">
             If built
           </p>
           <MoneyFigure
@@ -83,7 +83,7 @@ export default function FeasibilityVerdictBand({
         <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
 
         <div>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+          <p className="lf-kicker-dense text-lf-taupe">
             Feasibility verdict
           </p>
           <div className="mt-1 flex items-center gap-2.5">
@@ -109,7 +109,7 @@ export default function FeasibilityVerdictBand({
         <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
 
         <div className="hidden text-center sm:block">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-taupe">
+          <p className="lf-kicker-dense text-lf-taupe">
             Readiness
           </p>
           <div className="mt-0.5 lf-money-xl text-lf-sand">
