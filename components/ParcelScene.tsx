@@ -9,6 +9,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, ExteriorFinish, Parcel } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition } from "@/lib/scene-lighting";
+import { Button } from "@/components/ui/Button";
 
 /** Minimal error boundary that falls back to a render function. */
 class ErrorBoundary extends Component<
@@ -212,7 +213,7 @@ function SceneCallout({
       <div
         className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] xl:block ${toneClass}`}
       >
-        <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.14em] opacity-75">{eyebrow}</div>
+        <div className="lf-dataprint leading-[1.45] opacity-75">{eyebrow}</div>
         <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
         <div className="mt-1 text-[11px] leading-[1.45] opacity-80">{detail}</div>
       </div>
@@ -1259,20 +1260,18 @@ export default function ParcelScene({
         ].map(({ mode, label, icon: Icon }) => {
           const active = viewMode === mode;
           return (
-            <button
+            <Button
               key={mode}
               type="button"
+              size="sm"
+              variant={active ? "selected" : "ghost"}
               onClick={() => setViewMode(mode)}
               aria-pressed={active}
-              className={`inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-2.5 text-xs font-semibold leading-none transition-colors sm:h-9 sm:min-w-[86px] ${
-                active
-                  ? "bg-lf-clay text-lf-sand"
-                  : "text-lf-espresso hover:bg-lf-taupe/10 focus-visible:bg-lf-taupe/10"
-              }`}
+              className="h-11 min-w-11 px-2.5 leading-none aria-[pressed=false]:text-lf-espresso aria-[pressed=false]:hover:bg-lf-taupe/10 aria-[pressed=false]:focus-visible:bg-lf-taupe/10 sm:h-9 sm:min-w-[86px]"
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="hidden sm:inline">{label}</span>
-            </button>
+            </Button>
           );
         })}
       </div>

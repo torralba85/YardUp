@@ -124,7 +124,10 @@ p {
   max-width: 65ch;
 }
 
-.lf-kicker {
+/* Recorded-fact typography is compositional: all three steps live in Tailwind's
+   utilities layer so responsive text, weight, and leading utilities can
+   override individual properties consistently. */
+@utility lf-kicker {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -138,7 +141,7 @@ p {
   text-transform: uppercase;
 }
 
-.lf-kicker-dense {
+@utility lf-kicker-dense {
   font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 600;
@@ -151,8 +154,7 @@ p {
    2026-07-04 ruling). For micro labels in data-dense builder tables, ledger
    slips, and inline certificates: mono, uppercase, kicker-tracked. Text below
    9px is reserved for decorative facsimiles (scaled-down document thumbnails),
-   never informational content. Declared with @utility so responsive variants
-   work, matching the lf-money-* steps. */
+   never informational content. */
 @utility lf-dataprint {
   font-family: var(--font-mono);
   font-size: 0.5625rem; /* 9px */

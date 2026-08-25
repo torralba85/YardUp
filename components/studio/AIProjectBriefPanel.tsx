@@ -173,7 +173,7 @@ export function ProjectBriefPreviewContent({
       <div className="border-b border-lf-hairline p-3.5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+            <p className="lf-dataprint font-bold text-lf-clay-ink">
               Typical approval path
             </p>
             <h5 className="mt-1 text-xs font-semibold text-lf-espresso">{preview.permitTrack.name}</h5>
@@ -245,7 +245,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
       </div>
 
       <div className="border-b border-lf-hairline p-3.5">
-        <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+        <p className="lf-dataprint font-bold text-lf-clay-ink">
           Property notes
         </p>
         <p className="mt-1.5 text-xs leading-5 text-lf-espresso">{brief.bestFit}</p>
@@ -271,7 +271,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
       <div className="border-b border-lf-hairline p-3.5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+            <p className="lf-dataprint font-bold text-lf-clay-ink">
               Typical approval path
             </p>
             <h5 className="mt-1 text-xs font-semibold text-lf-espresso">{brief.permitTrack.name}</h5>
@@ -323,7 +323,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
 
       {nextSteps.length > 0 && (
         <div className="border-b border-lf-hairline p-3.5">
-          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+          <p className="lf-dataprint font-bold text-lf-clay-ink">
             Recommended next steps
           </p>
           <ol className="mt-2 space-y-2">

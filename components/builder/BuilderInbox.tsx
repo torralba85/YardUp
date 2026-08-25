@@ -229,52 +229,46 @@ export default function BuilderInbox({
             <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lf-hairline pb-4">
               <div role="tablist" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
                 {TABS.map((t) => (
-                  <button
+                  <Button
                     key={t.key}
                     type="button"
                     role="tab"
                     aria-selected={tab === t.key}
+                    size="md"
+                    variant={tab === t.key ? "selected" : "secondary"}
                     onClick={() => {
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
-                      tab === t.key
-                        ? "border-lf-clay bg-lf-clay text-lf-sand"
-                        : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                    }`}
+                    className="px-3.5 lf-kicker-dense text-[10px] leading-[14px]"
                   >
                     {t.label} · {tabCounts[t.key]}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               {/* Cards vs Table View Mode Segment Toggle */}
               <div className="flex rounded-full border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card">
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant={viewMode === "cards" ? "selected" : "ghost"}
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
-                    viewMode === "cards"
-                      ? "bg-lf-clay text-lf-sand font-semibold"
-                      : "text-lf-muted hover:bg-lf-sand-2"
-                  }`}
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
                 >
                   Cards
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  size="sm"
+                  variant={viewMode === "table" ? "selected" : "ghost"}
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
-                    viewMode === "table"
-                      ? "bg-lf-clay text-lf-sand font-semibold"
-                      : "text-lf-muted hover:bg-lf-sand-2"
-                  }`}
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
                 >
                   Table
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -821,7 +815,7 @@ function ResponseTriage({
         <Button
           type="button"
           size="xs"
-          variant={status === "interested" ? "primary" : "secondary"}
+          variant={status === "interested" ? "selected" : "secondary"}
           disabled={responding}
           aria-pressed={status === "interested"}
           onClick={() => onRespond("interested")}
@@ -832,16 +826,11 @@ function ResponseTriage({
         <Button
           type="button"
           size="xs"
-          variant="secondary"
+          variant={status === "not-a-fit" ? "selected" : "secondary"}
           disabled={responding}
           aria-pressed={status === "not-a-fit"}
           onClick={() => onRespond("not-a-fit")}
           leftIcon={<CircleSlash size={12} />}
-          className={
-            status === "not-a-fit"
-              ? "border-lf-taupe bg-lf-taupe-soft text-lf-espresso hover:bg-lf-taupe-soft"
-              : undefined
-          }
         >
           Not a fit
         </Button>

@@ -108,25 +108,24 @@ export default function ShapeStep({
           {FINISHES.map((finish) => {
             const selected = config.finish === finish;
             return (
-              <button
+              <Button
                 key={finish}
                 type="button"
+                size="md"
+                variant={selected ? "selected" : "secondary"}
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange({ ...config, finish })}
-                className={`flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                  selected
-                    ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
-                    : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe"
-                }`}
+                className="px-4"
+                leftIcon={
+                  <span
+                    className="block h-3 w-3 rounded-full border border-lf-hairline"
+                    style={{ backgroundColor: finishColors[finish] }}
+                  />
+                }
               >
-                <span
-                  aria-hidden
-                  className="block h-3 w-3 rounded-full border border-lf-hairline"
-                  style={{ backgroundColor: finishColors[finish] }}
-                />
                 {finishLabels[finish]}
-              </button>
+              </Button>
             );
           })}
         </div>

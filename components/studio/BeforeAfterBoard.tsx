@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Layers, RefreshCcw, X, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 const FOCUSABLE_SELECTOR =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -160,10 +161,7 @@ export default function BeforeAfterBoard({
             <h2 id="board-title" className="font-display text-2xl md:text-3xl font-semibold">
               Your house → your ADU
             </h2>
-            {/* Hand-rolled on purpose: this serial line steps 10px -> 12px at md, and
-                the mono utilities are single-size (and unlayered, so they would
-                override the responsive step). */}
-            <div className="font-mono text-[10px] md:text-xs font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <div className="lf-kicker-dense font-semibold text-lf-muted md:text-xs">
               NO. {serialNo} · {finalDateStr}
             </div>
           </div>
@@ -207,7 +205,7 @@ export default function BeforeAfterBoard({
               />
               {/* Rotated Concept Stamp */}
               <div
-                className="absolute right-4 bottom-4 border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] opacity-90 select-none shadow-sm"
+                className="absolute right-4 bottom-4 border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 lf-kicker-dense font-bold opacity-90 select-none shadow-sm"
                 style={{ transform: "rotate(5deg)" }}
               >
                 Concept · not a permit
@@ -278,14 +276,15 @@ export default function BeforeAfterBoard({
               Cast another
             </button>
           </div>
-          <button
+          <Button
             type="button"
+            variant="destructive"
+            size="md"
             onClick={onDelete}
-            className="flex min-h-11 items-center justify-center gap-2 border border-lf-brick bg-lf-card px-5 py-2 text-sm font-semibold text-lf-brick transition hover:bg-lf-brick-soft rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-brick"
+            leftIcon={<XCircle size={16} />}
           >
-            <XCircle size={16} aria-hidden="true" />
             Delete photo & renders
-          </button>
+          </Button>
         </div>
       </div>
     </div>

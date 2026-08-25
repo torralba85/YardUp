@@ -337,19 +337,16 @@ export default function FeasibilityInspector({
                       config.width === option.width &&
                       config.length === option.length;
                     return (
-                      <button
+                      <Button
                         key={option.value}
                         type="button"
+                        size="md"
+                        variant={isPressed ? "selected" : "secondary"}
                         onClick={() => onConfigChange(configForFootprint(option.value, config))}
                         aria-pressed={isPressed}
-                        className={`h-11 rounded-full border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
-                          isPressed
-                            ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                            : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                        }`}
                       >
                         {option.label}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -434,19 +431,17 @@ export default function FeasibilityInspector({
               </div>
 
               {/* Openings toggle — moved from footer */}
-              <button
+              <Button
                 type="button"
+                size="md"
+                variant={config.includeOpenings ? "selected" : "secondary"}
+                fullWidth
                 onClick={() => onConfigChange({ ...config, includeOpenings: !config.includeOpenings })}
                 aria-pressed={config.includeOpenings}
-                className={`flex h-11 w-full items-center justify-center gap-2 rounded-full border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
-                  config.includeOpenings
-                    ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                    : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                }`}
+                leftIcon={<Bookmark size={16} />}
               >
-                <Bookmark size={16} />
                 {config.includeOpenings ? "Remove Entry & Windows" : "Add Entry & Windows"}
-              </button>
+              </Button>
 
               <Button
                 type="button"
@@ -478,21 +473,19 @@ export default function FeasibilityInspector({
                 />
                 <div role="group" aria-label="Rental estimate" className="grid grid-cols-3 gap-2">
                   {(Object.keys(rentLabels) as RentScenario[]).map((scenario) => (
-                    <button
+                    <Button
                       key={scenario}
                       type="button"
+                      size="md"
+                      variant={assumptions.rentScenario === scenario ? "selected" : "secondary"}
                       onClick={() =>
                         onAssumptionsChange({ ...assumptions, rentScenario: scenario })
                       }
                       aria-pressed={assumptions.rentScenario === scenario}
-                      className={`h-11 rounded-full border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
-                        assumptions.rentScenario === scenario
-                          ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso ring-1 ring-lf-clay/20"
-                          : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2"
-                      }`}
+                      className="text-xs"
                     >
                       {rentLabels[scenario]}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -519,7 +512,7 @@ export default function FeasibilityInspector({
         {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
         <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
           <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2">
-            <div className="font-mono text-[10px] font-bold uppercase leading-4 tracking-[0.14em] text-lf-muted">
+            <div className="lf-kicker-dense font-bold leading-4 text-lf-muted">
               Next best action
             </div>
             <p className="mt-1 text-xs leading-5 text-lf-espresso">

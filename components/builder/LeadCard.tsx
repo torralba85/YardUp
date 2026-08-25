@@ -139,34 +139,28 @@ export default function LeadCard({
           {statusLabel(item.response.status)}
         </span>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant={item.response.status === "interested" ? "selected" : "secondary"}
             onClick={() => onRespond("interested")}
             disabled={responding}
             aria-pressed={item.response.status === "interested"}
-            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
-              item.response.status === "interested"
-                ? "bg-lf-clay text-lf-sand"
-                : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-            }`}
+            leftIcon={<CheckCircle2 size={14} />}
           >
-            <CheckCircle2 size={14} />
             Interested
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="sm"
+            variant={item.response.status === "not-a-fit" ? "selected" : "secondary"}
             onClick={() => onRespond("not-a-fit")}
             disabled={responding}
             aria-pressed={item.response.status === "not-a-fit"}
-            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
-              item.response.status === "not-a-fit"
-                ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
-                : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-            }`}
+            leftIcon={<CircleSlash size={14} />}
           >
-            <CircleSlash size={14} />
             Not a fit
-          </button>
+          </Button>
         </div>
       </div>
 

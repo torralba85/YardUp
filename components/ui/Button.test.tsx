@@ -52,6 +52,30 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "Primary" })).toHaveClass("bg-lf-clay");
   });
 
+  it("applies the selected variant for the current choice", () => {
+    render(
+      <Button variant="selected" role="tab" aria-selected="true">
+        Selected
+      </Button>,
+    );
+    const selected = screen.getByRole("tab", { name: "Selected" });
+    expect(selected).toHaveAttribute("aria-selected", "true");
+    expect(selected).toHaveClass(
+      "border-lf-clay",
+      "bg-lf-clay-soft",
+      "text-lf-clay-ink",
+    );
+  });
+
+  it("applies the destructive variant for irreversible actions", () => {
+    render(<Button variant="destructive">Delete permanently</Button>);
+    expect(screen.getByRole("button", { name: "Delete permanently" })).toHaveClass(
+      "bg-lf-brick",
+      "hover:bg-lf-brick-strong",
+      "focus-visible:ring-lf-brick",
+    );
+  });
+
   it("uses accessible clay ink for ghost actions and focus", () => {
     render(<Button variant="ghost">Ghost</Button>);
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
@@ -89,6 +113,20 @@ describe("Button", () => {
   it("stretches full width when requested", () => {
     render(<Button fullWidth>Wide</Button>);
     expect(screen.getByRole("button", { name: "Wide" })).toHaveClass("w-full");
+  });
+
+  it("lets compact recorded-fact controls replace the size step's default text metrics", () => {
+    render(
+      <Button
+        size="md"
+        className="lf-kicker-dense text-[10px] leading-[14px]"
+      >
+        Compact
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Compact" });
+    expect(button).toHaveClass("lf-kicker-dense", "text-[10px]", "leading-[14px]");
+    expect(button).not.toHaveClass("text-sm");
   });
 
   it("forwards a ref to the underlying button", () => {
@@ -148,6 +186,32 @@ describe("Button", () => {
       );
       fireEvent.click(screen.getByRole("button", { name: "Ghost" }));
       expect(vibrate).not.toHaveBeenCalled();
+    });
+
+    it("stays silent for the selected variant because it describes pre-click state", () => {
+      const vibrate = stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="selected" onClick={onClick}>
+          Selected
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Selected" }));
+      expect(vibrate).not.toHaveBeenCalled();
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("stays silent for the destructive variant", () => {
+      const vibrate = stubVibrate();
+      const onClick = vi.fn();
+      render(
+        <Button variant="destructive" onClick={onClick}>
+          Quiet
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Quiet" }));
+      expect(vibrate).not.toHaveBeenCalled();
+      expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it("still passes the original click event through to the caller's onClick", () => {

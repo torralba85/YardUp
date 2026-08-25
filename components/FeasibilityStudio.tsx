@@ -1059,7 +1059,7 @@ function SceneViewToggle({
       <Button
         type="button"
         size="xs"
-        variant={mode === "3d" ? "primary" : "ghost"}
+        variant={mode === "3d" ? "selected" : "ghost"}
         aria-pressed={mode === "3d"}
         onClick={() => onChange("3d")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
@@ -1071,7 +1071,7 @@ function SceneViewToggle({
       <Button
         type="button"
         size="xs"
-        variant={mode === "aerial" ? "primary" : "ghost"}
+        variant={mode === "aerial" ? "selected" : "ghost"}
         aria-pressed={mode === "aerial"}
         onClick={() => onChange("aerial")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
