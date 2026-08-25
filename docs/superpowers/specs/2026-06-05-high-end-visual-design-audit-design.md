@@ -3,7 +3,7 @@
 **Date:** 2026-06-05  
 **Topic:** High-End Visual Design Audit & Brand Alignment  
 **Status:** Under Review  
-**Project:** LotFoundry (yardup)
+**Project:** LotFoundry
 
 ---
 

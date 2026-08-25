@@ -1,4 +1,4 @@
-# Contributing to YardUp / LotFoundry
+# Contributing to LotFoundry
 
 This repository is source-available for OpenAI Build Week evaluation under the
 LotFoundry Evaluation License; it is not an open-source project. Contributions
