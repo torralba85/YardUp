@@ -1,7 +1,7 @@
 # LotFoundry Production Deployment and Website Completion Plan
 
-**Date:** 2026-08-25  
-**Status:** Proposed - implementation has not started  
+**Date:** 2026-08-25
+**Status:** Proposed - implementation has not started
 **Goal:** Deploy `lotfoundry.net` as a secure, accessible, fully working LotFoundry web product, with every supported critical journey verified in production.
 
 ## Scope and definition of done
