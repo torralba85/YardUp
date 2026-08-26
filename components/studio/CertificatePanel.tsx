@@ -315,7 +315,7 @@ export default function CertificatePanel({
               </p>
             )}
             <p className="lf-caption mt-3 text-lf-muted">
-              Estimate only. Not a permit or a guarantee of income; confirm local rules with a professional.
+              Planning estimate only. Not a permit, appraisal, architectural or engineering opinion, lending decision, government determination, or guarantee of income. Third-party data may be incomplete or outdated; verify with local authorities and licensed professionals before building or investing.
             </p>
           </>
         )}
