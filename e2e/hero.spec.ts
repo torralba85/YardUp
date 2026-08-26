@@ -53,13 +53,47 @@ test.describe("Landing survey hero", () => {
     await expect(verdict.getByText(/feasible · estimate only/i)).toBeVisible();
   });
 
-  test("routes the typed address to the studio without persisting it in the URL", async ({ page }) => {
+  test("asks a guest to sign in before handing the address off, without leaking it", async ({
+    page,
+  }) => {
     await page.goto("/");
     await page.getByLabel(/property address/i).fill("456 Pine St, Denver, CO");
     await page.getByRole("button", { name: /run feasibility/i }).click();
-    await expect(page).toHaveURL(/\/studio/);
-    // Privacy rule: a guest's typed address must never land in the URL/history.
+
+    // Real-address lookup spends metered provider quota, so handoff is gated on
+    // sign-in (`a1d7529`). The gate itself is lazily loaded, so give the chunk
+    // and Firebase time to come up before the modal appears.
+    await expect(
+      page.getByRole("dialog").filter({ hasText: /sign in|sign up|create account/i }),
+    ).toBeVisible({ timeout: 15000 });
+
+    // The guest stays put: no studio navigation without a session.
+    await expect(page).toHaveURL(/\/$/);
+    // Privacy rule: a guest's typed address must never land in the URL/history,
+    // whether the handoff completes or is gated.
     expect(page.url()).not.toMatch(/456|Pine|Denver|[?&]q=/i);
+  });
+
+  test("keeps the landing page free of the Firebase SDK until a visitor acts", async ({
+    page,
+  }) => {
+    const firebaseRequests: string[] = [];
+    page.on("request", (request) => {
+      const url = request.url();
+      if (/firebase|firestore|identitytoolkit/i.test(url)) {
+        firebaseRequests.push(url);
+      }
+    });
+
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", { name: /see what your backyard can earn/i }),
+    ).toBeVisible();
+
+    // `app/(firebase)/layout.tsx` scopes the ~479 KB client SDK to that route
+    // group precisely so the marketing landing never pays for it. Loading it
+    // here would mean something on `/` reached for auth during render again.
+    expect(firebaseRequests).toEqual([]);
   });
 
   test("keeps the still photograph and skips the player under reduced motion", async ({ browser }) => {

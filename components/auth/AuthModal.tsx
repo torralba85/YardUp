@@ -5,12 +5,29 @@ import { useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
+/**
+ * Why the modal closed.
+ *
+ * `"signed-in"` means the visitor authenticated; the session is about to
+ * appear. `"dismissed"` means they backed out (Escape, backdrop, the X) and no
+ * session is coming. Callers that own the surrounding `AuthProvider` must not
+ * tear it down on `"signed-in"`, or they unmount the subscription before the
+ * new user propagates.
+ */
+export type AuthModalCloseReason = "signed-in" | "dismissed";
+
 /** Props for {@link AuthModal}. */
 export interface AuthModalProps {
   /** Whether the modal is shown. */
   isOpen: boolean;
-  /** Called to dismiss the modal. */
-  onClose: () => void;
+  /**
+   * Called when the modal closes.
+   *
+   * @param reason - Why it closed. Omitted-parameter callers remain valid; they
+   *   simply treat every close the same way, which is correct when an
+   *   `AuthProvider` above them outlives the modal.
+   */
+  onClose: (reason: AuthModalCloseReason) => void;
 }
 
 /** Keyboard-reachable controls, excluding disabled ones the browser won't focus. */
@@ -173,7 +190,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     if (!isOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        onClose("dismissed");
         return;
       }
       if (event.key !== "Tab") return;
@@ -210,7 +227,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signIn(email, password);
       }
       signInInitiatedCloseRef.current = true;
-      onClose();
+      onClose("signed-in");
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
       setError(
@@ -231,7 +248,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       await signInWithGoogle();
       signInInitiatedCloseRef.current = true;
-      onClose();
+      onClose("signed-in");
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
       setError(
@@ -252,7 +269,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       await signInWithApple();
       signInInitiatedCloseRef.current = true;
-      onClose();
+      onClose("signed-in");
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
       setError(
@@ -272,7 +289,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       <div ref={panelRef} className="w-full max-w-md rounded-lg bg-lf-mahogany text-lf-sand shadow-2xl relative overflow-hidden border border-lf-taupe/25">
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => onClose("dismissed")}
           className="absolute right-4 top-4 rounded-full p-1 text-lf-taupe hover:bg-lf-sand/10 hover:text-lf-sand transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
         >
           <X size={20} />

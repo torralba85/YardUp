@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 
@@ -21,6 +21,13 @@ export interface LandingAuthGateProps {
  */
 function Gate({ onAuthenticated, onDismiss }: LandingAuthGateProps) {
   const firedRef = useRef(false);
+  // `AuthModal` closes itself on a *successful* sign-in, not just on cancel.
+  // This gate owns the `AuthProvider` the modal reads from, so forwarding that
+  // close to `onDismiss` would unmount the provider before
+  // `onAuthStateChanged` delivers the new user — the visitor would sign in,
+  // watch the modal vanish, and never be handed to the studio. Hide the modal
+  // instead and stay mounted until the session actually lands.
+  const [awaitingSession, setAwaitingSession] = useState(false);
 
   const { user, loading } = useAuth();
 
@@ -34,11 +41,22 @@ function Gate({ onAuthenticated, onDismiss }: LandingAuthGateProps) {
     onAuthenticated();
   }, [loading, user, onAuthenticated]);
 
-  if (loading || user) {
+  if (loading || user || awaitingSession) {
     return null;
   }
 
-  return <AuthModal isOpen onClose={onDismiss} />;
+  return (
+    <AuthModal
+      isOpen
+      onClose={(reason) => {
+        if (reason === "signed-in") {
+          setAwaitingSession(true);
+          return;
+        }
+        onDismiss();
+      }}
+    />
+  );
 }
 
 /**
