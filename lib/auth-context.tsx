@@ -34,6 +34,14 @@ import { validateDisplayName, validateEmail, validatePassword } from "./account-
 
 type UserRole = "user" | "builder";
 
+export const CURRENT_LEGAL_CONSENT = {
+  termsVersion: "2026-08-26",
+  privacyVersion: "2026-08-26",
+  adultConfirmed: true,
+} as const;
+
+export type LegalConsent = typeof CURRENT_LEGAL_CONSENT;
+
 /** The app-level user profile mirrored from the `users` Firestore collection. */
 export interface UserProfile {
   /** Firebase Auth user id. */
@@ -58,9 +66,10 @@ interface AuthContextType {
     password: string,
     displayName: string,
     role: UserRole,
+    legalConsent: LegalConsent,
   ) => Promise<UserCredential>;
-  signInWithGoogle: (role?: UserRole) => Promise<UserCredential>;
-  signInWithApple: (role?: UserRole) => Promise<UserCredential>;
+  signInWithGoogle: (role?: UserRole, legalConsent?: LegalConsent) => Promise<UserCredential>;
+  signInWithApple: (role?: UserRole, legalConsent?: LegalConsent) => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -101,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName?: string | null;
       email?: string | null;
       role?: UserRole;
+      legalConsent?: LegalConsent;
     } = {},
   ) => {
     const docRef = doc(db, "users", u.uid);
@@ -128,6 +138,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: nextDisplayName,
             email: nextEmail,
             role: existingRole,
+            ...(options.legalConsent
+              ? {
+                  legalConsent: {
+                    ...options.legalConsent,
+                    acceptedAt: serverTimestamp(),
+                  },
+                }
+              : {}),
             updatedAt: serverTimestamp(),
           }, { merge: true });
         }
@@ -144,6 +162,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           displayName,
           email,
           role,
+          ...(options.legalConsent
+            ? {
+                legalConsent: {
+                  ...options.legalConsent,
+                  acceptedAt: serverTimestamp(),
+                },
+              }
+            : {}),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }, { merge: true });
@@ -191,39 +217,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     displayName: string,
     role: UserRole,
+    legalConsent: LegalConsent,
   ) => {
     pendingAuthRoleRef.current = role;
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
-      await ensureProfile(cred.user, { displayName, email, role });
+      await ensureProfile(cred.user, { displayName, email, role, legalConsent });
       return cred;
     } finally {
       pendingAuthRoleRef.current = null;
     }
   };
 
-  const signInWithGoogle = async (role: UserRole = "user") => {
+  const signInWithGoogle = async (
+    role: UserRole = "user",
+    legalConsent?: LegalConsent,
+  ) => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
-      await ensureProfile(cred.user, { role });
+      await ensureProfile(cred.user, { role, legalConsent });
       return cred;
     } finally {
       pendingAuthRoleRef.current = null;
     }
   };
 
-  const signInWithApple = async (role: UserRole = "user") => {
+  const signInWithApple = async (
+    role: UserRole = "user",
+    legalConsent?: LegalConsent,
+  ) => {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
-      await ensureProfile(cred.user, { role });
+      await ensureProfile(cred.user, { role, legalConsent });
       return cred;
     } finally {
       pendingAuthRoleRef.current = null;
