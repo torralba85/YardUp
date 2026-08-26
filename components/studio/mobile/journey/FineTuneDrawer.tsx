@@ -45,7 +45,7 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
             </button>
           </div>
           <div
-            className="min-h-0 flex-1 overflow-y-auto px-4"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4"
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
           >
             {children}

@@ -285,7 +285,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/75 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div ref={panelRef} className="w-full max-w-md rounded-lg bg-lf-mahogany text-lf-sand shadow-2xl relative overflow-hidden border border-lf-taupe/25">
         <button
           type="button"

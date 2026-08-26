@@ -51,7 +51,7 @@ export default function ActStep({
           <Sparkles size={13} aria-hidden="true" />
           Step 5 · Act
         </p>
-        <h1 className="mt-2 font-display text-[31px] font-semibold leading-[1.08] text-lf-espresso">
+        <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
           Your feasibility study is ready.
         </h1>
         <p className="mt-1 font-mono text-[11px] text-lf-muted">{parcelName}</p>

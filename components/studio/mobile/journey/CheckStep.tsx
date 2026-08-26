@@ -77,7 +77,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
       <div className="mt-3 flex items-center gap-2.5">
         <Icon size={28} style={{ color: tone.color }} aria-hidden="true" />
         <h1
-          className="font-display text-[31px] font-semibold leading-none tracking-[-0.01em]"
+          className="font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-none tracking-[-0.01em] text-balance"
           style={{ color: tone.color }}
         >
           {summary.verdict}

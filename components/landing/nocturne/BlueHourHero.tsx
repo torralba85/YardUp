@@ -420,7 +420,7 @@ export function BlueHourHero() {
                 id="hero-address-suggestions"
                 role="listbox"
                 aria-label="Address suggestions"
-                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-lg border border-ln-hairline bg-ln-navy shadow-xl"
+                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-lg border border-ln-hairline bg-ln-navy/95 shadow-2xl backdrop-blur-md"
               >
                 {suggestions.map((suggestion, index) => (
                   <li

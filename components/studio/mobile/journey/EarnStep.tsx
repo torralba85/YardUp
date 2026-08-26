@@ -45,7 +45,7 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
       <p className="lf-kicker text-lf-clay">Step 2 · Earn</p>
-      <h1 className="mt-2 font-display text-[31px] font-semibold leading-[1.08] text-lf-espresso">
+      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
         Your backyard could earn
       </h1>
       <p className="mt-1 font-mono text-[11px] text-lf-muted">{parcelName}</p>

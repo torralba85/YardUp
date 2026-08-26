@@ -68,7 +68,7 @@ export default function ShapeStep({
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="lf-kicker text-lf-clay">Step 3 · Shape</p>
-            <h1 className="mt-1 font-display text-[25px] font-semibold leading-[1.1] text-lf-espresso">
+            <h1 className="mt-1 font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
               Pick a direction.
             </h1>
           </div>

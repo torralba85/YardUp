@@ -382,7 +382,7 @@ export default function AddressSearch({
           id="address-suggestions"
           role="listbox"
           aria-label="Address suggestions"
-          className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-lg border border-lf-hairline bg-lf-card shadow-lg"
+          className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-lg border border-lf-hairline bg-lf-card/95 shadow-xl backdrop-blur-md"
         >
           {suggestions.map((suggestion, index) => (
             <li

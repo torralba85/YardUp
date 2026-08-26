@@ -45,7 +45,7 @@ export default function FindStep({
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
       <p className="lf-kicker text-lf-clay">Step 1 · Find</p>
-      <h1 className="mt-2 font-display text-[31px] font-semibold leading-[1.08] text-lf-espresso">
+      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
         Start with your address.
       </h1>
       <p className="lf-body-sm mt-2 text-lf-muted">
