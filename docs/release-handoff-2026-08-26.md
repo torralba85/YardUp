@@ -61,14 +61,48 @@ branch** (`master`), which is 66 commits stale. Merging PR #162 clears them.
   `docs/devpost-submission.md` no longer carry plaintext reviewer passwords;
   both now state credentials are time-limited and owner-issued. The secret
   scanner passes.
-- **`/robots.txt` is not broken in code.** It 404s in production only because
-  the live deployment is a July build. The current build prerenders it
-  correctly - verified by serving `.next/standalone/server.js` directly and
-  receiving a 200 with the expected body.
+- **`/robots.txt` WAS genuinely broken** (this corrects an earlier reading that
+  blamed the stale deployment). Deploying current code did not fix it. Firebase
+  Hosting does not route `/robots.txt` through the `**` -> `app` rewrite; it
+  returns a bare 0-byte 404 before Next.js sees the request. The tell: that 404
+  carries none of the `next.config.ts` headers, while a genuinely missing route
+  returns Next's branded 404 with all of them. Reproduced against the Hosting
+  URL, the Cloud Run function URL directly, and the `lotfoundry.net` Host
+  header; `/sitemap.xml` resolves fine through the same rewrite. Fixed in
+  `c6ca15b` by materializing `dist/robots.txt` from the prerendered body in
+  `prepare-firebase.js`. Now 200 in production.
 - **`NEXT_PUBLIC_APP_URL` does not need a CI secret.** `.github/workflows/ci.yml`
   never sets it, and both `app/robots.ts` / `app/sitemap.ts` and
   `lib/server/checkout-origin.ts` already default to `https://lotfoundry.net`
   in production. Deploying current code flips the canonical host automatically.
+
+## DEPLOYED 2026-08-26
+
+Production was deployed manually from a developer machine at ~17:15 UTC while
+GitHub Actions was unavailable (Blocker 4). Hosting, all five Functions, and
+Firestore rules are live at `https://yardup-2026.web.app`.
+
+Post-deploy smoke - every route 200:
+
+```
+/  /studio  /about  /help  /feedback  /privacy  /terms  /delete-account
+/login  /signup  /settings  /builder  /robots.txt  /sitemap.xml
+/manifest.json  /.well-known/assetlinks.json  /sw.js  /offline.html
+```
+
+Confirmed live: all five security headers, `sitemap.xml` emitting
+`https://lotfoundry.net`, service worker `v5`, `/robots.txt` 200,
+`/api/suggest` 200.
+
+**`lotfoundry.net` already resolves correctly at Firebase's edge.** Requesting
+the Firebase IP with a `lotfoundry.net` Host header returns 200 for `/`,
+`/about`, `/sitemap.xml`, and `/robots.txt`. Only DNS and the certificate remain
+- once the Cloudflare change lands, the site works immediately with no further
+deploy.
+
+Note: PR #162 is **not merged**. `master` is still 66+ commits behind what is
+running in production. Merge it once Actions is restored so the branch and the
+deployed artifact agree.
 
 ## Blocker 1 - Cloudflare redirects all of lotfoundry.net (OPEN)
 
