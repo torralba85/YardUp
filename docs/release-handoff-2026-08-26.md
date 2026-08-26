@@ -12,7 +12,7 @@ which was written before this work landed.
 
 ## Verified on this branch
 
-All run locally against `5711b34`:
+All run locally against `5f63585`:
 
 | Gate | Command | Result |
 |---|---|---|
