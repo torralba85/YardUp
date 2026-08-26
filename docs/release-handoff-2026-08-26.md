@@ -59,9 +59,25 @@ Server: cloudflare
 ```
 
 DNS confirms the zone is on Cloudflare (`dion/zita.ns.cloudflare.com`), with A
-records on Cloudflare proxy IPs (`172.67.205.175`, `104.21.93.56`). A Firebase
-verification TXT record (`hosting-site=yardup-2026`) is already present, so
-custom-domain setup was at least started.
+records on Cloudflare proxy IPs (`172.67.205.175`, `104.21.93.56`).
+
+**The Firebase side is already done.** Queried via the Hosting API
+(`v1beta1/projects/yardup-2026/sites/yardup-2026/customDomains`):
+
+| Field | Value |
+|---|---|
+| Domain | `lotfoundry.net` (created 2026-07-28) |
+| `ownershipState` | `OWNERSHIP_ACTIVE` |
+| `hostState` | `HOST_MISMATCH` |
+| `cert.state` | `CERT_VALIDATING` |
+
+So the domain is registered and ownership is verified; the certificate is
+blocked only because DNS still points at Cloudflare. Nothing needs to be added
+in the Firebase Console for the apex domain - this is purely a DNS change.
+
+**`www.lotfoundry.net` is NOT registered.** The API returns exactly one custom
+domain. If `www` should resolve, add it in Firebase Console -> Hosting as a
+second custom domain (Firebase can set it up as a redirect to the apex).
 
 **Why this blocks the Play release too:** Android does not follow a
 cross-origin redirect when verifying Digital Asset Links. A TWA built against
@@ -76,17 +92,53 @@ redirect is removed. Target DNS-only (grey cloud) so Firebase serves directly.
 
 ### Fix
 
-1. **Cloudflare dashboard -> lotfoundry.net -> Rules.** Find and delete the rule
-   redirecting to `yardup-2026.web.app`. Check **Redirect Rules**, **Page
-   Rules**, and **Bulk Redirects** - it may be in any of the three.
-2. **Firebase Console -> Hosting -> `yardup-2026`.** Confirm `lotfoundry.net`
-   and `www.lotfoundry.net` are added as custom domains. If not, add them.
-3. **Cloudflare DNS.** Replace the apex `A` records with the exact records
-   Firebase Console displays for the domain, and set them to **DNS only (grey
-   cloud)**, not proxied. Do the same for `www`. Use the values Firebase shows -
-   do not copy IPs from elsewhere, they differ per site.
-4. Wait for Firebase to report the certificate as active (can take up to 24h,
-   usually much less).
+All of this happens in the **Cloudflare dashboard**; no Firebase Console change
+is needed for the apex domain. These are the exact records the Hosting API
+reports as required.
+
+1. **Cloudflare -> lotfoundry.net -> DNS -> Records.** Delete these four
+   records, which Firebase flags `REMOVE`:
+
+   | Type | Value |
+   |---|---|
+   | `A` | `104.21.93.56` |
+   | `A` | `172.67.205.175` |
+   | `AAAA` | `2606:4700:3031::6815:5d38` |
+   | `AAAA` | `2606:4700:3037::ac43:cdaf` |
+
+2. **Add one record**, set to **DNS only (grey cloud)** - not proxied:
+
+   | Type | Name | Value | Proxy |
+   |---|---|---|---|
+   | `A` | `@` (lotfoundry.net) | `199.36.158.100` | DNS only |
+
+   Grey cloud matters twice: it stops Cloudflare shadowing the app's
+   `robots.txt`, and Cloudflare rules only run on proxied traffic, so grey-cloud
+   also stops the redirect from firing.
+
+3. **Leave every `TXT` record alone.** `hosting-site=yardup-2026`, both
+   `google-site-verification` values, SPF, and DKIM are all still required.
+
+4. **Cloudflare -> lotfoundry.net -> Rules.** Delete the rule redirecting to
+   `yardup-2026.web.app`. Check **Redirect Rules**, **Page Rules**, and **Bulk
+   Redirects** - it may be in any of the three. Step 2 already neutralizes it,
+   but leaving it in place is a trap if the proxy is ever re-enabled.
+
+5. Wait for `cert.state` to move from `CERT_VALIDATING` to `CERT_ACTIVE`.
+   Usually minutes; Firebase allows up to 24h. Re-check with:
+
+   ```bash
+   TOKEN=$(gcloud auth print-access-token)
+   curl -sS -H "Authorization: Bearer $TOKEN" \
+     -H "X-Goog-User-Project: yardup-2026" \
+     "https://firebasehosting.googleapis.com/v1beta1/projects/yardup-2026/sites/yardup-2026/customDomains"
+   ```
+
+**Expect a short TLS gap.** Between the DNS flip and the certificate going
+active, `https://lotfoundry.net` may fail to negotiate TLS. This is unavoidable
+in the Firebase custom-domain flow - the cert cannot issue until DNS points at
+Firebase. `yardup-2026.web.app` keeps serving throughout, so nothing is fully
+dark. Do not roll the DNS back mid-issuance; that restarts the wait.
 
 ### Verification
 
@@ -101,16 +153,23 @@ curl -sS https://lotfoundry.net/robots.txt
 curl -sS https://lotfoundry.net/.well-known/assetlinks.json
 ```
 
-## Blocker 2 - master is 66 commits stale (OPEN, gated on Blocker 1)
+## Blocker 2 - master is 66 commits stale (OPEN, NOT gated on Blocker 1)
 
 CI deploys only `master`. The live site is a July build, which is why
 `/robots.txt` 404s and the sitemap still advertises `yardup-2026.web.app` with
 a `2026-07-23` `lastmod`.
 
-**Order matters.** `lib/server/checkout-origin.ts` resolves production Stripe
-`success_url` / `cancel_url` to `https://lotfoundry.net`. Deploying before
-Blocker 1 is fixed means every checkout return bounces through a 301 - tolerable
-in a browser, but it breaks TWA full-screen. Fix Cloudflare first, then merge.
+**This does not need to wait for Blocker 1.** `lib/server/checkout-origin.ts`
+resolves production Stripe `success_url` / `cancel_url` to
+`https://lotfoundry.net`, so while the redirect stands those returns bounce
+through a 301. A 301 preserves both path and query, so `?cert=...` and
+`?credits_added=1` survive and checkout returns work correctly in a browser.
+The thing that genuinely breaks on a redirecting host is Digital Asset Links
+verification, and that gates the **AAB build** (Blocker 3), not this deploy.
+
+Waiting is the more expensive option: it leaves production on a July build with
+a 404 `robots.txt`, no security headers, the Firestore read-before-write payment
+bug, and 52 open Dependabot alerts.
 
 After merge, CI runs verify then deploys Hosting + Functions + Firestore rules.
 Capture the run ID, Firebase revisions, and the previous revision as rollback
@@ -134,12 +193,20 @@ validator asserts the manifest exceeds it.
    `twa-manifest.json` and `app/build.gradle` and bump `PUBLISHED_VERSION_CODE`.
 2. **Do not build until Blocker 1 verification passes.** 1.0.6 is the first
    bundle carrying the `lotfoundry.net` host.
-3. **Recapture store screenshots.** This release changes the entire brand type
-   system (Newsreader / Instrument Sans / DM Mono). Every checked-in screenshot
-   in `public/screenshots/` and every Play listing graphic was captured from the
-   previous fonts and is now stale. Regenerate with
-   `node scripts/capture-store-screenshots.mjs`, then re-export listing
-   graphics.
+3. **Store screenshots: manifest set is done, Play listing art is not.** This
+   release changes the entire brand type system (Newsreader / Instrument Sans /
+   DM Mono), so everything captured on the old fonts is stale. The three
+   manifest screenshots in `public/screenshots/` were recaptured on 2026-08-26
+   from the production build and are current. The separate **Play listing
+   graphics still need re-export**, along with the 512x512 Play icon and
+   1024x500 feature graphic.
+
+   When re-exporting, note that `phone-studio.png` is a weak listing image:
+   roughly the lower half of the frame is empty background below the demo-lot
+   chips, because the Find step has no content there until an address resolves.
+   It is fine as a PWA manifest screenshot but should not be used as primary
+   Play listing art. Prefer a captured Earn or Check reveal, which carry the
+   money figure.
 4. Build the signed AAB from the protected release workspace and run
    `npm run android:validate:release`.
 5. Upload to the internal track. Run device tests for purchase, restore,
