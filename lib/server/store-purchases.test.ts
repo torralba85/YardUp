@@ -7,7 +7,8 @@ const store = vi.hoisted(() => {
   const grants = new Map<string, Record<string, unknown>>();
   const builders = new Map<string, { credits: number }>();
   const certificatePurchases = new Map<string, Record<string, unknown>>();
-  return { grants, builders, certificatePurchases };
+  const transactionOperations: string[] = [];
+  return { grants, builders, certificatePurchases, transactionOperations };
 });
 
 const grantCertificate = vi.hoisted(() =>
@@ -47,6 +48,7 @@ vi.mock("./firebase-admin", () => ({
     ) => {
       const tx = {
         get: async (ref: { path: string }) => {
+          store.transactionOperations.push(`read:${ref.path}`);
           if (ref.path.startsWith("purchaseGrants/")) {
             const id = ref.path.split("/")[1];
             const data = store.grants.get(id);
@@ -60,11 +62,13 @@ vi.mock("./firebase-admin", () => ({
           return { exists: false, data: () => undefined };
         },
         create: (ref: { path: string }, data: Record<string, unknown>) => {
+          store.transactionOperations.push(`write:${ref.path}`);
           const id = ref.path.split("/")[1];
           if (store.grants.has(id)) throw new Error("already exists");
           store.grants.set(id, data);
         },
         update: (ref: { path: string }, data: Record<string, unknown>) => {
+          store.transactionOperations.push(`write:${ref.path}`);
           if (ref.path.startsWith("builders/")) {
             const id = ref.path.split("/")[1];
             const current = store.builders.get(id) ?? { credits: 0 };
@@ -114,6 +118,7 @@ describe("verifyAndGrantPurchase", () => {
     store.grants.clear();
     store.builders.clear();
     store.certificatePurchases.clear();
+    store.transactionOperations.length = 0;
     grantCertificate.mockClear();
     store.builders.set("user-1", { credits: 0 });
   });
@@ -284,6 +289,38 @@ describe("verifyAndGrantPurchase", () => {
       expect(result.grant.platform).toBe("google-play");
     }
     expect(grantCertificate).not.toHaveBeenCalled();
+    expect(store.builders.get("user-1")?.credits).toBe(10);
+    expect(store.transactionOperations).toEqual([
+      expect.stringMatching(/^read:purchaseGrants\//),
+      "read:builders/user-1",
+      expect.stringMatching(/^write:purchaseGrants\//),
+      "write:builders/user-1",
+    ]);
+  });
+
+  it("rejects builder credits without recording a grant when the profile is missing", async () => {
+    store.builders.delete("user-1");
+
+    const result = await verifyAndGrantPurchase(
+      {
+        uid: "user-1",
+        platform: "google-play",
+        productId: STORE_PRODUCTS.builder5.id,
+        token: "demo:play-missing-builder",
+      },
+      verifier,
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(403);
+      expect(result.error).toMatch(/builder profile/i);
+    }
+    expect(store.grants.size).toBe(0);
+    expect(store.transactionOperations).toEqual([
+      expect.stringMatching(/^read:purchaseGrants\//),
+      "read:builders/user-1",
+    ]);
   });
 });
 
