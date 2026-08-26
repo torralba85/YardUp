@@ -1,7 +1,12 @@
 # LotFoundry Production Deployment and Website Completion Plan
 
 **Date:** 2026-08-25
-**Status:** Proposed - implementation has not started
+**Status:** Superseded in part - see `docs/release-handoff-2026-08-26.md` for
+current state. Phases 1-3 and most of Phase 5 landed on
+`feature/map-quality-improvements` (PR #162). Three blockers remain: the
+Cloudflare redirect on `lotfoundry.net`, the 66-commit-stale `master`, and the
+Play upload. The unchecked boxes below are **not** all still open - several were
+completed before this file was written.
 **Goal:** Deploy `lotfoundry.net` as a secure, accessible, fully working LotFoundry web product, with every supported critical journey verified in production.
 
 ## Scope and definition of done
