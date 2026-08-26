@@ -9,12 +9,25 @@ const { pushMock, stashMock } = vi.hoisted(() => ({
   stashMock: vi.fn(),
 }));
 
+const authMock = vi.hoisted(() => ({
+  user: { uid: "user-1" } as { uid: string } | null,
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
 }));
 
 vi.mock("@/lib/address-handoff", () => ({
   stashAddressQuery: stashMock,
+}));
+
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({ user: authMock.user }),
+}));
+
+vi.mock("@/components/auth/AuthModal", () => ({
+  AuthModal: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div role="dialog" aria-label="Sign in to continue" /> : null,
 }));
 
 // The real Player needs a browser rendering pipeline; the hero's contract with
@@ -55,6 +68,7 @@ describe("BlueHourHero", () => {
     setMatchMedia(false);
     pushMock.mockClear();
     stashMock.mockClear();
+    authMock.user = { uid: "user-1" };
   });
 
   afterEach(() => {
@@ -180,5 +194,18 @@ describe("BlueHourHero", () => {
       vi.advanceTimersByTime(DAWN_RAMP_MS);
     });
     expect(pushMock).toHaveBeenCalledWith("/studio");
+  });
+
+  it("asks a guest to sign in before handing an address to the studio", () => {
+    authMock.user = null;
+    render(<BlueHourHero />);
+    fireEvent.change(screen.getByLabelText(/property address/i), {
+      target: { value: "456 Pine St, Denver, CO" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
+
+    expect(screen.getByRole("dialog", { name: /sign in to continue/i })).toBeInTheDocument();
+    expect(stashMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

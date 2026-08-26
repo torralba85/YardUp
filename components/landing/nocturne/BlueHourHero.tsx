@@ -12,6 +12,8 @@ import {
   type SurveyHighlight,
 } from "@/remotion/nocturne/constants";
 import { stashAddressQuery } from "@/lib/address-handoff";
+import { useAuth } from "@/lib/auth-context";
+import { AuthModal } from "@/components/auth/AuthModal";
 import { DawnRampOverlay, DAWN_RAMP_MS } from "./DawnStudioLink";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
 import { useHeroProgress } from "./use-hero-progress";
@@ -65,7 +67,9 @@ export function BlueHourHero() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [authOpen, setAuthOpen] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
 
   // Post-hydration gate: server and first client render agree (no Player),
   // then the scrubbed composition mounts. Intentional sync, mirroring the
@@ -197,6 +201,14 @@ export function BlueHourHero() {
     if (!trimmed) {
       setAddressError(true);
       addressInputRef.current?.focus();
+      return;
+    }
+
+    // Real-address lookup is authenticated because every suggestion and parcel
+    // resolve spends metered provider quota. Ask for sign-in before handoff,
+    // rather than routing a guest to a studio state that rejects the request.
+    if (!user) {
+      setAuthOpen(true);
       return;
     }
 
@@ -522,6 +534,7 @@ export function BlueHourHero() {
           </p>
         </aside>
         <DawnRampOverlay visible={dawnRamp} />
+        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
       </div>
     </section>
   );
