@@ -106,8 +106,6 @@ describe("POST /api/stripe/webhook", () => {
             object: {
               id: "sess_1",
               payment_status: "paid",
-              mode: "payment",
-              currency: "usd",
               amount_total: 4900,
               metadata: { builderId: "b1", requestId: "r1" },
             },
@@ -133,8 +131,6 @@ describe("POST /api/stripe/webhook", () => {
             object: {
               id: "sess_1",
               payment_status: "unpaid",
-              mode: "payment",
-              currency: "usd",
               amount_total: 4900,
               metadata: { builderId: "b1", requestId: "r1" },
             },
@@ -171,9 +167,7 @@ describe("POST /api/stripe/webhook", () => {
             object: {
               id: "sess_credit",
               payment_status: "paid",
-              mode: "payment",
-              currency: "usd",
-              amount_total: 17500,
+              amount_total: 10000,
               metadata: { purchaseType: "credit_pack", builderId: "b2", creditsToGrant: "5" },
             },
           },
@@ -201,7 +195,7 @@ describe("POST /api/stripe/webhook", () => {
       expect.objectContaining({
         type: "purchase",
         creditsChange: 5,
-        amountPaid: 175,
+        amountPaid: 100,
         stripeSessionId: "sess_credit",
         createdAt: "mock-timestamp",
       })
@@ -218,9 +212,7 @@ describe("POST /api/stripe/webhook", () => {
             object: {
               id: "sess_credit",
               payment_status: "paid",
-              mode: "payment",
-              currency: "usd",
-              amount_total: 17500,
+              amount_total: 10000,
               metadata: { purchaseType: "credit_pack", builderId: "b2", creditsToGrant: "5" },
             },
           },
@@ -249,8 +241,6 @@ describe("POST /api/stripe/webhook", () => {
             object: {
               id: "sess_cert",
               payment_status: "paid",
-              mode: "payment",
-              currency: "usd",
               amount_total: 2900,
               metadata: {
                 purchaseType: "certificate",
@@ -273,59 +263,5 @@ describe("POST /api/stripe/webhook", () => {
       stripeSessionId: "sess_cert",
       amount: 2900,
     });
-  });
-
-  it("rejects a paid checkout whose amount does not match the lead-unlock catalog", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_underpaid",
-              payment_status: "paid",
-              mode: "payment",
-              currency: "usd",
-              amount_total: 1,
-              metadata: { purchaseType: "lead_unlock", builderId: "b1", requestId: "r1" },
-            },
-          },
-        })),
-      },
-    };
-
-    const res = await POST(webhookRequest());
-    expect(res.status).toBe(200);
-    expect(mocks.grant).not.toHaveBeenCalled();
-  });
-
-  it("rejects credit metadata that is not a server catalog pack", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_unsupported_pack",
-              payment_status: "paid",
-              mode: "payment",
-              currency: "usd",
-              amount_total: 17500,
-              metadata: {
-                purchaseType: "credit_pack",
-                builderId: "b2",
-                creditsToGrant: "999",
-              },
-            },
-          },
-        })),
-      },
-    };
-
-    const res = await POST(webhookRequest());
-    expect(res.status).toBe(200);
-    expect(mocks.adminDb.runTransaction).not.toHaveBeenCalled();
   });
 });

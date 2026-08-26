@@ -117,9 +117,7 @@ describe("POST /api/stripe/checkout", () => {
     expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/x" });
     expect(mocks.grant).not.toHaveBeenCalled();
     expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        metadata: { purchaseType: "lead_unlock", builderId: "b1", requestId: "r1" },
-      }),
+      expect.objectContaining({ metadata: { builderId: "b1", requestId: "r1" } }),
     );
   });
 

@@ -6,22 +6,9 @@ import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { creditPackPriceCents } from "@/lib/credit-pack-pricing";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
-
-function isExpectedPaidCheckout(
-  session: Stripe.Checkout.Session,
-  amountCents: number,
-): boolean {
-  return (
-    session.payment_status === "paid" &&
-    session.mode === "payment" &&
-    session.currency === "usd" &&
-    session.amount_total === amountCents
-  );
-}
 
 /**
  * POST /api/stripe/webhook
@@ -50,13 +37,11 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
-    const purchaseType = session.metadata?.purchaseType;
-
-    if (purchaseType === "certificate") {
-      if (!isExpectedPaidCheckout(session, CERTIFICATE_PRICE_CENTS)) {
-        console.error(`[stripe/webhook] Rejected invalid certificate checkout ${session.id}`);
-      } else {
+    
+    if (session.payment_status === "paid") {
+      const purchaseType = session.metadata?.purchaseType;
+      
+      if (purchaseType === "certificate") {
         // User certificate purchase. Deterministic grant id makes a replayed
         // webhook a no-op, so this is safe to receive twice.
         const uid = session.metadata?.uid;
@@ -73,15 +58,11 @@ export async function POST(request: NextRequest) {
             `[stripe/webhook] Missing uid or certKey in certificate purchase metadata for session ${session.id}`,
           );
         }
-      }
-    } else if (purchaseType === "credit_pack") {
-      const builderId = session.metadata?.builderId;
-      const creditsToGrant = Number(session.metadata?.creditsToGrant);
-      const expectedAmount = creditPackPriceCents(creditsToGrant);
-      if (expectedAmount === null || !isExpectedPaidCheckout(session, expectedAmount)) {
-        console.error(`[stripe/webhook] Rejected invalid credit-pack checkout ${session.id}`);
-      } else {
-        if (builderId) {
+      } else if (purchaseType === "credit_pack") {
+        const builderId = session.metadata?.builderId;
+        const creditsToGrant = parseInt(session.metadata?.creditsToGrant || "0", 10);
+        
+        if (builderId && creditsToGrant > 0) {
           const adminDb = getAdminDb();
           const builderRef = adminDb.collection("builders").doc(builderId);
           const ledgerRef = builderRef.collection("ledger").doc(`${builderId}_${session.id}`);
@@ -98,12 +79,12 @@ export async function POST(request: NextRequest) {
             }
             const data = builderDoc.data();
             const currentCredits = typeof data?.credits === "number" ? data.credits : 0;
-
+            
             transaction.update(builderRef, {
               credits: currentCredits + creditsToGrant,
               updatedAt: FieldValue.serverTimestamp(),
             });
-
+            
             transaction.set(ledgerRef, {
               type: "purchase",
               creditsChange: creditsToGrant,
@@ -113,10 +94,6 @@ export async function POST(request: NextRequest) {
             });
           });
         }
-      }
-    } else if (purchaseType === "lead_unlock" || purchaseType === undefined) {
-      if (!isExpectedPaidCheckout(session, LEAD_UNLOCK_PRICE_CENTS)) {
-        console.error(`[stripe/webhook] Rejected invalid lead-unlock checkout ${session.id}`);
       } else {
         const builderId = session.metadata?.builderId;
         const requestId = session.metadata?.requestId;
