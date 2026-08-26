@@ -393,7 +393,11 @@ service cloud.firestore {
     }
 
     match /builders/{builderId} {
-      allow read: if isSignedIn();
+      // Full builder profiles include contact details, license number, and
+      // credits. The owner can read their own profile; homeowner matching uses
+      // the authenticated /api/builders/active directory endpoint, which
+      // returns a redacted server-built view instead of exposing this document.
+      allow read: if isBuilder(builderId);
       allow create, update: if isBuilder(builderId) && isValidBuilderProfile(builderId);
       allow delete: if false;
 

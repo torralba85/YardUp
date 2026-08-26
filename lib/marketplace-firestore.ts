@@ -23,8 +23,10 @@ import type {
   LeadPreview,
   OwnerContact,
   ServiceArea,
+  BuilderDirectoryProfile,
   UnlockedLeadContact,
 } from "./marketplace-types";
+import { auth } from "./firebase";
 
 const BUILDERS = "builders";
 const REQUESTS = "connectionRequests";
@@ -85,11 +87,17 @@ export async function saveBuilderProfile(
  *
  * @returns The list of profiles with `active === true`.
  */
-export async function fetchActiveBuilders(): Promise<BuilderProfile[]> {
-  const snap = await getDocs(
-    query(collection(db, BUILDERS), where("active", "==", true)),
-  );
-  return snap.docs.map((item) => firestoreToBuilderProfile(item.id, item.data()));
+export async function fetchActiveBuilders(): Promise<BuilderDirectoryProfile[]> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in to browse the builder network.");
+
+  const response = await fetch("/api/builders/active", {
+    headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+  });
+  if (!response.ok) throw new Error("Unable to load the builder network.");
+
+  const payload = (await response.json()) as { builders?: BuilderDirectoryProfile[] };
+  return Array.isArray(payload.builders) ? payload.builders : [];
 }
 
 /**

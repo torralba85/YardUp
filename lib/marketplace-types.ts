@@ -52,6 +52,19 @@ export interface BuilderProfile {
   updatedAt: string | null;
 }
 
+/**
+ * The deliberately redacted builder directory record used for homeowner
+ * matching. Contact details, license number, account credits, and timestamps
+ * never leave the server for this view.
+ */
+export interface BuilderDirectoryProfile {
+  id: string;
+  companyName: string;
+  serviceAreas: ServiceArea[];
+  active: boolean;
+  licensed: boolean;
+}
+
 export interface BuilderLedgerEntry {
   id: string;
   builderId: string;

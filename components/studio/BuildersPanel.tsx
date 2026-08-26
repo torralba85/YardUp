@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { fetchActiveBuilders } from "@/lib/marketplace-firestore";
 import { getMatchedBuilders } from "@/lib/marketplace";
-import type { BuilderProfile } from "@/lib/marketplace-types";
+import type { BuilderDirectoryProfile } from "@/lib/marketplace-types";
 
 /** Props for {@link BuildersPanel}. */
 export interface BuildersPanelProps {
@@ -28,7 +28,7 @@ export interface BuildersPanelProps {
  */
 export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelProps) {
   const { user } = useAuth();
-  const [builders, setBuilders] = useState<BuilderProfile[] | null>(null);
+  const [builders, setBuilders] = useState<BuilderDirectoryProfile[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
@@ -108,7 +108,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
               <li key={b.id} className="rounded-lg border border-lf-hairline bg-lf-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-lf-espresso">{b.companyName}</span>
-                  {b.licenseNumber ? (
+                  {b.licensed ? (
                     <StatusChip status="clear" label="Licensed" size="sm" className="shrink-0" />
                   ) : null}
                 </div>
