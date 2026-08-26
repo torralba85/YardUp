@@ -12,8 +12,6 @@ import {
   type SurveyHighlight,
 } from "@/remotion/nocturne/constants";
 import { stashAddressQuery } from "@/lib/address-handoff";
-import { useAuth } from "@/lib/auth-context";
-import { AuthModal } from "@/components/auth/AuthModal";
 import { DawnRampOverlay, DAWN_RAMP_MS } from "./DawnStudioLink";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
 import { useHeroProgress } from "./use-hero-progress";
@@ -30,6 +28,13 @@ import {
  * separate chunk instead of riding the landing's critical path.
  */
 const ScrubbedLot = dynamic(() => import("./ScrubbedLot"), { ssr: false });
+
+// The gate carries its own AuthProvider and the Firebase client SDK. Keeping it
+// behind `next/dynamic` with `ssr: false` is what lets `/` stay outside the
+// `(firebase)` route group: nothing here calls `useAuth` during the prerender.
+const LandingAuthGate = dynamic(() => import("./LandingAuthGate"), {
+  ssr: false,
+});
 
 /** Hotspot definitions: composition geometry + how the page names each layer. */
 const HOTSPOTS: ReadonlyArray<{
@@ -68,8 +73,8 @@ export function BlueHourHero() {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [authOpen, setAuthOpen] = useState(false);
+  const pendingAddressRef = useRef("");
   const router = useRouter();
-  const { user } = useAuth();
 
   // Post-hydration gate: server and first client render agree (no Player),
   // then the scrubbed composition mounts. Intentional sync, mirroring the
@@ -195,6 +200,20 @@ export function BlueHourHero() {
       : VERDICT_RENT;
   const copyDimmed = progress > 0.12;
 
+  function handToStudio(address: string) {
+    // Privacy: hand the address to the studio via session storage instead of
+    // the URL, so a guest's typed address never lands in browser history, the
+    // Referer header, or analytics. The studio consumes it once on mount.
+    stashAddressQuery(address);
+    setDawnRamp(true);
+    if (rampTimerRef.current !== null) {
+      window.clearTimeout(rampTimerRef.current);
+    }
+    rampTimerRef.current = window.setTimeout(() => {
+      router.push("/studio");
+    }, DAWN_RAMP_MS);
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = query.trim();
@@ -207,22 +226,13 @@ export function BlueHourHero() {
     // Real-address lookup is authenticated because every suggestion and parcel
     // resolve spends metered provider quota. Ask for sign-in before handoff,
     // rather than routing a guest to a studio state that rejects the request.
-    if (!user) {
-      setAuthOpen(true);
-      return;
-    }
-
-    // Privacy: hand the address to the studio via session storage instead of
-    // the URL, so a guest's typed address never lands in browser history, the
-    // Referer header, or analytics. The studio consumes it once on mount.
-    stashAddressQuery(trimmed);
-    setDawnRamp(true);
-    if (rampTimerRef.current !== null) {
-      window.clearTimeout(rampTimerRef.current);
-    }
-    rampTimerRef.current = window.setTimeout(() => {
-      router.push("/studio");
-    }, DAWN_RAMP_MS);
+    //
+    // Auth state is not read during render: the landing page has no
+    // AuthProvider above it, by design. Mounting the gate is what resolves the
+    // session — it hands an already-signed-in visitor straight through, and
+    // shows the sign-in modal only to a guest.
+    pendingAddressRef.current = trimmed;
+    setAuthOpen(true);
   }
 
   return (
@@ -534,7 +544,15 @@ export function BlueHourHero() {
           </p>
         </aside>
         <DawnRampOverlay visible={dawnRamp} />
-        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+        {authOpen ? (
+          <LandingAuthGate
+            onAuthenticated={() => {
+              setAuthOpen(false);
+              handToStudio(pendingAddressRef.current);
+            }}
+            onDismiss={() => setAuthOpen(false)}
+          />
+        ) : null}
       </div>
     </section>
   );

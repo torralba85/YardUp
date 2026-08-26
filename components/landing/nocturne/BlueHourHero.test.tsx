@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { DAWN_RAMP_MS } from "./DawnStudioLink";
 import { BlueHourHero } from "./BlueHourHero";
 
@@ -21,8 +21,11 @@ vi.mock("@/lib/address-handoff", () => ({
   stashAddressQuery: stashMock,
 }));
 
+// The hero no longer touches auth during render; the lazily-mounted
+// LandingAuthGate does. These mocks now stand in for the gate's dependencies.
 vi.mock("@/lib/auth-context", () => ({
-  useAuth: () => ({ user: authMock.user }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({ user: authMock.user, loading: false }),
 }));
 
 vi.mock("@/components/auth/AuthModal", () => ({
@@ -180,23 +183,30 @@ describe("BlueHourHero", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it("routes the typed address to the studio via session stash, never the URL", () => {
-    vi.useFakeTimers();
+  it("routes the typed address to the studio via session stash, never the URL", async () => {
     render(<BlueHourHero />);
     fireEvent.change(screen.getByLabelText(/property address/i), {
       target: { value: " 456 Pine St, Denver, CO " },
     });
     fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
-    expect(stashMock).toHaveBeenCalledWith("456 Pine St, Denver, CO");
+
+    // Submitting mounts the gate behind `next/dynamic`; a signed-in visitor is
+    // handed straight through once it resolves, without seeing the modal.
+    await waitFor(() =>
+      expect(stashMock).toHaveBeenCalledWith("456 Pine St, Denver, CO"),
+    );
+    expect(
+      screen.queryByRole("dialog", { name: /sign in to continue/i }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(/opening studio/i);
     expect(pushMock).not.toHaveBeenCalled();
-    act(() => {
-      vi.advanceTimersByTime(DAWN_RAMP_MS);
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/studio"), {
+      timeout: DAWN_RAMP_MS + 500,
     });
-    expect(pushMock).toHaveBeenCalledWith("/studio");
   });
 
-  it("asks a guest to sign in before handing an address to the studio", () => {
+  it("asks a guest to sign in before handing an address to the studio", async () => {
     authMock.user = null;
     render(<BlueHourHero />);
     fireEvent.change(screen.getByLabelText(/property address/i), {
@@ -204,7 +214,9 @@ describe("BlueHourHero", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
 
-    expect(screen.getByRole("dialog", { name: /sign in to continue/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("dialog", { name: /sign in to continue/i }),
+    ).toBeInTheDocument();
     expect(stashMock).not.toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
   });
