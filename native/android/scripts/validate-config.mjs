@@ -33,11 +33,17 @@ const assetLinks = readJson("public/.well-known/assetlinks.json");
 expect(twa.packageId === "com.lotfoundry.app", "Package ID must be com.lotfoundry.app.");
 expect(twa.name === "LotFoundry", "Android app name must be LotFoundry.");
 expect(twa.launcherName === "LotFoundry", "Android launcher name must be LotFoundry.");
-expect(twa.host === "yardup-2026.web.app", "TWA host must be yardup-2026.web.app.");
+expect(twa.host === "lotfoundry.net", "TWA host must be lotfoundry.net.");
 expect(twa.startUrl === "/studio", "TWA start URL must be /studio.");
 expect(twa.display === "standalone", "TWA display mode must be standalone.");
 expect(twa.minSdkVersion >= 24, "Minimum Android SDK must be API 24 or newer.");
-expect(twa.appVersionCode >= 2, "Android version code must be at least 2.");
+// Highest versionCode already published to Google Play. Play rejects any upload whose
+// versionCode does not exceed it, so the checked-in manifest must stay ahead of it.
+const PUBLISHED_VERSION_CODE = 6; // versionName 1.0.5, uploaded 2026-08-11
+expect(
+  twa.appVersionCode > PUBLISHED_VERSION_CODE,
+  `Android version code (${twa.appVersionCode}) must exceed the published Play version code (${PUBLISHED_VERSION_CODE}).`,
+);
 expect(twa.features?.playBilling?.enabled === true, "Play Billing must remain enabled.");
 expect(twa.alphaDependencies?.enabled === true, "Bubblewrap alpha dependencies are required for Play Billing.");
 expect(webManifest.scope === "/", "Web manifest scope must include /studio.");
@@ -98,6 +104,51 @@ expect(
   ),
   "Digital Asset Links still contains a placeholder.",
 );
+
+const buildGradlePath = "native/android/app/build.gradle";
+const buildGradle = existsSync(pathFromRoot(buildGradlePath))
+  ? readFileSync(pathFromRoot(buildGradlePath), "utf8")
+  : undefined;
+const gradleNumberValue = (key) => {
+  const match = buildGradle?.match(new RegExp(`^\\s*${key}\\s+(\\d+)\\s*$`, "m"));
+  return match ? Number(match[1]) : undefined;
+};
+const gradleStringValue = (key) => {
+  const match = buildGradle?.match(
+    new RegExp(`^\\s*${key}\\s+"([^"]*)"\\s*$`, "m"),
+  );
+  return match ? match[1] : undefined;
+};
+
+if (buildGradle !== undefined) {
+  const gradleVersionCode = gradleNumberValue("versionCode");
+  const gradleVersionName = gradleStringValue("versionName");
+  const gradleTargetSdk = gradleNumberValue("targetSdkVersion");
+  expect(
+    gradleVersionCode !== undefined,
+    `Could not read versionCode from ${buildGradlePath}.`,
+  );
+  expect(
+    gradleVersionName !== undefined,
+    `Could not read versionName from ${buildGradlePath}.`,
+  );
+  expect(
+    gradleTargetSdk !== undefined,
+    `Could not read targetSdkVersion from ${buildGradlePath}.`,
+  );
+  expect(
+    gradleVersionCode === undefined || gradleVersionCode === twa.appVersionCode,
+    `build.gradle versionCode (${gradleVersionCode}) must match twa-manifest.json appVersionCode (${twa.appVersionCode}).`,
+  );
+  expect(
+    gradleVersionName === undefined || gradleVersionName === twa.appVersionName,
+    `build.gradle versionName (${gradleVersionName}) must match twa-manifest.json appVersionName (${twa.appVersionName}).`,
+  );
+  expect(
+    gradleTargetSdk === undefined || gradleTargetSdk >= 36,
+    `build.gradle targetSdkVersion (${gradleTargetSdk}) must be at least API 36 (Google Play requirement starting Aug 31, 2026).`,
+  );
+}
 
 const distinctFingerprints = new Set(normalizedFingerprints);
 releaseExpect(

@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BuilderProfile } from "@/lib/marketplace-types";
+import type { BuilderDirectoryProfile } from "@/lib/marketplace-types";
 
 const mocks = vi.hoisted(() => ({
-  fetchActiveBuilders: vi.fn<() => Promise<BuilderProfile[]>>(),
+  fetchActiveBuilders: vi.fn<() => Promise<BuilderDirectoryProfile[]>>(),
   user: null as { uid: string } | null,
 }));
 
@@ -23,19 +23,15 @@ vi.mock("@/components/auth/AuthModal", () => ({
 
 import BuildersPanel from "./BuildersPanel";
 
-function builder(overrides: Partial<BuilderProfile> = {}): BuilderProfile {
+function builder(
+  overrides: Partial<BuilderDirectoryProfile> = {},
+): BuilderDirectoryProfile {
   return {
     id: "b1",
-    ownerUid: "b1",
     companyName: "Cascade ADU Co",
-    contactEmail: "crew@cascadeadu.example",
-    phone: "555-0100",
-    licenseNumber: "CCB-12345",
     serviceAreas: [{ city: "Seattle", state: "WA", key: "seattle-wa" }],
     active: true,
-    credits: 3,
-    createdAt: null,
-    updatedAt: null,
+    licensed: true,
     ...overrides,
   };
 }
@@ -56,7 +52,7 @@ describe("BuildersPanel", () => {
     mocks.user = { uid: "u1" };
     mocks.fetchActiveBuilders.mockResolvedValue([
       builder(),
-      builder({ id: "b2", ownerUid: "b2", companyName: "Out of Area LLC", serviceAreas: [{ city: "Austin", state: "TX", key: "austin-tx" }] }),
+      builder({ id: "b2", companyName: "Out of Area LLC", serviceAreas: [{ city: "Austin", state: "TX", key: "austin-tx" }] }),
     ]);
 
     render(<BuildersPanel parcelCity="Seattle, WA" onConnect={() => {}} />);

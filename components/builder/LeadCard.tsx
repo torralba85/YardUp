@@ -72,7 +72,7 @@ export default function LeadCard({
   return (
     <article className="border border-lf-hairline bg-lf-card p-5">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <span className="lf-kicker-dense text-lf-muted">
           NO. {preview.previewSerial}
           {recorded ? ` · RECORDED ${recorded}` : ""}
         </span>
@@ -87,12 +87,12 @@ export default function LeadCard({
       {/* Value band first (B2): green is the money this lead pays the builder. */}
       <p className="mt-3 lf-money-md text-lf-forest">
         {formatCurrency(preview.rentBand)}
-        <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <span className="ml-1.5 lf-kicker-dense text-lf-muted">
           /mo rent potential
         </span>
       </p>
       {preview.rentBasis && (
-        <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-1 lf-kicker-dense text-lf-muted">
           {preview.rentBasis}
         </p>
       )}
@@ -135,45 +135,39 @@ export default function LeadCard({
       )}
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <span className="lf-kicker-dense text-lf-muted">
           {statusLabel(item.response.status)}
         </span>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant={item.response.status === "interested" ? "selected" : "secondary"}
             onClick={() => onRespond("interested")}
             disabled={responding}
             aria-pressed={item.response.status === "interested"}
-            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
-              item.response.status === "interested"
-                ? "bg-lf-clay text-lf-sand"
-                : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-            }`}
+            leftIcon={<CheckCircle2 size={14} />}
           >
-            <CheckCircle2 size={14} />
             Interested
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="sm"
+            variant={item.response.status === "not-a-fit" ? "selected" : "secondary"}
             onClick={() => onRespond("not-a-fit")}
             disabled={responding}
             aria-pressed={item.response.status === "not-a-fit"}
-            className={`flex h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition disabled:opacity-50 ${
-              item.response.status === "not-a-fit"
-                ? "border border-lf-taupe bg-lf-taupe-soft text-lf-espresso"
-                : "border border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-            }`}
+            leftIcon={<CircleSlash size={14} />}
           >
-            <CircleSlash size={14} />
             Not a fit
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="mt-3 border-t border-dashed border-lf-hairline pt-3">
         {access === "locked" && (
           <div>
-            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+            <div className="flex items-center gap-1.5 lf-kicker-dense text-lf-muted">
               <Lock size={13} />
               Contact locked — unlock to view
             </div>

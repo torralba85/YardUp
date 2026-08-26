@@ -19,7 +19,7 @@ describe("resolveCheckoutOrigin", () => {
     vi.stubEnv("NODE_ENV", "production");
 
     expect(resolveCheckoutOrigin(new Headers({ origin: "https://evil.example" }))).toBe(
-      "https://yardup-2026.web.app",
+      "https://lotfoundry.net",
     );
   });
 

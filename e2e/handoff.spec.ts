@@ -6,15 +6,35 @@ import { expect, test } from "@playwright/test";
 // while the demo parcel keeps the money moment on screen.
 const UNRESOLVABLE_ADDRESS = "0 Nowhere Lane, Zzyzx Flats, ZZ 00000";
 
+/** Session-storage key the hero writes and the studio consumes once on mount. */
+const ADDRESS_HANDOFF_KEY = "lf:pending-address";
+
+/**
+ * Seed the handoff the way the hero does, then open the studio.
+ *
+ * These tests are about the *studio* side of the seam: that it picks the
+ * stashed address up, runs the search, and keeps the money moment on screen.
+ * Driving them through the hero would now require completing a real sign-in
+ * (`a1d7529` gates address handoff on auth), which CI cannot do — generic
+ * Playwright runs must not create accounts in the production Firebase project.
+ * The landing-side half of the seam is covered as a guest in `hero.spec.ts`.
+ */
+async function handOffAddress(page: import("@playwright/test").Page) {
+  await page.goto("/");
+  await page.evaluate(
+    ([key, address]) => window.sessionStorage.setItem(key, address),
+    [ADDRESS_HANDOFF_KEY, UNRESOLVABLE_ADDRESS] as const,
+  );
+  await page.goto("/studio");
+}
+
 test.describe("landing → studio handoff", () => {
   test("desktop: the searched address runs and the money moment survives", async ({
     page,
     viewport,
   }) => {
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
-    await page.goto("/");
-    await page.getByLabel(/property address/i).fill(UNRESOLVABLE_ADDRESS);
-    await page.getByRole("button", { name: /run feasibility/i }).click();
+    await handOffAddress(page);
 
     await expect(page).toHaveURL(/\/studio/);
     // Seam rule (DESIGN.md): a money-green figure within 3s of arrival — the
@@ -41,9 +61,7 @@ test.describe("landing → studio handoff", () => {
     viewport,
   }) => {
     test.skip(!viewport || viewport.width >= 1024, "mobile-only");
-    await page.goto("/");
-    await page.getByLabel(/property address/i).fill(UNRESOLVABLE_ADDRESS);
-    await page.getByRole("button", { name: /run feasibility/i }).click();
+    await handOffAddress(page);
 
     await expect(page).toHaveURL(/\/studio/);
     // The five-reveal journey renders (15s: the dawn arrival plate holds the

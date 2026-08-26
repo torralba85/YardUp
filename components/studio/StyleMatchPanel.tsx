@@ -262,7 +262,7 @@ export default function StyleMatchPanel({
       <div className="border-b-4 border-double border-lf-espresso px-4 py-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-lf-clay-ink">
+            <p className="lf-kicker text-lf-clay-ink">
               Your house / your ADU
             </p>
             <h3 className="mt-1 font-display text-xl font-semibold leading-tight text-lf-espresso">
@@ -308,7 +308,7 @@ export default function StyleMatchPanel({
               <span className="mt-2 text-sm font-semibold text-lf-espresso">
                 Choose house photo
               </span>
-              <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+              <span className="mt-1 lf-kicker-dense text-lf-muted">
                 JPG PNG WEBP HEIC
               </span>
             </label>
@@ -322,7 +322,7 @@ export default function StyleMatchPanel({
               className="mr-2 animate-spin text-lf-clay-ink motion-reduce:animate-none"
               aria-hidden="true"
             />
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em]">
+            <span className="lf-kicker">
               Preparing photo
             </span>
           </div>
@@ -330,7 +330,7 @@ export default function StyleMatchPanel({
 
         {status === "generating" && (
           <div className="flex flex-col min-h-32 border border-lf-hairline bg-lf-card p-4 text-lf-espresso">
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted mb-3">
+            <div className="flex items-center justify-between lf-kicker-dense text-lf-muted mb-3">
               <span>Casting concept…</span>
             </div>
             
@@ -528,7 +528,7 @@ export default function StyleMatchPanel({
 function PhotoFact({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-lf-card px-3 py-2">
-      <dt className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+      <dt className="lf-kicker-dense text-lf-muted">
         {label}
       </dt>
       <dd className="mt-0.5 font-mono font-semibold uppercase tracking-[0.14em] text-lf-espresso">

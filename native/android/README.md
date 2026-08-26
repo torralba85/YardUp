@@ -8,7 +8,7 @@ From the repo root (requires network + Java):
 
 ```bash
 npx @bubblewrap/cli init \
-  --manifest=https://yardup-2026.web.app/manifest.json \
+  --manifest=https://lotfoundry.net/manifest.json \
   --directory=native/android
 ```
 
@@ -24,6 +24,27 @@ Suggested values:
 The generated Bubblewrap/Gradle project is checked in. Refresh it only when the
 web manifest, package identity, Bubblewrap configuration, or native bridge
 requirements change, then review the generated diff before committing.
+
+## Release history
+
+The checked-in version always describes the *next* build. Google Play rejects an
+upload whose `versionCode` does not exceed the highest already published, so
+`PUBLISHED_VERSION_CODE` in `scripts/validate-config.mjs` tracks that ceiling and
+must be raised whenever a new bundle is accepted.
+
+| versionName | versionCode | Status | Notes |
+|---|---|---|---|
+| 1.0.3 | 4 | published | Target API 36. |
+| 1.0.4 | 5 | see Play Console | Play Billing wired via Bubblewrap regeneration (`cd9c621`). |
+| 1.0.5 | 6 | published 2026-08-11 | Built locally with `bubblewrap-cli`; the version bump was never committed and no AAB was retained. Shell config is identical to `cd9c621` apart from the version, so it points at `yardup-2026.web.app`, not `lotfoundry.net`. |
+| 1.0.6 | 7 | unbuilt | First build carrying the `lotfoundry.net` host from `d4390c4`. |
+
+Version 1.0.5/vc6 predates the domain switch. Before building 1.0.6, confirm that
+`https://lotfoundry.net/` serves the app directly instead of redirecting to
+`https://yardup-2026.web.app/`, and that
+`https://lotfoundry.net/.well-known/assetlinks.json` returns 200. Android does not
+follow a cross-origin redirect when verifying Digital Asset Links, so a bundle built
+against a redirecting host launches with Custom Tab chrome instead of full screen.
 
 ## Digital Asset Links
 

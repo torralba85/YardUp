@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORE_PRODUCTS } from "./products";
-import { createPurchaseClient, PurchaseClientError } from "./purchase-client";
+import {
+  createPurchaseClient,
+  getGooglePlayProductPrices,
+  PurchaseClientError,
+} from "./purchase-client";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -182,5 +186,37 @@ describe("createPurchaseClient", () => {
     const receipt = await client.purchase(STORE_PRODUCTS.builder10.id);
     expect(receipt.token).toBe("play-token-2");
     expect(consume).toHaveBeenCalledWith("play-token-2");
+  });
+});
+
+describe("getGooglePlayProductPrices", () => {
+  it("uses the localized prices returned by Google Play", async () => {
+    const getDigitalGoodsService = vi.fn(async () => ({
+      getDetails: vi.fn(async () => [
+        {
+          itemId: STORE_PRODUCTS.builder5.id,
+          price: { value: "219.99", currency: "USD" },
+        },
+        {
+          itemId: STORE_PRODUCTS.builder10.id,
+          price: { value: 399.99, currency: "USD" },
+        },
+      ]),
+    }));
+
+    const prices = await getGooglePlayProductPrices(
+      [STORE_PRODUCTS.builder5.id, STORE_PRODUCTS.builder10.id],
+      {
+        win: { getDigitalGoodsService },
+        locale: "en-US",
+      },
+    );
+
+    expect(prices[STORE_PRODUCTS.builder5.id]).toMatchObject({
+      value: 219.99,
+      currency: "USD",
+      formatted: "$219.99",
+    });
+    expect(prices[STORE_PRODUCTS.builder10.id].formatted).toBe("$399.99");
   });
 });

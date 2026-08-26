@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -68,6 +68,7 @@ import {
   prevJourneyStep,
   type MobileJourneyStep,
 } from "@/lib/mobile-journey";
+import { useJourneyHistory } from "@/lib/use-journey-history";
 // ── Redesign: guided-spine studio ───────────────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
@@ -293,6 +294,46 @@ function FeasibilityStudioInner() {
   );
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(false);
+  // Whether the find decision has been made — an address resolved (live or
+  // estimated) or a demo lot explicitly committed to. Shared by the journey
+  // rail's reachability derivation below and the restore guard just below so
+  // the two cannot drift out of agreement with each other.
+  const found = parcelMode !== "preset" || demoCommitted;
+
+  // Session-history mirror so the Android back gesture steps back through the
+  // journey instead of exiting the TWA. All ~13 setJourneyStep call sites stay
+  // untouched — the hook observes the resulting state instead. Disabled on
+  // desktop (`enabled: !isDesktop`): desktop never renders the journey and
+  // must not observe any of this hook's side effects either — a live address
+  // search still flips `journeyStep` from "find" to "earn" behind the scenes
+  // (the render-phase adjustment below is not itself gated to mobile), and an
+  // enabled hook would push a history entry desktop's own Back button would
+  // then have to silently consume, with no visible change, before it could
+  // actually leave /studio.
+  //
+  // A step restored by a back/forward press is only applied when it is a
+  // completed ("done") step relative to where the journey currently stands —
+  // deliberately narrower than "not locked". JourneyRail only ever makes
+  // "done" chips clickable (forward travel always happens through each
+  // screen's one primary action, never the rail), so tapping an earlier done
+  // chip pushes a *new* forward entry, leaving the step the user tapped away
+  // from still sitting ahead of it in the stack. Relative to the new
+  // position, that abandoned step reads as merely "upcoming" (found is true,
+  // so nothing is "locked"), and "upcoming" is reachable going forward but
+  // must never become reachable via Back. Do not relax this back to "not
+  // locked" — that reopens exactly this hole.
+  const handleJourneyRestore = useCallback(
+    (restored: MobileJourneyStep) => {
+      const restoredState = deriveJourneySteps(journeyStep, { found }).find(
+        (candidate) => candidate.id === restored,
+      )?.state;
+      if (restoredState !== "done") return;
+      setJourneyStep(restored);
+    },
+    [journeyStep, found],
+  );
+  const journeyHistory = useJourneyHistory(journeyStep, handleJourneyRestore, !isDesktop);
+
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   // Render-phase adjustment (not an effect): the money reveal must appear
   // immediately after address resolution, so a parcel-mode change while on
@@ -357,7 +398,12 @@ function FeasibilityStudioInner() {
     if (!hydratedFromUrl || typeof window === "undefined") return;
     const serialized = serializeScenarioParams({ parcelId, config, assumptions });
     const next = `${window.location.pathname}?${serialized}`;
-    window.history.replaceState(null, "", next);
+    // Preserve the current entry's state — never pass `null` here. This
+    // effect only means to rewrite the URL; a null state would also erase
+    // the journey hook's lfJourneyStep key (use-journey-history.ts) and
+    // Next.js's own router state on this entry, since replaceState's first
+    // argument replaces the whole state object, not just the URL.
+    window.history.replaceState(window.history.state, "", next);
   }, [assumptions, config, hydratedFromUrl, parcelId]);
 
   // Managed focus: when the active step changes, move focus to the new step's
@@ -381,6 +427,7 @@ function FeasibilityStudioInner() {
     setBuilderLeadOpen(false);
     setActiveStep("lot");
     setJourneyStep("find");
+    journeyHistory.reset();
     setDemoCommitted(false);
     setFineTuneOpen(false);
     setReportAutoFocus(false);
@@ -610,7 +657,6 @@ function FeasibilityStudioInner() {
   if (!isDesktop) {
     // The five-reveal journey (issue #130): one decision and one payoff per
     // screen, with the advanced inspector behind an optional fine-tune drawer.
-    const found = parcelMode !== "preset" || demoCommitted;
     const journeySteps = deriveJourneySteps(journeyStep, { found });
     const previousStep = prevJourneyStep(journeyStep);
     const mobileParcelName = `${activeParcel.address}, ${activeParcel.city}`;
@@ -722,7 +768,7 @@ function FeasibilityStudioInner() {
             />
           }
           steps={journeySteps}
-          onBack={previousStep ? () => setJourneyStep(previousStep) : undefined}
+          onBack={previousStep ? () => window.history.back() : undefined}
           onStepSelect={setJourneyStep}
         >
           {stepContent}
@@ -1013,7 +1059,7 @@ function SceneViewToggle({
       <Button
         type="button"
         size="xs"
-        variant={mode === "3d" ? "primary" : "ghost"}
+        variant={mode === "3d" ? "selected" : "ghost"}
         aria-pressed={mode === "3d"}
         onClick={() => onChange("3d")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
@@ -1025,7 +1071,7 @@ function SceneViewToggle({
       <Button
         type="button"
         size="xs"
-        variant={mode === "aerial" ? "primary" : "ghost"}
+        variant={mode === "aerial" ? "selected" : "ghost"}
         aria-pressed={mode === "aerial"}
         onClick={() => onChange("aerial")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${

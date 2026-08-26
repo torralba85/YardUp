@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
-  stripe: null as null | { webhooks: { constructEvent: ReturnType<typeof vi.fn> } },
+  stripe: null as null | {
+    webhooks: { constructEvent: ReturnType<typeof vi.fn> };
+  },
   grant: vi.fn(),
   grantCertificate: vi.fn(),
   adminDb: {
@@ -21,7 +23,7 @@ const mocks = vi.hoisted(() => ({
   docRef: {
     collection: vi.fn(),
     doc: vi.fn(),
-  }
+  },
 }));
 
 vi.mock("@/lib/server/lead-unlocks", () => ({
@@ -44,7 +46,7 @@ vi.mock("@/lib/server/firebase-admin", () => ({
 vi.mock("firebase-admin/firestore", () => ({
   FieldValue: {
     serverTimestamp: vi.fn(() => "mock-timestamp"),
-  }
+  },
 }));
 
 import { POST } from "./route";
@@ -57,7 +59,35 @@ function webhookRequest(body = "{}", signature = "sig"): NextRequest {
   });
 }
 
+function installEvent(
+  object: Record<string, unknown>,
+  type = "checkout.session.completed",
+) {
+  mocks.stripe = {
+    webhooks: {
+      constructEvent: vi.fn(() => ({ type, data: { object } })),
+    },
+  };
+}
+
+function paidSession(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "sess_1",
+    mode: "payment",
+    payment_status: "paid",
+    amount_total: 4900,
+    currency: "usd",
+    metadata: {
+      purchaseType: "lead_unlock",
+      builderId: "b1",
+      requestId: "r1",
+    },
+    ...overrides,
+  };
+}
+
 beforeEach(() => {
+  vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
   mocks.stripe = null;
   mocks.grant.mockClear();
   mocks.grantCertificate.mockClear();
@@ -82,7 +112,6 @@ describe("POST /api/stripe/webhook", () => {
   });
 
   it("400s on an invalid signature, without granting", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
     mocks.stripe = {
       webhooks: {
         constructEvent: vi.fn(() => {
@@ -96,172 +125,180 @@ describe("POST /api/stripe/webhook", () => {
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
-  it("grants the unlock on checkout.session.completed", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_1",
-              payment_status: "paid",
-              amount_total: 4900,
-              metadata: { builderId: "b1", requestId: "r1" },
-            },
-          },
-        })),
-      },
-    };
+  it("grants an explicitly typed, correctly priced lead unlock", async () => {
+    installEvent(paidSession());
 
     const res = await POST(webhookRequest());
+
     expect(res.status).toBe(200);
-    expect(mocks.grant).toHaveBeenCalledWith(
-      expect.objectContaining({ builderId: "b1", requestId: "r1", stripeSessionId: "sess_1" }),
-    );
+    expect(mocks.grant).toHaveBeenCalledWith({
+      builderId: "b1",
+      requestId: "r1",
+      stripeSessionId: "sess_1",
+      amount: 4900,
+    });
   });
 
   it("does not grant when the completed session is not paid", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_1",
-              payment_status: "unpaid",
-              amount_total: 4900,
-              metadata: { builderId: "b1", requestId: "r1" },
-            },
-          },
-        })),
-      },
-    };
+    installEvent(paidSession({ payment_status: "unpaid" }));
 
-    const res = await POST(webhookRequest());
-    expect(res.status).toBe(200);
+    expect((await POST(webhookRequest())).status).toBe(200);
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
   it("ignores unrelated event types", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({ type: "payment_intent.created", data: { object: {} } })),
-      },
-    };
+    installEvent({}, "payment_intent.created");
 
-    const res = await POST(webhookRequest());
-    expect(res.status).toBe(200);
+    expect((await POST(webhookRequest())).status).toBe(200);
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
-  it("processes credit_pack purchases and grants credits", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_credit",
-              payment_status: "paid",
-              amount_total: 10000,
-              metadata: { purchaseType: "credit_pack", builderId: "b2", creditsToGrant: "5" },
-            },
-          },
-        })),
-      },
-    };
+  it("does not fall through an unknown purchase type to a lead grant", async () => {
+    installEvent(
+      paidSession({
+        metadata: {
+          purchaseType: "sponsorship",
+          builderId: "b1",
+          requestId: "r1",
+        },
+      }),
+    );
 
-    mocks.adminDb.runTransaction.mockImplementation(async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
-      mocks.transaction.get
-        .mockResolvedValueOnce({ exists: false })
-        .mockResolvedValueOnce(mocks.builderDoc);
-      await cb(mocks.transaction);
-    });
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["wrong amount", { amount_total: 100 }],
+    ["wrong currency", { currency: "eur" }],
+    ["wrong Checkout mode", { mode: "subscription" }],
+  ])("rejects a lead unlock with the %s", async (_label, overrides) => {
+    installEvent(paidSession(overrides));
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("processes a correctly priced 5-credit pack", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_credit",
+        amount_total: 17_500,
+        metadata: {
+          purchaseType: "credit_pack",
+          builderId: "b2",
+          creditsToGrant: "5",
+        },
+      }),
+    );
+    mocks.adminDb.runTransaction.mockImplementation(
+      async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
+        mocks.transaction.get
+          .mockResolvedValueOnce({ exists: false })
+          .mockResolvedValueOnce(mocks.builderDoc);
+        await cb(mocks.transaction);
+      },
+    );
 
     const res = await POST(webhookRequest());
+
     expect(res.status).toBe(200);
     expect(mocks.grant).not.toHaveBeenCalled();
-    expect(mocks.adminDb.runTransaction).toHaveBeenCalled();
     expect(mocks.transaction.update).toHaveBeenCalledWith(
       mocks.docRef,
-      expect.objectContaining({ credits: 15, updatedAt: "mock-timestamp" })
+      expect.objectContaining({ credits: 15, updatedAt: "mock-timestamp" }),
     );
     expect(mocks.transaction.set).toHaveBeenCalledWith(
       mocks.docRef,
       expect.objectContaining({
         type: "purchase",
         creditsChange: 5,
-        amountPaid: 100,
+        amountPaid: 175,
         stripeSessionId: "sess_credit",
         createdAt: "mock-timestamp",
-      })
+      }),
     );
   });
 
-  it("skips duplicate credit_pack webhook deliveries", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_credit",
-              payment_status: "paid",
-              amount_total: 10000,
-              metadata: { purchaseType: "credit_pack", builderId: "b2", creditsToGrant: "5" },
-            },
-          },
-        })),
+  it("rejects a credit pack whose amount does not match the pack", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_credit",
+        amount_total: 10_000,
+        metadata: {
+          purchaseType: "credit_pack",
+          builderId: "b2",
+          creditsToGrant: "5",
+        },
+      }),
+    );
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.adminDb.runTransaction).not.toHaveBeenCalled();
+  });
+
+  it("skips duplicate credit pack webhook deliveries", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_credit",
+        amount_total: 17_500,
+        metadata: {
+          purchaseType: "credit_pack",
+          builderId: "b2",
+          creditsToGrant: "5",
+        },
+      }),
+    );
+    mocks.adminDb.runTransaction.mockImplementation(
+      async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
+        mocks.transaction.get.mockResolvedValueOnce({ exists: true });
+        await cb(mocks.transaction);
       },
-    };
+    );
 
-    mocks.adminDb.runTransaction.mockImplementation(async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
-      mocks.transaction.get.mockResolvedValueOnce({ exists: true });
-      await cb(mocks.transaction);
-    });
-
-    const res = await POST(webhookRequest());
-    expect(res.status).toBe(200);
+    expect((await POST(webhookRequest())).status).toBe(200);
     expect(mocks.transaction.update).not.toHaveBeenCalled();
     expect(mocks.transaction.set).not.toHaveBeenCalled();
   });
 
-  it("grants a certificate purchase on paid checkout completion", async () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
-    mocks.stripe = {
-      webhooks: {
-        constructEvent: vi.fn(() => ({
-          type: "checkout.session.completed",
-          data: {
-            object: {
-              id: "sess_cert",
-              payment_status: "paid",
-              amount_total: 2900,
-              metadata: {
-                purchaseType: "certificate",
-                uid: "user_1",
-                certKey: "1234-oak-street-seattle",
-              },
-            },
-          },
-        })),
-      },
-    };
+  it("grants a correctly priced certificate purchase", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_cert",
+        amount_total: 2900,
+        metadata: {
+          purchaseType: "certificate",
+          uid: "user_1",
+          certKey: "1234-oak-street-seattle",
+        },
+      }),
+    );
 
     const res = await POST(webhookRequest());
+
     expect(res.status).toBe(200);
-    expect(mocks.grant).not.toHaveBeenCalled();
-    expect(mocks.adminDb.runTransaction).not.toHaveBeenCalled();
     expect(mocks.grantCertificate).toHaveBeenCalledWith({
       uid: "user_1",
       certKey: "1234-oak-street-seattle",
       stripeSessionId: "sess_cert",
       amount: 2900,
     });
+  });
+
+  it("rejects a certificate purchase with a mismatched amount", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_cert",
+        amount_total: 1,
+        metadata: {
+          purchaseType: "certificate",
+          uid: "user_1",
+          certKey: "1234-oak-street-seattle",
+        },
+      }),
+    );
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.grantCertificate).not.toHaveBeenCalled();
   });
 });

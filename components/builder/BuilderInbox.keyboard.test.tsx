@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import BuilderInbox from "./BuilderInbox";
+import { STORE_PRODUCTS } from "@/lib/commerce/products";
 import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 
 vi.mock("@/lib/marketplace-firestore", () => ({
@@ -74,7 +75,44 @@ const item: BuilderInboxItem = {
   unlocked: false,
 };
 
+afterEach(() => {
+  Reflect.deleteProperty(window, "getDigitalGoodsService");
+});
+
 describe("BuilderInbox table view keyboard access", () => {
+  it("renders credit-pack prices from the shared web catalog", async () => {
+    render(<BuilderInbox profile={profile} items={[item]} onRespond={vi.fn()} />);
+
+    expect(await screen.findByText("$175")).toBeInTheDocument();
+    expect(screen.getByText("$300")).toBeInTheDocument();
+    expect(screen.getByText("$35 / lead")).toBeInTheDocument();
+    expect(screen.getByText("$30 / lead")).toBeInTheDocument();
+  });
+
+  it("renders localized Google Play prices instead of the web catalog", async () => {
+    Object.defineProperty(window, "getDigitalGoodsService", {
+      configurable: true,
+      value: vi.fn(async () => ({
+        getDetails: vi.fn(async () => [
+          {
+            itemId: STORE_PRODUCTS.builder5.id,
+            price: { value: "219.99", currency: "USD" },
+          },
+          {
+            itemId: STORE_PRODUCTS.builder10.id,
+            price: { value: "399.99", currency: "USD" },
+          },
+        ]),
+      })),
+    });
+
+    render(<BuilderInbox profile={profile} items={[item]} onRespond={vi.fn()} />);
+
+    expect(await screen.findByText("$219.99")).toBeInTheDocument();
+    expect(screen.getByText("$399.99")).toBeInTheDocument();
+    expect(screen.queryByText("$175")).not.toBeInTheDocument();
+  });
+
   it("selects a ledger row with Enter and opens the detail panel", async () => {
     render(<BuilderInbox profile={profile} items={[item]} onRespond={vi.fn()} />);
 

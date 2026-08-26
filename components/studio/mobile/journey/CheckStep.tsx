@@ -77,7 +77,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
       <div className="mt-3 flex items-center gap-2.5">
         <Icon size={28} style={{ color: tone.color }} aria-hidden="true" />
         <h1
-          className="font-display text-[31px] font-semibold leading-none tracking-[-0.01em]"
+          className="font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-none tracking-[-0.01em] text-balance"
           style={{ color: tone.color }}
         >
           {summary.verdict}
@@ -88,7 +88,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
       <div className="mt-5 grid grid-cols-3 gap-px border border-lf-hairline bg-lf-hairline">
         {metrics.map((metric) => (
           <div key={metric.label} className="bg-lf-card px-2.5 py-3">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <p className="lf-dataprint text-lf-muted">
               {metric.label}
             </p>
             <p className="mt-1 font-display text-lg font-semibold tabular-nums text-lf-espresso">
@@ -100,7 +100,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
 
       {openItems.length > 0 && (
         <>
-          <p className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+          <p className="mt-6 lf-kicker-dense text-lf-muted">
             Verify before permit
           </p>
           <ul className="mt-2 flex flex-col gap-2">
@@ -130,7 +130,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
         </>
       )}
 
-      <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
+      <p className="mt-5 lf-dataprint text-lf-muted">
         {marketProvenanceLine(result.market)}
       </p>
 

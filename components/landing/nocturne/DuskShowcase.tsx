@@ -31,7 +31,7 @@ export function DuskShowcase() {
                 width={1920}
                 height={1280}
               />
-              <figcaption className="border-t border-ln-hairline px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ln-slate">
+              <figcaption className="border-t border-ln-hairline px-4 py-2.5 lf-kicker-dense text-ln-slate">
                 Style-matched concept · sample render
               </figcaption>
             </figure>
@@ -99,7 +99,7 @@ export function DuskShowcase() {
                 width={800}
                 height={620}
               />
-              <figcaption className="border-t border-ln-hairline bg-ln-ink px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ln-slate">
+              <figcaption className="border-t border-ln-hairline bg-ln-ink px-4 py-2.5 lf-kicker-dense text-ln-slate">
                 The studio · setbacks + proposed ADU
               </figcaption>
             </figure>

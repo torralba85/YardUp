@@ -122,7 +122,7 @@ export default function InspirationGalleryPanel({
 
                   {item.isStyleMatched && (
                     <div className="absolute top-3 left-3 z-20 rounded-md bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-md">
-                      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-lf-sand">
+                      <span className="lf-dataprint font-bold text-lf-sand">
                         Style-Matched
                       </span>
                     </div>
@@ -140,30 +140,28 @@ export default function InspirationGalleryPanel({
 
                   {/* Toggle Capsule — min 44px touch via before: hit area on mobile. */}
                   <div className="absolute top-3 right-3 z-20 flex gap-0.5 rounded-full bg-lf-espresso/85 p-0.5 backdrop-blur-md border border-lf-sand/10 shadow-lg">
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
+                      variant={viewMode === "image" ? "selected" : "ghost"}
                       onClick={() => setCardView(item.id, "image")}
-                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
-                        viewMode === "image"
-                          ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
-                          : "text-lf-sand/60 hover:text-lf-sand"
-                      }`}
+                      aria-pressed={viewMode === "image"}
+                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-sand aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-sm aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lf-sand/60 aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
+                      leftIcon={<Camera size={10} />}
                     >
-                      <Camera size={10} />
                       Real View
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      size="sm"
+                      variant={viewMode === "diagram" ? "selected" : "ghost"}
                       onClick={() => setCardView(item.id, "diagram")}
-                      className={`relative flex min-h-9 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] motion-safe:transition-colors motion-safe:duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 ${
-                        viewMode === "diagram"
-                          ? "bg-lf-clay text-lf-sand font-bold shadow-sm"
-                          : "text-lf-sand/60 hover:text-lf-sand"
-                      }`}
+                      aria-pressed={viewMode === "diagram"}
+                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-sand aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-sm aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lf-sand/60 aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
+                      leftIcon={<Layers size={10} />}
                     >
-                      <Layers size={10} />
                       Massing
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -174,7 +172,7 @@ export default function InspirationGalleryPanel({
                       {item.title}
                     </h3>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted uppercase tracking-[0.14em]">
+                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 lf-kicker-dense font-medium text-lf-muted">
                         {item.style}
                       </span>
                       <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted tracking-[0.14em]">
@@ -189,7 +187,7 @@ export default function InspirationGalleryPanel({
                     {item.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-lf-taupe-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted"
+                        className="rounded-md bg-lf-taupe-soft px-2 py-0.5 lf-dataprint text-lf-muted"
                       >
                         {tag}
                       </span>
@@ -199,7 +197,7 @@ export default function InspirationGalleryPanel({
                   <div className="mt-1 flex items-center justify-between border-t border-lf-hairline pt-3 gap-2">
                     <div className="flex items-center gap-2">
                       {/* Build cost band is cost, not payable income — espresso ink. */}
-                      <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-lf-espresso">
+                      <span className="lf-kicker font-bold text-lf-espresso">
                         {item.budgetBand}
                       </span>
                       {item.isStyleMatched && onViewComparison && (
@@ -208,7 +206,7 @@ export default function InspirationGalleryPanel({
                           <button
                             type="button"
                             onClick={() => onViewComparison(item)}
-                            className="relative flex min-h-11 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink hover:text-lf-clay-strong motion-safe:transition-colors cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-2"
+                            className="relative flex min-h-11 items-center gap-1 lf-kicker-dense font-bold text-lf-clay-ink hover:text-lf-clay-strong motion-safe:transition-colors cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-2"
                           >
                             Compare
                           </button>
@@ -235,12 +233,19 @@ export default function InspirationGalleryPanel({
   );
 }
 
+/** Parcel outline of the diagram, and its untokenized warm-earth fill. */
+const LOT_PATH = "M46 22 294 34 278 138 34 126Z";
+const LOT_FILL = "#E9D4B7";
+
 function ConceptDiagram({ item }: { item: InspirationItem }) {
   const aduWidth = Math.max(48, Math.min(104, item.width * 3.1));
   const aduLength = Math.max(54, Math.min(118, item.length * 2.4));
   const aduX = 168 - aduWidth / 2;
   const aduY = 88 - aduLength / 2;
   const roofPeak = item.roof === "gable" ? aduY - 16 : aduY + 10;
+  // Component-local material swatches. These are illustration colours for the
+  // cedar/lap/stucco/board finishes, not semantic UI roles — forcing them into
+  // brand tokens would weaken the token model.
   const finishFill: Record<InspirationItem["finish"], string> = {
     cedar: "#B16C39",
     lap: "#CFC8B8",
@@ -258,21 +263,22 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
       <defs>
         {/* Adds a soft 3D-like depth to the massing model */}
         <filter id="adu-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="#261307" floodOpacity="0.22" />
+          <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="var(--color-lf-espresso)" floodOpacity="0.22" />
         </filter>
         <filter id="roof-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="2" floodColor="#261307" floodOpacity="0.3" />
+          <feDropShadow dx="0" dy="4" stdDeviation="2" floodColor="var(--color-lf-espresso)" floodOpacity="0.3" />
         </filter>
       </defs>
-      <rect width="336" height="160" fill="#F8F0E4" />
+      <rect width="336" height="160" fill="var(--color-lf-sand-2)" />
       {/* Parcel Lot */}
-      <path d="M46 22 294 34 278 138 34 126Z" fill="#E9D4B7" stroke="#8C5B3F" strokeWidth="1.5" />
+      {/* LOT_FILL sits between sand and hairline; no exact brand token. */}
+      <path d={LOT_PATH} fill={LOT_FILL} stroke="var(--color-lf-clay)" strokeWidth="1.5" />
       {/* Setback lines */}
       <path
         d="M70 42 268 51 256 118 58 110Z"
-        fill="#FBF6EE"
+        fill="var(--color-lf-card)"
         fillOpacity="0.45"
-        stroke="#8C5B3F"
+        stroke="var(--color-lf-clay)"
         strokeDasharray="6 6"
         strokeWidth="1.2"
       />
@@ -284,7 +290,7 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
         height={aduLength}
         rx="3"
         fill={finishFill[item.finish]}
-        stroke="#592A0F"
+        stroke="var(--color-lf-mahogany)"
         strokeWidth="1.5"
         filter="url(#adu-shadow)"
       />
@@ -293,7 +299,7 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
         <path
           d={`M${aduX - 6} ${aduY + 8} L168 ${roofPeak} L${aduX + aduWidth + 6} ${aduY + 8}`}
           fill="none"
-          stroke="#592A0F"
+          stroke="var(--color-lf-mahogany)"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="5"
@@ -303,26 +309,26 @@ function ConceptDiagram({ item }: { item: InspirationItem }) {
         <path
           d={`M${aduX - 4} ${aduY + 12} L${aduX + aduWidth + 4} ${roofPeak}`}
           fill="none"
-          stroke="#592A0F"
+          stroke="var(--color-lf-mahogany)"
           strokeLinecap="round"
           strokeWidth="5"
           filter="url(#roof-shadow)"
         />
       )}
       {/* Door and Window representation */}
-      <rect x={aduX + aduWidth * 0.2} y={aduY + aduLength * 0.38} width="16" height="22" rx="2" fill="#F2E5D5" opacity="0.82" />
-      <rect x={aduX + aduWidth * 0.58} y={aduY + aduLength * 0.42} width="18" height="28" rx="2" fill="#F2E5D5" opacity="0.82" />
+      <rect x={aduX + aduWidth * 0.2} y={aduY + aduLength * 0.38} width="16" height="22" rx="2" fill="var(--color-lf-sand)" opacity="0.82" />
+      <rect x={aduX + aduWidth * 0.58} y={aduY + aduLength * 0.42} width="18" height="28" rx="2" fill="var(--color-lf-sand)" opacity="0.82" />
       {/* Trees & Landscaping paths */}
-      <path d="M60 116 C112 106 133 121 168 124 C205 128 228 116 270 122" fill="none" stroke="#2F4A38" strokeOpacity="0.34" strokeWidth="8" strokeLinecap="round" />
-      <circle cx="70" cy="52" r="10" fill="#2F4A38" opacity="0.85" />
-      <circle cx="286" cy="64" r="13" fill="#2F4A38" opacity="0.72" />
+      <path d="M60 116 C112 106 133 121 168 124 C205 128 228 116 270 122" fill="none" stroke="var(--color-lf-forest)" strokeOpacity="0.34" strokeWidth="8" strokeLinecap="round" />
+      <circle cx="70" cy="52" r="10" fill="var(--color-lf-forest)" opacity="0.85" />
+      <circle cx="286" cy="64" r="13" fill="var(--color-lf-forest)" opacity="0.72" />
       {/* Dimension badge */}
       <g transform="translate(18 18)">
-        <rect width="78" height="28" rx="4" fill="#261307" />
-        <text x="10" y="12" fill="#F2E5D5" fontSize="7" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }} letterSpacing="1.1">
+        <rect width="78" height="28" rx="4" fill="var(--color-lf-espresso)" />
+        <text x="10" y="12" fill="var(--color-lf-sand)" fontSize="7" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }} letterSpacing="1.1">
           TEMPLATE
         </text>
-        <text x="10" y="23" fill="#F2E5D5" fontSize="10" fontWeight="800" style={{ fontFamily: "var(--font-mono)" }}>
+        <text x="10" y="23" fill="var(--color-lf-sand)" fontSize="10" fontWeight="800" style={{ fontFamily: "var(--font-mono)" }}>
           {item.sqft} sf
         </text>
       </g>

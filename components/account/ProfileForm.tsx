@@ -64,7 +64,7 @@ export function ProfileForm({
       <div>
         <p className="lf-body-sm mb-1 font-medium">Email</p>
         <p className="text-sm text-lf-muted">{email || "—"}</p>
-        <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-1 lf-kicker text-lf-muted">
           {emailVerified ? "Verified" : "Unverified"}
         </p>
         {!emailVerified && onSendVerification ? (

@@ -124,16 +124,24 @@ p {
   max-width: 65ch;
 }
 
-.lf-kicker {
+/* Recorded-fact typography is compositional: all three steps live in Tailwind's
+   utilities layer so responsive text, weight, and leading utilities can
+   override individual properties consistently. */
+@utility lf-kicker {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  /* 0.14em across all three mono steps (2026-08-14). The 11px step carried
+     0.16em from an earlier pass and was never reconciled with the 2026-07-04
+     snap, leaving the layer with two tracking values — and the split ran
+     backwards from optical practice, since the smaller steps were the tighter
+     ones. One value now; see the DESIGN.md decisions log. */
+  letter-spacing: 0.14em;
   line-height: 1rem;
   text-transform: uppercase;
 }
 
-.lf-kicker-dense {
+@utility lf-kicker-dense {
   font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 600;
@@ -146,8 +154,7 @@ p {
    2026-07-04 ruling). For micro labels in data-dense builder tables, ledger
    slips, and inline certificates: mono, uppercase, kicker-tracked. Text below
    9px is reserved for decorative facsimiles (scaled-down document thumbnails),
-   never informational content. Declared with @utility so responsive variants
-   work, matching the lf-money-* steps. */
+   never informational content. */
 @utility lf-dataprint {
   font-family: var(--font-mono);
   font-size: 0.5625rem; /* 9px */
@@ -421,6 +428,40 @@ button:focus-visible {
   .lf-stagger > *:nth-child(4) { animation-delay: 135ms; }
   .lf-stagger > *:nth-child(5) { animation-delay: 180ms; }
   .lf-stagger > *:nth-child(6) { animation-delay: 225ms; }
+}
+
+/* ── Installed-app touch chrome ────────────────────────────────
+   The TWA runs this same CSS with no browser UI around it, so web
+   defaults that are invisible in a tab read as "web page" in the app.
+   Scoped to the mobile journey; desktop is untouched. */
+
+/* Chrome paints a translucent box on every tap. In a standalone app
+   that flash is the loudest remaining "this is a website" tell. */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Journey chrome must not long-press-select like a document. Content
+   stays selectable on purpose — users copy addresses, money figures,
+   and APNs, and taking that away would be a real regression. */
+.lf-journey-surface nav,
+.lf-journey-surface button,
+.lf-journey-surface .lf-kicker {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Contain overscroll so Chrome's pull-to-refresh cannot fire inside the
+   TWA. Journey position lives in React state, so a reload would drop the
+   user back to Find and lose the study. */
+.lf-journey-surface {
+  overscroll-behavior-y: contain;
 }
 
 /* ── Blue Hour landing type roles ─────────────────────────────

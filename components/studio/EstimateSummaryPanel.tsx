@@ -106,7 +106,7 @@ export default function EstimateSummaryPanel({
                 key={metric.label}
                 className="rounded-md border border-lf-hairline bg-lf-card p-4"
               >
-                <div className="flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-lf-muted">
+                <div className="flex items-center gap-2 lf-kicker-dense font-medium text-lf-muted">
                   <Icon size={13} />
                   {metric.label}
                 </div>

@@ -45,13 +45,27 @@ export async function requestADUConcept({
   parcel: Parcel & { zoning?: string; source?: string };
   config: ADUConfig;
 }): Promise<AIADUConcept> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new AIRequestError("Sign in to generate an AI style-match concept.");
+  }
+
+  let idToken: string;
+  try {
+    idToken = await user.getIdToken();
+  } catch {
+    throw new AIRequestError("Your sign-in could not be verified. Please sign in again.");
+  }
+
   const formData = new FormData();
   formData.set("image", image);
   formData.set("parcel", JSON.stringify(parcel));
   formData.set("config", JSON.stringify(config));
+  formData.set("consent", "true");
 
   const res = await fetch("/api/ai/adu-concept", {
     method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
     body: formData,
   });
 

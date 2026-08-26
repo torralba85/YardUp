@@ -6,7 +6,7 @@ import type {
 } from "./feasibility";
 import type { Parcel } from "./parcel-types";
 import type {
-  BuilderProfile,
+  BuilderDirectoryProfile,
   ConnectionSnapshot,
   LeadPreview,
   OwnerContact,
@@ -75,10 +75,12 @@ export function parseParcelCityState(value: string): ServiceArea | null {
  * @param parcelCity - The parcel's `"City, ST"` string.
  * @returns Matching active builders; empty if the location can't be parsed.
  */
-export function getMatchedBuilders(
-  builders: BuilderProfile[],
+type BuilderMatchCandidate = Pick<BuilderDirectoryProfile, "active" | "serviceAreas">;
+
+export function getMatchedBuilders<T extends BuilderMatchCandidate>(
+  builders: T[],
   parcelCity: string,
-): BuilderProfile[] {
+): T[] {
   const area = parseParcelCityState(parcelCity);
   if (!area) return [];
 

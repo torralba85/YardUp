@@ -12,6 +12,7 @@ import { getStoreProduct } from "@/lib/commerce/products";
 import type { PurchaseChannel } from "@/lib/commerce/purchase-channel";
 import { grantCertificate } from "./certificate-purchases";
 import { getAdminDb } from "./firebase-admin";
+import { purchaseTokenHash } from "./purchase-token-hash";
 import {
   parseDemoReceiptToken,
   verifyAppleSignedTransaction,
@@ -187,20 +188,32 @@ export async function verifyAndGrantPurchase(
         };
       }
 
+      // Firestore requires every transaction read to happen before any write.
+      // A lead-credit grant also requires an existing builder balance document;
+      // otherwise recording the replay key would strand a paid receipt forever.
+      const builderRef =
+        product.leadCredits > 0
+          ? db.collection("builders").doc(input.uid)
+          : null;
+      const builderSnap = builderRef ? await tx.get(builderRef) : null;
+      if (builderSnap && !builderSnap.exists) {
+        return { grant, replay: false, builderProfileMissing: true as const };
+      }
+
       tx.create(grantRef, {
         ...grant,
+        // Indexed so a voided-purchase notification — which carries only a
+        // purchase token and order id — can find this grant even when the
+        // grant was keyed by something other than the order id.
+        purchaseTokenHash: purchaseTokenHash(input.token),
         createdAtServer: FieldValue.serverTimestamp(),
       });
 
-      if (product.leadCredits > 0) {
-        const builderRef = db.collection("builders").doc(input.uid);
-        const builderSnap = await tx.get(builderRef);
-        if (builderSnap.exists) {
-          tx.update(builderRef, {
-            credits: FieldValue.increment(product.leadCredits),
-            updatedAt: FieldValue.serverTimestamp(),
-          });
-        }
+      if (builderRef) {
+        tx.update(builderRef, {
+          credits: FieldValue.increment(product.leadCredits),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
       }
 
       // Balance ledger for multi-credit packs (no single certKey).
@@ -219,6 +232,14 @@ export async function verifyAndGrantPurchase(
 
       return { grant, replay: false };
     });
+
+    if ("builderProfileMissing" in outcome && outcome.builderProfileMissing) {
+      return {
+        ok: false,
+        error: "Builder profile not found. Complete your builder profile before purchasing credits.",
+        status: 403,
+      };
+    }
 
     if (replayUidMismatch) {
       return {

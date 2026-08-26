@@ -201,7 +201,7 @@ export default function BuilderInbox({
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
-          <span className="self-start rounded-md border border-lf-hairline px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="self-start rounded-md border border-lf-hairline px-2 py-1 lf-kicker-dense text-lf-muted">
             {profile.active ? "Active" : "Inactive"}
           </span>
         </div>
@@ -229,52 +229,46 @@ export default function BuilderInbox({
             <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lf-hairline pb-4">
               <div role="tablist" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
                 {TABS.map((t) => (
-                  <button
+                  <Button
                     key={t.key}
                     type="button"
                     role="tab"
                     aria-selected={tab === t.key}
+                    size="md"
+                    variant={tab === t.key ? "selected" : "secondary"}
                     onClick={() => {
                       setTab(t.key);
                       setSelectedItemId(null);
                     }}
-                    className={`min-h-11 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 ${
-                      tab === t.key
-                        ? "border-lf-clay bg-lf-clay text-lf-sand"
-                        : "border-lf-hairline text-lf-muted hover:bg-lf-sand-2"
-                    }`}
+                    className="px-3.5 lf-kicker-dense text-[10px] leading-[14px]"
                   >
                     {t.label} · {tabCounts[t.key]}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               {/* Cards vs Table View Mode Segment Toggle */}
               <div className="flex rounded-full border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card">
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant={viewMode === "cards" ? "selected" : "ghost"}
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
-                    viewMode === "cards"
-                      ? "bg-lf-clay text-lf-sand font-semibold"
-                      : "text-lf-muted hover:bg-lf-sand-2"
-                  }`}
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
                 >
                   Cards
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  size="sm"
+                  variant={viewMode === "table" ? "selected" : "ghost"}
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink ${
-                    viewMode === "table"
-                      ? "bg-lf-clay text-lf-sand font-semibold"
-                      : "text-lf-muted hover:bg-lf-sand-2"
-                  }`}
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
                 >
                   Table
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -308,12 +302,12 @@ export default function BuilderInbox({
                 <table className="w-full text-left border-collapse" aria-label="Inbox Leads Ledger">
                   <thead>
                     <tr className="border-b border-lf-hairline bg-lf-sand-2">
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Lead / Recorded</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Location</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted text-right">Rent Potential</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Specs</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">Economics</th>
-                      <th scope="col" className="px-4 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted text-center">Status</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Lead / Recorded</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Location</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted text-right">Rent Potential</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Specs</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Economics</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -379,7 +373,7 @@ export default function BuilderInbox({
                               {itemAccess === "confirming" && (
                                 <span className="h-2 w-2 rounded-full bg-lf-amber animate-pulse" />
                               )}
-                              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted ml-0.5">
+                              <span className="lf-dataprint text-lf-muted ml-0.5">
                                 {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
                               </span>
                             </div>
@@ -465,7 +459,7 @@ export default function BuilderInbox({
                           </Button>
 
                           <div className="flex items-center justify-between border-b border-lf-hairline pb-3">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                            <span className="lf-kicker-dense text-lf-muted">
                               NO. {selectedItem.request.preview.previewSerial}
                               {recordedDate ? ` · RECORDED ${recordedDate}` : ""}
                             </span>
@@ -494,14 +488,14 @@ export default function BuilderInbox({
                               <div>
                                 <p className="lf-money-md text-lf-forest">
                                   {formatCurrency(selectedItem.request.preview.rentBand)}
-                                  <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                                  <span className="ml-1.5 lf-kicker-dense text-lf-muted">
                                     /mo rent potential
                                   </span>
                                 </p>
                                 <p className="mt-2 font-semibold text-lf-espresso text-sm">
                                   {selectedItem.request.preview.neighborhood}
                                 </p>
-                                <p className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                                <p className="mt-1 flex flex-wrap gap-2.5 lf-kicker-dense text-lf-muted">
                                   <span>{selectedItem.request.preview.lotSqft.toLocaleString()} sqft lot</span>
                                   <span>{selectedItem.request.preview.aduSqft.toLocaleString()} sf ADU</span>
                                   <span>{finishLabels[selectedItem.request.preview.config.finish]}</span>
@@ -556,7 +550,7 @@ export default function BuilderInbox({
                             <div className="space-y-4 lf-stamp">
                               {/* Homeowner Info Block */}
                               <div className="border border-lf-forest bg-lf-forest-soft p-4 rounded-lg">
-                                <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.14em] text-lf-forest font-semibold">
+                                <div className="flex items-center justify-between lf-dataprint text-lf-forest">
                                   <span>Owner Contact Unlocked{demo ? " · Demo" : ""}</span>
                                 </div>
                                 <address className="mt-2 font-mono text-xs not-italic leading-relaxed text-lf-espresso">
@@ -761,7 +755,7 @@ function ZeroEverEmptyState() {
         </p>
       </div>
 
-      <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+      <p className="mt-5 lf-kicker-dense text-lf-muted">
         Example · this is what a lead looks like
       </p>
       <article
@@ -769,10 +763,10 @@ function ZeroEverEmptyState() {
         className="mt-2 border border-dashed border-lf-taupe bg-lf-card/70 p-5"
       >
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="lf-kicker-dense text-lf-muted">
             NO. LF-EXAMPLE
           </span>
-          <span className="rounded-md bg-lf-taupe-soft px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="rounded-md bg-lf-taupe-soft px-2.5 py-1 lf-kicker-dense text-lf-muted">
             Example
           </span>
         </div>
@@ -787,11 +781,11 @@ function ZeroEverEmptyState() {
         </p>
         <p className="mt-2 lf-money-md text-lf-forest">
           $2,500
-          <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+          <span className="ml-1.5 lf-kicker-dense text-lf-muted">
             /mo rent potential
           </span>
         </p>
-        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 lf-kicker-dense text-lf-muted">
           Owner contact unlocks for {formatUnlockPrice()} — once you have real leads
         </p>
       </article>
@@ -814,14 +808,14 @@ function ResponseTriage({
 
   return (
     <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-muted">
+      <span className="lf-dataprint text-lf-muted">
         Response: {label}
       </span>
       <div className="flex gap-2">
         <Button
           type="button"
           size="xs"
-          variant={status === "interested" ? "primary" : "secondary"}
+          variant={status === "interested" ? "selected" : "secondary"}
           disabled={responding}
           aria-pressed={status === "interested"}
           onClick={() => onRespond("interested")}
@@ -832,16 +826,11 @@ function ResponseTriage({
         <Button
           type="button"
           size="xs"
-          variant="secondary"
+          variant={status === "not-a-fit" ? "selected" : "secondary"}
           disabled={responding}
           aria-pressed={status === "not-a-fit"}
           onClick={() => onRespond("not-a-fit")}
           leftIcon={<CircleSlash size={12} />}
-          className={
-            status === "not-a-fit"
-              ? "border-lf-taupe bg-lf-taupe-soft text-lf-espresso hover:bg-lf-taupe-soft"
-              : undefined
-          }
         >
           Not a fit
         </Button>
@@ -854,6 +843,87 @@ function CreditShop() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [prices, setPrices] = useState<Record<5 | 10, {
+    total: string;
+    perLead: string;
+  }> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPrices() {
+      const { detectPurchaseChannel } = await import(
+        "@/lib/commerce/purchase-channel"
+      );
+      const channel = detectPurchaseChannel();
+
+      if (channel === "web") {
+        const { formatCreditPackPrice, formatCreditPackUnitPrice } = await import(
+          "@/lib/credit-packs"
+        );
+        if (!cancelled) {
+          setPrices({
+            5: {
+              total: formatCreditPackPrice(5),
+              perLead: `${formatCreditPackUnitPrice(5)} / lead`,
+            },
+            10: {
+              total: formatCreditPackPrice(10),
+              perLead: `${formatCreditPackUnitPrice(10)} / lead`,
+            },
+          });
+        }
+        return;
+      }
+
+      if (channel === "app-store") {
+        if (!cancelled) {
+          setPrices({
+            5: { total: "App Store", perLead: "Price shown at checkout" },
+            10: { total: "App Store", perLead: "Price shown at checkout" },
+          });
+        }
+        return;
+      }
+
+      try {
+        const { STORE_PRODUCTS } = await import("@/lib/commerce/products");
+        const { formatCurrencyAmount, getGooglePlayProductPrices } = await import(
+          "@/lib/commerce/purchase-client"
+        );
+        const playPrices = await getGooglePlayProductPrices([
+          STORE_PRODUCTS.builder5.id,
+          STORE_PRODUCTS.builder10.id,
+        ]);
+        const five = playPrices[STORE_PRODUCTS.builder5.id];
+        const ten = playPrices[STORE_PRODUCTS.builder10.id];
+        if (!five || !ten) {
+          throw new Error("Google Play did not return both credit-pack prices.");
+        }
+        if (!cancelled) {
+          setPrices({
+            5: {
+              total: five.formatted,
+              perLead: `${formatCurrencyAmount(five.value / 5, five.currency)} / lead`,
+            },
+            10: {
+              total: ten.formatted,
+              perLead: `${formatCurrencyAmount(ten.value / 10, ten.currency)} / lead`,
+            },
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Google Play pricing is unavailable. Please try again.");
+        }
+      }
+    }
+
+    void loadPrices();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function buyPack(pack: number) {
     if (!user) return;
@@ -907,7 +977,7 @@ function CreditShop() {
     <div className="border border-lf-hairline bg-lf-card p-5">
       <h3 className="lf-card-heading text-lf-espresso">Credit Shop</h3>
       <p className="mt-1 text-sm text-lf-muted">
-        Unlock leads instantly with credits. Save up to 25% by buying in bulk.
+        Unlock leads instantly with credits.
       </p>
       {error && (
         <div role="alert" className="mt-3 border border-lf-brick/30 bg-lf-brick-soft p-2 text-xs text-lf-brick">
@@ -919,29 +989,33 @@ function CreditShop() {
         <button
           type="button"
           onClick={() => buyPack(5)}
-          disabled={loading !== null}
+          disabled={loading !== null || prices === null}
           className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
-            <div className="text-xs text-lf-muted">$35 / lead</div>
+            <div className="text-xs text-lf-muted">
+              {prices ? prices[5].perLead : "Loading price"}
+            </div>
           </div>
           <div className="lf-money-md text-lf-forest">
-            {loading === 5 ? "…" : "$175"}
+            {loading === 5 ? "…" : prices?.[5].total ?? "—"}
           </div>
         </button>
         <button
           type="button"
           onClick={() => buyPack(10)}
-          disabled={loading !== null}
+          disabled={loading !== null || prices === null}
           className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>
-            <div className="text-xs text-lf-sand/80">$30 / lead · Best value</div>
+            <div className="text-xs text-lf-sand/80">
+              {prices ? prices[10].perLead : "Loading price"}
+            </div>
           </div>
           <div className="lf-money-md text-lf-sand">
-            {loading === 10 ? "…" : "$300"}
+            {loading === 10 ? "…" : prices?.[10].total ?? "—"}
           </div>
         </button>
       </div>

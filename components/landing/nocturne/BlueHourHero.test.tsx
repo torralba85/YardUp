@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { DAWN_RAMP_MS } from "./DawnStudioLink";
 import { BlueHourHero } from "./BlueHourHero";
 
@@ -9,12 +9,28 @@ const { pushMock, stashMock } = vi.hoisted(() => ({
   stashMock: vi.fn(),
 }));
 
+const authMock = vi.hoisted(() => ({
+  user: { uid: "user-1" } as { uid: string } | null,
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
 }));
 
 vi.mock("@/lib/address-handoff", () => ({
   stashAddressQuery: stashMock,
+}));
+
+// The hero no longer touches auth during render; the lazily-mounted
+// LandingAuthGate does. These mocks now stand in for the gate's dependencies.
+vi.mock("@/lib/auth-context", () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({ user: authMock.user, loading: false }),
+}));
+
+vi.mock("@/components/auth/AuthModal", () => ({
+  AuthModal: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div role="dialog" aria-label="Sign in to continue" /> : null,
 }));
 
 // The real Player needs a browser rendering pipeline; the hero's contract with
@@ -55,6 +71,7 @@ describe("BlueHourHero", () => {
     setMatchMedia(false);
     pushMock.mockClear();
     stashMock.mockClear();
+    authMock.user = { uid: "user-1" };
   });
 
   afterEach(() => {
@@ -110,20 +127,31 @@ describe("BlueHourHero", () => {
     ).toBeInTheDocument();
   });
 
-  it("passes hovered or focused survey geometry to the composition as highlight", () => {
+  it("keeps pointer-only survey geometry out of the accessibility tree", async () => {
     render(<BlueHourHero />);
-    const hotspot = screen.getByRole("button", { name: /highlight property lines/i });
+    const surveyHotspots = screen.getByTestId("survey-hotspots");
+    expect(surveyHotspots).toHaveAttribute("aria-hidden", "true");
+    expect(
+      screen.queryByRole("button", { name: /highlight property lines/i }),
+    ).not.toBeInTheDocument();
 
-    fireEvent.focus(hotspot);
-    expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "parcel");
+    const hotspots = surveyHotspots.querySelectorAll("polygon");
+    expect(hotspots).toHaveLength(3);
 
-    fireEvent.blur(hotspot);
+    // The composition is behind a `next/dynamic` boundary, so the first read
+    // has to wait for that chunk to resolve; later reads are synchronous.
+    fireEvent.mouseEnter(hotspots[0]);
+    expect(await screen.findByTestId("mock-player")).toHaveAttribute(
+      "data-highlight",
+      "parcel",
+    );
+
+    fireEvent.mouseLeave(hotspots[0]);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
 
-    const adu = screen.getByRole("button", { name: /highlight adu footprint/i });
-    fireEvent.mouseEnter(adu);
+    fireEvent.mouseEnter(hotspots[2]);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "adu");
-    fireEvent.mouseLeave(adu);
+    fireEvent.mouseLeave(hotspots[2]);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
   });
 
@@ -138,9 +166,7 @@ describe("BlueHourHero", () => {
   it("keeps hotspots and the rail out of the reduced-motion experience", () => {
     setMatchMedia(true);
     render(<BlueHourHero />);
-    expect(
-      screen.queryByRole("button", { name: /highlight property lines/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("survey-hotspots")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("navigation", { name: /survey phases/i }),
     ).not.toBeInTheDocument();
@@ -157,19 +183,41 @@ describe("BlueHourHero", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it("routes the typed address to the studio via session stash, never the URL", () => {
-    vi.useFakeTimers();
+  it("routes the typed address to the studio via session stash, never the URL", async () => {
     render(<BlueHourHero />);
     fireEvent.change(screen.getByLabelText(/property address/i), {
       target: { value: " 456 Pine St, Denver, CO " },
     });
     fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
-    expect(stashMock).toHaveBeenCalledWith("456 Pine St, Denver, CO");
+
+    // Submitting mounts the gate behind `next/dynamic`; a signed-in visitor is
+    // handed straight through once it resolves, without seeing the modal.
+    await waitFor(() =>
+      expect(stashMock).toHaveBeenCalledWith("456 Pine St, Denver, CO"),
+    );
+    expect(
+      screen.queryByRole("dialog", { name: /sign in to continue/i }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(/opening studio/i);
     expect(pushMock).not.toHaveBeenCalled();
-    act(() => {
-      vi.advanceTimersByTime(DAWN_RAMP_MS);
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/studio"), {
+      timeout: DAWN_RAMP_MS + 500,
     });
-    expect(pushMock).toHaveBeenCalledWith("/studio");
+  });
+
+  it("asks a guest to sign in before handing an address to the studio", async () => {
+    authMock.user = null;
+    render(<BlueHourHero />);
+    fireEvent.change(screen.getByLabelText(/property address/i), {
+      target: { value: "456 Pine St, Denver, CO" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /run feasibility/i }));
+
+    expect(
+      await screen.findByRole("dialog", { name: /sign in to continue/i }),
+    ).toBeInTheDocument();
+    expect(stashMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

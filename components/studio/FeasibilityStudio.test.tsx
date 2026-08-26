@@ -1,10 +1,52 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
 import { clearInitialParcel } from "@/lib/parcel-handoff";
+import { JOURNEY_STEP_STATE_KEY } from "@/lib/use-journey-history";
 import type { ReactNode } from "react";
+
+/** The matchMedia stub the mobile-journey tests use to force the mobile layout. */
+function stubMobileMatchMedia() {
+  vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
+    matches: query.includes("prefers-reduced-motion"),
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  } as unknown as MediaQueryList)));
+}
+
+/**
+ * Simulate a browser back/forward press delivering `step`. A real popstate
+ * only ever fires after the browser has already moved to the destination
+ * entry, so `history.state` must reflect it by the time the event fires —
+ * mirrors the `popTo` helper in lib/use-journey-history.test.ts.
+ */
+function popToJourneyStep(step: string) {
+  const state = { [JOURNEY_STEP_STATE_KEY]: step };
+  window.history.replaceState(state, "", window.location.href);
+  window.dispatchEvent(new PopStateEvent("popstate", { state }));
+}
+
+/**
+ * Dispatch a popstate carrying an arbitrary raw history-state object (or
+ * null), matching real navigation by also stamping window.history.state
+ * first. Distinct from popToJourneyStep above: this replays whatever state a
+ * real entry actually holds (captured live from window.history.state),
+ * rather than constructing a fresh `{ lfJourneyStep: step }` object — needed
+ * to test that a third-party history writer preserves (or clobbers) that
+ * key, since the point of that test is to observe the entry's real,
+ * possibly-null shape rather than assume it.
+ */
+function popToRawState(state: Record<string, unknown> | null) {
+  window.history.replaceState(state, "", window.location.href);
+  window.dispatchEvent(new PopStateEvent("popstate", { state }));
+}
 
 vi.mock("next/dynamic", () => ({
   default: () => {
@@ -442,5 +484,123 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(leads).toHaveLength(2);
     // Positive financial value renders forest, never amber (amber = risk).
     leads.forEach((el) => expect(el).toHaveAttribute("data-accent", "forest"));
+  });
+
+  it("refuses to resurrect a stale history entry left behind by start over", async () => {
+    stubMobileMatchMedia();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    // Walk the full journey to Act, pushing a real history entry per reveal.
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See your certificate/i }));
+    expect(
+      await screen.findByRole("heading", { name: /Your feasibility study is ready/i }),
+    ).toBeInTheDocument();
+
+    // Start over: resetScenario() sends journeyStep back to "find" and the
+    // hook's reset() only stamps the *current* (top) history entry — the
+    // "check" entry pushed earlier is still sitting in the stack underneath.
+    fireEvent.click(screen.getByRole("button", { name: "Reset scenario" }));
+    expect(
+      await screen.findByRole("heading", { name: "Start with your address." }),
+    ).toBeInTheDocument();
+
+    // A back gesture pops to that stale entry for real, delivering "check".
+    // The reset also zeroed demoCommitted and parcelMode is back to preset,
+    // so `found` is now false and "check" derives as locked relative to
+    // "find" — the restore guard must refuse it.
+    act(() => popToJourneyStep("check"));
+
+    expect(screen.getByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
+    expect(screen.queryByText(/Verify before permit/i)).not.toBeInTheDocument();
+  });
+
+  it("never lets Back move forward past a rail jump to a done step", async () => {
+    stubMobileMatchMedia();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    // Walk forward to Check, pushing find -> earn -> shape -> check.
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
+    expect(await screen.findByText(/Verify before permit/i)).toBeInTheDocument();
+
+    // Jump backward via the rail's completed "Earn" chip. JourneyRail only
+    // makes done chips clickable and calls onStepSelect (setJourneyStep)
+    // directly — an ordinary forward move as far as the history hook is
+    // concerned, so it pushes a *new* entry, leaving the "check" entry
+    // pushed a moment ago still sitting ahead of it in the stack.
+    const rail = screen.getByRole("navigation", { name: "Journey progress" });
+    fireEvent.click(within(rail).getByRole("button", { name: /Earn/i }));
+    expect(
+      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+    ).toBeInTheDocument();
+
+    // A back gesture pops forward into that stale "check" entry. Relative
+    // to the new position (Earn), "check" derives as "upcoming" (found is
+    // still true, so nothing is locked) rather than "done" - so the guard
+    // must refuse it: Back must never move the user forward.
+    act(() => popToJourneyStep("check"));
+
+    expect(
+      screen.getByRole("heading", { name: /Your backyard could earn/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Verify before permit/i)).not.toBeInTheDocument();
+  });
+
+  it("does not let the scenario URL sync effect erase the journey's history-state key", async () => {
+    // Regression: the scenario-URL sync effect (below, fires on every
+    // parcelId/config/assumptions change) called
+    // window.history.replaceState(null, "", next) — the `null` wipes the
+    // *entire* state object on the current entry, including the
+    // lfJourneyStep key the journey hook wrote there. It is not a rare
+    // collision: selecting a preset, resizing the ADU, or changing
+    // finish/roof all trigger it.
+    //
+    // This test triggers the real effect via a real interaction (selecting
+    // a different demo preset while still on Find, changing parcelId) so
+    // its outcome is actually driven by FeasibilityStudio.tsx's own
+    // replaceState(null, ...) line rather than by an assumption baked into
+    // the test. A hook-level test cannot reproduce this: the hook's own
+    // sync effect has always correctly spread existing state
+    // (`{ ...window.history.state, [KEY]: step }`); the bug is a second,
+    // unrelated effect in FeasibilityStudio.tsx overwriting that state with
+    // `null` entirely, which only exists at the studio level.
+    stubMobileMatchMedia();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    // Select a different demo preset while still on Find — changes
+    // parcelId, which is one of the scenario-URL sync effect's deps. This
+    // is the exact action from the live-browser repro that found this bug.
+    fireEvent.click(screen.getByRole("button", { name: /Portland/i }));
+
+    // Capture what that effect actually left on the current (launch)
+    // entry's state, right before burying it under a new push below. This
+    // is what a real Back press will deliver once the journey advances
+    // past it — reading it here (rather than assuming its shape) is what
+    // makes the assertion below depend on the real source line under test.
+    const launchEntryState = window.history.state as { lfJourneyStep?: string } | null;
+
+    // Advance the journey one step: pushes a new entry for "earn", burying
+    // the (possibly now-stateless) launch entry beneath it.
+    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    expect(
+      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+    ).toBeInTheDocument();
+
+    // Simulate a real Back press landing on the launch entry, carrying
+    // whatever state it actually holds.
+    act(() => popToRawState(launchEntryState));
+
+    // Back must actually navigate. Against the unfixed
+    // replaceState(null, ...), the launch entry has no lfJourneyStep key,
+    // so handlePopState's (correct, unchanged) `restored === undefined`
+    // guard silently no-ops and the screen stays on Earn — the browser
+    // moves, the UI does not.
+    expect(
+      screen.getByRole("heading", { name: "Start with your address." }),
+    ).toBeInTheDocument();
   });
 });

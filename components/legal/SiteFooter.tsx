@@ -1,12 +1,16 @@
 import Link from "next/link";
 
+// `firebase: true` marks a route inside the `(firebase)` group. This footer
+// renders on Firebase-free pages, so those links opt out of Next's automatic
+// prefetch of visible links — otherwise reading /about or /privacy would pull
+// down the ~479 KB Firebase client SDK nobody on the page needs.
 const FOOTER_LINKS = [
   { href: "/about", label: "About" },
   { href: "/help", label: "Help" },
-  { href: "/feedback", label: "Feedback" },
+  { href: "/feedback", label: "Feedback", firebase: true },
   { href: "/terms", label: "Terms & Conditions" },
   { href: "/privacy", label: "Privacy" },
-  { href: "/delete-account", label: "Delete account" },
+  { href: "/delete-account", label: "Delete account", firebase: true },
 ] as const;
 
 /**
@@ -38,6 +42,7 @@ export function SiteFooter({
             </span>
             <Link
               href={link.href}
+              prefetch={"firebase" in link ? false : undefined}
               className={`inline-flex min-h-11 items-center ${hover}`}
             >
               {link.label}

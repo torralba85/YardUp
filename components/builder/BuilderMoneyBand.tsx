@@ -37,7 +37,7 @@ function Cell({
 }) {
   return (
     <div className="bg-lf-espresso px-6 py-4">
-      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-lf-taupe">{label}</p>
+      <p className="lf-dataprint text-lf-taupe">{label}</p>
       <p
         className={`mt-1.5 text-lf-money-on-dark ${lead ? "lf-money-xl" : "lf-money-lg"}`}
       >

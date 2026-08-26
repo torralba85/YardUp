@@ -4,7 +4,7 @@ LotFoundry is an AI-assisted ADU feasibility studio for homeowners. Enter an
 address—or use a built-in demo parcel—to explore what may fit, what it may cost,
 what it may earn, and which questions still need a local professional.
 
-[Try the live app](https://yardup-2026.web.app) ·
+[Try the live app](https://lotfoundry.net) ·
 [Read the documentation](docs/README.md) ·
 [Review the Build Week submission notes](docs/devpost-submission.md)
 
@@ -62,22 +62,18 @@ deployment decision were reviewed by the project owner. See
 [docs/devpost-submission.md](docs/devpost-submission.md) for the evidence map,
 remaining assets, and final submission checklist.
 
-### Judge test accounts
+### Reviewer access
 
 The core feasibility journey (Seattle, Portland, Austin) needs no login. To try
 the authenticated paths — saved scenarios, the AI project brief, style-match
 concepts, and the builder dashboard — sign in at
-[yardup-2026.web.app/login](https://yardup-2026.web.app/login) with one of two
-dedicated judge accounts:
+[lotfoundry.net/login](https://lotfoundry.net/login).
 
-| Role | Email | Password |
-|---|---|---|
-| Homeowner | `torralba85+judge-homeowner@gmail.com` | `U5NYPBvBPuSZ54g!9` |
-| Builder | `torralba85+judge-builder@gmail.com` | `etDVfW89qAhxDUf!9` |
+Reviewer credentials are time-limited and issued directly by the project owner.
+They are never stored in this repository.
 
-These credentials are intentionally provided for OpenAI Build Week judges. The
-accounts are dedicated to judging only; all prior development seed accounts
-have been removed from Firebase Auth.
+Request access through the support route before testing saved scenarios, AI
+features, or the builder dashboard.
 
 ## Run locally
 

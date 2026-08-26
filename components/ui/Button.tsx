@@ -2,24 +2,37 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/haptics";
 
 /**
  * Visual intent:
  * - `commit` — forest; the action that pays (generate certificate, connect).
  *   Forest is money/readiness only, so it is reserved for value-completing CTAs.
  * - `primary` — clay; the everyday interactive accent ("the hand you click").
+ * - `selected` — clay outline + soft wash; the current choice in a toggle set.
  * - `secondary` — hairline outline on card.
  * - `ghost` — text-only clay.
+ * - `destructive` — brick; an irreversible action after confirmation.
  */
-export type ButtonVariant = "commit" | "primary" | "secondary" | "ghost";
+export type ButtonVariant =
+  | "commit"
+  | "primary"
+  | "selected"
+  | "secondary"
+  | "ghost"
+  | "destructive";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   commit: "bg-lf-forest text-lf-sand hover:bg-lf-forest-strong",
   primary: "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong",
+  selected:
+    "border border-lf-clay bg-lf-clay-soft text-lf-clay-ink ring-1 ring-lf-clay/20 hover:bg-lf-clay-soft",
   secondary:
     "border border-lf-hairline bg-lf-card text-lf-espresso hover:border-lf-taupe/50 hover:bg-lf-sand-2",
   ghost: "text-lf-clay-ink hover:bg-lf-clay-soft",
+  destructive:
+    "bg-lf-brick text-lf-sand hover:bg-lf-brick-strong focus-visible:ring-lf-brick",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
@@ -66,6 +79,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       type,
       className,
       children,
+      onClick,
       ...props
     },
     ref,
@@ -85,6 +99,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           fullWidth && "w-full",
           className,
         )}
+        onClick={(event) => {
+          // Commit gets the weightier pattern and ordinary primary actions get
+          // a light tick. Selection variants describe pre-click state, so
+          // buzzing here would fire on an already-selected choice rather than
+          // the newly selected one. Secondary, ghost, selected, and destructive
+          // controls therefore stay silent.
+          if (variant === "commit") {
+            haptic("commit");
+          } else if (variant === "primary") {
+            haptic("tap");
+          }
+          onClick?.(event);
+        }}
         {...props}
       >
         {loading ? (

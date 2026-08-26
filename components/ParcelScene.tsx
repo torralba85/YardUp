@@ -3,11 +3,13 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
 import { Html, Line, OrbitControls } from "@react-three/drei";
-import { Box, Home, Ruler } from "lucide-react";
+import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import type { ADUConfig, ExteriorFinish, Parcel } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
+import { formatPreviewHour, getIllustrativeSunPosition } from "@/lib/scene-lighting";
+import { Button } from "@/components/ui/Button";
 
 /** Minimal error boundary that falls back to a render function. */
 class ErrorBoundary extends Component<
@@ -68,6 +70,13 @@ const SCENE = {
   sun: "#ffdcae", // low golden-hour key light
   ambient: "#f6e8d2", // warm ambient fill
   fog: "#ddcbaa", // warm sand haze
+};
+
+const FINISH_ROUGHNESS: Record<ExteriorFinish, number> = {
+  cedar: 0.85,
+  lap: 0.6,
+  stucco: 0.9,
+  board: 0.5,
 };
 
 const SCENE_BACKDROP =
@@ -204,7 +213,7 @@ function SceneCallout({
       <div
         className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] xl:block ${toneClass}`}
       >
-        <div className="font-mono text-[9px] leading-[1.45] uppercase tracking-[0.14em] opacity-75">{eyebrow}</div>
+        <div className="lf-dataprint leading-[1.45] opacity-75">{eyebrow}</div>
         <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
         <div className="mt-1 text-[11px] leading-[1.45] opacity-80">{detail}</div>
       </div>
@@ -700,6 +709,7 @@ function ProposedAdu({
   onPositionChange?: (pos: [number, number]) => void;
 }) {
   const finishColor = finishColors[config.finish];
+  const finishRoughness = FINISH_ROUGHNESS[config.finish];
   const y = config.height / 2;
   const groundPlaneRef = useRef<THREE.Mesh>(null);
   const isDragging = useRef(false);
@@ -819,12 +829,12 @@ function ProposedAdu({
           />
         </mesh>
 
-        {/* ADU body — hover/drag glow is clay, the interactive accent */}
+        {/* ADU body — finish material dynamically reflects cedar/lap/stucco/board */}
         <mesh position={[0, y, 0]} castShadow receiveShadow>
           <boxGeometry args={[config.width, config.height, config.length]} />
           <meshStandardMaterial
             color={finishColor}
-            roughness={0.74}
+            roughness={finishRoughness}
             emissive={isHovered ? SCENE.hoverGlow : "#000000"}
             emissiveIntensity={isHovered ? 0.22 : 0}
           />
@@ -917,6 +927,9 @@ export default function ParcelScene({
 }: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [sunHour, setSunHour] = useState<number>(14);
+
+  const sunPosition = useMemo(() => getIllustrativeSunPosition(sunHour), [sunHour]);
   const restoreTimer = useRef<number | null>(null);
   const keysDown = useRef(new Set<string>());
   const animFrame = useRef<number | null>(null);
@@ -1120,9 +1133,9 @@ export default function ParcelScene({
         <ambientLight intensity={1.15} color={SCENE.ambient} />
         <directionalLight
           castShadow
-          position={[44, 50, 30]}
-          intensity={3.6}
-          color={SCENE.sun}
+          position={sunPosition}
+          intensity={Math.max(3.6 * (1 - Math.abs(sunHour - 13) / 10), 1.2)}
+          color={sunHour < 9 || sunHour > 17 ? "#ffaa66" : SCENE.sun}
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
           shadow-camera-left={-90}
@@ -1207,6 +1220,35 @@ export default function ParcelScene({
       </Canvas>
       </ErrorBoundary>
 
+      {/* This is an illustrative lighting preview, not a location/date-based solar study. */}
+      <div
+        className="absolute left-4 top-20 z-(--z-index-scene) flex items-center gap-2 rounded-full border border-lf-hairline/70 bg-lf-card/95 px-3 py-1.5 text-lf-espresso shadow-sm sm:left-52 sm:top-5"
+        role="group"
+        aria-label="Illustrative shadow preview"
+      >
+        <Sun className="h-4 w-4 shrink-0 text-lf-clay-ink" aria-hidden="true" />
+        <span className="flex min-w-16 flex-col leading-none">
+          <span className="lf-dataprint text-lf-muted">Shadow preview</span>
+          <output
+            htmlFor="shadow-preview-hour"
+            className="mt-1 font-mono text-xs font-semibold tracking-[0.14em]"
+          >
+            {formatPreviewHour(sunHour)}
+          </output>
+        </span>
+        <input
+          id="shadow-preview-hour"
+          type="range"
+          min="7"
+          max="19"
+          step="0.5"
+          value={sunHour}
+          onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
+          aria-label="Preview time"
+          className="h-8 w-20 cursor-pointer accent-lf-clay sm:w-24"
+        />
+      </div>
+
       {/* View-mode toggle. Docked to the scene bottom — the old bottom-sheet
           offset (bottom-44) clipped these controls inside the mobile journey's
           34dvh Shape reveal. 44px touch floor below `sm`. */}
@@ -1218,20 +1260,18 @@ export default function ParcelScene({
         ].map(({ mode, label, icon: Icon }) => {
           const active = viewMode === mode;
           return (
-            <button
+            <Button
               key={mode}
               type="button"
+              size="sm"
+              variant={active ? "selected" : "ghost"}
               onClick={() => setViewMode(mode)}
               aria-pressed={active}
-              className={`inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-2.5 text-xs font-semibold leading-none transition-colors sm:h-9 sm:min-w-[86px] ${
-                active
-                  ? "bg-lf-clay text-lf-sand"
-                  : "text-lf-espresso hover:bg-lf-taupe/10 focus-visible:bg-lf-taupe/10"
-              }`}
+              className="h-11 min-w-11 px-2.5 leading-none aria-[pressed=false]:text-lf-espresso aria-[pressed=false]:hover:bg-lf-taupe/10 aria-[pressed=false]:focus-visible:bg-lf-taupe/10 sm:h-9 sm:min-w-[86px]"
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="hidden sm:inline">{label}</span>
-            </button>
+            </Button>
           );
         })}
       </div>

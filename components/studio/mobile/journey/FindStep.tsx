@@ -45,7 +45,7 @@ export default function FindStep({
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
       <p className="lf-kicker text-lf-clay">Step 1 · Find</p>
-      <h1 className="mt-2 font-display text-[31px] font-semibold leading-[1.08] text-lf-espresso">
+      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
         Start with your address.
       </h1>
       <p className="lf-body-sm mt-2 text-lf-muted">
@@ -71,26 +71,24 @@ export default function FindStep({
         )}
       </div>
 
-      <p className="mt-7 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+      <p className="mt-7 lf-kicker-dense text-lf-muted">
         Or explore a demo lot
       </p>
       <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">
         {parcelPresets.map((preset) => {
           const selected = selectedPresetId === preset.id;
           return (
-            <button
+            <Button
               key={preset.id}
               type="button"
+              size="md"
+              variant={selected ? "selected" : "secondary"}
               onClick={() => onPresetSelect(preset.id)}
               aria-pressed={selected}
-              className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                selected
-                  ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
-                  : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe hover:bg-lf-sand-2"
-              }`}
+              className="px-4"
             >
               {preset.city.split(",")[0]}
-            </button>
+            </Button>
           );
         })}
       </div>

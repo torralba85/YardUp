@@ -83,6 +83,26 @@ fs.cpSync(PUBLIC, DIST, {
   },
 });
 
+// 3b. Materialize /robots.txt as a static file in dist/.
+//
+// Firebase Hosting does not route /robots.txt through the `**` -> `app`
+// function rewrite. It answers with a bare 0-byte 404 before Next.js ever sees
+// the request — verified against the Hosting URL, the Cloud Run URL, and the
+// lotfoundry.net Host header, while /sitemap.xml and every page route resolve
+// normally through the same rewrite. Writing the prerendered body into dist/
+// lets Hosting serve it as a static file.
+//
+// The body is copied from the build output rather than hand-maintained, so
+// app/robots.ts stays the single source of truth.
+console.log("[firebase] Materializing robots.txt for Hosting...");
+const ROBOTS_BODY = path.resolve(ROOT, ".next", "server", "app", "robots.txt.body");
+if (!fs.existsSync(ROBOTS_BODY)) {
+  throw new Error(
+    `Expected prerendered robots body at ${ROBOTS_BODY}. If app/robots.ts was removed or is no longer statically prerendered, update this step — otherwise the deploy silently ships a 404 for /robots.txt.`,
+  );
+}
+fs.copyFileSync(ROBOTS_BODY, path.resolve(DIST, "robots.txt"));
+
 // 4. Prepare functions/.next/standalone for the Cloud Function.
 console.log("[firebase] Preparing functions/.next/standalone...");
 copyDir(STANDALONE, path.resolve(FUNC_NEXT, "standalone"));

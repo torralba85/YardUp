@@ -86,6 +86,10 @@ const secretPatterns = [
   ["GitHub token", /gh[pousr]_[A-Za-z0-9]{20,}/],
   ["Slack token", /xox[baprs]-[A-Za-z0-9-]{20,}/],
   ["Stripe live secret", /(?:sk|rk)_live_[A-Za-z0-9]{12,}/],
+  [
+    "plaintext reviewer credential table",
+    /\|\s*(?:homeowner|builder|judge|reviewer)\s*\|\s*`[^`\n]+`\s*\|\s*`[^`\n]+`\s*\|/i,
+  ],
 ];
 
 for (const path of files) {

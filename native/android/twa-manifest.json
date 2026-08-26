@@ -1,6 +1,6 @@
 {
   "packageId": "com.lotfoundry.app",
-  "host": "yardup-2026.web.app",
+  "host": "lotfoundry.net",
   "name": "LotFoundry",
   "launcherName": "LotFoundry",
   "display": "standalone",
@@ -13,31 +13,31 @@
   "backgroundColor": "#F2E5D5",
   "enableNotifications": true,
   "startUrl": "/studio",
-  "iconUrl": "https://yardup-2026.web.app/icon-512.png",
-  "maskableIconUrl": "https://yardup-2026.web.app/icon-maskable-512.png",
+  "iconUrl": "https://lotfoundry.net/icon-512.png",
+  "maskableIconUrl": "https://lotfoundry.net/icon-maskable-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.2",
-  "appVersionCode": 3,
+  "appVersionName": "1.0.6",
+  "appVersionCode": 7,
   "shortcuts": [
     {
       "name": "New Study",
       "shortName": "Study",
       "url": "/studio",
-      "chosenIconUrl": "https://yardup-2026.web.app/icon-512.png"
+      "chosenIconUrl": "https://lotfoundry.net/icon-512.png"
     },
     {
       "name": "Builder Dashboard",
       "shortName": "Builder",
       "url": "/builder",
-      "chosenIconUrl": "https://yardup-2026.web.app/icon-512.png"
+      "chosenIconUrl": "https://lotfoundry.net/icon-512.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://yardup-2026.web.app/manifest.json",
+  "webManifestUrl": "https://lotfoundry.net/manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "playBilling": {
@@ -50,7 +50,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://yardup-2026.web.app/",
+  "fullScopeUrl": "https://lotfoundry.net/",
   "minSdkVersion": 24,
   "orientation": "default",
   "fingerprints": [
@@ -59,5 +59,5 @@
   ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.0.2"
+  "appVersion": "1.0.6"
 }

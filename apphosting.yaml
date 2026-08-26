@@ -1,6 +1,6 @@
 env:
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://yardup-2026.web.app
+    value: https://lotfoundry.net
   - variable: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
     value: 6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra
   - variable: STRIPE_SECRET_KEY

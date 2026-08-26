@@ -12,7 +12,9 @@ const mocks = vi.hoisted(() => ({
     }),
   } as { exists: boolean; data: () => Record<string, unknown> },
   unlocked: false,
-  stripe: null as null | { checkout: { sessions: { create: ReturnType<typeof vi.fn> } } },
+  stripe: null as null | {
+    checkout: { sessions: { create: ReturnType<typeof vi.fn> } };
+  },
   grant: vi.fn(),
 }));
 
@@ -90,7 +92,10 @@ describe("POST /api/stripe/checkout", () => {
   it("403s when the builder is not matched to the lead", async () => {
     mocks.leadDoc = {
       exists: true,
-      data: () => ({ status: "submitted", matchedBuilderIds: ["someone-else"] }),
+      data: () => ({
+        status: "submitted",
+        matchedBuilderIds: ["someone-else"],
+      }),
     };
     const res = await POST(postRequest({ requestId: "r1" }));
     expect(res.status).toBe(403);
@@ -106,18 +111,34 @@ describe("POST /api/stripe/checkout", () => {
     );
   });
 
-  it("returns a Stripe Checkout URL when configured (no grant yet)", async () => {
+  it("creates an idempotent, explicitly typed Stripe Checkout session", async () => {
     mocks.stripe = {
       checkout: {
-        sessions: { create: vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" }) },
+        sessions: {
+          create: vi
+            .fn()
+            .mockResolvedValue({ url: "https://stripe.test/checkout/x" }),
+        },
       },
     };
     const res = await POST(postRequest({ requestId: "r1" }));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/x" });
     expect(mocks.grant).not.toHaveBeenCalled();
-    expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
-      expect.objectContaining({ metadata: { builderId: "b1", requestId: "r1" } }),
+    expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: {
+          purchaseType: "lead_unlock",
+          builderId: "b1",
+          requestId: "r1",
+        },
+        payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
+      }),
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(
+          /^lotfoundry:lead_unlock:[a-f0-9]{64}$/,
+        ),
+      }),
     );
   });
 
@@ -125,24 +146,32 @@ describe("POST /api/stripe/checkout", () => {
     vi.stubEnv("NODE_ENV", "production");
     mocks.stripe = {
       checkout: {
-        sessions: { create: vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" }) },
+        sessions: {
+          create: vi
+            .fn()
+            .mockResolvedValue({ url: "https://stripe.test/checkout/x" }),
+        },
       },
     };
 
     const res = await POST(postRequest({ requestId: "r1" }));
     expect(res.status).toBe(200);
-    expect(mocks.stripe!.checkout.sessions.create).toHaveBeenCalledWith(
+    expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        success_url: "https://yardup-2026.web.app/builder?lead=r1&unlocked=1",
-        cancel_url: "https://yardup-2026.web.app/builder?lead=r1",
+        success_url: "https://lotfoundry.net/builder?lead=r1&unlocked=1",
+        cancel_url: "https://lotfoundry.net/builder?lead=r1",
       }),
+      expect.any(Object),
     );
   });
 
   it("is an idempotent success when already unlocked", async () => {
     mocks.unlocked = true;
     const res = await POST(postRequest({ requestId: "r1" }));
-    expect(await res.json()).toMatchObject({ status: "granted", alreadyUnlocked: true });
+    expect(await res.json()).toMatchObject({
+      status: "granted",
+      alreadyUnlocked: true,
+    });
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 });

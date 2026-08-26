@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
 
 export interface DeleteAccountButtonProps {
   /** Surface tone — matches {@link AccountMenu} dark mahogany vs light card. */
@@ -90,18 +91,20 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
         be undone.
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button
+        <Button
           type="button"
+          variant="destructive"
+          size="md"
           onClick={handleDelete}
-          disabled={pending}
+          loading={pending}
           className={cn(
-            "min-h-11 rounded-full bg-lf-brick px-4 py-2 text-[11px] font-semibold text-lf-sand transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
+            "px-4 text-[11px]",
             dangerRing,
             ringOffset,
           )}
         >
           {pending ? "Deleting…" : "Delete permanently"}
-        </button>
+        </Button>
         <button
           type="button"
           onClick={() => setConfirming(false)}

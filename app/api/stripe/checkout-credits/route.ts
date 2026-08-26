@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
+import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
@@ -13,18 +14,24 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const pack = body?.pack;
-  
-  if (pack !== 5 && pack !== 10) {
-    return NextResponse.json({ error: "Invalid credit pack selected" }, { status: 400 });
+
+  if (!isCreditPackSize(pack)) {
+    return NextResponse.json(
+      { error: "Invalid credit pack selected" },
+      { status: 400 },
+    );
   }
 
-  const amountCents = pack === 5 ? 17500 : 30000;
+  const amountCents = CREDIT_PACK_PRICES_CENTS[pack];
   const db = getAdminDb();
   const profileRef = db.doc(`builders/${builderId}`);
   const profileSnap = await profileRef.get();
 
   if (!profileSnap.exists) {
-    return NextResponse.json({ error: "Builder profile not found" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Builder profile not found" },
+      { status: 403 },
+    );
   }
 
   const stripe = await getStripe();
@@ -34,9 +41,12 @@ export async function POST(request: NextRequest) {
       process.env.NODE_ENV === "production" &&
       process.env.LOTFOUNDRY_DEMO_UNLOCKS !== "true"
     ) {
-      return NextResponse.json({ error: "Payments are not available." }, { status: 503 });
+      return NextResponse.json(
+        { error: "Payments are not available." },
+        { status: 503 },
+      );
     }
-    
+
     // Demo grant
     try {
       await db.runTransaction(async (transaction) => {
@@ -45,7 +55,7 @@ export async function POST(request: NextRequest) {
           throw new Error("Builder profile not found");
         }
         const currentCredits = profileSnap.data()?.credits ?? 0;
-        
+
         transaction.update(profileRef, {
           credits: currentCredits + pack,
           updatedAt: new Date().toISOString(),
@@ -66,7 +76,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: "granted", demo: true });
     } catch (err) {
       console.error("[stripe/checkout-credits] Demo grant failed:", err);
-      return NextResponse.json({ error: "Failed to grant credits" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to grant credits" },
+        { status: 500 },
+      );
     }
   }
 
@@ -82,7 +95,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      submit_type: "pay",
       payment_method_types: ["card"],
+      payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
       line_items: [
         {
           quantity: 1,
@@ -93,10 +108,10 @@ export async function POST(request: NextRequest) {
           },
         },
       ],
-      metadata: { 
-        builderId, 
-        purchaseType: "credit_pack", 
-        creditsToGrant: String(pack) 
+      metadata: {
+        builderId,
+        purchaseType: "credit_pack",
+        creditsToGrant: String(pack),
       },
       success_url: `${origin}/builder?credits_added=1`,
       cancel_url: `${origin}/builder`,
@@ -104,7 +119,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error("[stripe/checkout-credits] Failed to create Checkout session:", err);
+    console.error(
+      "[stripe/checkout-credits] Failed to create Checkout session:",
+      err,
+    );
     return NextResponse.json(
       { error: "Could not start checkout. Please try again." },
       { status: 502 },

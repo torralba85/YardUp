@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Player, type PlayerRef } from "@remotion/player";
-import { BlueHourLot } from "@/remotion/nocturne/BlueHourLot";
+import type { PlayerRef } from "@remotion/player";
 import {
   BLUE_HOUR_DURATION_IN_FRAMES,
-  BLUE_HOUR_FPS,
   BLUE_HOUR_HEIGHT,
   BLUE_HOUR_WIDTH,
   GEOMETRY,
@@ -22,6 +21,20 @@ import {
   activeRailPhase,
   nocturneParallax,
 } from "./hero-phases";
+
+/**
+ * The Remotion Player and the composition it renders are ~242 KB and are only
+ * ever mounted after hydration for motion-tolerant visitors, so they load as a
+ * separate chunk instead of riding the landing's critical path.
+ */
+const ScrubbedLot = dynamic(() => import("./ScrubbedLot"), { ssr: false });
+
+// The gate carries its own AuthProvider and the Firebase client SDK. Keeping it
+// behind `next/dynamic` with `ssr: false` is what lets `/` stay outside the
+// `(firebase)` route group: nothing here calls `useAuth` during the prerender.
+const LandingAuthGate = dynamic(() => import("./LandingAuthGate"), {
+  ssr: false,
+});
 
 /** Hotspot definitions: composition geometry + how the page names each layer. */
 const HOTSPOTS: ReadonlyArray<{
@@ -59,6 +72,8 @@ export function BlueHourHero() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [authOpen, setAuthOpen] = useState(false);
+  const pendingAddressRef = useRef("");
   const router = useRouter();
 
   // Post-hydration gate: server and first client render agree (no Player),
@@ -185,6 +200,20 @@ export function BlueHourHero() {
       : VERDICT_RENT;
   const copyDimmed = progress > 0.12;
 
+  function handToStudio(address: string) {
+    // Privacy: hand the address to the studio via session storage instead of
+    // the URL, so a guest's typed address never lands in browser history, the
+    // Referer header, or analytics. The studio consumes it once on mount.
+    stashAddressQuery(address);
+    setDawnRamp(true);
+    if (rampTimerRef.current !== null) {
+      window.clearTimeout(rampTimerRef.current);
+    }
+    rampTimerRef.current = window.setTimeout(() => {
+      router.push("/studio");
+    }, DAWN_RAMP_MS);
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = query.trim();
@@ -194,17 +223,16 @@ export function BlueHourHero() {
       return;
     }
 
-    // Privacy: hand the address to the studio via session storage instead of
-    // the URL, so a guest's typed address never lands in browser history, the
-    // Referer header, or analytics. The studio consumes it once on mount.
-    stashAddressQuery(trimmed);
-    setDawnRamp(true);
-    if (rampTimerRef.current !== null) {
-      window.clearTimeout(rampTimerRef.current);
-    }
-    rampTimerRef.current = window.setTimeout(() => {
-      router.push("/studio");
-    }, DAWN_RAMP_MS);
+    // Real-address lookup is authenticated because every suggestion and parcel
+    // resolve spends metered provider quota. Ask for sign-in before handoff,
+    // rather than routing a guest to a studio state that rejects the request.
+    //
+    // Auth state is not read during render: the landing page has no
+    // AuthProvider above it, by design. Mounting the gate is what resolves the
+    // session — it hands an already-signed-in visitor straight through, and
+    // shows the sign-in modal only to a guest.
+    pendingAddressRef.current = trimmed;
+    setAuthOpen(true);
   }
 
   return (
@@ -236,55 +264,34 @@ export function BlueHourHero() {
               data-testid="blue-hour-player"
               className="absolute left-1/2 top-1/2 h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%]"
             >
-              <Player
-                ref={playerRef}
-                component={BlueHourLot}
-                inputProps={{ highlight }}
-                durationInFrames={BLUE_HOUR_DURATION_IN_FRAMES}
-                fps={BLUE_HOUR_FPS}
-                compositionWidth={BLUE_HOUR_WIDTH}
-                compositionHeight={BLUE_HOUR_HEIGHT}
-                controls={false}
-                clickToPlay={false}
-                doubleClickToFullscreen={false}
-                spaceKeyToPlayOrPause={false}
-                acknowledgeRemotionLicense
-                style={{ width: "100%", height: "100%" }}
-              />
+              <ScrubbedLot playerRef={playerRef} highlight={highlight} />
             </div>
           ) : null}
 
           {showPlayer ? (
-            /* Geometry hotspots — invisible, hover/focus lifts that survey
-               layer in the composition. Desktop-pointer affordance; the
-               container tracks the composition's 16:9 cover crop exactly. */
+            /* Geometry hotspots — invisible pointer-only affordances that lift
+               the survey layer in the composition. They do not perform an
+               action, so they stay out of the keyboard and screen-reader
+               interaction model. The container tracks the 16:9 cover crop. */
             <svg
               data-testid="survey-hotspots"
               viewBox={`0 0 ${BLUE_HOUR_WIDTH} ${BLUE_HOUR_HEIGHT}`}
               preserveAspectRatio="none"
               className="absolute left-1/2 top-1/2 hidden h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%] sm:block"
-              aria-label="Survey layers"
-              role="group"
+              aria-hidden="true"
             >
               {HOTSPOTS.map((spot) => (
                 <polygon
                   key={spot.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={spot.label}
                   points={spot.polygon
                     .map(([x, y]) => `${x * BLUE_HOUR_WIDTH},${y * BLUE_HOUR_HEIGHT}`)
                     .join(" ")}
                   fill="transparent"
                   stroke="none"
-                  className="cursor-help outline-none"
+                  className="cursor-help"
                   style={{ pointerEvents: "all" }}
                   onMouseEnter={() => setHighlight(spot.id)}
                   onMouseLeave={() =>
-                    setHighlight((current) => (current === spot.id ? null : current))
-                  }
-                  onFocus={() => setHighlight(spot.id)}
-                  onBlur={() =>
                     setHighlight((current) => (current === spot.id ? null : current))
                   }
                 />
@@ -413,7 +420,7 @@ export function BlueHourHero() {
                 id="hero-address-suggestions"
                 role="listbox"
                 aria-label="Address suggestions"
-                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-lg border border-ln-hairline bg-ln-navy shadow-xl"
+                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-lg border border-ln-hairline bg-ln-navy/95 shadow-2xl backdrop-blur-md"
               >
                 {suggestions.map((suggestion, index) => (
                   <li
@@ -537,6 +544,15 @@ export function BlueHourHero() {
           </p>
         </aside>
         <DawnRampOverlay visible={dawnRamp} />
+        {authOpen ? (
+          <LandingAuthGate
+            onAuthenticated={() => {
+              setAuthOpen(false);
+              handToStudio(pendingAddressRef.current);
+            }}
+            onDismiss={() => setAuthOpen(false)}
+          />
+        ) : null}
       </div>
     </section>
   );

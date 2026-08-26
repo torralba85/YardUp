@@ -68,12 +68,12 @@ export default function ShapeStep({
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="lf-kicker text-lf-clay">Step 3 · Shape</p>
-            <h1 className="mt-1 font-display text-[25px] font-semibold leading-[1.1] text-lf-espresso">
+            <h1 className="mt-1 font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
               Pick a direction.
             </h1>
           </div>
           <div className="text-right">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+            <p className="lf-dataprint text-lf-muted">
               Now earning
             </p>
             <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
@@ -101,32 +101,31 @@ export default function ShapeStep({
           })}
         </div>
 
-        <p className="mt-5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-5 lf-kicker-dense text-lf-muted">
           Style
         </p>
         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Exterior style">
           {FINISHES.map((finish) => {
             const selected = config.finish === finish;
             return (
-              <button
+              <Button
                 key={finish}
                 type="button"
+                size="md"
+                variant={selected ? "selected" : "secondary"}
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange({ ...config, finish })}
-                className={`flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                  selected
-                    ? "border-lf-clay bg-lf-taupe-soft text-lf-espresso"
-                    : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe"
-                }`}
+                className="px-4"
+                leftIcon={
+                  <span
+                    className="block h-3 w-3 rounded-full border border-lf-hairline"
+                    style={{ backgroundColor: finishColors[finish] }}
+                  />
+                }
               >
-                <span
-                  aria-hidden
-                  className="block h-3 w-3 rounded-full border border-lf-hairline"
-                  style={{ backgroundColor: finishColors[finish] }}
-                />
                 {finishLabels[finish]}
-              </button>
+              </Button>
             );
           })}
         </div>

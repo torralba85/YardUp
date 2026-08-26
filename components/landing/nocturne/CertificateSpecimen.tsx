@@ -71,7 +71,7 @@ export function CertificateSpecimen() {
           {/* Daylight parchment on night ground: the lit window (invariant 4). */}
           <div className="relative mx-auto w-full max-w-md">
             <div className="rounded-lg border border-lf-hairline bg-lf-card p-6 text-lf-espresso shadow-[0_0_80px_rgba(245,181,74,0.16),0_24px_48px_rgba(0,0,0,0.55)] sm:p-8">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 lf-kicker-dense text-lf-muted">
                 <span>No. LF-042-0117-118</span>
                 <span>Sample · cities we cover</span>
               </div>
@@ -79,16 +79,16 @@ export function CertificateSpecimen() {
                 <p className="font-display text-2xl font-semibold leading-tight">
                   Certificate of Feasibility
                 </p>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                <p className="mt-1 lf-kicker-dense text-lf-muted">
                   Sample — your address replaces this
                 </p>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-1">
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                <p className="lf-kicker-dense text-lf-muted">
                   Est. rent
                 </p>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                <p className="lf-kicker-dense text-lf-muted">
                   Build cost
                 </p>
                 <p className="lf-money-md text-lf-forest">
@@ -99,7 +99,7 @@ export function CertificateSpecimen() {
               </div>
 
               <div className="mt-6 flex items-baseline justify-between gap-4 border-b-4 border-double border-lf-taupe pb-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lf-muted">
+                <span className="lf-kicker-dense text-lf-muted">
                   Yearly income
                 </span>
                 <span className="lf-money-md text-lf-forest">
@@ -121,7 +121,7 @@ export function CertificateSpecimen() {
             </div>
             <div
               aria-hidden="true"
-              className="absolute -top-3 right-8 rotate-6 rounded-sm border-2 border-lf-brick/80 bg-lf-brick-soft px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-lf-brick"
+              className="absolute -top-3 right-8 rotate-6 rounded-sm border-2 border-lf-brick/80 bg-lf-brick-soft px-2.5 py-1 lf-kicker-dense text-lf-brick"
             >
               Concept · not a permit
             </div>

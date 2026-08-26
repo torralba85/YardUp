@@ -393,7 +393,11 @@ service cloud.firestore {
     }
 
     match /builders/{builderId} {
-      allow read: if isSignedIn();
+      // Full builder profiles include contact details, license number, and
+      // credits. The owner can read their own profile; homeowner matching uses
+      // the authenticated /api/builders/active directory endpoint, which
+      // returns a redacted server-built view instead of exposing this document.
+      allow read: if isBuilder(builderId);
       allow create, update: if isBuilder(builderId) && isValidBuilderProfile(builderId);
       allow delete: if false;
 
@@ -486,6 +490,12 @@ service cloud.firestore {
 
     // Feedback intake is server-only (Admin SDK).
     match /feedback/{ticketId} {
+      allow read, write: if false;
+    }
+
+    // Play RTDN dedupe ledger (Admin SDK only). Pub/Sub message ids are an
+    // internal idempotency record; no client ever reads or writes them.
+    match /rtdnEvents/{messageId} {
       allow read, write: if false;
     }
   }

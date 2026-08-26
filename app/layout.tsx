@@ -1,33 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/google";
-import { AuthProvider } from "@/lib/auth-context";
+import { DM_Mono, Instrument_Sans, Newsreader } from "next/font/google";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 
-const cormorant = Cormorant_Garamond({
+const newsreader = Newsreader({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
   variable: "--font-display",
 });
 
-const libreFranklin = Libre_Franklin({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-sans",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
+const dmMono = DM_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   display: "swap",
   variable: "--font-mono",
 });
 
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
 
 /** Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no fabricated ratings. */
 const jsonLd = {
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   description:
     "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
   manifest: "/manifest.json",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net"),
   appleWebApp: {
     // Run as a standalone iOS PWA (no Safari chrome) with a translucent status
     // bar so the espresso studio header reaches the top edge under the notch.
@@ -91,8 +91,11 @@ export const viewport: Viewport = {
 };
 
 /**
- * Root layout for the App Router. Loads the brand fonts as CSS variables, wraps
- * the app in {@link AuthProvider}, and registers the service worker.
+ * Root layout for the App Router. Loads the brand fonts as CSS variables and
+ * registers the service worker.
+ *
+ * Deliberately Firebase-free: `AuthProvider` lives in the `(firebase)` route
+ * group so the marketing and legal surfaces never pull in the client SDK.
  *
  * @param props.children - The routed page content.
  */
@@ -104,7 +107,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${libreFranklin.variable} ${ibmPlexMono.variable}`}
+      className={`${newsreader.variable} ${instrumentSans.variable} ${dmMono.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
@@ -118,7 +121,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <AuthProvider>{children}</AuthProvider>
+        {children}
         <ServiceWorkerRegistration />
       </body>
     </html>

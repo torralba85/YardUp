@@ -27,6 +27,7 @@ export default function NotFound() {
         </Link>
         <Link
           href="/studio"
+          prefetch={false}
           className="inline-flex h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
         >
           Start a feasibility study

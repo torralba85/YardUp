@@ -56,7 +56,19 @@ test("robots and sitemap are reachable", async ({ request }) => {
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
   expect(xml).toContain("/about");
-  expect(xml).toContain("/delete-account");
+
+  // `79c6545` de-indexed the account-utility pages: they have nothing to rank
+  // for and carry a page-level noindex, so listing them in the sitemap would
+  // work against that. Absence here is the intended state, not an omission.
+  expect(xml).not.toContain("/delete-account");
+  expect(xml).not.toContain("/login");
+  expect(xml).not.toContain("/signup");
+
+  // De-indexed is not hidden: Play requires the deletion URL stay publicly
+  // reachable, and robots.txt must not disallow it.
+  expect(robotsBody).not.toMatch(/Disallow:\s*\/delete-account/i);
+  const deleteAccount = await request.get("/delete-account");
+  expect(deleteAccount.status()).toBe(200);
 });
 
 test("unknown route shows branded 404 recovery", async ({ page }) => {
