@@ -26,7 +26,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
 
 /** Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no fabricated ratings. */
 const jsonLd = {
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   description:
     "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
   manifest: "/manifest.json",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net"),
   appleWebApp: {
     // Run as a standalone iOS PWA (no Safari chrome) with a translucent status
     // bar so the espresso studio header reaches the top edge under the notch.

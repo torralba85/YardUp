@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const productionBaseURL =
-  process.env.LOTFOUNDRY_E2E_PRODUCTION_URL ?? "https://yardup-2026.web.app";
+  process.env.LOTFOUNDRY_E2E_PRODUCTION_URL ?? "https://lotfoundry.net";
 
 test.describe("address suggestions", () => {
   test("production /api/suggest returns live address suggestions", async ({

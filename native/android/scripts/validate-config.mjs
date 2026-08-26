@@ -33,7 +33,7 @@ const assetLinks = readJson("public/.well-known/assetlinks.json");
 expect(twa.packageId === "com.lotfoundry.app", "Package ID must be com.lotfoundry.app.");
 expect(twa.name === "LotFoundry", "Android app name must be LotFoundry.");
 expect(twa.launcherName === "LotFoundry", "Android launcher name must be LotFoundry.");
-expect(twa.host === "yardup-2026.web.app", "TWA host must be yardup-2026.web.app.");
+expect(twa.host === "lotfoundry.net", "TWA host must be lotfoundry.net.");
 expect(twa.startUrl === "/studio", "TWA start URL must be /studio.");
 expect(twa.display === "standalone", "TWA display mode must be standalone.");
 expect(twa.minSdkVersion >= 24, "Minimum Android SDK must be API 24 or newer.");

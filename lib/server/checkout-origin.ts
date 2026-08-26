@@ -1,5 +1,5 @@
 const DEFAULT_PRODUCTION_ORIGIN =
-  "https://yardup-2026.web.app";
+  "https://lotfoundry.net";
 
 /**
  * Resolve the absolute app origin used for Stripe Checkout success/cancel URLs.

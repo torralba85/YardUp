@@ -8,7 +8,7 @@ From the repo root (requires network + Java):
 
 ```bash
 npx @bubblewrap/cli init \
-  --manifest=https://yardup-2026.web.app/manifest.json \
+  --manifest=https://lotfoundry.net/manifest.json \
   --directory=native/android
 ```
 

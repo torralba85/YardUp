@@ -12,9 +12,9 @@ const config = {
   appName: "LotFoundry",
   webDir: "native/ios-shell",
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || "https://yardup-2026.web.app",
+    url: process.env.CAPACITOR_SERVER_URL || "https://lotfoundry.net",
     cleartext: false,
-    allowNavigation: ["yardup-2026.web.app", "*.web.app", "localhost"],
+    allowNavigation: ["lotfoundry.net", "www.lotfoundry.net", "localhost"],
   },
   ios: {
     contentInset: "automatic",

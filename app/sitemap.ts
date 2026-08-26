@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://yardup-2026.web.app";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
 
 /**
  * Only URLs we actually want shown in search.
@@ -21,10 +21,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/privacy",
     "/terms",
   ];
-  const now = new Date();
   return paths.map((path) => ({
     url: `${baseUrl}${path === "/" ? "" : path}`,
-    lastModified: now,
     changeFrequency: path === "/" ? "weekly" : "monthly",
     priority: path === "/" ? 1 : 0.6,
   }));
