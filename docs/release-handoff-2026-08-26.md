@@ -143,6 +143,77 @@ production had already been deployed manually, nothing is missing from the live
 site - but the automated deploy path is unproven until billing is fixed and the
 workflow is re-run.
 
+## Blocker 1b - App Check will reject every request on lotfoundry.net (OPEN, SEVERE)
+
+**This is the most severe launch blocker found, and it is certain.** Fix it
+before the DNS change, not after.
+
+Firebase App Check is **`ENFORCED`** - not monitor-only - on:
+
+| Service | Mode |
+|---|---|
+| `firestore.googleapis.com` | ENFORCED |
+| `identitytoolkit.googleapis.com` (Auth) | ENFORCED |
+| `oauth2.googleapis.com` | ENFORCED |
+| `places.googleapis.com` | ENFORCED |
+| `maps-backend.googleapis.com` | ENFORCED |
+| `firebaseml.googleapis.com` | ENFORCED + replay protection |
+
+App Check attests via reCAPTCHA Enterprise site key
+`6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra`. That key's **allowed domains are
+only**:
+
+```
+yardup-2026.web.app
+yardup-2026--yardup-2026.us-central1.hosted.app
+```
+
+`lotfoundry.net` is not among them. A reCAPTCHA Enterprise SCORE key validates
+the domain the token was issued on, so once the app serves from
+`lotfoundry.net`, attestation fails, App Check issues no token, and **every
+enforced service rejects the request** - sign-in, sign-up, saved scenarios,
+builder dashboard, settings, and Places all break at once. The site would look
+fine on static pages and fail the moment a user tries to do anything.
+
+**Fix:** add `lotfoundry.net` (and `www.lotfoundry.net` if used) to the key's
+allowed domains in Google Cloud Console -> Security -> reCAPTCHA Enterprise, or:
+
+```bash
+gcloud recaptcha keys update 6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra \
+  --project=yardup-2026 \
+  --domains=lotfoundry.net,www.lotfoundry.net,yardup-2026.web.app,yardup-2026--yardup-2026.us-central1.hosted.app
+```
+
+Verify with `gcloud recaptcha keys list --project=yardup-2026`.
+
+### Unresolved: does App Check currently work for real users?
+
+A browser audit of the live site found the App Check exchange returning
+**403 `"App attestation failed."` / `PERMISSION_DENIED`** on every page that
+mounts the Firebase SDK (`/studio`, `/login`, `/signup`, `/settings`,
+`/builder`, `/help`, `/feedback`, `/delete-account`). Static pages (`/`,
+`/about`, `/privacy`, `/terms`) are clean, which matches the landing
+deliberately not loading Firebase.
+
+**This test cannot settle whether real users are affected.** Both headless *and*
+headed Playwright Chromium got the same 403, but Playwright-driven Chrome is
+automation-flagged either way, and `"App attestation failed."` with
+`minValidScore: 0.5` is exactly what a low reCAPTCHA risk score produces. So
+this is consistent with "automation is correctly rejected" **and** with
+"attestation is broken for everyone" - the evidence does not distinguish them.
+
+It matters because there is no positive evidence that production sign-in
+currently works: the 2026-08-25 session recorded an attempted Google sign-in
+on a real device that was abandoned before completing, so the return leg has
+never been observed to succeed.
+
+**To settle it:** complete one real sign-in in an ordinary browser on
+`https://yardup-2026.web.app/login` and watch the network panel for
+`exchangeRecaptchaEnterpriseToken`. A 200 means real users are fine and the
+audit finding was an automation artifact. A 403 means App Check is rejecting
+real traffic against enforced Auth and Firestore, which is a P0 independent of
+the domain move.
+
 ## Blocker 1a - the Places API key does not allow lotfoundry.net (OPEN)
 
 **Do this before or alongside the DNS change, or address autocomplete breaks the
