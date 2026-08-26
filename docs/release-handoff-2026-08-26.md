@@ -1,8 +1,8 @@
 # Release Handoff - Web Production + Google Play
 
 **Date:** 2026-08-26
-**Branch:** `feature/map-quality-improvements` @ `5f63585`
-**PR:** [#162](https://github.com/torralba85/YardUp/pull/162) -> `master` (MERGEABLE / CLEAN, `verify` passing)
+**Branch:** merged to `master` @ `bac2b0f`
+**PR:** [#162](https://github.com/torralba85/YardUp/pull/162) -> `master` — **MERGED** 2026-08-26 as `bac2b0f`
 **Firebase project:** `yardup-2026`
 
 This document records what is verified, what blocks release, and the exact
@@ -12,7 +12,7 @@ which was written before this work landed.
 
 ## Verified on this branch
 
-All run locally against `5f63585`:
+All run locally against `a4bec0b`, and CI `verify` passed on the merge commit:
 
 | Gate | Command | Result |
 |---|---|---|
@@ -53,7 +53,7 @@ outdated version of firebase-functions`. Worth scheduling, not a release gate.
 - `chore(store)` manifest screenshots recaptured on the new type.
 
 GitHub reports 52 Dependabot alerts, but those are against the **default
-branch** (`master`), which is 66 commits stale. Merging PR #162 clears them.
+branch** (`master`) as it was before the merge. PR #162 takes both root and functions to 0 vulnerabilities, so they should clear as GitHub rescans.
 
 ## Corrections to prior status docs
 
@@ -136,9 +136,12 @@ period where `https://lotfoundry.net` fails TLS until the certificate issues -
 that is normal, not a sign the DNS change was wrong. Wait for `CERT_ACTIVE`
 before concluding anything.
 
-Note: PR #162 is **not merged**. `master` is still 66+ commits behind what is
-running in production. Merge it once Actions is restored so the branch and the
-deployed artifact agree.
+PR #162 was subsequently **merged** at 17:41 UTC as `bac2b0f`, so `master` now
+matches what is running in production. Its `verify` job passed; only the
+`deploy` job was blocked, by the account billing lock (Blocker 4). Since
+production had already been deployed manually, nothing is missing from the live
+site - but the automated deploy path is unproven until billing is fixed and the
+workflow is re-run.
 
 ## Blocker 1 - Cloudflare redirects all of lotfoundry.net (OPEN)
 
@@ -249,7 +252,7 @@ curl -sS https://lotfoundry.net/robots.txt
 curl -sS https://lotfoundry.net/.well-known/assetlinks.json
 ```
 
-## Blocker 2 - master is 66 commits stale (OPEN, NOT gated on Blocker 1)
+## Blocker 2 - master was 66 commits stale (RESOLVED 2026-08-26)
 
 CI deploys only `master`. The live site is a July build, which is why
 `/robots.txt` 404s and the sitemap still advertises `yardup-2026.web.app` with
@@ -327,7 +330,7 @@ validator asserts the manifest exceeds it.
    Blocker 1.
 7. Promote to production.
 
-## Blocker 4 - GitHub Actions is not queueing runs (OPEN, blocks the deploy)
+## Blocker 4 - GitHub account is billing-locked (OPEN, blocks CI deploy only)
 
 Pushes to `feature/map-quality-improvements` on 2026-08-26 between 16:15 and
 16:44 UTC produced **no workflow runs at all**. PR #162's head SHA matches the
@@ -339,7 +342,27 @@ pushed commit (`5bf3acc`), so the pushes registered, but:
 - Actions is enabled (`{"enabled": true, "allowed_actions": "all"}`) and the CI
   workflow is `active`; the repo is not archived or disabled
 
-### Likely cause: exhausted Actions minutes
+### CONFIRMED CAUSE: the GitHub account is billing-locked
+
+After PR #162 was merged, the `master` run's `verify` job passed but `deploy`
+failed after 2 seconds with no steps executed. The GitHub check annotation gives
+it verbatim:
+
+> **The job was not started because your account is locked due to a billing issue.**
+
+That single fact explains every symptom: no runs queueing earlier in the day,
+the `deploy` job refusing to start, and Dependabot jobs never being assigned a
+runner for weeks.
+
+**Fix:** resolve the billing issue at
+<https://github.com/settings/billing/summary>. Nothing in this repository can
+work around an account lock.
+
+Until then `master` will not auto-deploy on merge. Production is already current
+(deployed manually 2026-08-26), so this is not urgent for the live site, but it
+must be fixed before the next release.
+
+### Superseded theory: exhausted Actions minutes
 
 The repo is **private**, so Actions minutes are metered. The `Dependabot
 Updates` workflow has been hanging and being cancelled at the 24-hour platform
@@ -352,22 +375,31 @@ timeout, repeatedly:
 ...
 ```
 
-61 such runs appear in the last 100 workflow runs, each burning ~1,440 minutes.
-That is far beyond any Free or Pro monthly allowance and is the most plausible
-reason new runs are refused.
+61 such runs appear in the last 100 workflow runs. **This theory was wrong and
+is kept only so nobody re-derives it.** Inspecting one shows `runner_name: ""` -
+the jobs were never assigned a runner, so they sat queued and were cancelled at
+the 24h platform timeout. Queued time is not billed, so they consumed
+essentially nothing. They are a *symptom* of the account lock, not a cause.
 
-### To confirm and fix
+The `dependabot.yml` config is fine as written (weekly, grouped, sane PR
+limits). Nothing needs changing there.
 
-1. Check <https://github.com/settings/billing/summary> for Actions usage and
-   whether the spending limit is reached. (`gh` cannot read this without the
-   `user` scope: `gh auth refresh -h github.com -s user`.)
-2. Raise the spending limit, or wait for the monthly reset, or make the repo
-   public (Actions minutes are free for public repos).
-3. **Fix the runaway independently of the release.** These runs are not doing
-   useful work - they hang for 24h and get killed. Options: disable Dependabot
-   version updates in `.github/dependabot.yml`, reduce their schedule, or
-   investigate why the job never completes. Left alone this will exhaust the
-   allowance again next cycle.
+Separately, the `npm_and_yarn in /. for body-parser, brace-expansion, ...` runs
+are Dependabot **security** updates driven by the 52 open alerts, not scheduled
+version updates - the alert packages match those run titles exactly. PR #162
+takes `npm audit` to 0 vulnerabilities in both root and `functions`, so merging
+it removes the trigger for those runs entirely.
+
+### Status
+
+PR #162 is **merged** (`bac2b0f`, 2026-08-26 17:41 UTC). `master` now matches
+what is running in production. `verify` passed on the merge commit; only
+`deploy` was blocked by the account lock, and production was already deployed
+manually, so nothing is missing from the live site.
+
+Once billing is resolved, re-run the `CI` workflow on `master` to confirm the
+automated deploy path works end to end before relying on it for the next
+release.
 
 ### If you must deploy from a developer machine
 
