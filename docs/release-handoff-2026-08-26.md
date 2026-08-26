@@ -668,6 +668,100 @@ and go back to deploying through it.
 standing between a dev-machine deploy and a leaked App Check bypass is
 remembering to move one file.
 
+## Google Play build checklist (owner runs; repo side is prepared)
+
+Verified ready as of 2026-08-26 - nothing in the repo blocks a build:
+
+| Item | State |
+|---|---|
+| `twa-manifest.json` | `1.0.6` / `appVersionCode 7` / `appVersion 1.0.6` |
+| `app/build.gradle` | `versionCode 7`, `versionName "1.0.6"`, `targetSdkVersion 36` |
+| `applicationId` | `com.lotfoundry.app` (both files agree) |
+| TWA host / start URL | `lotfoundry.net` / `/studio` |
+| `npm run android:validate` | passes |
+| Play product IDs | all 4 match `lib/commerce/products.ts` exactly |
+| Digital Asset Links | both upload-key and Play App Signing SHA-256 present, served 200 |
+| Android SDK / JDK | present on the dev machine (SDK at `%LOCALAPPDATA%\Android\Sdk`, JDK 21) |
+
+Play products, which must exist in Play Console with these exact IDs:
+
+```
+com.lotfoundry.certificate.credit1
+com.lotfoundry.builder.credit1
+com.lotfoundry.builder.credits5
+com.lotfoundry.builder.credits10
+```
+
+### Step 0 - the domain gate (HARD; do not skip)
+
+Do not build until **all three** return the expected result. Android does not
+follow a cross-origin redirect when verifying Digital Asset Links, so building
+against a redirecting host produces a bundle that launches with Custom Tab
+browser chrome instead of full screen.
+
+```bash
+curl -sSI https://lotfoundry.net/ | head -3
+#   want: HTTP/... 200  +  Server: Google Frontend      (NOT 301, NOT Server: cloudflare)
+
+curl -sS -o /dev/null -w "%{http_code}\n" https://lotfoundry.net/.well-known/assetlinks.json
+#   want: 200
+
+curl -sS https://lotfoundry.net/robots.txt | head -2
+#   want: the app's rules, NOT Cloudflare's "# BEGIN Cloudflare Managed content"
+```
+
+Blockers 1b (reCAPTCHA domains) and 1a (Places referrer) must also be done, or
+the app installs and launches but sign-in and address search fail inside it.
+
+### Step 1 - confirm the version ceiling
+
+The repo cannot know whether an internal-track upload already consumed
+`versionCode 7`. Check Play Console. If it did, bump `twa-manifest.json`
+(`appVersionName`, `appVersionCode`, **and** the separate `appVersion` field),
+`app/build.gradle`, and `PUBLISHED_VERSION_CODE` in
+`native/android/scripts/validate-config.mjs` together.
+
+### Step 2 - build and validate
+
+```bash
+cd native/android
+./gradlew test bundleRelease      # needs the signing keystore in this workspace
+cd ../..
+npm run android:validate:release  # asserts the signed AAB exists
+```
+
+Artifact lands at `native/android/app/build/outputs/bundle/release/app-release.aab`.
+
+### Step 3 - listing assets (still outstanding)
+
+The manifest screenshots in `public/screenshots/` were recaptured 2026-08-26 on
+the new type system and are current. **Play listing graphics were not** - they
+still show the old fonts and must be re-exported:
+
+- 512x512 Play icon
+- 1024x500 feature graphic
+- phone + tablet listing screenshots
+
+Do not reuse `phone-studio.png` as primary listing art; roughly half the frame
+is empty below the demo-lot chips. Capture an Earn or Check reveal instead -
+those carry the money figure. `node scripts/capture-store-screenshots.mjs`
+(against a running server) regenerates the manifest set.
+
+### Step 4 - device testing before promotion
+
+On the internal track, on a real device:
+
+- Launches **full screen** with no address bar. Browser chrome means Digital
+  Asset Links verification failed - return to Step 0.
+- Purchase, restore, refund/revocation, and account deletion.
+- Credit Shop shows **Play's** localized prices, not `$175`/`$300`. This is what
+  the channel-native pricing change fixed; it is only observable on-device.
+- An in-app purchase completes. `Permissions-Policy: payment=(self)` is correct
+  per spec but has never been confirmed on a real device - this is the check
+  that confirms it.
+
+Then promote to production.
+
 ## Remaining owner-only gates
 
 These need console or business access and are not code-resolvable:
