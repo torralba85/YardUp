@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
@@ -16,6 +16,7 @@ function SignupForm() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [legalAccepted, setLegalAccepted] = useState(false);
   
   const initialRole = searchParams.get("role") === "builder" ? "builder" : "user";
   const [role, setRole] = useState<"user" | "builder">(initialRole);
@@ -33,6 +34,11 @@ function SignupForm() {
     e.preventDefault();
     setError(null);
 
+    if (!legalAccepted) {
+      setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
+      return;
+    }
+
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -40,7 +46,7 @@ function SignupForm() {
 
     startTransition(async () => {
       try {
-        await signUp(email, password, displayName, role);
+        await signUp(email, password, displayName, role, CURRENT_LEGAL_CONSENT);
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
@@ -51,9 +57,13 @@ function SignupForm() {
 
   const handleGoogle = async () => {
     setError(null);
+    if (!legalAccepted) {
+      setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
+      return;
+    }
     startTransition(async () => {
       try {
-        await signInWithGoogle(role);
+        await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
@@ -64,9 +74,13 @@ function SignupForm() {
 
   const handleApple = async () => {
     setError(null);
+    if (!legalAccepted) {
+      setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
+      return;
+    }
     startTransition(async () => {
       try {
-        await signInWithApple(role);
+        await signInWithApple(role, CURRENT_LEGAL_CONSENT);
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
@@ -164,21 +178,29 @@ function SignupForm() {
           </div>
         </div>
 
-        <p className="lf-caption text-lf-muted">
-          By creating an account, you agree to our{" "}
-          <Link href="/terms" className="text-lf-clay-ink hover:text-lf-mahogany">
-            Terms &amp; Conditions
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="text-lf-clay-ink hover:text-lf-mahogany">
-            Privacy Policy
-          </Link>
-          .
-        </p>
+        <label className="flex items-start gap-3 lf-caption text-lf-muted">
+          <input
+            type="checkbox"
+            checked={legalAccepted}
+            onChange={(event) => setLegalAccepted(event.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay"
+          />
+          <span>
+            I confirm I am 18 or older, agree to the{" "}
+            <Link href="/terms" className="text-lf-clay-ink underline underline-offset-2">
+              Terms &amp; Conditions
+            </Link>
+            , and acknowledge the{" "}
+            <Link href="/privacy" className="text-lf-clay-ink underline underline-offset-2">
+              Privacy Policy
+            </Link>
+            .
+          </span>
+        </label>
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || !legalAccepted}
           className="min-h-11 w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Creating account..." : "Create account"}
@@ -197,7 +219,7 @@ function SignupForm() {
       <button
         type="button"
         onClick={handleGoogle}
-        disabled={isPending}
+        disabled={isPending || !legalAccepted}
         className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
@@ -223,7 +245,7 @@ function SignupForm() {
       <button
         type="button"
         onClick={handleApple}
-        disabled={isPending}
+        disabled={isPending || !legalAccepted}
         className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
