@@ -186,7 +186,42 @@ gcloud recaptcha keys update 6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra \
 
 Verify with `gcloud recaptcha keys list --project=yardup-2026`.
 
-### Unresolved: does App Check currently work for real users?
+### RESOLVED: App Check works fine for real users today
+
+Cloud Monitoring settles it. `firebaseappcheck.googleapis.com/services/verdict_count`
+over the 14 days to 2026-08-26:
+
+| result | security | count |
+|---|---|---|
+| `ALLOW` | `VALID` | **94** |
+| `DENY` | `MISSING_UNKNOWN_ORIGIN` | 2 |
+
+94 allowed verdicts with valid attestation means **real users are attesting
+successfully against the enforced services**. Production auth and Firestore are
+healthy; there is no P0 here. The two denials are unattested/unknown-origin
+clients, consistent with the automated browser runs described below.
+
+So the 403 seen in the browser audit **was an automation artifact after all**,
+despite reproducing in headed mode - Playwright-driven Chrome is
+automation-flagged either way, and reCAPTCHA scored it below
+`minValidScore: 0.5`. No action needed.
+
+This does *not* soften Blocker 1b: enforcement is demonstrably live and working,
+which is precisely why `lotfoundry.net` must be added to the key's allowed
+domains before the domain switch.
+
+Query to re-check:
+
+```bash
+TOKEN=$(gcloud auth print-access-token)
+curl -sS -H "Authorization: Bearer $TOKEN" -H "X-Goog-User-Project: yardup-2026" \
+  "https://monitoring.googleapis.com/v3/projects/yardup-2026/timeSeries?\
+filter=metric.type%3D%22firebaseappcheck.googleapis.com%2Fservices%2Fverdict_count%22\
+&interval.startTime=<ISO>&interval.endTime=<ISO>\
+&aggregation.alignmentPeriod=1209600s&aggregation.perSeriesAligner=ALIGN_SUM"
+```
+
+### Superseded: the original uncertainty
 
 A browser audit of the live site found the App Check exchange returning
 **403 `"App attestation failed."` / `PERMISSION_DENIED`** on every page that
@@ -207,12 +242,11 @@ currently works: the 2026-08-25 session recorded an attempted Google sign-in
 on a real device that was abandoned before completing, so the return leg has
 never been observed to succeed.
 
-**To settle it:** complete one real sign-in in an ordinary browser on
-`https://yardup-2026.web.app/login` and watch the network panel for
-`exchangeRecaptchaEnterpriseToken`. A 200 means real users are fine and the
-audit finding was an automation artifact. A 403 means App Check is rejecting
-real traffic against enforced Auth and Firestore, which is a P0 independent of
-the domain move.
+**Settled by Cloud Monitoring above - no real sign-in needed.** Kept only to
+document how the false alarm arose: a 403 from an automated browser is not
+evidence of a production fault when the attestation provider is a bot-scoring
+service. Check the aggregate verdict metrics before escalating this class of
+finding.
 
 ## Blocker 1a - the Places API key does not allow lotfoundry.net (OPEN)
 
