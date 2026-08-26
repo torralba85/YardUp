@@ -143,6 +143,47 @@ production had already been deployed manually, nothing is missing from the live
 site - but the automated deploy path is unproven until billing is fixed and the
 workflow is re-run.
 
+## Blocker 1a - the Places API key does not allow lotfoundry.net (OPEN)
+
+**Do this before or alongside the DNS change, or address autocomplete breaks the
+moment the domain goes live** - silently, with no server-side error.
+
+The browser Places key is referrer-restricted, and `lotfoundry.net` is not in
+its allowlist. Confirmed with `gcloud services api-keys describe`:
+
+| Key | UID | Allowed referrers |
+|---|---|---|
+| `lotfoundry-web-places` | `6c62509e-eada-4a6c-8400-e186856b9ea3` | `yardup-2026.web.app`, `yardup-2026.firebaseapp.com`, `localhost:4517`, `localhost:3000` |
+
+Add `https://lotfoundry.net/*` and `https://www.lotfoundry.net/*`. Adding
+referrers is additive and does not disturb the existing origins:
+
+```bash
+gcloud services api-keys update 6c62509e-eada-4a6c-8400-e186856b9ea3 \
+  --project=yardup-2026 \
+  --allowed-referrers="https://lotfoundry.net/*,https://www.lotfoundry.net/*,https://yardup-2026.web.app/*,https://yardup-2026.firebaseapp.com/*,http://localhost:4517/*,http://localhost:3000/*" \
+  --api-target=service=maps-embed-backend.googleapis.com \
+  --api-target=service=places-backend.googleapis.com \
+  --api-target=service=places.googleapis.com
+```
+
+Both `--api-target` and `--allowed-referrers` are passed because updating one
+restriction type without the other can clear the one you omit.
+
+Verify afterwards with `gcloud services api-keys describe 6c62509e-... --format="yaml(restrictions)"`,
+then load `/studio` on the live domain and type an address.
+
+**Housekeeping while you are in there:** a second key,
+`New next_public_google_places_key`
+(`4d270dd8-96b9-4a5a-b660-533c5ea082a5`), carries the same referrers but is
+scoped to ~27 Maps Platform services - far broader than a browser key needs. It
+is unclear whether anything still uses it. Worth confirming and either
+tightening to the three Places services or deleting.
+
+Also check the two server keys (`lotfoundry-server-places-2026-07`,
+`lotfoundry-server-maps-2026-07`). They correctly have no referrer restriction,
+but should be confirmed IP- or API-restricted rather than unrestricted.
+
 ## Blocker 1 - Cloudflare redirects all of lotfoundry.net (OPEN)
 
 `lotfoundry.net` does not serve the app. Every path returns `301` to
