@@ -110,25 +110,31 @@ describe("BlueHourHero", () => {
     ).toBeInTheDocument();
   });
 
-  it("passes hovered or focused survey geometry to the composition as highlight", async () => {
+  it("keeps pointer-only survey geometry out of the accessibility tree", async () => {
     render(<BlueHourHero />);
-    const hotspot = screen.getByRole("button", { name: /highlight property lines/i });
+    const surveyHotspots = screen.getByTestId("survey-hotspots");
+    expect(surveyHotspots).toHaveAttribute("aria-hidden", "true");
+    expect(
+      screen.queryByRole("button", { name: /highlight property lines/i }),
+    ).not.toBeInTheDocument();
 
-    fireEvent.focus(hotspot);
+    const hotspots = surveyHotspots.querySelectorAll("polygon");
+    expect(hotspots).toHaveLength(3);
+
     // The composition is behind a `next/dynamic` boundary, so the first read
     // has to wait for that chunk to resolve; later reads are synchronous.
+    fireEvent.mouseEnter(hotspots[0]);
     expect(await screen.findByTestId("mock-player")).toHaveAttribute(
       "data-highlight",
       "parcel",
     );
 
-    fireEvent.blur(hotspot);
+    fireEvent.mouseLeave(hotspots[0]);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
 
-    const adu = screen.getByRole("button", { name: /highlight adu footprint/i });
-    fireEvent.mouseEnter(adu);
+    fireEvent.mouseEnter(hotspots[2]);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "adu");
-    fireEvent.mouseLeave(adu);
+    fireEvent.mouseLeave(hotspots[2]);
     expect(screen.getByTestId("mock-player")).toHaveAttribute("data-highlight", "");
   });
 
@@ -143,9 +149,7 @@ describe("BlueHourHero", () => {
   it("keeps hotspots and the rail out of the reduced-motion experience", () => {
     setMatchMedia(true);
     render(<BlueHourHero />);
-    expect(
-      screen.queryByRole("button", { name: /highlight property lines/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("survey-hotspots")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("navigation", { name: /survey phases/i }),
     ).not.toBeInTheDocument();

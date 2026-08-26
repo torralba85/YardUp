@@ -247,36 +247,29 @@ export function BlueHourHero() {
           ) : null}
 
           {showPlayer ? (
-            /* Geometry hotspots — invisible, hover/focus lifts that survey
-               layer in the composition. Desktop-pointer affordance; the
-               container tracks the composition's 16:9 cover crop exactly. */
+            /* Geometry hotspots — invisible pointer-only affordances that lift
+               the survey layer in the composition. They do not perform an
+               action, so they stay out of the keyboard and screen-reader
+               interaction model. The container tracks the 16:9 cover crop. */
             <svg
               data-testid="survey-hotspots"
               viewBox={`0 0 ${BLUE_HOUR_WIDTH} ${BLUE_HOUR_HEIGHT}`}
               preserveAspectRatio="none"
               className="absolute left-1/2 top-1/2 hidden h-[max(100svh,56.25vw)] w-[max(100vw,177.78svh)] max-w-none -translate-x-1/2 -translate-y-1/2 portrait:-translate-x-[62%] sm:block"
-              aria-label="Survey layers"
-              role="group"
+              aria-hidden="true"
             >
               {HOTSPOTS.map((spot) => (
                 <polygon
                   key={spot.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={spot.label}
                   points={spot.polygon
                     .map(([x, y]) => `${x * BLUE_HOUR_WIDTH},${y * BLUE_HOUR_HEIGHT}`)
                     .join(" ")}
                   fill="transparent"
                   stroke="none"
-                  className="cursor-help outline-none"
+                  className="cursor-help"
                   style={{ pointerEvents: "all" }}
                   onMouseEnter={() => setHighlight(spot.id)}
                   onMouseLeave={() =>
-                    setHighlight((current) => (current === spot.id ? null : current))
-                  }
-                  onFocus={() => setHighlight(spot.id)}
-                  onBlur={() =>
                     setHighlight((current) => (current === spot.id ? null : current))
                   }
                 />
