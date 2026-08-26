@@ -62,8 +62,9 @@ describe("BuildersPanel", () => {
     // The referral cannot be bypassed: no builder contact details pre-connect.
     expect(screen.queryByText(/cascadeadu.example/)).not.toBeInTheDocument();
     expect(screen.queryByText(/555-0100/)).not.toBeInTheDocument();
-    // Licensed builders carry a licensed marker.
-    expect(screen.getByText(/licensed/i)).toBeInTheDocument();
+    // Self-reported license information is labeled without implying verification.
+    expect(screen.getByText(/license provided/i)).toBeInTheDocument();
+    expect(screen.getByText(/not guarantees of licensing/i)).toBeInTheDocument();
   });
 
   it("enables connecting when builders match", async () => {
