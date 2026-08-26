@@ -68,9 +68,24 @@ interface StoreKitBridge {
 }
 
 interface DigitalGoodsService {
-  getDetails: (productIds: string[]) => Promise<Array<{ itemId: string }>>;
+  getDetails: (productIds: string[]) => Promise<DigitalGoodsItemDetails[]>;
   listPurchases?: () => Promise<Array<{ itemId: string; purchaseToken: string }>>;
   consume?: (token: string) => Promise<void>;
+}
+
+interface DigitalGoodsItemDetails {
+  itemId: string;
+  price?: {
+    value: number | string;
+    currency: string;
+  };
+}
+
+export interface StoreProductPrice {
+  itemId: string;
+  value: number;
+  currency: string;
+  formatted: string;
 }
 
 interface DigitalGoodsPaymentResponse {
@@ -97,6 +112,72 @@ export function createPurchaseClient(
     return createAppStoreClient(win, options);
   }
   return createGooglePlayClient(win, options);
+}
+
+/**
+ * Read localized Google Play prices from the billing backend. Store prices
+ * must come from `getDetails()` rather than a web/Stripe catalog because Play
+ * controls the amount and localization shown in its purchase sheet.
+ */
+export async function getGooglePlayProductPrices(
+  productIds: string[],
+  options: {
+    win?: PurchaseChannelWindow | null;
+    locale?: string;
+  } = {},
+): Promise<Record<string, StoreProductPrice>> {
+  const win =
+    options.win === undefined
+      ? typeof window !== "undefined"
+        ? (window as unknown as PurchaseChannelWindow)
+        : null
+      : options.win;
+  const getService = win?.getDigitalGoodsService;
+  if (typeof getService !== "function") {
+    throw new PurchaseClientError("Google Play pricing is unavailable.");
+  }
+
+  const service = (await Promise.resolve(
+    getService("https://play.google.com/billing"),
+  )) as DigitalGoodsService | null;
+  if (!service?.getDetails) {
+    throw new PurchaseClientError("Google Play pricing is unavailable.");
+  }
+
+  const details = await service.getDetails(productIds);
+  const locale =
+    options.locale ??
+    (typeof navigator !== "undefined" ? navigator.language : "en-US");
+  const prices: Record<string, StoreProductPrice> = {};
+
+  for (const item of details) {
+    const value = Number(item.price?.value);
+    const currency = item.price?.currency;
+    if (!Number.isFinite(value) || value < 0 || !currency) continue;
+
+    prices[item.itemId] = {
+      itemId: item.itemId,
+      value,
+      currency,
+      formatted: formatCurrencyAmount(value, currency, locale),
+    };
+  }
+
+  return prices;
+}
+
+export function formatCurrencyAmount(
+  value: number,
+  currency: string,
+  locale?: string,
+): string {
+  const resolvedLocale =
+    locale ??
+    (typeof navigator !== "undefined" ? navigator.language : "en-US");
+  return new Intl.NumberFormat(resolvedLocale, {
+    style: "currency",
+    currency,
+  }).format(value);
 }
 
 function createWebClient(options: CreatePurchaseClientOptions): PurchaseClient {

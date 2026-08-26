@@ -843,6 +843,87 @@ function CreditShop() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [prices, setPrices] = useState<Record<5 | 10, {
+    total: string;
+    perLead: string;
+  }> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPrices() {
+      const { detectPurchaseChannel } = await import(
+        "@/lib/commerce/purchase-channel"
+      );
+      const channel = detectPurchaseChannel();
+
+      if (channel === "web") {
+        const { formatCreditPackPrice, formatCreditPackUnitPrice } = await import(
+          "@/lib/credit-packs"
+        );
+        if (!cancelled) {
+          setPrices({
+            5: {
+              total: formatCreditPackPrice(5),
+              perLead: `${formatCreditPackUnitPrice(5)} / lead`,
+            },
+            10: {
+              total: formatCreditPackPrice(10),
+              perLead: `${formatCreditPackUnitPrice(10)} / lead`,
+            },
+          });
+        }
+        return;
+      }
+
+      if (channel === "app-store") {
+        if (!cancelled) {
+          setPrices({
+            5: { total: "App Store", perLead: "Price shown at checkout" },
+            10: { total: "App Store", perLead: "Price shown at checkout" },
+          });
+        }
+        return;
+      }
+
+      try {
+        const { STORE_PRODUCTS } = await import("@/lib/commerce/products");
+        const { formatCurrencyAmount, getGooglePlayProductPrices } = await import(
+          "@/lib/commerce/purchase-client"
+        );
+        const playPrices = await getGooglePlayProductPrices([
+          STORE_PRODUCTS.builder5.id,
+          STORE_PRODUCTS.builder10.id,
+        ]);
+        const five = playPrices[STORE_PRODUCTS.builder5.id];
+        const ten = playPrices[STORE_PRODUCTS.builder10.id];
+        if (!five || !ten) {
+          throw new Error("Google Play did not return both credit-pack prices.");
+        }
+        if (!cancelled) {
+          setPrices({
+            5: {
+              total: five.formatted,
+              perLead: `${formatCurrencyAmount(five.value / 5, five.currency)} / lead`,
+            },
+            10: {
+              total: ten.formatted,
+              perLead: `${formatCurrencyAmount(ten.value / 10, ten.currency)} / lead`,
+            },
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Google Play pricing is unavailable. Please try again.");
+        }
+      }
+    }
+
+    void loadPrices();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function buyPack(pack: number) {
     if (!user) return;
@@ -896,7 +977,7 @@ function CreditShop() {
     <div className="border border-lf-hairline bg-lf-card p-5">
       <h3 className="lf-card-heading text-lf-espresso">Credit Shop</h3>
       <p className="mt-1 text-sm text-lf-muted">
-        Unlock leads instantly with credits. Save up to 25% by buying in bulk.
+        Unlock leads instantly with credits.
       </p>
       {error && (
         <div role="alert" className="mt-3 border border-lf-brick/30 bg-lf-brick-soft p-2 text-xs text-lf-brick">
@@ -908,29 +989,33 @@ function CreditShop() {
         <button
           type="button"
           onClick={() => buyPack(5)}
-          disabled={loading !== null}
+          disabled={loading !== null || prices === null}
           className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
-            <div className="text-xs text-lf-muted">$35 / lead</div>
+            <div className="text-xs text-lf-muted">
+              {prices ? prices[5].perLead : "Loading price"}
+            </div>
           </div>
           <div className="lf-money-md text-lf-forest">
-            {loading === 5 ? "…" : "$175"}
+            {loading === 5 ? "…" : prices?.[5].total ?? "—"}
           </div>
         </button>
         <button
           type="button"
           onClick={() => buyPack(10)}
-          disabled={loading !== null}
+          disabled={loading !== null || prices === null}
           className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>
-            <div className="text-xs text-lf-sand/80">$30 / lead · Best value</div>
+            <div className="text-xs text-lf-sand/80">
+              {prices ? prices[10].perLead : "Loading price"}
+            </div>
           </div>
           <div className="lf-money-md text-lf-sand">
-            {loading === 10 ? "…" : "$300"}
+            {loading === 10 ? "…" : prices?.[10].total ?? "—"}
           </div>
         </button>
       </div>
