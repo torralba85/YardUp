@@ -299,21 +299,72 @@ reason new runs are refused.
    investigate why the job never completes. Left alone this will exhaust the
    allowance again next cycle.
 
-### Why not just deploy from this machine
+### If you must deploy from a developer machine
 
-`npm run deploy` would work from here (Firebase CLI is authenticated, and both
-`build:firebase` and `deploy:dry-run` pass), but it is **not safe**:
+Done once on 2026-08-26 while Actions was unavailable. **`.env.local` must be
+moved aside first**, not merely overridden.
 
-- `.env.local` sets `NEXT_PUBLIC_APP_URL=http://localhost:3000`, and `NEXT_PUBLIC_*`
-  values are inlined at build time. A local build would bake `localhost:3000`
-  into the sitemap, robots, and Stripe return URLs.
-- `NEXT_PUBLIC_GOOGLE_PLACES_KEY` has no checked-in fallback and lives only in
-  GitHub secrets, so a local build would ship without working address
-  autocomplete.
+Next loads `.env.production.local` *and* `.env.local` for a production build, so
+any key present only in `.env.local` is still inlined. This repo's `.env.local`
+carries `NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN`, and a build made with it in
+place **baked that token into a public static chunk** - verified by grepping the
+token value out of `.next/static/chunks/` and `dist/`. Shipping it would hand
+every visitor a token that bypasses App Check enforcement, which `CLAUDE.md`
+explicitly forbids.
 
-CI writes `.env.production.local` from secrets precisely to avoid both. Deploy
-through CI, or reproduce that env file locally from the real secret values
-first.
+CI never hits this because a CI checkout has no `.env.local` at all.
+
+Safe procedure:
+
+```bash
+mv .env.local .env.local.disabled-for-release
+# .env.production.local should contain ONLY:
+#   NEXT_PUBLIC_APP_URL=https://lotfoundry.net
+#   NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser Places key>
+npm run build:firebase
+# confirm the build line reads: "Environments: .env.production.local"
+# confirm the debug token is absent:
+grep -rl "<token value>" .next/static/ dist/ || echo CLEAN
+npm run deploy
+mv .env.local.disabled-for-release .env.local   # restore afterwards
+```
+
+The Places key can be read without pasting secrets around:
+
+```bash
+gcloud services api-keys get-key-string 6c62509e-eada-4a6c-8400-e186856b9ea3 \
+  --project=yardup-2026 --format="value(keyString)"
+```
+
+`functions/.env` should mirror what production already has
+(`ENABLE_NATIVE_STORE_VERIFICATION=""`) so the deploy does not silently flip
+native store verification.
+
+One benign match remains: `localhost:3000` appears in a Remotion vendor chunk as
+an SSR fallback for `new URL()`. It is library code, present in CI builds too.
+
+### Why CI is still the right default
+
+A developer-machine deploy has three failure modes CI cannot hit, and two of
+them are silent:
+
+- `.env.local` sets `NEXT_PUBLIC_APP_URL=http://localhost:3000`. `NEXT_PUBLIC_*`
+  is inlined at build time, so a careless build bakes `localhost:3000` into the
+  sitemap, robots, and Stripe return URLs.
+- `.env.local` also carries the App Check debug token, which lands in a public
+  static chunk. Nothing in the build warns about it.
+- `NEXT_PUBLIC_GOOGLE_PLACES_KEY` has no checked-in fallback, so a build without
+  it ships with address autocomplete quietly broken.
+
+CI writes `.env.production.local` from secrets into a checkout that has no
+`.env.local`, which is why it avoids all three by construction. Restore Actions
+and go back to deploying through it.
+
+**Worth adding:** a release guard that fails the build when
+`NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` is set and `NODE_ENV=production`.
+`scripts/validate-public-repo.mjs` is the natural home. Today the only thing
+standing between a dev-machine deploy and a leaked App Check bypass is
+remembering to move one file.
 
 ## Remaining owner-only gates
 
