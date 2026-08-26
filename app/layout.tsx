@@ -1,26 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, IBM_Plex_Mono, Libre_Franklin } from "next/font/google";
+import { DM_Mono, Instrument_Sans, Newsreader } from "next/font/google";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 
-const cormorant = Cormorant_Garamond({
+const newsreader = Newsreader({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
   variable: "--font-display",
 });
 
-const libreFranklin = Libre_Franklin({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-sans",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
+const dmMono = DM_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   display: "swap",
   variable: "--font-mono",
 });
@@ -106,7 +107,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${libreFranklin.variable} ${ibmPlexMono.variable}`}
+      className={`${newsreader.variable} ${instrumentSans.variable} ${dmMono.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
