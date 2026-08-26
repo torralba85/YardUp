@@ -1,7 +1,11 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider, useAuth } from "./auth-context";
+import {
+  AuthProvider,
+  CURRENT_LEGAL_CONSENT,
+  useAuth,
+} from "./auth-context";
 
 const authMocks = vi.hoisted(() => ({
   createUserWithEmailAndPassword: vi.fn(),
@@ -79,7 +83,7 @@ vi.mock("firebase/firestore", () => ({
 function GoogleBuilderButton() {
   const { signInWithGoogle } = useAuth();
   return (
-    <button type="button" onClick={() => signInWithGoogle("builder")}>
+    <button type="button" onClick={() => signInWithGoogle("builder", CURRENT_LEGAL_CONSENT)}>
       Continue with Google
     </button>
   );
@@ -91,7 +95,13 @@ function EmailBuilderButton() {
     <button
       type="button"
       onClick={() =>
-        signUp("builder@example.com", "password123", "Builder Person", "builder")
+        signUp(
+          "builder@example.com",
+          "password123",
+          "Builder Person",
+          "builder",
+          CURRENT_LEGAL_CONSENT,
+        )
       }
     >
       Create builder
@@ -102,7 +112,7 @@ function EmailBuilderButton() {
 function AppleUserButton() {
   const { signInWithApple } = useAuth();
   return (
-    <button type="button" onClick={() => signInWithApple("user")}>
+    <button type="button" onClick={() => signInWithApple("user", CURRENT_LEGAL_CONSENT)}>
       Continue with Apple
     </button>
   );
@@ -144,6 +154,12 @@ describe("AuthProvider profile creation", () => {
           displayName: "Builder Person",
           email: "builder@example.com",
           role: "builder",
+          legalConsent: expect.objectContaining({
+            termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+            privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+            adultConfirmed: true,
+            acceptedAt: "server-time",
+          }),
         }),
         { merge: true },
       );
@@ -175,6 +191,12 @@ describe("AuthProvider profile creation", () => {
           displayName: "Builder Person",
           email: "builder@example.com",
           role: "builder",
+          legalConsent: expect.objectContaining({
+            termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+            privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+            adultConfirmed: true,
+            acceptedAt: "server-time",
+          }),
         }),
         { merge: true },
       );
