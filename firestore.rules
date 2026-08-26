@@ -151,11 +151,34 @@ service cloud.firestore {
       return request.resource.data.role in ["user", "builder"];
     }
 
+    function isValidLegalConsent(consent) {
+      return consent is map &&
+        consent.keys().hasOnly([
+          "termsVersion",
+          "privacyVersion",
+          "adultConfirmed",
+          "acceptedAt"
+        ]) &&
+        consent.keys().hasAll([
+          "termsVersion",
+          "privacyVersion",
+          "adultConfirmed",
+          "acceptedAt"
+        ]) &&
+        consent.termsVersion is string &&
+        consent.termsVersion.size() > 0 &&
+        consent.privacyVersion is string &&
+        consent.privacyVersion.size() > 0 &&
+        consent.adultConfirmed == true &&
+        consent.acceptedAt is timestamp;
+    }
+
     function isValidUserProfile(userId) {
       return request.resource.data.keys().hasOnly([
         "displayName",
         "email",
         "role",
+        "legalConsent",
         "createdAt",
         "updatedAt"
       ]) &&
@@ -170,6 +193,8 @@ service cloud.firestore {
       request.resource.data.email.size() <= 254 &&
       request.resource.data.role is string &&
       isValidRole() &&
+      (!("legalConsent" in request.resource.data) ||
+        isValidLegalConsent(request.resource.data.legalConsent)) &&
       request.resource.data.createdAt is timestamp &&
       request.resource.data.updatedAt is timestamp &&
       (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
