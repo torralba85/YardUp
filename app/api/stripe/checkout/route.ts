@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           },
         },
       ],
-      metadata: { builderId, requestId },
+      metadata: { purchaseType: "lead_unlock", builderId, requestId },
       success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
       cancel_url: `${origin}/builder?lead=${requestId}`,
     });

@@ -3,6 +3,7 @@ import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
+import { creditPackPriceCents } from "@/lib/credit-pack-pricing";
 
 export const runtime = "nodejs";
 
@@ -13,12 +14,11 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const pack = body?.pack;
-  
-  if (pack !== 5 && pack !== 10) {
+
+  const amountCents = creditPackPriceCents(pack);
+  if (amountCents === null) {
     return NextResponse.json({ error: "Invalid credit pack selected" }, { status: 400 });
   }
-
-  const amountCents = pack === 5 ? 17500 : 30000;
   const db = getAdminDb();
   const profileRef = db.doc(`builders/${builderId}`);
   const profileSnap = await profileRef.get();
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Payments are not available." }, { status: 503 });
     }
-    
+
     // Demo grant
     try {
       await db.runTransaction(async (transaction) => {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
           throw new Error("Builder profile not found");
         }
         const currentCredits = profileSnap.data()?.credits ?? 0;
-        
+
         transaction.update(profileRef, {
           credits: currentCredits + pack,
           updatedAt: new Date().toISOString(),
@@ -93,10 +93,10 @@ export async function POST(request: NextRequest) {
           },
         },
       ],
-      metadata: { 
-        builderId, 
-        purchaseType: "credit_pack", 
-        creditsToGrant: String(pack) 
+      metadata: {
+        builderId,
+        purchaseType: "credit_pack",
+        creditsToGrant: String(pack),
       },
       success_url: `${origin}/builder?credits_added=1`,
       cancel_url: `${origin}/builder`,
