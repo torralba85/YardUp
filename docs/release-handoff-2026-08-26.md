@@ -1,7 +1,7 @@
 # Release Handoff - Web Production + Google Play
 
 **Date:** 2026-08-26
-**Branch:** `feature/map-quality-improvements` @ `5711b34`
+**Branch:** `feature/map-quality-improvements` @ `5f63585`
 **PR:** [#162](https://github.com/torralba85/YardUp/pull/162) -> `master` (MERGEABLE / CLEAN, `verify` passing)
 **Firebase project:** `yardup-2026`
 
@@ -17,14 +17,40 @@ All run locally against `5711b34`:
 | Gate | Command | Result |
 |---|---|---|
 | Lint | `npm run lint` | pass (0 warnings) |
-| Unit | `npm run test` | pass |
+| Unit | `npm run test` | 770 passed, 135 files |
 | Types | `npx tsc --noEmit` | pass |
 | Build | `npm run build` | pass |
 | E2E | `npm run test:e2e` | 82 passed, 14 skipped, 0 failed |
+| Firebase build | `npm run build:firebase` | pass, incl. `assertFunctionsDependencies()` |
+| Deploy config | `npm run deploy:dry-run` | pass, rules compiled, functions packaged |
 | Secrets | `npm run repo:public-check` | pass (595 files) |
 | Android config | `npm run android:validate` | pass |
 | Audit (root) | `npm audit` | 0 vulnerabilities |
 | Audit (functions) | `cd functions && npm audit` | 0 vulnerabilities |
+
+Playwright browsers were missing locally on first run and produced 86 spurious
+failures (`Executable doesn't exist ... chrome-headless-shell.exe`). That is an
+environment gap, not a product defect; `npx playwright install chromium` fixes
+it. CI installs its own browsers.
+
+`deploy:dry-run` emits one non-blocking warning: `package.json indicates an
+outdated version of firebase-functions`. Worth scheduling, not a release gate.
+
+### Changes made in this session
+
+- `feat(security)` baseline headers - X-Content-Type-Options, X-Frame-Options,
+  Referrer-Policy, Permissions-Policy. `payment=(self)` is load-bearing for Play
+  Billing and is locked by a test.
+- `fix(payments)` Firestore read-before-write ordering in store grants; a
+  purchase by a user with no builder profile previously recorded the grant and
+  replay key while skipping the credit increment.
+- `feat(commerce)` channel-native credit-pack pricing; Play requires its own
+  localized prices rather than hardcoded `$175`/`$300`.
+- `feat(android)` 1.0.6 / versionCode 7 with a published-ceiling guard.
+- `style(design-system)` Newsreader / Instrument Sans / DM Mono.
+- `chore(pwa)` service worker cache `v4` -> `v5` so returning visitors leave the
+  old app shell.
+- `chore(store)` manifest screenshots recaptured on the new type.
 
 GitHub reports 52 Dependabot alerts, but those are against the **default
 branch** (`master`), which is 66 commits stale. Merging PR #162 clears them.
@@ -172,8 +198,23 @@ a 404 `robots.txt`, no security headers, the Firestore read-before-write payment
 bug, and 52 open Dependabot alerts.
 
 After merge, CI runs verify then deploys Hosting + Functions + Firestore rules.
-Capture the run ID, Firebase revisions, and the previous revision as rollback
-target.
+
+### Rollback target
+
+Production has been frozen since 2026-07-23. The currently live release, and
+therefore the rollback target for this deploy:
+
+| Field | Value |
+|---|---|
+| Release | `sites/yardup-2026/releases/1784830700797000` |
+| Version | `sites/yardup-2026/versions/0cc37cbbb4e7d19b` |
+| Released | `2026-07-23T18:18:20Z` |
+| By | `firebase-adminsdk-fbsvc@yardup-2026.iam.gserviceaccount.com` |
+
+Roll back from Firebase Console -> Hosting -> release history -> "Rollback" on
+that version, or re-run the deploy workflow from the previous `master` commit.
+Note this only rolls back Hosting; Cloud Functions and Firestore rules are
+deployed separately and need their own revert if the problem is in either.
 
 ## Blocker 3 - Google Play production release (OPEN, gated on Blockers 1-2)
 
