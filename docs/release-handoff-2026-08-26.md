@@ -143,6 +143,45 @@ production had already been deployed manually, nothing is missing from the live
 site - but the automated deploy path is unproven until billing is fixed and the
 workflow is re-run.
 
+## Live QA of the deployed site - clean
+
+Run against the live origin on 2026-08-26 with Playwright (Chrome DevTools MCP
+hung on launch and was abandoned). Scripts kept at `scratchpad/liveaudit.mjs`
+and `scratchpad/journey2.mjs`.
+
+**12 routes x desktop (1440) and Pixel 7:**
+
+| Check | Result |
+|---|---|
+| Uncaught page errors | 0 |
+| Failed network requests | 0 |
+| HTTP >= 400 responses | 0 (excl. the App Check automation artifact) |
+| Horizontal overflow | none at either width |
+| Same-origin assets resolving | 37/37 landing, 25-32 per inner page, all 200 |
+
+**Core product journey, live:**
+
+- Desktop `/studio`: 12 dollar figures rendered, 3D canvas present, no overflow.
+- Mobile `/studio`: demo lot -> `1:FIND` -> `2:EARN` with `$2,050` and `$24,600`
+  rendered.
+
+Two false alarms from the first pass, recorded so they are not re-raised:
+
+- *"Mobile renders no money figures and no canvas."* Wrong - the harness bailed
+  on an `isEnabled()` check while the parcel was still loading, so it never
+  clicked the CTA. With a proper wait the journey advances normally. `canvas: 0`
+  on the Earn step is also correct; the 3D scene belongs to the Shape step.
+- *"App Check 403 on every authenticated page."* An automation artifact - see
+  the resolved section below.
+
+The only remaining console noise is `requestStorageAccess: Permission denied`,
+which is Chrome's third-party-storage prompt under automation and does not
+appear as a functional fault.
+
+**Scope limit worth stating:** this exercised guest and demo paths only. Signed-in
+journeys, checkout, and lead unlock were not driven end to end, because doing so
+writes to production Firestore and Stripe under a real account.
+
 ## Blocker 1b - App Check will reject every request on lotfoundry.net (OPEN, SEVERE)
 
 **This is the most severe launch blocker found, and it is certain.** Fix it
