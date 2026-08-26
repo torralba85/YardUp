@@ -31,6 +31,12 @@ describe("security headers", () => {
     // lib/commerce/purchase-client.ts. Tightening this to payment=() would
     // silently break every in-app purchase on Android, so assert the
     // allowance explicitly rather than only checking the string exists.
+    //
+    // (self) is right despite Play's method identifier being cross-origin
+    // (https://play.google.com/billing): the `payment` allowlist gates which
+    // document origins may call the API, not which supportedMethods are
+    // permitted. Nothing here can catch a regression on a real device, so the
+    // assertion is the only guard.
     expect(permissions).toContain("payment=(self)");
     expect(permissions).not.toContain("payment=()");
   });

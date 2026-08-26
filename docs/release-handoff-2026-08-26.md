@@ -94,11 +94,47 @@ Confirmed live: all five security headers, `sitemap.xml` emitting
 `https://lotfoundry.net`, service worker `v5`, `/robots.txt` 200,
 `/api/suggest` 200.
 
-**`lotfoundry.net` already resolves correctly at Firebase's edge.** Requesting
-the Firebase IP with a `lotfoundry.net` Host header returns 200 for `/`,
-`/about`, `/sitemap.xml`, and `/robots.txt`. Only DNS and the certificate remain
-- once the Cloudflare change lands, the site works immediately with no further
-deploy.
+Function health - all five Cloud Run services report ready, and each was
+exercised past its cold-start path rather than only through cached page routes.
+All returned proper auth/validation responses, no 5xx, and Cloud Run logged zero
+`severity>=ERROR` entries after the deploy:
+
+| Endpoint | Function | Result |
+|---|---|---|
+| `/api/ai/project-brief` | `apiAi` | 401 (auth required) |
+| `/api/stripe/webhook` | `apiStripe` | 400 (signature validation) |
+| `/api/stripe/checkout` | `apiStripe` | 401 (auth required) |
+| `/api/store/purchases/verify` | `apiStore` | 401 (auth required) |
+| `/api/geocode` | `api` | 400 (validation) |
+| `/api/feedback` | `api` | 400 (validation) |
+
+This mattered because `deploy:dry-run` and the deploy both warned that
+`functions/package.json` pins an outdated `firebase-functions`, and this release
+also refreshed the lockfile. Neither combination broke a cold start. Upgrading
+`firebase-functions` is still worth scheduling.
+
+### One header worth not "hardening" later
+
+`Permissions-Policy: payment=(self)` is deliberate. It looks wrong next to Play
+Billing's cross-origin method identifier `https://play.google.com/billing`, and
+a future tightening pass may try to change it. Per MDN and the Payment Request
+spec, the `payment` allowlist gates **which document origins may call the API**
+(a blocked policy throws `SecurityError` from the constructor); it does not
+filter `supportedMethods`. LotFoundry calls `PaymentRequest` from its own
+top-level document, so `(self)` is correct. `payment=()` would kill all Android
+in-app purchases; adding `play.google.com` to the list would grant nothing.
+Only a real device in the TWA can confirm this end to end.
+
+**`lotfoundry.net` already routes correctly at Firebase's edge.** Requesting the
+Firebase IP with a `lotfoundry.net` Host header returns 200 for `/`, `/about`,
+`/sitemap.xml`, and `/robots.txt`, so Hosting already maps that host to this
+site and **no further deploy is needed** after the DNS change.
+
+That test used `curl -k` and therefore proves **routing only, not TLS**. The
+API still reports `cert.state: CERT_VALIDATING`. After the DNS flip expect a
+period where `https://lotfoundry.net` fails TLS until the certificate issues -
+that is normal, not a sign the DNS change was wrong. Wait for `CERT_ACTIVE`
+before concluding anything.
 
 Note: PR #162 is **not merged**. `master` is still 66+ commits behind what is
 running in production. Merge it once Actions is restored so the branch and the
@@ -370,9 +406,24 @@ gcloud services api-keys get-key-string 6c62509e-eada-4a6c-8400-e186856b9ea3 \
   --project=yardup-2026 --format="value(keyString)"
 ```
 
-`functions/.env` should mirror what production already has
-(`ENABLE_NATIVE_STORE_VERIFICATION=""`) so the deploy does not silently flip
-native store verification.
+**`functions/.env` must exist**, and is gitignored - a clean checkout will not
+have it. `firebase deploy` reads it and sets the deployed functions' env from
+it, so if it is missing the deploy *removes* `NEXT_PUBLIC_GOOGLE_PLACES_KEY`
+from the functions' environment. Mirror what production already has:
+
+```
+NEXT_PUBLIC_GOOGLE_PLACES_KEY="next_public_google_places_key"
+ENABLE_NATIVE_STORE_VERIFICATION=""
+```
+
+Those are the literal current production values, confirmed with
+`gcloud functions describe apiStore`. `ENABLE_NATIVE_STORE_VERIFICATION` is read
+at deploy time to decide secret bindings, so an empty value keeps native store
+verification disabled - the documented desired state until sandbox and RTDN
+tests pass. (The Places value really is the literal string
+`next_public_google_places_key` in production, which looks like a secret set to
+its own name. It is vestigial: `NEXT_PUBLIC_*` is inlined at build time, so the
+functions' runtime copy is never read. Worth cleaning up, harmless today.)
 
 One benign match remains: `localhost:3000` appears in a Remotion vendor chunk as
 an SSR fallback for `new URL()`. It is library code, present in CI builds too.
