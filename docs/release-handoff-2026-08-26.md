@@ -257,6 +257,64 @@ validator asserts the manifest exceeds it.
    Blocker 1.
 7. Promote to production.
 
+## Blocker 4 - GitHub Actions is not queueing runs (OPEN, blocks the deploy)
+
+Pushes to `feature/map-quality-improvements` on 2026-08-26 between 16:15 and
+16:44 UTC produced **no workflow runs at all**. PR #162's head SHA matches the
+pushed commit (`5bf3acc`), so the pushes registered, but:
+
+- `gh api repos/torralba85/YardUp/commits/5bf3acc.../check-runs` returns
+  `total_count: 0`
+- the newest CI run is still `df4d42d` at `2026-08-26T03:12:39Z`
+- Actions is enabled (`{"enabled": true, "allowed_actions": "all"}`) and the CI
+  workflow is `active`; the repo is not archived or disabled
+
+### Likely cause: exhausted Actions minutes
+
+The repo is **private**, so Actions minutes are metered. The `Dependabot
+Updates` workflow has been hanging and being cancelled at the 24-hour platform
+timeout, repeatedly:
+
+```
+2026-08-22T20:01:59Z -> 2026-08-23T20:02:02Z  cancelled  github_actions in /.
+2026-08-17T00:39:04Z -> 2026-08-18T00:39:06Z  cancelled  npm_and_yarn in /functions
+2026-08-17T00:39:04Z -> 2026-08-18T00:39:06Z  cancelled  npm_and_yarn in /.
+...
+```
+
+61 such runs appear in the last 100 workflow runs, each burning ~1,440 minutes.
+That is far beyond any Free or Pro monthly allowance and is the most plausible
+reason new runs are refused.
+
+### To confirm and fix
+
+1. Check <https://github.com/settings/billing/summary> for Actions usage and
+   whether the spending limit is reached. (`gh` cannot read this without the
+   `user` scope: `gh auth refresh -h github.com -s user`.)
+2. Raise the spending limit, or wait for the monthly reset, or make the repo
+   public (Actions minutes are free for public repos).
+3. **Fix the runaway independently of the release.** These runs are not doing
+   useful work - they hang for 24h and get killed. Options: disable Dependabot
+   version updates in `.github/dependabot.yml`, reduce their schedule, or
+   investigate why the job never completes. Left alone this will exhaust the
+   allowance again next cycle.
+
+### Why not just deploy from this machine
+
+`npm run deploy` would work from here (Firebase CLI is authenticated, and both
+`build:firebase` and `deploy:dry-run` pass), but it is **not safe**:
+
+- `.env.local` sets `NEXT_PUBLIC_APP_URL=http://localhost:3000`, and `NEXT_PUBLIC_*`
+  values are inlined at build time. A local build would bake `localhost:3000`
+  into the sitemap, robots, and Stripe return URLs.
+- `NEXT_PUBLIC_GOOGLE_PLACES_KEY` has no checked-in fallback and lives only in
+  GitHub secrets, so a local build would ship without working address
+  autocomplete.
+
+CI writes `.env.production.local` from secrets precisely to avoid both. Deploy
+through CI, or reproduce that env file locally from the real secret values
+first.
+
 ## Remaining owner-only gates
 
 These need console or business access and are not code-resolvable:
