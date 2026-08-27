@@ -166,6 +166,46 @@ describe("AuthProvider profile creation", () => {
     });
   });
 
+  it("records the consent receipt when an existing user signs in with Google", async () => {
+    // A returning social user: the profile already exists, and signInWithGoogle
+    // passes neither displayName nor email. The receipt must still be written —
+    // prompting for consent and then discarding it is worse than not asking.
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        role: "builder",
+        displayName: "Builder Person",
+        email: "builder@example.com",
+      }),
+    });
+    authMocks.signInWithPopup.mockResolvedValue({
+      user: { uid: "user-1", email: "builder@example.com", displayName: "Builder Person" },
+    });
+
+    render(
+      <AuthProvider>
+        <GoogleBuilderButton />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() => {
+      expect(firestoreMocks.setDoc).toHaveBeenCalledWith(
+        { path: "users/user-1" },
+        expect.objectContaining({
+          legalConsent: expect.objectContaining({
+            termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+            privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+            adultConfirmed: true,
+            acceptedAt: "server-time",
+          }),
+        }),
+        { merge: true },
+      );
+    });
+  });
+
   it("creates a builder profile for email registration", async () => {
     authMocks.createUserWithEmailAndPassword.mockResolvedValue({
       user: {

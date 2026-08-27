@@ -133,7 +133,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextDisplayName = displayName || data.displayName || null;
         const nextEmail = email || data.email || "";
 
-        if (options.displayName !== undefined || options.email !== undefined) {
+        // Social sign-in passes neither displayName nor email, so gating the
+        // write on those alone silently dropped every returning user's consent
+        // receipt — they were re-prompted on each sign-in and nothing was
+        // recorded, which is the one thing clickwrap exists to produce.
+        if (
+          options.displayName !== undefined ||
+          options.email !== undefined ||
+          options.legalConsent !== undefined
+        ) {
           await setDoc(docRef, {
             displayName: nextDisplayName,
             email: nextEmail,
