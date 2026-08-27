@@ -409,8 +409,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             )}
 
-
-
             <button
               type="submit"
               disabled={loading}
@@ -426,20 +424,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 type="checkbox"
                 checked={legalAccepted}
                 onChange={(event) => setLegalAccepted(event.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
               />
               <span>
                 I confirm I am 18 or older, agree to the{" "}
                 <a
                   href="/terms"
-                  className="text-lf-sand underline underline-offset-2"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   Terms &amp; Conditions
                 </a>
                 , and acknowledge the{" "}
                 <a
                   href="/privacy"
-                  className="text-lf-sand underline underline-offset-2"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
                 >
                   Privacy Policy
                 </a>

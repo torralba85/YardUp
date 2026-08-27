@@ -160,15 +160,15 @@ export default function LoginForm() {
           type="checkbox"
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
         />
         <span>
           For Google or Apple, I confirm I am 18 or older, agree to the{" "}
-          <Link href="/terms" className="text-lf-clay-ink underline underline-offset-2">
+          <Link href="/terms" className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2">
             Terms &amp; Conditions
           </Link>
           , and acknowledge the{" "}
-          <Link href="/privacy" className="text-lf-clay-ink underline underline-offset-2">
+          <Link href="/privacy" className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2">
             Privacy Policy
           </Link>
           .
