@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AuthProvider,
@@ -9,6 +10,7 @@ import {
 
 const authMocks = vi.hoisted(() => ({
   createUserWithEmailAndPassword: vi.fn(),
+  deleteUser: vi.fn(),
   onAuthStateChanged: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
@@ -56,6 +58,7 @@ const oauthProvider = vi.hoisted(() => {
 
 vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: authMocks.createUserWithEmailAndPassword,
+  deleteUser: authMocks.deleteUser,
   GoogleAuthProvider: class {
     setCustomParameters = vi.fn();
   },
@@ -115,6 +118,48 @@ function AppleUserButton() {
     <button type="button" onClick={() => signInWithApple("user", CURRENT_LEGAL_CONSENT)}>
       Continue with Apple
     </button>
+  );
+}
+
+function GoogleFailureButton() {
+  const { signInWithGoogle } = useAuth();
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          signInWithGoogle("user", CURRENT_LEGAL_CONSENT).catch(() => setFailed(true))
+        }
+      >
+        Continue with Google
+      </button>
+      {failed ? <span>Consent failed</span> : null}
+    </>
+  );
+}
+
+function EmailFailureButton() {
+  const { signUp } = useAuth();
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          signUp(
+            "builder@example.com",
+            "password123",
+            "Builder Person",
+            "builder",
+            CURRENT_LEGAL_CONSENT,
+          ).catch(() => setFailed(true))
+        }
+      >
+        Create builder
+      </button>
+      {failed ? <span>Consent failed</span> : null}
+    </>
   );
 }
 
@@ -204,6 +249,77 @@ describe("AuthProvider profile creation", () => {
         { merge: true },
       );
     });
+  });
+
+  it("preserves the original receipt when an existing user already accepted the current versions", async () => {
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        role: "builder",
+        displayName: "Builder Person",
+        email: "builder@example.com",
+        legalConsent: {
+          ...CURRENT_LEGAL_CONSENT,
+          acceptedAt: "original-server-time",
+        },
+      }),
+    });
+    authMocks.signInWithPopup.mockResolvedValue({
+      user: { uid: "user-1", email: "builder@example.com", displayName: "Builder Person" },
+    });
+
+    render(
+      <AuthProvider>
+        <GoogleBuilderButton />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() => {
+      expect(firestoreMocks.getDoc).toHaveBeenCalledWith({ path: "users/user-1" });
+    });
+    expect(firestoreMocks.setDoc).not.toHaveBeenCalled();
+  });
+
+  it("signs a social user back out when the consent receipt cannot be stored", async () => {
+    authMocks.signInWithPopup.mockResolvedValue({
+      user: { uid: "user-1", email: "user@example.com", displayName: "User Person" },
+    });
+    firestoreMocks.setDoc.mockRejectedValueOnce(new Error("Firestore unavailable"));
+
+    render(
+      <AuthProvider>
+        <GoogleFailureButton />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    expect(await screen.findByText("Consent failed")).toBeInTheDocument();
+    expect(authMocks.signOut).toHaveBeenCalled();
+  });
+
+  it("rolls back a new email account when the consent receipt cannot be stored", async () => {
+    const createdUser = {
+      uid: "user-1",
+      email: "builder@example.com",
+      displayName: null,
+    };
+    authMocks.createUserWithEmailAndPassword.mockResolvedValue({ user: createdUser });
+    authMocks.updateProfile.mockResolvedValue(undefined);
+    firestoreMocks.setDoc.mockRejectedValueOnce(new Error("Firestore unavailable"));
+
+    render(
+      <AuthProvider>
+        <EmailFailureButton />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Create builder" }));
+
+    expect(await screen.findByText("Consent failed")).toBeInTheDocument();
+    expect(authMocks.deleteUser).toHaveBeenCalledWith(createdUser);
   });
 
   it("creates a builder profile for email registration", async () => {
