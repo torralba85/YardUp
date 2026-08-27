@@ -116,7 +116,7 @@ export default function TermsPage() {
       <LegalSection title="13. Changes">
         <p>
           We may update these terms by changing the “Last updated” date. Continued use after
-          changes constitutes acceptance. Subject to legal review before store submission.
+          changes constitutes acceptance.
         </p>
       </LegalSection>
 

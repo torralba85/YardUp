@@ -105,8 +105,7 @@ export default function PrivacyPage() {
       <LegalSection title="10. Changes">
         <p>
           We may update this policy by revising the “Last updated” date. Material changes may also
-          be communicated by email when appropriate. This policy is subject to legal review before
-          store submission.
+          be communicated by email when appropriate.
         </p>
       </LegalSection>
 
