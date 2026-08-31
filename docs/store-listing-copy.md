@@ -20,13 +20,19 @@ native build, provider contracts, and store guidance before submission.
 | Feedback | `/api/feedback` intake | Support and product feedback | Confirm support retention and access policy |
 | Server diagnostics | Firebase Hosting and Cloud Functions logs | Reliability and security operations | Confirm platform retention settings |
 
-There are no advertising or analytics SDKs in the current codebase. This is not
-a claim that no processor collects operational logs; verify each processor's
-current policy before completing App Privacy or Play Data Safety.
+There are no advertising SDKs in the current codebase, and no analytics SDK in
+the native bundles. The web app runs Google Analytics 4 behind an opt-in cookie
+banner (`components/analytics/GoogleAnalytics.tsx`): no tag loads and no cookie
+is set until the visitor accepts, and advertising/personalization signals are
+disabled. Since the store shells render the same web surface, treat GA as in
+scope for App Privacy and Play Data Safety — see `docs/play-declarations.md`.
+This is also not a claim that no processor collects operational logs; verify
+each processor's current policy before completing either form.
 
 ### Third-party processors
 
-- Google: Firebase Auth/Firestore, Maps, Geocoding, and Places.
+- Google: Firebase Auth/Firestore, Maps, Geocoding, Places, and Analytics 4
+  (web, opt-in only).
 - Regrid: parcel lookup.
 - OpenAI: address context and optional style-match photo generation.
 - Stripe: web Checkout and payment processing.

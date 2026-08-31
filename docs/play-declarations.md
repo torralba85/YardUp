@@ -13,8 +13,14 @@ filled in verbatim. Console entry itself requires the account owner.
 
 Answers reflect what the product actually does: Firebase Auth + Firestore,
 Stripe Checkout on the open web, Play Billing in the TWA
-(`lib/commerce/purchase-channel.ts`), reCAPTCHA Enterprise on auth, no ads,
-no analytics SDK.
+(`lib/commerce/purchase-channel.ts`), reCAPTCHA Enterprise on auth, and no ads.
+
+**Analytics:** no analytics SDK ships in the Android bundle. Google Analytics 4
+runs on the web app only (`components/analytics/GoogleAnalytics.tsx`), behind an
+opt-in cookie banner. Because the TWA renders that same web surface, a user who
+accepts the banner inside the TWA is measured by GA — so this is a web-content
+behavior the Data Safety form still has to account for, not a "no analytics"
+situation. See "App activity" below before submitting.
 
 | Question | Answer |
 |---|---|
@@ -53,8 +59,18 @@ Notes for the form:
   `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
   generation — declare Photos as collected. The photo is not stored on our
   servers (processed and discarded), matching `app/privacy/page.tsx`.
-- No crash/analytics SDK ships in the app bundle; do not declare App info and
-  performance.
+- No crash/analytics SDK ships in the app bundle, so **Crash logs** and
+  **Diagnostics** under App info and performance stay undeclared.
+- **App activity -> App interactions** must be declared: Collected, Not shared,
+  Optional (the user can decline), purpose Analytics. GA4 records page paths,
+  referrer, device/browser type, and an approximate location derived from a
+  truncated IP. It is optional in Play's sense because the tag does not load at
+  all until the visitor accepts the banner.
+- Do not declare advertising or personalization: `ad_storage`,
+  `ad_user_data`, and `ad_personalization` are set to `denied` in the tag
+  config, and there is no ads SDK.
+- Nothing user-identifying is sent to Google — no address, email, saved
+  scenario, or feasibility result — so this adds no PII category.
 
 ## 2. Content rating questionnaire (IARC)
 

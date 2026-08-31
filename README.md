@@ -95,6 +95,12 @@ cp .env.example .env.local
 Fill only the services you intend to test. Never commit `.env.local`,
 `functions/.env`, signing keys, or store-service credentials.
 
+Analytics stays off locally unless you opt in. `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+is empty in `.env.example`, and with no measurement ID the Google Analytics tag
+never loads and the cookie banner never renders. Set it to a `G-XXXXXXXXXX` ID
+only if you are deliberately testing the consent flow, and use a separate GA4
+property so local traffic never lands in production reporting.
+
 ## Verify
 
 ```bash
@@ -143,6 +149,10 @@ The repository map and deeper architecture links are maintained in
 
 - Server secrets stay server-side and must never use a `NEXT_PUBLIC_*` name.
 - AI photo upload requires explicit consent.
+- Google Analytics is opt-in: no tag loads and no analytics cookie is set until
+  the visitor accepts the cookie banner, and declining also clears any GA cookie
+  left from an earlier grant. Advertising and personalization signals are
+  disabled, and no address, email, or feasibility result is sent to Google.
 - Account export and deletion are available from Settings.
 - Security reports should follow [SECURITY.md](SECURITY.md), not a public issue.
 
