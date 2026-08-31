@@ -70,6 +70,7 @@ Key entry points:
 - `lib/ai-api.ts`, `lib/ai-types.ts`, `lib/style-match-photo.ts`, `lib/server/openai.ts` - AI panels (project brief, style-matched ADU concepts)
 - `lib/stripe.ts`, `lib/lead-unlock-*.ts`, `lib/marketplace*.ts`, `lib/server/lead-unlocks.ts` - payments + builder lead-unlock marketplace
 - `lib/saved-scenarios.ts`, `lib/scenarios-firestore.ts`, `lib/scenario-url.ts` - scenario persistence and sharing
+- `lib/analytics/*`, `components/analytics/*` - consent-gated GA4; the tag loads only after opt-in and only when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set
 - `app/api/{parcel,aerial,geocode,suggest}/route.ts` - parcel/data server routes
 - `app/api/ai/{project-brief,adu-concept}/route.ts` - AI server routes (auth + rate-limited)
 - `app/api/stripe/{checkout,webhook}/route.ts` - Stripe checkout session + webhook handler
@@ -82,6 +83,7 @@ Key entry points:
 - `DESIGN.md` - mandatory before visual or UI decisions.
 - `README.md` - product scope, local setup, environment variables, verification, CI, deployment.
 - `docs/deployment.md` - Firebase deploy flow, CI secrets, rollback, deployment troubleshooting.
+- `docs/cloudflare-dns.md` - DNS/edge state for `lotfoundry.net`, the open `www` redirect, and verification commands.
 - `docs/release-checklist.md` - manual and automated release checks.
 - `docs/debugging-guide.md` - bug reproduction and diagnosis methodology (log collection, environment isolation, `git bisect`, minimal reproducible examples, flaky tests).
 - `docs/repo-health-routine.md` - weekly/monthly repo maintenance schedule (dependency review, CI health, secrets scanning, doc freshness, release tagging).
@@ -120,6 +122,7 @@ OPENAI_IMAGE_MODEL=<image-capable model, defaults to gpt-5.6-sol>
 STRIPE_SECRET_KEY=<server-side Stripe secret key>
 STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
 NEXT_PUBLIC_APP_URL=<canonical app URL for Stripe redirect callbacks>
+NEXT_PUBLIC_GA_MEASUREMENT_ID=<GA4 measurement ID; empty disables analytics and the cookie banner>
 NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web API key>
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<Firebase auth domain>
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=<Firebase project ID>
