@@ -460,6 +460,72 @@ and go back to deploying through it.
 standing between a dev-machine deploy and a leaked App Check bypass is
 remembering to move one file.
 
+### Update 2026-08-31 - Blocker 4 is still open; new evidence and one fix landed
+
+CI has produced **zero `ci.yml` runs on any branch since this doc's original
+date**, PR #167 included. Two things changed today:
+
+**New evidence for the exhausted-minutes theory.** Two runs recorded against
+this session's pushes came from a GitHub Actions workflow ID (`343134271`)
+that corresponds to no file in `.github/workflows/` on any branch and is not
+in the repo's registered workflow list (`list_workflows` returns only
+`ai-maintainer.yml`, `ci.yml`, `labels.yml`, and `fetch-landing-assets.yml`).
+Both runs show `conclusion: startup_failure` with `path: "BuildFailed"` - a
+placeholder, not a real path - and `get_job_logs` confirms **zero jobs were
+ever scheduled** under either run (`total_jobs: 0`). That rules out a broken
+workflow file (nothing ran to fail); it is consistent with GitHub recording a
+stub run because no job could be queued at the account level at all, which
+fits an exhausted spending limit better than any repo-side cause. It has been
+firing this way on `push`, `pull_request`, and `issues` events since
+2026-08-26, matching this blocker's timeline exactly.
+
+The `Dependabot Updates` dynamic workflow (`282543146`) also flipped from its
+prior pattern - hanging 24h, then getting cancelled - to `startup_failure` on
+2026-08-29, the same failure-to-queue signature.
+
+**Root-cause mitigation landed.** `.github/dependabot.yml` still scheduled
+three ecosystems (`npm` root, `npm` in `functions/`, `github-actions`)
+weekly with a combined 25-open-PR limit - unchanged since this was first
+identified as the trigger for the runaway 24h-hang-and-cancel cycle that
+burned the original allowance. Changed all three to `monthly` and trimmed
+the limits to 5/5/3. This does not fix *why* a Dependabot scan hangs (that
+looks like a GitHub-infrastructure-side issue, not a `dependabot.yml`
+setting can diagnose) - it bounds the blast radius by cutting scan attempts
+from ~52/year to ~12/year per ecosystem, so a recurrence costs a quarter as
+much. If scans keep hanging even monthly, the next step is investigating
+which specific ecosystem's resolution is stalling (private registry auth,
+network egress, or a dependency tree too large to resolve in the sandbox),
+not tuning the schedule further.
+
+**Still unresolved, still owner-only:** whether the Actions spending limit is
+actually exhausted (check
+<https://github.com/settings/billing/summary>), and the two ways out this doc
+already named - raise it, or make the repo public. A full git-history secret
+audit (633 commits, 3,026 blobs, back to repo creation) found nothing that
+blocks going public; see PR #167's discussion for details.
+
+### API key hardening (found 2026-08-31, non-blocking)
+
+Not part of any blocker above - a live GCP Console credentials review turned
+up scoping gaps unrelated to repo visibility or CI. None of these are new
+exposures from this session's work; they predate it.
+
+| Key | Restrictions | Issue |
+|---|---|---|
+| `next_public_google_places_key` | HTTP referrers, **33 APIs** | Public browser key; referrer restriction is its only real protection, and 33 APIs is a large blast radius if that is ever loosened or spoofed. Scope down to what it actually calls. |
+| Browser key (Firebase auto-created) | **no app restriction**, 25 APIs | This is the key in `lib/firebase.ts`, shipped to every visitor by design - but "no restriction, 25 APIs" is a billing-abuse surface Firestore rules and App Check do not cover (they protect data, not non-Firebase API quota). Add HTTP referrer restriction. |
+| iOS key (Firebase auto-created) | **no app restriction**, 25 APIs | Add bundle ID restriction. |
+| Android key (Firebase auto-created) | **no app restriction**, 25 APIs | Add package name + SHA-1 restriction. |
+| `lotfoundry-web-places` | HTTP referrers, 3 APIs | Fine as-is. |
+| `lotfoundry-server-*` (Places, Maps) | no app restriction | Expected - server keys, referrer restriction does not apply. |
+
+Cheap optional insurance: rotate `next_public_google_places_key` and
+`lotfoundry-web-places` (both created 2026-06-28). One of them is very likely
+the key that appears in a Playwright console log committed 2026-07-01
+(`.playwright-cli/console-2026-06-30T02-37-39-740Z.log`, still in git history
+on every branch) - already referrer-restricted per the table above, so the
+exposure is low-severity, but rotation is cheap and removes the ambiguity.
+
 ## Remaining owner-only gates
 
 These need console or business access and are not code-resolvable:
