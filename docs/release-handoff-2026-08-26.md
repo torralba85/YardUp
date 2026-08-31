@@ -140,7 +140,16 @@ Note: PR #162 is **not merged**. `master` is still 66+ commits behind what is
 running in production. Merge it once Actions is restored so the branch and the
 deployed artifact agree.
 
-## Blocker 1 - Cloudflare redirects all of lotfoundry.net (OPEN)
+## Blocker 1 - Cloudflare redirects all of lotfoundry.net (PARTIALLY RESOLVED)
+
+> **Update 2026-08-31.** The apex is fixed: `lotfoundry.net` resolves to
+> `199.36.158.100` DNS-only and returns 200 from `Server: Google Frontend` with
+> valid TLS, its own `robots.txt`, and a correct sitemap. `www.lotfoundry.net`
+> is still proxied and still 301s to `yardup-2026.web.app`, and Cloudflare's
+> managed `robots.txt` is still enabled zone-wide. Current state, remaining fix,
+> and verification now live in [cloudflare-dns.md](cloudflare-dns.md); the
+> section below is kept as the original diagnosis.
+
 
 `lotfoundry.net` does not serve the app. Every path returns `301` to
 `https://yardup-2026.web.app`, and the response carries `Server: cloudflare` -
