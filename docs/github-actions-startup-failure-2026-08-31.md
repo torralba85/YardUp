@@ -14,7 +14,14 @@ PR #167 currently targets `master`. Its head commit `b28e5761e5e595adab1f7aba313
 - conclusion: `startup_failure`
 - jobs: none
 
-The same workflow ID appeared on the prior PR head as another zero-job `startup_failure`, so this is reproducible across pushes rather than a one-off job failure.
+A separate control PR (#168), created from `master` with only Dependabot configuration and documentation changes, independently produced the same failure on head commit `83fbed1c83a5d751e2c75a5cff7cd7ed48fa5140`:
+
+- run ID: `33442663669`
+- workflow ID: `343134271`
+- workflow name: empty
+- conclusion: `startup_failure`
+
+The same workflow ID also appeared on the prior PR #167 head as another zero-job `startup_failure`. This reproduces across independent branches and changesets rather than tracking the analytics code or a single malformed commit.
 
 The checked-in workflow inventory on `master` contains only:
 
@@ -45,5 +52,5 @@ This is separate from the private-repository Actions-minutes exhaustion document
 
 1. Make the repository public as already planned, which removes the private-repo minutes gate.
 2. Trigger a fresh PR/push event and confirm whether workflow ID `343134271` disappears and the real `CI` workflow queues.
-3. If the same empty-name `startup_failure` persists, open GitHub Support with repo `torralba85/YardUp`, workflow ID `343134271`, and run ID `33442450718`, asking for the orphaned/deleted Actions workflow registration to be purged or the repository Actions registry to be repaired.
+3. If the same empty-name `startup_failure` persists, open GitHub Support with repo `torralba85/YardUp`, workflow ID `343134271`, and run IDs `33442450718` / `33442663669`, asking for the orphaned/deleted Actions workflow registration to be purged or the repository Actions registry to be repaired.
 4. Do not rewrite working workflow YAML or add dummy workflows unless Support specifically requests it; current evidence does not point to repository workflow syntax as the source.
