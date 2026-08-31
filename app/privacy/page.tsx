@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CookiePreferences } from "@/components/analytics/CookiePreferences";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 /** Privacy policy — matches Firebase, Regrid, Google, OpenAI, Stripe, marketplace. */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: August 26, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: September 3, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect information you provide when you create an account (name, email, password
@@ -40,6 +41,8 @@ export default function PrivacyPage() {
           data. Payments use <strong>Stripe</strong> on the open web and{" "}
           <strong>Apple App Store / Google Play Billing</strong> in store apps. Optional AI
           style-match concepts use <strong>OpenAI</strong> when you consent to send a photo.
+          Usage measurement uses <strong>Google Analytics 4</strong>, and only after you accept
+          analytics cookies (see section 7).
         </p>
       </LegalSection>
 
@@ -81,6 +84,20 @@ export default function PrivacyPage() {
           storage for studio handoff and preferences. We do not use third-party advertising
           cookies.
         </p>
+        <p>
+          With your consent, we also use Google Analytics 4 to measure which pages and features
+          are used. It sets first-party cookies (<code>_ga</code> and <code>_ga_*</code>) holding
+          a random identifier, and reports page paths, referrer, approximate location derived
+          from a truncated IP address, and device/browser type. Analytics is off until you
+          accept: we load nothing from Google and set no analytics cookie unless you opt in, and
+          advertising and personalization signals are disabled. We do not send Google your
+          address, email, saved scenarios, or feasibility results.
+        </p>
+        <p>
+          You can change your mind at any time. Turning analytics off stops collection and
+          deletes the analytics cookies already in your browser.
+        </p>
+        <CookiePreferences />
       </LegalSection>
 
       <LegalSection title="8. Children">
@@ -94,8 +111,8 @@ export default function PrivacyPage() {
           Depending on where you live and whether applicable legal thresholds are met, you may
           request access to, correction of, deletion of, or a portable copy of your information;
           object to or opt out of certain disclosures; or appeal a denied request. Email{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
-            privacy@lotfoundry.net
+          <a href="mailto:privacy@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
+            privacy@lotfoundry.com
           </a>
           . We may verify your identity before completing a request and will not discriminate
           against you for exercising an applicable privacy right.
@@ -113,17 +130,17 @@ export default function PrivacyPage() {
         <p>
           Privacy questions:{" "}
           <a
-            href="mailto:privacy@lotfoundry.net"
+            href="mailto:privacy@lotfoundry.com"
             className="font-medium text-lf-clay-ink underline"
           >
-            privacy@lotfoundry.net
+            privacy@lotfoundry.com
           </a>
           . Support:{" "}
           <a
-            href="mailto:support@lotfoundry.net"
+            href="mailto:support@lotfoundry.com"
             className="font-medium text-lf-clay-ink underline"
           >
-            support@lotfoundry.net
+            support@lotfoundry.com
           </a>
           .
         </p>

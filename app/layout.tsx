@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Mono, Instrument_Sans, Newsreader } from "next/font/google";
+import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
@@ -123,6 +124,7 @@ export default function RootLayout({
         </a>
         {children}
         <ServiceWorkerRegistration />
+        <Analytics />
       </body>
     </html>
   );

@@ -87,8 +87,16 @@ Function's short-lived OAuth token and `X-Goog-User-Project`; the dedicated
 Places key is a local/non-enforced fallback, not the production auth path.
 
 CI also needs `FIREBASE_SERVICE_ACCOUNT` and the browser-safe public Firebase and
-Places configuration. Restrict the browser Places key by HTTP referrer. Keep
-server-side Maps keys server-safe rather than referrer-locked.
+Places configuration, plus `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the GA4 property's
+`G-XXXXXXXXXX` ID) if analytics should run in production. It is a browser-safe
+public value, not a secret, but it is still read from an Actions secret so the
+property can be rotated or switched off without a code change. Leaving the
+secret unset is a supported state: the build then ships with no tag and no
+cookie banner. The ID is baked in at build time, so changing it requires a
+redeploy, not just a secret update.
+
+Restrict the browser Places key by HTTP referrer. Keep server-side Maps keys
+server-safe rather than referrer-locked.
 
 ## CI/CD
 

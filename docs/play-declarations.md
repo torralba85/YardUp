@@ -86,12 +86,40 @@ them in Play Console's required dimensions.
 | Other user-generated content (saved studies and feedback) | Yes | No | App functionality | No |
 | Device or other IDs | Yes | No | Security and fraud prevention | Yes |
 
-The homeowner's name is shared on the same trigger as the email, phone, and
-address: `OwnerContact` in `lib/marketplace-types.ts` carries `name` alongside
-them, and the whole record is revealed to a builder when a lead is unlocked.
-This row previously read `Shared: No`, which the code does not support — and a
-Data safety form that disagrees with the shipped app is among the most common
-causes of Play enforcement.
+Notes for the form:
+- Firebase and Stripe act as service providers (processing on the developer's
+  behalf), which Play does not count as "sharing."
+- The homeowner's email, phone (if provided), and lot address ARE shared with
+  a third party — matched builders — once the homeowner submits a connect
+  request (`app/privacy/page.tsx` § Marketplace Sharing, `lib/marketplace.ts`).
+  Declare these under the Shared column, purpose "App functionality," basis
+  "User provided."
+- The homeowner's name is shared on the same trigger as the email, phone, and
+  address: `OwnerContact` in `lib/marketplace-types.ts` carries `name`
+  alongside them, and the whole record is revealed to a builder when a lead is
+  unlocked. This row previously read `Shared: No`, which the code does not
+  support — and a Data safety form that disagrees with the shipped app is
+  among the most common causes of Play enforcement.
+- No device location permission is requested, but the typed address is
+  geocoded server-side to latitude/longitude and sent to `/api/parcel`
+  (`lib/parcel-api.ts`) for the feasibility lookup — declare this under
+  Location → Precise location in addition to Personal info → Address.
+- The optional AI style-match feature uploads a home photo to
+  `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
+  generation — declare Photos as collected. The photo is not stored on our
+  servers (processed and discarded), matching `app/privacy/page.tsx`.
+- No crash/analytics SDK ships in the app bundle, so **Crash logs** and
+  **Diagnostics** under App info and performance stay undeclared.
+- **App activity -> App interactions** must be declared: Collected, Not shared,
+  Optional (the user can decline), purpose Analytics. GA4 records page paths,
+  referrer, device/browser type, and an approximate location derived from a
+  truncated IP. It is optional in Play's sense because the tag does not load at
+  all until the visitor accepts the banner.
+- Do not declare advertising or personalization: `ad_storage`,
+  `ad_user_data`, and `ad_personalization` are set to `denied` in the tag
+  config, and there is no ads SDK.
+- Nothing user-identifying is sent to Google — no address, email, saved
+  scenario, or feasibility result — so this adds no PII category.
 
 For every collected data type: `Encrypted in transit: Yes`. Do not declare ads
 or third-party advertising. Firebase, Google Maps/Places/Geocoding, Regrid,
