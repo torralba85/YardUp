@@ -136,7 +136,10 @@ async function unlockViaStripe(
         "content-type": "application/json",
         ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
       },
-      body: JSON.stringify({ requestId }),
+      body: JSON.stringify({
+        requestId,
+        checkoutAttemptId: crypto.randomUUID(),
+      }),
     });
   } catch {
     throw new LeadUnlockError(
