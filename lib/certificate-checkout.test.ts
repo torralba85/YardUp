@@ -89,7 +89,11 @@ describe("startCertificateCheckout", () => {
     await startCertificateCheckout({ certKey: "k", parcelName: "x", idToken: "TOKEN" });
     const init = fetchMock.mock.calls[0][1];
     expect(init.headers.Authorization).toBe("Bearer TOKEN");
-    expect(JSON.parse(init.body)).toMatchObject({ certKey: "k", parcelName: "x" });
+    expect(JSON.parse(init.body)).toMatchObject({
+      certKey: "k",
+      parcelName: "x",
+      checkoutAttemptId: expect.any(String),
+    });
   });
 
   it("throws a user-facing error on a failed response", async () => {
