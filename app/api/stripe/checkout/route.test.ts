@@ -121,7 +121,9 @@ describe("POST /api/stripe/checkout", () => {
         },
       },
     };
-    const res = await POST(postRequest({ requestId: "r1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/x" });
     expect(mocks.grant).not.toHaveBeenCalled();
@@ -142,6 +144,22 @@ describe("POST /api/stripe/checkout", () => {
     );
   });
 
+  it("reuses a key for one attempt and creates a new key for a fresh attempt", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-2" }));
+
+    expect(create.mock.calls[0][1].idempotencyKey).toBe(
+      create.mock.calls[1][1].idempotencyKey,
+    );
+    expect(create.mock.calls[2][1].idempotencyKey).not.toBe(
+      create.mock.calls[0][1].idempotencyKey,
+    );
+  });
+
   it("does not use the request Origin for production Stripe return URLs", async () => {
     vi.stubEnv("NODE_ENV", "production");
     mocks.stripe = {
@@ -154,7 +172,9 @@ describe("POST /api/stripe/checkout", () => {
       },
     };
 
-    const res = await POST(postRequest({ requestId: "r1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
     expect(res.status).toBe(200);
     expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
