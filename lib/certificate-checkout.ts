@@ -79,7 +79,11 @@ export async function startCertificateCheckout(
         "content-type": "application/json",
         ...(input.idToken ? { Authorization: `Bearer ${input.idToken}` } : {}),
       },
-      body: JSON.stringify({ certKey: input.certKey, parcelName: input.parcelName }),
+      body: JSON.stringify({
+        certKey: input.certKey,
+        parcelName: input.parcelName,
+        checkoutAttemptId: crypto.randomUUID(),
+      }),
     });
   } catch {
     throw new CertificateCheckoutError(
