@@ -122,6 +122,23 @@ describe("POST /api/stripe/checkout-certificate", () => {
     );
   });
 
+  it("supports clients loaded before checkoutAttemptId was introduced", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(postRequest({ certKey: "parcel-1" }));
+
+    expect(res.status).toBe(200);
+    expect(create).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(
+          /^lotfoundry:certificate:[a-f0-9]{64}$/,
+        ),
+      }),
+    );
+  });
+
   it("fails closed in production when Stripe is unavailable", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("LOTFOUNDRY_DEMO_UNLOCKS", "false");

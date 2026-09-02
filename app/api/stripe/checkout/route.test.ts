@@ -160,6 +160,25 @@ describe("POST /api/stripe/checkout", () => {
     );
   });
 
+  it("supports clients loaded before checkoutAttemptId was introduced", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue({ url: "https://stripe.test/checkout/x" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(postRequest({ requestId: "r1" }));
+
+    expect(res.status).toBe(200);
+    expect(create).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(
+          /^lotfoundry:lead_unlock:[a-f0-9]{64}$/,
+        ),
+      }),
+    );
+  });
+
   it("does not use the request Origin for production Stripe return URLs", async () => {
     vi.stubEnv("NODE_ENV", "production");
     mocks.stripe = {
