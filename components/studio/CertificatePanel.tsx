@@ -10,6 +10,7 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import { certificateKey } from "@/lib/certificate-key";
 import { formatCertificatePrice } from "@/lib/certificate-pricing";
 import { useCertificateAccess } from "@/lib/certificate-access";
+import { getSiteFitCapacityStatus } from "@/lib/site-fit";
 import {
   CertificateCheckoutError,
   startCertificateCheckout,
@@ -18,12 +19,12 @@ import EstimateSummaryPanel from "./EstimateSummaryPanel";
 
 /** What the complete certificate includes — the paid deliverable's contents. */
 const CERTIFICATE_INCLUDES = [
-  "Certificate of Feasibility",
-  "Income and payback summary",
-  "Site plan and 3D view",
-  "Zoning and setback summary",
-  "Property notes and approval timeline",
-  "Print / PDF and shareable link",
+  "Property-specific feasibility record",
+  "Modeled site-fit flags and assumptions",
+  "Cost, rent, NOI, and payback summary",
+  "AI property notes and approval path, when available",
+  "Recommended next steps",
+  "Print, CSV, and shareable scenario link",
 ] as const;
 
 /** Props for {@link CertificatePanel}. */
@@ -199,6 +200,7 @@ export default function CertificatePanel({
   }
 
   const price = formatCertificatePrice();
+  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity);
   const reportBusy = busy || loading || preparingBrief || projectBriefLoading;
   const ctaLabel = reportBusy
     ? purchased
@@ -208,7 +210,7 @@ export default function CertificatePanel({
     ? "View complete certificate"
     : !user
       ? "Sign in to generate your certificate"
-      : `Generate complete certificate — ${price}`;
+      : `Unlock complete certificate — ${price}`;
 
   return (
     // Centered artifact layout; the estimate and the unlock offer are its content.
@@ -241,7 +243,8 @@ export default function CertificatePanel({
               </div>
               <p className="lf-body-sm mt-1 text-lf-muted">
                 Your complete Certificate of Feasibility for {parcelName} is ready to print,
-                download, or share.
+                download, or share. This property remains unlocked when you revise the concept
+                and regenerate the certificate.
               </p>
               {projectBrief ? (
                 <div className="mt-3 flex items-start gap-2 border-t border-lf-hairline pt-3">
@@ -294,13 +297,44 @@ export default function CertificatePanel({
             <div className="flex items-center gap-2">
               <Lock size={16} className="shrink-0 text-lf-clay-ink" />
               <h3 className="text-sm font-semibold text-lf-espresso">
-                The complete certificate is a one-time {price}
+                Unlock the complete record for {parcel.address} — one-time {price}
               </h3>
             </div>
             <p className="lf-body-sm mt-1 text-lf-muted">
-              The estimate above is free. Unlock the shareable certificate with
-              property notes and a typical approval timeline.
+              The estimate above is free. The certificate turns this scenario into a
+              decision record you can review with builders, lenders, and local professionals.
             </p>
+            <div
+              className={`mt-4 flex items-start gap-3 rounded-lg border px-4 py-3 ${
+                siteFitStatus.tone === "ok"
+                  ? "border-lf-forest/25 bg-lf-forest/5"
+                  : "border-lf-amber/35 bg-lf-amber/5"
+              }`}
+            >
+              {siteFitStatus.tone === "ok" ? (
+                <CheckCircle2
+                  size={17}
+                  className="mt-0.5 shrink-0 text-lf-forest"
+                  aria-hidden="true"
+                />
+              ) : (
+                <AlertTriangle
+                  size={17}
+                  className="mt-0.5 shrink-0 text-lf-amber"
+                  aria-hidden="true"
+                />
+              )}
+              <div>
+                <p className="lf-dataprint text-lf-clay-ink">Current concept</p>
+                <p className="mt-1 text-sm font-semibold text-lf-espresso">
+                  {siteFitStatus.title}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-lf-muted">
+                  {siteFitStatus.action} The certificate preserves this finding with the
+                  assumptions, financial model, and next steps behind it.
+                </p>
+              </div>
+            </div>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {CERTIFICATE_INCLUDES.map((item) => (
                 <li key={item} className="flex items-center gap-2 text-sm text-lf-muted">
@@ -309,6 +343,10 @@ export default function CertificatePanel({
                 </li>
               ))}
             </ul>
+            <p className="mt-4 rounded-md border border-lf-hairline bg-lf-card px-3 py-2 text-xs leading-5 text-lf-espresso">
+              <strong>One purchase unlocks this property.</strong> Revise the ADU concept and
+              regenerate its certificate without paying again.
+            </p>
             {error && (
               <p role="alert" className="mt-3 text-xs text-lf-brick">
                 {error}

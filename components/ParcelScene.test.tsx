@@ -37,6 +37,7 @@ describe("ParcelScene controls", () => {
         parcel={parcelPresets[0]}
         config={defaultAduConfig}
         isCompliant
+        remainingCapacity={20}
       />,
     );
 
@@ -51,5 +52,52 @@ describe("ParcelScene controls", () => {
     });
 
     expect(screen.getByText("6.5 PM")).toBeInTheDocument();
+  });
+
+  it("announces the exact modeled capacity and corrective action", () => {
+    render(
+      <ParcelScene
+        parcel={parcelPresets[0]}
+        config={defaultAduConfig}
+        isCompliant={false}
+        remainingCapacity={-380}
+      />,
+    );
+
+    const siteFitStatus = screen.getByRole("status", {
+      name: "Modeled site fit status",
+    });
+    expect(siteFitStatus).toHaveTextContent(
+      "380 sf over modeled coverage allowance",
+    );
+    expect(siteFitStatus).toHaveTextContent(
+      "Reduce the ADU footprint by at least 380 sf",
+    );
+  });
+
+  it("only captures arrow keys while the placement model itself has focus", () => {
+    const onAduPositionChange = vi.fn();
+    render(
+      <ParcelScene
+        parcel={parcelPresets[0]}
+        config={defaultAduConfig}
+        isCompliant
+        remainingCapacity={20}
+        onAduPositionChange={onAduPositionChange}
+      />,
+    );
+
+    const pageArrow = new KeyboardEvent("keydown", {
+      key: "ArrowLeft",
+      bubbles: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(pageArrow);
+    expect(pageArrow.defaultPrevented).toBe(false);
+    expect(onAduPositionChange).not.toHaveBeenCalled();
+
+    const scene = screen.getByRole("group", { name: "Interactive ADU placement model" });
+    fireEvent.keyDown(scene, { key: "ArrowLeft" });
+    expect(onAduPositionChange).toHaveBeenCalledTimes(1);
   });
 });

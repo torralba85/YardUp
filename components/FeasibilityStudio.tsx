@@ -651,6 +651,7 @@ function FeasibilityStudioInner() {
         parcel={sceneParcel}
         config={config}
         isCompliant={isCompliant}
+        remainingCapacity={result.remainingCapacity}
       />
     );
 

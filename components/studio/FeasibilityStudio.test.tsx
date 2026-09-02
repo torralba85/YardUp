@@ -398,7 +398,11 @@ describe("FeasibilityStudio (guided spine)", () => {
       screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
     ).toBeInTheDocument();
     // ...but the complete certificate is gated behind a one-time price.
-    expect(screen.getByText(/complete certificate is a one-time \$29/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /unlock the complete record for .* one-time \$29/i,
+      }),
+    ).toBeInTheDocument();
 
     // A guest is asked to sign in, and the paid report does not open.
     await user.click(screen.getByRole("button", { name: /Sign in to generate your certificate/i }));

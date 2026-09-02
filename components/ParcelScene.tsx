@@ -2,13 +2,14 @@
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
-import { Html, Line, OrbitControls } from "@react-three/drei";
+import { Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, ExteriorFinish, Parcel } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition } from "@/lib/scene-lighting";
+import { getAduPlacementBounds, getSiteFitCapacityStatus } from "@/lib/site-fit";
 import { Button } from "@/components/ui/Button";
 
 /** Minimal error boundary that falls back to a render function. */
@@ -35,6 +36,7 @@ interface ParcelSceneProps {
   parcel: Parcel;
   config: ADUConfig;
   isCompliant: boolean;
+  remainingCapacity: number;
   aduPosition?: [number, number];
   onAduPositionChange?: (pos: [number, number]) => void;
 }
@@ -187,40 +189,6 @@ function ContactShadow({
     </mesh>
   );
 }
-
-function SceneCallout({
-  eyebrow,
-  title,
-  detail,
-  position,
-  tone = "neutral",
-}: {
-  eyebrow: string;
-  title: string;
-  detail: string;
-  position: [number, number, number];
-  tone?: "neutral" | "ok" | "warn";
-}) {
-  const toneClass =
-    tone === "ok"
-      ? "border-lf-forest/30 bg-lf-forest text-lf-sand"
-      : tone === "warn"
-        ? "border-lf-amber/40 bg-lf-amber text-lf-espresso"
-        : "border-lf-hairline bg-lf-card/95 text-lf-espresso";
-
-  return (
-    <Html position={position} center distanceFactor={74} occlude>
-      <div
-        className={`hidden w-[196px] rounded-md border px-3 py-2.5 text-left shadow-[0_12px_28px_-18px_rgba(38,19,7,0.65)] xl:block ${toneClass}`}
-      >
-        <div className="lf-dataprint leading-[1.45] opacity-75">{eyebrow}</div>
-        <div className="mt-1 text-sm font-bold leading-[1.35]">{title}</div>
-        <div className="mt-1 text-[11px] leading-[1.45] opacity-80">{detail}</div>
-      </div>
-    </Html>
-  );
-}
-
 
 function SceneCameraChoreography({
   mode,
@@ -426,6 +394,7 @@ function monoFontStack(): string {
  * and redrawn once `document.fonts` settles so the brand mono actually lands.
  */
 function LabelSprite({ text, position, scale = 6 }: { text: string; position: [number, number, number]; scale?: number }) {
+  const [positionX, positionY, positionZ] = position;
   const { sprite, redraw } = useMemo(() => {
     const baseW = 512;
     const baseH = 64;
@@ -463,9 +432,9 @@ function LabelSprite({ text, position, scale = 6 }: { text: string; position: [n
     const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
     const s = new THREE.Sprite(mat);
     s.scale.set(scale, scale * 0.125, 1);
-    s.position.set(...position);
+    s.position.set(positionX, positionY, positionZ);
     return { sprite: s, redraw: draw };
-  }, [text, position, scale]);
+  }, [text, positionX, positionY, positionZ, scale]);
 
   useEffect(() => {
     const fonts = document.fonts;
@@ -478,6 +447,13 @@ function LabelSprite({ text, position, scale = 6 }: { text: string; position: [n
       cancelled = true;
     };
   }, [redraw]);
+
+  useEffect(() => {
+    return () => {
+      sprite.material.map?.dispose();
+      sprite.material.dispose();
+    };
+  }, [sprite]);
 
   return <primitive object={sprite} />;
 }
@@ -726,11 +702,7 @@ function ProposedAdu({
     controlsRef.current = controls;
   }, [controls]);
 
-  const buildableArea = useMemo(() => {
-    const halfWidth = parcel.lotWidth / 2 - parcel.setbacks.side - config.width / 2;
-    const halfLength = parcel.lotLength / 2 - parcel.setbacks.front - config.length / 2;
-    return { maxX: halfWidth, minX: -halfWidth, maxZ: -parcel.setbacks.rear + parcel.lotLength / 2 - config.length / 2, minZ: -halfLength };
-  }, [parcel, config]);
+  const buildableArea = getAduPlacementBounds(parcel, config);
 
   // Clamp position within buildable area
   const clampPos = useCallback(
@@ -922,6 +894,7 @@ export default function ParcelScene({
   parcel,
   config,
   isCompliant,
+  remainingCapacity,
   aduPosition,
   onAduPositionChange,
 }: ParcelSceneProps) {
@@ -930,23 +903,19 @@ export default function ParcelScene({
   const [sunHour, setSunHour] = useState<number>(14);
 
   const sunPosition = useMemo(() => getIllustrativeSunPosition(sunHour), [sunHour]);
+  const siteFitStatus = getSiteFitCapacityStatus(remainingCapacity);
   const restoreTimer = useRef<number | null>(null);
   const keysDown = useRef(new Set<string>());
   const animFrame = useRef<number | null>(null);
 
   // Buildable area (mirrors ProposedAdu logic)
-  const buildableBounds = useMemo(() => {
-    const halfW = parcel.lotWidth / 2 - parcel.setbacks.side - config.width / 2;
-    const halfL = parcel.lotLength / 2 - parcel.setbacks.front - config.length / 2;
-    const rearZ = -parcel.setbacks.rear + parcel.lotLength / 2 - config.length / 2;
-    return { minX: -halfW, maxX: halfW, minZ: -halfL, maxZ: rearZ };
-  }, [parcel, config]);
+  const buildableBounds = getAduPlacementBounds(parcel, config);
 
   // Default ADU position: centered, at rear setback (clear of the house)
-  const defaultAduPos = useMemo((): [number, number] => {
-    const rearZ = -parcel.lotLength / 2 + parcel.setbacks.rear + config.length / 2 + 3;
-    return [0, Math.min(rearZ, buildableBounds.maxZ)];
-  }, [parcel, config, buildableBounds]);
+  const defaultAduPos = useMemo(
+    (): [number, number] => [0, Math.min(buildableBounds.minZ + 3, buildableBounds.maxZ)],
+    [buildableBounds.minZ, buildableBounds.maxZ],
+  );
 
   const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? defaultAduPos);
   // Mirror of aduPos read by the rAF movement loop, so the loop never re-subscribes
@@ -977,7 +946,6 @@ export default function ParcelScene({
   // 60Hz or 120Hz display and a quick tap nudges rather than rockets the ADU.
   useEffect(() => {
     const SPEED = 22; // feet per second while key is held
-    const NUDGE = 1;  // feet on first keydown, before glide kicks in
     let last = performance.now();
     const loop = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05); // clamp after tab-away
@@ -1001,40 +969,42 @@ export default function ParcelScene({
     };
     animFrame.current = requestAnimationFrame(loop);
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-        e.preventDefault();
-        // Initial press only (e.repeat is true for the OS auto-repeat stream):
-        // apply one precise step so a quick tap nudges by exactly NUDGE feet.
-        // Holding the key then hands off to the delta-time glide loop above.
-        if (!e.repeat) {
-          let [x, z] = aduPosRef.current;
-          if (e.key === "ArrowLeft") x -= NUDGE;
-          if (e.key === "ArrowRight") x += NUDGE;
-          if (e.key === "ArrowUp") z -= NUDGE;
-          if (e.key === "ArrowDown") z += NUDGE;
-          x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
-          z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
-          handleAduPosChange([x, z]);
-        }
-        keysDown.current.add(e.key);
-      }
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      keysDown.current.delete(e.key);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
       if (animFrame.current !== null) cancelAnimationFrame(animFrame.current);
     };
   }, [buildableBounds, handleAduPosChange]);
+
+  const handleSceneKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget) return;
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        return;
+      }
+
+      event.preventDefault();
+      if (!event.repeat) {
+        const NUDGE = 1;
+        let [x, z] = aduPosRef.current;
+        if (event.key === "ArrowLeft") x -= NUDGE;
+        if (event.key === "ArrowRight") x += NUDGE;
+        if (event.key === "ArrowUp") z -= NUDGE;
+        if (event.key === "ArrowDown") z += NUDGE;
+        x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
+        z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
+        handleAduPosChange([x, z]);
+      }
+      keysDown.current.add(event.key);
+    },
+    [buildableBounds, handleAduPosChange],
+  );
+
+  const handleSceneKeyUp = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    keysDown.current.delete(event.key);
+  }, []);
+
+  const stopKeyboardMovement = useCallback(() => {
+    keysDown.current.clear();
+  }, []);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -1103,13 +1073,27 @@ export default function ParcelScene({
   }, []);
 
   if (!webglAvailable) {
-    return <Parcel2DScene parcel={parcel} config={config} isCompliant={isCompliant} />;
+    return (
+      <Parcel2DScene
+        parcel={parcel}
+        config={config}
+        isCompliant={isCompliant}
+        remainingCapacity={remainingCapacity}
+      />
+    );
   }
 
   return (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-lf-sand"
+      className="relative h-full min-h-[220px] overflow-hidden bg-lf-sand outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay lg:min-h-[460px]"
       style={{ backgroundImage: SCENE_BACKDROP }}
+      tabIndex={0}
+      role="group"
+      aria-label="Interactive ADU placement model"
+      aria-describedby="studio-site-fit-status"
+      onKeyDown={handleSceneKeyDown}
+      onKeyUp={handleSceneKeyUp}
+      onBlur={stopKeyboardMovement}
     >
       <ErrorBoundary
         fallbackRender={() => {
@@ -1165,22 +1149,6 @@ export default function ParcelScene({
         <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
         <SetbackLines parcel={parcel} />
         {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
-        {viewMode === "overview" && (
-          <SceneCallout
-            eyebrow="Buildable area"
-            title={isCompliant ? "Within declared limits" : "Local review likely"}
-            detail={`${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side setbacks.`}
-            // Anchored to the front-right of the lot (foreground/driveway) so the
-            // callout projects into empty screen space and never collides with the
-            // fixed income-summary card in the top-left.
-            position={[
-              parcel.lotWidth / 2 - parcel.setbacks.side,
-              6,
-              parcel.lotLength / 2 - parcel.setbacks.front - 10,
-            ]}
-            tone={isCompliant ? "ok" : "warn"}
-          />
-        )}
         <ExistingHouse parcel={parcel} />
         <ProposedAdu
           config={config}
@@ -1219,6 +1187,29 @@ export default function ParcelScene({
         <SceneCameraChoreography mode={viewMode} parcel={parcel} config={config} aduPos={aduPos} />
       </Canvas>
       </ErrorBoundary>
+
+      <div
+        id="studio-site-fit-status"
+        className={`pointer-events-none absolute bottom-16 left-3 z-(--z-index-scene) max-w-[min(19rem,calc(100%-1.5rem))] rounded-lg border bg-lf-card/95 px-3 py-2.5 shadow-sm lg:bottom-20 lg:left-5 ${
+          siteFitStatus.tone === "ok"
+            ? "border-lf-forest/30"
+            : "border-lf-amber/40"
+        }`}
+        role="status"
+        aria-live="polite"
+        aria-label="Modeled site fit status"
+      >
+        <p className="lf-dataprint text-lf-clay-ink">Modeled site fit</p>
+        <p className="mt-1 text-sm font-semibold leading-5 text-lf-espresso">
+          {siteFitStatus.title}
+        </p>
+        <p className="mt-0.5 text-[11px] leading-4 text-lf-muted">
+          {siteFitStatus.action}
+        </p>
+        <p className="sr-only font-semibold uppercase tracking-[0.08em] text-lf-muted sm:not-sr-only sm:mt-1 sm:text-[10px]">
+          Drag to move · Arrow keys when focused
+        </p>
+      </div>
 
       {/* This is an illustrative lighting preview, not a location/date-based solar study. */}
       <div
@@ -1276,11 +1267,6 @@ export default function ParcelScene({
         })}
       </div>
 
-      {/* Mobile gesture hint — sits above the view toggle in the thumb zone. */}
-      <div className="pointer-events-none absolute bottom-16 left-3 z-(--z-index-scene) max-w-[min(16rem,calc(100%-5.5rem))] rounded-md border border-lf-taupe/20 bg-lf-espresso/90 px-3 py-2 text-[11px] font-semibold text-lf-sand shadow-sm lg:hidden">
-        Drag ADU to move · Pinch to zoom
-      </div>
-
       <div className="pointer-events-none absolute right-5 top-5 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
       </div>
@@ -1288,8 +1274,14 @@ export default function ParcelScene({
   );
 }
 
-function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
+function Parcel2DScene({
+  parcel,
+  config,
+  isCompliant,
+  remainingCapacity,
+}: ParcelSceneProps) {
   const finishColor = finishColors[config.finish];
+  const siteFitStatus = getSiteFitCapacityStatus(remainingCapacity);
 
   // Calculate existing house dimensions
   const houseWidth = Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28);
@@ -1311,7 +1303,7 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
 
   return (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-lf-sand flex flex-col items-center justify-center p-6"
+      className="relative flex h-full min-h-[220px] flex-col items-center justify-center overflow-hidden bg-lf-sand p-6 lg:min-h-[460px]"
       style={{ backgroundImage: SCENE_BACKDROP }}
     >
       {/* 2D Mode Badge â€” hidden on mobile to match the 3D badge and avoid
@@ -1323,6 +1315,25 @@ function Parcel2DScene({ parcel, config, isCompliant }: ParcelSceneProps) {
 
       <div className="absolute right-5 top-5 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
         N
+      </div>
+
+      <div
+        className={`absolute bottom-5 left-5 right-5 z-(--z-index-scene) max-w-md rounded-lg border px-4 py-3 shadow-sm ${
+          siteFitStatus.tone === "ok"
+            ? "border-lf-forest/30 bg-lf-card/95"
+            : "border-lf-amber/40 bg-lf-card/95"
+        }`}
+        role="status"
+        aria-live="polite"
+        aria-label="Modeled site fit status"
+      >
+        <p className="lf-dataprint text-lf-clay-ink">Modeled site fit</p>
+        <p className="mt-1 text-sm font-semibold text-lf-espresso">
+          {siteFitStatus.title}
+        </p>
+        <p className="mt-1 text-xs leading-5 text-lf-muted">
+          {siteFitStatus.action}
+        </p>
       </div>
 
       <svg
