@@ -1,29 +1,27 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { type NextRequest, NextResponse } from "next/server";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { getStripe } from "@/lib/stripe";
 import { requireApiAuth } from "@/lib/server/api-auth";
+import {
+  replaceExpiredActiveCheckout,
+  reserveActiveCheckout,
+  saveActiveCheckoutSession,
+} from "@/lib/server/active-checkout-sessions";
 import {
   grantCertificate,
   hasCertificate,
 } from "@/lib/server/certificate-purchases";
-import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
-import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
 
-/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
-/** Firestore doc ids cap at ~1500 bytes; a certificate key is a short slug, so
- * anything longer is a malformed/abusive request. */
 const MAX_CERT_KEY_LEN = 200;
 
 /**
- * POST /api/stripe/checkout-certificate  { certKey, parcelName, checkoutAttemptId? }
- *
- * Starts a certificate purchase for the authenticated user. With a Stripe key:
- * creates a Checkout session and returns its URL. Without one (demo): grants
- * immediately and stamps the purchase `demo` — gated so a production deploy
- * (which always carries a key) can never reach the demo branch.
+ * POST /api/stripe/checkout-certificate
+ * { certKey, parcelName, checkoutAttemptId? }
  */
 export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
@@ -49,16 +47,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Already purchased — idempotent success, never a second charge.
   if (await hasCertificate(uid, certKey)) {
     return NextResponse.json({ status: "granted", alreadyPurchased: true });
   }
 
   const stripe = await getStripe();
-
   if (!stripe) {
-    // Demo/mock grant path. Hard prod guard: even if a prod deploy is
-    // misconfigured without a key, refuse to grant unless explicitly opted in.
     if (
       process.env.NODE_ENV === "production" &&
       process.env.LOTFOUNDRY_DEMO_UNLOCKS !== "true"
@@ -96,47 +90,109 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const reservationInput = {
+    purchaseType: "certificate" as const,
+    accountId: uid,
+    purchaseId: certKey,
+    attemptId: checkoutAttemptId,
+    parameters: { origin, parcelName },
+  };
+
   try {
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: "payment",
-        submit_type: "pay",
-        // Card (incl. wallets) is immediate, so checkout.session.completed always
-        // means paid — the webhook needs no async-payment fulfilment.
-        payment_method_types: ["card"],
-        payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: CERTIFICATE_PRICE_CENTS,
-              product_data: {
-                name: parcelName
-                  ? `LotFoundry Certificate of Feasibility — ${parcelName}`
-                  : "LotFoundry Certificate of Feasibility",
+    let reservation = await reserveActiveCheckout(reservationInput);
+
+    // A second tab resumes the existing payable Session, preventing duplicate
+    // charges while retaining a stable key for the transport retry.
+    for (let retry = 0; retry < 2; retry += 1) {
+      if (reservation.sessionId && reservation.sessionUrl) {
+        const existing = await stripe.checkout.sessions.retrieve(
+          reservation.sessionId,
+        );
+        if (existing.status === "open") {
+          return NextResponse.json({ url: reservation.sessionUrl });
+        }
+        if (existing.status === "complete") {
+          return NextResponse.json(
+            { error: "Payment is being confirmed. Please refresh shortly." },
+            { status: 409 },
+          );
+        }
+        if (existing.status !== "expired") {
+          return NextResponse.json(
+            { error: "Payments are temporarily unavailable." },
+            { status: 503 },
+          );
+        }
+        reservation = await replaceExpiredActiveCheckout(
+          reservationInput,
+          reservation.attemptId,
+        );
+        continue;
+      }
+
+      const sessionOrigin = reservation.parameters.origin;
+      if (!sessionOrigin) {
+        throw new Error("Active checkout reservation is missing its origin");
+      }
+      const sessionParcelName = reservation.parameters.parcelName;
+      const session = await stripe.checkout.sessions.create(
+        {
+          mode: "payment",
+          submit_type: "pay",
+          payment_method_types: ["card"],
+          payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
+          line_items: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: "usd",
+                unit_amount: CERTIFICATE_PRICE_CENTS,
+                product_data: {
+                  name: sessionParcelName
+                    ? `LotFoundry Certificate of Feasibility — ${sessionParcelName}`
+                    : "LotFoundry Certificate of Feasibility",
+                },
               },
             },
-          },
-        ],
-        // The webhook reads these back to write the grant.
-        metadata: { purchaseType: "certificate", uid, certKey },
-        // Stamp which certificate was bought so the return only unlocks the
-        // panel whose key matches (the studio may rehydrate a different parcel).
-        success_url: `${origin}/studio?cert=${encodeURIComponent(certKey)}`,
-        cancel_url: `${origin}/studio`,
-      },
-      {
-        idempotencyKey: createStripeIdempotencyKey(
-          "certificate",
-          uid,
-          certKey,
-          checkoutAttemptId,
-        ),
-      },
-    );
+          ],
+          metadata: { purchaseType: "certificate", uid, certKey },
+          success_url: `${sessionOrigin}/studio?cert=${encodeURIComponent(certKey)}`,
+          cancel_url: `${sessionOrigin}/studio`,
+        },
+        {
+          idempotencyKey: createStripeIdempotencyKey(
+            "certificate",
+            uid,
+            certKey,
+            reservation.attemptId,
+          ),
+        },
+      );
+      if (!session.url) {
+        throw new Error("Stripe returned a Checkout Session without a URL");
+      }
 
-    return NextResponse.json({ url: session.url });
+      const saved = await saveActiveCheckoutSession(
+        reservationInput,
+        reservation,
+        {
+          id: session.id,
+          url: session.url,
+          ...(session.expires_at
+            ? { expiresAtMs: session.expires_at * 1000 }
+            : {}),
+        },
+      );
+      if (saved.attemptId === reservation.attemptId) {
+        return NextResponse.json({ url: saved.sessionUrl ?? session.url });
+      }
+      reservation = saved;
+    }
+
+    return NextResponse.json(
+      { error: "Could not resume checkout. Please try again." },
+      { status: 409 },
+    );
   } catch (err) {
     console.error(
       "[stripe/checkout-certificate] Failed to create Checkout session:",
