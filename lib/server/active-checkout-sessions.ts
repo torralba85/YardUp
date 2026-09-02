@@ -131,6 +131,9 @@ function reservationDocument(
   reservation: ActiveCheckoutSession,
 ) {
   return {
+    // Keep the owner queryable so account deletion can remove reservations
+    // containing checkout presentation data before deleting Auth.
+    accountId: input.accountId,
     purchaseType: input.purchaseType,
     attemptId: reservation.attemptId,
     parameters: reservation.parameters,

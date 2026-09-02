@@ -57,6 +57,9 @@ describe("active checkout sessions", () => {
 
     expect(first.attemptId).toBe("attempt-1");
     expect(second).toEqual(first);
+    expect([...mocks.docs.values()][0]).toEqual(
+      expect.objectContaining({ accountId: "builder-1" }),
+    );
   });
 
   it("persists the returned Stripe session for later resumptions", async () => {

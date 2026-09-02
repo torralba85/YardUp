@@ -44,6 +44,14 @@ export async function POST(request: NextRequest) {
 
     await deleteQueryInBatches(db, userRef.collection("savedScenarios"));
 
+    // Checkout reservations can contain presentation data such as a parcel
+    // address. They are keyed by a hash, so delete them through their stored
+    // account identifier before removing the authenticated identity.
+    await deleteQueryInBatches(
+      db,
+      db.collection("activeCheckoutSessions").where("accountId", "==", uid),
+    );
+
     // Remove contact PII and retire retained lead roots in the same batch. A
     // withdrawn lead cannot be bought/unlocked, and removing ownerUid prevents
     // the retained business record from identifying the deleted account.

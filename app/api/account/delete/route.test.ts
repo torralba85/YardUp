@@ -3,7 +3,10 @@ import { NextRequest } from "next/server";
 
 const deleteUser = vi.fn(async () => undefined);
 
-type Ref = { kind: "scenario" | "contact" | "lead" | "feedback"; id: string };
+type Ref = {
+  kind: "scenario" | "contact" | "lead" | "feedback" | "activeCheckout";
+  id: string;
+};
 
 const ops = {
   deleted: [] as Ref[],
@@ -13,6 +16,7 @@ const ops = {
   userSet: null as Record<string, unknown> | null,
   scenarioIds: [] as string[],
   feedbackIds: [] as string[],
+  activeCheckoutIds: [] as string[],
   connectionRequests: [] as { id: string; ownerUid: string }[],
   failCommit: false,
 };
@@ -62,6 +66,17 @@ function makeDb() {
             get: async () => ({
               docs: ops.feedbackIds.map((id) => ({
                 ref: { kind: "feedback", id } as Ref,
+              })),
+            }),
+          }),
+        };
+      }
+      if (name === "activeCheckoutSessions") {
+        return {
+          where: () => ({
+            get: async () => ({
+              docs: ops.activeCheckoutIds.map((id) => ({
+                ref: { kind: "activeCheckout", id } as Ref,
               })),
             }),
           }),
@@ -129,6 +144,7 @@ describe("POST /api/account/delete", () => {
     ops.userSet = null;
     ops.scenarioIds = [];
     ops.feedbackIds = [];
+    ops.activeCheckoutIds = [];
     ops.connectionRequests = [];
     ops.failCommit = false;
     throwOnDb = false;
@@ -173,6 +189,18 @@ describe("POST /api/account/delete", () => {
         id: "lead-1",
         data: expect.objectContaining({ status: "withdrawn", ownerUid: "DELETE_FIELD" }),
       }),
+    ]);
+  });
+
+  it("removes active checkout reservations before deleting the account", async () => {
+    ops.activeCheckoutIds = ["checkout-1", "checkout-2"];
+
+    const res = await POST(postRequest());
+
+    expect(res.status).toBe(200);
+    expect(ops.deleted).toEqual([
+      { kind: "activeCheckout", id: "checkout-1" },
+      { kind: "activeCheckout", id: "checkout-2" },
     ]);
   });
 
