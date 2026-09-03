@@ -90,7 +90,7 @@ function StepDot({ step, index }: { step: Step; index: number }) {
   }
   if (step.state === "locked") {
     return (
-      <span aria-hidden className={cn(base, "border-lf-hairline bg-lf-sand-2 text-lf-taupe")}>
+      <span aria-hidden className={cn(base, "border-lf-hairline bg-lf-sand-2 text-lf-muted")}>
         <Lock size={12} />
       </span>
     );
