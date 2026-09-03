@@ -50,6 +50,18 @@ def twaManifest = [
     orientation: 'default',
 ]
 
+// Release signing is supplied only at build time. GitHub Actions provides these
+// as ORG_GRADLE_PROJECT_* environment variables, which Gradle exposes as project
+// properties. Keeping all signing material out of this project prevents an
+// unsigned or debug-signed bundle from being mistaken for a Play upload.
+def releaseSigningProperties = [
+    LOTFOUNDRY_STORE_FILE: project.findProperty('LOTFOUNDRY_STORE_FILE')?.toString()?.trim(),
+    LOTFOUNDRY_STORE_PASSWORD: project.findProperty('LOTFOUNDRY_STORE_PASSWORD')?.toString(),
+    LOTFOUNDRY_KEY_ALIAS: project.findProperty('LOTFOUNDRY_KEY_ALIAS')?.toString()?.trim(),
+    LOTFOUNDRY_KEY_PASSWORD: project.findProperty('LOTFOUNDRY_KEY_PASSWORD')?.toString(),
+]
+def missingReleaseSigningProperties = releaseSigningProperties.findAll { !it.value }.keySet()
+
 android {
     compileSdkVersion 36
     namespace "com.lotfoundry.app"
@@ -150,9 +162,22 @@ android {
 
         
     }
+    signingConfigs {
+        release {
+            if (missingReleaseSigningProperties.isEmpty()) {
+                storeFile file(releaseSigningProperties.LOTFOUNDRY_STORE_FILE)
+                storePassword releaseSigningProperties.LOTFOUNDRY_STORE_PASSWORD
+                keyAlias releaseSigningProperties.LOTFOUNDRY_KEY_ALIAS
+                keyPassword releaseSigningProperties.LOTFOUNDRY_KEY_PASSWORD
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled true
+            if (missingReleaseSigningProperties.isEmpty()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {
@@ -162,6 +187,29 @@ android {
     lintOptions {
         checkReleaseBuilds false
     }
+}
+
+tasks.register('verifyReleaseSigning') {
+    doFirst {
+        if (!missingReleaseSigningProperties.isEmpty()) {
+            throw new GradleException(
+                'Refusing to build a release AAB without signing material. Missing: ' +
+                missingReleaseSigningProperties.join(', ') +
+                '. Supply Gradle project properties; do not add secrets to this repository.'
+            )
+        }
+        if (!file(releaseSigningProperties.LOTFOUNDRY_STORE_FILE).isFile()) {
+            throw new GradleException('LOTFOUNDRY_STORE_FILE does not point to a readable keystore.')
+        }
+    }
+}
+
+// The Android Gradle plugin registers variant tasks such as `bundleRelease`
+// lazily, after this script is evaluated, so `tasks.named('bundleRelease')`
+// here would fail with UnknownTaskException. A live filtered collection binds
+// the guard whenever the task appears, regardless of registration order.
+tasks.matching { it.name == 'bundleRelease' }.configureEach {
+    dependsOn(tasks.named('verifyReleaseSigning'))
 }
 
 task generateShorcutsFile {

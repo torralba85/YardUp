@@ -147,7 +147,7 @@ export default function ConstraintsPanel({
               <p className="pb-0.5 pt-[18px] font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
                 {group}
                 {group === "Economics" ? (
-                  <span className="font-medium text-lf-taupe"> · if built</span>
+                  <span className="font-medium text-lf-muted"> · if built</span>
                 ) : null}
               </p>
               {rows.map((row) => (

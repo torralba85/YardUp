@@ -94,8 +94,15 @@ Use this as a review checklist, not a submission answer key:
 - **App title (30):** `LotFoundry: ADU Feasibility`
 - **Short description (80):**
   `See if a backyard ADU pencils out: rent, build cost, payback, and lot fit.`
-- **Category:** Finance
-- **Suggested tags:** Finance, Real Estate, Productivity
+- **Category:** House & Home
+- **Suggested tags:** Real Estate, Productivity
+
+`docs/play-declarations.md` is the authority for Console entry and specifies
+`House & Home`; this file previously said `Finance` and the two would have
+disagreed at the point someone typed a value into the form. `Finance` is also
+the more expensive answer: it makes Play enforce the Financial Features
+declaration and applies financial-services vetting to an app that offers no
+financial service, only estimates.
 
 ### Long description
 

@@ -1,115 +1,124 @@
-# Google Play Declarations and Closed Testing Pack
+# Google Play Console inputs — LotFoundry Android TWA
 
-**Updated:** 2026-07-18
-**App:** LotFoundry (`com.lotfoundry.app`), TWA wrapping `https://yardup-2026.web.app`
-**Artifact:** `app-release.aab` v1.0.2 (versionCode 3), signed with the upload key;
-Play App Signing certificate (`03:12:00:71…`) is trusted in
-`public/.well-known/assetlinks.json` and `native/android/twa-manifest.json`.
+Use these values for the Android app only. Do not enter signing passwords, a
+keystore, or a service-account key in Play Console or this repository.
 
-Everything below is drafted from repo evidence so the Play Console forms can be
-filled in verbatim. Console entry itself requires the account owner.
+## Create app
 
-## 1. Data safety form
-
-Answers reflect what the product actually does: Firebase Auth + Firestore,
-Stripe Checkout on the open web, Play Billing in the TWA
-(`lib/commerce/purchase-channel.ts`), reCAPTCHA Enterprise on auth, no ads,
-no analytics SDK.
-
-| Question | Answer |
+| Play Console field | Value |
 |---|---|
-| Does your app collect or share any of the required user data types? | Yes |
-| Is all of the user data collected by your app encrypted in transit? | Yes (HTTPS everywhere) |
-| Do you provide a way for users to request that their data is deleted? | Yes — in-app via Settings, and `https://yardup-2026.web.app/delete-account` |
+| App name | `LotFoundry` |
+| Default language | `English (United States)` |
+| App or game | `App` |
+| Free or paid | `Free` |
+| Package name | `com.lotfoundry.app` |
+| App category | `House & Home` |
+| Contact email | `support@lotfoundry.com` |
+| Privacy policy URL | `https://lotfoundry.net/privacy` |
+| Account deletion URL | `https://lotfoundry.net/delete-account` |
+| Developer Program Policies declaration | `Acknowledge` |
+| US export laws declaration | `Acknowledge` |
 
-Data types to declare (see Shared column — builder-marketplace fields ARE
-shared with a third party; everything else is collected only):
+### Contact address
 
-| Data type | Collected | Shared | Purpose | Optional? |
+Use `support@lotfoundry.com`. It is the canonical support address on the
+implemented help, privacy, terms, and account-deletion surfaces. The Console
+listing must stay aligned with those user-facing routes.
+
+## App integrity
+
+Enroll in **Play App Signing**. Upload the AAB built by the `Android release
+bundle` GitHub Actions workflow. The upload certificate must be:
+
+`E7:B3:6E:54:38:69:D5:AF:1D:D1:2B:3B:A6:8B:58:E4:29:D4:9E:AB:57:6F:38:69:50:A5:40:3B:DD:92:F6:90`
+
+The Play App Signing certificate that Console displays must remain in the live
+Digital Asset Links statement. The currently served value is:
+
+`03:12:00:71:08:87:DD:21:17:EA:42:D1:E2:25:76:B8:BF:C4:DD:94:56:08:C8:BE:2F:DD:AB:9B:EA:AD:5A:CE`
+
+## Store listing
+
+| Field | Value |
+|---|---|
+| App name | `LotFoundry` |
+| Short description | `See what your backyard can earn.` |
+| Full description | `Check your address for ADU rent, build cost, and payback estimates before you spend money on plans. Explore lot fit, compare assumptions, and save or share an early feasibility study. Estimates only; local review is still required before design, permitting, financing, or investment decisions.` |
+| Category | `House & Home` |
+| Email | `support@lotfoundry.com` |
+| Privacy policy | `https://lotfoundry.net/privacy` |
+
+Upload current phone and tablet screenshots from the release candidate. Do not
+reuse the web-manifest screenshots as store-listing assets without reviewing
+them in Play Console's required dimensions.
+
+## App content
+
+| Play Console question | Answer |
+|---|---|
+| Ads | `No` |
+| Target age | `18 and over` |
+| App access | `Some or all functionality is restricted` — provide an active, non-personal reviewer account in the Console form. The demo-lot path works without sign-in. |
+| Account creation | `Yes` |
+| Account deletion | `Users can request deletion in-app and at https://lotfoundry.net/delete-account` |
+| Financial features | `None of the above` |
+| Health apps | `No` |
+| Government app | `No` |
+| News app | `No` |
+| COVID-19 contact tracing/status | `No` |
+
+## Data safety
+
+| Data type | Collected | Shared | Purpose | Required |
 |---|---|---|---|---|
-| Personal info → Email address | Yes | Yes — with matched builders after a connect request | Account management; builder lead marketplace | No (required for accounts) |
-| Personal info → Name | Yes | No | Account management, personalization | Yes (display name) |
-| Personal info → Phone number | Yes | Yes — with matched builders after a connect request | Builder lead marketplace (owner-provided callback number) | Yes |
-| Personal info → Address | Yes | Yes — lot address shared with matched builders after a connect request | App functionality (property feasibility lookup); builder lead marketplace | Yes (demo lots work without) |
-| Location → Precise location | Yes | No | App functionality (typed address is geocoded to lat/lng for the parcel lookup API; no device GPS permission is requested) | Yes (demo lots work without) |
-| Photos | Yes | No | App functionality (optional AI style-match: user photo sent to OpenAI for analysis/generation, not stored on our servers) | Yes (feature is opt-in) |
-| Financial info → Purchase history | Yes | No | App functionality (certificate/lead unlock grants) | Yes |
-| App activity → Other user-generated content | Yes | No | App functionality (saved studies/scenarios) | Yes |
-| Device or other IDs | Yes | No | Fraud prevention/security (reCAPTCHA Enterprise) | No |
+| Name | Yes | Yes, after a homeowner submits a builder connection request | Account management, app functionality | No |
+| Email address | Yes | Yes, after a homeowner submits a builder connection request | Account management, app functionality | No |
+| Phone number | Yes | Yes, after a homeowner submits a builder connection request | App functionality | No |
+| Address | Yes | Yes, after a homeowner submits a builder connection request | App functionality | No |
+| Precise location | Yes, from a user-entered property address geocoded server-side | No | App functionality | No |
+| Photos | Yes, only when the user submits an optional style-match photo | No | App functionality | No |
+| Purchase history | Yes | No | App functionality | No |
+| Other user-generated content (saved studies and feedback) | Yes | No | App functionality | No |
+| Device or other IDs | Yes | No | Security and fraud prevention | Yes |
 
-Notes for the form:
-- Firebase and Stripe act as service providers (processing on the developer's
-  behalf), which Play does not count as "sharing."
-- The homeowner's email, phone (if provided), and lot address ARE shared with
-  a third party — matched builders — once the homeowner submits a connect
-  request (`app/privacy/page.tsx` § Marketplace Sharing, `lib/marketplace.ts`).
-  Declare these under the Shared column, purpose "App functionality," basis
-  "User provided."
-- No device location permission is requested, but the typed address is
-  geocoded server-side to latitude/longitude and sent to `/api/parcel`
-  (`lib/parcel-api.ts`) for the feasibility lookup — declare this under
-  Location → Precise location in addition to Personal info → Address.
-- The optional AI style-match feature uploads a home photo to
-  `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
-  generation — declare Photos as collected. The photo is not stored on our
-  servers (processed and discarded), matching `app/privacy/page.tsx`.
-- No crash/analytics SDK ships in the app bundle; do not declare App info and
-  performance.
+The homeowner's name is shared on the same trigger as the email, phone, and
+address: `OwnerContact` in `lib/marketplace-types.ts` carries `name` alongside
+them, and the whole record is revealed to a builder when a lead is unlocked.
+This row previously read `Shared: No`, which the code does not support — and a
+Data safety form that disagrees with the shipped app is among the most common
+causes of Play enforcement.
 
-## 2. Content rating questionnaire (IARC)
+For every collected data type: `Encrypted in transit: Yes`. Do not declare ads
+or third-party advertising. Firebase, Google Maps/Places/Geocoding, Regrid,
+OpenAI, Stripe, and store billing process data for LotFoundry; the builder
+marketplace disclosure above is the only third-party sharing claim.
 
-- Category: **Utility / Productivity / Communication / Other**
-- Violence, sexuality, language, controlled substances: **No** to all
-- Gambling (real or simulated): **No**
-- Users can interact or exchange content: **No** (builder leads are mediated
-  through the platform; there is no open chat or public UGC)
-- Shares user location with other users: **No**
-- Purchases digital goods: **Yes** (feasibility certificate, lead unlocks)
-- Expected rating: **Everyone / PEGI 3**
+## Content rating
 
-## 3. Other console declarations
-
-| Declaration | Answer |
+| IARC question | Answer |
 |---|---|
-| Privacy policy URL | `https://yardup-2026.web.app/privacy` |
-| App access | Full access requires a free account. Provide a review account **and** note the no-login path: open the app, choose a demo lot (Seattle/Portland/Austin), and run the full journey. |
-| Ads | No ads |
-| Target audience | 18 and over (financial planning tool) |
-| News app | No |
-| COVID-19 contact tracing/status | No |
-| Data safety | As per section 1 |
-| Government app | No |
-| Financial features | None of the above (estimates only; no loans, banking, or payments products) |
-| Health apps | No |
+| Violence, sexual content, language, controlled substances, gambling | `No` to each |
+| Users interact or exchange content | `No` |
+| Shares user location with other users | `No` — the app does not transmit the user's current device location to other people |
+| Purchases digital goods | `Yes` |
 
-## 4. Closed testing setup
+The IARC answer is `No`: the app does not transmit a user's current device
+location to other people. A homeowner can voluntarily share a property address
+with a builder through a connection request; Data safety separately discloses
+that address and conservatively declares precise location because an address can
+identify a physical place below the precise-location threshold. The app does not
+request a device-location permission. Keep these answers aligned with the
+marketplace-sharing rows above.
 
-1. Play Console → Testing → **Closed testing** → create track `closed-beta`.
-2. Upload `native/android/app/build/outputs/bundle/release/app-release.aab`
-   (v1.0.2, versionCode 3). Play re-signs with the Play App Signing key already
-   trusted in Digital Asset Links, so the TWA opens full-screen.
-3. Create an email-list tester group; add at least the owner account plus test
-   devices. Personal (non-organization) Play accounts created after Nov 2023
-   need **12 testers opted in for 14 days** before production access can be
-   requested — start the clock early.
-4. Release notes for v1.0.2 (versionCode 3):
-   > Store-ready release: trusted Play signing, in-app checkout returns,
-   > accessible sign-in, and a smoother five-step mobile journey.
-5. Roll out, then share the opt-in URL with testers.
+## Release upload
 
-### Tester validation checklist (real devices)
+| Field | Value |
+|---|---|
+| Artifact | `app-release.aab` from the GitHub Actions artifact `lotfoundry-android-release-aab` |
+| Version name | `1.0.6` |
+| Version code | `7` |
+| Release notes | `First LotFoundry Android release with the feasibility studio, saved studies, builder connections, and Google Play Billing.` |
 
-- [ ] App opens full-screen with no Chrome URL bar (Digital Asset Links OK)
-- [ ] `/studio` journey: address → estimate → certificate on a phone
-- [ ] Play Billing purchase, restore after reinstall, and refund/revocation
-- [ ] Sign-in autofill offers saved credentials (autocomplete fix)
-- [ ] Account deletion via Settings and `/delete-account`
-- [ ] App shortcuts (New Study, Builder Dashboard) launch correctly
-
-## 5. Console-side items nobody can pre-draft
-
-- Play App Signing enrollment already produced the signing certificate; no
-  further integrity action needed beyond keeping both fingerprints served.
-- License testers for Play Billing sandbox (Console → Setup → License testing).
-- In-app products must exist under Monetize → Products before billing tests.
-- Tax, banking, and merchant profile for paid digital goods.
+Before upload, confirm in Play Console that the highest accepted version code is
+less than `7`; Play rejects a duplicate or lower code. After upload, test on a
+physical device that the app opens full-screen without Chrome browser controls.

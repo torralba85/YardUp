@@ -320,7 +320,7 @@ export default function CertificatePanel({
               ) : (
                 <AlertTriangle
                   size={17}
-                  className="mt-0.5 shrink-0 text-lf-amber"
+                  className="mt-0.5 shrink-0 text-lf-amber-ink"
                   aria-hidden="true"
                 />
               )}

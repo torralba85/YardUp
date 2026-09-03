@@ -359,7 +359,7 @@ export default function AddressSearch({
         }
         className={[
           "h-11 w-full rounded-full border pl-9 pr-26 text-sm",
-          "bg-lf-card text-lf-espresso placeholder:text-lf-taupe",
+          "bg-lf-card text-lf-espresso placeholder:text-lf-muted",
           "outline-none transition",
           "focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15",
           isDisabled

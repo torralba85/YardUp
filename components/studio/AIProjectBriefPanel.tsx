@@ -106,9 +106,9 @@ export default function AIProjectBriefPanel({
             your Certificate of Feasibility.
           </p>
           <div className="mt-3 grid grid-cols-[20px_1fr] gap-x-2 gap-y-1.5 border-t border-lf-hairline pt-3">
-            <span className="font-mono text-[9px] text-lf-taupe">01</span>
+            <span className="font-mono text-[9px] text-lf-muted">01</span>
             <span className="text-[11px] leading-4 text-lf-espresso">Parcel fit and open questions</span>
-            <span className="font-mono text-[9px] text-lf-taupe">02</span>
+            <span className="font-mono text-[9px] text-lf-muted">02</span>
             <span className="text-[11px] leading-4 text-lf-espresso">Permit track and stage ranges</span>
           </div>
         </div>
