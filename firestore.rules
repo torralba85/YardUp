@@ -151,11 +151,59 @@ service cloud.firestore {
       return request.resource.data.role in ["user", "builder"];
     }
 
+    function isWellFormedLegalConsent(consent) {
+      return consent is map &&
+        consent.keys().hasOnly([
+          "termsVersion",
+          "privacyVersion",
+          "adultConfirmed",
+          "acceptedAt"
+        ]) &&
+        consent.keys().hasAll([
+          "termsVersion",
+          "privacyVersion",
+          "adultConfirmed",
+          "acceptedAt"
+        ]) &&
+        consent.termsVersion is string &&
+        consent.termsVersion.size() > 0 &&
+        consent.privacyVersion is string &&
+        consent.privacyVersion.size() > 0 &&
+        consent.adultConfirmed == true &&
+        consent.acceptedAt is timestamp;
+    }
+
+    function isCurrentLegalConsent(consent) {
+      return isWellFormedLegalConsent(consent) &&
+        consent.termsVersion == "2026-08-26" &&
+        consent.privacyVersion == "2026-08-26" &&
+        consent.acceptedAt == request.time;
+    }
+
+    function isValidLegalConsentTransition() {
+      let hadConsent = resource != null && "legalConsent" in resource.data;
+      let hasConsent = "legalConsent" in request.resource.data;
+
+      // Legacy profiles may remain receipt-free until they next accept the
+      // current documents. Once a receipt exists it cannot be removed or
+      // rewritten with client-chosen versions/timestamps. An unchanged older
+      // receipt remains valid so unrelated profile edits keep working after a
+      // future policy revision.
+      return (!hasConsent && !hadConsent) ||
+        (hasConsent && hadConsent &&
+          request.resource.data.legalConsent == resource.data.legalConsent) ||
+        (hasConsent && isCurrentLegalConsent(request.resource.data.legalConsent) &&
+          (!hadConsent ||
+            resource.data.legalConsent.termsVersion != "2026-08-26" ||
+            resource.data.legalConsent.privacyVersion != "2026-08-26"));
+    }
+
     function isValidUserProfile(userId) {
       return request.resource.data.keys().hasOnly([
         "displayName",
         "email",
         "role",
+        "legalConsent",
         "createdAt",
         "updatedAt"
       ]) &&
@@ -170,6 +218,7 @@ service cloud.firestore {
       request.resource.data.email.size() <= 254 &&
       request.resource.data.role is string &&
       isValidRole() &&
+      isValidLegalConsentTransition() &&
       request.resource.data.createdAt is timestamp &&
       request.resource.data.updatedAt is timestamp &&
       (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&

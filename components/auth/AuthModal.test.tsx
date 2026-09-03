@@ -89,6 +89,31 @@ describe("AuthModal focus restore", () => {
     );
   });
 
+  it("gates social auth in both modes while leaving returning email sign-in available", () => {
+    render(<AuthModal isOpen onClose={() => {}} />);
+
+    const checkbox = screen.getByRole("checkbox", { name: /18 or older/i });
+    expect(screen.getByRole("button", { name: "Sign In" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Google" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Apple" })).toBeDisabled();
+
+    fireEvent.click(checkbox);
+    expect(screen.getByRole("button", { name: "Google" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Apple" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Alma Reyes" } });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "alma@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/confirm that you are 18 or older/i);
+  });
+
   it("associates visible labels with the email/password fields in both auth modes", () => {
     render(<AuthModal isOpen onClose={() => {}} />);
 

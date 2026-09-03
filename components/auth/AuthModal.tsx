@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
@@ -52,6 +52,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -222,7 +223,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       if (isSignUp) {
-        await signUp(email, password, displayName, "user");
+        if (!legalAccepted) {
+          throw new Error("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
+        }
+        await signUp(
+          email,
+          password,
+          displayName,
+          "user",
+          CURRENT_LEGAL_CONSENT,
+        );
       } else {
         await signIn(email, password);
       }
@@ -244,9 +254,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    if (!legalAccepted) {
+      setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
+      return;
+    }
     setLoading(true);
     try {
-      await signInWithGoogle();
+      await signInWithGoogle("user", CURRENT_LEGAL_CONSENT);
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
@@ -265,9 +279,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleAppleSignIn = async () => {
     setError(null);
+    if (!legalAccepted) {
+      setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
+      return;
+    }
     setLoading(true);
     try {
-      await signInWithApple();
+      await signInWithApple("user", CURRENT_LEGAL_CONSENT);
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
@@ -391,26 +409,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             )}
 
-            {isSignUp && (
-              <p className="lf-caption text-lf-taupe">
-                By creating an account, you agree to our{" "}
-                <a
-                  href="/terms"
-                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
-                >
-                  Terms &amp; Conditions
-                </a>{" "}
-                and{" "}
-                <a
-                  href="/privacy"
-                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
-                >
-                  Privacy Policy
-                </a>
-                .
-              </p>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -421,6 +419,31 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </form>
 
           <div className="mt-6">
+            <label className="mb-4 flex items-start gap-3 lf-caption text-lf-taupe">
+              <input
+                type="checkbox"
+                checked={legalAccepted}
+                onChange={(event) => setLegalAccepted(event.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+              />
+              <span>
+                I confirm I am 18 or older, agree to the{" "}
+                <a
+                  href="/terms"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
+                  Terms &amp; Conditions
+                </a>
+                , and acknowledge the{" "}
+                <a
+                  href="/privacy"
+                  className="text-lf-sand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany"
+                >
+                  Privacy Policy
+                </a>
+                . This confirmation is required for Google or Apple.
+              </span>
+            </label>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-lf-taupe/25"></div>
@@ -435,7 +458,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              disabled={loading}
+              disabled={loading || !legalAccepted}
               className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
@@ -461,7 +484,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="button"
               onClick={handleAppleSignIn}
-              disabled={loading}
+              disabled={loading || !legalAccepted}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-taupe/25 bg-lf-sand/5 px-4 py-2.5 text-sm font-medium text-lf-sand transition-colors hover:bg-lf-sand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

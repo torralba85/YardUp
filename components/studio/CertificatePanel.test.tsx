@@ -114,6 +114,26 @@ describe("CertificatePanel", () => {
     expect(screen.queryByText("Step 4 · Certificate")).not.toBeInTheDocument();
   });
 
+  it("explains the current site-fit issue and reusable property value before purchase", () => {
+    mocks.access.purchased = false;
+    const overLimitResult = { ...result, remainingCapacity: -380 };
+
+    render(<CertificatePanel {...createProps({ result: overLimitResult })} />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: /unlock the complete record for .* one-time \$29/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("380 sf over modeled coverage allowance")).toBeInTheDocument();
+    expect(
+      screen.getByText(/reduce the adu footprint by at least 380 sf/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/one purchase unlocks this property/i)).toBeInTheDocument();
+    expect(screen.getByText("Recommended next steps")).toBeInTheDocument();
+    expect(screen.queryByText(/site plan and 3d view/i)).not.toBeInTheDocument();
+  });
+
   it("prepares the combined AI brief before automatically opening a newly unlocked certificate", async () => {
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();

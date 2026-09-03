@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 /** Privacy policy — matches Firebase, Regrid, Google, OpenAI, Stripe, marketplace. */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: July 13, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: August 26, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect information you provide when you create an account (name, email, password
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           We use this information to provide LotFoundry, authenticate you, save feasibility
           studies, process purchases and lead unlocks, match consented leads to builders, send
           transactional messages, improve reliability, prevent fraud, and respond to support
-          requests. We do not sell your personal information.
+          requests. We do not sell personal information for cross-context behavioral advertising. Builders pay LotFoundry to unlock contact and property details only after a homeowner affirmatively submits a connection request.
         </p>
       </LegalSection>
 
@@ -71,10 +71,7 @@ export default function PrivacyPage() {
           <Link href="/delete-account" className="font-medium text-lf-clay-ink underline">
             Delete account
           </Link>{" "}
-          page (usable without reinstalling a mobile app). Deletion removes account-associated
-          PII and user-generated content. We may retain redacted transaction IDs, amounts, and
-          fraud/accounting records without direct contact details. Counsel may require a narrower
-          retention window; we will not expand retained PII silently.
+          page (usable without reinstalling a mobile app). Deletion removes account-associated contact information and user-generated content from active product records. We may retain purchase, credit, lead-unlock, fraud, tax, accounting, and dispute records for as long as reasonably necessary for those purposes. Retained records may contain transaction or internal account identifiers but not active profile contact details. We delete or de-identify them when they are no longer needed.
         </p>
       </LegalSection>
 
@@ -88,20 +85,31 @@ export default function PrivacyPage() {
 
       <LegalSection title="8. Children">
         <p>
-          LotFoundry is not directed at children under 13. We do not knowingly collect personal
-          information from children under 13.
+          LotFoundry is intended only for people age 18 or older. We do not knowingly allow children to create accounts or submit personal information.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Changes">
+      <LegalSection title="9. Privacy Choices &amp; State Rights">
+        <p>
+          Depending on where you live and whether applicable legal thresholds are met, you may
+          request access to, correction of, deletion of, or a portable copy of your information;
+          object to or opt out of certain disclosures; or appeal a denied request. Email{" "}
+          <a href="mailto:privacy@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
+            privacy@lotfoundry.com
+          </a>
+          . We may verify your identity before completing a request and will not discriminate
+          against you for exercising an applicable privacy right.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="10. Changes">
         <p>
           We may update this policy by revising the “Last updated” date. Material changes may also
-          be communicated by email when appropriate. This policy is subject to legal review before
-          store submission.
+          be communicated by email when appropriate.
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Contact">
+      <LegalSection title="11. Contact">
         <p>
           Privacy questions:{" "}
           <a

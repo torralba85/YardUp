@@ -108,7 +108,7 @@ export default function BuilderLeadPanel({
             Connect with local builders
           </h2>
           <p className="mt-1 text-sm leading-6 text-lf-muted">
-            Share this address and feasibility snapshot with registered builders that serve this area.
+            Share this address and feasibility snapshot with registered builders that serve this area. Builders may contact you about your project.
           </p>
         </div>
         <button
@@ -187,7 +187,7 @@ export default function BuilderLeadPanel({
             checked={consent}
             onChange={(event) => setConsent(event.target.checked)}
           />
-          I agree to share my contact details, property address, and ADU snapshot with matched local builders.
+          I agree to share my name, email, optional phone and message, exact property address, and ADU snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project.
         </label>
         <Button type="submit" variant="primary" size="md" loading={isPending}>
           {isPending ? "Submitting…" : "Submit snapshot"}

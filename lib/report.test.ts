@@ -58,6 +58,9 @@ describe("buildReportText", () => {
     expect(text).toMatch(/1234 Oak Street/);
     expect(text).toMatch(/600 sf/);
     expect(text).toMatch(/Lot coverage/i);
+    expect(text).toMatch(/Setbacks: 20 ft front, 25 ft rear, 5 ft side/i);
+    expect(text).toMatch(/Buildable area after setbacks/i);
+    expect(text).toMatch(/Remaining coverage capacity/i);
     expect(text).toMatch(/Compliant/);
     expect(text).toMatch(/Estimated build cost/i);
     expect(text).toMatch(/Monthly rent estimate/i);
@@ -72,6 +75,18 @@ describe("buildReportText", () => {
     expect(text).toContain("Typical approval timeline: 5-9 weeks");
     expect(text).toContain("Pre-application check: 1-2 weeks");
   });
+
+  it("records every modeled warning instead of dropping later review items", () => {
+    const input = makeInput();
+    const result = {
+      ...input.result,
+      warnings: ["Coverage needs review.", "Height needs review."],
+    };
+    const text = buildReportText({ ...input, result });
+
+    expect(text).toContain("Review note 1: Coverage needs review.");
+    expect(text).toContain("Review note 2: Height needs review.");
+  });
 });
 
 describe("buildReportHtml", () => {
@@ -82,6 +97,8 @@ describe("buildReportHtml", () => {
     expect(html).toContain("<style>");
     expect(html).toContain("Certificate of Feasibility");
     expect(html).toContain("Project Snapshot");
+    expect(html).toContain("Buildable area after setbacks");
+    expect(html).toContain("Remaining coverage capacity");
     expect(html).toContain("Recommended Next Steps");
     expect(html).toContain("1234 Oak Street");
     expect(html).toContain("Yearly net income");
@@ -158,6 +175,9 @@ describe("buildReportCsv", () => {
     expect(csv).toMatch(/Address/);
     expect(csv).toMatch(/ADU Size \(sf\)/);
     expect(csv).toMatch(/Zoning Status/);
+    expect(csv).toMatch(/Front Setback \(ft\)/);
+    expect(csv).toMatch(/Buildable Area After Setbacks \(sf\)/);
+    expect(csv).toMatch(/Remaining Coverage Capacity \(sf\)/);
     expect(csv).toMatch(/Build Cost Low/);
     expect(csv).toMatch(/Monthly Rent/);
     expect(csv).toMatch(/Annual Net Income/);

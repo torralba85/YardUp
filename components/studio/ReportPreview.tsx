@@ -288,13 +288,14 @@ export default function ReportPreview({
                   {[
                     "Project overview",
                     "Cost estimate range",
-                    "Site plan & 3D view",
+                    "Modeled site-fit flags",
                     "Rental analysis",
                     "Assumptions",
                     "Zoning & compliance",
-                    "Property notes",
-                    "Typical approval timeline",
+                    "AI property notes, when available",
+                    "Typical approval path, when available",
                     "Recommended next steps",
+                    "Source and rent basis",
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-2">
                       <CheckCircle2 size={14} className="shrink-0 text-lf-forest" />

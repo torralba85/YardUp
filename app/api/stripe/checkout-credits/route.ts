@@ -4,6 +4,7 @@ import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
+import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
 
 export const runtime = "nodejs";
 
@@ -93,29 +94,38 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      submit_type: "pay",
-      payment_method_types: ["card"],
-      payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: amountCents,
-            product_data: { name: `LotFoundry ${pack}-Lead Pack` },
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        submit_type: "pay",
+        payment_method_types: ["card"],
+        payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: amountCents,
+              product_data: { name: `LotFoundry ${pack}-Lead Pack` },
+            },
           },
+        ],
+        metadata: {
+          builderId,
+          purchaseType: "credit_pack",
+          creditsToGrant: String(pack),
         },
-      ],
-      metadata: {
-        builderId,
-        purchaseType: "credit_pack",
-        creditsToGrant: String(pack),
+        success_url: `${origin}/builder?credits_added=1`,
+        cancel_url: `${origin}/builder`,
       },
-      success_url: `${origin}/builder?credits_added=1`,
-      cancel_url: `${origin}/builder`,
-    });
+      {
+        idempotencyKey: createStripeIdempotencyKey(
+          "credit_pack",
+          builderId,
+          String(pack),
+        ),
+      },
+    );
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
