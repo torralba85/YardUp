@@ -20,6 +20,7 @@
     "android:validate:live": "node native/android/scripts/validate-config.mjs --verify-live",
     "android:validate:release": "node native/android/scripts/validate-config.mjs --release --verify-live",
     "smoke:firebase": "node scripts/firebase-scenario-smoke.mjs",
+    "store:feature-graphic": "node scripts/render-feature-graphic.mjs",
     "deploy": "firebase deploy --only hosting,functions,firestore:rules --project yardup-2026",
     "deploy:dry-run": "firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run",
     "deploy:rules": "firebase deploy --only firestore:rules --project yardup-2026",

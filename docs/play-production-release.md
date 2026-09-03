@@ -108,8 +108,12 @@ Take verbatim values from `docs/play-declarations.md`:
   displays must still be the `03:12:00:71:…:5A:CE` entry served in
   `assetlinks.json`.
 - **Store listing** — name, descriptions, category, contact email, privacy
-  policy. Upload phone and tablet screenshots at Console's required dimensions;
-  do not reuse the web-manifest screenshots without checking them.
+  policy. Upload the 1024x500 feature graphic from
+  `native/android/store-listing/feature-graphic.png` (Play will not publish a
+  listing without one), the 512x512 icon, and the phone and tablet screenshots.
+  Check screenshot dimensions against Console rather than assuming the
+  web-manifest set is accepted as-is; a second tablet screenshot is worth adding
+  before submission.
 - **App content** — ads, target age, app access, data deletion, financial
   features. App access needs a working reviewer account; note that the demo-lot
   path (Seattle, Portland, Austin) runs the full journey with no sign-in.

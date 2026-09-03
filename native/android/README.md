@@ -51,6 +51,24 @@ that `https://lotfoundry.net/`, the start URL, and the served asset-links
 statement each answer 200 without a redirect, and the release workflow runs it
 before building. Verified directly on 2026-09-03.
 
+## Store listing graphics
+
+Play refuses to publish a listing without a **1024x500 feature graphic**, PNG or
+JPEG, no transparency. It lives at `store-listing/feature-graphic.png` with its
+HTML source beside it, so it stays editable rather than being an unregenerable
+binary:
+
+```bash
+npm run store:feature-graphic
+```
+
+Also required: a 512x512 icon (`store_icon.png`) and at least two phone
+screenshots. `public/screenshots/` currently holds two phone shots
+(1080x1920) and one tablet shot (1280x800); regenerate them with
+`node scripts/capture-store-screenshots.mjs` against a running dev server. A
+second tablet screenshot is worth adding before submission — Play uses tablet
+assets to decide large-screen presentation.
+
 ## Digital Asset Links
 
 `public/.well-known/assetlinks.json` and `twa-manifest.json` include both the
