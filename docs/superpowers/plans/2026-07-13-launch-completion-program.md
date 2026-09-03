@@ -504,7 +504,7 @@ Never include other users' PII, Firebase tokens, Stripe secrets, or raw provider
 
 - [ ] **Step 4: Build `/delete-account`**
 
-The page must name LotFoundry, explain exactly what is deleted/retained, let signed-in users complete deletion with the existing two-step confirmation, provide login/password-reset options, and link `support@lotfoundry.com` only as a fallback. It must not require reinstalling a native app.
+The page must name LotFoundry, explain exactly what is deleted/retained, let signed-in users complete deletion with the existing two-step confirmation, provide login/password-reset options, and link `support@lotfoundry.net` only as a fallback. It must not require reinstalling a native app.
 
 - [ ] **Step 5: Verify rules and user flows**
 

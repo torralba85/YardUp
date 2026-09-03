@@ -82,8 +82,8 @@ export function DeleteAccountPageClient() {
         <h2 className="lf-card-heading">Need help?</h2>
         <p className="lf-body-sm text-lf-muted">
           If you cannot access your account, email{" "}
-          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
-            support@lotfoundry.com
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            support@lotfoundry.net
           </a>{" "}
           from the address on the account. Support is a fallback — most users can complete
           deletion above without waiting.
