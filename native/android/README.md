@@ -2,6 +2,10 @@
 
 Trusted Web Activity package for Google Play (`com.lotfoundry.app`).
 
+`docs/play-production-release.md` is the ordered runbook from a merged
+release branch to a production rollout; `docs/play-declarations.md` holds the
+verbatim Console field values.
+
 ## Generate / refresh
 
 From the repo root (requires network + Java):
