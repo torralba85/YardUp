@@ -52,6 +52,17 @@ Confirmed 2026-09-03 against the live host:
 `npm run android:validate:release` re-checks all of the above, including the
 live host, and additionally requires the built AAB. Run it before uploading.
 
+A second audit on 2026-09-03 re-read the whole release path and found the
+static side clean: `verifyReleaseSigning` has no reachable debug or unsigned
+fallback, the validator compares the two fingerprint sets in both directions
+rather than only checking their shape, the version pair agrees across
+`app/build.gradle` and `twa-manifest.json`, the four product IDs match
+`lib/commerce/products.ts` character for character, and the workflow uploads
+with `if-no-files-found: error`. The live statement at
+`lotfoundry.net/.well-known/assetlinks.json` was re-fetched and still matches
+both committed fingerprints. The only release-blocking item is the Play Billing
+configuration above.
+
 ## 1. Secrets
 
 Four repository (or protected-environment) secrets, all from the Play **upload**
@@ -112,8 +123,10 @@ Take verbatim values from `docs/play-declarations.md`:
   `native/android/store-listing/feature-graphic.png` (Play will not publish a
   listing without one), the 512x512 icon, and the phone and tablet screenshots.
   Check screenshot dimensions against Console rather than assuming the
-  web-manifest set is accepted as-is; a second tablet screenshot is worth adding
-  before submission.
+  web-manifest set is accepted as-is. The set now carries two phone
+  (1080x1920) and two tablet (1280x800) captures, which is Play's minimum for
+  each declared form factor; regenerate with
+  `node scripts/capture-store-screenshots.mjs https://lotfoundry.net`.
 - **App content** — ads, target age, app access, data deletion, financial
   features. App access needs a working reviewer account; note that the demo-lot
   path (Seattle, Portland, Austin) runs the full journey with no sign-in.
@@ -149,7 +162,16 @@ bundle.
       Digital Asset Links verification failed; re-check the served statement
       against the App integrity page rather than rebuilding.
 - [ ] `/studio` journey on a phone: address → estimate → certificate
-- [ ] Play Billing purchase **grants the entitlement** — the blocker above
+- [ ] Play Billing purchase **grants the entitlement** — the blocker above.
+      Two request-shape conditions fail a purchase even once the secrets are
+      deployed, so test with an account that satisfies both:
+      a builder-credit SKU needs an existing `builders/{uid}` document or the
+      grant returns `builderProfileMissing`
+      (`lib/server/store-purchases.ts:193`), and the single-certificate SKU
+      needs a `certKey` bound to a lot or the route rejects with 400
+      (`lib/server/store-purchases.ts:126`). Testing only with a fresh account
+      that has never opened the builder dashboard will look like a billing
+      failure when it is neither.
 - [ ] Restore after reinstall; refund and revocation behavior
 - [ ] Sign-in offers saved credentials
 - [ ] Account deletion via Settings and `/delete-account`
