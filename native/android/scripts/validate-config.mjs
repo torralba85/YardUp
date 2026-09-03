@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const releaseMode = process.argv.includes("--release");
+const verifyLive = process.argv.includes("--verify-live");
 const errors = [];
 const warnings = [];
 
@@ -59,6 +60,7 @@ expect(Boolean(statement), "Digital Asset Links must include com.lotfoundry.app.
 
 const rawFingerprints = statement?.target?.sha256_cert_fingerprints;
 const rawTwaFingerprints = twa.fingerprints;
+const uploadKeyFingerprint = process.env.LOTFOUNDRY_UPLOAD_KEY_SHA256;
 expect(
   Array.isArray(rawFingerprints),
   "Digital Asset Links fingerprints must be an array.",
@@ -104,6 +106,21 @@ expect(
   ),
   "Digital Asset Links still contains a placeholder.",
 );
+if (uploadKeyFingerprint) {
+  const normalizedUploadKeyFingerprint = uploadKeyFingerprint.toUpperCase();
+  expect(
+    sha256Pattern.test(uploadKeyFingerprint),
+    "The supplied upload-key SHA-256 fingerprint is invalid.",
+  );
+  expect(
+    normalizedFingerprints.includes(normalizedUploadKeyFingerprint),
+    "The supplied upload-key SHA-256 fingerprint is absent from Digital Asset Links.",
+  );
+  expect(
+    normalizedTwaFingerprints.includes(normalizedUploadKeyFingerprint),
+    "The supplied upload-key SHA-256 fingerprint is absent from the TWA manifest.",
+  );
+}
 
 const buildGradlePath = "native/android/app/build.gradle";
 const buildGradle = existsSync(pathFromRoot(buildGradlePath))
@@ -172,6 +189,84 @@ releaseExpect(
   ),
   "Build the signed Android App Bundle at native/android/app/build/outputs/bundle/release/app-release.aab before release.",
 );
+
+// Live-host verification. Android does not follow a cross-origin redirect when
+// checking Digital Asset Links, so a bundle built against a host that redirects
+// launches with Custom Tab chrome instead of full screen. That is what shipped
+// as versionCode 6. Run with --verify-live before every release build.
+if (verifyLive) {
+  const origin = `https://${twa.host}`;
+  const fetchNoRedirect = async (path) => {
+    try {
+      const response = await fetch(`${origin}${path}`, {
+        redirect: "manual",
+        headers: { "user-agent": "lotfoundry-release-validator" },
+      });
+      return { status: response.status, response };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Could not reach ${origin}${path}: ${message}`);
+      return undefined;
+    }
+  };
+
+  const root = await fetchNoRedirect("/");
+  if (root) {
+    expect(
+      root.status === 200,
+      `${origin}/ answered ${root.status} instead of serving the app directly. ` +
+        "Digital Asset Links verification does not follow cross-origin redirects, " +
+        "so a release built against a redirecting host opens with Custom Tab chrome.",
+    );
+  }
+
+  const startUrl = await fetchNoRedirect(twa.startUrl);
+  if (startUrl) {
+    expect(
+      startUrl.status === 200,
+      `TWA start URL ${origin}${twa.startUrl} answered ${startUrl.status} instead of 200.`,
+    );
+  }
+
+  const served = await fetchNoRedirect("/.well-known/assetlinks.json");
+  if (served) {
+    expect(
+      served.status === 200,
+      `${origin}/.well-known/assetlinks.json answered ${served.status} instead of 200.`,
+    );
+    if (served.status === 200) {
+      let servedStatements;
+      try {
+        servedStatements = await served.response.json();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        errors.push(`Served Digital Asset Links is not valid JSON: ${message}`);
+      }
+      const servedStatement = Array.isArray(servedStatements)
+        ? servedStatements.find(
+            (entry) =>
+              entry?.target?.namespace === "android_app" &&
+              entry?.target?.package_name === twa.packageId,
+          )
+        : undefined;
+      expect(
+        Boolean(servedStatement),
+        `Served Digital Asset Links has no statement for ${twa.packageId}.`,
+      );
+      const servedFingerprints = normalizeFingerprints(
+        servedStatement?.target?.sha256_cert_fingerprints ?? [],
+      );
+      expect(
+        servedFingerprints.length === normalizedFingerprints.length &&
+          servedFingerprints.every((value) =>
+            normalizedFingerprints.includes(value),
+          ),
+        "Served Digital Asset Links fingerprints do not match " +
+          "public/.well-known/assetlinks.json. Redeploy Hosting before building.",
+      );
+    }
+  }
+}
 
 if (errors.length > 0) {
   for (const error of errors) console.error(`ERROR: ${error}`);

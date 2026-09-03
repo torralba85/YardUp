@@ -1,0 +1,111 @@
+name: Android release bundle
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-release-aab:
+    name: Build signed Android App Bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Also confirms the live host serves the app and Digital Asset Links
+      # directly. Android does not follow a cross-origin redirect when verifying
+      # asset links, so building against a redirecting host produces a bundle
+      # that opens with Custom Tab chrome instead of full screen.
+      - name: Validate TWA configuration against the live host
+        run: npm run android:validate:live
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Materialize upload keystore
+        shell: bash
+        env:
+          LOTFOUNDRY_ANDROID_KEYSTORE_BASE64: ${{ secrets.LOTFOUNDRY_ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$LOTFOUNDRY_ANDROID_KEYSTORE_BASE64"
+          keystore_path="$RUNNER_TEMP/lotfoundry-upload.keystore"
+          printf '%s' "$LOTFOUNDRY_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          test -s "$keystore_path"
+          echo "ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE=$keystore_path" >> "$GITHUB_ENV"
+
+      # The fingerprint is public (it is served in assetlinks.json), so carrying
+      # it between steps in the environment exposes nothing.
+      - name: Verify upload key is trusted by the TWA
+        shell: bash
+        env:
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD: ${{ secrets.LOTFOUNDRY_ANDROID_KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS: ${{ secrets.LOTFOUNDRY_ANDROID_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD: ${{ secrets.LOTFOUNDRY_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          fingerprint="$(keytool -list -v \
+            -keystore "$ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE" \
+            -alias "$ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS" \
+            -storepass:env ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD \
+            -keypass:env ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD \
+            2>/dev/null | awk -F': ' '/SHA256:/{print $2; exit}')"
+          test -n "$fingerprint"
+          echo "LOTFOUNDRY_UPLOAD_KEY_SHA256=$fingerprint" >> "$GITHUB_ENV"
+          LOTFOUNDRY_UPLOAD_KEY_SHA256="$fingerprint" npm run android:validate
+
+      - name: Build signed release bundle
+        working-directory: native/android
+        env:
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD: ${{ secrets.LOTFOUNDRY_ANDROID_KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS: ${{ secrets.LOTFOUNDRY_ANDROID_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD: ${{ secrets.LOTFOUNDRY_ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon :app:bundleRelease
+
+      # `jarsigner -verify -strict` is not usable here: a Play upload key is
+      # self-signed, so strict mode reports an unvalidated certificate chain and
+      # fails a bundle that is in fact correctly signed. Comparing the bundle's
+      # actual signer certificate against the upload key is both stricter about
+      # what matters and free of that false negative.
+      - name: Verify the bundle is signed by the upload key
+        shell: bash
+        working-directory: native/android
+        run: |
+          set -euo pipefail
+          bundle="app/build/outputs/bundle/release/app-release.aab"
+          test -s "$bundle"
+          jarsigner -verify "$bundle"
+          signer="$(keytool -printcert -jarfile "$bundle" \
+            | awk -F': ' '/SHA256:/{print $2; exit}')"
+          test -n "$signer"
+          if [ "${signer^^}" != "${LOTFOUNDRY_UPLOAD_KEY_SHA256^^}" ]; then
+            echo "Bundle signer $signer does not match upload key $LOTFOUNDRY_UPLOAD_KEY_SHA256" >&2
+            exit 1
+          fi
+          echo "Bundle is signed by the trusted upload key."
+
+      - name: Validate release gates
+        run: npm run android:validate:release
+
+      - name: Upload signed release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: lotfoundry-android-release-aab
+          path: native/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove upload keystore
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/lotfoundry-upload.keystore"
