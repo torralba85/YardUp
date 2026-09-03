@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BuilderDashboard from "@/components/builder/BuilderDashboard";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -29,12 +30,18 @@ export default function BuilderPage() {
       <div className="min-h-dvh bg-lf-sand text-lf-espresso">
         <header className="border-b border-lf-hairline bg-lf-card">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lotfoundry-lockup-horizontal.svg"
-              alt="LotFoundry"
-              className="h-7 w-auto"
-            />
+            <Link
+              href="/"
+              aria-label="LotFoundry home"
+              className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/lotfoundry-lockup-horizontal.svg"
+                alt="LotFoundry"
+                className="h-7 w-auto"
+              />
+            </Link>
             <Skeleton className="h-9 w-9 rounded-full" />
           </div>
         </header>
