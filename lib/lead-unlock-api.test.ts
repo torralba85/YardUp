@@ -89,7 +89,10 @@ describe("startLeadUnlock", () => {
 
     const init = fn.mock.calls[0][1] as RequestInit;
     expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok-123");
-    expect(JSON.parse(init.body as string)).toEqual({ requestId: "r1" });
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      requestId: "r1",
+      checkoutAttemptId: expect.any(String),
+    });
   });
 
   it("throws LeadUnlockError carrying the server message on failure", async () => {
