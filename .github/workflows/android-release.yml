@@ -11,6 +11,7 @@ jobs:
     name: Build signed Android App Bundle
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: play-production
     steps:
       - uses: actions/checkout@v4
 
@@ -95,6 +96,10 @@ jobs:
           echo "Bundle is signed by the trusted upload key."
 
       - name: Validate release gates
+        env:
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD: ${{ secrets.LOTFOUNDRY_ANDROID_KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS: ${{ secrets.LOTFOUNDRY_ANDROID_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD: ${{ secrets.LOTFOUNDRY_ANDROID_KEY_PASSWORD }}
         run: npm run android:validate:release
 
       - name: Upload signed release bundle

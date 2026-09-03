@@ -41,9 +41,26 @@ try {
     deviceScaleFactor: 1,
   });
   // The source pulls webfonts from Google Fonts; without them the wordmark
-  // silently falls back to a system serif.
+  // silently falls back to a system font. Do this before screenshotting so a
+  // transient font outage can never overwrite the committed Play asset.
   await page.goto(pathToFileURL(source).href, { waitUntil: "networkidle" });
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    const requiredFonts = [
+      { family: "Libre Franklin", weight: "700", text: "LotFoundry" },
+      { family: "Instrument Sans", weight: "400", text: "backyard" },
+      { family: "DM Mono", weight: "500", text: "ADU" },
+    ];
+    const missing = requiredFonts.filter(
+      ({ family, weight, text }) =>
+        !document.fonts.check(`${weight} 16px "${family}"`, text),
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `Required webfonts did not load: ${missing.map(({ family, weight }) => `${family} ${weight}`).join(", ")}`,
+      );
+    }
+  });
   await page.screenshot({ path: output, type: "png" });
 } finally {
   await browser.close();

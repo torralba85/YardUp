@@ -16,7 +16,7 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --lf-sand: #F2E5D5;
@@ -44,9 +44,7 @@
     position: relative;
     width: 1024px;
     height: 500px;
-    background:
-      radial-gradient(120% 140% at 82% 18%, #F8F0E4 0%, rgba(248,240,228,0) 58%),
-      linear-gradient(160deg, #F5EADC 0%, #F2E5D5 55%, #EDDDC9 100%);
+    background: var(--lf-sand);
     overflow: hidden;
   }
 
@@ -54,13 +52,9 @@
   .grid {
     position: absolute;
     inset: 0;
-    background-image:
-      linear-gradient(to right, rgba(191,165,142,0.20) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(191,165,142,0.20) 1px, transparent 1px);
-    background-size: 64px 64px;
-    background-position: -1px -1px;
-    -webkit-mask-image: radial-gradient(120% 100% at 78% 50%, #000 0%, rgba(0,0,0,0.35) 55%, transparent 78%);
-            mask-image: radial-gradient(120% 100% at 78% 50%, #000 0%, rgba(0,0,0,0.35) 55%, transparent 78%);
+    width: 1024px;
+    height: 500px;
+    opacity: 0.2;
   }
 
   /* Parcel diagram: lot boundary, setback line, and the ADU footprint. */
@@ -94,9 +88,9 @@
 
   .wordmark {
     margin-top: 20px;
-    font-family: "Newsreader", Georgia, serif;
+    font-family: "Libre Franklin", system-ui, sans-serif;
     font-size: 82px;
-    font-weight: 500;
+    font-weight: 700;
     line-height: 0.98;
     letter-spacing: -0.018em;
     color: var(--lf-espresso);
@@ -128,7 +122,14 @@
 </head>
 <body>
   <div class="plate">
-    <div class="grid"></div>
+    <svg class="grid" width="1024" height="500" aria-hidden="true">
+      <defs>
+        <pattern id="survey-grid" width="64" height="64" patternUnits="userSpaceOnUse">
+          <path d="M 64 0 L 0 0 0 64" fill="none" stroke="#BFA58E" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="1024" height="500" fill="url(#survey-grid)"/>
+    </svg>
 
     <svg class="parcel" width="286" height="330" viewBox="0 0 286 330" fill="none">
       <!-- lot boundary -->

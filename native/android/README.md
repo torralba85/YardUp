@@ -93,18 +93,34 @@ The web client detects `getDigitalGoodsService` and routes purchases through
 
 ```bash
 cd native/android
-./gradlew test bundleRelease
+./gradlew test
 ```
 
 Run `npm run android:validate` for committed configuration checks, which need
-no network. `npm run android:validate:live` adds the live-host checks: the
-canonical host must serve `/`, the start URL, and
-`/.well-known/assetlinks.json` with a direct 200 rather than a redirect, and
-the served asset-links fingerprints must match
-`public/.well-known/assetlinks.json`. `npm run android:validate:release` runs
-all of that plus the release gates, and expects the signed AAB at
-`native/android/app/build/outputs/bundle/release/app-release.aab`. The AAB,
-signing keys, and keystores are intentionally not committed.
+no network. `npm run android:validate:live` checks the canonical host's app,
+legal, manifest, and icon endpoints all serve a direct 200, and verifies that
+the served asset-links statement has the required relation, fingerprints, and
+`application/json` content type. `npm run android:validate:release` adds the
+release gates, expects the signed AAB at
+`native/android/app/build/outputs/bundle/release/app-release.aab`, and compares
+its signer with the upload keystore. The AAB, signing keys, and keystores are
+intentionally not committed.
+
+`bundleRelease` deliberately fails closed unless all four Gradle project
+properties are set. For a local release build, set these as environment-backed
+Gradle properties (substitute real local paths and values; do not commit them):
+
+```bash
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE=/path/to/upload.keystore
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD='...'
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS='...'
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD='...'
+
+cd native/android
+./gradlew --no-daemon :app:bundleRelease
+cd ../..
+npm run android:validate:release
+```
 
 Dependency resolution needs both `google()` and `mavenCentral()`. The
 Bubblewrap template shipped `jcenter()`, which is shut down; `guava`,
@@ -114,12 +130,13 @@ Central, so a cold build fails without it.
 ## GitHub Actions signing
 
 Run the manually triggered **Android release bundle** workflow only after these
-repository or protected-environment secrets are configured. It decodes the
-keystore into the ephemeral runner directory, passes signing values to Gradle
-as masked environment-backed project properties, verifies that the upload
-certificate is already trusted by the TWA, confirms the finished bundle is
-signed by that exact certificate, uploads only the AAB, and removes the
-keystore.
+secrets are configured in GitHub's protected `play-production` environment. It
+decodes the keystore into the ephemeral runner directory, passes signing values
+to Gradle as masked environment-backed project properties, verifies that the
+upload certificate is already trusted by the TWA, confirms the finished bundle
+is signed by that exact certificate, uploads only the AAB, and removes the
+keystore. Configure the environment's required reviewers and deployment-branch
+rules before adding the secrets.
 
 | Secret | Value |
 |---|---|

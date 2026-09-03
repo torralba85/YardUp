@@ -49,8 +49,10 @@ Confirmed 2026-09-03 against the live host:
 - `versionCode 7` exceeds the `PUBLISHED_VERSION_CODE = 6` ceiling.
 - Repo gate green: lint, `tsc --noEmit`, 739 unit tests, production build.
 
-`npm run android:validate:release` re-checks all of the above, including the
-live host, and additionally requires the built AAB. Run it before uploading.
+`npm run android:validate:release` re-checks the listed live endpoints,
+asset-links content, and the built AAB's signer. It does not re-run lint,
+TypeScript, unit tests, or the production build; use the current CI `verify`
+job (or re-run those checks) as evidence for that separate repo gate.
 
 A second audit on 2026-09-03 re-read the whole release path and found the
 static side clean: `verifyReleaseSigning` has no reachable debug or unsigned
@@ -60,13 +62,14 @@ rather than only checking their shape, the version pair agrees across
 `lib/commerce/products.ts` character for character, and the workflow uploads
 with `if-no-files-found: error`. The live statement at
 `lotfoundry.net/.well-known/assetlinks.json` was re-fetched and still matches
-both committed fingerprints. The only release-blocking item is the Play Billing
-configuration above.
+both committed fingerprints. Release remains blocked until the Play Billing
+configuration above is complete and its sandbox purchase grants an entitlement.
 
 ## 1. Secrets
 
-Four repository (or protected-environment) secrets, all from the Play **upload**
-key. Google retains the App Signing private key; the workflow never needs it.
+Four protected-environment secrets in GitHub environment `play-production`, all
+from the Play **upload** key. Google retains the App Signing private key; the
+workflow never needs it.
 
 | Secret | Value |
 |---|---|
@@ -93,11 +96,11 @@ same build runs locally with a JDK 21 and the Android SDK:
 
 ```bash
 cd native/android
-ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE=/path/to/upload.keystore \
-ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD=… \
-ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS=… \
-ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD=… \
-  ./gradlew --no-daemon :app:bundleRelease
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE=/path/to/upload.keystore
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD=…
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS=…
+export ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD=…
+./gradlew --no-daemon :app:bundleRelease
 cd ../..
 npm run android:validate:release
 ```
@@ -133,6 +136,7 @@ Take verbatim values from `docs/play-declarations.md`:
 - **Data safety** — the marketplace sharing disclosure is the only third-party
   sharing claim. Everything collected is encrypted in transit.
 - **Content rating** — IARC questionnaire; digital-goods purchases are `Yes`.
+  The app does not transmit current device location to other people.
 
 ## 4. In-app products
 

@@ -13,25 +13,17 @@ keystore, or a service-account key in Play Console or this repository.
 | Free or paid | `Free` |
 | Package name | `com.lotfoundry.app` |
 | App category | `House & Home` |
-| Contact email | `support@lotfoundry.net` |
+| Contact email | `support@lotfoundry.com` |
 | Privacy policy URL | `https://lotfoundry.net/privacy` |
 | Account deletion URL | `https://lotfoundry.net/delete-account` |
 | Developer Program Policies declaration | `Acknowledge` |
 | US export laws declaration | `Acknowledge` |
 
-### Contact address — decide which domain is canonical
+### Contact address
 
-The two Console contact fields above say `support@lotfoundry.net`, but the legal
-pages served at that domain send users elsewhere: `app/privacy/page.tsx` gives
-`privacy@lotfoundry.com` and `support@lotfoundry.com`, and
-`app/terms/page.tsx` gives `support@lotfoundry.com`.
-
-`lotfoundry.com` does resolve and carries Google MX records, so this is very
-likely a live mailbox rather than a dead address — but a reviewer following the
-privacy policy lands on a different domain than the one entered in Console, and
-a privacy contact is one of the things Play review actually exercises. Pick the
-mailbox that is really monitored and make Console, `/privacy`, and `/terms`
-agree on it.
+Use `support@lotfoundry.com`. It is the canonical support address on the
+implemented help, privacy, terms, and account-deletion surfaces. The Console
+listing must stay aligned with those user-facing routes.
 
 ## App integrity
 
@@ -53,7 +45,7 @@ Digital Asset Links statement. The currently served value is:
 | Short description | `See what your backyard can earn.` |
 | Full description | `Check your address for ADU rent, build cost, and payback estimates before you spend money on plans. Explore lot fit, compare assumptions, and save or share an early feasibility study. Estimates only; local review is still required before design, permitting, financing, or investment decisions.` |
 | Category | `House & Home` |
-| Email | `support@lotfoundry.net` |
+| Email | `support@lotfoundry.com` |
 | Privacy policy | `https://lotfoundry.net/privacy` |
 
 Upload current phone and tablet screenshots from the release candidate. Do not
@@ -83,7 +75,7 @@ them in Play Console's required dimensions.
 | Email address | Yes | Yes, after a homeowner submits a builder connection request | Account management, app functionality | No |
 | Phone number | Yes | Yes, after a homeowner submits a builder connection request | App functionality | No |
 | Address | Yes | Yes, after a homeowner submits a builder connection request | App functionality | No |
-| Precise location | Yes, from a typed address geocoded server-side | No | App functionality | No |
+| Precise location | Yes, from a user-entered property address geocoded server-side | No | App functionality | No |
 | Photos | Yes, only when the user submits an optional style-match photo | No | App functionality | No |
 | Purchase history | Yes | No | App functionality | No |
 | Other user-generated content (saved studies and feedback) | Yes | No | App functionality | No |
@@ -107,35 +99,16 @@ marketplace disclosure above is the only third-party sharing claim.
 |---|---|
 | Violence, sexual content, language, controlled substances, gambling | `No` to each |
 | Users interact or exchange content | `No` |
-| Shares user location with other users | Decide before submitting — see below |
+| Shares user location with other users | `No` — the app does not transmit the user's current device location to other people |
 | Purchases digital goods | `Yes` |
 
-`Shares user location with other users` is currently drafted as `No`, and that
-answer is hard to defend as written: unlocking a lead reveals the homeowner's
-**exact street address** to a builder, and builders are other users of the app.
-Two readings are available, and the difference matters enough to settle
-deliberately rather than by default.
-
-- `Yes` is the literal reading. A precise address does reach another user.
-- `No` is the reading IARC's wording invites, since the question targets
-  location-broadcasting features rather than a one-time disclosure the user
-  initiates for a specific counterparty.
-
-`Yes` is the safer answer: an IARC questionnaire that understates disclosure can
-invalidate the rating after the fact, whereas a conservative answer costs
-little for an app already rated `18 and over`. Whichever is chosen, keep it
-consistent with the Data safety sharing rows above.
-
-Two smaller items to settle in the same pass:
-
-- **`Precise location` is over-declared.** The app never requests a device
-  location permission; the value is a user-typed address, already disclosed
-  under `Address`. Declaring `Precise location` invites a reviewer question
-  about a permission the app does not hold. Consider `Not collected`.
-- **The release note names the domain.** `First LotFoundry Android release on
-  lotfoundry.net…` reads as wrapper-ish to a human reviewer, and store copy is
-  not the place for a hostname. Describing the capabilities instead costs
-  nothing.
+The IARC answer is `No`: the app does not transmit a user's current device
+location to other people. A homeowner can voluntarily share a property address
+with a builder through a connection request; Data safety separately discloses
+that address and conservatively declares precise location because an address can
+identify a physical place below the precise-location threshold. The app does not
+request a device-location permission. Keep these answers aligned with the
+marketplace-sharing rows above.
 
 ## Release upload
 
@@ -144,7 +117,7 @@ Two smaller items to settle in the same pass:
 | Artifact | `app-release.aab` from the GitHub Actions artifact `lotfoundry-android-release-aab` |
 | Version name | `1.0.6` |
 | Version code | `7` |
-| Release notes | `First LotFoundry Android release on lotfoundry.net, with the feasibility studio, saved studies, builder connections, and Google Play Billing.` |
+| Release notes | `First LotFoundry Android release with the feasibility studio, saved studies, builder connections, and Google Play Billing.` |
 
 Before upload, confirm in Play Console that the highest accepted version code is
 less than `7`; Play rejects a duplicate or lower code. After upload, test on a

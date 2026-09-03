@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,6 +27,20 @@ const releaseExpect = (condition, message) => {
   if (releaseMode) errors.push(message);
   else warnings.push(message);
 };
+const HANDLE_ALL_URLS_RELATION = "delegate_permission/common.handle_all_urls";
+const findAndroidAppStatement = (entries, packageId) =>
+  Array.isArray(entries)
+    ? entries.find(
+        (entry) =>
+          entry?.target?.namespace === "android_app" &&
+          entry?.target?.package_name === packageId,
+      )
+    : undefined;
+const hasHandleAllUrlsRelation = (entry) =>
+  Array.isArray(entry?.relation) &&
+  entry.relation.includes(HANDLE_ALL_URLS_RELATION);
+const sha256FromKeytool = (output) =>
+  output.match(/SHA256:\s*([0-9A-F:]+)/i)?.[1]?.toUpperCase();
 
 const twa = readJson("native/android/twa-manifest.json") ?? {};
 const webManifest = readJson("public/manifest.json") ?? {};
@@ -51,12 +66,12 @@ expect(webManifest.scope === "/", "Web manifest scope must include /studio.");
 
 expect(Array.isArray(assetLinks), "Digital Asset Links must be a JSON array.");
 const assetLinkEntries = Array.isArray(assetLinks) ? assetLinks : [];
-const statement = assetLinkEntries.find(
-  (entry) =>
-    entry?.target?.namespace === "android_app" &&
-    entry?.target?.package_name === twa.packageId,
-);
+const statement = findAndroidAppStatement(assetLinkEntries, twa.packageId);
 expect(Boolean(statement), "Digital Asset Links must include com.lotfoundry.app.");
+expect(
+  hasHandleAllUrlsRelation(statement),
+  `Digital Asset Links must include ${HANDLE_ALL_URLS_RELATION}.`,
+);
 
 const rawFingerprints = statement?.target?.sha256_cert_fingerprints;
 const rawTwaFingerprints = twa.fingerprints;
@@ -181,14 +196,87 @@ releaseExpect(
   Array.isArray(webManifest.screenshots) && webManifest.screenshots.length >= 2,
   "Add final phone/tablet screenshots to public/manifest.json before release.",
 );
+const releaseBundlePath =
+  "native/android/app/build/outputs/bundle/release/app-release.aab";
+const absoluteReleaseBundlePath = pathFromRoot(releaseBundlePath);
+const hasReleaseBundle = existsSync(absoluteReleaseBundlePath);
 releaseExpect(
-  existsSync(
-    pathFromRoot(
-      "native/android/app/build/outputs/bundle/release/app-release.aab",
-    ),
-  ),
+  hasReleaseBundle,
   "Build the signed Android App Bundle at native/android/app/build/outputs/bundle/release/app-release.aab before release.",
 );
+
+if (releaseMode && hasReleaseBundle) {
+  const signingPropertyNames = [
+    "ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE",
+    "ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD",
+    "ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS",
+    "ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD",
+  ];
+  const missingSigningProperties = signingPropertyNames.filter(
+    (name) => !process.env[name],
+  );
+  releaseExpect(
+    missingSigningProperties.length === 0,
+    "Verify the local AAB signer with the same Gradle project properties used to build it. Missing: " +
+      missingSigningProperties.join(", ") + ".",
+  );
+
+  if (missingSigningProperties.length === 0) {
+    try {
+      const uploadKeyDetails = execFileSync(
+        "keytool",
+        [
+          "-list",
+          "-v",
+          "-keystore",
+          process.env.ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_FILE,
+          "-alias",
+          process.env.ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_ALIAS,
+          "-storepass:env",
+          "ORG_GRADLE_PROJECT_LOTFOUNDRY_STORE_PASSWORD",
+          "-keypass:env",
+          "ORG_GRADLE_PROJECT_LOTFOUNDRY_KEY_PASSWORD",
+        ],
+        { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      );
+      const uploadKeyFingerprint = sha256FromKeytool(uploadKeyDetails);
+      releaseExpect(
+        Boolean(uploadKeyFingerprint),
+        "Could not read a SHA-256 fingerprint from the upload keystore.",
+      );
+      releaseExpect(
+        normalizedFingerprints.includes(uploadKeyFingerprint),
+        "The upload-key fingerprint is absent from Digital Asset Links.",
+      );
+      releaseExpect(
+        normalizedTwaFingerprints.includes(uploadKeyFingerprint),
+        "The upload-key fingerprint is absent from the TWA manifest.",
+      );
+
+      execFileSync("jarsigner", ["-verify", absoluteReleaseBundlePath], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const bundleDetails = execFileSync(
+        "keytool",
+        ["-printcert", "-jarfile", absoluteReleaseBundlePath],
+        { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      );
+      const bundleFingerprint = sha256FromKeytool(bundleDetails);
+      releaseExpect(
+        Boolean(bundleFingerprint),
+        "Could not read a SHA-256 fingerprint from the release AAB.",
+      );
+      releaseExpect(
+        bundleFingerprint === uploadKeyFingerprint,
+        "The release AAB signer does not match the configured upload keystore.",
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Could not verify the release AAB signer: ${message}`);
+    }
+  }
+}
 
 // Live-host verification. Android does not follow a cross-origin redirect when
 // checking Digital Asset Links, so a bundle built against a host that redirects
@@ -210,22 +298,25 @@ if (verifyLive) {
     }
   };
 
-  const root = await fetchNoRedirect("/");
-  if (root) {
-    expect(
-      root.status === 200,
-      `${origin}/ answered ${root.status} instead of serving the app directly. ` +
-        "Digital Asset Links verification does not follow cross-origin redirects, " +
-        "so a release built against a redirecting host opens with Custom Tab chrome.",
-    );
-  }
-
-  const startUrl = await fetchNoRedirect(twa.startUrl);
-  if (startUrl) {
-    expect(
-      startUrl.status === 200,
-      `TWA start URL ${origin}${twa.startUrl} answered ${startUrl.status} instead of 200.`,
-    );
+  const requiredLivePaths = [
+    "/",
+    twa.startUrl,
+    "/privacy",
+    "/delete-account",
+    "/help",
+    "/terms",
+    "/manifest.json",
+    "/icon-512.png",
+    "/icon-maskable-512.png",
+  ];
+  for (const path of requiredLivePaths) {
+    const result = await fetchNoRedirect(path);
+    if (result) {
+      expect(
+        result.status === 200,
+        `${origin}${path} answered ${result.status} instead of serving the release endpoint directly.`,
+      );
+    }
   }
 
   const served = await fetchNoRedirect("/.well-known/assetlinks.json");
@@ -235,6 +326,11 @@ if (verifyLive) {
       `${origin}/.well-known/assetlinks.json answered ${served.status} instead of 200.`,
     );
     if (served.status === 200) {
+      const contentType = served.response.headers.get("content-type")?.toLowerCase();
+      expect(
+        contentType?.startsWith("application/json") === true,
+        "Served Digital Asset Links must use an application/json Content-Type header.",
+      );
       let servedStatements;
       try {
         servedStatements = await served.response.json();
@@ -242,16 +338,17 @@ if (verifyLive) {
         const message = error instanceof Error ? error.message : String(error);
         errors.push(`Served Digital Asset Links is not valid JSON: ${message}`);
       }
-      const servedStatement = Array.isArray(servedStatements)
-        ? servedStatements.find(
-            (entry) =>
-              entry?.target?.namespace === "android_app" &&
-              entry?.target?.package_name === twa.packageId,
-          )
-        : undefined;
+      const servedStatement = findAndroidAppStatement(
+        servedStatements,
+        twa.packageId,
+      );
       expect(
         Boolean(servedStatement),
         `Served Digital Asset Links has no statement for ${twa.packageId}.`,
+      );
+      expect(
+        hasHandleAllUrlsRelation(servedStatement),
+        `Served Digital Asset Links must include ${HANDLE_ALL_URLS_RELATION}.`,
       );
       const servedFingerprints = normalizeFingerprints(
         servedStatement?.target?.sha256_cert_fingerprints ?? [],
