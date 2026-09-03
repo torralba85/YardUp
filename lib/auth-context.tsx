@@ -17,6 +17,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   OAuthProvider,
+  deleteUser,
   signOut,
   updateProfile,
   sendPasswordResetEmail,
@@ -29,10 +30,14 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { type LegalConsent } from "./legal-consent";
 import { clearInitialParcel } from "./parcel-handoff";
 import { validateDisplayName, validateEmail, validatePassword } from "./account-settings";
 
 type UserRole = "user" | "builder";
+
+export { CURRENT_LEGAL_CONSENT } from "./legal-consent";
+export type { LegalConsent } from "./legal-consent";
 
 /** The app-level user profile mirrored from the `users` Firestore collection. */
 export interface UserProfile {
@@ -58,9 +63,10 @@ interface AuthContextType {
     password: string,
     displayName: string,
     role: UserRole,
+    legalConsent: LegalConsent,
   ) => Promise<UserCredential>;
-  signInWithGoogle: (role?: UserRole) => Promise<UserCredential>;
-  signInWithApple: (role?: UserRole) => Promise<UserCredential>;
+  signInWithGoogle: (role?: UserRole, legalConsent?: LegalConsent) => Promise<UserCredential>;
+  signInWithApple: (role?: UserRole, legalConsent?: LegalConsent) => Promise<UserCredential>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -79,8 +85,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * Subscribes to auth state changes, and on sign-in ensures a matching
  * `users/{uid}` Firestore profile exists (creating it with the pending role
  * for new accounts, or reading the existing role otherwise). Profile reads
- * fall back to an in-memory profile if Firestore is unavailable, so auth never
- * blocks on a failed profile fetch.
+ * fall back to an in-memory profile if Firestore is unavailable. Account
+ * creation is stricter: a consent-bearing flow fails closed if its versioned
+ * receipt cannot be persisted.
  *
  * @param props.children - The subtree that can consume {@link useAuth}.
  * @returns The auth context provider.
@@ -101,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName?: string | null;
       email?: string | null;
       role?: UserRole;
+      legalConsent?: LegalConsent;
     } = {},
   ) => {
     const docRef = doc(db, "users", u.uid);
@@ -122,12 +130,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const existingRole = data.role || "user";
         const nextDisplayName = displayName || data.displayName || null;
         const nextEmail = email || data.email || "";
+        const existingConsent = data.legalConsent;
+        const shouldRecordLegalConsent = Boolean(options.legalConsent) && (
+          existingConsent?.termsVersion !== options.legalConsent?.termsVersion ||
+          existingConsent?.privacyVersion !== options.legalConsent?.privacyVersion ||
+          existingConsent?.adultConfirmed !== true
+        );
 
-        if (options.displayName !== undefined || options.email !== undefined) {
+        // Social sign-in passes neither displayName nor email, so gating the
+        // write on those alone silently dropped every returning user's consent
+        // receipt — they were re-prompted on each sign-in and nothing was
+        // recorded, which is the one thing clickwrap exists to produce.
+        if (
+          options.displayName !== undefined ||
+          options.email !== undefined ||
+          shouldRecordLegalConsent
+        ) {
           await setDoc(docRef, {
             displayName: nextDisplayName,
             email: nextEmail,
             role: existingRole,
+            ...(shouldRecordLegalConsent && options.legalConsent
+              ? {
+                  legalConsent: {
+                    ...options.legalConsent,
+                    acceptedAt: serverTimestamp(),
+                  },
+                }
+              : {}),
             updatedAt: serverTimestamp(),
           }, { merge: true });
         }
@@ -144,12 +174,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           displayName,
           email,
           role,
+          ...(options.legalConsent
+            ? {
+                legalConsent: {
+                  ...options.legalConsent,
+                  acceptedAt: serverTimestamp(),
+                },
+              }
+            : {}),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }, { merge: true });
         setProfile(fallbackProfile);
       }
-    } catch {
+    } catch (error) {
+      if (options.legalConsent) throw error;
       setProfile(fallbackProfile);
     }
   }, []);
@@ -160,9 +199,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (u) {
           hadUserRef.current = true;
-          await ensureProfile(u, {
-            role: pendingAuthRoleRef.current ?? undefined,
-          });
+          // signUp/social handlers persist the consent-bearing profile before
+          // completing. Letting this listener race them could create a profile
+          // without the receipt and redirect before a failed write is reported.
+          if (pendingAuthRoleRef.current === null) {
+            await ensureProfile(u);
+          }
         } else {
           // Only clear the stashed parcel when a real session ends (a
           // previously authed user going null — logout, deleteAccount, or an
@@ -191,39 +233,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     displayName: string,
     role: UserRole,
+    legalConsent: LegalConsent,
   ) => {
     pendingAuthRoleRef.current = role;
+    let cred: UserCredential | null = null;
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
-      await ensureProfile(cred.user, { displayName, email, role });
+      await ensureProfile(cred.user, { displayName, email, role, legalConsent });
       return cred;
+    } catch (error) {
+      if (cred) {
+        await deleteUser(cred.user).catch(async () => {
+          await signOut(auth).catch(() => undefined);
+        });
+      }
+      throw error;
     } finally {
       pendingAuthRoleRef.current = null;
     }
   };
 
-  const signInWithGoogle = async (role: UserRole = "user") => {
+  const signInWithGoogle = async (
+    role: UserRole = "user",
+    legalConsent?: LegalConsent,
+  ) => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
-      await ensureProfile(cred.user, { role });
+      try {
+        await ensureProfile(cred.user, { role, legalConsent });
+      } catch (error) {
+        await signOut(auth).catch(() => undefined);
+        throw error;
+      }
       return cred;
     } finally {
       pendingAuthRoleRef.current = null;
     }
   };
 
-  const signInWithApple = async (role: UserRole = "user") => {
+  const signInWithApple = async (
+    role: UserRole = "user",
+    legalConsent?: LegalConsent,
+  ) => {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
-      await ensureProfile(cred.user, { role });
+      try {
+        await ensureProfile(cred.user, { role, legalConsent });
+      } catch (error) {
+        await signOut(auth).catch(() => undefined);
+        throw error;
+      }
       return cred;
     } finally {
       pendingAuthRoleRef.current = null;

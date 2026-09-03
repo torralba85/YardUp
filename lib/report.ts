@@ -8,6 +8,8 @@ import {
 import { marketProvenanceLine } from "./market/market-basis";
 import type { Parcel } from "./parcel-types";
 import type { AIProjectBrief } from "./ai-types";
+import { buildableArea } from "./feasibility-verdict";
+import { getSiteFitCapacityStatus } from "./site-fit";
 
 /** Inputs needed to render any of the feasibility report formats. */
 export interface ReportInput {
@@ -70,6 +72,7 @@ export function buildReportText({
         "Review the concept with a licensed designer or builder.",
         "Update costs, financing, taxes, and rent assumptions before making decisions.",
       ];
+  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity);
   const lines = [
     "LotFoundry Certificate of Feasibility",
     `No. ${makeCertificateSerial(parcel)} - Recorded ${formatRecordedDate(recordedAt ?? new Date())}`,
@@ -85,8 +88,13 @@ export function buildReportText({
     "",
     "Site Fit",
     `Lot coverage: ${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% max`,
+    `Setbacks: ${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
+    `Buildable area after setbacks: ${buildableArea(parcel).toLocaleString()} sf`,
+    `Remaining coverage capacity: ${siteFitStatus.title}`,
     `Zoning status: ${result.zoningStatus}`,
-    result.warnings.length > 0 ? `Review note: ${result.warnings[0]}` : "Review note: No coverage warning for the current assumptions.",
+    ...(result.warnings.length > 0
+      ? result.warnings.map((warning, index) => `Review note ${index + 1}: ${warning}`)
+      : ["Review note: No coverage warning for the current assumptions."]),
     "",
     "Financial Estimate",
     `Estimated build cost: ${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`,
@@ -141,12 +149,19 @@ export function buildReportHtml({
   recordedAt,
   projectBrief,
 }: ReportInput): string {
+  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity);
   const rows: Array<[string, string]> = [
     ["Property", `${parcel.address}, ${parcel.city}`],
     ["ADU size", `${result.aduSqft.toLocaleString()} sf`],
     ["Roof", roofLabels[config.roof]],
     ["Exterior finish", finishLabels[config.finish]],
     ["Lot coverage", `${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% max`],
+    [
+      "Setbacks",
+      `${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
+    ],
+    ["Buildable area after setbacks", `${buildableArea(parcel).toLocaleString()} sf`],
+    ["Remaining coverage capacity", siteFitStatus.title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],
@@ -155,7 +170,10 @@ export function buildReportHtml({
     ["Market basis", marketProvenanceLine(result.market)],
   ];
 
-  const reviewNote = result.warnings[0] ?? "No coverage warning for the current assumptions.";
+  const reviewNotes =
+    result.warnings.length > 0
+      ? result.warnings
+      : ["No coverage warning for the current assumptions."];
   const serial = makeCertificateSerial(parcel);
   const recorded = formatRecordedDate(recordedAt ?? new Date());
   // Ledger lines are derived from the engine result so the T-account always
@@ -293,6 +311,8 @@ export function buildReportHtml({
       text-transform: uppercase;
     }
     .note { border-left: 3px solid var(--amber); background: var(--paper); padding: 12px 14px; color: var(--ink); }
+    .note p { color: var(--ink); }
+    .note p + p { margin-top: 8px; }
     ol { margin: 0; padding-left: 20px; color: var(--muted); }
     li + li { margin-top: 8px; }
     .ai-brief { margin-top: 32px; padding: 24px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
@@ -431,8 +451,10 @@ export function buildReportHtml({
           </tbody>
         </table>
 
-        <h2>Review Note</h2>
-        <p class="note">${escapeHtml(reviewNote)}</p>
+        <h2>Review Notes</h2>
+        <div class="note">
+          ${reviewNotes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
+        </div>
 
         ${projectBrief ? buildProjectBriefHtml(projectBrief) : ""}
 
@@ -595,6 +617,11 @@ export function buildReportCsv({ parcel, config, result, projectBrief }: ReportI
     ["Exterior Finish", finishLabels[config.finish]],
     ["Lot Coverage (%)", result.coveragePercent.toFixed(1)],
     ["Max Coverage (%)", String(result.maxCoveragePercent)],
+    ["Front Setback (ft)", String(parcel.setbacks.front)],
+    ["Rear Setback (ft)", String(parcel.setbacks.rear)],
+    ["Side Setback (ft)", String(parcel.setbacks.side)],
+    ["Buildable Area After Setbacks (sf)", String(buildableArea(parcel))],
+    ["Remaining Coverage Capacity (sf)", String(result.remainingCapacity)],
     ["Zoning Status", result.zoningStatus],
     ["Build Cost Low ($)", String(result.costLow)],
     ["Build Cost High ($)", String(result.costHigh)],
@@ -604,6 +631,9 @@ export function buildReportCsv({ parcel, config, result, projectBrief }: ReportI
     ["Rent Basis", result.rentBasis],
     ["Market Source", marketProvenanceLine(result.market)],
     ["Operating Expense Ratio (%)", (result.operatingExpenseRatio * 100).toFixed(1)],
+    ...result.warnings.map(
+      (warning, index): [string, string] => [`Review Note ${index + 1}`, warning],
+    ),
     ...aiRows,
     ["Disclaimer", DISCLAIMER],
   ];

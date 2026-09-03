@@ -73,21 +73,26 @@ describe("Firebase AI API routing", () => {
     expect(ciWorkflow).toContain("deploy_target functions:apiStore");
   });
 
-  it("creates the store target before its rewrite without exposing new asset URLs early", () => {
+  it("deploys the store target and backward-compatible rules before publishing Hosting", () => {
     const storeDeployIndex = ciWorkflow.indexOf(
       "deploy_target functions:apiStore",
     );
+    const rulesDeployIndex = ciWorkflow.indexOf(
+      "firebase deploy --only firestore:rules --project yardup-2026",
+    );
     const hostingDeployIndex = ciWorkflow.indexOf(
-      "firebase deploy --only hosting,firestore:rules",
+      "firebase deploy --only hosting --project yardup-2026",
     );
     const appDeployIndex = ciWorkflow.indexOf(
       "for target in functions:app functions:api functions:apiAi functions:apiStripe",
     );
 
     expect(storeDeployIndex).toBeGreaterThanOrEqual(0);
+    expect(rulesDeployIndex).toBeGreaterThanOrEqual(0);
     expect(hostingDeployIndex).toBeGreaterThanOrEqual(0);
     expect(appDeployIndex).toBeGreaterThanOrEqual(0);
-    expect(storeDeployIndex).toBeLessThan(hostingDeployIndex);
+    expect(storeDeployIndex).toBeLessThan(rulesDeployIndex);
+    expect(rulesDeployIndex).toBeLessThan(hostingDeployIndex);
     expect(hostingDeployIndex).toBeLessThan(appDeployIndex);
   });
 

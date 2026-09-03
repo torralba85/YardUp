@@ -31,4 +31,25 @@ test.describe("account and support surfaces", () => {
     await expect(page.getByText("OpenAI", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: /delete account/i }).first()).toBeVisible();
   });
+
+  test("account creation and social sign-in require affirmative legal consent", async ({ page }) => {
+    await page.goto("/signup");
+    const signupConsent = page.getByRole("checkbox", { name: /18 or older/i });
+    await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Google" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Apple" })).toBeDisabled();
+    await signupConsent.check();
+    await expect(page.getByRole("button", { name: "Create account" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Google" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Apple" })).toBeEnabled();
+
+    await page.goto("/login");
+    const loginConsent = page.getByRole("checkbox", { name: /18 or older/i });
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Google" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Apple" })).toBeDisabled();
+    await loginConsent.check();
+    await expect(page.getByRole("button", { name: "Google" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Apple" })).toBeEnabled();
+  });
 });

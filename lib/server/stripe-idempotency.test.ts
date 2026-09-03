@@ -26,5 +26,8 @@ describe("createStripeIdempotencyKey", () => {
     expect(
       createStripeIdempotencyKey("certificate", "user", "parcel"),
     ).not.toBe(createStripeIdempotencyKey("lead_unlock", "user", "parcel"));
+    expect(
+      createStripeIdempotencyKey("credit_pack", "user", "5"),
+    ).not.toBe(createStripeIdempotencyKey("credit_pack", "user", "10"));
   });
 });

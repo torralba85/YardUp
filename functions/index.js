@@ -1,5 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
+const { onInit } = require("firebase-functions/core");
 const path = require("path");
 const { requestForNext } = require("./request-replay");
 
@@ -37,27 +38,33 @@ const nativeStoreSecrets = nativeStoreSecretParams
   ? Object.values(nativeStoreSecretParams)
   : [];
 
-// Resolved from functions/node_modules, which Firebase installs server-side
-// from functions/package.json at deploy time. (Firebase strips all bundled
-// node_modules on upload — including the standalone build's own copy — so the
-// runtime deps must be declared in functions/package.json, not relied upon
-// from .next/standalone/node_modules.)
-const next = require("next");
-
 // scripts/prepare-firebase.js copies the Next.js standalone build into
 // functions/.next/standalone/. The compiled app (BUILD_ID, server/, manifests)
 // lives at functions/.next/standalone/.next/, so point Next's `dir` there.
 const APP_DIR = path.join(__dirname, ".next", "standalone");
 
-const app = next({ dev: false, dir: APP_DIR });
-const handle = app.getRequestHandler();
-
-// Prepare the server once per warm container; reuse across invocations.
+// Loading Next.js takes longer than Firebase's default function-discovery
+// timeout on some machines. Defer it with onInit so deploy discovery only has
+// to register the function definitions, then prepare once per warm container.
+let app;
+let requestHandler;
 let prepared;
-function ready() {
-  if (!prepared) prepared = app.prepare();
-  return prepared;
+async function ready() {
+  if (!prepared) {
+    // Resolved from functions/node_modules, which Firebase installs server-side
+    // from functions/package.json at deploy time. Firebase strips bundled
+    // node_modules on upload, including the standalone build's own copy.
+    const next = require("next");
+    app = next({ dev: false, dir: APP_DIR });
+    requestHandler = app.getRequestHandler();
+    prepared = app.prepare();
+  }
+
+  await prepared;
+  return requestHandler;
 }
+
+onInit(ready);
 
 const fnOpts = {
   memory: "1GiB",
@@ -78,7 +85,7 @@ const aiFnOpts = {
 // `apiStore`, the rest of /api/** to `api`, and everything else to `app`; all
 // resolve to the same handler and differ only in which secrets are bound.
 exports.app = onRequest(fnOpts, async (req, res) => {
-  await ready();
+  const handle = await ready();
   return handle(requestForNext(req), res);
 });
 
@@ -86,7 +93,7 @@ exports.apiAi = onRequest(
   { ...aiFnOpts, secrets: [openAiApiKey] },
   async (req, res) => {
     process.env.OPENAI_API_KEY = openAiApiKey.value();
-    await ready();
+    const handle = await ready();
     return handle(requestForNext(req), res);
   },
 );
@@ -100,7 +107,7 @@ exports.api = onRequest(
     process.env.GOOGLE_MAPS_API_KEY = googleMapsApiKey.value();
     process.env.GOOGLE_PLACES_SERVER_KEY = googlePlacesServerKey.value();
     process.env.REGRID_API_KEY = regridApiKey.value();
-    await ready();
+    const handle = await ready();
     return handle(requestForNext(req), res);
   },
 );
@@ -120,7 +127,7 @@ exports.apiStore = onRequest(
       process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON =
         nativeStoreSecretParams.googlePlayServiceAccountJson.value();
     }
-    await ready();
+    const handle = await ready();
     return handle(requestForNext(req), res);
   },
 );
@@ -131,7 +138,7 @@ exports.apiStore = onRequest(
 exports.apiStripe = onRequest(
   { ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] },
   async (req, res) => {
-    await ready();
+    const handle = await ready();
     return handle(requestForNext(req), res);
   },
 );

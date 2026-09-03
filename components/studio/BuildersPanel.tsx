@@ -20,7 +20,7 @@ export interface BuildersPanelProps {
 
 /**
  * Step 5 — the Builders destination. Shows the matched local builders for the
- * active parcel (company, licensed marker, service areas — never contact info,
+ * active parcel (company, license-information marker, service areas — never contact info,
  * which stays behind the paid referral), an honest zero-state when none serve
  * the area yet, and a sign-in prompt for guests. The connect CTA hands off to
  * the existing {@link BuilderLeadPanel} flow, which creates the referral that
@@ -64,7 +64,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
         <p className="lf-kicker text-lf-clay-ink">Step 5 · Builders</p>
         <h2 className="lf-section-heading mt-2 text-lf-espresso">Connect with local builders.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
-          Share your concept with vetted builders in your area. They reach out with quotes and the real next steps.
+          Share your concept with registered builders in your area. They may reach out with quotes and next steps.
         </p>
       </div>
 
@@ -109,7 +109,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-lf-espresso">{b.companyName}</span>
                   {b.licensed ? (
-                    <StatusChip status="clear" label="Licensed" size="sm" className="shrink-0" />
+                    <StatusChip status="clear" label="License provided" size="sm" className="shrink-0" />
                   ) : null}
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -140,7 +140,7 @@ export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelPr
           Connect with builders
         </Button>
         <p className="lf-caption text-center text-lf-muted">
-          Free for homeowners — builders pay LotFoundry for the introduction, never you.
+          Free for homeowners — builders pay LotFoundry for the introduction, never you. Builder registration and license information are not guarantees of licensing, insurance, qualifications, availability, or work quality.
           Your contact details are only shared with builders you choose to hear from.
         </p>
       </div>

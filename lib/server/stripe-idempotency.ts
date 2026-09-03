@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-type IdempotentPurchaseType = "certificate" | "lead_unlock";
+type IdempotentPurchaseType = "certificate" | "credit_pack" | "lead_unlock";
 
 /**
  * Build a short, deterministic Stripe idempotency key without exposing user or

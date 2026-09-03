@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   plugins: [react()],
@@ -19,11 +19,11 @@ export default defineConfig({
     // numerator and the denominator, so the run prints a clean "N passed (N)"
     // over a silently smaller suite and only the exit code gives it away.
     // Leave CI on the default: its runners are smaller and do not hit this.
-    ...(process.env.CI ? {} : { poolOptions: { forks: { maxForks: 4 } } }),
+    ...(process.env.CI ? {} : { maxWorkers: 4 }),
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "."),
+      "@": fileURLToPath(new URL(".", import.meta.url)),
     },
   },
 });

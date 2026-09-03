@@ -90,6 +90,11 @@ describe("POST /api/stripe/checkout-credits", () => {
             }),
           ],
         }),
+        expect.objectContaining({
+          idempotencyKey: expect.stringMatching(
+            /^lotfoundry:credit_pack:[a-f0-9]{64}$/,
+          ),
+        }),
       );
     },
   );

@@ -60,6 +60,16 @@ for (const path of files) {
 
   const size = statSync(path).size;
   fileSizes.set(path, size);
+  if (
+    size <= 256 &&
+    readFileSync(path, "utf8").startsWith(
+      "version https://git-lfs.github.com/spec/v1",
+    )
+  ) {
+    errors.push(
+      `Git LFS pointer would be published instead of its asset: ${path}`,
+    );
+  }
   if (size > 10 * 1024 * 1024) {
     warnings.push(`Large tracked file (${Math.round(size / 1024 / 1024)} MiB): ${path}`);
   }

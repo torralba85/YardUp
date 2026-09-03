@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 
 /** Email/password, Google, and Apple sign-in with a validated redirect. */
@@ -15,6 +15,7 @@ export default function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [socialConsent, setSocialConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,9 +48,13 @@ export default function LoginForm() {
   const handleGoogle = () => {
     if (isPending) return;
     setError(null);
+    if (!socialConsent) {
+      setError("Confirm the legal terms before continuing with Google.");
+      return;
+    }
     startTransition(async () => {
       try {
-        await signInWithGoogle();
+        await signInWithGoogle("user", CURRENT_LEGAL_CONSENT);
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
         setError(
@@ -66,9 +71,13 @@ export default function LoginForm() {
   const handleApple = () => {
     if (isPending) return;
     setError(null);
+    if (!socialConsent) {
+      setError("Confirm the legal terms before continuing with Apple.");
+      return;
+    }
     startTransition(async () => {
       try {
-        await signInWithApple();
+        await signInWithApple("user", CURRENT_LEGAL_CONSENT);
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
         setError(
@@ -146,6 +155,26 @@ export default function LoginForm() {
         </button>
       </form>
 
+      <label className="mt-6 flex items-start gap-3 lf-caption text-lf-muted">
+        <input
+          type="checkbox"
+          checked={socialConsent}
+          onChange={(event) => setSocialConsent(event.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+        />
+        <span>
+          For Google or Apple, I confirm I am 18 or older, agree to the{" "}
+          <Link href="/terms" className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2">
+            Terms &amp; Conditions
+          </Link>
+          , and acknowledge the{" "}
+          <Link href="/privacy" className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2">
+            Privacy Policy
+          </Link>
+          .
+        </span>
+      </label>
+
       <div className="relative mt-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-lf-hairline" />
@@ -158,7 +187,7 @@ export default function LoginForm() {
       <button
         type="button"
         onClick={handleGoogle}
-        disabled={isPending}
+        disabled={isPending || !socialConsent}
         className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
@@ -184,7 +213,7 @@ export default function LoginForm() {
       <button
         type="button"
         onClick={handleApple}
-        disabled={isPending}
+        disabled={isPending || !socialConsent}
         className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
