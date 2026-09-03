@@ -53,6 +53,13 @@
       "type": "image/png",
       "form_factor": "wide",
       "label": "Feasibility studio with 3D lot model and zoning checks"
+    },
+    {
+      "src": "/screenshots/tablet-home.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Enter a property address to run an ADU feasibility estimate"
     }
   ]
 }
