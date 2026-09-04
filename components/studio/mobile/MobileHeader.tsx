@@ -39,7 +39,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       <Link
         href="/"
         aria-label="LotFoundry home"
-        className="shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 rounded" />

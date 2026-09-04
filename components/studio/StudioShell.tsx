@@ -84,7 +84,7 @@ export default function StudioShell({
             <Link
               href="/"
               aria-label="LotFoundry home"
-              className="self-start rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
