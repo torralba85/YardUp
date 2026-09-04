@@ -30,7 +30,11 @@ listing must stay aligned with those user-facing routes.
 Enroll in **Play App Signing**. Upload the AAB built by the `Android release
 bundle` GitHub Actions workflow. The upload certificate must be:
 
-`E7:B3:6E:54:38:69:D5:AF:1D:D1:2B:3B:A6:8B:58:E4:29:D4:9E:AB:57:6F:38:69:50:A5:40:3B:DD:92:F6:90`
+`A8:AC:42:8E:E2:C1:FE:38:D9:45:BB:A7:44:F5:7A:D4:43:BD:43:69:91:34:DB:EE:F8:F6:B3:38:67:04:26:BD`
+
+The upload-key reset to this certificate was requested in Play Console on
+2026-09-03. Do not upload version code 7 until Console shows the reset as
+approved.
 
 The Play App Signing certificate that Console displays must remain in the live
 Digital Asset Links statement. The currently served value is:
@@ -114,7 +118,7 @@ marketplace-sharing rows above.
 
 | Field | Value |
 |---|---|
-| Artifact | `app-release.aab` from the GitHub Actions artifact `lotfoundry-android-release-aab` |
+| Artifact | `native/android/app/build/outputs/bundle/release/app-release.aab` (or the GitHub Actions artifact `lotfoundry-android-release-aab`) |
 | Version name | `1.0.6` |
 | Version code | `7` |
 | Release notes | `First LotFoundry Android release with the feasibility studio, saved studies, builder connections, and Google Play Billing.` |

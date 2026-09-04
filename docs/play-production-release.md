@@ -47,7 +47,8 @@ Confirmed 2026-09-03 against the live host:
   both the upload-key and Play App Signing fingerprints, matching
   `native/android/twa-manifest.json` exactly.
 - `versionCode 7` exceeds the `PUBLISHED_VERSION_CODE = 6` ceiling.
-- Repo gate green: lint, `tsc --noEmit`, 739 unit tests, production build.
+- Repo gate green: lint and 136 Vitest files / 782 tests on 2026-09-03; the
+  preceding release audit also passed `tsc --noEmit` and the production build.
 
 `npm run android:validate:release` re-checks the listed live endpoints,
 asset-links content, and the built AAB's signer. It does not re-run lint,
@@ -79,9 +80,10 @@ workflow never needs it.
 | `LOTFOUNDRY_ANDROID_KEY_PASSWORD` | Password for that alias |
 
 The keystore must be the one whose certificate is
-`E7:B3:6E:…:F6:90`. The workflow checks this before building rather than after,
-so a wrong keystore fails in seconds instead of producing a bundle Play will
-reject.
+`A8:AC:42:8E:…:26:BD`. The upload-key reset to this certificate was requested
+in Play Console on 2026-09-03 and must show as approved before upload. The
+workflow checks this before building rather than after, so a wrong keystore
+fails in seconds instead of producing a bundle Play will reject.
 
 ## 2. Build the bundle
 
@@ -108,6 +110,11 @@ npm run android:validate:release
 `verifyReleaseSigning` fails the build rather than emit an unsigned or
 debug-signed bundle, so a missing property is an error, never a silent
 downgrade.
+
+The code-7 AAB was built locally on 2026-09-03. It is 1,732,606 bytes, has
+SHA-256
+`5F1D360DCF5D4B71EFEB31D4F9B455F4090271098F06257B079E45C2205C59BC`,
+and its signer matches `A8:AC:42:8E:…:26:BD`.
 
 ## 3. Console setup
 
