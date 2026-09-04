@@ -105,7 +105,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-8 w-auto" />
