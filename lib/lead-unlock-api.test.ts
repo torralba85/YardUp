@@ -37,6 +37,7 @@ vi.mock("@/lib/commerce/purchase-client", () => ({
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  window.localStorage.clear();
   channelMocks.detectPurchaseChannel.mockReturnValue("web");
   channelMocks.requiresStoreBilling.mockImplementation((ch: string) => ch !== "web");
   channelMocks.purchase.mockClear();
@@ -93,6 +94,17 @@ describe("startLeadUnlock", () => {
       requestId: "r1",
       checkoutAttemptId: expect.any(String),
     });
+  });
+
+  it("reuses the checkout attempt for a retry of the same lead", async () => {
+    const fn = mockFetch(200, { url: "https://stripe.test/checkout/x" });
+
+    await startLeadUnlock("r1", "tok-123");
+    await startLeadUnlock("r1", "tok-123");
+
+    const first = JSON.parse(fn.mock.calls[0][1].body).checkoutAttemptId;
+    const second = JSON.parse(fn.mock.calls[1][1].body).checkoutAttemptId;
+    expect(second).toBe(first);
   });
 
   it("throws LeadUnlockError carrying the server message on failure", async () => {
