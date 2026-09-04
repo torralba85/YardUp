@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "node:crypto";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import {
   grantCertificate,
@@ -34,11 +33,12 @@ export async function POST(request: NextRequest) {
   const certKey = typeof body?.certKey === "string" ? body.certKey.trim() : "";
   const parcelName =
     typeof body?.parcelName === "string" ? body.parcelName.trim() : "";
-  // Clients loaded before checkoutAttemptId was introduced omit it. Give those
-  // requests a one-off server token, while rejecting malformed supplied values.
+  // Clients loaded before checkoutAttemptId was introduced omit it. Keep their
+  // entitlement-scoped idempotency key stable across network retries, while
+  // rejecting malformed supplied values.
   const checkoutAttemptId =
     body?.checkoutAttemptId === undefined
-      ? randomUUID()
+      ? "legacy-client"
       : typeof body.checkoutAttemptId === "string"
         ? body.checkoutAttemptId.trim()
         : "";

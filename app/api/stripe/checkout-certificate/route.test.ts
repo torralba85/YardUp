@@ -127,8 +127,10 @@ describe("POST /api/stripe/checkout-certificate", () => {
     mocks.stripe = { checkout: { sessions: { create } } };
 
     const res = await POST(postRequest({ certKey: "parcel-1" }));
+    const retry = await POST(postRequest({ certKey: "parcel-1" }));
 
     expect(res.status).toBe(200);
+    expect(retry.status).toBe(200);
     expect(create).toHaveBeenCalledWith(
       expect.any(Object),
       expect.objectContaining({
@@ -136,6 +138,9 @@ describe("POST /api/stripe/checkout-certificate", () => {
           /^lotfoundry:certificate:[a-f0-9]{64}$/,
         ),
       }),
+    );
+    expect(create.mock.calls[1][1].idempotencyKey).toBe(
+      create.mock.calls[0][1].idempotencyKey,
     );
   });
 
