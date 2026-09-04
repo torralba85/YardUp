@@ -41,7 +41,7 @@ must be raised whenever a new bundle is accepted.
 | 1.0.3 | 4 | published | Target API 36. |
 | 1.0.4 | 5 | see Play Console | Play Billing wired via Bubblewrap regeneration (`cd9c621`). |
 | 1.0.5 | 6 | published 2026-08-11 | Built locally with `bubblewrap-cli`; the version bump was never committed and no AAB was retained. Shell config is identical to `cd9c621` apart from the version, so it points at `yardup-2026.web.app`, not `lotfoundry.net`. |
-| 1.0.6 | 7 | unbuilt | First build carrying the `lotfoundry.net` host from `d4390c4`. Build it with the **Android release bundle** workflow. |
+| 1.0.6 | 7 | signed locally 2026-09-03; upload pending | First build carrying the `lotfoundry.net` host from `d4390c4`. The AAB signer matches the new upload certificate; Play upload waits for the key-reset request to be approved. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
 cross-origin redirect when verifying Digital Asset Links, so a bundle built
