@@ -32,9 +32,10 @@ bundle` GitHub Actions workflow. The upload certificate must be:
 
 `A8:AC:42:8E:E2:C1:FE:38:D9:45:BB:A7:44:F5:7A:D4:43:BD:43:69:91:34:DB:EE:F8:F6:B3:38:67:04:26:BD`
 
-The upload-key reset to this certificate was requested in Play Console on
-2026-09-03. Do not upload version code 7 until Console shows the reset as
-approved.
+Play Console activated this upload certificate on 2026-09-03, with a mandatory
+post-reset delay. Do not upload version code 7 before 2026-09-06 02:33:32 UTC
+(2026-09-05 19:33:32 America/Los_Angeles); Console rejects the certificate
+before that exact time.
 
 The Play App Signing certificate that Console displays must remain in the live
 Digital Asset Links statement. The currently served value is:

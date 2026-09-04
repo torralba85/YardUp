@@ -81,9 +81,11 @@ workflow never needs it.
 
 The keystore must be the one whose certificate is
 `A8:AC:42:8E:…:26:BD`. The upload-key reset to this certificate was requested
-in Play Console on 2026-09-03 and must show as approved before upload. The
-workflow checks this before building rather than after, so a wrong keystore
-fails in seconds instead of producing a bundle Play will reject.
+in Play Console on 2026-09-03. Play activated the certificate but enforces a
+post-reset safety delay until 2026-09-06 02:33:32 UTC (2026-09-05 19:33:32
+America/Los_Angeles). The workflow checks the certificate before building
+rather than after, so a wrong keystore fails in seconds instead of producing a
+bundle Play will reject.
 
 ## 2. Build the bundle
 
