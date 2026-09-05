@@ -185,15 +185,17 @@ describe("AuthModal focus restore", () => {
     // while the trigger is still mounted — focus is restored to it.
     fireEvent.click(within(dialog).getByRole("button", { name: "Sign In" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(document.activeElement).toBe(trigger);
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
 
     // A moment later onAuthStateChanged lands: the user appears and the
     // trigger is swapped for account UI in the same render.
     mocks.auth.user = { uid: "user-1" };
     fireEvent.click(screen.getByRole("button", { name: "Swap trigger only" }));
 
-    expect(document.activeElement).toBe(
-      screen.getByRole("button", { name: "Account" }),
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "Account" }),
+      ),
     );
   });
 
