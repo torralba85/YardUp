@@ -9,8 +9,8 @@ async function openShape(page: Page) {
   await expect(page.getByRole("heading", { name: /pick a direction/i })).toBeVisible();
 }
 
-test.describe("T08 mobile accessibility defects at 56293db", () => {
-  test.skip(({ viewport }) => !viewport || viewport.width >= 640, "Names disappear below sm");
+test.describe("T08 mobile accessibility verification", () => {
+  test.skip(({ viewport }) => !viewport || viewport.width >= 640, "Names retain visibility below sm");
 
   test("U4: camera actions retain names at phone widths", async ({ page }, testInfo) => {
     await openShape(page);
@@ -19,11 +19,9 @@ test.describe("T08 mobile accessibility defects at 56293db", () => {
     const cameraActions = scene.locator("button[aria-pressed]");
     await expect(cameraActions).toHaveCount(3);
     await page.screenshot({ path: testInfo.outputPath("shape-camera-controls.png"), fullPage: true });
-    // Setup failures above remain real failures. Only the known name defect is expected.
-    test.fail(true, "U4: current camera text is hidden below sm and there is no aria-label");
-    await expect(cameraActions.nth(0)).toHaveAccessibleName("Overview");
-    await expect(cameraActions.nth(1)).toHaveAccessibleName("ADU");
-    await expect(cameraActions.nth(2)).toHaveAccessibleName("Setbacks");
+    await expect(cameraActions.nth(0)).toHaveAccessibleName("Frame lot");
+    await expect(cameraActions.nth(1)).toHaveAccessibleName("Frame ADU");
+    await expect(cameraActions.nth(2)).toHaveAccessibleName("Plan");
   });
 
   test("T04: size radio group implements arrow-key selection", async ({ page }) => {
@@ -34,7 +32,6 @@ test.describe("T08 mobile accessibility defects at 56293db", () => {
     await studio.click();
     await expect(studio).toHaveAttribute("aria-checked", "true");
     await studio.press("ArrowDown");
-    test.fail(true, "Custom role=radio buttons lack arrow-key selection behavior");
     await expect(oneBedroom).toHaveAttribute("aria-checked", "true");
     await expect(oneBedroom).toBeFocused();
   });
