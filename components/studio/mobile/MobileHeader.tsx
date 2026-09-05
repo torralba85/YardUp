@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { RotateCcw, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -35,8 +36,14 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
     >
       {/* Compact mark (not the full lockup): on phone widths the address pill
           needs the horizontal space — see DESIGN.md "Visual Identity & Logo". */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 shrink-0 rounded" />
+      <Link
+        href="/"
+        aria-label="LotFoundry home"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 rounded" />
+      </Link>
       <span className="min-w-0 flex-1 truncate rounded-full bg-lf-sand/10 px-2.5 py-1 text-xs text-lf-sand">
         {address}
         {estimated && <span className="ml-1.5 lf-dataprint text-lf-amber-on-dark">est.</span>}

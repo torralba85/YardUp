@@ -7,6 +7,10 @@ import {
   detectPurchaseChannel,
   requiresStoreBilling,
 } from "@/lib/commerce/purchase-channel";
+import {
+  clearCheckoutAttemptId,
+  getCheckoutAttemptId,
+} from "@/lib/checkout-attempt";
 
 /**
  * Error thrown by {@link startCertificateCheckout} when the purchase flow fails;
@@ -79,7 +83,11 @@ export async function startCertificateCheckout(
         "content-type": "application/json",
         ...(input.idToken ? { Authorization: `Bearer ${input.idToken}` } : {}),
       },
-      body: JSON.stringify({ certKey: input.certKey, parcelName: input.parcelName }),
+      body: JSON.stringify({
+        certKey: input.certKey,
+        parcelName: input.parcelName,
+        checkoutAttemptId: getCheckoutAttemptId("certificate", input.certKey),
+      }),
     });
   } catch {
     throw new CertificateCheckoutError(
@@ -94,5 +102,6 @@ export async function startCertificateCheckout(
 
   const data = (await res.json()) as { url?: string; demo?: boolean };
   if (data.url) return { kind: "redirect", url: data.url };
+  clearCheckoutAttemptId("certificate", input.certKey);
   return { kind: "granted", demo: Boolean(data.demo) };
 }

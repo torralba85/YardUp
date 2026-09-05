@@ -75,8 +75,8 @@ export default function HelpPage() {
       <LegalSection title="Contact support">
         <p>
           Email{" "}
-          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
-            support@lotfoundry.com
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            support@lotfoundry.net
           </a>{" "}
           or use{" "}
           <Link href="/feedback" className="font-medium text-lf-clay-ink underline">

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChevronDown, MapPin, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { SavedScenario } from "@/lib/saved-scenarios";
@@ -80,12 +81,18 @@ export default function StudioShell({
       >
         <div className="flex h-full flex-col overflow-y-auto p-4">
           <div className="flex flex-col gap-1 px-2 py-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lotfoundry-lockup-horizontal-inverse.svg"
-              alt="LotFoundry"
-              className="h-8 w-auto self-start"
-            />
+            <Link
+              href="/"
+              aria-label="LotFoundry home"
+              className="self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/lotfoundry-lockup-horizontal-inverse.svg"
+                alt="LotFoundry"
+                className="h-8 w-auto"
+              />
+            </Link>
             <p className="pl-0.5 lf-dataprint text-lf-taupe">
               ADU planning
             </p>
@@ -227,8 +234,14 @@ export default function StudioShell({
           widths during resize before the media-query swap to MobileStudio. */}
       <main className="lf-grain flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lf-sand lg:h-dvh lg:overflow-y-auto">
         <header className="flex items-center justify-between border-b border-lf-hairline bg-lf-card px-4 py-3 lg:hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto shrink-0" />
+          <Link
+            href="/"
+            aria-label="LotFoundry home"
+            className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto" />
+          </Link>
           <Button variant="secondary" size="md" onClick={onReset}>
             Reset
           </Button>

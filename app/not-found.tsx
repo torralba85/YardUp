@@ -7,12 +7,14 @@ export default function NotFound() {
       id="main-content"
       className="flex min-h-dvh flex-col items-center justify-center bg-lf-sand px-6 py-16 text-center text-lf-espresso"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/lotfoundry-lockup-horizontal.svg"
-        alt="LotFoundry"
-        className="mb-8 h-8 w-auto"
-      />
+      <Link
+        href="/"
+        aria-label="LotFoundry home"
+        className="mb-8 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-8 w-auto" />
+      </Link>
       <p className="lf-kicker text-lf-muted">404</p>
       <h1 className="lf-section-heading mt-3">Page not found</h1>
       <p className="lf-body-sm mx-auto mt-3 max-w-md text-lf-muted">

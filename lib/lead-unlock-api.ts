@@ -14,6 +14,10 @@ import {
   requiresStoreBilling,
   type PurchaseChannel,
 } from "@/lib/commerce/purchase-channel";
+import {
+  clearCheckoutAttemptId,
+  getCheckoutAttemptId,
+} from "@/lib/checkout-attempt";
 
 /**
  * Error thrown by {@link startLeadUnlock} when the unlock flow fails; its
@@ -136,7 +140,10 @@ async function unlockViaStripe(
         "content-type": "application/json",
         ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
       },
-      body: JSON.stringify({ requestId }),
+      body: JSON.stringify({
+        requestId,
+        checkoutAttemptId: getCheckoutAttemptId("lead_unlock", requestId),
+      }),
     });
   } catch {
     throw new LeadUnlockError(
@@ -151,5 +158,6 @@ async function unlockViaStripe(
 
   const data = (await res.json()) as { url?: string; demo?: boolean };
   if (data.url) return { kind: "redirect", url: data.url };
+  clearCheckoutAttemptId("lead_unlock", requestId);
   return { kind: "granted", demo: Boolean(data.demo) };
 }

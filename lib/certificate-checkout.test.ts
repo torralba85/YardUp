@@ -40,6 +40,7 @@ vi.mock("@/lib/commerce/purchase-client", () => ({
 
 afterEach(() => {
   vi.restoreAllMocks();
+  window.localStorage.clear();
   purchaseMocks.detectPurchaseChannel.mockReturnValue("web");
   purchaseMocks.requiresStoreBilling.mockImplementation((ch: string) => ch !== "web");
   purchaseMocks.purchase.mockClear();
@@ -89,7 +90,27 @@ describe("startCertificateCheckout", () => {
     await startCertificateCheckout({ certKey: "k", parcelName: "x", idToken: "TOKEN" });
     const init = fetchMock.mock.calls[0][1];
     expect(init.headers.Authorization).toBe("Bearer TOKEN");
-    expect(JSON.parse(init.body)).toMatchObject({ certKey: "k", parcelName: "x" });
+    expect(JSON.parse(init.body)).toMatchObject({
+      certKey: "k",
+      parcelName: "x",
+      checkoutAttemptId: expect.any(String),
+    });
+  });
+
+  it("reuses the checkout attempt for a retry of the same certificate", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ url: "u" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await startCertificateCheckout({ certKey: "lot-1", parcelName: "x" });
+    await startCertificateCheckout({ certKey: "lot-1", parcelName: "x" });
+
+    const first = JSON.parse(fetchMock.mock.calls[0][1].body).checkoutAttemptId;
+    const second = JSON.parse(fetchMock.mock.calls[1][1].body).checkoutAttemptId;
+    expect(second).toBe(first);
   });
 
   it("throws a user-facing error on a failed response", async () => {

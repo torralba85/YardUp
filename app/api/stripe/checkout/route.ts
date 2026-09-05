@@ -10,7 +10,7 @@ import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
 export const runtime = "nodejs";
 
 /**
- * POST /api/stripe/checkout  { requestId }
+ * POST /api/stripe/checkout  { requestId, checkoutAttemptId? }
  *
  * Starts a lead unlock. The authenticated builder must be matched to an active
  * lead. With a Stripe key: creates a Checkout session and returns its URL.
@@ -25,6 +25,15 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const requestId =
     typeof body?.requestId === "string" ? body.requestId.trim() : "";
+  // Clients loaded before checkoutAttemptId was introduced omit it. Keep their
+  // entitlement-scoped idempotency key stable across network retries, while
+  // rejecting malformed supplied values.
+  const checkoutAttemptId =
+    body?.checkoutAttemptId === undefined
+      ? "legacy-client"
+      : typeof body.checkoutAttemptId === "string"
+        ? body.checkoutAttemptId.trim()
+        : "";
   if (!requestId) {
     return NextResponse.json(
       { error: "requestId is required" },
@@ -85,6 +94,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", demo: true });
   }
 
+  if (!checkoutAttemptId || checkoutAttemptId.length > 100) {
+    return NextResponse.json(
+      { error: "A valid checkoutAttemptId is required" },
+      { status: 400 },
+    );
+  }
+
   const origin = resolveCheckoutOrigin(request.headers);
   if (!origin) {
     console.error(
@@ -125,6 +141,7 @@ export async function POST(request: NextRequest) {
           "lead_unlock",
           builderId,
           requestId,
+          checkoutAttemptId,
         ),
       },
     );

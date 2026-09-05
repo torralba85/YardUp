@@ -73,7 +73,11 @@ describe("POST /api/stripe/checkout-certificate", () => {
     };
 
     const res = await POST(
-      postRequest({ certKey: "parcel-1", parcelName: "123 Main Street" }),
+      postRequest({
+        certKey: "parcel-1",
+        parcelName: "123 Main Street",
+        checkoutAttemptId: "attempt-1",
+      }),
     );
 
     expect(await res.json()).toEqual({ url: "https://stripe.test/cert" });
@@ -99,6 +103,44 @@ describe("POST /api/stripe/checkout-certificate", () => {
           /^lotfoundry:certificate:[a-f0-9]{64}$/,
         ),
       }),
+    );
+  });
+
+  it("reuses a key for one attempt and creates a new key for a fresh attempt", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+    await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+    await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-2" }));
+
+    expect(create.mock.calls[0][1].idempotencyKey).toBe(
+      create.mock.calls[1][1].idempotencyKey,
+    );
+    expect(create.mock.calls[2][1].idempotencyKey).not.toBe(
+      create.mock.calls[0][1].idempotencyKey,
+    );
+  });
+
+  it("supports clients loaded before checkoutAttemptId was introduced", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(postRequest({ certKey: "parcel-1" }));
+    const retry = await POST(postRequest({ certKey: "parcel-1" }));
+
+    expect(res.status).toBe(200);
+    expect(retry.status).toBe(200);
+    expect(create).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(
+          /^lotfoundry:certificate:[a-f0-9]{64}$/,
+        ),
+      }),
+    );
+    expect(create.mock.calls[1][1].idempotencyKey).toBe(
+      create.mock.calls[0][1].idempotencyKey,
     );
   });
 

@@ -42,8 +42,8 @@ export default function AboutPage() {
             feedback
           </Link>
           , or email{" "}
-          <a href="mailto:support@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
-            support@lotfoundry.com
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            support@lotfoundry.net
           </a>
           .
         </p>

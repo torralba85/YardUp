@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 const MAX_CERT_KEY_LEN = 200;
 
 /**
- * POST /api/stripe/checkout-certificate  { certKey, parcelName }
+ * POST /api/stripe/checkout-certificate  { certKey, parcelName, checkoutAttemptId? }
  *
  * Starts a certificate purchase for the authenticated user. With a Stripe key:
  * creates a Checkout session and returns its URL. Without one (demo): grants
@@ -33,6 +33,15 @@ export async function POST(request: NextRequest) {
   const certKey = typeof body?.certKey === "string" ? body.certKey.trim() : "";
   const parcelName =
     typeof body?.parcelName === "string" ? body.parcelName.trim() : "";
+  // Clients loaded before checkoutAttemptId was introduced omit it. Keep their
+  // entitlement-scoped idempotency key stable across network retries, while
+  // rejecting malformed supplied values.
+  const checkoutAttemptId =
+    body?.checkoutAttemptId === undefined
+      ? "legacy-client"
+      : typeof body.checkoutAttemptId === "string"
+        ? body.checkoutAttemptId.trim()
+        : "";
   if (!certKey || certKey.length > MAX_CERT_KEY_LEN) {
     return NextResponse.json(
       { error: "A valid certKey is required" },
@@ -67,6 +76,13 @@ export async function POST(request: NextRequest) {
       demo: true,
     });
     return NextResponse.json({ status: "granted", demo: true });
+  }
+
+  if (!checkoutAttemptId || checkoutAttemptId.length > 100) {
+    return NextResponse.json(
+      { error: "A valid checkoutAttemptId is required" },
+      { status: 400 },
+    );
   }
 
   const origin = resolveCheckoutOrigin(request.headers);
@@ -111,7 +127,12 @@ export async function POST(request: NextRequest) {
         cancel_url: `${origin}/studio`,
       },
       {
-        idempotencyKey: createStripeIdempotencyKey("certificate", uid, certKey),
+        idempotencyKey: createStripeIdempotencyKey(
+          "certificate",
+          uid,
+          certKey,
+          checkoutAttemptId,
+        ),
       },
     );
 

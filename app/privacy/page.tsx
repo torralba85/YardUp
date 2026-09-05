@@ -94,8 +94,8 @@ export default function PrivacyPage() {
           Depending on where you live and whether applicable legal thresholds are met, you may
           request access to, correction of, deletion of, or a portable copy of your information;
           object to or opt out of certain disclosures; or appeal a denied request. Email{" "}
-          <a href="mailto:privacy@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
-            privacy@lotfoundry.com
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            privacy@lotfoundry.net
           </a>
           . We may verify your identity before completing a request and will not discriminate
           against you for exercising an applicable privacy right.
@@ -113,17 +113,17 @@ export default function PrivacyPage() {
         <p>
           Privacy questions:{" "}
           <a
-            href="mailto:privacy@lotfoundry.com"
+            href="mailto:privacy@lotfoundry.net"
             className="font-medium text-lf-clay-ink underline"
           >
-            privacy@lotfoundry.com
+            privacy@lotfoundry.net
           </a>
           . Support:{" "}
           <a
-            href="mailto:support@lotfoundry.com"
+            href="mailto:support@lotfoundry.net"
             className="font-medium text-lf-clay-ink underline"
           >
-            support@lotfoundry.com
+            support@lotfoundry.net
           </a>
           .
         </p>
