@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       {
         mode: "payment",
         submit_type: "pay",
-        payment_method_types: ["card"],
+        integration_identifier: "lotfoundry_lead_unlock_qmvdjrxn",
         payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
         line_items: [
           {

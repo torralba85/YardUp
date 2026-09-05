@@ -73,8 +73,12 @@ describe("POST /api/stripe/checkout-credits", () => {
       const res = await POST(postRequest({ pack }));
 
       expect(await res.json()).toEqual({ url: "https://stripe.test/credits" });
+      expect(mocks.stripe.checkout.sessions.create.mock.calls[0][0]).not.toHaveProperty(
+        "payment_method_types",
+      );
       expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
+          integration_identifier: "lotfoundry_credit_pack_hscytrve",
           metadata: {
             builderId: "builder-1",
             purchaseType: "credit_pack",

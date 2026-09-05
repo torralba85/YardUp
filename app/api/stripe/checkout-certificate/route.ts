@@ -101,9 +101,7 @@ export async function POST(request: NextRequest) {
       {
         mode: "payment",
         submit_type: "pay",
-        // Card (incl. wallets) is immediate, so checkout.session.completed always
-        // means paid — the webhook needs no async-payment fulfilment.
-        payment_method_types: ["card"],
+        integration_identifier: "lotfoundry_certificate_wndqkplz",
         payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
         line_items: [
           {

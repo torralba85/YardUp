@@ -81,8 +81,12 @@ describe("POST /api/stripe/checkout-certificate", () => {
     );
 
     expect(await res.json()).toEqual({ url: "https://stripe.test/cert" });
+    expect(mocks.stripe.checkout.sessions.create.mock.calls[0][0]).not.toHaveProperty(
+      "payment_method_types",
+    );
     expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
+        integration_identifier: "lotfoundry_certificate_wndqkplz",
         metadata: {
           purchaseType: "certificate",
           uid: "user-1",

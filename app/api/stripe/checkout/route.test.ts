@@ -127,8 +127,12 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/x" });
     expect(mocks.grant).not.toHaveBeenCalled();
+    expect(mocks.stripe.checkout.sessions.create.mock.calls[0][0]).not.toHaveProperty(
+      "payment_method_types",
+    );
     expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
+        integration_identifier: "lotfoundry_lead_unlock_qmvdjrxn",
         metadata: {
           purchaseType: "lead_unlock",
           builderId: "b1",

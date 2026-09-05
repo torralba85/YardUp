@@ -139,6 +139,18 @@ describe("POST /api/stripe/webhook", () => {
     });
   });
 
+  it("fulfills a delayed payment after async payment succeeds", async () => {
+    installEvent(paidSession(), "checkout.session.async_payment_succeeded");
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.grant).toHaveBeenCalledWith({
+      builderId: "b1",
+      requestId: "r1",
+      stripeSessionId: "sess_1",
+      amount: 4900,
+    });
+  });
+
   it("does not grant when the completed session is not paid", async () => {
     installEvent(paidSession({ payment_status: "unpaid" }));
 
