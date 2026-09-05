@@ -5,7 +5,8 @@
  */
 import type { GeoJsonPolygon } from "./parcel-types";
 
-const FT_PER_DEG_LAT = 364000;
+/** Feet per degree of latitude, used to latitude-correct longitude scaling. Exported so other pure geometry modules (e.g. `scene-model.ts`) share one projection constant instead of duplicating it. */
+export const FT_PER_DEG_LAT = 364000;
 const MIN_DIMENSION_FT = 10;
 const MAX_DIMENSION_FT = 1000;
 const MIN_ESTIMATE_WIDTH_FT = 25;

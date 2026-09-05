@@ -237,8 +237,11 @@ describe("FeasibilityStudio (guided spine)", () => {
     const modelButton = within(viewControl).getByRole("button", { name: "3D model" });
     const aerialButton = within(viewControl).getByRole("button", { name: "Aerial" });
 
-    expect(viewControl).toHaveClass("absolute", "left-4", "top-4");
-    expect(viewControl).toHaveClass("pointer-events-auto", "z-(--z-index-header)");
+    // The switch is docked above the scene rather than floating over it: the
+    // audit measured phone overlays covering 40.4% of the viewport (U3), so
+    // this control now takes layout space instead of obscuring the model.
+    expect(viewControl).not.toHaveClass("absolute");
+    expect(viewControl).toHaveClass("pointer-events-auto", "shrink-0", "border-b");
     expect(viewport.firstElementChild).toBe(viewControl);
     expect(modelButton).toHaveAttribute("aria-pressed", "true");
     expect(aerialButton).toHaveAttribute("aria-pressed", "false");

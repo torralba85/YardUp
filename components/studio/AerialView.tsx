@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { TriangleAlert } from "lucide-react";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
+import {
+  buildAduSceneModel,
+  buildSceneOrigin,
+  projectLocalToGeodetic,
+  type Pose2D,
+} from "@/lib/scene-model";
+import { Button } from "@/components/ui/Button";
 import { latLngToPixel } from "@/lib/map-utils";
 import { useAuth } from "@/lib/auth-context";
 
@@ -19,6 +26,15 @@ export interface AerialViewProps {
   config: ADUConfig;
   /** Whether the current design is zoning-compliant (affects overlay styling). */
   isCompliant: boolean;
+  /**
+   * The committed ADU pose, in the same local frame the 3D scene uses. The
+   * aerial overlay used to place the ADU at a fixed rear-of-lot position of
+   * its own, so the three surfaces disagreed about where the building was
+   * (D3); it now projects the shared footprint corners.
+   */
+  pose: Pose2D;
+  /** Returns to the 3D model — the aerial view is read-only. */
+  onReturnToModel?: () => void;
 }
 
 /**
@@ -35,6 +51,8 @@ export default function AerialView({
   parcel,
   config,
   isCompliant,
+  pose,
+  onReturnToModel,
 }: AerialViewProps) {
   const { user } = useAuth();
   const { lat, lng } = parcel;
@@ -108,47 +126,31 @@ export default function AerialView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parcel.boundaryGeoJson, lat, lng]);
 
-  // Approximate ADU footprint rectangle centered behind the house
-  // (placed at rear of lot — a typical ADU placement)
+  // The ADU footprint, projected from the shared scene model rather than
+  // re-derived here. `bearingDeg` is 0 because the parcel's true compass
+  // bearing is unknown — this matches the fixed "N" badge the renderer already
+  // shows, and the overlay is labelled as approximate rather than surveyed.
   const aduRect = useMemo(() => {
-    // 1 degree lat ≈ 364,000 ft, 1 degree lng ≈ 288,000 ft at 38°N
-    const ftPerDegLat = 364000;
-    const ftPerDegLng = 288000;
+    const origin = buildSceneOrigin({ lat, lng });
+    const corners = buildAduSceneModel(config, pose).footprintCorners;
+    if (origin.lat === null || origin.lng === null || !corners) return null;
+    const anchor = { lat: origin.lat, lng: origin.lng };
+    const geodetic = corners.map((corner) => projectLocalToGeodetic(anchor, 0, corner));
+    if (geodetic.some((point) => point === null)) return null;
 
-    // Place ADU in the rear portion of the lot
-    const rearOffsetFt = parcel.setbacks.rear + config.length / 2;
-    const aduLatCenter = lat - rearOffsetFt / ftPerDegLat;
-    const aduLngCenter = lng;
-
-    const halfW = (config.width / 2) / ftPerDegLng;
-    const halfL = (config.length / 2) / ftPerDegLat;
-
-    const corners = [
-      { lat: aduLatCenter + halfL, lng: aduLngCenter - halfW },
-      { lat: aduLatCenter + halfL, lng: aduLngCenter + halfW },
-      { lat: aduLatCenter - halfL, lng: aduLngCenter + halfW },
-      { lat: aduLatCenter - halfL, lng: aduLngCenter - halfW },
-    ];
-
-    const pixels = corners.map((c) => toPixel(c.lat, c.lng));
-    const minX = Math.min(...pixels.map((p) => p.x));
-    const minY = Math.min(...pixels.map((p) => p.y));
-    const maxX = Math.max(...pixels.map((p) => p.x));
-    const maxY = Math.max(...pixels.map((p) => p.y));
-
-    const centerPixel = toPixel(aduLatCenter, aduLngCenter);
+    const pixels = (geodetic as { lat: number; lng: number }[]).map((c) => toPixel(c.lat, c.lng));
+    const centerLocal = { x: pose.x, z: pose.z };
+    const centerGeodetic = projectLocalToGeodetic(anchor, 0, centerLocal);
+    if (!centerGeodetic) return null;
+    const centerPixel = toPixel(centerGeodetic.lat, centerGeodetic.lng);
 
     return {
       points: pixels.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
       labelX: centerPixel.x,
       labelY: centerPixel.y,
-      minX,
-      minY,
-      width: maxX - minX,
-      height: maxY - minY,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lat, lng, config.width, config.length, parcel.setbacks.rear]);
+  }, [lat, lng, config.width, config.length, config.height, config.roof, pose.x, pose.z, pose.rotationDeg]);
 
   // Approximate existing house center (middle of lot, slightly front-biased)
   const houseCenter = useMemo(() => {
@@ -220,36 +222,38 @@ export default function AerialView({
           />
         )}
 
-        {/* ADU footprint */}
-        <polygon
-          points={aduRect.points}
-          fill={`${statusColor}22`}
-          stroke={statusColor}
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-
-        {/* "PROPOSED ADU" label background */}
-        <rect
-          x={aduRect.labelX - 46}
-          y={aduRect.labelY - 10}
-          width="92"
-          height="18"
-          rx="3"
-          fill="rgba(38,19,7,0.78)"
-        />
-        <text
-          x={aduRect.labelX}
-          y={aduRect.labelY + 4}
-          textAnchor="middle"
-          fill="#F2E5D5"
-          fontSize="10"
-          style={{ fontFamily: "var(--font-mono)" }}
-          fontWeight="600"
-          letterSpacing="0.06em"
-        >
-          PROPOSED ADU
-        </text>
+        {/* ADU footprint, at the same position and rotation as the 3D model */}
+        {aduRect && (
+          <>
+            <polygon
+              points={aduRect.points}
+              fill={`${statusColor}22`}
+              stroke={statusColor}
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <rect
+              x={aduRect.labelX - 46}
+              y={aduRect.labelY - 10}
+              width="92"
+              height="18"
+              rx="3"
+              fill="rgba(38,19,7,0.78)"
+            />
+            <text
+              x={aduRect.labelX}
+              y={aduRect.labelY + 4}
+              textAnchor="middle"
+              fill="#F2E5D5"
+              fontSize="10"
+              style={{ fontFamily: "var(--font-mono)" }}
+              fontWeight="600"
+              letterSpacing="0.06em"
+            >
+              PROPOSED ADU
+            </text>
+          </>
+        )}
 
         {/* Existing house marker */}
         <rect
@@ -297,6 +301,20 @@ export default function AerialView({
           text={`Front Setback ${parcel.setbacks.front}.0 ft`}
         />
       </svg>
+
+      {/* The aerial view is read-only; give it a labelled way back to the
+          editable model instead of leaving the user to find the toggle (U8). */}
+      {onReturnToModel && (
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={onReturnToModel}
+          className="absolute left-4 top-4 min-h-11"
+        >
+          Return to 3D model
+        </Button>
+      )}
 
       {/* Zoning badge */}
       <div

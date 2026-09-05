@@ -11,10 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
-  isValidAduConfig,
-  isValidFinancialAssumptions,
-  isValidLiveParcelData,
-  isValidSavedScenario,
+  migrateSavedScenario,
   type SavedScenario,
 } from "./saved-scenarios";
 
@@ -22,24 +19,6 @@ const COLLECTION = "savedScenarios";
 
 function userScenariosRef(uid: string) {
   return collection(db, "users", uid, COLLECTION);
-}
-
-/**
- * Back-compat shim for ADU configs. An earlier iteration of this feature
- * persisted configs with `roofStyle` / `exteriorFinish`; alias those to the
- * current `roof` / `finish` keys so any documents written by that build still
- * pass validation. Missing fields are deliberately NOT defaulted —
- * isValidSavedScenario remains the gate, so genuinely-incomplete documents are
- * rejected rather than surfaced with fabricated numbers in a financial estimate.
- */
-function migrateLegacyConfig(raw: unknown): unknown {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return raw;
-  const config = raw as Record<string, unknown>;
-  return {
-    ...config,
-    roof: config.roof ?? config.roofStyle,
-    finish: config.finish ?? config.exteriorFinish,
-  };
 }
 
 function firestoreToScenario(
@@ -54,12 +33,15 @@ function firestoreToScenario(
         ? data.createdAt.toDate().toISOString()
         : (data.createdAt as string) || new Date().toISOString(),
     parcelId: (data.parcelId as string) || "",
-    liveParcel: isValidLiveParcelData(data.liveParcel) ? data.liveParcel : undefined,
-    config: migrateLegacyConfig(data.config),
+    ...(data.liveParcel !== undefined ? { liveParcel: data.liveParcel } : {}),
+    version: data.version,
+    heightConvention: data.heightConvention,
+    pose: data.pose,
+    config: data.config,
     assumptions: data.assumptions,
   };
 
-  return isValidSavedScenario(scenario) ? scenario : null;
+  return migrateSavedScenario(scenario);
 }
 
 /**
@@ -93,21 +75,18 @@ export async function saveSavedScenario(
   uid: string,
   input: Omit<SavedScenario, "id" | "createdAt">,
 ): Promise<SavedScenario> {
-  if (
-    !input.name.trim() ||
-    !input.parcelId ||
-    !isValidAduConfig(input.config) ||
-    !isValidFinancialAssumptions(input.assumptions)
-  ) {
-    throw new Error("Scenario is missing required fields.");
-  }
+  const normalized = migrateSavedScenario({ ...input, id: "pending", createdAt: new Date().toISOString() });
+  if (!normalized) throw new Error("Scenario is missing required fields.");
 
   const ref = userScenariosRef(uid);
   const payload = {
-    name: input.name,
+    version: normalized.version,
+    heightConvention: normalized.heightConvention,
+    pose: normalized.pose,
+    name: normalized.name,
     parcelId: input.parcelId,
-    config: input.config,
-    assumptions: input.assumptions,
+    config: normalized.config,
+    assumptions: normalized.assumptions,
     ...(input.liveParcel ? { liveParcel: input.liveParcel } : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -116,7 +95,7 @@ export async function saveSavedScenario(
     ...payload,
   });
   return {
-    ...input,
+    ...normalized,
     id: docRef.id,
     createdAt: new Date().toISOString(),
   };

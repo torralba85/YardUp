@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Drawer } from "vaul";
 
@@ -20,12 +20,16 @@ export interface FineTuneDrawerProps {
  * Check; never part of the default path.
  */
 export default function FineTuneDrawer({ open, onClose, children }: FineTuneDrawerProps) {
+  const returnFocus=useRef<HTMLElement|null>(null);
+  useEffect(()=>{ if(open) returnFocus.current=document.activeElement instanceof HTMLElement ? document.activeElement : null; },[open]);
   return (
     <Drawer.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-(--z-index-sheet) bg-lf-espresso/50" />
         <Drawer.Content
           data-testid="fine-tune-drawer"
+          onCloseAutoFocus={event=>{event.preventDefault();returnFocus.current?.focus();}}
+          onOpenAutoFocus={event=>{const input=document.querySelector<HTMLInputElement>('[data-testid="fine-tune-drawer"] input[type="number"]');if(input){event.preventDefault();input.focus();}}}
           aria-label="Fine-tune your ADU"
           className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[92dvh] flex-col rounded-t-2xl border-t border-lf-hairline bg-lf-card shadow-[0_-8px_28px_rgba(38,19,7,0.3)] outline-none"
         >

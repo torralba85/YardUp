@@ -10,16 +10,20 @@
  * @module saved-scenarios
  */
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
+import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesign } from "./scenario-design";
+export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario-design";
+import type { Pose2D } from "./scene-model";
 import type { LiveParcelData } from "./parcel-types";
 
 /** `localStorage` key under which the saved-scenario array is persisted. */
 export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
-const ROOF_STYLES = ["shed", "gable", "flat"] as const;
-const EXTERIOR_FINISHES = ["cedar", "lap", "stucco", "board"] as const;
-const RENT_SCENARIOS = ["conservative", "market", "optimistic"] as const;
 
 /** A persisted feasibility scenario: the parcel, design, and assumptions. */
 export interface SavedScenario {
+  /** Missing only on legacy records; reads and new writes normalize to v2. */
+  version?: 2;
+  heightConvention?: "wall";
+  pose?: Pose2D;
   /** Unique id assigned at save time. */
   id: string;
   /** User-provided name (1–160 characters). */
@@ -54,67 +58,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
-}
-
-/**
- * Type guard verifying an unknown value is a well-formed {@link ADUConfig}
- * with all dimensions within sane bounds.
- *
- * @param value - The candidate value (typically parsed from storage).
- * @returns `true` if `value` is a valid ADU configuration.
- */
-export function isValidAduConfig(value: unknown): value is ADUConfig {
-  if (!isRecord(value)) return false;
-  return (
-    isFiniteNumber(value.footprint) &&
-    value.footprint > 0 &&
-    value.footprint <= 2000 &&
-    isFiniteNumber(value.width) &&
-    value.width > 0 &&
-    value.width <= 80 &&
-    isFiniteNumber(value.length) &&
-    value.length > 0 &&
-    value.length <= 80 &&
-    isFiniteNumber(value.height) &&
-    value.height > 0 &&
-    value.height <= 30 &&
-    typeof value.roof === "string" &&
-    ROOF_STYLES.includes(value.roof as ADUConfig["roof"]) &&
-    typeof value.finish === "string" &&
-    EXTERIOR_FINISHES.includes(value.finish as ADUConfig["finish"]) &&
-    typeof value.includeOpenings === "boolean"
-  );
-}
-
-/**
- * Type guard verifying an unknown value is a well-formed
- * {@link FinancialAssumptions}, including per-finish cost bounds.
- *
- * @param value - The candidate value.
- * @returns `true` if `value` is a valid set of financial assumptions.
- */
-export function isValidFinancialAssumptions(
-  value: unknown,
-): value is FinancialAssumptions {
-  if (!isRecord(value) || !isRecord(value.costPerSqft)) return false;
-  const costs = value.costPerSqft;
-
-  const hasValidCosts = EXTERIOR_FINISHES.every((finish) => {
-    const cost = costs[finish];
-    return isFiniteNumber(cost) && cost >= 100 && cost <= 1000;
-  });
-
-  return (
-    hasValidCosts &&
-    isFiniteNumber(value.softCostMultiplier) &&
-    value.softCostMultiplier >= 1 &&
-    value.softCostMultiplier <= 3 &&
-    isFiniteNumber(value.operatingExpenseRatio) &&
-    value.operatingExpenseRatio >= 0 &&
-    value.operatingExpenseRatio <= 1 &&
-    typeof value.rentScenario === "string" &&
-    RENT_SCENARIOS.includes(value.rentScenario as FinancialAssumptions["rentScenario"])
-  );
 }
 
 function isValidGeoJsonPolygon(value: unknown): boolean {
@@ -192,9 +135,20 @@ export function isValidSavedScenario(value: unknown): value is SavedScenario {
       value.liveParcel === undefined ||
       isValidLiveParcelData(value.liveParcel)
     ) &&
+    (value.version === undefined || (value.version === 2 && value.heightConvention === "wall" && isValidPose(value.pose))) &&
+    (value.pose === undefined || isValidPose(value.pose)) &&
     isValidAduConfig(value.config) &&
     isValidFinancialAssumptions(value.assumptions)
   );
+}
+
+export function migrateSavedScenario(value: unknown): SavedScenario | null {
+  if (!isRecord(value)) return null;
+  if (value.liveParcel !== undefined && !isValidLiveParcelData(value.liveParcel)) return null;
+  const design = migrateDesign(value, isValidLiveParcelData(value.liveParcel) ? value.liveParcel : undefined);
+  if (!design) return null;
+  const migrated = { ...value, ...design };
+  return isValidSavedScenario(migrated) ? migrated : null;
 }
 
 function readAll(storage: Storage): SavedScenario[] {
@@ -203,7 +157,7 @@ function readAll(storage: Storage): SavedScenario[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isValidSavedScenario);
+    return parsed.map(migrateSavedScenario).filter((value): value is SavedScenario => value !== null);
   } catch {
     return [];
   }
@@ -235,12 +189,12 @@ export function createSavedScenarioStore(storage: Storage): SavedScenarioStore {
     },
     save(input) {
       const entries = readAll(storage);
-      const created: SavedScenario = {
+      const created = migrateSavedScenario({
         ...input,
         id: cryptoRandomId(),
         createdAt: new Date().toISOString(),
-      };
-      if (!isValidSavedScenario(created)) {
+      });
+      if (!created) {
         throw new Error("Saved scenario is missing required fields.");
       }
       writeAll(storage, [created, ...entries]);

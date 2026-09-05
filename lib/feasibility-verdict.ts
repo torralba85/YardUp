@@ -21,6 +21,7 @@ import {
   type FeasibilityResult,
   type Parcel,
 } from "./feasibility";
+import { describePlacement, type PlacementResult } from "./placement-validation";
 
 export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
 
@@ -133,6 +134,7 @@ export function summarizeFeasibility(
   parcel: Parcel,
   result: FeasibilityResult,
   config?: Pick<ADUConfig, "width" | "length">,
+  placement: PlacementResult | undefined = result.placement,
 ): FeasibilitySummary {
   const buildableSqft = buildableArea(parcel);
   const compliant = result.zoningStatus === "Compliant";
@@ -141,8 +143,8 @@ export function summarizeFeasibility(
   // drives zoningStatus. Reuse it everywhere so the verdict and rows cannot
   // disagree because allowedFootprint is rounded while coveragePercent is not.
   const coverageOk = hasCapacity;
-  const envelopeFits = config
-    ? fitsWithinEnvelope(parcel, config)
+  const envelopeFits = placement ? placement.envelopeStatus === "fits" : config
+    ? config.width <= parcel.lotWidth - parcel.setbacks.side * 2 && config.length <= parcel.lotLength - parcel.setbacks.front - parcel.setbacks.rear
     : buildableSqft >= result.aduSqft;
   const minimumEnvelopeFits = fitsWithinEnvelope(parcel, { width: 20, length: 20 });
 
@@ -219,6 +221,11 @@ export function summarizeFeasibility(
     },
   ];
 
+  const placementReview = placement !== undefined && placement.status !== "fits";
+  if (placement) {
+    const feedback = describePlacement(placement);
+    constraints.push({ id: "placement", group: "Site & utilities", label: "Modeled ADU placement", detail: feedback.detail, status: feedback.tone });
+  }
   const cleared = constraints.filter((c) => c.status === "clear").length;
 
   // Verdict derives from distinct real signals — NOT a naive status count.
@@ -235,7 +242,7 @@ export function summarizeFeasibility(
 
   let verdict: VerdictLevel;
   if (envelopeTooSmall) verdict = "Unlikely";
-  else if (overCoverage || zoningReview || envelopeReview) verdict = "Needs Review";
+  else if (overCoverage || zoningReview || envelopeReview || placementReview) verdict = "Needs Review";
   else verdict = "Likely Feasible";
 
   // Readiness — 100 minus weighted penalties. Default preset (compliant, the
@@ -249,6 +256,7 @@ export function summarizeFeasibility(
         (overCoverage ? 25 : 0) -
         (zoningReview ? 9 : 0) -
         (envelopeReview ? 15 : 0) -
+        (placementReview ? 15 : 0) -
         verifyOpen * 9,
     ),
   );
@@ -258,6 +266,7 @@ export function summarizeFeasibility(
     (overCoverage ? 1 : 0) +
     (zoningReview ? 1 : 0) +
     (envelopeReview ? 1 : 0) +
+    (placementReview ? 1 : 0) +
     verifyOpen;
 
   const reviewNote =

@@ -24,6 +24,9 @@ import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
+import { defaultPose, isValidPose } from "@/lib/scenario-design";
+import { getScenePlacement } from "@/lib/site-fit";
+import { buildAduHeightModel, type Pose2D } from "@/lib/scene-model";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { getMatchedBuilders } from "@/lib/marketplace";
@@ -125,6 +128,7 @@ function FeasibilityStudioInner() {
   const { parcel: liveParcel, parcelMode, parcelError, parcelLoading, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
+  const [poseState,setPoseState] = useState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
     defaultFinancialAssumptions,
   );
@@ -243,6 +247,10 @@ function FeasibilityStudioInner() {
   // (Estimated wizard parcels borrow their base preset's dimensions, so they
   // render identically to before.)
   const sceneParcel = activeParcel;
+  const sceneKey = parcelMode === "preset" ? parcelId : `${activeParcel.address}|${activeParcel.city}`;
+  const pose = poseState.key===sceneKey ? poseState.pose : defaultPose(activeParcel,config);
+  if(poseState.key!==sceneKey) setPoseState({key:sceneKey,pose});
+  const commitPose=useCallback((next:Pose2D)=>{ if(isValidPose(next)) setPoseState({key:sceneKey,pose:next}); },[sceneKey]);
   // Only a geocoded (Regrid/fallback) parcel has real lat/lng for AerialView's
   // satellite imagery — demo presets and wizard estimates never do.
   const aerialAvailable = parcelMode === "live" && "lat" in activeParcel;
@@ -254,9 +262,16 @@ function FeasibilityStudioInner() {
   );
   const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
-    () => calculateFeasibility(activeParcel, config, assumptions, expectedRent),
+    () => {
+      const base=calculateFeasibility(activeParcel, config, assumptions, expectedRent);
+      const placement=getScenePlacement(activeParcel,config,pose);
+      const totalHeight=buildAduHeightModel(config)?.totalHeight;
+      return {...base,placement,placementPose:pose,warnings:[...base.warnings,
+        ...(placement.status!=="fits" ? placement.reasons.map(reason=>reason.message) : []),
+        ...(totalHeight && totalHeight>16 && config.height<=16 ? [`Modeled total roof height is ${totalHeight.toFixed(1)} ft; verify the local height limit.`] : [])]};
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [assumptions, config, activeParcel],
+    [assumptions, config, activeParcel, pose],
   );
   const isCompliant = result.zoningStatus === "Compliant";
   const projectBriefInput = useMemo(
@@ -356,6 +371,7 @@ function FeasibilityStudioInner() {
     const merged = mergeScenarioPartial(parsed);
     setParcelId(merged.parcelId);
     setConfig(merged.config);
+    setPoseState({key:merged.parcelId,pose:merged.pose ?? defaultPose(getParcelById(merged.parcelId),merged.config)});
     setAssumptions(merged.assumptions);
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the
@@ -396,7 +412,7 @@ function FeasibilityStudioInner() {
 
   useEffect(() => {
     if (!hydratedFromUrl || typeof window === "undefined") return;
-    const serialized = serializeScenarioParams({ parcelId, config, assumptions });
+    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
     const next = `${window.location.pathname}?${serialized}`;
     // Preserve the current entry's state — never pass `null` here. This
     // effect only means to rewrite the URL; a null state would also erase
@@ -404,7 +420,7 @@ function FeasibilityStudioInner() {
     // Next.js's own router state on this entry, since replaceState's first
     // argument replaces the whole state object, not just the URL.
     window.history.replaceState(window.history.state, "", next);
-  }, [assumptions, config, hydratedFromUrl, parcelId]);
+  }, [assumptions, config, hydratedFromUrl, parcelId, pose]);
 
   // Managed focus: when the active step changes, move focus to the new step's
   // body so keyboard/screen-reader users follow the navigation instead of being
@@ -422,6 +438,7 @@ function FeasibilityStudioInner() {
     resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
+    setPoseState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
     setBuilderLeadOpen(false);
@@ -515,6 +532,7 @@ function FeasibilityStudioInner() {
     }
 
     const entry: Omit<SavedScenario, "id" | "createdAt"> = {
+      version:2, heightConvention:"wall", pose,
       name: `${activeParcel.address} - ${config.footprint} sf`,
       parcelId,
       config,
@@ -555,6 +573,7 @@ function FeasibilityStudioInner() {
     }
     setParcelId(scenario.parcelId);
     setConfig(scenario.config);
+    setPoseState({key:scenario.liveParcel ? `${scenario.liveParcel.address}|${scenario.liveParcel.city}` : scenario.parcelId,pose:scenario.pose ?? defaultPose(scenario.liveParcel ?? getParcelById(scenario.parcelId),scenario.config)});
     setAssumptions(scenario.assumptions);
   }
 
@@ -633,6 +652,8 @@ function FeasibilityStudioInner() {
         <AerialView
           parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
           config={config}
+          pose={pose}
+          onReturnToModel={()=>setViewMode("3d")}
           isCompliant={isCompliant}
         />
       ) : (
@@ -644,6 +665,8 @@ function FeasibilityStudioInner() {
           <p className="lf-body max-w-[28ch] text-lf-taupe">
             Aerial view requires a real address. Search your address from the Lot step to see satellite imagery.
           </p>
+          <Button variant="secondary" onClick={()=>setViewMode("3d")}>Return to 3D model</Button>
+          <Button variant="secondary" onClick={()=>{setJourneyStep("find");handleChangeAddress();}}>Search an address</Button>
         </div>
       )
     ) : (
@@ -652,6 +675,8 @@ function FeasibilityStudioInner() {
         config={config}
         isCompliant={isCompliant}
         remainingCapacity={result.remainingCapacity}
+        pose={pose}
+        onPoseCommit={commitPose}
       />
     );
 
@@ -776,6 +801,7 @@ function FeasibilityStudioInner() {
         </MobileJourney>
         <FineTuneDrawer open={fineTuneOpen} onClose={() => setFineTuneOpen(false)}>
           <FeasibilityInspector
+            initialStep={2}
             parcelId={parcelId}
             config={config}
             assumptions={assumptions}
@@ -1012,9 +1038,9 @@ function SceneViewport({
   onViewModeChange: (mode: SceneViewMode) => void;
 }) {
   return (
-    <div data-testid="scene-viewport" className="relative h-full min-h-0 flex-1">
+    <div data-testid="scene-viewport" className="relative flex h-full min-h-0 flex-1 flex-col">
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} />
-      {sceneNode}
+      <div className="min-h-0 flex-1">{sceneNode}</div>
     </div>
   );
 }
@@ -1055,7 +1081,7 @@ function SceneViewToggle({
     <div
       role="group"
       aria-label="Parcel view"
-      className="pointer-events-auto absolute left-4 top-4 z-(--z-index-header) flex items-center gap-0.5 rounded-full border border-lf-hairline bg-lf-card p-1 shadow-sm sm:left-5 sm:top-5"
+      className="pointer-events-auto flex shrink-0 items-center gap-1 border-b border-lf-hairline bg-lf-card px-2 py-1"
     >
       <Button
         type="button"
@@ -1063,7 +1089,7 @@ function SceneViewToggle({
         variant={mode === "3d" ? "selected" : "ghost"}
         aria-pressed={mode === "3d"}
         onClick={() => onChange("3d")}
-        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
+        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
           mode === "3d" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
         }`}
       >
@@ -1075,7 +1101,7 @@ function SceneViewToggle({
         variant={mode === "aerial" ? "selected" : "ghost"}
         aria-pressed={mode === "aerial"}
         onClick={() => onChange("aerial")}
-        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card sm:h-9 ${
+        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
           mode === "aerial" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
         }`}
       >

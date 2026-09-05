@@ -8,6 +8,7 @@ vi.mock("@react-three/fiber", () => ({
   Canvas: () => <div data-testid="parcel-canvas" />,
   useFrame: vi.fn(),
   useThree: vi.fn(),
+  addAfterEffect: vi.fn(() => () => {}),
 }));
 
 vi.mock("@react-three/drei", () => ({
@@ -51,7 +52,8 @@ describe("ParcelScene controls", () => {
       target: { value: "18.5" },
     });
 
-    expect(screen.getByText("6.5 PM")).toBeInTheDocument();
+    // A half hour reads as a clock time, not a decimal hour.
+    expect(screen.getByText("6:30 PM")).toBeInTheDocument();
   });
 
   it("announces the exact modeled capacity and corrective action", () => {
@@ -76,14 +78,14 @@ describe("ParcelScene controls", () => {
   });
 
   it("only captures arrow keys while the placement model itself has focus", () => {
-    const onAduPositionChange = vi.fn();
+    const onPoseCommit = vi.fn();
     render(
       <ParcelScene
         parcel={parcelPresets[0]}
         config={defaultAduConfig}
         isCompliant
         remainingCapacity={20}
-        onAduPositionChange={onAduPositionChange}
+        onPoseCommit={onPoseCommit}
       />,
     );
 
@@ -94,10 +96,33 @@ describe("ParcelScene controls", () => {
     });
     window.dispatchEvent(pageArrow);
     expect(pageArrow.defaultPrevented).toBe(false);
-    expect(onAduPositionChange).not.toHaveBeenCalled();
+    expect(onPoseCommit).not.toHaveBeenCalled();
 
+    // A keyboard nudge previews while the key is held and commits once, on
+    // release, so a held arrow writes one scenario entry rather than one per
+    // animation frame.
     const scene = screen.getByRole("group", { name: "Interactive ADU placement model" });
     fireEvent.keyDown(scene, { key: "ArrowLeft" });
-    expect(onAduPositionChange).toHaveBeenCalledTimes(1);
+    expect(onPoseCommit).not.toHaveBeenCalled();
+    fireEvent.keyUp(scene, { key: "ArrowLeft" });
+    expect(onPoseCommit).toHaveBeenCalledTimes(1);
+    expect(onPoseCommit.mock.calls[0][0]).toMatchObject({ rotationDeg: 0 });
+  });
+
+  it("reports placement and coverage as two separate outcomes", () => {
+    render(
+      <ParcelScene
+        parcel={parcelPresets[0]}
+        config={{ ...defaultAduConfig, width: 31, length: 20 }}
+        isCompliant
+        remainingCapacity={120}
+      />,
+    );
+
+    // Coverage can pass while the footprint still fails to fit the envelope —
+    // the audit found a 31 x 20 ft design accepted in a 30 ft envelope.
+    const status = screen.getByRole("status", { name: "Modeled site fit status" });
+    expect(status).toHaveTextContent("120 sf of modeled coverage remains");
+    expect(status).not.toHaveTextContent("Fits at this placement");
   });
 });
