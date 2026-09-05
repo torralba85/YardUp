@@ -1,8 +1,8 @@
 # Release Handoff - Web Production + Google Play
 
 **Date:** 2026-08-26
-**Branch:** `feature/map-quality-improvements` @ `5f63585`
-**PR:** [#162](https://github.com/torralba85/YardUp/pull/162) -> `master` (MERGEABLE / CLEAN, `verify` passing)
+**Branch:** merged to `master` @ `bac2b0f`
+**PR:** [#162](https://github.com/torralba85/YardUp/pull/162) -> `master` — **MERGED** 2026-08-26 as `bac2b0f`
 **Firebase project:** `yardup-2026`
 
 This document records what is verified, what blocks release, and the exact
@@ -12,7 +12,7 @@ which was written before this work landed.
 
 ## Verified on this branch
 
-All run locally against `5f63585`:
+All run locally against `a4bec0b`, and CI `verify` passed on the merge commit:
 
 | Gate | Command | Result |
 |---|---|---|
@@ -53,7 +53,7 @@ outdated version of firebase-functions`. Worth scheduling, not a release gate.
 - `chore(store)` manifest screenshots recaptured on the new type.
 
 GitHub reports 52 Dependabot alerts, but those are against the **default
-branch** (`master`), which is 66 commits stale. Merging PR #162 clears them.
+branch** (`master`) as it was before the merge. PR #162 takes both root and functions to 0 vulnerabilities, so they should clear as GitHub rescans.
 
 ## Corrections to prior status docs
 
@@ -136,9 +136,197 @@ period where `https://lotfoundry.net` fails TLS until the certificate issues -
 that is normal, not a sign the DNS change was wrong. Wait for `CERT_ACTIVE`
 before concluding anything.
 
-Note: PR #162 is **not merged**. `master` is still 66+ commits behind what is
-running in production. Merge it once Actions is restored so the branch and the
-deployed artifact agree.
+PR #162 was subsequently **merged** at 17:41 UTC as `bac2b0f`, so `master` now
+matches what is running in production. Its `verify` job passed; only the
+`deploy` job was blocked, by the account billing lock (Blocker 4). Since
+production had already been deployed manually, nothing is missing from the live
+site - but the automated deploy path is unproven until billing is fixed and the
+workflow is re-run.
+
+## Live QA of the deployed site - clean
+
+Run against the live origin on 2026-08-26 with Playwright (Chrome DevTools MCP
+hung on launch and was abandoned). Scripts kept at `scratchpad/liveaudit.mjs`
+and `scratchpad/journey2.mjs`.
+
+**12 routes x desktop (1440) and Pixel 7:**
+
+| Check | Result |
+|---|---|
+| Uncaught page errors | 0 |
+| Failed network requests | 0 |
+| HTTP >= 400 responses | 0 (excl. the App Check automation artifact) |
+| Horizontal overflow | none at either width |
+| Same-origin assets resolving | 37/37 landing, 25-32 per inner page, all 200 |
+
+**Core product journey, live:**
+
+- Desktop `/studio`: 12 dollar figures rendered, 3D canvas present, no overflow.
+- Mobile `/studio`: demo lot -> `1:FIND` -> `2:EARN` with `$2,050` and `$24,600`
+  rendered.
+
+Two false alarms from the first pass, recorded so they are not re-raised:
+
+- *"Mobile renders no money figures and no canvas."* Wrong - the harness bailed
+  on an `isEnabled()` check while the parcel was still loading, so it never
+  clicked the CTA. With a proper wait the journey advances normally. `canvas: 0`
+  on the Earn step is also correct; the 3D scene belongs to the Shape step.
+- *"App Check 403 on every authenticated page."* An automation artifact - see
+  the resolved section below.
+
+The only remaining console noise is `requestStorageAccess: Permission denied`,
+which is Chrome's third-party-storage prompt under automation and does not
+appear as a functional fault.
+
+**Scope limit worth stating:** this exercised guest and demo paths only. Signed-in
+journeys, checkout, and lead unlock were not driven end to end, because doing so
+writes to production Firestore and Stripe under a real account.
+
+## Blocker 1b - App Check will reject every request on lotfoundry.net (OPEN, SEVERE)
+
+**This is the most severe launch blocker found, and it is certain.** Fix it
+before the DNS change, not after.
+
+Firebase App Check is **`ENFORCED`** - not monitor-only - on:
+
+| Service | Mode |
+|---|---|
+| `firestore.googleapis.com` | ENFORCED |
+| `identitytoolkit.googleapis.com` (Auth) | ENFORCED |
+| `oauth2.googleapis.com` | ENFORCED |
+| `places.googleapis.com` | ENFORCED |
+| `maps-backend.googleapis.com` | ENFORCED |
+| `firebaseml.googleapis.com` | ENFORCED + replay protection |
+
+App Check attests via reCAPTCHA Enterprise site key
+`6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra`. That key's **allowed domains are
+only**:
+
+```
+yardup-2026.web.app
+yardup-2026--yardup-2026.us-central1.hosted.app
+```
+
+`lotfoundry.net` is not among them. A reCAPTCHA Enterprise SCORE key validates
+the domain the token was issued on, so once the app serves from
+`lotfoundry.net`, attestation fails, App Check issues no token, and **every
+enforced service rejects the request** - sign-in, sign-up, saved scenarios,
+builder dashboard, settings, and Places all break at once. The site would look
+fine on static pages and fail the moment a user tries to do anything.
+
+**Fix:** add `lotfoundry.net` (and `www.lotfoundry.net` if used) to the key's
+allowed domains in Google Cloud Console -> Security -> reCAPTCHA Enterprise, or:
+
+```bash
+gcloud recaptcha keys update 6Ld8T1AtAAAAAJNbNuVPFb0CxBTE42cRerKUk9ra \
+  --project=yardup-2026 \
+  --domains=lotfoundry.net,www.lotfoundry.net,yardup-2026.web.app,yardup-2026--yardup-2026.us-central1.hosted.app
+```
+
+Verify with `gcloud recaptcha keys list --project=yardup-2026`.
+
+### RESOLVED: App Check works fine for real users today
+
+Cloud Monitoring settles it. `firebaseappcheck.googleapis.com/services/verdict_count`
+over the 14 days to 2026-08-26:
+
+| result | security | count |
+|---|---|---|
+| `ALLOW` | `VALID` | **94** |
+| `DENY` | `MISSING_UNKNOWN_ORIGIN` | 2 |
+
+94 allowed verdicts with valid attestation means **real users are attesting
+successfully against the enforced services**. Production auth and Firestore are
+healthy; there is no P0 here. The two denials are unattested/unknown-origin
+clients, consistent with the automated browser runs described below.
+
+So the 403 seen in the browser audit **was an automation artifact after all**,
+despite reproducing in headed mode - Playwright-driven Chrome is
+automation-flagged either way, and reCAPTCHA scored it below
+`minValidScore: 0.5`. No action needed.
+
+This does *not* soften Blocker 1b: enforcement is demonstrably live and working,
+which is precisely why `lotfoundry.net` must be added to the key's allowed
+domains before the domain switch.
+
+Query to re-check:
+
+```bash
+TOKEN=$(gcloud auth print-access-token)
+curl -sS -H "Authorization: Bearer $TOKEN" -H "X-Goog-User-Project: yardup-2026" \
+  "https://monitoring.googleapis.com/v3/projects/yardup-2026/timeSeries?\
+filter=metric.type%3D%22firebaseappcheck.googleapis.com%2Fservices%2Fverdict_count%22\
+&interval.startTime=<ISO>&interval.endTime=<ISO>\
+&aggregation.alignmentPeriod=1209600s&aggregation.perSeriesAligner=ALIGN_SUM"
+```
+
+### Superseded: the original uncertainty
+
+A browser audit of the live site found the App Check exchange returning
+**403 `"App attestation failed."` / `PERMISSION_DENIED`** on every page that
+mounts the Firebase SDK (`/studio`, `/login`, `/signup`, `/settings`,
+`/builder`, `/help`, `/feedback`, `/delete-account`). Static pages (`/`,
+`/about`, `/privacy`, `/terms`) are clean, which matches the landing
+deliberately not loading Firebase.
+
+**This test cannot settle whether real users are affected.** Both headless *and*
+headed Playwright Chromium got the same 403, but Playwright-driven Chrome is
+automation-flagged either way, and `"App attestation failed."` with
+`minValidScore: 0.5` is exactly what a low reCAPTCHA risk score produces. So
+this is consistent with "automation is correctly rejected" **and** with
+"attestation is broken for everyone" - the evidence does not distinguish them.
+
+It matters because there is no positive evidence that production sign-in
+currently works: the 2026-08-25 session recorded an attempted Google sign-in
+on a real device that was abandoned before completing, so the return leg has
+never been observed to succeed.
+
+**Settled by Cloud Monitoring above - no real sign-in needed.** Kept only to
+document how the false alarm arose: a 403 from an automated browser is not
+evidence of a production fault when the attestation provider is a bot-scoring
+service. Check the aggregate verdict metrics before escalating this class of
+finding.
+
+## Blocker 1a - the Places API key does not allow lotfoundry.net (OPEN)
+
+**Do this before or alongside the DNS change, or address autocomplete breaks the
+moment the domain goes live** - silently, with no server-side error.
+
+The browser Places key is referrer-restricted, and `lotfoundry.net` is not in
+its allowlist. Confirmed with `gcloud services api-keys describe`:
+
+| Key | UID | Allowed referrers |
+|---|---|---|
+| `lotfoundry-web-places` | `6c62509e-eada-4a6c-8400-e186856b9ea3` | `yardup-2026.web.app`, `yardup-2026.firebaseapp.com`, `localhost:4517`, `localhost:3000` |
+
+Add `https://lotfoundry.net/*` and `https://www.lotfoundry.net/*`. Adding
+referrers is additive and does not disturb the existing origins:
+
+```bash
+gcloud services api-keys update 6c62509e-eada-4a6c-8400-e186856b9ea3 \
+  --project=yardup-2026 \
+  --allowed-referrers="https://lotfoundry.net/*,https://www.lotfoundry.net/*,https://yardup-2026.web.app/*,https://yardup-2026.firebaseapp.com/*,http://localhost:4517/*,http://localhost:3000/*" \
+  --api-target=service=maps-embed-backend.googleapis.com \
+  --api-target=service=places-backend.googleapis.com \
+  --api-target=service=places.googleapis.com
+```
+
+Both `--api-target` and `--allowed-referrers` are passed because updating one
+restriction type without the other can clear the one you omit.
+
+Verify afterwards with `gcloud services api-keys describe 6c62509e-... --format="yaml(restrictions)"`,
+then load `/studio` on the live domain and type an address.
+
+**Housekeeping while you are in there:** a second key,
+`New next_public_google_places_key`
+(`4d270dd8-96b9-4a5a-b660-533c5ea082a5`), carries the same referrers but is
+scoped to ~27 Maps Platform services - far broader than a browser key needs. It
+is unclear whether anything still uses it. Worth confirming and either
+tightening to the three Places services or deleting.
+
+Also check the two server keys (`lotfoundry-server-places-2026-07`,
+`lotfoundry-server-maps-2026-07`). They correctly have no referrer restriction,
+but should be confirmed IP- or API-restricted rather than unrestricted.
 
 ## Blocker 1 - Cloudflare redirects all of lotfoundry.net (OPEN)
 
@@ -249,7 +437,7 @@ curl -sS https://lotfoundry.net/robots.txt
 curl -sS https://lotfoundry.net/.well-known/assetlinks.json
 ```
 
-## Blocker 2 - master is 66 commits stale (OPEN, NOT gated on Blocker 1)
+## Blocker 2 - master was 66 commits stale (RESOLVED 2026-08-26)
 
 CI deploys only `master`. The live site is a July build, which is why
 `/robots.txt` 404s and the sitemap still advertises `yardup-2026.web.app` with
@@ -327,7 +515,7 @@ validator asserts the manifest exceeds it.
    Blocker 1.
 7. Promote to production.
 
-## Blocker 4 - GitHub Actions is not queueing runs (OPEN, blocks the deploy)
+## Blocker 4 - GitHub account is billing-locked (OPEN, blocks CI deploy only)
 
 Pushes to `feature/map-quality-improvements` on 2026-08-26 between 16:15 and
 16:44 UTC produced **no workflow runs at all**. PR #162's head SHA matches the
@@ -339,7 +527,27 @@ pushed commit (`5bf3acc`), so the pushes registered, but:
 - Actions is enabled (`{"enabled": true, "allowed_actions": "all"}`) and the CI
   workflow is `active`; the repo is not archived or disabled
 
-### Likely cause: exhausted Actions minutes
+### CONFIRMED CAUSE: the GitHub account is billing-locked
+
+After PR #162 was merged, the `master` run's `verify` job passed but `deploy`
+failed after 2 seconds with no steps executed. The GitHub check annotation gives
+it verbatim:
+
+> **The job was not started because your account is locked due to a billing issue.**
+
+That single fact explains every symptom: no runs queueing earlier in the day,
+the `deploy` job refusing to start, and Dependabot jobs never being assigned a
+runner for weeks.
+
+**Fix:** resolve the billing issue at
+<https://github.com/settings/billing/summary>. Nothing in this repository can
+work around an account lock.
+
+Until then `master` will not auto-deploy on merge. Production is already current
+(deployed manually 2026-08-26), so this is not urgent for the live site, but it
+must be fixed before the next release.
+
+### Superseded theory: exhausted Actions minutes
 
 The repo is **private**, so Actions minutes are metered. The `Dependabot
 Updates` workflow has been hanging and being cancelled at the 24-hour platform
@@ -352,22 +560,31 @@ timeout, repeatedly:
 ...
 ```
 
-61 such runs appear in the last 100 workflow runs, each burning ~1,440 minutes.
-That is far beyond any Free or Pro monthly allowance and is the most plausible
-reason new runs are refused.
+61 such runs appear in the last 100 workflow runs. **This theory was wrong and
+is kept only so nobody re-derives it.** Inspecting one shows `runner_name: ""` -
+the jobs were never assigned a runner, so they sat queued and were cancelled at
+the 24h platform timeout. Queued time is not billed, so they consumed
+essentially nothing. They are a *symptom* of the account lock, not a cause.
 
-### To confirm and fix
+The `dependabot.yml` config is fine as written (weekly, grouped, sane PR
+limits). Nothing needs changing there.
 
-1. Check <https://github.com/settings/billing/summary> for Actions usage and
-   whether the spending limit is reached. (`gh` cannot read this without the
-   `user` scope: `gh auth refresh -h github.com -s user`.)
-2. Raise the spending limit, or wait for the monthly reset, or make the repo
-   public (Actions minutes are free for public repos).
-3. **Fix the runaway independently of the release.** These runs are not doing
-   useful work - they hang for 24h and get killed. Options: disable Dependabot
-   version updates in `.github/dependabot.yml`, reduce their schedule, or
-   investigate why the job never completes. Left alone this will exhaust the
-   allowance again next cycle.
+Separately, the `npm_and_yarn in /. for body-parser, brace-expansion, ...` runs
+are Dependabot **security** updates driven by the 52 open alerts, not scheduled
+version updates - the alert packages match those run titles exactly. PR #162
+takes `npm audit` to 0 vulnerabilities in both root and `functions`, so merging
+it removes the trigger for those runs entirely.
+
+### Status
+
+PR #162 is **merged** (`bac2b0f`, 2026-08-26 17:41 UTC). `master` now matches
+what is running in production. `verify` passed on the merge commit; only
+`deploy` was blocked by the account lock, and production was already deployed
+manually, so nothing is missing from the live site.
+
+Once billing is resolved, re-run the `CI` workflow on `master` to confirm the
+automated deploy path works end to end before relying on it for the next
+release.
 
 ### If you must deploy from a developer machine
 
@@ -450,6 +667,100 @@ and go back to deploying through it.
 `scripts/validate-public-repo.mjs` is the natural home. Today the only thing
 standing between a dev-machine deploy and a leaked App Check bypass is
 remembering to move one file.
+
+## Google Play build checklist (owner runs; repo side is prepared)
+
+Verified ready as of 2026-08-26 - nothing in the repo blocks a build:
+
+| Item | State |
+|---|---|
+| `twa-manifest.json` | `1.0.6` / `appVersionCode 7` / `appVersion 1.0.6` |
+| `app/build.gradle` | `versionCode 7`, `versionName "1.0.6"`, `targetSdkVersion 36` |
+| `applicationId` | `com.lotfoundry.app` (both files agree) |
+| TWA host / start URL | `lotfoundry.net` / `/studio` |
+| `npm run android:validate` | passes |
+| Play product IDs | all 4 match `lib/commerce/products.ts` exactly |
+| Digital Asset Links | both upload-key and Play App Signing SHA-256 present, served 200 |
+| Android SDK / JDK | present on the dev machine (SDK at `%LOCALAPPDATA%\Android\Sdk`, JDK 21) |
+
+Play products, which must exist in Play Console with these exact IDs:
+
+```
+com.lotfoundry.certificate.credit1
+com.lotfoundry.builder.credit1
+com.lotfoundry.builder.credits5
+com.lotfoundry.builder.credits10
+```
+
+### Step 0 - the domain gate (HARD; do not skip)
+
+Do not build until **all three** return the expected result. Android does not
+follow a cross-origin redirect when verifying Digital Asset Links, so building
+against a redirecting host produces a bundle that launches with Custom Tab
+browser chrome instead of full screen.
+
+```bash
+curl -sSI https://lotfoundry.net/ | head -3
+#   want: HTTP/... 200  +  Server: Google Frontend      (NOT 301, NOT Server: cloudflare)
+
+curl -sS -o /dev/null -w "%{http_code}\n" https://lotfoundry.net/.well-known/assetlinks.json
+#   want: 200
+
+curl -sS https://lotfoundry.net/robots.txt | head -2
+#   want: the app's rules, NOT Cloudflare's "# BEGIN Cloudflare Managed content"
+```
+
+Blockers 1b (reCAPTCHA domains) and 1a (Places referrer) must also be done, or
+the app installs and launches but sign-in and address search fail inside it.
+
+### Step 1 - confirm the version ceiling
+
+The repo cannot know whether an internal-track upload already consumed
+`versionCode 7`. Check Play Console. If it did, bump `twa-manifest.json`
+(`appVersionName`, `appVersionCode`, **and** the separate `appVersion` field),
+`app/build.gradle`, and `PUBLISHED_VERSION_CODE` in
+`native/android/scripts/validate-config.mjs` together.
+
+### Step 2 - build and validate
+
+```bash
+cd native/android
+./gradlew test bundleRelease      # needs the signing keystore in this workspace
+cd ../..
+npm run android:validate:release  # asserts the signed AAB exists
+```
+
+Artifact lands at `native/android/app/build/outputs/bundle/release/app-release.aab`.
+
+### Step 3 - listing assets (still outstanding)
+
+The manifest screenshots in `public/screenshots/` were recaptured 2026-08-26 on
+the new type system and are current. **Play listing graphics were not** - they
+still show the old fonts and must be re-exported:
+
+- 512x512 Play icon
+- 1024x500 feature graphic
+- phone + tablet listing screenshots
+
+Do not reuse `phone-studio.png` as primary listing art; roughly half the frame
+is empty below the demo-lot chips. Capture an Earn or Check reveal instead -
+those carry the money figure. `node scripts/capture-store-screenshots.mjs`
+(against a running server) regenerates the manifest set.
+
+### Step 4 - device testing before promotion
+
+On the internal track, on a real device:
+
+- Launches **full screen** with no address bar. Browser chrome means Digital
+  Asset Links verification failed - return to Step 0.
+- Purchase, restore, refund/revocation, and account deletion.
+- Credit Shop shows **Play's** localized prices, not `$175`/`$300`. This is what
+  the channel-native pricing change fixed; it is only observable on-device.
+- An in-app purchase completes. `Permissions-Policy: payment=(self)` is correct
+  per spec but has never been confirmed on a real device - this is the check
+  that confirms it.
+
+Then promote to production.
 
 ## Remaining owner-only gates
 
