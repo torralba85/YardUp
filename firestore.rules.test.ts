@@ -388,6 +388,39 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     await assertSucceeds(setDoc(scenarioRef, legacy));
   });
 
+  it("rejects nested config, cost, and setback maps missing a required key", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    // The paired hasAll() checks were removed from isValidAduConfig,
+    // isValidCostPerSqft, and isValidSetbacks to stay under Firestore's
+    // 1000-expression ceiling. Required-ness now rests entirely on the
+    // per-field checks: reading a key that is absent is an error, and an error
+    // denies the write. These cases are what proves that, so a future edit
+    // cannot quietly turn a required field optional.
+    const noFootprint = sampleScenario();
+    delete (noFootprint.config as Record<string, unknown>).footprint;
+    await assertFails(setDoc(scenarioRef, noFootprint));
+
+    const noFinish = sampleScenario();
+    delete (noFinish.config as Record<string, unknown>).finish;
+    await assertFails(setDoc(scenarioRef, noFinish));
+
+    const noCedar = sampleScenario();
+    delete (
+      (noCedar.assumptions as Record<string, unknown>).costPerSqft as Record<
+        string,
+        unknown
+      >
+    ).cedar;
+    await assertFails(setDoc(scenarioRef, noCedar));
+
+    const noSideSetback = sampleScenario({
+      liveParcel: sampleLiveParcel({ setbacks: { front: 20, rear: 20 } }),
+    });
+    await assertFails(setDoc(scenarioRef, noSideSetback));
+  });
+
   it("rejects version 2 without the heightConvention and pose it implies", async () => {
     const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
     const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
