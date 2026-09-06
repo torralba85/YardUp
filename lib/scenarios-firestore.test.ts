@@ -4,6 +4,7 @@ import {
   defaultFinancialAssumptions,
 } from "./feasibility";
 import type { LiveParcelData } from "./parcel-types";
+import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import {
   deleteSavedScenario,
   fetchSavedScenarios,
@@ -38,21 +39,9 @@ vi.mock("firebase/firestore", () => ({
 }));
 
 const liveParcel: LiveParcelData = {
-  address: "500 Cedar Ave",
-  city: "San Jose, CA",
-  lotArea: 5600,
-  lotWidth: 44,
-  lotLength: 127,
-  existingHouseSqft: 1420,
-  maxLotCoveragePercent: 42,
-  setbacks: { front: 20, rear: 20, side: 5 },
-  zoning: "R-1",
-  boundaryGeoJson: null,
-  lat: 37.335,
-  lng: -121.889,
-  source: "regrid",
-  state: "CA",
-  zip: "",
+  ...SAMPLE_LIVE_PARCEL,
+  setbacks: { ...SAMPLE_LIVE_PARCEL.setbacks },
+  marketData: { ...SAMPLE_LIVE_PARCEL.marketData },
 };
 
 describe("saved scenario Firestore helpers", () => {
@@ -203,6 +192,56 @@ describe("saved scenario Firestore helpers", () => {
     const [, payload] = firestoreMocks.addDoc.mock.calls[0];
     expect(payload.liveParcel).not.toHaveProperty("county");
     expect(payload.liveParcel.address).toBe("500 Cedar Ave");
+  });
+
+  it("drops properties outside the rules allowlist before Firestore write", async () => {
+    firestoreMocks.addDoc.mockResolvedValue({ id: "scenario-1" });
+
+    await saveSavedScenario("user-1", {
+      name: "Extra field suite",
+      parcelId: "oak-street",
+      liveParcel: {
+        ...liveParcel,
+        boundaryGeoJson: {
+          type: "Polygon",
+          coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]],
+          bbox: [0, 0, 1, 1],
+        },
+        apn: "123-456-789",
+        marketData: { ...liveParcel.marketData, vendorDebug: { raw: "blob" } },
+      } as unknown as LiveParcelData,
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    const [, payload] = firestoreMocks.addDoc.mock.calls[0];
+    // isValidLiveParcel's hasOnly() would reject the whole create otherwise.
+    expect(payload.liveParcel).not.toHaveProperty("apn");
+    expect(payload.liveParcel.boundaryGeoJson).not.toHaveProperty("bbox");
+    expect(payload.liveParcel.marketData).not.toHaveProperty("vendorDebug");
+    expect(Object.keys(payload.liveParcel.boundaryGeoJson)).toEqual(["type", "coordinates"]);
+  });
+
+  it("coerces a stored null state or zip rather than letting it through", async () => {
+    firestoreMocks.getDocs.mockResolvedValue({
+      docs: [
+        {
+          id: "scenario-null-state",
+          data: () => ({
+            name: "Null state scenario",
+            parcelId: "oak-street",
+            createdAt: "2026-06-08T12:00:00.000Z",
+            liveParcel: { ...liveParcel, state: null, zip: null },
+            config: defaultAduConfig,
+            assumptions: defaultFinancialAssumptions,
+          }),
+        },
+      ],
+    });
+
+    const scenarios = await fetchSavedScenarios("user-1");
+    expect(scenarios[0].liveParcel?.state).toBe("");
+    expect(scenarios[0].liveParcel?.zip).toBe("");
   });
 
   it("hydrates legacy live parcels missing state and zip with safe fallbacks", async () => {

@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
 import { CURRENT_LEGAL_CONSENT } from "./lib/legal-consent";
+import { SAMPLE_LIVE_PARCEL, SAMPLE_LIVE_PARCEL_MAX } from "./test/fixtures/live-parcel";
 
 const PROJECT_ID = "demo-lotfoundry-rules";
 const OWNER_ID = "owner-1";
@@ -278,30 +279,9 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     };
   }
 
-  const sampleLiveParcel = {
-    address: "500 Cedar Ave",
-    city: "San Jose, CA",
-    lotArea: 5600,
-    lotWidth: 44,
-    lotLength: 127,
-    existingHouseSqft: 1420,
-    maxLotCoveragePercent: 42,
-    setbacks: { front: 20, rear: 20, side: 5 },
-    zoning: "R-1",
-    boundaryGeoJson: null,
-    lat: 37.335,
-    lng: -121.889,
-    source: "regrid",
-    state: "CA",
-    zip: "95110",
-    county: "Santa Clara",
-    marketData: {
-      rentByBedroom: { studio: 2100, "1br": 2500, "2br": 3100 },
-      costMultiplier: 1.15,
-      source: "hud-zip",
-      area: "San Jose, CA",
-    },
-  };
+  function sampleLiveParcel(overrides: Record<string, unknown> = {}) {
+    return { ...SAMPLE_LIVE_PARCEL, ...overrides };
+  }
 
   it("allows owner to create a scenario with scene model fields", async () => {
     const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
@@ -318,7 +298,27 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
       setDoc(
         scenarioRef,
         sampleScenario({
-          liveParcel: sampleLiveParcel,
+          liveParcel: sampleLiveParcel(),
+        }),
+      ),
+    );
+  });
+
+  it("allows owner to create a scenario with every optional field populated", async () => {
+    // Guards Firestore's hard ceiling of 1000 evaluated expressions per
+    // request. Every optional field that is present costs another branch, so
+    // this maximal document — not the lighter SAMPLE_LIVE_PARCEL — is what says
+    // whether validation still fits the budget. It did not once: adding
+    // isValidMarketData pushed the extended-parcel create over the ceiling and
+    // every real save would have failed with PERMISSION_DENIED.
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertSucceeds(
+      setDoc(
+        scenarioRef,
+        sampleScenario({
+          liveParcel: SAMPLE_LIVE_PARCEL_MAX,
         }),
       ),
     );
@@ -373,6 +373,127 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
         sampleScenario({
           unknownField: "hacked",
         }),
+      ),
+    );
+  });
+
+  it("allows a legacy create with no version, heightConvention, or pose", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+    const legacy = sampleScenario();
+    delete (legacy as Record<string, unknown>).version;
+    delete (legacy as Record<string, unknown>).heightConvention;
+    delete (legacy as Record<string, unknown>).pose;
+
+    await assertSucceeds(setDoc(scenarioRef, legacy));
+  });
+
+  it("rejects nested config, cost, and setback maps missing a required key", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    // The paired hasAll() checks were removed from isValidAduConfig,
+    // isValidCostPerSqft, and isValidSetbacks to stay under Firestore's
+    // 1000-expression ceiling. Required-ness now rests entirely on the
+    // per-field checks: reading a key that is absent is an error, and an error
+    // denies the write. These cases are what proves that, so a future edit
+    // cannot quietly turn a required field optional.
+    const noFootprint = sampleScenario();
+    delete (noFootprint.config as Record<string, unknown>).footprint;
+    await assertFails(setDoc(scenarioRef, noFootprint));
+
+    const noFinish = sampleScenario();
+    delete (noFinish.config as Record<string, unknown>).finish;
+    await assertFails(setDoc(scenarioRef, noFinish));
+
+    const noCedar = sampleScenario();
+    delete (
+      (noCedar.assumptions as Record<string, unknown>).costPerSqft as Record<
+        string,
+        unknown
+      >
+    ).cedar;
+    await assertFails(setDoc(scenarioRef, noCedar));
+
+    const noSideSetback = sampleScenario({
+      liveParcel: sampleLiveParcel({ setbacks: { front: 20, rear: 20 } }),
+    });
+    await assertFails(setDoc(scenarioRef, noSideSetback));
+  });
+
+  it("rejects version 2 without the heightConvention and pose it implies", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    // migrateDesign refuses to hydrate a v2 record missing either field, so a
+    // document accepted here would be written and then silently unreadable.
+    const noConvention = sampleScenario();
+    delete (noConvention as Record<string, unknown>).heightConvention;
+    await assertFails(setDoc(scenarioRef, noConvention));
+
+    const noPose = sampleScenario();
+    delete (noPose as Record<string, unknown>).pose;
+    await assertFails(setDoc(scenarioRef, noPose));
+  });
+
+  it("rejects an unrecognized scenario version", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertFails(setDoc(scenarioRef, sampleScenario({ version: 1 })));
+    await assertFails(setDoc(scenarioRef, sampleScenario({ version: 3 })));
+    await assertFails(
+      setDoc(scenarioRef, sampleScenario({ heightConvention: "ridge" })),
+    );
+  });
+
+  it("rejects liveParcel properties outside the allowlist", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertFails(
+      setDoc(
+        scenarioRef,
+        sampleScenario({ liveParcel: sampleLiveParcel({ apn: "123-456-789" }) }),
+      ),
+    );
+    await assertFails(
+      setDoc(
+        scenarioRef,
+        sampleScenario({
+          liveParcel: sampleLiveParcel({
+            boundaryGeoJson: { type: "Polygon", coordinates: [], bbox: [0, 0, 1, 1] },
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("rejects malformed liveParcel state, zip, county, and marketData", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertFails(
+      setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ state: 6 }) })),
+    );
+    await assertFails(
+      setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ zip: "z".repeat(21) }) })),
+    );
+    // county is `string | undefined` on LiveParcelData - null is not a shape it models.
+    await assertFails(
+      setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ county: null }) })),
+    );
+    await assertFails(
+      setDoc(
+        scenarioRef,
+        sampleScenario({ liveParcel: sampleLiveParcel({ marketData: "not-a-map" }) }),
+      ),
+    );
+    // An arbitrary blob is no longer accepted just because it is a map.
+    await assertFails(
+      setDoc(
+        scenarioRef,
+        sampleScenario({ liveParcel: sampleLiveParcel({ marketData: { junk: "x" } }) }),
       ),
     );
   });

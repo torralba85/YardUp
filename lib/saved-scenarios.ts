@@ -106,8 +106,84 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     isFiniteNumber(value.lng) &&
     value.lng >= -180 &&
     value.lng <= 180 &&
-    (value.source === "regrid" || value.source === "fallback")
+    (value.source === "regrid" || value.source === "fallback") &&
+    // Mirrors isValidLiveParcel in firestore.rules. Absent is tolerated so
+    // scenarios saved before these fields existed stay readable;
+    // normalizeLiveParcel fills them in before the record reaches the app.
+    (value.state === undefined || typeof value.state === "string") &&
+    (value.zip === undefined || typeof value.zip === "string") &&
+    (value.county === undefined || typeof value.county === "string") &&
+    (value.marketData === undefined || isRecord(value.marketData))
   );
+}
+
+/** The exact `marketData` keys `isValidMarketData` in firestore.rules allows. */
+const MARKET_DATA_KEYS = [
+  "rentByBedroom",
+  "costMultiplier",
+  "operatingExpenseRatio",
+  "opexBreakdown",
+  "source",
+  "area",
+  "asOf",
+  "sourceUrl",
+  "retrievedAt",
+  "geography",
+  "comparableCount",
+  "confidence",
+] as const;
+
+function pickMarketData(value: Record<string, unknown>): Record<string, unknown> {
+  const picked: Record<string, unknown> = {};
+  for (const key of MARKET_DATA_KEYS) {
+    if (value[key] !== undefined) picked[key] = value[key];
+  }
+  return picked;
+}
+
+/**
+ * Reduce an untrusted live parcel to exactly the fields `firestore.rules`
+ * accepts, filling `state`/`zip` for records saved before they existed.
+ *
+ * Persisted scenarios are gated by `isValidLiveParcel`'s `hasOnly()` allowlist,
+ * so one stray property — a new field from the parcel API, a stale handoff
+ * payload, a `crs`/`bbox` on the boundary polygon — would fail the whole write
+ * with permission-denied. Picking here means every reader and the Firestore
+ * writer see the same normalized shape.
+ *
+ * @param value - The candidate live parcel.
+ * @returns Normalized live parcel data, or `null` if it is not valid.
+ */
+export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
+  if (!isRecord(value)) return null;
+  const setbacks = value.setbacks;
+  const boundary = value.boundaryGeoJson;
+  const normalized: Record<string, unknown> = {
+    address: value.address,
+    city: value.city,
+    lotArea: value.lotArea,
+    lotWidth: value.lotWidth,
+    lotLength: value.lotLength,
+    existingHouseSqft: value.existingHouseSqft,
+    maxLotCoveragePercent: value.maxLotCoveragePercent,
+    setbacks: isRecord(setbacks)
+      ? { front: setbacks.front, rear: setbacks.rear, side: setbacks.side }
+      : setbacks,
+    zoning: value.zoning,
+    boundaryGeoJson: isRecord(boundary)
+      ? { type: boundary.type, coordinates: boundary.coordinates }
+      : null,
+    lat: value.lat,
+    lng: value.lng,
+    source: value.source,
+    // Non-optional on LiveParcelData, but absent on scenarios saved before the
+    // parcel lookup resolved them. Coerce by type so a stored null cannot win.
+    state: typeof value.state === "string" ? value.state : "",
+    zip: typeof value.zip === "string" ? value.zip : "",
+  };
+  if (typeof value.county === "string") normalized.county = value.county;
+  if (isRecord(value.marketData)) normalized.marketData = pickMarketData(value.marketData);
+  return isValidLiveParcelData(normalized) ? normalized : null;
 }
 
 /**
@@ -144,10 +220,15 @@ export function isValidSavedScenario(value: unknown): value is SavedScenario {
 
 export function migrateSavedScenario(value: unknown): SavedScenario | null {
   if (!isRecord(value)) return null;
-  if (value.liveParcel !== undefined && !isValidLiveParcelData(value.liveParcel)) return null;
-  const design = migrateDesign(value, isValidLiveParcelData(value.liveParcel) ? value.liveParcel : undefined);
+  let liveParcel: LiveParcelData | undefined;
+  if (value.liveParcel !== undefined) {
+    const normalized = normalizeLiveParcel(value.liveParcel);
+    if (!normalized) return null;
+    liveParcel = normalized;
+  }
+  const design = migrateDesign(value, liveParcel);
   if (!design) return null;
-  const migrated = { ...value, ...design };
+  const migrated = { ...value, ...design, ...(liveParcel ? { liveParcel } : {}) };
   return isValidSavedScenario(migrated) ? migrated : null;
 }
 
