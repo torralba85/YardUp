@@ -7,8 +7,10 @@ import {
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import {
+  deleteDoc,
   deleteField,
   doc,
+  getDoc,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -336,7 +338,8 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
     const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
 
-    await assertSucceeds(setDoc(scenarioRef, sampleScenario()));
+    await assertSucceeds(getDoc(scenarioRef));
+    await assertSucceeds(deleteDoc(scenarioRef));
   });
 
   it("rejects create by another user or unauthenticated client", async () => {
