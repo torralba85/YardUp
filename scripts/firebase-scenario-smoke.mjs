@@ -77,6 +77,7 @@ async function requestJson(url, init) {
 }
 
 function firestoreValue(value) {
+  if (value === null) return { nullValue: null };
   if (typeof value === "string") return { stringValue: value };
   if (typeof value === "boolean") return { booleanValue: value };
   if (typeof value === "number") {
@@ -84,7 +85,10 @@ function firestoreValue(value) {
       ? { integerValue: String(value) }
       : { doubleValue: value };
   }
-  if (value && typeof value === "object" && !Array.isArray(value)) {
+  if (Array.isArray(value)) {
+    return { arrayValue: { values: value.map(firestoreValue) } };
+  }
+  if (value && typeof value === "object") {
     return {
       mapValue: {
         fields: Object.fromEntries(
@@ -155,6 +159,36 @@ async function commitScenario({ idToken, uid }) {
       operatingExpenseRatio: 0.325,
       rentScenario: "conservative",
     },
+    // The live-parcel branch is the only part of isValidLiveParcel that the
+    // deployed rules ever see, so the smoke run must write one: a mistake in
+    // the state/zip/county/marketData clauses otherwise only surfaces as users'
+    // saves failing in production.
+    liveParcel: {
+      address: "500 Cedar Ave",
+      city: "San Jose, CA",
+      lotArea: 5600,
+      lotWidth: 44,
+      lotLength: 127,
+      existingHouseSqft: 1420,
+      maxLotCoveragePercent: 42,
+      setbacks: { front: 20, rear: 20, side: 5 },
+      zoning: "R-1",
+      boundaryGeoJson: null,
+      lat: 37.335,
+      lng: -121.889,
+      source: "regrid",
+      state: "CA",
+      zip: "95110",
+      county: "Santa Clara",
+      marketData: {
+        rentByBedroom: { studio: 2100, "1br": 2500, "2br": 3100 },
+        costMultiplier: 1.15,
+        operatingExpenseRatio: 0.32,
+        source: "hud-zip",
+        area: "San Jose, CA",
+        confidence: "high",
+      },
+    },
   };
 
   await requestJson(
@@ -181,6 +215,7 @@ async function commitScenario({ idToken, uid }) {
                 "parcelId",
                 "config",
                 "assumptions",
+                "liveParcel",
               ],
             },
             updateTransforms: [

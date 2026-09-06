@@ -233,18 +233,15 @@ service cloud.firestore {
       );
     }
 
+    // Required fields are enforced by the per-field checks below, not by a
+    // matching hasAll(): reading a key that is absent is an error, which denies
+    // the write. The paired hasOnly()/hasAll() this file used to carry doubled
+    // the evaluated-expression count, and a scenario carrying a full liveParcel
+    // then blew Firestore's hard 1000-expression-per-request ceiling. Keep
+    // hasOnly() (it rejects unknown fields) and do not reintroduce hasAll().
     function isValidAduConfig(config) {
       return config is map &&
         config.keys().hasOnly([
-          "footprint",
-          "width",
-          "length",
-          "height",
-          "roof",
-          "finish",
-          "includeOpenings"
-        ]) &&
-        config.keys().hasAll([
           "footprint",
           "width",
           "length",
@@ -273,7 +270,6 @@ service cloud.firestore {
     function isValidCostPerSqft(costs) {
       return costs is map &&
         costs.keys().hasOnly(["cedar", "lap", "stucco", "board"]) &&
-        costs.keys().hasAll(["cedar", "lap", "stucco", "board"]) &&
         costs.cedar is number &&
         costs.cedar >= 100 &&
         costs.cedar <= 1000 &&
@@ -296,12 +292,6 @@ service cloud.firestore {
           "operatingExpenseRatio",
           "rentScenario"
         ]) &&
-        assumptions.keys().hasAll([
-          "costPerSqft",
-          "softCostMultiplier",
-          "operatingExpenseRatio",
-          "rentScenario"
-        ]) &&
         isValidCostPerSqft(assumptions.costPerSqft) &&
         assumptions.softCostMultiplier is number &&
         assumptions.softCostMultiplier >= 1 &&
@@ -315,7 +305,6 @@ service cloud.firestore {
     function isValidSetbacks(setbacks) {
       return setbacks is map &&
         setbacks.keys().hasOnly(["front", "rear", "side"]) &&
-        setbacks.keys().hasAll(["front", "rear", "side"]) &&
         setbacks.front is number &&
         setbacks.front >= 0 &&
         setbacks.rear is number &&
@@ -336,7 +325,6 @@ service cloud.firestore {
     function isValidPose(pose) {
       return pose is map &&
         pose.keys().hasOnly(["x", "z", "rotationDeg"]) &&
-        pose.keys().hasAll(["x", "z", "rotationDeg"]) &&
         pose.x is number &&
         pose.x >= -10000 &&
         pose.x <= 10000 &&
@@ -346,6 +334,43 @@ service cloud.firestore {
         pose.rotationDeg is number &&
         pose.rotationDeg >= -360 &&
         pose.rotationDeg <= 360;
+    }
+
+    // Deliberately shallow, and it must stay that way. Firestore evaluates at
+    // most 1000 expressions per request, and a fully populated liveParcel
+    // spends most of that budget before reaching this function — validating
+    // every market field's range here put the create over the ceiling, so every
+    // real save failed with PERMISSION_DENIED (see the maximal-payload case in
+    // firestore.rules.test.ts, which is the guard against that returning).
+    //
+    // What is kept is what rules are actually for here: the allowlist, so an
+    // unknown field cannot be smuggled in, and the core types. Range and format
+    // checking of market rows is data-integrity work that isValidLiveParcelData
+    // in lib/saved-scenarios.ts already does, and this is a private per-owner
+    // subcollection — nobody but the owner can read or write it.
+    function isValidMarketData(market) {
+      return market is map &&
+        market.keys().hasOnly([
+          "rentByBedroom",
+          "costMultiplier",
+          "operatingExpenseRatio",
+          "opexBreakdown",
+          "source",
+          "area",
+          "asOf",
+          "sourceUrl",
+          "retrievedAt",
+          "geography",
+          "comparableCount",
+          "confidence"
+        ]) &&
+        // rentByBedroom/opexBreakdown/geography are bounded by the allowlist
+        // above but left unkeyed: their rows come straight from the HUD data
+        // files, which may gain columns without a rules deploy.
+        market.rentByBedroom is map &&
+        market.costMultiplier is number &&
+        market.source is string &&
+        market.area is string;
     }
 
     function isValidLiveParcel(parcel) {
@@ -368,21 +393,6 @@ service cloud.firestore {
           "zip",
           "county",
           "marketData"
-        ]) &&
-        parcel.keys().hasAll([
-          "address",
-          "city",
-          "lotArea",
-          "lotWidth",
-          "lotLength",
-          "existingHouseSqft",
-          "maxLotCoveragePercent",
-          "setbacks",
-          "zoning",
-          "boundaryGeoJson",
-          "lat",
-          "lng",
-          "source"
         ]) &&
         parcel.address is string &&
         parcel.address.size() > 0 &&
@@ -415,12 +425,17 @@ service cloud.firestore {
         parcel.source in ["regrid", "fallback"] &&
         (!("state" in parcel) || (parcel.state is string && parcel.state.size() <= 20)) &&
         (!("zip" in parcel) || (parcel.zip is string && parcel.zip.size() <= 20)) &&
-        (!("county" in parcel) || parcel.county == null || (parcel.county is string && parcel.county.size() <= 100)) &&
-        (!("marketData" in parcel) || parcel.marketData is map);
+        (!("county" in parcel) || (parcel.county is string && parcel.county.size() <= 100)) &&
+        (!("marketData" in parcel) || isValidMarketData(parcel.marketData));
     }
 
     function isValidNewScenario() {
-      return request.resource.data.keys().hasOnly([
+      // `data` is bound once on purpose: re-spelling `request.resource.data` on
+      // every line re-walks that path each time, and a scenario carrying a full
+      // liveParcel already runs close to Firestore's hard ceiling of 1000
+      // evaluated expressions per request.
+      let data = request.resource.data;
+      return data.keys().hasOnly([
         "name",
         "parcelId",
         "liveParcel",
@@ -432,29 +447,30 @@ service cloud.firestore {
         "createdAt",
         "updatedAt"
       ]) &&
-      request.resource.data.keys().hasAll([
-        "name",
-        "parcelId",
-        "config",
-        "assumptions",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.name is string &&
-      request.resource.data.name.size() > 0 &&
-      request.resource.data.name.size() <= 160 &&
-      request.resource.data.parcelId is string &&
-      request.resource.data.parcelId.size() > 0 &&
-      request.resource.data.parcelId.size() <= 100 &&
-      (!("liveParcel" in request.resource.data) ||
-        isValidLiveParcel(request.resource.data.liveParcel)) &&
-      isValidAduConfig(request.resource.data.config) &&
-      isValidFinancialAssumptions(request.resource.data.assumptions) &&
-      (!("version" in request.resource.data) || request.resource.data.version == 2) &&
-      (!("heightConvention" in request.resource.data) || request.resource.data.heightConvention == "wall") &&
-      (!("pose" in request.resource.data) || isValidPose(request.resource.data.pose)) &&
-      request.resource.data.createdAt == request.time &&
-      request.resource.data.updatedAt == request.time;
+      data.name is string &&
+      data.name.size() > 0 &&
+      data.name.size() <= 160 &&
+      data.parcelId is string &&
+      data.parcelId.size() > 0 &&
+      data.parcelId.size() <= 100 &&
+      (!("liveParcel" in data) || isValidLiveParcel(data.liveParcel)) &&
+      isValidAduConfig(data.config) &&
+      isValidFinancialAssumptions(data.assumptions) &&
+      // version/heightConvention/pose travel together, mirroring
+      // isValidSavedScenario in lib/saved-scenarios.ts. Accepting `version: 2`
+      // on its own would store a document migrateDesign refuses to hydrate, so
+      // the write would succeed and the scenario would then be invisible.
+      // This branch only asserts that the three fields travel together; the two
+      // clauses below do the value checks, so `pose` is validated once and not
+      // twice.
+      (!("version" in data) || (
+        data.version == 2 &&
+        data.keys().hasAll(["heightConvention", "pose"])
+      )) &&
+      (!("heightConvention" in data) || data.heightConvention == "wall") &&
+      (!("pose" in data) || isValidPose(data.pose)) &&
+      data.createdAt == request.time &&
+      data.updatedAt == request.time;
     }
 
     match /users/{userId} {
