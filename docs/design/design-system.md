@@ -160,7 +160,7 @@ Fraunces on any A LOT MORE surface.
 - `9px` is the absolute floor for any informational text; below that, don't ship it.
 - `font-variant-numeric: tabular-nums` wherever numbers change in place or align in a column.
 - Headlines are short enough to behave as graphic objects. Body copy stays conversational.
-- Kicker tracking: use `0.08em`. The shipped `0.075em`/`0.06em` variants are drift, not intent. **NEW**
+- Kicker tracking: strictly `0.08em` across all eyebrows, captions, and readouts (shipped drift resolved).
 
 ---
 
@@ -211,7 +211,7 @@ Hero grid is `43% / 57%` at desktop — the artwork gets the larger half.
 | `radius-control` | `3px` | Buttons, segmented controls, sticky CTA, menu |
 | `radius-dot` | `50%` | Status dots, index badges |
 
-The shipped `4px` on `.inputRow` and `2px` on inner scene buttons are **drift** — new work uses `3px`. **NEW**
+All controls strictly use `3px` (`radius-control`). The former `4px` on `.inputRow` and `2px` on inner scene buttons have been snapped to `3px`.
 
 - **Borders:** 1px hairline `--line` default; `1.5px`+ carbon for instrument-grade elements.
 - **Elevation is hard, not soft.** `box-shadow: 12px 16px 0 #E7E7DF` — an offset architectural drop with
@@ -304,8 +304,7 @@ own surveyed parcel or as the numeric scenario shown beside it. Ship optimized W
 ## 9. Iconography
 
 Lucide, sized `16px` inline / `18–20px` in buttons / `24px` in nav and cards. Icons are `aria-hidden`
-when the adjacent label already says it. Stroke weight should be consistent at a given size — the
-shipped mix of `1px`/`1.3px`/`3.5px` is drift to converge on `1.5px`. **NEW**
+when the adjacent label already says it. Stroke weight is unified to `1.5px` across 24px and primary icons.
 
 ---
 
@@ -378,3 +377,4 @@ Recorded so they are decided deliberately, not by accident:
 | 2026-09-05 | Status tokens defined for both grounds | The new palette had no eligible/caution/blocked colours at all. |
 | 2026-09-05 | Focus ring pinned to ground, not `currentColor` | `currentColor` produced a 1.00:1 invisible ring on every light-labelled control. |
 | 2026-09-05 | Percentage gutters and the optical spacing scale are intentional | Prevents a future "snap to 8px grid" cleanup regressing the layout. |
+| 2026-09-05 | Design system audit & refinement pass: radius drift snapped, kicker tracking unified, closing CTA hover bug fixed, 9px floor enforced, ARIA arrow navigation added, mobile-ux-design-system skill synchronized | Corrected `.inputRow` 4px and `.sceneControls button` 2px drift to canonical `3px`; unified all eyebrows/kickers to `0.08em`; fixed closing button orange hover on orange ground; raised mobile paper text to 9px floor; added keyboard arrow navigation for all segmented controls; updated `mobile-ux-design-system` skill to full A LOT MORE authority. |

@@ -89,6 +89,27 @@ function Eyebrow({
   );
 }
 
+function handleSegmentArrowKey(
+  event: React.KeyboardEvent<HTMLElement>,
+  currentIndex: number,
+  total: number,
+  onSelect: (index: number) => void,
+) {
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+    event.preventDefault();
+    const next = (currentIndex + 1) % total;
+    onSelect(next);
+    const buttons = event.currentTarget.querySelectorAll("button");
+    buttons[next]?.focus();
+  } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const prev = (currentIndex - 1 + total) % total;
+    onSelect(prev);
+    const buttons = event.currentTarget.querySelectorAll("button");
+    buttons[prev]?.focus();
+  }
+}
+
 export function LotMoreLanding({
   scenarios,
   certificatePrice,
@@ -363,13 +384,14 @@ export function LotMoreLanding({
                   <span className={styles.tagLine} />
                 </div>
                 <div className={styles.northMark} aria-hidden="true">
-                  N<ArrowUpRight size={24} strokeWidth={1} />
+                  N<ArrowUpRight size={24} strokeWidth={1.5} />
                 </div>
               </div>
               <div
                 className={styles.sceneControls}
                 role="group"
                 aria-label="Property illustration view"
+                onKeyDown={(e) => handleSegmentArrowKey(e, scene, 3, setScene)}
               >
                 {["Today", "The footprint", "The possibility"].map(
                   (label, index) => (
@@ -449,7 +471,7 @@ export function LotMoreLanding({
                     {number}
                     <ArrowUpRight
                       size={24}
-                      strokeWidth={1.3}
+                      strokeWidth={1.5}
                       aria-hidden="true"
                     />
                   </span>
@@ -486,6 +508,14 @@ export function LotMoreLanding({
                 className={styles.intentControls}
                 role="group"
                 aria-label="What would your backyard home be for?"
+                onKeyDown={(e) =>
+                  handleSegmentArrowKey(
+                    e,
+                    intention,
+                    intentions.length,
+                    setIntention,
+                  )
+                }
               >
                 {intentions.map((item, index) => (
                   <button
@@ -541,6 +571,14 @@ export function LotMoreLanding({
                 role="group"
                 aria-label="Demo rent assumption"
                 className={styles.scenarioControls}
+                onKeyDown={(e) =>
+                  handleSegmentArrowKey(
+                    e,
+                    scenarioIndex,
+                    scenarios.length,
+                    setScenarioIndex,
+                  )
+                }
               >
                 {scenarios.map((item, index) => (
                   <button
@@ -662,6 +700,9 @@ export function LotMoreLanding({
                 className={styles.reportTabs}
                 role="group"
                 aria-label="Sample report pages"
+                onKeyDown={(e) =>
+                  handleSegmentArrowKey(e, reportTab, 3, setReportTab)
+                }
               >
                 {["The overview", "The estimates", "Next steps"].map(
                   (label, index) => (

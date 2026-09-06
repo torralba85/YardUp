@@ -95,4 +95,31 @@ describe("landing address handoff", () => {
     expect(stash).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
   });
+
+  it("navigates segmented controls using keyboard arrow keys", () => {
+    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    const sceneGroup = screen.getByRole("group", {
+      name: "Property illustration view",
+    });
+    const sceneButtons = sceneGroup.querySelectorAll("button");
+    expect(sceneButtons[2]).toHaveAttribute("aria-pressed", "true");
+
+    // ArrowRight cycles forward to 0 (wrap around)
+    fireEvent.keyDown(sceneGroup, { key: "ArrowRight" });
+    expect(sceneButtons[0]).toHaveAttribute("aria-pressed", "true");
+
+    // ArrowLeft cycles backward to 2
+    fireEvent.keyDown(sceneGroup, { key: "ArrowLeft" });
+    expect(sceneButtons[2]).toHaveAttribute("aria-pressed", "true");
+
+    // Report tabs keyboard navigation
+    const reportTabsGroup = screen.getByRole("group", {
+      name: "Sample report pages",
+    });
+    const reportButtons = reportTabsGroup.querySelectorAll("button");
+    expect(reportButtons[0]).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.keyDown(reportTabsGroup, { key: "ArrowRight" });
+    expect(reportButtons[1]).toHaveAttribute("aria-pressed", "true");
+  });
 });

@@ -4,6 +4,34 @@
   --orange: #ff5b24;
   --stone: #65655f;
   --line: #dadad3;
+
+  /* Accessible text, edge, and interactive states */
+  --orange-ink: #c43708;
+  --orange-edge: #e5410b;
+  --orange-hover: #ee4b17;
+  --stone-on-dark: #b7b7ae;
+  --ink-hover: #33332f;
+
+  /* Inverted dark ground tokens */
+  --ground-dark: #161616;
+  --surface-dark: #212121;
+  --line-dark: #44443f;
+  --text-dark: #f5f5f0;
+  --text-dark-muted: #b7b7ae;
+
+  /* Status feedback tokens */
+  --status-eligible: #176b4c;
+  --status-eligible-dark: #5fbf93;
+  --status-review: #8a5300;
+  --status-review-dark: #e0a33c;
+  --status-blocked: #a82d16;
+  --status-blocked-dark: #f0705a;
+
+  /* Geometry tokens */
+  --radius-none: 0px;
+  --radius-control: 3px;
+  --radius-dot: 50%;
+
   background: var(--chalk);
   color: var(--ink);
   font-family: var(--font-lot-body), Arial, sans-serif;
@@ -238,7 +266,7 @@
   padding: 5px;
   align-items: center;
   border: 1px solid #8c8c83;
-  border-radius: 4px;
+  border-radius: var(--radius-control, 3px);
   background: var(--chalk);
 }
 .inputRow > svg {
@@ -398,7 +426,7 @@
   border: 0;
   font-size: 12px;
   min-height: 44px;
-  border-radius: 2px;
+  border-radius: var(--radius-control, 3px);
 }
 .sceneControls button span {
   color: var(--stone);
@@ -445,7 +473,7 @@
   align-items: center;
   gap: 13px;
   font-size: 11px;
-  letter-spacing: 0.075em;
+  letter-spacing: 0.08em;
   font-weight: 600;
   margin-bottom: 30px !important;
 }
@@ -528,7 +556,7 @@
   left: 28px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   color: white;
   background: #161616b3;
   padding: 8px 12px;
@@ -566,6 +594,10 @@
   margin-bottom: -1px;
   white-space: nowrap;
   min-height: 44px;
+}
+.intentControls button:hover:not([aria-pressed="true"]) {
+  color: var(--ink);
+  border-bottom-color: var(--line);
 }
 .intentControls button[aria-pressed="true"] {
   border-color: var(--ink);
@@ -627,7 +659,7 @@
   align-items: center;
   gap: 9px;
   font-size: 10px;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
 }
 .scenarioControls {
   display: flex;
@@ -784,6 +816,10 @@
   border-bottom: 1px solid transparent;
   color: var(--stone);
 }
+.reportTabs button:hover:not([aria-pressed="true"]) {
+  color: var(--ink);
+  border-bottom-color: var(--line);
+}
 .reportTabs button[aria-pressed="true"] {
   border-color: var(--ink);
   color: var(--ink);
@@ -817,7 +853,7 @@
 .paperTop > span:last-child {
   font-size: 9px;
   text-align: right;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 .paperContent {
   min-height: 325px;
@@ -825,7 +861,7 @@
 }
 .paperKicker {
   font-size: 9px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--stone);
 }
 .paper h3 {
@@ -935,6 +971,9 @@
   font-size: 15px;
   font-weight: 500;
 }
+.faqList summary:hover {
+  color: var(--ink);
+}
 .faqList details p {
   font-size: 14px;
   color: var(--stone);
@@ -954,7 +993,7 @@
 .closingKicker {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.075em;
+  letter-spacing: 0.08em;
 }
 .closing > div > p:not(.closingKicker) {
   font-size: 17px;
@@ -971,6 +1010,10 @@
 }
 .closing .primaryButton {
   background: var(--ink);
+  color: var(--chalk);
+}
+.closing .primaryButton:hover {
+  background: var(--ink-hover, #33332f);
   color: var(--chalk);
 }
 .closing .formNote {
@@ -1021,6 +1064,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.backTop:hover {
+  background: var(--line);
+  border-color: var(--ink);
 }
 .footerWordmark {
   font-family: var(--font-lot-display), sans-serif;
@@ -1216,7 +1263,10 @@
     width: 44px;
     height: 44px;
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: var(--radius-control, 3px);
+  }
+  .menuButton:hover {
+    background: var(--line);
   }
   .mobileMenu {
     display: flex;
@@ -1456,9 +1506,12 @@
     color: var(--chalk) !important;
     padding: 14px 20px;
     border: 1px solid var(--chalk);
-    border-radius: 3px;
+    border-radius: var(--radius-control, 3px);
     font-size: 14px;
     box-shadow: 0 4px 18px #16161626;
+  }
+  .stickyCta:hover {
+    background: var(--ink-hover, #33332f);
   }
 }
 
@@ -1680,10 +1733,10 @@
   }
   .paperTop > span:last-child,
   .paperKicker {
-    font-size: 8px;
+    font-size: 9px;
   }
   .paperBottom span {
-    font-size: 8px;
+    font-size: 9px;
   }
   .reportEstimates dd {
     font-size: 15px;
