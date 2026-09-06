@@ -161,6 +161,88 @@ describe("saved scenario Firestore helpers", () => {
     expect(payload).not.toHaveProperty("liveParcel");
   });
 
+  it("persists version 2, heightConvention wall, and sanitized pose", async () => {
+    firestoreMocks.addDoc.mockResolvedValue({ id: "scenario-1" });
+
+    await saveSavedScenario("user-1", {
+      version: 2,
+      heightConvention: "wall",
+      pose: { x: 12.5, z: -5, rotationDeg: 45 },
+      name: "3D scene suite",
+      parcelId: "oak-street",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    expect(firestoreMocks.addDoc).toHaveBeenCalledWith(
+      { path: "users/user-1/savedScenarios" },
+      expect.objectContaining({
+        version: 2,
+        heightConvention: "wall",
+        pose: { x: 12.5, z: -5, rotationDeg: 45 },
+      }),
+    );
+  });
+
+  it("strips undefined properties from liveParcel before Firestore write", async () => {
+    firestoreMocks.addDoc.mockResolvedValue({ id: "scenario-1" });
+
+    const liveParcelWithUndefined = {
+      ...liveParcel,
+      county: undefined,
+    };
+
+    await saveSavedScenario("user-1", {
+      name: "Cleaned live parcel suite",
+      parcelId: "oak-street",
+      liveParcel: liveParcelWithUndefined,
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    const [, payload] = firestoreMocks.addDoc.mock.calls[0];
+    expect(payload.liveParcel).not.toHaveProperty("county");
+    expect(payload.liveParcel.address).toBe("500 Cedar Ave");
+  });
+
+  it("hydrates legacy live parcels missing state and zip with safe fallbacks", async () => {
+    const legacyLiveParcel = {
+      address: "100 Main St",
+      city: "Seattle, WA",
+      lotArea: 5000,
+      lotWidth: 50,
+      lotLength: 100,
+      existingHouseSqft: 1200,
+      maxLotCoveragePercent: 40,
+      setbacks: { front: 20, rear: 20, side: 5 },
+      zoning: "SF-5000",
+      boundaryGeoJson: null,
+      lat: 47.6,
+      lng: -122.3,
+      source: "regrid",
+    };
+
+    firestoreMocks.getDocs.mockResolvedValue({
+      docs: [
+        {
+          id: "scenario-legacy",
+          data: () => ({
+            name: "Legacy scenario",
+            parcelId: "oak-street",
+            createdAt: "2026-06-08T12:00:00.000Z",
+            liveParcel: legacyLiveParcel,
+            config: defaultAduConfig,
+            assumptions: defaultFinancialAssumptions,
+          }),
+        },
+      ],
+    });
+
+    const scenarios = await fetchSavedScenarios("user-1");
+    expect(scenarios[0].liveParcel?.state).toBe("");
+    expect(scenarios[0].liveParcel?.zip).toBe("");
+  });
+
   it("deletes from the same savedScenarios subcollection", async () => {
     await deleteSavedScenario("user-1", "scenario-1");
 
