@@ -20,15 +20,15 @@ test.describe("Visual breakpoint coverage", () => {
       const page = await context.newPage();
       await page.goto("/");
 
-      await expect(page.getByRole("heading", { name: /See what your backyard can earn/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /A LOT MORE/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.
-      const heading = page.getByRole("heading", { name: /Check your address.*Get your numbers/i });
+      const heading = page.getByRole("heading", { name: /It starts with your address/i });
       await expect(heading).toBeVisible();
-      await expect(page.getByRole("heading", { name: /Take the studio outside/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Good questions.*Straight answers/i })).toBeVisible();
 
       // The certificate specimen (steps 04–05) must survive every breakpoint.
       await expect(
-        page.getByRole("heading", { name: /report you can keep/i }),
+        page.getByRole("article", { name: "Sample feasibility report" }),
       ).toBeVisible();
 
       const widths = await page.evaluate(() => ({
@@ -39,7 +39,7 @@ test.describe("Visual breakpoint coverage", () => {
 
       // Hero search instrument is the primary CTA at every breakpoint
       // (the header link collapses to "Start" on small screens).
-      await expect(page.getByRole("button", { name: /Run feasibility/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Explore my lot/i }).first()).toBeVisible();
 
       await page.screenshot({
         path: testInfo.outputPath(`${bp.name}.png`),

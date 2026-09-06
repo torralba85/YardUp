@@ -1,3 +1,7 @@
+> **Historical design record.** This spec predates the A LOT MORE design system (adopted 2026-09-05)
+> and references the retired Blue Hour / Golden Hour system. Read it for history and reasoning, not for
+> rules. The source of truth is [`docs/design/`](../../design/README.md).
+
 # Landing Income Rail — Design Spec
 
 **Date:** 2026-06-25

@@ -157,8 +157,9 @@ P1 - release-hardening tasks an agent can prepare:
   journey back control is a true 44×44 target.
 - Mobile form refresh (2026-07-19): landing, standalone auth, shared auth,
   builder, studio, settings, security, and feedback text controls are protected
-  from iOS focus zoom; builder close/submit controls meet the 44×44 target; the
-  Blue Hour fade remains animated and narrow navigation keeps Sign in visible.
+  from iOS focus zoom; builder close/submit controls meet the 44×44 target and
+  narrow navigation keeps Sign in visible. (The Blue Hour fade referenced here was
+  deleted with the old landing on 2026-09-05.)
 - Add or extend e2e coverage for certificate purchase return, builder lead
   unlock return, bulk credit purchase return, and credit unlock reveal.
 - Add a dashboard billing-ledger surface if the current right-rail purchase
@@ -167,9 +168,10 @@ P1 - release-hardening tasks an agent can prepare:
   support policy is finalized.
 - Add real-device screenshot capture scripts or docs for iPhone, iPad, Pixel,
   and Android tablet store assets.
-- Run an agency-bar visual QA sweep against `DESIGN.md` for landing, studio,
-  builder, auth, certificate/report, and mobile breakpoints; file issues for
-  any typography, radius, or semantic-color drift.
+- Run an agency-bar visual QA sweep against `docs/design/design-system.md` for
+  the landing and mobile breakpoints, and against `docs/design/product-surfaces.md`
+  for studio, builder, auth, and certificate/report (still on the legacy palette);
+  file issues for any typography, radius, contrast, or semantic-color drift.
 - ~~Honor parcel query and address handoff on mobile/tablet studio entry so the
   first visible state includes the selected lot and a money figure, not the
   generic onboarding plate.~~ ✅ 2026-07-19 — address handoff already advanced
@@ -186,8 +188,10 @@ P1 - release-hardening tasks an agent can prepare:
   dismissal, and keyboard coverage are present in `AuthModal` and its tests.
 - Reconcile builder-only microtype utilities with the canonical `lf-*`
   typography scale so ledger labels do not drift across inbox surfaces.
-- Replace remaining layout/paint-heavy landing motion with transform/opacity
-  equivalents where practical, preserving the Blue Hour scroll narrative.
+- ~~Replace remaining layout/paint-heavy landing motion with transform/opacity
+  equivalents where practical, preserving the Blue Hour scroll narrative.~~
+  ✅ 2026-09-05 — obsolete. The Blue Hour landing was replaced by A LOT MORE, whose
+  motion is already transform/opacity only and fully reduced-motion gated.
 
 P2 - larger agent work that needs a focused branch:
 

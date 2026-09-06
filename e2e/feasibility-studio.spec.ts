@@ -4,20 +4,20 @@ test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle(/LotFoundry \| See what your backyard can earn/);
+    await expect(page).toHaveTitle(/LotFoundry \| A lot more possibility/);
     await expect(
-      page.getByRole("heading", { name: /See what your backyard can earn/i }),
+      page.getByRole("heading", { name: /A LOT MORE/i }),
     ).toBeVisible();
-    // The rent verdict plate leads the first viewport.
+    // The property illustration anchors the new landing hero.
     await expect(
-      page.getByRole("complementary", { name: /Projected rent verdict/i }),
+      page.getByRole("group", { name: "Property illustration view" }),
     ).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
-      page.getByRole("heading", { name: /Check your address.*Get your numbers/i }),
+      page.getByRole("heading", { name: /It starts with your address/i }),
     ).toBeVisible();
     // Survey-instrument search is the hero CTA.
-    await expect(page.getByRole("button", { name: /Run feasibility/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Explore my lot/i }).first()).toBeVisible();
 
     await page.screenshot({
       path: testInfo.outputPath("landing-page.png"),

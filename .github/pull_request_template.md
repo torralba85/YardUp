@@ -5,7 +5,7 @@ Before submitting this PR, please ensure you have checked the following criteria
 ## Author Checklist
 
 ### Code Quality & Standards
-- [ ] My code follows `DESIGN.md` and the style rules in `CLAUDE.md` (TypeScript strict mode, two-space indent, `@/*` imports).
+- [ ] My code follows `docs/design/` (the design source of truth) and the style rules in `CLAUDE.md` (TypeScript strict mode, two-space indent, `@/*` imports).
 - [ ] `npm run lint` passes with zero warnings.
 - [ ] `npx tsc --noEmit` passes with no type errors.
 
