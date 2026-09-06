@@ -1,80 +1,83 @@
-import type { Viewport } from "next";
-import { Fraunces } from "next/font/google";
-import Link from "next/link";
-import { NocturneNav } from "@/components/landing/nocturne/NocturneNav";
-import { BlueHourHero } from "@/components/landing/nocturne/BlueHourHero";
-import { SignalLedger } from "@/components/landing/nocturne/SignalLedger";
-import { OwnerPath } from "@/components/landing/nocturne/OwnerPath";
-import { DuskShowcase } from "@/components/landing/nocturne/DuskShowcase";
-import { CertificateSpecimen } from "@/components/landing/nocturne/CertificateSpecimen";
-import { ClosingCall } from "@/components/landing/nocturne/ClosingCall";
-import { ComingSoonBanner } from "@/components/landing/nocturne/ComingSoonBanner";
+﻿import type { Metadata, Viewport } from "next";
+import { Manrope, Space_Grotesk } from "next/font/google";
+import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
+import { formatCertificatePrice } from "@/lib/certificate-pricing";
+import {
+  calculateFeasibility,
+  defaultAduConfig,
+  defaultFinancialAssumptions,
+  parcelPresets,
+} from "@/lib/feasibility";
 
-// The landing's display face. Loaded here (not in the root layout) so the
-// studio and auth pages don't pay for it; exposed as --font-display-ln for
-// the ln-* type roles in globals.css.
-const fraunces = Fraunces({
+const display = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-display-ln",
+  variable: "--font-lot-display",
+});
+const body = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-lot-body",
 });
 
-/** Landing browser chrome matches the dark marketing ground. */
 export const viewport: Viewport = {
-  themeColor: "#0A1120",
+  themeColor: "#F5F5F0",
   viewportFit: "cover",
 };
+const description =
+  "Discover what your backyard could become. Explore space for an ADU, estimated build costs, and rental potential with LotFoundry.";
+export const metadata: Metadata = {
+  title: "LotFoundry | A lot more possibility",
+  description,
+  icons: {
+    icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
+  },
+  openGraph: {
+    title: "LotFoundry. A lot more.",
+    description,
+    url: "https://lotfoundry.net",
+    images: [
+      {
+        url: "/landing/a-lot-more/parcel-after.webp",
+        width: 1536,
+        height: 1024,
+        alt: "An illustrative miniature property with an orange backyard home",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LotFoundry. A lot more.",
+    description,
+    images: ["/landing/a-lot-more/parcel-after.webp"],
+  },
+};
 
-/**
- * Marketing landing page (`/`): scroll-scrub hero, numbers band, how-it-works,
- * showcase, certificate sample, closing CTA, and footer.
- */
 export default function LandingPage() {
+  // Use one explicit demo configuration from the studio engine. Artwork is illustrative.
+  const scenarios = (["conservative", "market", "optimistic"] as const).map(
+    (rentScenario) => {
+      const result = calculateFeasibility(parcelPresets[0], defaultAduConfig, {
+        ...defaultFinancialAssumptions,
+        rentScenario,
+      });
+      return {
+        id: rentScenario,
+        costLow: result.costLow,
+        costHigh: result.costHigh,
+        rent: result.monthlyRent,
+        noi: result.annualNoi,
+        payback: result.paybackYears,
+        expenseRatio: result.operatingExpenseRatio,
+      };
+    },
+  );
   return (
-    <div data-theme="blue-hour" className={`${fraunces.variable} bg-ln-ink text-ln-mist`}>
-      <NocturneNav />
-
-      <main id="main-content">
-        <BlueHourHero />
-        <SignalLedger />
-        <OwnerPath />
-        <DuskShowcase />
-        <CertificateSpecimen />
-        <ClosingCall />
-        <ComingSoonBanner />
-      </main>
-
-      <footer className="border-t border-ln-hairline/60">
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lotfoundry-lockup-horizontal-inverse.svg"
-              alt="LotFoundry"
-              className="h-7 w-auto"
-            />
-            <p className="text-sm text-ln-slate">
-              ADU planning for homeowners. Estimates only—not guarantees.
-            </p>
-            <div className="flex items-center gap-4 text-sm text-ln-slate">
-              <Link
-                href="/terms"
-                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
-              >
-                Terms
-              </Link>
-              <Link
-                href="/privacy"
-                className="inline-flex min-h-11 items-center transition-colors hover:text-ln-mist"
-              >
-                Privacy
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+    <div className={`${display.variable} ${body.variable}`}>
+      <LotMoreLanding
+        scenarios={scenarios}
+        certificatePrice={formatCertificatePrice()}
+      />
     </div>
   );
 }
