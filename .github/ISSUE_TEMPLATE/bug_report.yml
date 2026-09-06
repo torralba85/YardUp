@@ -1,0 +1,83 @@
+﻿name: "🐛 Bug Report"
+description: "File a bug report to help fix an issue in YardUp"
+title: "[BUG]: "
+labels: ["type: bug", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this issue! Please provide as much context as possible.
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Affected Area"
+      description: "Which part of the codebase or application is affected?"
+      options:
+        - "area: studio (FeasibilityStudio, ParcelScene, constraints)"
+        - "area: landing (Marketing, BlueHourHero, Nocturne)"
+        - "area: parcel (Parcel ingest, geocoding, boundary detection)"
+        - "area: builder (Builder inbox, lead unlocking, dashboard)"
+        - "area: ai (ADU concept, AI project brief, OpenAI pipeline)"
+        - "area: stripe (Payments, checkout, credits)"
+        - "area: auth (Sign in, sign up, session management)"
+        - "area: firebase (Functions, Hosting, Firestore rules)"
+        - "area: ci (GitHub Actions, workflows, tests)"
+        - "Other"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Problem Description"
+      description: "A clear and concise description of the bug."
+      placeholder: "Describe what went wrong..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Exact step-by-step instructions to reproduce the issue."
+      placeholder: |
+        1. Go to '/studio'
+        2. Search for address '...'
+        3. Click on 'Generate Concept'
+        4. See error '...'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen?"
+      placeholder: "Expected behavior..."
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment Details"
+      description: "Browser, device, OS, and platform information."
+      value: |
+        - OS: [e.g. macOS Sonoma, Windows 11, iOS 17, Android 14]
+        - Browser / Client: [e.g. Chrome 124, Safari, Capacitor Native App]
+        - Version / Commit: [e.g. 1.0.1 / git commit SHA]
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Error Logs / Console Output"
+      description: "Paste relevant error logs, stack traces, or console outputs."
+      render: shell
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Preflight Checks"
+      options:
+        - label: "I have searched existing issues and verified this is not a duplicate"
+          required: true
+        - label: "This is a bug report and not a security vulnerability (see SECURITY.md)"
+          required: true
