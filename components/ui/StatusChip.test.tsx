@@ -35,8 +35,9 @@ describe("StatusChip", () => {
   });
 
   it("is rectangular, not a pill (chips are read-only data)", () => {
+    // Read-only badges are square; only interactive controls receive 3px.
     const { container } = render(<StatusChip status="info" />);
-    expect(container.firstChild).toHaveClass("rounded-md");
+    expect(container.firstChild).toHaveClass("rounded-none");
     expect(container.firstChild).not.toHaveClass("rounded-full");
   });
 });

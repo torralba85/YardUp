@@ -57,7 +57,7 @@ export function ProfileForm({
           id="settings-display-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+          className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
           autoComplete="name"
         />
       </div>

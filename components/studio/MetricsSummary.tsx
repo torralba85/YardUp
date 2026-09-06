@@ -66,7 +66,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       value: `${Math.round(result.coveragePercent)}%`,
       detail: `of ${result.maxCoveragePercent}% max`,
       detailMono: true,
-      valueClass: `font-mono font-semibold text-xl ${
+      valueClass: `font-sans font-semibold text-xl ${
         result.remainingCapacity < 0 ? "text-lf-brick" : "text-lf-espresso"
       }`,
     },
@@ -106,7 +106,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
             <div key={key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
               <CellLabel icon={Icon} label={metric.label} />
               <div className={`mt-2 tabular-nums ${metric.valueClass}`}>{metric.value}</div>
-              <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-mono" : ""}`}>
+              <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-sans" : ""}`}>
                 {metric.detail}
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
           they are, and whether they trace to a verified local source. */}
       <div
         data-testid="market-provenance"
-        className={`flex items-start gap-1.5 border-t border-lf-hairline px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] sm:px-5 lg:px-6 ${
+        className={`flex items-start gap-1.5 border-t border-lf-hairline px-4 py-2 font-sans text-[10px] uppercase tracking-[0.14em] sm:px-5 lg:px-6 ${
           unverifiedMarket ? "bg-lf-amber-soft text-lf-amber-ink" : "bg-lf-sand-2 text-lf-muted"
         }`}
       >
@@ -156,7 +156,7 @@ function LeadCell({
       <div
         data-metric-lead="true"
         data-accent="forest"
-        className="mt-2 inline-block lf-money-lg text-lf-forest"
+        className="mt-2 inline-block lf-money-lg text-lf-money"
       >
         {format(animated)}
         {/* Forest hairline — money figures carry the forest semantic (DESIGN.md). */}

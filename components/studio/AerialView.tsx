@@ -244,7 +244,7 @@ export default function AerialView({
               x={aduRect.labelX}
               y={aduRect.labelY + 4}
               textAnchor="middle"
-              fill="#F2E5D5"
+              fill="#F5F5F0"
               fontSize="10"
               style={{ fontFamily: "var(--font-mono)" }}
               fontWeight="600"
@@ -268,7 +268,7 @@ export default function AerialView({
           x={houseCenter.x}
           y={houseCenter.y + 4}
           textAnchor="middle"
-          fill="#F2E5D5"
+          fill="#F5F5F0"
           fontSize="10"
           style={{ fontFamily: "var(--font-mono)" }}
           fontWeight="600"
@@ -318,7 +318,7 @@ export default function AerialView({
 
       {/* Zoning badge */}
       <div
-        className={`pointer-events-none absolute right-4 top-4 rounded-md px-2.5 py-1.5 font-mono text-xs font-semibold shadow-md ${
+        className={`pointer-events-none absolute right-4 top-4 rounded-none px-2.5 py-1.5 font-sans text-xs font-semibold shadow-none ${
           isCompliant
             ? "bg-lf-forest text-lf-sand"
             : "border border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink"
@@ -331,7 +331,7 @@ export default function AerialView({
       {/* Fallback notice */}
       {aerialError && (
         <div
-          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           Aerial imagery unavailable - showing the parcel overlay without a satellite base.
@@ -350,7 +350,7 @@ export default function AerialView({
 
       {parcel.source === "fallback" && (
         <div
-          className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-md border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-on-dark" aria-hidden="true" />
@@ -390,7 +390,7 @@ function SetbackLabel({
         x={x}
         y={y + 4}
         textAnchor="middle"
-        fill="#F2E5D5"
+        fill="#F5F5F0"
         fontSize="9.5"
         style={{ fontFamily: "var(--font-mono)" }}
         opacity="0.92"

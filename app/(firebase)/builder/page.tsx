@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,14 +34,9 @@ export default function BuilderPage() {
             <Link
               href="/"
               aria-label="LotFoundry home"
-              className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/lotfoundry-lockup-horizontal.svg"
-                alt="LotFoundry"
-                className="h-7 w-auto"
-              />
+              <BrandLockup className="h-7 w-auto" />
             </Link>
             <Skeleton className="h-9 w-9 rounded-full" />
           </div>
@@ -65,7 +61,7 @@ export default function BuilderPage() {
                     <Skeleton className="mt-3 h-4 w-72 max-w-full" />
                     <Skeleton className="mt-2 h-4 w-52 max-w-full" />
                   </div>
-                  <Skeleton className="h-11 w-full rounded-full" />
+                  <Skeleton className="h-11 w-full rounded-none" />
                 </div>
               ))}
             </div>

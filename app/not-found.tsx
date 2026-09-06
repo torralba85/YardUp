@@ -1,3 +1,4 @@
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 
 /** Branded 404 recovery. */
@@ -10,10 +11,9 @@ export default function NotFound() {
       <Link
         href="/"
         aria-label="LotFoundry home"
-        className="mb-8 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+        className="mb-8 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-8 w-auto" />
+        <BrandLockup className="h-8 w-auto" />
       </Link>
       <p className="lf-kicker text-lf-muted">404</p>
       <h1 className="lf-section-heading mt-3">Page not found</h1>
@@ -23,20 +23,20 @@ export default function NotFound() {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/"
-          className="inline-flex h-11 items-center rounded-full bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
+          className="inline-flex h-11 items-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
         >
           Home
         </Link>
         <Link
           href="/studio"
           prefetch={false}
-          className="inline-flex h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
+          className="inline-flex h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
         >
           Start a feasibility study
         </Link>
         <Link
           href="/help"
-          className="inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-lf-clay-ink"
+          className="inline-flex h-11 items-center rounded-[3px] px-5 text-sm font-semibold text-lf-clay-ink"
         >
           Get help
         </Link>

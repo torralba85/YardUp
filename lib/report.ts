@@ -198,23 +198,23 @@ export function buildReportHtml({
   <title>LotFoundry Certificate of Feasibility — ${escapeHtml(parcel.address)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Libre+Franklin:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    /* Certificate of Feasibility (DESIGN.md v2): an engraved instrument, not a
+    /* Certificate of Feasibility (A LOT MORE): an architectural plat sheet, not a
        dashboard. Sharp corners, double frame, ledger T-account, recorder stamp. */
     :root {
       color-scheme: light;
-      --ink: #261307;
-      --muted: #6B5B4D;
-      --line: #E0CDB4;
-      --taupe: #BFA58E;
-      --paper: #F2E5D5;
-      --card: #FBF6EE;
-      --clay: #8C5B3F;
-      --forest: #2F4A38;
-      --amber: #C8922A;
-      --brick: #A23B26;
-      font-family: "Libre Franklin", Georgia, serif;
+      --ink: #161616;
+      --muted: #65655F;
+      --line: #DADAD3;
+      --taupe: #B7B7AE;
+      --paper: #F5F5F0;
+      --card: #F5F5F0;
+      --clay: #C43708;
+      --forest: #176B4C;
+      --amber: #8A5300;
+      --brick: #A82D16;
+      font-family: "Manrope", Arial, sans-serif;
     }
     * { box-sizing: border-box; }
     body {
@@ -229,15 +229,15 @@ export function buildReportHtml({
     .frame { background: var(--card); border: 1.5px solid var(--ink); padding: 10px; }
     .frame-inner { border: 1px solid var(--taupe); padding: 44px 48px; position: relative; }
     .mono {
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
-      letter-spacing: 0.16em;
+      font-family: "Manrope", Arial, sans-serif;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
     header { text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 26px; }
     .eyebrow { font-size: 10px; font-weight: 600; color: var(--clay); }
     h1 {
       margin: 8px 0 6px;
-      font-family: "Cormorant Garamond", Georgia, serif;
+      font-family: "Space Grotesk", Arial, sans-serif;
       font-size: 38px;
       font-weight: 600;
       line-height: 1.05;
@@ -245,30 +245,30 @@ export function buildReportHtml({
     .serial { font-size: 10px; color: var(--muted); }
     .hero-money { text-align: center; margin: 26px 0 8px; }
     .hero-money .figure {
-      font-family: "Cormorant Garamond", Georgia, serif;
+      font-family: "Space Grotesk", Arial, sans-serif;
       font-size: 60px;
       font-weight: 700;
       line-height: 1;
-      color: var(--forest);
+      color: var(--ink);
     }
-    .hero-money .unit { font-family: "IBM Plex Mono", monospace; font-size: 14px; color: var(--muted); }
+    .hero-money .unit { font-family: "Manrope", Arial, sans-serif; font-size: 14px; color: var(--muted); }
     .hero-money .caption { margin-top: 6px; font-size: 10px; color: var(--muted); }
     h2 {
       margin: 30px 0 10px;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-family: "Manrope", Arial, sans-serif;
       font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--clay);
     }
     p { margin: 0; color: var(--muted); }
     table { width: 100%; border-collapse: collapse; }
     .ledger th {
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-family: "Manrope", Arial, sans-serif;
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
       text-align: left;
@@ -276,13 +276,13 @@ export function buildReportHtml({
       border-bottom: 1px solid var(--ink);
     }
     .ledger td { padding: 9px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-    .ledger td.amt { font-family: "IBM Plex Mono", ui-monospace, monospace; text-align: right; white-space: nowrap; }
+    .ledger td.amt { font-family: "Manrope", Arial, sans-serif; text-align: right; white-space: nowrap; }
     .ledger tr.balance td {
       border-top: 1.5px solid var(--ink);
       border-bottom: 4px double var(--ink);
       font-weight: 700;
     }
-    .ledger tr.balance td.amt { color: var(--forest); }
+    .ledger tr.balance td.amt { color: var(--ink); }
     .snapshot td, .snapshot th {
       padding: 9px 6px;
       border-bottom: 1px solid var(--line);
@@ -291,10 +291,10 @@ export function buildReportHtml({
     }
     .snapshot th {
       width: 38%;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-family: "Manrope", Arial, sans-serif;
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
     }
@@ -304,10 +304,10 @@ export function buildReportHtml({
       border: 1px solid ${result.zoningStatus === "Compliant" ? "var(--forest)" : "var(--amber)"};
       color: ${result.zoningStatus === "Compliant" ? "var(--forest)" : "var(--amber)"};
       padding: 3px 10px;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-family: "Manrope", Arial, sans-serif;
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
     .note { border-left: 3px solid var(--amber); background: var(--paper); padding: 12px 14px; color: var(--ink); }
@@ -319,11 +319,11 @@ export function buildReportHtml({
     .brief-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
     .brief-heading h2 { margin: 0; }
     .brief-total { white-space: nowrap; text-align: right; }
-    .brief-total strong { font-family: "Cormorant Garamond", Georgia, serif; font-size: 32px; line-height: 1; color: var(--ink); }
-    .brief-total span { margin-left: 5px; font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .brief-total strong { font-family: "Space Grotesk", Arial, sans-serif; font-size: 32px; line-height: 1; color: var(--ink); }
+    .brief-total span { margin-left: 5px; font-family: "Manrope", Arial, sans-serif; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
     .brief-grid { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 28px; margin-top: 22px; }
     .brief-column + .brief-column { border-left: 1px solid var(--line); padding-left: 28px; }
-    .brief-label { font-family: "IBM Plex Mono", monospace; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--clay); }
+    .brief-label { font-family: "Manrope", Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); }
     .brief-title { margin: 7px 0 0; font-size: 15px; line-height: 1.4; color: var(--ink); }
     .brief-copy { margin-top: 7px; font-size: 12px; line-height: 1.7; }
     .best-fit { margin-top: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 11px 0; }
@@ -333,27 +333,27 @@ export function buildReportHtml({
     .risk-head, .track-head, .stage-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
     .risk-head strong, .track-head strong, .stage-head strong { color: var(--ink); }
     .risk-row p, .track-basis, .stage-copy { margin-top: 4px; font-size: 11px; line-height: 1.55; }
-    .data-chip { display: inline-block; border: 1px solid var(--line); padding: 2px 7px; font-family: "IBM Plex Mono", monospace; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+    .data-chip { display: inline-block; border: 1px solid var(--line); padding: 2px 7px; font-family: "Manrope", Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
     .tone-low { color: var(--muted); }
-    .tone-medium { color: #745A00; border-color: #745A0060; background: #C8922A1A; }
-    .tone-high { color: var(--brick); border-color: #A23B2660; background: #A23B261A; }
+    .tone-medium { color: #8A5300; border-color: #8A530060; background: #8A53001A; }
+    .tone-high { color: var(--brick); border-color: #A82D1660; background: #A82D161A; }
     .stage-list { list-style: none; margin: 16px 0 0; padding: 0; }
     .stage { display: grid; grid-template-columns: 24px 1fr; gap: 10px; position: relative; padding-bottom: 13px; }
     .stage + .stage { margin-top: 0; }
     .stage:not(:last-child)::before { content: ""; position: absolute; left: 11px; top: 23px; bottom: 0; width: 1px; background: var(--line); }
-    .stage-index { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--muted); z-index: 1; }
+    .stage-index { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); font-family: "Manrope", Arial, sans-serif; font-size: 9px; color: var(--muted); z-index: 1; }
     .stage-body { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
     .stage:last-child .stage-body { border-bottom: 0; }
-    .stage-weeks, .stage-status { font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
-    .stage-status { display: block; margin-top: 5px; font-weight: 600; letter-spacing: 0.14em; }
+    .stage-weeks, .stage-status { font-family: "Manrope", Arial, sans-serif; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .stage-status { display: block; margin-top: 5px; font-weight: 600; letter-spacing: 0.08em; }
     .stage-clear { color: var(--forest); }
-    .stage-review { color: #745A00; }
+    .stage-review { color: #8A5300; }
     .stage-blocker { color: var(--brick); }
     .brief-disclaimer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 10px; line-height: 1.6; }
     .motto {
       margin-top: 34px;
       text-align: center;
-      font-family: "Cormorant Garamond", Georgia, serif;
+      font-family: "Space Grotesk", Arial, sans-serif;
       font-style: italic;
       font-size: 17px;
       color: var(--muted);
@@ -366,7 +366,7 @@ export function buildReportHtml({
       border: 2px solid var(--brick);
       color: var(--brick);
       padding: 7px 14px;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-family: "Manrope", Arial, sans-serif;
       font-size: 10px;
       font-weight: 600;
       letter-spacing: 0.2em;

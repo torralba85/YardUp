@@ -1,3 +1,4 @@
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { Bezel } from "@/components/ui/Bezel";
 
@@ -23,12 +24,7 @@ export function AuthLayout({
       <div className="lf-entrance w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/lotfoundry-lockup-horizontal.svg"
-            alt="LotFoundry"
-            className="h-8 w-auto sm:h-9"
-          />
+          <BrandLockup className="h-8 w-auto sm:h-9" />
         </Link>
 
         {/* Card */}
@@ -48,21 +44,21 @@ export function AuthLayout({
         <div className="lf-caption mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-lf-muted">
           <Link
             href="/terms"
-            className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso"
+            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lf-espresso"
           >
             Terms &amp; Conditions
           </Link>
           <span aria-hidden>/</span>
           <Link
             href="/privacy"
-            className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso"
+            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lf-espresso"
           >
             Privacy
           </Link>
           <span aria-hidden>/</span>
           <Link
             href="/help"
-            className="inline-flex min-h-11 items-center transition-colors hover:text-lf-espresso"
+            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lf-espresso"
           >
             Help
           </Link>

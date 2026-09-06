@@ -81,7 +81,7 @@ export default function BuilderProfileForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-6 grid gap-4 rounded-md border border-lf-hairline bg-lf-card p-4 md:grid-cols-2"
+      className="mt-6 grid gap-4 rounded-none border border-lf-hairline bg-lf-card p-4 md:grid-cols-2"
     >
       <div className="md:col-span-2">
         <h2 className="lf-panel-heading">Builder profile</h2>
@@ -101,7 +101,7 @@ export default function BuilderProfileForm({
           id="builder-company-name"
           type="text"
           autoComplete="organization"
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
           aria-required="true"
@@ -113,7 +113,7 @@ export default function BuilderProfileForm({
           id="builder-contact-email"
           type="email"
           autoComplete="email"
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
           aria-required="true"
@@ -125,7 +125,7 @@ export default function BuilderProfileForm({
           id="builder-phone"
           type="tel"
           autoComplete="tel"
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
         />
@@ -135,7 +135,7 @@ export default function BuilderProfileForm({
         <input
           id="builder-license"
           type="text"
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           value={licenseNumber}
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
@@ -148,7 +148,7 @@ export default function BuilderProfileForm({
         <input
           id="builder-service-areas"
           type="text"
-          className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           placeholder="Seattle WA, Portland OR"
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}
@@ -161,7 +161,7 @@ export default function BuilderProfileForm({
         <input
           id="builder-active"
           type="checkbox"
-          className="accent-lf-clay"
+          className="h-5 w-5 shrink-0 accent-lf-espresso"
           checked={active}
           onChange={(event) => setActive(event.target.checked)}
         />
@@ -170,7 +170,7 @@ export default function BuilderProfileForm({
       <button
         type="submit"
         disabled={isPending}
-        className="min-h-11 rounded-full bg-lf-clay px-4 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
+        className="min-h-11 rounded-[3px] bg-lf-clay px-4 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
       >
         {isPending ? "Saving..." : "Save builder profile"}
       </button>

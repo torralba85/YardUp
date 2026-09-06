@@ -54,7 +54,7 @@ export default function ActStep({
         <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
           Your feasibility study is ready.
         </h1>
-        <p className="mt-1 font-mono text-[11px] text-lf-muted">{parcelName}</p>
+        <p className="mt-1 font-sans text-[11px] text-lf-muted">{parcelName}</p>
 
         <div className="mt-5 flex flex-col gap-2.5">
           <Button

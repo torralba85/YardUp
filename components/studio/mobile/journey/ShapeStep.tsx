@@ -71,7 +71,7 @@ export default function ShapeStep({
       <div className="flex flex-1 flex-col px-5 pt-5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="lf-kicker text-lf-clay">Step 3 · Shape</p>
+            <p className="lf-kicker text-lf-clay-ink">Step 3 · Shape</p>
             <h1 className="mt-1 font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
               Pick a direction.
             </h1>
@@ -98,8 +98,8 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
-                className={`min-h-14 rounded-lg border-2 bg-lf-card px-4 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 ${
-                  selected ? "border-lf-clay bg-lf-clay/5" : "border-lf-hairline"
+                className={`min-h-14 rounded-[3px] border-2 bg-lf-card px-4 py-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2 ${
+                  selected ? "border-[#161616] bg-[#161616]/5" : "border-[#DADAD3]"
                 }`}
               >
                 <span className="block font-semibold text-lf-espresso">{option.title}</span>
@@ -150,7 +150,7 @@ export default function ShapeStep({
         <button
           type="button"
           onClick={onFineTune}
-          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-semibold text-lf-clay transition hover:bg-lf-taupe-soft"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-[#C43708] motion-safe:transition hover:bg-lf-taupe-soft"
         >
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions

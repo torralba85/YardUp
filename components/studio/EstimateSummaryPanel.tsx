@@ -40,14 +40,14 @@ export default function EstimateSummaryPanel({
       detail: "Current rental assumption",
       icon: Home,
       // Income figures: forest only (DESIGN.md money semantic).
-      valueClass: "lf-money-md text-lf-forest",
+      valueClass: "lf-money-md text-lf-money",
     },
     {
       label: "Annual Net Income",
       value: formatCurrency(result.annualNoi),
       detail: "After expenses and vacancy",
       icon: BarChart3,
-      valueClass: "lf-money-md text-lf-forest",
+      valueClass: "lf-money-md text-lf-money",
     },
     {
       label: "Build Range",
@@ -69,7 +69,7 @@ export default function EstimateSummaryPanel({
   return (
     <aside
       aria-labelledby="estimate-summary-heading"
-      className="w-full overflow-hidden rounded-lg border border-lf-hairline bg-lf-card"
+      className="w-full overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card"
     >
       <PanelHeader
         as="h2"
@@ -79,7 +79,7 @@ export default function EstimateSummaryPanel({
       />
 
       <div className="space-y-4 px-6 py-5">
-        <div className="rounded-md border border-lf-hairline bg-lf-sand-2 p-4">
+        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-4">
           <div className="flex items-start gap-3">
             <CheckCircle2
               size={18}
@@ -104,7 +104,7 @@ export default function EstimateSummaryPanel({
             return (
               <div
                 key={metric.label}
-                className="rounded-md border border-lf-hairline bg-lf-card p-4"
+                className="rounded-none border border-[#DADAD3] bg-lf-card p-4"
               >
                 <div className="flex items-center gap-2 lf-kicker-dense font-medium text-lf-muted">
                   <Icon size={13} />
@@ -122,7 +122,7 @@ export default function EstimateSummaryPanel({
         {result.warnings.length > 0 && (
           <div
             role="alert"
-            className="rounded-md border border-lf-amber-ink/35 bg-lf-amber-soft p-4 text-lf-amber-ink"
+            className="rounded-none border border-lf-amber-ink/35 bg-lf-amber-soft p-4 text-lf-amber-ink"
           >
             <div className="flex items-start gap-2">
               <TriangleAlert className="mt-0.5 shrink-0" size={16} />

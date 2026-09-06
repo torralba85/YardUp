@@ -39,20 +39,20 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       <Link
         href="/"
         aria-label="LotFoundry home"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5B24]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/lotfoundry-mark-dark.svg" alt="LotFoundry" className="h-7 w-7 rounded" />
+        <img src="/landing/a-lot-more/mark.svg" alt="LotFoundry" className="h-7 w-7 rounded-none" />
       </Link>
-      <span className="min-w-0 flex-1 truncate rounded-full bg-lf-sand/10 px-2.5 py-1 text-xs text-lf-sand">
+      <span className="min-w-0 flex-1 truncate rounded-none bg-white/10 px-2.5 py-1 text-xs text-[#F5F5F0]">
         {address}
-        {estimated && <span className="ml-1.5 lf-dataprint text-lf-amber-on-dark">est.</span>}
+        {estimated && <span className="ml-1.5 lf-dataprint text-[#E0A33C]">est.</span>}
       </span>
       <button
         type="button"
         aria-label="Reset scenario"
         onClick={onReset}
-        className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-sand"
+        className="flex h-11 w-11 items-center justify-center rounded-[3px] text-lot-stone-on-dark motion-safe:transition hover:text-[#F5F5F0]"
       >
         <RotateCcw size={17} />
       </button>
@@ -68,7 +68,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           type="button"
           aria-label="Sign in"
           onClick={() => setAuthOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-sand"
+          className="flex h-11 w-11 items-center justify-center rounded-[3px] text-lot-stone-on-dark motion-safe:transition hover:text-[#F5F5F0]"
         >
           <UserRound size={18} />
         </button>

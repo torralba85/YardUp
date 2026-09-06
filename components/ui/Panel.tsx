@@ -7,7 +7,7 @@ export type PanelSurface = "card" | "sand" | "raised";
 const SURFACE_CLASS: Record<PanelSurface, string> = {
   card: "bg-lf-card",
   sand: "bg-lf-sand-2",
-  raised: "bg-lf-card shadow-[0_1px_3px_rgba(38,19,7,0.06)]",
+  raised: "bg-lf-card shadow-[6px_8px_0_#16161618]",
 };
 
 /** Props for {@link Panel}. */

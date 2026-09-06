@@ -5,14 +5,13 @@ import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 
 /**
- * Visual intent:
- * - `commit` — forest; the action that pays (generate certificate, connect).
- *   Forest is money/readiness only, so it is reserved for value-completing CTAs.
- * - `primary` — clay; the everyday interactive accent ("the hand you click").
- * - `selected` — clay outline + soft wash; the current choice in a toggle set.
- * - `secondary` — hairline outline on card.
- * - `ghost` — text-only clay.
- * - `destructive` — brick; an irreversible action after confirmation.
+ * Visual intent in A LOT MORE:
+ * - `primary` — Signal Orange (#FF5B24) fill with carbon label (#161616); hover #EE4B17.
+ * - `commit` — Carbon (#161616) fill with chalk label (#F5F5F0); hover #33332F.
+ * - `selected` — Carbon fill with chalk label in toggle sets.
+ * - `secondary` — Drafting hairline outline (#DADAD3) on chalk ground (#F5F5F0).
+ * - `ghost` — Text-only carbon with soft hover wash.
+ * - `destructive` — Blocked red (#A82D16) fill with chalk label.
  */
 export type ButtonVariant =
   | "commit"
@@ -24,22 +23,21 @@ export type ButtonVariant =
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  commit: "bg-lf-forest text-lf-sand hover:bg-lf-forest-strong",
-  primary: "bg-lf-clay text-lf-sand hover:bg-lf-clay-strong",
+  primary: "bg-lf-clay text-lf-primary-label hover:bg-lf-clay-strong",
+  commit: "bg-lf-commit text-lf-sand hover:bg-lf-commit-strong",
   selected:
-    "border border-lf-clay bg-lf-clay-soft text-lf-clay-ink ring-1 ring-lf-clay/20 hover:bg-lf-clay-soft",
+    "border border-lf-espresso bg-lf-espresso text-lf-sand ring-1 ring-lf-espresso/20",
   secondary:
-    "border border-lf-hairline bg-lf-card text-lf-espresso hover:border-lf-taupe/50 hover:bg-lf-sand-2",
-  ghost: "text-lf-clay-ink hover:bg-lf-clay-soft",
+    "border border-lf-hairline bg-lf-sand text-lf-espresso hover:border-lf-taupe hover:bg-lf-sand-2",
+  ghost: "text-lf-espresso hover:bg-lf-hairline/30",
   destructive:
     "bg-lf-brick text-lf-sand hover:bg-lf-brick-strong focus-visible:ring-lf-brick",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  // xs is the compact-density step for the builder inbox's inline action rows,
-  // where a 36px control would crowd the table detail panel.
-  xs: "h-8 gap-1.5 px-3 text-xs",
-  sm: "h-9 gap-1.5 px-3.5 text-sm",
+  // Compact variants reduce type and padding, never the 44px touch target.
+  xs: "min-h-11 gap-1.5 px-3 text-xs",
+  sm: "min-h-11 gap-1.5 px-3.5 text-sm",
   md: "h-11 gap-2 px-5 text-sm",
   lg: "h-12 gap-2 px-6 text-base",
 };
@@ -61,10 +59,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 /**
- * The one button. Pill radius (clickable controls are pills per DESIGN.md),
- * accessible clay-ink focus ring (never amber — amber is a status color), and a settle-not-
- * bounce active press guarded by `motion-safe`. `loading` disables the control
- * and swaps the leading icon for a spinner without shifting the label.
+ * The canonical button for A LOT MORE: 3px control radius, ground-pinned
+ * focus ring (2px solid), and a settle-not-bounce active press guarded by
+ * `motion-safe`. `loading` disables the control and swaps the leading icon
+ * for a spinner without shifting the label.
  */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -91,8 +89,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         className={cn(
-          "inline-flex select-none items-center justify-center rounded-full font-semibold transition",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2",
+          "inline-flex select-none items-center justify-center rounded-[3px] font-semibold motion-safe:transition",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2",
           "motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
           VARIANT_CLASS[variant],
           SIZE_CLASS[size],
@@ -117,7 +115,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {loading ? (
           <span
             aria-hidden
-            className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+            className="h-4 w-4 shrink-0 motion-safe:animate-spin rounded-full border-2 border-current border-t-transparent"
           />
         ) : leftIcon ? (
           <span aria-hidden className="shrink-0">

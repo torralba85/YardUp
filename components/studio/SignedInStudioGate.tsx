@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { User } from "firebase/auth";
@@ -105,17 +106,16 @@ export default function SignedInStudioGate({ user }: { user: User }) {
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-8 w-auto" />
+            <BrandLockup className="h-8 w-auto" />
           </Link>
           <div className="flex min-w-0 items-center gap-3">
             <span className="hidden max-w-64 truncate text-sm text-lf-muted sm:block">{identity}</span>
             <button
               type="button"
               onClick={() => void logout()}
-              className="flex min-h-11 items-center gap-2 rounded-full border border-lf-hairline px-4 text-sm font-semibold transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="flex min-h-11 items-center gap-2 rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold motion-safe:transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
             >
               <LogOut size={15} />
               Sign out
@@ -125,7 +125,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       </header>
 
       <main className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-4 py-12 lg:px-8">
-        <section className="w-full rounded-2xl border border-lf-hairline bg-lf-card p-6 shadow-sm sm:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] lg:gap-12">
+        <section className="w-full rounded-none border border-lf-hairline bg-lf-card p-6 shadow-none sm:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] lg:gap-12">
           <div>
             <p className="lf-kicker text-lf-clay-ink">Your workspace</p>
             <h1 className="lf-section-heading mt-3">Start with your property.</h1>
@@ -141,14 +141,14 @@ export default function SignedInStudioGate({ user }: { user: User }) {
               />
               {lookupLoading && (
                 <div role="status" className="mt-3 flex items-center gap-2 text-sm text-lf-muted">
-                  <span className="block h-4 w-4 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+                  <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
                   Loading your property…
                 </div>
               )}
               {lookupError && (
                 <div
                   role="alert"
-                  className="mt-3 flex items-start gap-2 rounded-lg border border-lf-brick/30 bg-lf-brick-soft p-3 text-sm text-lf-brick"
+                  className="mt-3 flex items-start gap-2 rounded-none border border-lf-brick/30 bg-lf-brick-soft p-3 text-sm text-lf-brick"
                 >
                   <Search size={16} className="mt-0.5 shrink-0" />
                   {lookupError}
@@ -157,7 +157,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
             </div>
           </div>
 
-          <div className="mt-10 flex min-h-52 items-center justify-center rounded-xl border border-dashed border-lf-hairline bg-lf-sand-2 p-8 text-center lg:mt-0">
+          <div className="mt-10 flex min-h-52 items-center justify-center rounded-none border border-dashed border-lf-hairline bg-lf-sand-2 p-8 text-center lg:mt-0">
             <div>
               <Search size={28} className="mx-auto text-lf-clay-ink" aria-hidden="true" />
               <p className="mt-4 font-semibold">No property loaded</p>

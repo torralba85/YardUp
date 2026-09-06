@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 
 /** Money display size, mapped to the DESIGN.md money scale. */
 export type MoneyFigureSize = "hero" | "band" | "inline" | "sm";
-/** Money surface tone. `forest`/`onDark` are the only sanctioned green renders. */
+/** Money surface tone. Money is always carbon or chalk — never green. */
 export type MoneyFigureTone = "onLight" | "onDark" | "forest";
-/** Small trailing unit (IBM Plex Mono). Empty string renders no unit. */
+/** Small trailing unit (Manrope). Empty string renders no unit. */
 export type MoneyFigureUnit = "/mo" | "/yr" | "yrs" | "";
 
 /* Sizes sit on the Major Third money scale (DESIGN.md): 20 · 25 · 31 · 39 ·
@@ -31,12 +31,14 @@ const UNIT_SIZE_CLASS: Record<MoneyFigureSize, string> = {
 const TONE_CLASS: Record<MoneyFigureTone, string> = {
   onLight: "text-lf-espresso",
   onDark: "text-lf-money-on-dark",
-  forest: "text-lf-forest",
+  // Vestigial name: A LOT MORE retired money-green, so this renders carbon like
+  // every other recorded fact across the product.
+  forest: "text-lf-money",
 };
 
 const UNIT_TONE_CLASS: Record<MoneyFigureTone, string> = {
   onLight: "text-lf-muted",
-  onDark: "text-lf-taupe",
+  onDark: "text-lf-unit-on-dark",
   forest: "text-lf-muted",
 };
 
@@ -59,8 +61,8 @@ export interface MoneyFigureProps {
 }
 
 /**
- * The single canonical way to render a money figure across LotFoundry — serif
- * Cormorant numerals, tabular figures, and a small mono unit. Replaces the four
+ * The single canonical way to render a money figure across LotFoundry — Space Grotesk
+ * numerals, tabular figures, and a small Manrope unit. Replaces the four
  * divergent `$/mo` treatments the studio grew (band / rail / metrics / estimate)
  * so the asset figure reads with one voice everywhere.
  *
@@ -98,7 +100,7 @@ export function MoneyFigure({
     },
     <span>{formatCurrency(Math.round(shown))}</span>,
     unit ? (
-      <span className={cn("ml-1 font-mono font-medium", UNIT_SIZE_CLASS[size], UNIT_TONE_CLASS[tone])}>
+      <span className={cn("ml-1 font-sans font-medium", UNIT_SIZE_CLASS[size], UNIT_TONE_CLASS[tone])}>
         {unit}
       </span>
     ) : null,

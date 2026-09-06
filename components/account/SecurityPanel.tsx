@@ -30,7 +30,7 @@ export function SecurityPanel({
 
   if (!capabilities.canChangeEmail && !capabilities.canChangePassword) {
     return (
-      <div className="rounded-lg border border-lf-hairline bg-lf-card p-4">
+      <div className="rounded-none border border-lf-hairline bg-lf-card p-4">
         <p className="lf-body-sm text-lf-muted">
           Sign-in for this account is managed by{" "}
           <strong className="text-lf-espresso">{capabilities.managedBy}</strong>. Update
@@ -107,7 +107,7 @@ export function SecurityPanel({
             onChange={(e) => setEmail(e.target.value)}
             placeholder="New email"
             autoComplete="email"
-            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
           />
           <input
             type="password"
@@ -115,7 +115,7 @@ export function SecurityPanel({
             onChange={(e) => setEmailPassword(e.target.value)}
             placeholder="Current password"
             autoComplete="current-password"
-            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
           />
           <Button type="submit" variant="secondary" loading={pending}>
             Update email
@@ -131,7 +131,7 @@ export function SecurityPanel({
             onChange={(e) => setPasswordPassword(e.target.value)}
             placeholder="Current password"
             autoComplete="current-password"
-            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
           />
           <input
             type="password"
@@ -139,7 +139,7 @@ export function SecurityPanel({
             onChange={(e) => setNextPassword(e.target.value)}
             placeholder="New password"
             autoComplete="new-password"
-            className="w-full rounded-lg border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
+            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
           />
           <Button type="submit" variant="secondary" loading={pending}>
             Update password

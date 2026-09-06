@@ -19,7 +19,7 @@ export function Skeleton({
   return (
     <div
       aria-hidden="true"
-      className={cn("animate-pulse rounded-none bg-lf-taupe-soft", className)}
+      className={cn("motion-safe:animate-pulse rounded-none bg-lf-taupe-soft", className)}
       {...props}
     />
   );

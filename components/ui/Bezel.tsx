@@ -8,8 +8,8 @@ export interface BezelProps extends React.ComponentPropsWithRef<"div"> {
 }
 
 /**
- * A double-framed "bezel" container (outer rim + inset card) used to give
- * panels the engraved, instrument-like surface from `DESIGN.md`. Forwards a ref
+ * A square architectural drawing-board container used to give
+ * panels the paper surface from `docs/design/design-system.md`. Forwards a ref
  * and spreads remaining props onto the outer element.
  */
 export const Bezel = React.forwardRef<HTMLDivElement, BezelProps>(
@@ -18,14 +18,14 @@ export const Bezel = React.forwardRef<HTMLDivElement, BezelProps>(
       <div
         ref={ref}
         className={cn(
-          "flex flex-col rounded-[2rem] border border-lf-hairline/25 bg-lf-taupe-soft p-1.5",
+          "flex flex-col rounded-none border border-lf-hairline bg-lf-card shadow-[12px_16px_0_#E7E7DF]",
           className
         )}
         {...props}
       >
         <div
           className={cn(
-            "flex flex-col flex-1 rounded-[1.625rem] bg-lf-card shadow-[inset_0_1px_2px_rgba(255,250,240,0.95),0_1px_3px_rgba(38,19,7,0.05)]",
+            "flex flex-col flex-1 rounded-none bg-lf-card",
             innerClassName
           )}
         >

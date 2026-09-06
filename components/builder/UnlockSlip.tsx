@@ -110,14 +110,14 @@ export default function UnlockSlip({
 
           <div className="mt-4 border border-lf-hairline bg-lf-sand-2 px-4 py-3.5">
             <p className="font-semibold">{preview.neighborhood}</p>
-            <p className="mt-1 flex flex-wrap gap-3.5 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
+            <p className="mt-1 flex flex-wrap gap-3.5 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
               <span>{preview.lotSqft.toLocaleString()} sqft lot</span>
               <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
               {item.request.ownerVerified && <span>Owner-verified</span>}
             </p>
-            <p className="mt-2 lf-money-lg text-lf-forest">
+            <p className="mt-2 lf-money-lg text-lf-money">
               {formatCurrency(preview.rentBand)}
-              <span className="ml-1.5 font-mono text-[10px] uppercase text-lf-muted">/mo rent potential</span>
+              <span className="ml-1.5 font-sans text-[10px] uppercase text-lf-muted">/mo rent potential</span>
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export default function UnlockSlip({
             </li>
           </ul>
 
-          <div className="mt-4 font-mono text-[11.5px]">
+          <div className="mt-4 font-sans text-[11.5px]">
             <div className="mb-2 text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">This purchase</div>
             <div className="flex justify-between border-b border-dashed border-lf-hairline py-1.5">
               <span className="text-lf-muted">LEAD UNLOCK · {preview.previewSerial}</span>
@@ -155,12 +155,12 @@ export default function UnlockSlip({
             type="button"
             onClick={onConfirm}
             disabled={pending}
-            className="mt-4 flex w-full items-center justify-between bg-lf-forest px-4 py-3.5 text-sm font-semibold text-lf-sand transition hover:brightness-95 disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-between rounded-[3px] bg-lf-commit px-4 py-3.5 text-sm font-semibold text-lf-sand motion-safe:transition hover:brightness-95 disabled:opacity-60"
           >
             <span>{pending ? "Recording unlock…" : payLabel}</span>
             <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>
           </button>
-          <div className="mt-3 flex justify-center gap-3.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
+          <div className="mt-3 flex justify-center gap-3.5 font-sans text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
             <span>Receipt emailed</span>
             <span>{secureNote}</span>
           </div>

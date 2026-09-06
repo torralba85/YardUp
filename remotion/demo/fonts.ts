@@ -1,24 +1,18 @@
-import { loadFont as loadFraunces } from "@remotion/google-fonts/Fraunces";
-import { loadFont as loadLibreFranklin } from "@remotion/google-fonts/LibreFranklin";
-import { loadFont as loadIBMPlexMono } from "@remotion/google-fonts/IBMPlexMono";
+import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
+import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 
-const display = loadFraunces("normal", {
+const display = loadSpaceGrotesk("normal", {
   weights: ["500", "600", "700"],
   subsets: ["latin"],
 });
 
-const sans = loadLibreFranklin("normal", {
+const sans = loadManrope("normal", {
   weights: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
-
-const mono = loadIBMPlexMono("normal", {
-  weights: ["400", "500", "600"],
   subsets: ["latin"],
 });
 
 export const fonts = {
   display: display.fontFamily,
   sans: sans.fontFamily,
-  mono: mono.fontFamily,
+  mono: sans.fontFamily,
 };

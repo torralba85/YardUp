@@ -23,7 +23,7 @@ describe("StepRail", () => {
     render(<StepRail aria-label="Studio steps" steps={steps} onSelect={() => {}} />);
     const current = screen.getByRole("button", { name: /Rules & Fit/ });
     expect(current).toHaveAttribute("aria-current", "step");
-    expect(current).toHaveClass("focus-visible:ring-lf-clay-on-dark");
+    expect(current).toHaveClass("focus-visible:ring-lot-chalk");
     expect(screen.getByText("Rules & Fit")).toHaveClass("text-lf-sand");
   });
 

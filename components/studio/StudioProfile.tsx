@@ -8,7 +8,7 @@ import { StudioMeasurementCollector } from "@/lib/studio-measurement";
 
 const ParcelScene = dynamic(() => import("@/components/ParcelScene"), { ssr: false });
 const roofs: RoofStyle[] = ["shed", "gable", "flat"];
-const control = "min-h-11 rounded-full border border-lf-clay px-4 py-2 text-lf-clay-ink disabled:opacity-50";
+const control = "min-h-11 rounded-none border border-lf-clay px-4 py-2 text-lf-clay-ink disabled:opacity-50";
 
 export default function StudioProfile() {
   const [run, setRun] = useState<{ collector: StudioMeasurementCollector; id: number; started: number; thermal: string; device: string } | null>(null);
@@ -73,8 +73,8 @@ export default function StudioProfile() {
       <h1 className="font-display text-2xl">Local Studio profiling</h1>
       <p className="text-sm text-lf-muted">Direct scene workload. First render measures CPU submission; full Shape readiness and GPU completion remain separate. Idle samples exclude timing intervals but retain submitted frame counts.</p>
       <div className="flex flex-wrap items-end gap-3">
-        <label>Device description<input className="block min-h-11 rounded-lg border border-lf-hairline bg-lf-card px-3" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
-        <label>Thermal state<input className="block min-h-11 rounded-lg border border-lf-hairline bg-lf-card px-3" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
+        <label>Device description<input className="block min-h-11 rounded-[3px] border border-lf-hairline bg-lf-card px-3" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
+        <label>Thermal state<input className="block min-h-11 rounded-[3px] border border-lf-hairline bg-lf-card px-3" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
         <button className={control} onClick={start} disabled={running}>Start run</button>
         <button className={control} onClick={() => snapshot()} disabled={!run}>Snapshot</button>
         <button className={control} onClick={exportReport} disabled={!run}>Stop and export JSON</button>
@@ -85,7 +85,7 @@ export default function StudioProfile() {
       <div data-profile-scene className="relative h-[70vh] min-h-80 overflow-hidden border border-lf-hairline">
         {run && <ParcelScene key={`${run.id}-${remount}`} parcel={parcel} config={config} isCompliant={remainingCapacity >= 0} remainingCapacity={remainingCapacity} measurement={{ collector: run.collector, runId: run.id, cycleIndex: cycle, enabled: running, active }} />}
       </div>
-      <pre aria-label="Measurement report" className="overflow-auto rounded-lg bg-lf-card p-4 text-xs">{report || "No snapshot yet."}</pre>
+      <pre aria-label="Measurement report" className="overflow-auto rounded-none bg-lf-card p-4 text-xs">{report || "No snapshot yet."}</pre>
     </main>
   );
 }

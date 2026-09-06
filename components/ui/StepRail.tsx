@@ -64,10 +64,10 @@ function RevenueMark({ tone = "light" }: { tone?: "light" | "dark" }) {
     <span
       aria-hidden
       className={cn(
-        "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-bold",
+        "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-sans text-[10px] font-bold tabular-nums",
         tone === "dark"
-          ? "bg-lf-espresso/45 text-lf-money-on-dark"
-          : "bg-lf-forest-soft text-lf-forest",
+          ? "bg-[#212121] text-lf-money-on-dark"
+          : "bg-lf-sand-2 text-lf-money",
       )}
     >
       $
@@ -77,25 +77,25 @@ function RevenueMark({ tone = "light" }: { tone?: "light" | "dark" }) {
 
 /** Circular step indicator; always an explicit equal width/height (true circle). */
 function StepDot({ step, index }: { step: Step; index: number }) {
-  const base = "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold";
+  const base = "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums";
   if (step.state === "done") {
     return (
-      <span aria-hidden className={cn(base, "border-lf-forest bg-lf-forest text-lf-sand")}>
+      <span aria-hidden className={cn(base, "border-[#5FBF93] bg-[#5FBF93] text-[#161616]")}>
         <Check size={14} />
       </span>
     );
   }
   if (step.state === "current") {
-    return <span aria-hidden className={cn(base, "border-lf-clay bg-lf-clay text-lf-sand")}>{index + 1}</span>;
+    return <span aria-hidden className={cn(base, "border-[#FF5B24] bg-[#FF5B24] text-[#161616]")}>{index + 1}</span>;
   }
   if (step.state === "locked") {
     return (
-      <span aria-hidden className={cn(base, "border-lf-hairline bg-lf-sand-2 text-lf-muted")}>
+      <span aria-hidden className={cn(base, "border-[#44443F] bg-[#161616] text-[#B7B7AE]")}>
         <Lock size={12} />
       </span>
     );
   }
-  return <span aria-hidden className={cn(base, "border-lf-hairline bg-lf-card text-lf-muted")}>{index + 1}</span>;
+  return <span aria-hidden className={cn(base, "border-[#44443F] bg-[#212121] text-[#B7B7AE]")}>{index + 1}</span>;
 }
 
 /**
@@ -123,9 +123,9 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "group flex items-center gap-3 rounded-full px-2.5 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-lf-mahogany",
-              step.state === "current" && "bg-lf-sand/10",
-              !locked && step.state !== "current" && "hover:bg-lf-sand/5",
+              "group flex min-h-11 items-center gap-3 rounded-[3px] px-2.5 py-2 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]",
+              step.state === "current" && "bg-[#212121]",
+              !locked && step.state !== "current" && "hover:bg-[#212121]/60",
               locked && "cursor-not-allowed opacity-55",
             )}
           >
@@ -134,7 +134,7 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
               <span
                 className={cn(
                   "block truncate text-sm font-semibold",
-                  step.state === "current" ? "text-lf-sand" : "text-lf-taupe",
+                  step.state === "current" ? "text-lf-sand" : "text-[#B7B7AE]",
                 )}
               >
                 {step.label}
@@ -172,7 +172,7 @@ export function StepProgress({ steps, onSelect, className, ...aria }: StepNavPro
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-inset",
+              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[3px] px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-inset",
               locked && "cursor-not-allowed opacity-55",
             )}
           >
@@ -180,17 +180,17 @@ export function StepProgress({ steps, onSelect, className, ...aria }: StepNavPro
               aria-hidden
               className={cn(
                 "h-1.5 w-full rounded-full",
-                step.state === "done" && "bg-lf-forest",
-                step.state === "current" && "bg-lf-clay",
-                step.state === "upcoming" && "bg-lf-hairline",
-                step.state === "locked" && "bg-lf-hairline/60",
+                step.state === "done" && "bg-[#176B4C]",
+                step.state === "current" && "bg-[#FF5B24]",
+                step.state === "upcoming" && "bg-[#DADAD3]",
+                step.state === "locked" && "bg-[#DADAD3]/60",
               )}
             />
             <span className="flex items-center gap-1">
               <span
                 className={cn(
                   "truncate text-[10px] font-semibold",
-                  step.state === "current" ? "text-lf-espresso" : "text-lf-muted",
+                  step.state === "current" ? "text-[#161616]" : "text-[#65655F]",
                 )}
               >
                 {step.label}

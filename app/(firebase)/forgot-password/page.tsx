@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-lg border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-none border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay-ink focus:outline-none focus:ring-2 focus:ring-lf-clay-ink/20"
+            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-espresso"
             placeholder="you@example.com"
           />
         </div>
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="min-h-11 w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="min-h-11 w-full rounded-[3px] bg-lf-clay py-3 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           {isPending ? "Sending…" : "Send reset link"}
         </button>

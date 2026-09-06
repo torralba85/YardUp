@@ -1,32 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Mono, Instrument_Sans, Newsreader } from "next/font/google";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 
-const newsreader = Newsreader({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-display",
+  variable: "--font-lot-display",
 });
 
-const instrumentSans = Instrument_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-sans",
+  variable: "--font-lot-body",
 });
-
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  display: "swap",
-  variable: "--font-mono",
-});
-
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
 
@@ -63,7 +52,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" },
     ],
     apple: "/icon-180.png",
   },
@@ -85,7 +74,7 @@ export const metadata: Metadata = {
 
 /** Viewport config: theme color and `viewport-fit: cover` for PWA safe areas. */
 export const viewport: Viewport = {
-  themeColor: "#F2E5D5",
+  themeColor: "#F5F5F0",
   // Extend behind the iOS notch/home indicator so env(safe-area-inset-*)
   // paddings in the studio shell take effect in standalone PWA mode.
   viewportFit: "cover",
@@ -108,7 +97,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${instrumentSans.variable} ${dmMono.variable}`}
+      className={`${spaceGrotesk.variable} ${manrope.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
@@ -118,7 +107,7 @@ export default function RootLayout({
         />
         <a
           href="#main-content"
-          className="sr-only rounded-full focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lf-espresso focus:px-5 focus:py-2.5 focus:font-mono focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.14em] focus:text-lf-sand focus:outline-2 focus:outline-offset-2 focus:outline-lf-clay-on-dark"
+          className="sr-only rounded-[3px] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lf-espresso focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lf-sand focus:outline-2 focus:outline-offset-2 focus:outline-lf-sand"
         >
           Skip to content
         </a>

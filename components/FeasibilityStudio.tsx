@@ -96,10 +96,10 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
       aria-label="Loading parcel scene"
       role="status"
     >
-      <div className="absolute inset-0 animate-pulse bg-lf-mahogany/40" />
+      <div className="absolute inset-0 motion-safe:animate-pulse bg-lf-mahogany/40" />
       <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
-        <div className="h-3 w-32 animate-pulse rounded bg-lf-taupe/15" />
-        <div className="h-2.5 w-56 animate-pulse rounded bg-lf-taupe/10" />
+        <div className="h-3 w-32 motion-safe:animate-pulse rounded bg-lf-taupe/15" />
+        <div className="h-2.5 w-56 motion-safe:animate-pulse rounded bg-lf-taupe/10" />
       </div>
     </div>
   ),
@@ -1168,15 +1168,15 @@ function LotStep({
         <div className="mt-5 max-w-xl">
           <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
           {parcelLoading && (
-            <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-              <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+            <div className="mt-2 flex items-center gap-2 rounded-none border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+              <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
               Looking up property data…
             </div>
           )}
           {parcelError && (
             <div
               role="alert"
-              className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+              className="mt-2 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
             >
               <Search size={14} className="mt-0.5 shrink-0" />
               {parcelError}

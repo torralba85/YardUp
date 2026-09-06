@@ -31,7 +31,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
         aria-label="Back to previous step"
         onClick={onBack}
         disabled={!onBack}
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lf-muted transition hover:text-lf-espresso ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] text-[#65655F] motion-safe:transition hover:text-[#161616] ${
           onBack ? "" : "invisible"
         }`}
       >
@@ -47,7 +47,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 <span
                   aria-hidden
                   className={`mx-1 h-px w-3 sm:w-5 ${
-                    index <= currentIndex ? "bg-lf-clay" : "bg-lf-hairline"
+                    index <= currentIndex ? "bg-[#FF5B24]" : "bg-[#DADAD3]"
                   }`}
                 />
               )}
@@ -57,19 +57,19 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 disabled={!isDone && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : ""}`}
-                className={`flex min-h-11 items-center gap-1.5 rounded-full px-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] transition sm:px-2 ${
+                className={`flex min-h-11 items-center gap-1.5 rounded-[3px] px-1.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] motion-safe:transition sm:px-2 ${
                   isCurrent
-                    ? "text-lf-clay"
+                    ? "text-[#C43708]"
                     : isDone
-                      ? "text-lf-forest"
-                      : "text-lf-taupe"
+                      ? "text-[#176B4C]"
+                      : "text-[#65655F]"
                 }`}
               >
                 {/* Equal explicit width/height — a true circle, never an oval. */}
                 <span
                   aria-hidden
                   className={`block h-2 w-2 rounded-full ${
-                    isCurrent ? "bg-lf-clay" : isDone ? "bg-lf-forest" : "bg-lf-taupe/40"
+                    isCurrent ? "bg-[#FF5B24]" : isDone ? "bg-[#176B4C]" : "bg-[#DADAD3]"
                   }`}
                 />
                 <span className="hidden min-[440px]:inline">{step.label}</span>

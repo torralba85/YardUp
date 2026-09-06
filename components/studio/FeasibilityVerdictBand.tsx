@@ -48,26 +48,24 @@ export default function FeasibilityVerdictBand({
   const lotLine = `${parcel.lotArea.toLocaleString()} sf lot · ${parcel.lotWidth}′ × ${parcel.lotLength}′`;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-6 gap-y-3.5 bg-lf-espresso px-7 py-[18px] text-lf-sand">
+    <div className="flex flex-wrap items-center justify-between gap-6 gap-y-3.5 border-b border-[#44443F] bg-[#161616] px-7 py-[18px] text-[#F5F5F0]">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="lf-kicker-dense text-lf-taupe">
+          <p className="lf-kicker-dense text-[#B7B7AE]">
             {eyebrow}
           </p>
         )}
-        <h2 className="mt-[3px] font-display text-[31px] font-semibold leading-[1.08] text-lf-sand">
+        <h2 className="mt-[3px] font-display text-[31px] font-semibold leading-[1.08] text-[#F5F5F0]">
           {parcel.address}
         </h2>
-        <p className="mt-[5px] font-mono text-[11px] text-lf-taupe">{lotLine}</p>
+        <p className="mt-[5px] font-sans text-[11px] tabular-nums text-[#B7B7AE]">{lotLine}</p>
       </div>
 
       <div className="flex flex-shrink-0 flex-wrap items-center gap-x-[22px] gap-y-3">
-        {/* Income leads the band: the money figure is the first and largest
-            thing on every screen (DESIGN.md income-led north star). It was
-            previously hidden below `xl` — re-promoted here so the asset value
-            never drops off the studio's lead element. */}
+        {/* Income leads the band: the money figure is typographic in chalk on dark,
+            never money-green (A LOT MORE rule §2.6). */}
         <div>
-          <p className="lf-kicker-dense text-lf-taupe">
+          <p className="lf-kicker-dense text-[#B7B7AE]">
             If built
           </p>
           <MoneyFigure
@@ -75,15 +73,15 @@ export default function FeasibilityVerdictBand({
             animate
             size="band"
             tone="onDark"
-            className="mt-1"
+            className="mt-1 text-[#F5F5F0]"
           />
-          <p className="mt-1 font-mono text-[10px] text-lf-taupe">{result.rentBasis}</p>
+          <p className="mt-1 font-sans text-[10px] tabular-nums text-[#B7B7AE]">{result.rentBasis}</p>
         </div>
 
-        <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
+        <div className="hidden self-stretch border-l border-[#44443F] sm:block" />
 
         <div>
-          <p className="lf-kicker-dense text-lf-taupe">
+          <p className="lf-kicker-dense text-[#B7B7AE]">
             Feasibility verdict
           </p>
           <div className="mt-1 flex items-center gap-2.5">
@@ -95,30 +93,28 @@ export default function FeasibilityVerdictBand({
               {summary.verdict}
             </span>
           </div>
-          {/* Amber only when residual review work remains; otherwise taupe note. */}
           <div
-            className={`mt-[7px] flex items-center gap-1.5 font-mono text-[11px] ${
-              summary.openCount > 0 ? "text-lf-amber-on-dark" : "text-lf-taupe"
-            }`}
+            className="mt-[7px] flex items-center gap-1.5 font-sans text-[11px] tabular-nums"
+            style={{ color: summary.openCount > 0 ? tone.onDark : "#B7B7AE" }}
           >
             {summary.openCount > 0 ? <AlertTriangle size={13} /> : null}
             {summary.reviewNote}
           </div>
         </div>
 
-        <div className="hidden self-stretch border-l border-lf-taupe/25 sm:block" />
+        <div className="hidden self-stretch border-l border-[#44443F] sm:block" />
 
         <div className="hidden text-center sm:block">
-          <p className="lf-kicker-dense text-lf-taupe">
+          <p className="lf-kicker-dense text-[#B7B7AE]">
             Readiness
           </p>
-          <div className="mt-0.5 lf-money-xl text-lf-sand">
+          <div className="mt-0.5 lf-money-xl text-[#F5F5F0]">
             {readiness}
-            <span className="font-mono text-sm text-lf-taupe"> /100</span>
+            <span className="font-sans text-sm text-[#B7B7AE]"> /100</span>
           </div>
-          <div className="mt-2 h-1 w-[110px] overflow-hidden rounded-full bg-lf-sand/10">
+          <div className="mt-2 h-1 w-[110px] overflow-hidden rounded-full bg-[#212121]">
             <div
-              className="h-full w-full origin-left rounded-full transition-transform duration-500"
+              className="h-full w-full origin-left rounded-full motion-safe:transition-transform duration-500"
               style={{ transform: `scaleX(${summary.readiness / 100})`, backgroundColor: tone.onDark }}
             />
           </div>

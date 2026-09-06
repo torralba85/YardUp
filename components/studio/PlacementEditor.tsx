@@ -6,9 +6,9 @@ import type { ADUConfig } from "@/lib/feasibility";
 import { buildAduHeightModel } from "@/lib/scene-model";
 export function PlacementEditor({config,pose,onChange}: {config:ADUConfig;pose:Pose2D;onChange(pose:Pose2D):void}) {
   const total=buildAduHeightModel(config)?.totalHeight;
-  return <details className="border-t border-lf-hairline bg-lf-card px-3">
-    <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-clay-ink">Move or rotate ADU</summary>
-    <p className="mb-3 text-xs text-lf-muted">Selected: {config.width} × {config.length} ft ADU · {config.height} ft walls · {total?.toFixed(1)} ft total height. Position uses modeled lot coordinates; +Z is the front.</p>
+  return <details className="border-t border-[#DADAD3] bg-[#F5F5F0] px-3">
+    <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#161616]">Move or rotate ADU</summary>
+    <p className="mb-3 text-xs text-[#65655F]">Selected: {config.width} × {config.length} ft ADU · {config.height} ft walls · {total?.toFixed(1)} ft total height. Position uses modeled lot coordinates; +Z is the front.</p>
     <div className="grid grid-cols-3 gap-2">
       <NumericField label="X position (ft)" value={pose.x} min={-10000} max={10000} onChange={x=>onChange({...pose,x})}/>
       <NumericField label="Z position (ft)" value={pose.z} min={-10000} max={10000} onChange={z=>onChange({...pose,z})}/>

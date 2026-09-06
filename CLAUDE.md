@@ -119,9 +119,9 @@ Project-specific design rules:
 - Touch targets are `min-height: 44px`. All motion sits inside `prefers-reduced-motion: no-preference`.
 - Do not "snap" the landing's spacing to a 4/8px grid - the odd values are optically tuned, and that
   cleanup is a regression.
-- `/studio`, auth, builder, report, certificate and email still run the legacy Golden Hour palette; see
-  `docs/design/product-surfaces.md`. Fix bugs there, but do not build new components in it and do not
-  partially reskin a surface.
+- A LOT MORE is project-wide: landing, auth and consent, account, builder, Studio, and generated
+  reports/certificates share the global tokens. There is no legacy route-theme boundary. See
+  `docs/design/product-surfaces.md` for renderer ownership and verification requirements.
 
 ## Environment
 
@@ -194,57 +194,50 @@ Without parcel API keys, the app must still run in demo mode with Seattle, Portl
 
 ## Obsidian Second Brain
 
-Obsidian is the durable second brain and memory layer. `CLAUDE.md` is the compact context router for this repo; do not bloat it with session logs, source dumps, or long-lived research notes that belong in Obsidian.
+Obsidian is the durable second brain and memory layer for LotFoundry. `CLAUDE.md` (and `AGENTS.md` / `GEMINI.md`) is the compact context router for this repo; do not bloat it with session logs, source dumps, scratchpad notes, or long-lived research that belongs in Obsidian.
 
-Use the Obsidian MCP or the configured Obsidian vault whenever the task depends on prior decisions, saved research, user preferences, project memory, meeting notes, source documents, or cross-session continuity. If Obsidian tooling is unavailable, say so and ask for the vault path or exported notes instead of inventing memory.
+Use the Obsidian MCP or the configured Obsidian vault whenever the task depends on prior decisions, saved research, user preferences, project memory, meeting notes, source documents, or cross-session continuity. If Obsidian tooling is unavailable, say so clearly and request the vault path or exported notes instead of inventing memory.
 
-The intended pattern follows the Karpathy / James Keet LLM Wiki workflow:
+### Vault Structure (Karpathy / Keet LLM Wiki)
 
 ```text
-raw/            immutable source documents; never modify these
-wiki/           markdown pages maintained by the agent
-wiki/index.md   table of contents and routing layer
-wiki/log.md     append-only operation log
+raw/            immutable source documents; never modify or delete these
+wiki/           markdown knowledge base maintained by AI agents & humans
+wiki/index.md   table of contents, category index, and routing layer
+wiki/log.md     append-only chronological audit log of vault mutations
 ```
 
-Before answering from memory:
-- Read `wiki/index.md` first to find the relevant pages.
-- Follow links only to pages needed for the current task.
-- Cite the wiki/source pages used.
-- If the wiki does not contain the answer, say so clearly and fall back to repo files or live research.
-- If an answer creates durable knowledge, offer to save it back into Obsidian.
+### When to Update Obsidian
+Update or create notes in Obsidian when:
+- **Architectural & Design Decisions (ADRs)**: New tech choices, system redesigns (e.g. A LOT MORE studio migration), Three.js coordinate or lighting conventions, state models.
+- **Contract & Schema Changes**: Firestore security rules updates, live parcel data schemas, API response contracts.
+- **Durable User Directives**: Specific user instructions, product requirements, branding guidelines, or workflow preferences.
+- **Milestones & Session Handoffs**: Completed feature tracks, PR release summaries, unresolved risks or edge-case discoveries.
+- **Synthesized Research**: External market data, municipal zoning bylaws, technical investigation notes.
 
-When ingesting a new source into Obsidian:
-- Read the full source document first.
-- Discuss key takeaways with the user before writing synthesis.
-- Create a summary page in `wiki/` named after the source.
-- Create or update concept pages for major ideas, entities, decisions, and workflows.
-- Add `[[wiki-links]]` between related pages.
-- Update `wiki/index.md` with new or changed pages and one-line descriptions.
-- Append `wiki/log.md` with the date, source name, and what changed.
+### Obsidian MCP Update Rules & Invariants
+1. **MCP Preflight**: Check if Obsidian MCP tools (`search_notes`, `read_note`, `create_note`, `patch_note`, `append_content`) are active in your environment. Use them directly to query and modify vault contents. Never ask the user to do what MCP can do. If tools are unavailable, output the markdown payload ready to paste and ask for the vault path.
+2. **Page File Naming**: All pages in `wiki/` must be lowercase kebab-case (e.g. `wiki/design-system-a-lot-more.md`, `wiki/firestore-rules-v2.md`).
+3. **Strict Page Header Structure**: Every page in `wiki/` must begin with:
+   ```markdown
+   # Page Title
 
-Every wiki page should use this shape:
+   **Summary**: 1–2 clear sentences summarizing the page purpose and scope.
+   **Sources**: Source code files, commits, raw docs, or external URLs.
+   **Last updated**: YYYY-MM-DD
 
-```markdown
-# Page Title
+   ---
 
-**Summary**: One to two sentences describing this page.
-**Sources**: Source files or URLs this page draws from.
-**Last updated**: YYYY-MM-DD
+   Main content with clear H2/H3 headers, architectural decisions, and [[wiki-links]].
 
----
-
-Main content with clear headings, concise paragraphs, and [[wiki-links]].
-
-## Related pages
-
-- [[related-page]]
-```
-
-Wiki maintenance rules:
-- Keep page names lowercase kebab-case.
-- Use clear, plain language.
-- Reference source files for factual claims.
-- Note contradictions between sources explicitly.
-- Mark unsourced claims as needing verification.
-- When linting the wiki, check for contradictions, orphan pages, missing concept pages, outdated claims, and page-format drift.
+   ## Related pages
+   - [[related-page-slug]]
+   ```
+4. **The Dual Sync Invariant (Atomic Log & Index)**:
+   Every creation, modification, or refactor of a `wiki/` page MUST be accompanied by:
+   - Updating `wiki/index.md` with the new/modified link and a concise 1-sentence descriptor in the relevant section.
+   - Appending `wiki/log.md` with a timestamped entry:
+     `YYYY-MM-DD: [create|update|refactor] [[wiki/page-slug]] — brief explanation of what changed`.
+5. **Bi-directional Linking**: Link related concepts using `[[wiki-links]]`. Every page must have at least one incoming link from `wiki/index.md` or a parent concept page (no orphans).
+6. **Factual Verification & Grounding**: Reference concrete files and code symbols for all technical claims. Explicitly note contradictions between legacy docs and active code. Mark speculative claims with `[Needs verification]`.
+7. **Never Modify `raw/`**: Raw inputs are permanent historical records. Process raw sources into synthesized `wiki/` articles.

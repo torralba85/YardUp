@@ -325,7 +325,7 @@ export default function AddressSearch({
       >
         {loading ? (
           <span
-            className="block h-4 w-4 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay"
+            className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay"
             role="status"
             aria-label="Loading address search"
           />
@@ -358,9 +358,9 @@ export default function AddressSearch({
           activeIndex >= 0 ? `address-suggestion-${activeIndex}` : undefined
         }
         className={[
-          "h-11 w-full rounded-full border pl-9 pr-26 text-sm",
+          "h-11 w-full rounded-[3px] border pl-9 pr-26 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-muted",
-          "outline-none transition",
+          "outline-none motion-safe:transition",
           "focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15",
           isDisabled
             ? "cursor-not-allowed border-lf-hairline opacity-60"
@@ -371,7 +371,7 @@ export default function AddressSearch({
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-sand enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
+        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-[3px] px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-primary-label enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search
@@ -382,7 +382,7 @@ export default function AddressSearch({
           id="address-suggestions"
           role="listbox"
           aria-label="Address suggestions"
-          className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-lg border border-lf-hairline bg-lf-card/95 shadow-xl backdrop-blur-md"
+          className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-none border border-lf-hairline bg-lf-card/95 shadow-none backdrop-blur-md"
         >
           {suggestions.map((suggestion, index) => (
             <li

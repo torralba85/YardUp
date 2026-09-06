@@ -72,7 +72,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lf-clay">Step 4 · Check</p>
+      <p className="lf-kicker text-lf-clay-ink">Step 4 · Check</p>
 
       <div className="mt-3 flex items-center gap-2.5">
         <Icon size={28} style={{ color: tone.color }} aria-hidden="true" />
@@ -107,7 +107,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
             {openItems.map((item) => (
               <li
                 key={item.id}
-                className={`rounded-lg border px-3 py-2.5 text-sm ${
+                className={`rounded-none border px-3 py-2.5 text-sm ${
                   item.status === "blocked"
                     ? "border-lf-brick/40 bg-lf-brick-soft text-lf-brick"
                     : "border-lf-amber-ink/35 bg-lf-amber-soft text-lf-amber-ink"
@@ -137,7 +137,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
       <button
         type="button"
         onClick={onFineTune}
-        className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-semibold text-lf-clay transition hover:bg-lf-taupe-soft"
+        className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-[#C43708] motion-safe:transition hover:bg-lf-taupe-soft"
       >
         <SlidersHorizontal size={15} />
         Fine-tune the numbers

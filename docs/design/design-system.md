@@ -1,6 +1,6 @@
 # A LOT MORE — LotFoundry Design System
 
-**Status: ACTIVE. This is the source of truth for all new visual and UI work.**
+**Status: ACTIVE. This is the source of truth for all project-wide visual and UI work.**
 Adopted 2026-09-05, replacing `DESIGN.md` v3 ("Blue Hour / Golden Hour").
 Superseded material lives in [`archive/`](./archive/) and must not be applied to new work.
 
@@ -29,7 +29,7 @@ carries that: it looks like a studio presenting a model, not a bank approving a 
 
 ### 2.1 Core tokens
 
-Declared on `.page` in `LotMoreLanding.module.css`.
+Shared in `app/globals.css` as `lot-*` tokens, with matching landing-local CSS variables.
 
 | Token | Value | Role |
 |---|---|---|
@@ -124,8 +124,7 @@ Do not add a `prefers-color-scheme` theme without a decision recorded here.
 
 ### 3.1 Families
 
-Loaded per-page in `app/page.tsx` via `next/font/google` as variable fonts, so the whole weight axis is
-available and only the landing pays for them.
+Loaded globally in `app/layout.tsx` via `next/font/google` as variable fonts. All product routes use these same two families.
 
 | Variable | Family | Job |
 |---|---|---|
@@ -339,32 +338,18 @@ bottom instrument rail; warm sand/clay/espresso as brand ground.
 
 ---
 
-## 12. Scope
+## 12. Project-wide scope
 
-| Surface | System |
-|---|---|
-| `/` marketing landing | **A LOT MORE** (this document) |
-| New marketing, campaign, OG/social surfaces | **A LOT MORE** |
-| Auth modal | Neutral bridge — rendered outside the landing style wrapper so landing heading/control styles cannot leak into sign-in |
-| `/studio`, `/builder`, report, certificate, product email | Legacy Golden Hour — see [`product-surfaces.md`](./product-surfaces.md) |
-
-All A LOT MORE styling is CSS-Module-scoped under `.page`. It must not leak into globals, and global
-studio tokens must not leak in. Keep new landing selectors scoped.
-
----
+A LOT MORE applies to landing, authentication and consent, account and support, builder, desktop and
+mobile Studio, generated reports, and the paid Certificate of Feasibility. No sign-in theme boundary remains.
+Shared tokens live in `app/globals.css`; `lf-*` aliases preserve existing component APIs, not old colors.
+The landing CSS Module retains its optical layout. See [product surfaces](./product-surfaces.md).
 
 ## Open decisions
 
-Recorded so they are decided deliberately, not by accident:
-
-1. **Certificate of Feasibility.** Still an engraved parchment artifact. Restyling it to an
-   architectural plat sheet is a product decision with revenue surface area — not yet made.
-2. **Studio migration.** Timing and phasing in [`product-surfaces.md`](./product-surfaces.md).
-3. **Transactional email.** Still Golden Hour. Needs an A LOT MORE letterhead before the next campaign.
-4. **Logo system.** `mark.svg` is scoped to the landing. A full mark set (inverse, monochrome, app
-   icon, clearspace, minimum size) is not yet drawn.
-5. **Token extraction.** The palette lives in one CSS Module. If a second A LOT MORE surface ships, lift
-   the tokens to a shared layer before duplicating them.
+- Provider-hosted email, checkout branding, and native-store icons are external configuration/assets;
+  verify them separately before claiming a change to those systems. This web release does not mutate them.
+- Historical exports and archived videos remain historical; new renderer output follows this system.
 
 ## Decisions log
 
@@ -378,3 +363,4 @@ Recorded so they are decided deliberately, not by accident:
 | 2026-09-05 | Focus ring pinned to ground, not `currentColor` | `currentColor` produced a 1.00:1 invisible ring on every light-labelled control. |
 | 2026-09-05 | Percentage gutters and the optical spacing scale are intentional | Prevents a future "snap to 8px grid" cleanup regressing the layout. |
 | 2026-09-05 | Design system audit & refinement pass: radius drift snapped, kicker tracking unified, closing CTA hover bug fixed, 9px floor enforced, ARIA arrow navigation added, mobile-ux-design-system skill synchronized | Corrected `.inputRow` 4px and `.sceneControls button` 2px drift to canonical `3px`; unified all eyebrows/kickers to `0.08em`; fixed closing button orange hover on orange ground; raised mobile paper text to 9px floor; added keyboard arrow navigation for all segmented controls; updated `mobile-ux-design-system` skill to full A LOT MORE authority. |
+| 2026-09-06 | User approved project-wide finalization, merge, and live deployment | Auth/consent, account, builder, Studio/3D, and report/certificate now use one shared palette and typography. No legacy route scope remains. |

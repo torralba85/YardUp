@@ -77,7 +77,7 @@ export default function LeadCard({
           {recorded ? ` · RECORDED ${recorded}` : ""}
         </span>
         <span
-          className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${chip.cls}`}
+          className={`inline-flex items-center gap-1.5 rounded-none px-2.5 py-1 font-sans text-[10px] uppercase tracking-[0.14em] ${chip.cls}`}
         >
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
           {chip.label}
@@ -85,7 +85,7 @@ export default function LeadCard({
       </div>
 
       {/* Value band first (B2): green is the money this lead pays the builder. */}
-      <p className="mt-3 lf-money-md text-lf-forest">
+      <p className="mt-3 lf-money-md text-lf-money">
         {formatCurrency(preview.rentBand)}
         <span className="ml-1.5 lf-kicker-dense text-lf-muted">
           /mo rent potential
@@ -101,19 +101,19 @@ export default function LeadCard({
         <p className="font-semibold text-lf-espresso">
           {headline}
           {preview.zip && (
-            <span className="ml-1.5 font-mono text-[10.5px] font-normal text-lf-muted">
+            <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lf-muted">
               {preview.zip}
             </span>
           )}
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
           <span>{preview.lotSqft.toLocaleString()} sqft</span>
           <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
           <span>{finishLabels[preview.config.finish]}</span>
         </p>
       </div>
 
-      <p className="mt-2 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
+      <p className="mt-2 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
         <span>
           Build {formatCompactCurrency(preview.buildBandLow)}–{formatCompactCurrency(preview.buildBandHigh)}
         </span>
@@ -126,7 +126,7 @@ export default function LeadCard({
           {preview.matchReasons.map((reason) => (
             <li
               key={reason}
-              className="rounded-md bg-lf-sand-2 px-2 py-1 text-[11px] text-lf-muted"
+              className="rounded-none bg-lf-sand-2 px-2 py-1 text-[11px] text-lf-muted"
             >
               {reason}
             </li>
@@ -180,14 +180,14 @@ export default function LeadCard({
 
         {access === "confirming" && (
           <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3">
-            <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-amber-ink">
+            <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-amber-ink">
               <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber-ink" />
               Payment received · recording unlock…
             </div>
             <p className="mt-1.5 text-xs text-lf-espresso">
               Usually a few seconds. Your contact details will appear right here.
             </p>
-            <p className="mt-2 font-mono text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
+            <p className="mt-2 font-sans text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
               You will not be charged twice.
             </p>
           </div>
@@ -195,10 +195,10 @@ export default function LeadCard({
 
         {access === "unlocked" && contact && (
           <div className="lf-stamp relative border-[1.5px] border-lf-forest bg-lf-forest-soft px-3.5 py-3">
-            <div className="flex justify-between font-mono text-[9.5px] uppercase tracking-[0.14em] text-lf-forest">
+            <div className="flex justify-between font-sans text-[9.5px] uppercase tracking-[0.14em] text-lf-forest">
               <span>Access recorded{demo ? " · demo" : ""}</span>
             </div>
-            <address className="mt-2 font-mono text-xs not-italic leading-relaxed text-lf-espresso">
+            <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lf-espresso">
               <span className="block font-semibold">{contact.ownerContact.name}</span>
               <span className="block">
                 {contact.ownerContact.email}

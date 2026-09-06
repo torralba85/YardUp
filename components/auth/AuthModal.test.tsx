@@ -75,17 +75,17 @@ describe("AuthModal focus restore", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("uses the on-dark focus token for signup legal links", () => {
+  it("uses the carbon-on-chalk focus token for signup legal links", () => {
     render(<AuthModal isOpen onClose={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));
 
     expect(screen.getByRole("link", { name: /terms & conditions/i })).toHaveClass(
-      "focus-visible:ring-lf-clay-on-dark",
-      "focus-visible:ring-offset-lf-mahogany",
+      "focus-visible:ring-lf-espresso",
+      "focus-visible:ring-offset-lf-card",
     );
     expect(screen.getByRole("link", { name: /privacy policy/i })).toHaveClass(
-      "focus-visible:ring-lf-clay-on-dark",
-      "focus-visible:ring-offset-lf-mahogany",
+      "focus-visible:ring-lf-espresso",
+      "focus-visible:ring-offset-lf-card",
     );
   });
 

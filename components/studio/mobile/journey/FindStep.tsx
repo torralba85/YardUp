@@ -44,7 +44,7 @@ export default function FindStep({
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lf-clay">Step 1 · Find</p>
+      <p className="lf-kicker text-lf-clay-ink">Step 1 · Find</p>
       <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
         Start with your address.
       </h1>
@@ -55,15 +55,15 @@ export default function FindStep({
       <div className="mt-5">
         <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} />
         {parcelLoading && (
-          <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-            <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+          <div className="mt-2 flex items-center gap-2 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+            <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
             Looking up property data…
           </div>
         )}
         {parcelError && (
           <div
             role="alert"
-            className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+            className="mt-2 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
           >
             <Search size={14} className="mt-0.5 shrink-0" />
             {parcelError}
