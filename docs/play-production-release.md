@@ -113,10 +113,13 @@ npm run android:validate:release
 debug-signed bundle, so a missing property is an error, never a silent
 downgrade.
 
-The code-7 AAB was built locally on 2026-09-03. It is 1,732,606 bytes, has
-SHA-256
-`5F1D360DCF5D4B71EFEB31D4F9B455F4090271098F06257B079E45C2205C59BC`,
-and its signer matches `A8:AC:42:8E:…:26:BD`.
+The code-8 AAB was built by **Android release bundle** run `34048176925` on
+2026-09-06 from `master`. It is 1,742,113 bytes, has SHA-256
+`B6D0F3AA787D70AA1497B5DEB74ECE3DC2A54B7482D8B857F00F5E51126CD43D`, and the
+workflow verified its signer against the upload key before uploading the
+artifact. The superseded code-7 AAB was built locally on 2026-09-03 at
+1,732,606 bytes, SHA-256
+`5F1D360DCF5D4B71EFEB31D4F9B455F4090271098F06257B079E45C2205C59BC`.
 
 ## 3. Console setup
 
@@ -192,9 +195,11 @@ bundle.
 
 ## 6. Rollout
 
-Upload to the intended track with version name `1.0.6`, version code `7`, and
+Upload to the intended track with version name `1.0.7`, version code `8`, and
 the release note from `docs/play-declarations.md`. Confirm in Console that the
-highest accepted version code is below 7 before uploading.
+highest accepted version code is below 8 before uploading. Code 7 was uploaded
+as a draft on 2026-09-06 and rejected for carrying Play Billing Library 7.1.1;
+code 8 is the build that answers that rejection.
 
 A personal Play account created after November 2023 needs 12 testers opted in
 for 14 continuous days before it can request production access. This account has
@@ -205,7 +210,7 @@ the clock is long if it does apply.
 
 Both in the same commit, or the next release build fails validation:
 
-1. Raise `PUBLISHED_VERSION_CODE` to `7` in
+1. Raise `PUBLISHED_VERSION_CODE` to `8` in
    `native/android/scripts/validate-config.mjs`.
 2. Raise `appVersionCode`/`appVersionName` in
    `native/android/twa-manifest.json` and `versionCode`/`versionName` in
