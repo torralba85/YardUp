@@ -333,6 +333,21 @@ service cloud.firestore {
       );
     }
 
+    function isValidPose(pose) {
+      return pose is map &&
+        pose.keys().hasOnly(["x", "z", "rotationDeg"]) &&
+        pose.keys().hasAll(["x", "z", "rotationDeg"]) &&
+        pose.x is number &&
+        pose.x >= -10000 &&
+        pose.x <= 10000 &&
+        pose.z is number &&
+        pose.z >= -10000 &&
+        pose.z <= 10000 &&
+        pose.rotationDeg is number &&
+        pose.rotationDeg >= -360 &&
+        pose.rotationDeg <= 360;
+    }
+
     function isValidLiveParcel(parcel) {
       return parcel is map &&
         parcel.keys().hasOnly([
@@ -348,7 +363,11 @@ service cloud.firestore {
           "boundaryGeoJson",
           "lat",
           "lng",
-          "source"
+          "source",
+          "state",
+          "zip",
+          "county",
+          "marketData"
         ]) &&
         parcel.keys().hasAll([
           "address",
@@ -393,7 +412,11 @@ service cloud.firestore {
         parcel.lng is number &&
         parcel.lng >= -180 &&
         parcel.lng <= 180 &&
-        parcel.source in ["regrid", "fallback"];
+        parcel.source in ["regrid", "fallback"] &&
+        (!("state" in parcel) || (parcel.state is string && parcel.state.size() <= 20)) &&
+        (!("zip" in parcel) || (parcel.zip is string && parcel.zip.size() <= 20)) &&
+        (!("county" in parcel) || parcel.county == null || (parcel.county is string && parcel.county.size() <= 100)) &&
+        (!("marketData" in parcel) || parcel.marketData is map);
     }
 
     function isValidNewScenario() {
@@ -403,6 +426,9 @@ service cloud.firestore {
         "liveParcel",
         "config",
         "assumptions",
+        "version",
+        "heightConvention",
+        "pose",
         "createdAt",
         "updatedAt"
       ]) &&
@@ -424,6 +450,9 @@ service cloud.firestore {
         isValidLiveParcel(request.resource.data.liveParcel)) &&
       isValidAduConfig(request.resource.data.config) &&
       isValidFinancialAssumptions(request.resource.data.assumptions) &&
+      (!("version" in request.resource.data) || request.resource.data.version == 2) &&
+      (!("heightConvention" in request.resource.data) || request.resource.data.heightConvention == "wall") &&
+      (!("pose" in request.resource.data) || isValidPose(request.resource.data.pose)) &&
       request.resource.data.createdAt == request.time &&
       request.resource.data.updatedAt == request.time;
     }

@@ -25,6 +25,7 @@ function firestoreToScenario(
   id: string,
   data: Record<string, unknown>,
 ): SavedScenario | null {
+  const rawLiveParcel = data.liveParcel as Record<string, unknown> | undefined;
   const scenario = {
     id,
     name: (data.name as string) || "Untitled",
@@ -33,7 +34,15 @@ function firestoreToScenario(
         ? data.createdAt.toDate().toISOString()
         : (data.createdAt as string) || new Date().toISOString(),
     parcelId: (data.parcelId as string) || "",
-    ...(data.liveParcel !== undefined ? { liveParcel: data.liveParcel } : {}),
+    ...(rawLiveParcel !== undefined
+      ? {
+          liveParcel: {
+            state: "",
+            zip: "",
+            ...rawLiveParcel,
+          },
+        }
+      : {}),
     version: data.version,
     heightConvention: data.heightConvention,
     pose: data.pose,
@@ -79,21 +88,34 @@ export async function saveSavedScenario(
   if (!normalized) throw new Error("Scenario is missing required fields.");
 
   const ref = userScenariosRef(uid);
-  const payload = {
-    version: normalized.version,
-    heightConvention: normalized.heightConvention,
-    pose: normalized.pose,
+  const payload: Record<string, unknown> = {
     name: normalized.name,
     parcelId: input.parcelId,
     config: normalized.config,
     assumptions: normalized.assumptions,
-    ...(input.liveParcel ? { liveParcel: input.liveParcel } : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
-  const docRef = await addDoc(ref, {
-    ...payload,
-  });
+
+  if (normalized.version !== undefined) {
+    payload.version = normalized.version;
+  }
+  if (normalized.heightConvention !== undefined) {
+    payload.heightConvention = normalized.heightConvention;
+  }
+  if (normalized.pose !== undefined) {
+    payload.pose = {
+      x: normalized.pose.x,
+      z: normalized.pose.z,
+      rotationDeg: normalized.pose.rotationDeg,
+    };
+  }
+  if (input.liveParcel) {
+    // Strip undefined properties so Firestore Web SDK does not throw "Unsupported field value: undefined"
+    payload.liveParcel = JSON.parse(JSON.stringify(input.liveParcel));
+  }
+
+  const docRef = await addDoc(ref, payload);
   return {
     ...normalized,
     id: docRef.id,

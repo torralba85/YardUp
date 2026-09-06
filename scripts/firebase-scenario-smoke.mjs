@@ -126,6 +126,13 @@ async function signIn() {
 async function commitScenario({ idToken, uid }) {
   const documentName = `projects/${projectId}/databases/(default)/documents/users/${uid}/savedScenarios/${scenarioId}`;
   const scenario = {
+    version: 2,
+    heightConvention: "wall",
+    pose: {
+      x: 0,
+      z: 0,
+      rotationDeg: 0,
+    },
     name: `Smoke scenario ${new Date().toISOString()}`,
     parcelId: "oak-street",
     config: {
@@ -166,7 +173,15 @@ async function commitScenario({ idToken, uid }) {
               fields: firestoreFields(scenario),
             },
             updateMask: {
-              fieldPaths: ["name", "parcelId", "config", "assumptions"],
+              fieldPaths: [
+                "version",
+                "heightConvention",
+                "pose",
+                "name",
+                "parcelId",
+                "config",
+                "assumptions",
+              ],
             },
             updateTransforms: [
               { fieldPath: "createdAt", setToServerValue: "REQUEST_TIME" },

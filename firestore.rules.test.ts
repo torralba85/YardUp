@@ -239,3 +239,161 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
     );
   });
 });
+
+describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioId} rules", () => {
+  const SCENARIO_ID = "scenario-123";
+
+  function sampleScenario(overrides: Record<string, unknown> = {}) {
+    return {
+      name: "Standard Backyard Suite",
+      parcelId: "oak-street",
+      version: 2,
+      heightConvention: "wall",
+      pose: { x: 10, z: -5, rotationDeg: 90 },
+      config: {
+        footprint: 600,
+        width: 20,
+        length: 30,
+        height: 12,
+        roof: "shed",
+        finish: "cedar",
+        includeOpenings: true,
+      },
+      assumptions: {
+        costPerSqft: {
+          cedar: 340,
+          lap: 315,
+          stucco: 330,
+          board: 355,
+        },
+        softCostMultiplier: 1.18,
+        operatingExpenseRatio: 0.325,
+        rentScenario: "conservative",
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      ...overrides,
+    };
+  }
+
+  const sampleLiveParcel = {
+    address: "500 Cedar Ave",
+    city: "San Jose, CA",
+    lotArea: 5600,
+    lotWidth: 44,
+    lotLength: 127,
+    existingHouseSqft: 1420,
+    maxLotCoveragePercent: 42,
+    setbacks: { front: 20, rear: 20, side: 5 },
+    zoning: "R-1",
+    boundaryGeoJson: null,
+    lat: 37.335,
+    lng: -121.889,
+    source: "regrid",
+    state: "CA",
+    zip: "95110",
+    county: "Santa Clara",
+    marketData: {
+      rentByBedroom: { studio: 2100, "1br": 2500, "2br": 3100 },
+      costMultiplier: 1.15,
+      source: "hud-zip",
+      area: "San Jose, CA",
+    },
+  };
+
+  it("allows owner to create a scenario with scene model fields", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertSucceeds(setDoc(scenarioRef, sampleScenario()));
+  });
+
+  it("allows owner to create a scenario with extended liveParcel", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertSucceeds(
+      setDoc(
+        scenarioRef,
+        sampleScenario({
+          liveParcel: sampleLiveParcel,
+        }),
+      ),
+    );
+  });
+
+  it("allows owner to read and delete their saved scenario", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(
+        doc(context.firestore(), "users", OWNER_ID, "savedScenarios", SCENARIO_ID),
+        sampleScenario({
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }),
+      );
+    });
+
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertSucceeds(setDoc(scenarioRef, sampleScenario()));
+  });
+
+  it("rejects create by another user or unauthenticated client", async () => {
+    const unauthedDb = rulesEnv().unauthenticatedContext().firestore();
+    const otherUserDb = rulesEnv().authenticatedContext("other-user").firestore();
+    const scenarioRef1 = doc(unauthedDb, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+    const scenarioRef2 = doc(otherUserDb, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertFails(setDoc(scenarioRef1, sampleScenario()));
+    await assertFails(setDoc(scenarioRef2, sampleScenario()));
+  });
+
+  it("rejects create with invalid pose bounds or unknown properties", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    // Invalid rotation
+    await assertFails(
+      setDoc(
+        scenarioRef,
+        sampleScenario({
+          pose: { x: 0, z: 0, rotationDeg: 500 },
+        }),
+      ),
+    );
+
+    // Unknown property
+    await assertFails(
+      setDoc(
+        scenarioRef,
+        sampleScenario({
+          unknownField: "hacked",
+        }),
+      ),
+    );
+  });
+
+  it("rejects update on existing scenarios", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(
+        doc(context.firestore(), "users", OWNER_ID, "savedScenarios", SCENARIO_ID),
+        sampleScenario({
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }),
+      );
+    });
+
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertFails(
+      updateDoc(scenarioRef, {
+        name: "Updated Name",
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+});
+
