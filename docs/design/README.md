@@ -8,8 +8,7 @@ Read this before any visual or UI decision. Nothing outside this directory carri
 When two documents disagree, the higher entry wins:
 
 1. **[`design-system.md`](./design-system.md)** — the A LOT MORE system. Active, authoritative.
-2. **[`product-surfaces.md`](./product-surfaces.md)** — the legacy Golden Hour surfaces (studio, auth,
-   builder, report, certificate, email) that have not migrated yet, plus the migration path.
+2. **[`product-surfaces.md`](./product-surfaces.md)** — project-wide coverage, renderer ownership, and verification.
 3. Shipped code. Where code and doc disagree on a *value*, the code is the fact and the doc is the bug —
    fix the doc. Where they disagree on a *rule*, the doc wins and the code is the bug.
 4. **[`archive/`](./archive/)** — superseded. Historical reference only. **Never apply to new work.**
@@ -19,7 +18,7 @@ When two documents disagree, the higher entry wins:
 | File | What it is |
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
-| [`product-surfaces.md`](./product-surfaces.md) | What the studio/auth/builder surfaces still run, and how they migrate. |
+| [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
 | [`2026-09-05-a-lot-more.md`](./2026-09-05-a-lot-more.md) | Implementation record for the landing redesign. |
 | [`a-lot-more-image-prompts.md`](./a-lot-more-image-prompts.md) | Asset provenance — the exact generation prompts. |
 | [`archive/`](./archive/) | Retired systems and audits. Superseded. |
@@ -53,10 +52,9 @@ type, disciplined white space, one vivid orange volume that is the thing you cou
 
 ## Working rules
 
-- All A LOT MORE styling is CSS-Module-scoped. It must not leak into `app/globals.css`, and the global
-  studio tokens must not leak into it.
-- New surfaces use A LOT MORE. Do not extend the Golden Hour system — it is in migration, not in
-  development.
+- The landing remains CSS-Module-scoped; its optical layout is preserved.
+- Every product route uses shared A LOT MORE tokens in `app/globals.css`, including auth and consent.
+- Legacy `lf-*` names are compatibility aliases, never permission to restore Golden Hour.
 - New colour pairing? Check contrast before shipping it. The palette contains a trap that looks fine.
 - Changing a rule here is a decision: add a row to the decisions log in `design-system.md` with the
   rationale, so the next person inherits the reasoning and not just the value.

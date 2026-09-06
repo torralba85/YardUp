@@ -25,14 +25,14 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           fontFamily: "system-ui, sans-serif",
-          background: "#F2E5D5",
-          color: "#261307",
+          background: "#F5F5F0",
+          color: "#161616",
           padding: "2rem",
           textAlign: "center",
         }}
       >
         <h1 style={{ fontSize: "1.75rem", margin: 0 }}>Something went wrong</h1>
-        <p style={{ color: "#6B5B4D", maxWidth: "28rem" }}>
+        <p style={{ color: "#65655F", maxWidth: "28rem" }}>
           LotFoundry could not load this page. Retry or open Help.
         </p>
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
@@ -41,10 +41,10 @@ export default function GlobalError({
             onClick={reset}
             style={{
               minHeight: 44,
-              borderRadius: 9999,
+              borderRadius: 3,
               border: "none",
-              background: "#2F4A38",
-              color: "#F2E5D5",
+              background: "#FF5B24",
+              color: "#161616",
               padding: "0 1.25rem",
               fontWeight: 600,
               cursor: "pointer",
@@ -58,10 +58,10 @@ export default function GlobalError({
               minHeight: 44,
               display: "inline-flex",
               alignItems: "center",
-              borderRadius: 9999,
-              border: "1px solid #E0CDB4",
-              background: "#FBF6EE",
-              color: "#261307",
+              borderRadius: 3,
+              border: "1px solid #65655F",
+              background: "#F5F5F0",
+              color: "#161616",
               padding: "0 1.25rem",
               fontWeight: 600,
               textDecoration: "none",

@@ -1,3 +1,4 @@
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFooter } from "./SiteFooter";
@@ -21,20 +22,15 @@ export function LegalPageShell({
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="flex min-h-11 items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="flex min-h-11 items-center gap-2 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lotfoundry-lockup-horizontal.svg"
-              alt="LotFoundry"
-              className="h-8 w-auto"
-            />
+            <BrandLockup className="h-8 w-auto" />
           </Link>
           <Link
             href="/studio"
             // Legal/support pages are Firebase-free; don't prefetch the group.
             prefetch={false}
-            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-lf-clay-ink transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="inline-flex min-h-11 items-center rounded-[3px] px-4 text-sm font-semibold text-lf-clay-ink motion-safe:transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
             Open studio
           </Link>

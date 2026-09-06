@@ -82,7 +82,7 @@ export interface VerdictTone {
 const VERDICT_TONE: Record<VerdictLevel, VerdictTone> = {
   "Likely Feasible": {
     color: "var(--color-lf-forest)",
-    onDark: "var(--color-lf-money-on-dark)",
+    onDark: "var(--color-status-eligible-on-dark)",
     soft: "var(--color-lf-forest-soft)",
   },
   "Needs Review": {
@@ -105,13 +105,13 @@ export function verdictTone(level: VerdictLevel): VerdictTone {
 export function statusTone(status: ConstraintStatus): VerdictTone {
   switch (status) {
     case "clear":
-      return { color: "var(--color-lf-forest)", onDark: "var(--color-lf-money-on-dark)", soft: "var(--color-lf-forest-soft)" };
+      return { color: "var(--color-lf-forest)", onDark: "var(--color-status-eligible-on-dark)", soft: "var(--color-lf-forest-soft)" };
     case "review":
       return { color: "var(--color-lf-amber-ink)", onDark: "var(--color-lf-amber-on-dark)", soft: "var(--color-lf-amber-soft)" };
     case "blocked":
       return { color: "var(--color-lf-brick)", onDark: "var(--color-lf-brick-on-dark)", soft: "var(--color-lf-brick-soft)" };
     default:
-      return { color: "var(--color-lf-muted)", onDark: "var(--color-lf-taupe)", soft: "var(--color-lf-taupe-soft)" };
+      return { color: "var(--color-lf-muted)", onDark: "var(--color-lot-stone-on-dark)", soft: "var(--color-lf-taupe-soft)" };
   }
 }
 

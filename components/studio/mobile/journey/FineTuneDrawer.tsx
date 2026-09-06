@@ -31,19 +31,19 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
           onCloseAutoFocus={event=>{event.preventDefault();returnFocus.current?.focus();}}
           onOpenAutoFocus={event=>{const input=document.querySelector<HTMLInputElement>('[data-testid="fine-tune-drawer"] input[type="number"]');if(input){event.preventDefault();input.focus();}}}
           aria-label="Fine-tune your ADU"
-          className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[92dvh] flex-col rounded-t-2xl border-t border-lf-hairline bg-lf-card shadow-[0_-8px_28px_rgba(38,19,7,0.3)] outline-none"
+          className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[92dvh] flex-col border-t border-[#DADAD3] bg-[#F5F5F0] shadow-[6px_8px_0_#16161618] outline-none"
         >
           <Drawer.Title className="sr-only">Fine-tune your ADU</Drawer.Title>
           <Drawer.Description className="sr-only">
             Adjust exact dimensions, roof, finish, and financial assumptions.
           </Drawer.Description>
           <div className="relative shrink-0 pt-2">
-            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-lf-taupe/40" />
+            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-[#DADAD3]" />
             <button
               type="button"
               aria-label="Close fine-tune panel"
               onClick={onClose}
-              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-full text-lf-taupe transition hover:text-lf-espresso"
+              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-[3px] text-[#65655F] motion-safe:transition hover:text-[#161616]"
             >
               <X size={20} />
             </button>

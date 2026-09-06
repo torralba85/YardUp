@@ -33,9 +33,9 @@ export default function StudioPage() {
           <p className="lf-kicker-dense text-lf-muted">
             Opening studio · typical supported markets
           </p>
-          <p data-money className="lf-money-lg mt-3 text-lf-forest">
+          <p data-money className="lf-money-lg mt-3 text-lf-money">
             {TYPICAL_MARKET.rentBand}
-            <span className="ml-1 font-mono text-sm font-normal text-lf-muted">/mo</span>
+            <span className="ml-1 font-sans text-sm font-normal text-lf-muted">/mo</span>
           </p>
           <p className="lf-caption mt-3 text-lf-muted">Estimates, not guarantees.</p>
         </div>

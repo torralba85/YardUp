@@ -17,8 +17,8 @@ environment files, sibling worktrees, or agent configuration.
 
 ## Manual web QA
 
-- [ ] Semantic-color check: base clay is used for interactive fills and borders; clay-ink is used for interactive text and focus on light surfaces; clay-on-dark is used on mahogany or espresso.
-- [ ] State-color check: current/selected controls are clay, completed/readiness states are forest, and forest commit CTAs use their solid semantic hover role.
+- [ ] A LOT MORE color check: chalk/carbon grounds, orange action fills with carbon labels, deep orange text on chalk, and stone-on-dark secondary text on carbon.
+- [ ] State-color check: selected controls are carbon/chalk; green is verified status only; money is neutral. Focus is carbon on light grounds and chalk on dark grounds.
 - [ ] Desktop at 1440×900 — no clipped UI or blank scene
 - [ ] Tablet at 768×1024 — no horizontal overflow
 - [ ] Mobile at 390×844 and 320×568 — no horizontal overflow

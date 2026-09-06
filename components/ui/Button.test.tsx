@@ -33,18 +33,22 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "Go" })).toHaveAttribute("type", "submit");
   });
 
-  it("is a pill and keeps a 44px comfortable target at the default size", () => {
+  it("uses the 3px control radius and keeps a 44px comfortable target", () => {
+    // A LOT MORE retired the pill-radius system; every control is 3px
+    // (docs/design/design-system.md 4.4).
     render(<Button>Continue</Button>);
     const button = screen.getByRole("button", { name: "Continue" });
-    expect(button).toHaveClass("rounded-full", "h-11");
+    expect(button).toHaveClass("rounded-[3px]", "h-11");
+    expect(button).not.toHaveClass("rounded-full");
   });
 
-  it("applies the commit (forest) variant for money actions", () => {
+  it("applies the commit (carbon) variant for money actions", () => {
+    // Money commits are carbon, not green: money-green is retired and green now
+    // means eligible/verified status only (docs/design/design-system.md 2.6).
     render(<Button variant="commit">Generate certificate</Button>);
-    expect(screen.getByRole("button", { name: "Generate certificate" })).toHaveClass(
-      "bg-lf-forest",
-      "hover:bg-lf-forest-strong",
-    );
+    const button = screen.getByRole("button", { name: "Generate certificate" });
+    expect(button).toHaveClass("bg-lf-commit", "text-lf-sand");
+    expect(button).not.toHaveClass("bg-lf-forest");
   });
 
   it("applies the primary (clay) variant by default", () => {
@@ -61,9 +65,9 @@ describe("Button", () => {
     const selected = screen.getByRole("tab", { name: "Selected" });
     expect(selected).toHaveAttribute("aria-selected", "true");
     expect(selected).toHaveClass(
-      "border-lf-clay",
-      "bg-lf-clay-soft",
-      "text-lf-clay-ink",
+      "border-lf-espresso",
+      "bg-lf-espresso",
+      "text-lf-sand",
     );
   });
 
@@ -79,9 +83,9 @@ describe("Button", () => {
   it("uses accessible clay ink for ghost actions and focus", () => {
     render(<Button variant="ghost">Ghost</Button>);
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
-      "text-lf-clay-ink",
-      "hover:bg-lf-clay-soft",
-      "focus-visible:ring-lf-clay-ink",
+      "text-lf-espresso",
+      "hover:bg-lf-hairline/30",
+      "focus-visible:ring-lf-espresso",
     );
   });
 

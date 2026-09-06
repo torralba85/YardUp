@@ -105,23 +105,23 @@ export default function ConstraintsPanel({
   return (
     <aside
       aria-label="Property constraints"
-      className="flex w-full shrink-0 flex-col border-t border-lf-hairline bg-lf-card lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
+      className="flex w-full shrink-0 flex-col border-t border-[#DADAD3] bg-[#F5F5F0] text-[#161616] lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
     >
-      <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
-        <p className="pb-2 lf-kicker text-lf-clay-ink">
+      <div className="border-b border-[#DADAD3] px-[22px] pb-3.5 pt-[18px]">
+        <p className="pb-2 lf-kicker text-[#65655F]">
           Your property
         </p>
         <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} autoFocusSignal={addressFocusSignal} />
         {parcelLoading && (
-          <div className="mt-2 flex items-center gap-2 rounded-lg border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-            <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+          <div className="mt-2 flex items-center gap-2 rounded-none border border-[#DADAD3] bg-[#EBEBE6] px-3 py-2 text-xs text-[#65655F]">
+            <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-[#DADAD3] border-t-[#FF5B24]" />
             Looking up property data…
           </div>
         )}
         {parcelError && (
           <div
             role="alert"
-            className="mt-2 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+            className="mt-2 flex items-start gap-2 rounded-none border border-[#A82D16]/30 bg-[#A82D16]/10 p-3 text-xs text-[#A82D16]"
           >
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             {parcelError}
@@ -129,11 +129,11 @@ export default function ConstraintsPanel({
         )}
       </div>
 
-      <div className="border-b border-lf-hairline px-[22px] pb-3.5 pt-[18px]">
-        <p className="lf-kicker text-lf-clay-ink">
+      <div className="border-b border-[#DADAD3] px-[22px] pb-3.5 pt-[18px]">
+        <p className="lf-kicker text-[#65655F]">
           Property constraints
         </p>
-        <h2 className="mt-1 font-display text-2xl font-bold leading-[1.15] text-lf-espresso">
+        <h2 className="mt-1 font-display text-2xl font-bold leading-[1.15] text-[#161616]">
           What this lot allows
         </h2>
       </div>
@@ -144,10 +144,10 @@ export default function ConstraintsPanel({
           if (rows.length === 0) return null;
           return (
             <div key={group}>
-              <p className="pb-0.5 pt-[18px] font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
+              <p className="pb-0.5 pt-[18px] font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-[#65655F]">
                 {group}
                 {group === "Economics" ? (
-                  <span className="font-medium text-lf-muted"> · if built</span>
+                  <span className="font-medium text-[#65655F]"> · if built</span>
                 ) : null}
               </p>
               {rows.map((row) => (
@@ -159,12 +159,12 @@ export default function ConstraintsPanel({
 
         {/* Rent scenario — drives the headline $/mo. Lives on the Feasibility
             tab so the income figure is adjustable without opening Massing. */}
-        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
+        <div className="mt-[18px] border-t border-[#DADAD3] pt-[18px]">
           <div className="flex items-center justify-between pb-2">
-            <p className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-muted">
+            <p className="font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-[#65655F]">
               Rent estimate
             </p>
-            <MoneyFigure value={result.monthlyRent} size="sm" tone="forest" />
+            <MoneyFigure value={result.monthlyRent} size="sm" tone="onLight" className="text-[#161616]" />
           </div>
           <Segmented
             aria-label="Rent estimate basis"
@@ -177,7 +177,7 @@ export default function ConstraintsPanel({
           />
         </div>
 
-        <div className="mt-[18px] border-t border-lf-hairline pt-[18px]">
+        <div className="mt-[18px] border-t border-[#DADAD3] pt-[18px]">
           <AIProjectBriefPanel
             response={projectBriefResponse}
             loading={projectBriefLoading}
@@ -190,10 +190,10 @@ export default function ConstraintsPanel({
 
       {/* Verdict-reason strip */}
       <div
-        className="flex items-start gap-3 border-t border-lf-hairline bg-lf-sand-2 px-[22px] py-3.5"
+        className="flex items-start gap-3 border-t border-[#DADAD3] bg-[#EBEBE6] px-[22px] py-3.5"
         style={{ borderLeft: `3px solid ${tone.color}` }}
       >
-        <p className="text-[13px] leading-[1.5] text-lf-espresso">
+        <p className="text-[13px] leading-[1.5] text-[#161616]">
           <strong style={{ color: tone.color }}>{summary.verdict}.</strong>{" "}
           {summary.clearedCount} of {summary.constraints.filter((c) => c.status !== "info").length}{" "}
           checks clear, with {summary.openCount}{" "}to confirm before permitting.
@@ -203,7 +203,7 @@ export default function ConstraintsPanel({
       <div className="px-[22px] pb-4">
         <Button
           type="button"
-          variant="commit"
+          variant="primary"
           size="md"
           fullWidth
           onClick={onViewCertificate}
@@ -219,14 +219,14 @@ export default function ConstraintsPanel({
 function ConstraintRow({ item }: { item: ConstraintItem }) {
   const tone = statusTone(item.status);
   const Icon = STATUS_ICON[item.status];
-  const iconColor = item.status === "info" ? "var(--color-lf-muted)" : tone.color;
+  const iconColor = item.status === "info" ? "#65655F" : tone.color;
 
   return (
-    <div className="flex items-start gap-3 border-b border-lf-hairline py-3">
+    <div className="flex items-start gap-3 border-b border-[#DADAD3] py-3">
       <Icon size={16} className="mt-px shrink-0" style={{ color: iconColor }} />
       <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-semibold text-lf-espresso">{item.label}</div>
-        <div className="mt-0.5 text-xs text-lf-muted">{item.detail}</div>
+        <div className="text-[13px] font-semibold text-[#161616]">{item.label}</div>
+        <div className="mt-0.5 text-xs text-[#65655F]">{item.detail}</div>
       </div>
       <RowTrailing item={item} />
     </div>
@@ -234,26 +234,26 @@ function ConstraintRow({ item }: { item: ConstraintItem }) {
 }
 
 function RowTrailing({ item }: { item: ConstraintItem }) {
-  // The income figure keeps the brand's serif-money treatment.
+  // Income figures set plain and large in carbon tabular numerals (§2.6)
   if (item.id === "rent") {
     return (
-      <span className="lf-money-sm text-lf-forest">
+      <span className="lf-money-sm text-[#161616]">
         {item.value?.replace("/mo", "")}
-        <span className="font-mono text-[10px] text-lf-muted">/mo</span>
+        <span className="font-sans text-[10px] tabular-nums text-[#65655F]">/mo</span>
       </span>
     );
   }
-  // Rows carrying a measured value show it as a recorded fact (mono),
+  // Rows carrying a measured value show it as a recorded fact (tabular numerals),
   // tinted only when the value itself represents a blocker.
   if (item.value) {
     return (
       <span
-        className="whitespace-nowrap font-mono text-xs"
+        className="whitespace-nowrap font-sans text-xs tabular-nums"
         style={{
           color:
             item.status === "blocked"
               ? statusTone(item.status).color
-              : "var(--color-lf-espresso)",
+              : "#161616",
         }}
       >
         {item.value}

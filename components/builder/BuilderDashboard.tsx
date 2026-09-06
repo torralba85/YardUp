@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -129,7 +130,7 @@ export default function BuilderDashboard({
           Review consented ADU feasibility snapshots matched to your service area.
         </p>
         {loadError && (
-          <div role="alert" className="mt-4 rounded-md border border-lf-brick/20 bg-lf-brick-soft p-3 text-sm text-lf-brick">
+          <div role="alert" className="mt-4 rounded-none border border-lf-brick/20 bg-lf-brick-soft p-3 text-sm text-lf-brick">
             {loadError}
           </div>
         )}
@@ -167,10 +168,9 @@ function BuilderHeader({
         <Link
           href="/"
           aria-label="LotFoundry home"
-          className="shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+          className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lotfoundry-lockup-horizontal.svg" alt="LotFoundry" className="h-7 w-auto" />
+          <BrandLockup className="h-7 w-auto" />
         </Link>
         <div className="flex min-w-0 items-center gap-3">
           <span className="hidden min-w-0 truncate text-sm text-lf-muted sm:block">{identity}</span>

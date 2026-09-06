@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -53,7 +54,7 @@ export function SettingsClient() {
         </p>
         <Link
           href="/login?next=/settings"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-lf-forest px-5 text-sm font-semibold text-lf-sand"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
         >
           Sign in
         </Link>
@@ -73,12 +74,7 @@ export function SettingsClient() {
       <header className="border-b border-lf-hairline bg-lf-card">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between gap-4 px-4">
           <Link href="/" className="shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lotfoundry-lockup-horizontal.svg"
-              alt="LotFoundry"
-              className="h-7 w-auto"
-            />
+            <BrandLockup className="h-7 w-auto" />
           </Link>
           <Link
             href={profile.role === "builder" ? "/builder" : "/studio"}
@@ -156,13 +152,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/help"
-                className="inline-flex min-h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
               >
                 Get help
               </Link>
               <Link
                 href="/feedback"
-                className="inline-flex min-h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
               >
                 Send feedback
               </Link>

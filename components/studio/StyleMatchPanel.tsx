@@ -298,7 +298,7 @@ export default function StyleMatchPanel({
             </label>
             <label
               htmlFor={inputId}
-              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2 ${
+              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2 ${
                 aiConsent
                   ? "cursor-pointer hover:bg-lf-sand"
                   : "cursor-not-allowed opacity-50"
@@ -319,7 +319,7 @@ export default function StyleMatchPanel({
           <div className="flex min-h-32 items-center justify-center border border-lf-hairline bg-lf-card px-4 py-6 text-lf-espresso">
             <Loader2
               size={20}
-              className="mr-2 animate-spin text-lf-clay-ink motion-reduce:animate-none"
+              className="mr-2 motion-safe:animate-spin text-lf-clay-ink motion-reduce:animate-none"
               aria-hidden="true"
             />
             <span className="lf-kicker">
@@ -340,7 +340,7 @@ export default function StyleMatchPanel({
                 <img src={previewUrl} alt="Uploading house" className="h-full w-full object-cover opacity-60" />
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-lf-espresso/10">
-                <Loader2 className="animate-spin text-lf-clay-ink" size={24} />
+                <Loader2 className="motion-safe:animate-spin text-lf-clay-ink" size={24} />
               </div>
             </div>
 
@@ -354,7 +354,7 @@ export default function StyleMatchPanel({
                   icon = <CheckCircle2 size={16} className="text-lf-forest shrink-0" aria-hidden="true" />;
                   textColor = "text-lf-forest font-semibold";
                 } else if (state === "current") {
-                  icon = <Loader2 size={16} className="animate-spin text-lf-clay-ink shrink-0" aria-hidden="true" />;
+                  icon = <Loader2 size={16} className="motion-safe:animate-spin text-lf-clay-ink shrink-0" aria-hidden="true" />;
                   textColor = "text-lf-espresso font-semibold";
                 } else {
                   icon = (
@@ -366,7 +366,7 @@ export default function StyleMatchPanel({
                 }
 
                 return (
-                  <div key={idx} className={`flex items-center gap-2.5 text-[11px] font-mono leading-none ${textColor}`}>
+                  <div key={idx} className={`flex items-center gap-2.5 text-[11px] font-sans leading-none ${textColor}`}>
                     {icon}
                     <span>{stepText}</span>
                   </div>
@@ -375,7 +375,7 @@ export default function StyleMatchPanel({
             </div>
 
             <div className="h-1.5 w-full bg-lf-taupe-soft mt-4 overflow-hidden rounded-full">
-              <div className="h-full w-full origin-left bg-lf-clay transition-transform duration-300 animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
+              <div className="h-full w-full origin-left bg-lf-clay motion-safe:transition-transform duration-300 motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
             </div>
 
             <p className="mt-3 text-[11px] text-lf-muted leading-normal">
@@ -384,28 +384,28 @@ export default function StyleMatchPanel({
 
             {showDeveloperTestControls && (
               <div className="mt-4 border border-dashed border-lf-hairline p-2 flex flex-col gap-1.5 bg-lf-sand-2">
-                <div className="font-mono text-[9px] uppercase text-lf-clay-ink text-center font-bold">
+                <div className="font-sans text-[9px] uppercase text-lf-clay-ink text-center font-bold">
                   Dev Test Controls
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="inline-flex min-h-11 items-center rounded-md bg-lf-forest px-3 py-1 font-mono text-[10px] font-semibold text-lf-sand transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="inline-flex min-h-11 items-center rounded-md bg-lf-brick px-3 py-1 font-mono text-[10px] font-semibold text-lf-sand transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-md border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-mono text-[10px] font-semibold text-lf-amber-ink transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>
@@ -531,7 +531,7 @@ function PhotoFact({ label, value }: { label: string; value: string }) {
       <dt className="lf-kicker-dense text-lf-muted">
         {label}
       </dt>
-      <dd className="mt-0.5 font-mono font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+      <dd className="mt-0.5 font-sans font-semibold uppercase tracking-[0.14em] text-lf-espresso">
         {value}
       </dd>
     </div>

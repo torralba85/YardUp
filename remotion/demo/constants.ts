@@ -11,20 +11,20 @@ export const DEMO_DURATION_IN_FRAMES =
   90 + 150 + 150 + 210 + 240 + 240 + 180 + 210 - 7 * 12;
 
 export const DEMO_PALETTE = {
-  ink: "#0A1120",
-  navy: "#121D33",
-  card: "#16233C",
-  mist: "#EAF0FA",
-  slate: "#BCC6DA",
-  glow: "#F5B54A",
-  money: "#7ED4A6",
-  hairline: "#263450",
-  sand: "#F2E5D5",
-  espresso: "#261307",
-  forest: "#2F4A38",
-  mahogany: "#592A0F",
-  clay: "#8C5B3F",
-  parchment: "#FBF6EE",
+  ink: "#161616",
+  navy: "#161616",
+  card: "#212121",
+  mist: "#F5F5F0",
+  slate: "#B7B7AE",
+  glow: "#FF5B24",
+  money: "#F5F5F0",
+  hairline: "#44443F",
+  sand: "#F5F5F0",
+  espresso: "#161616",
+  forest: "#176B4C",
+  mahogany: "#161616",
+  clay: "#FF5B24",
+  parchment: "#F5F5F0",
 } as const;
 
 /** Scene lengths in frames (30fps). Transition overlaps handled in composition. */

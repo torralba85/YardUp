@@ -61,15 +61,15 @@ export interface LightingPreset {
 export const LIGHTING_PRESETS: Record<LightingPresetId, LightingPreset> = {
   neutral: {
     id: "neutral",
-    name: "Neutral Inspection",
-    description: "Clean daylight studio inspection preset with high contrast clarity.",
+    name: "Gallery Daylight",
+    description: "Possibility Series gallery daylighting with clean architectural plane definition and high contrast clarity.",
     sunPosition: [25, 65, 35],
     sunColor: "#ffffff",
-    sunIntensity: 1.1,
-    ambientColor: "#f0f4f8",
+    sunIntensity: 1.15,
+    ambientColor: "#F5F5F0",
     ambientIntensity: 0.65,
     fillPosition: [-30, 40, -25],
-    fillColor: "#e2e8f0",
+    fillColor: "#DADAD3",
     fillIntensity: 0.35,
   },
   "golden-hour": {

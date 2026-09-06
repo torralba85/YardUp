@@ -147,7 +147,7 @@ export default function ReportPreview({
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-preview-heading"
-        className="flex h-[min(94dvh,920px)] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl border border-lf-hairline bg-lf-card shadow-[0_28px_80px_rgba(38,19,7,0.28)] motion-safe:animate-[lf-fade-in_180ms_ease-out] sm:h-auto sm:max-h-[min(92dvh,900px)] sm:rounded-2xl print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:border-0 print:shadow-none"
+        className="flex h-[min(94dvh,920px)] w-full max-w-5xl flex-col overflow-hidden rounded-none border border-lf-hairline bg-lf-card shadow-[6px_8px_0_#16161618] motion-safe:animate-[lf-fade-in_180ms_ease-out] sm:h-auto sm:max-h-[min(92dvh,900px)] sm:rounded-none print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:border-0 print:shadow-none"
       >
         {/* Sticky chrome: title + primary actions always reachable */}
         <header className="shrink-0 border-b border-lf-hairline bg-lf-card/95 px-4 py-3 backdrop-blur-sm sm:px-6 sm:py-4 print:static print:border-b print:bg-lf-card">
@@ -169,7 +169,7 @@ export default function ReportPreview({
               type="button"
               onClick={onClose}
               aria-label="Close report preview"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 print:hidden"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 print:hidden"
             >
               <X size={18} aria-hidden="true" />
             </button>
@@ -247,7 +247,7 @@ export default function ReportPreview({
                 <div className="mx-auto mt-2 h-px w-10 bg-lf-hairline" />
                 <div className="lf-caption mt-2 truncate text-lf-muted">{parcelName}</div>
                 {/* Decorative facsimile thumbnail only — not primary body copy. */}
-                <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-lf-brick">
+                <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.14em] text-lf-brick">
                   Concept
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function ReportPreview({
                 </div>
               </div>
 
-              <div className="lf-caption mt-5 rounded-lg border border-lf-hairline/50 bg-lf-sand-2 p-3 text-lf-muted">
+              <div className="lf-caption mt-5 rounded-none border border-lf-hairline/50 bg-lf-sand-2 p-3 text-lf-muted">
                 Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
                 and market rents with local professionals before moving forward. No approval or
                 income outcome is guaranteed.
@@ -374,14 +374,14 @@ function CertificateBriefSection({
             <div className="mt-2 h-2.5 w-full rounded bg-lf-taupe-soft" />
             <div className="mt-1.5 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="h-24 rounded-lg border border-lf-hairline bg-lf-sand-2" />
-              <div className="h-24 rounded-lg border border-lf-hairline bg-lf-sand-2" />
+              <div className="h-24 rounded-none border border-lf-hairline bg-lf-sand-2" />
+              <div className="h-24 rounded-none border border-lf-hairline bg-lf-sand-2" />
             </div>
           </div>
         ) : error ? (
           <div
             role="alert"
-            className="mt-3 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
+            className="mt-3 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
           >
             <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
             {error} The parcel facts and financial ledger remain available in this certificate.
@@ -428,7 +428,7 @@ function CertificateBriefSection({
       {error && (
         <div
           role="alert"
-          className="mt-4 flex items-start gap-2 rounded-lg border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
+          className="mt-4 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
         >
           <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
           {error} The last recorded brief is shown below.
@@ -463,7 +463,7 @@ function CertificateBriefSection({
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-lf-espresso">{risk.label}</span>
                       <span
-                        className={`rounded-md border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] ${REPORT_RISK_TONE[risk.level]}`}
+                        className={`rounded-none border px-2 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${REPORT_RISK_TONE[risk.level]}`}
                       >
                         {risk.level}
                       </span>
@@ -486,7 +486,7 @@ function CertificateBriefSection({
                 {brief.permitTrack.name}
               </h4>
             </div>
-            <span className="rounded-md border border-lf-hairline bg-lf-sand-2 px-2 py-1 lf-dataprint text-lf-muted">
+            <span className="rounded-none border border-lf-hairline bg-lf-sand-2 px-2 py-1 lf-dataprint text-lf-muted">
               {brief.permitTrack.type}
             </span>
           </div>
@@ -506,7 +506,7 @@ function CertificateBriefSection({
                       className="absolute bottom-0 left-[11px] top-6 w-px bg-lf-hairline"
                     />
                   )}
-                  <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-lf-hairline bg-lf-card font-mono text-[9px] text-lf-muted">
+                  <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-lf-hairline bg-lf-card font-sans text-[9px] text-lf-muted">
                     {index + 1}
                   </span>
                   <div className="min-w-0 border-b border-lf-hairline pb-3 last:border-b-0">
@@ -514,13 +514,13 @@ function CertificateBriefSection({
                       <span className="text-xs font-semibold leading-5 text-lf-espresso">
                         {stage.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[9px] text-lf-muted">
+                      <span className="shrink-0 font-sans text-[9px] text-lf-muted">
                         {stage.estWeeksLow}&ndash;{stage.estWeeksHigh} WK
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] leading-4 text-lf-muted">{stage.description}</p>
                     <span
-                      className={`mt-1.5 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] ${tone.className}`}
+                      className={`mt-1.5 block font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${tone.className}`}
                     >
                       {tone.label}
                     </span>
@@ -540,7 +540,7 @@ function CertificateBriefSection({
           <ol className="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {nextSteps.map((step, index) => (
               <li key={`${index}-${step}`} className="grid grid-cols-[20px_1fr] gap-2 text-xs leading-5 text-lf-muted">
-                <span className="font-mono text-[9px] text-lf-taupe">
+                <span className="font-sans text-[9px] text-lf-taupe">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <span>{step}</span>
@@ -578,7 +578,9 @@ function ReportFact({
             ? "text-lf-brick font-semibold"
             : "text-lf-muted";
   const iconClass =
-    tone === "money" || tone === "clear"
+    tone === "money"
+      ? "text-lf-money"
+      : tone === "clear"
       ? "text-lf-forest"
       : tone === "review"
         ? "text-lf-amber-ink"

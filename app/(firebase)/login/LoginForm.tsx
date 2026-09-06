@@ -95,7 +95,7 @@ export default function LoginForm() {
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-lg border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-none border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -114,7 +114,7 @@ export default function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-espresso"
             placeholder="you@example.com"
           />
         </div>
@@ -129,7 +129,7 @@ export default function LoginForm() {
             </label>
             <Link
               href="/forgot-password"
-              className="lf-body-sm text-lf-clay-ink transition-colors hover:text-lf-mahogany"
+              className="lf-body-sm text-lf-clay-ink motion-safe:transition-colors hover:text-lf-mahogany"
             >
               Forgot password?
             </Link>
@@ -141,7 +141,7 @@ export default function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20"
+            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-espresso"
             placeholder="Password"
           />
         </div>
@@ -149,18 +149,18 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-full bg-lf-clay py-3 text-sm font-semibold text-lf-sand shadow-[0_8px_24px_-12px_rgba(38,19,7,0.5)] transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
+          className="w-full rounded-[3px] bg-lf-clay py-3 text-sm font-semibold text-lf-primary-label motion-safe:transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
-      <label className="mt-6 flex items-start gap-3 lf-caption text-lf-muted">
+      <label className="mt-6 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lf-muted">
         <input
           type="checkbox"
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
         />
         <span>
           For Google or Apple, I confirm I am 18 or older, agree to the{" "}
@@ -188,7 +188,7 @@ export default function LoginForm() {
         type="button"
         onClick={handleGoogle}
         disabled={isPending || !socialConsent}
-        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
           <path
@@ -214,7 +214,7 @@ export default function LoginForm() {
         type="button"
         onClick={handleApple}
         disabled={isPending || !socialConsent}
-        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-lf-hairline bg-lf-card py-3 text-sm font-medium text-lf-espresso transition-colors hover:bg-lf-sand-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
           <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />

@@ -6,62 +6,68 @@
 @source not "../docs";
 
 @theme {
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), var(--font-sans), sans-serif;
-  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-sans: var(--font-lot-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-lot-display), sans-serif;
+  --font-mono: var(--font-lot-body), sans-serif;
 
-  /* LotFoundry Warm Earth Palette */
-  --color-lf-sand: #F2E5D5;
-  --color-lf-sand-2: #F8F0E4;
-  --color-lf-card: #FBF6EE;
-  --color-lf-taupe: #BFA58E;
-  --color-lf-taupe-soft: #BFA58E2E;
-  --color-lf-clay: #8C5B3F;
-  --color-lf-clay-soft: #8C5B3F14;
-  /* Accessible clay roles: base clay remains the fill/accent hue, clay-ink
-     carries small interactive text on light surfaces, and clay-on-dark keeps
-     focus/interaction visible on mahogany and espresso. */
-  --color-lf-clay-ink: #6F3F28;
-  --color-lf-clay-strong: #6F3F28;
-  --color-lf-clay-on-dark: #D09A78;
-  --color-lf-mahogany: #592A0F;
-  --color-lf-espresso: #261307;
-  --color-lf-muted: #6B5B4D;
-  --color-lf-hairline: #E0CDB4;
+  /* A LOT MORE Core Tokens */
+  --color-lot-chalk: #F5F5F0;
+  --color-lot-ink: #161616;
+  --color-lot-orange: #FF5B24;
+  --color-lot-orange-hover: #EE4B17;
+  --color-lot-orange-ink: #C43708;
+  --color-lot-orange-edge: #E5410B;
+  --color-lot-stone: #65655F;
+  --color-lot-stone-on-dark: #B7B7AE;
+  --color-lot-line: #DADAD3;
+  --color-lot-line-dark: #44443F;
+  --color-lot-surface-dark: #212121;
+  --color-lot-ground-dark: #161616;
 
-  /* On-dark accents (money band, instrument rail) */
-  --color-lf-money-on-dark: #9DC4A8;
-  /* Raised dark surface — the mahogany-family "#2A1A10 surface" from the
-     DESIGN.md dark-mode spec, for cards/panels sitting on espresso/mahogany. */
-  --color-lf-dark-surface: #2A1A10;
+  /* Status Tokens */
+  --color-status-eligible: #176B4C;
+  --color-status-eligible-on-dark: #5FBF93;
+  --color-status-review: #8A5300;
+  --color-status-review-on-dark: #E0A33C;
+  --color-status-blocked: #A82D16;
+  --color-status-blocked-on-dark: #F0705A;
 
-  /* Semantic colors */
-  --color-lf-forest: #2F4A38;
-  --color-lf-forest-strong: #263D2F;
-  --color-lf-forest-soft: #2F4A381A;
-  --color-lf-amber: #C8922A;
-  --color-lf-amber-soft: #C8922A1A;
-  /* Amber tuned for text/icons on LIGHT surfaces. The base --color-lf-amber
-     (#C8922A) is a fill/accent hue that only reaches ~2.6:1 on sand/card and
-     fails WCAG AA (1.4.3 as text, 1.4.11 as an icon). This deepened amber
-     clears 5:1 on sand, sand-2, and card while staying in the gold family.
-     Dark surfaces use --color-lf-amber-on-dark instead. */
-  --color-lf-amber-ink: #745A00;
-  --color-lf-amber-on-dark: #D9AA4A;
-  --color-lf-brick: #A23B26;
+  /* Compatibility aliases while legacy class names are retired incrementally. */
+  --color-lf-sand: #F5F5F0;
+  --color-lf-sand-2: #EBEBE6;
+  --color-lf-card: #F5F5F0;
+  --color-lf-taupe: #65655F;
+  --color-lf-taupe-soft: rgb(101 101 95 / 12%);
+  --color-lf-clay: #FF5B24;
+  --color-lf-clay-soft: rgb(255 91 36 / 12%);
+  --color-lf-clay-ink: #C43708;
+  --color-lf-primary-label: #161616;
+  --color-lf-clay-strong: #EE4B17;
+  --color-lf-clay-on-dark: #FF5B24;
+  --color-lf-mahogany: #161616;
+  --color-lf-espresso: #161616;
+  --color-lf-muted: #65655F;
+  --color-lf-hairline: #DADAD3;
+  --color-lf-focus-ring: #161616;
+  --color-lf-money: #161616;
+  --color-lf-money-on-dark: #F5F5F0;
+  --color-lf-unit-on-dark: #B7B7AE;
+  --color-lf-commit: #161616;
+  --color-lf-commit-strong: #33332F;
+  --color-lf-dark-surface: #212121;
+  --color-lf-forest: #176B4C;
+  --color-lf-forest-strong: #12543B;
+  --color-lf-forest-soft: rgb(23 107 76 / 12%);
+  --color-lf-amber: #8A5300;
+  --color-lf-amber-soft: rgb(138 83 0 / 12%);
+  --color-lf-amber-ink: #8A5300;
+  --color-lf-amber-on-dark: #E0A33C;
+  --color-lf-brick: #A82D16;
   --color-lf-brick-strong: #842F1F;
-  --color-lf-brick-soft: #A23B261A;
-  /* Brick tuned for text/icons on the dark espresso/mahogany surfaces
-     (verdict band, constraint list) — mirrors --color-lf-amber-on-dark's role
-     for the brick family. */
-  --color-lf-brick-on-dark: #D98A77;
+  --color-lf-brick-soft: rgb(168 45 22 / 12%);
+  --color-lf-brick-on-dark: #F0705A;
 
-  /* Layering scale — replaces ad-hoc z-40 / z-[100] / z-50 / z-30 collisions.
-     Every stacking context in the app draws from these named tiers so overlay
-     order is deterministic (studio scene < rails < headers < nav < sheet <
-     modals < toasts < coach marks). Reference from markup with the v4 var
-     shorthand, e.g. `z-(--z-index-modal)`, so the layer resolves regardless
-     of whether the `z-index` utility namespace is generated. */
+  /* Layering scale — deterministic overlay ordering */
   --z-index-base: 0;
   --z-index-scene: 10;
   --z-index-rail: 20;
@@ -97,7 +103,7 @@ h1,
 h2,
 h3,
 h4 {
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
@@ -113,24 +119,20 @@ p {
    utilities layer so responsive text, weight, and leading utilities can
    override individual properties consistently. */
 @utility lf-kicker {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 0.6875rem;
   font-weight: 600;
-  /* 0.14em across all three mono steps (2026-08-14). The 11px step carried
-     0.16em from an earlier pass and was never reconciled with the 2026-07-04
-     snap, leaving the layer with two tracking values — and the split ran
-     backwards from optical practice, since the smaller steps were the tighter
-     ones. One value now; see the DESIGN.md decisions log. */
-  letter-spacing: 0.14em;
+  /* A LOT MORE: one restrained eyebrow tracking value. */
+  letter-spacing: 0.08em;
   line-height: 1rem;
   text-transform: uppercase;
 }
 
 @utility lf-kicker-dense {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   line-height: 0.875rem;
   text-transform: uppercase;
 }
@@ -141,10 +143,10 @@ p {
    9px is reserved for decorative facsimiles (scaled-down document thumbnails),
    never informational content. */
 @utility lf-dataprint {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 0.5625rem; /* 9px */
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   line-height: 0.8125rem;
   text-transform: uppercase;
 }
@@ -161,7 +163,7 @@ p {
   font-family: var(--font-display);
   font-size: clamp(2.25rem, 3.6vw, 2.75rem);
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
   line-height: 1.08;
 }
 
@@ -169,7 +171,7 @@ p {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
   line-height: 1.18;
 }
 
@@ -177,7 +179,7 @@ p {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
   line-height: 1.2;
 }
 
@@ -203,8 +205,8 @@ p {
 
 /* Money/lead-figure scale — Major Third steps (16px × 1.25ⁿ: 20 · 25 · 31 · 39)
    for dollar figures and other lead numerals that `MoneyFigure` cannot render
-   (ranges, percents, years, scores). Cormorant 600, tight-set, tabular figures.
-   Color stays per-context (forest on light; money-on-dark/sand on dark).
+   (ranges, percents, years, scores). Space Grotesk 600, tight-set, tabular figures.
+   Color stays neutral: carbon on light, chalk on dark.
    Declared with @utility so responsive variants (`sm:lf-money-lg`) work. */
 @utility lf-money-sm {
   font-family: var(--font-display);
@@ -270,28 +272,14 @@ p {
   }
 }
 
-/* Subtle grain overlay — breaks the flatness of warm cream surfaces */
+/* Retained as a layout hook; A LOT MORE uses a crisp chalk ground. */
 .lf-grain {
   position: relative;
   isolation: isolate;
 }
-/* Fixed, not absolute: an absolute inset-0 overlay inside a scroll container
-   (the desktop StudioShell main is one) scrolls away with the content, so the
-   texture would cover only the first viewport. Viewport-pinning keeps the
-   paper uniform while scrolling and stays off the layout/paint path. */
 .lf-grain::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.05;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.149 0 0 0 0 0.075 0 0 0 0 0.027 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  display: none;
 }
-/* `:not(.fixed)` keeps viewport-fixed children (floating nav) out of this
-   rule — `position: relative` here would silently defeat their `fixed`
-   positioning since this rule comes later in the cascade. */
 .lf-grain > *:not(.fixed) {
   position: relative;
   z-index: 1;
@@ -301,18 +289,15 @@ button,
 select,
 input,
 textarea {
-  font: inherit;
+  font-family: inherit;
 }
 
-a:focus-visible,
-button:focus-visible {
-  /* Clay is the interactive accent ("the hand you click with"). Focus rings
-     must not use amber — amber is reserved for "review needed / permit risk"
-     status, so an amber focus ring collides with a meaning-bearing color.
-     The ink role keeps the same hue while raising light-surface contrast from
-     4.60:1 to 7.01:1; dark surfaces use `clay-on-dark`. */
-  outline: 2px solid var(--color-lf-clay-ink);
-  outline-offset: 3px;
+@layer base {
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--color-lf-focus-ring);
+    outline-offset: 5px;
+  }
 }
 
 @media print {
@@ -331,7 +316,7 @@ button:focus-visible {
 
   body {
     background: #ffffff !important;
-    color: #261307 !important;
+    color: #161616 !important;
     overflow: visible !important;
   }
 
@@ -444,13 +429,9 @@ summary {
   overscroll-behavior-y: contain;
 }
 
-/* Ambient warm backdrop — radial wash + faint grain (via `.lf-grain`).
-   Used by the auth pages (AuthLayout). */
+/* Shared architectural ground for authentication surfaces. */
 .lf-backdrop {
-  background:
-    radial-gradient(120% 80% at 50% -10%, rgba(140, 91, 63, 0.10), transparent 60%),
-    radial-gradient(90% 60% at 85% 10%, rgba(47, 74, 56, 0.06), transparent 55%),
-    var(--color-lf-sand);
+  background: var(--color-lf-sand);
 }
 
 /* Committed-state stamp/settle (6A): a granted unlock lands at 1.02→1, it

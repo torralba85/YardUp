@@ -43,7 +43,7 @@ export function DeleteAccountPageClient() {
       {loading ? (
         <p className="lf-body-sm text-lf-muted">Checking sign-in…</p>
       ) : user ? (
-        <section className="space-y-3 rounded-lg border border-lf-brick/30 bg-lf-brick-soft p-5">
+        <section className="space-y-3 rounded-none border border-lf-brick/30 bg-lf-brick-soft p-5">
           <h2 className="lf-card-heading">Delete now</h2>
           <p className="lf-body-sm text-lf-muted">
             Signed in as{" "}
@@ -55,7 +55,7 @@ export function DeleteAccountPageClient() {
           <DeleteAccountButton tone="light" />
         </section>
       ) : (
-        <section className="space-y-4 rounded-lg border border-lf-hairline bg-lf-card p-5">
+        <section className="space-y-4 rounded-none border border-lf-hairline bg-lf-card p-5">
           <h2 className="lf-card-heading">Sign in to delete</h2>
           <p className="lf-body-sm text-lf-muted">
             Use the same email or Apple/Google account you registered with. You do not need to
@@ -64,13 +64,13 @@ export function DeleteAccountPageClient() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/login?next=/delete-account"
-              className="inline-flex h-11 items-center justify-center rounded-full bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
+              className="inline-flex h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
             >
               Sign in
             </Link>
             <Link
               href="/forgot-password"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-lf-hairline px-5 text-sm font-semibold text-lf-espresso"
+              className="inline-flex h-11 items-center justify-center rounded-[3px] border border-lf-hairline px-5 text-sm font-semibold text-lf-espresso"
             >
               Reset password
             </Link>

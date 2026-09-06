@@ -115,7 +115,7 @@ export default function BuilderLeadPanel({
           type="button"
           onClick={onClose}
           aria-label="Close builder connection form"
-          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-lf-muted transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[3px] text-lf-muted motion-safe:transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
         >
           <X size={18} aria-hidden="true" />
         </button>
@@ -138,7 +138,7 @@ export default function BuilderLeadPanel({
             id="builder-lead-name"
             type="text"
             autoComplete="name"
-            className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
@@ -149,7 +149,7 @@ export default function BuilderLeadPanel({
             id="builder-lead-email"
             type="email"
             autoComplete="email"
-            className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -160,7 +160,7 @@ export default function BuilderLeadPanel({
             id="builder-lead-phone"
             type="tel"
             autoComplete="tel"
-            className="mt-1 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
           />
@@ -172,7 +172,7 @@ export default function BuilderLeadPanel({
           Message optional
           <textarea
             id="builder-lead-message"
-            className="mt-1 min-h-20 w-full rounded-md border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 min-h-20 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
           />

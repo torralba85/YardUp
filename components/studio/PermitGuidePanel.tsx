@@ -104,13 +104,13 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
             {guide.permitSteps.map((step, idx) => (
               <label
                 key={idx}
-                className="flex items-start gap-3 rounded-lg border border-lf-hairline bg-lf-sand/20 p-3 hover:bg-lf-sand/40 transition cursor-pointer"
+                className="flex items-start gap-3 rounded-none border border-[#DADAD3] bg-lf-sand/20 p-3 hover:bg-lf-sand/40 motion-safe:transition cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-lf-clay rounded focus:ring-lf-clay-ink"
+                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-[#161616]"
                 />
                 <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
                   {step}
@@ -127,7 +127,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
               <h4 className="lf-kicker-dense text-lf-muted">
                 Potential Blockers
               </h4>
-              <div className="rounded-md border border-lf-brick/30 bg-lf-brick-soft p-3.5 text-xs text-lf-brick">
+              <div className="rounded-none border border-lf-brick/30 bg-lf-brick-soft p-3.5 text-xs text-lf-brick">
                 <div className="flex gap-2">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <ul className="list-disc pl-3 space-y-1 font-medium">
@@ -157,7 +157,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           href={safeHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay-ink transition hover:text-lf-clay-strong"
+                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay-ink motion-safe:transition hover:text-lf-clay-strong"
                         >
                           <BookOpen size={14} />
                           {citationLabel}

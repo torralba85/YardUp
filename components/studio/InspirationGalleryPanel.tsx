@@ -100,7 +100,7 @@ export default function InspirationGalleryPanel({
             return (
               <div
                 key={item.id}
-                className="group overflow-hidden rounded-md border border-lf-hairline bg-lf-card shadow-sm motion-safe:transition-[border-color,box-shadow] motion-safe:duration-300 hover:border-lf-clay/50 hover:shadow-md"
+                className="group overflow-hidden rounded-none border border-lf-hairline bg-lf-card shadow-none motion-safe:transition-[border-color,box-shadow] motion-safe:duration-300 hover:border-lf-clay/50 hover:shadow-none"
               >
                 {/* Media area with toggling Views */}
                 <div className="relative h-44 w-full overflow-hidden bg-lf-sand-2 border-b border-lf-hairline">
@@ -121,8 +121,8 @@ export default function InspirationGalleryPanel({
                   </div>
 
                   {item.isStyleMatched && (
-                    <div className="absolute top-3 left-3 z-20 rounded-md bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-md">
-                      <span className="lf-dataprint font-bold text-lf-sand">
+                    <div className="absolute top-3 left-3 z-20 rounded-none bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-none">
+                      <span className="lf-dataprint font-bold text-lf-primary-label">
                         Style-Matched
                       </span>
                     </div>
@@ -139,14 +139,14 @@ export default function InspirationGalleryPanel({
                   </div>
 
                   {/* Toggle Capsule — min 44px touch via before: hit area on mobile. */}
-                  <div className="absolute top-3 right-3 z-20 flex gap-0.5 rounded-full bg-lf-espresso/85 p-0.5 backdrop-blur-md border border-lf-sand/10 shadow-lg">
+                  <div className="absolute top-3 right-3 z-20 flex gap-0.5 rounded-none bg-lf-espresso/85 p-0.5 backdrop-blur-md border border-lf-sand/10 shadow-none">
                     <Button
                       type="button"
                       size="sm"
                       variant={viewMode === "image" ? "selected" : "ghost"}
                       onClick={() => setCardView(item.id, "image")}
                       aria-pressed={viewMode === "image"}
-                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-sand aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-sm aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lf-sand/60 aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
+                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-primary-label aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-none aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lot-stone-on-dark aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
                       leftIcon={<Camera size={10} />}
                     >
                       Real View
@@ -157,7 +157,7 @@ export default function InspirationGalleryPanel({
                       variant={viewMode === "diagram" ? "selected" : "ghost"}
                       onClick={() => setCardView(item.id, "diagram")}
                       aria-pressed={viewMode === "diagram"}
-                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-sand aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-sm aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lf-sand/60 aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
+                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-primary-label aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-none aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lot-stone-on-dark aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
                       leftIcon={<Layers size={10} />}
                     >
                       Massing
@@ -168,14 +168,14 @@ export default function InspirationGalleryPanel({
                 {/* Card Details */}
                 <div className="space-y-3 p-4">
                   <div>
-                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso motion-safe:transition-colors motion-safe:duration-200 group-hover:text-lf-clay-ink">
+                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso motion-safe:transition-colors motion-safe:duration-200 group-hover:text-lf-clay-ink-ink">
                       {item.title}
                     </h3>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 lf-kicker-dense font-medium text-lf-muted">
+                      <span className="rounded-none border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 lf-kicker-dense font-medium text-lf-muted">
                         {item.style}
                       </span>
-                      <span className="rounded-md border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-mono text-[10px] font-medium text-lf-muted tracking-[0.14em]">
+                      <span className="rounded-none border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-sans text-[10px] font-medium text-lf-muted tracking-[0.14em]">
                         {item.sqft} sf ({item.width}&apos;x{item.length}&apos;)
                       </span>
                     </div>
@@ -187,7 +187,7 @@ export default function InspirationGalleryPanel({
                     {item.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-lf-taupe-soft px-2 py-0.5 lf-dataprint text-lf-muted"
+                        className="rounded-none bg-lf-taupe-soft px-2 py-0.5 lf-dataprint text-lf-muted"
                       >
                         {tag}
                       </span>

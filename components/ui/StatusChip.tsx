@@ -14,7 +14,7 @@ interface StatusConfig {
 }
 
 // Tones are chosen for WCAG AA on light surfaces: `review` uses the deepened
-// amber ink (#745A00, ~6:1 on card), never the base amber fill hue which fails
+// amber ink (#8A5300, ~6:1 on card), never the base amber fill hue which fails
 // as small text. Label + icon always carry the meaning, so colour is never the
 // sole signal.
 const CONFIG: Record<StatusChipStatus, StatusConfig> = {
@@ -63,7 +63,7 @@ export function StatusChip({ status, label, size = "sm", className }: StatusChip
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border font-mono font-semibold uppercase tracking-[0.14em]",
+        "inline-flex items-center gap-1.5 rounded-none border font-sans font-semibold uppercase tracking-[0.14em]",
         size === "sm" ? "h-[22px] px-2 text-[9.5px]" : "h-6 px-2.5 text-[11px]",
         config.className,
         className,

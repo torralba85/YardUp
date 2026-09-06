@@ -26,7 +26,7 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
   // Brick on light surfaces; brick-on-dark for AA on mahogany.
   const errorText = isDark ? "text-lf-brick-on-dark" : "text-lf-brick";
   const ringOffset = isDark ? "focus-visible:ring-offset-lf-mahogany" : "focus-visible:ring-offset-lf-card";
-  const actionRing = isDark ? "focus-visible:ring-lf-clay-on-dark" : "focus-visible:ring-lf-clay-ink";
+  const actionRing = isDark ? "focus-visible:ring-lot-chalk" : "focus-visible:ring-lf-clay-ink";
   const dangerRing = isDark ? "focus-visible:ring-lf-brick-on-dark" : "focus-visible:ring-lf-brick";
 
   async function handleDelete() {
@@ -52,9 +52,9 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
             setConfirming(true);
           }}
           className={cn(
-            "inline-flex min-h-11 items-center text-[11px] underline-offset-2 transition hover:underline",
+            "inline-flex min-h-11 items-center text-[11px] underline-offset-2 motion-safe:transition hover:underline",
             isDark
-              ? "text-lf-taupe hover:text-lf-brick-on-dark"
+              ? "text-lot-stone-on-dark hover:text-lf-brick-on-dark"
               : "text-lf-muted hover:text-lf-brick",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
             dangerRing,
@@ -75,7 +75,7 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
   return (
     <div
       className={cn(
-        "rounded-lg border p-2.5",
+        "rounded-none border p-2.5",
         isDark
           ? "border-lf-brick-on-dark/40 bg-lf-brick/15"
           : "border-lf-brick/40 bg-lf-brick-soft",
@@ -110,8 +110,8 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
           onClick={() => setConfirming(false)}
           disabled={pending}
           className={cn(
-            "min-h-11 rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
-            isDark ? "text-lf-taupe hover:text-lf-sand" : "text-lf-muted hover:text-lf-espresso",
+            "min-h-11 rounded-[3px] px-4 py-2 text-[11px] font-medium motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
+            isDark ? "text-lot-stone-on-dark hover:text-lf-sand" : "text-lf-muted hover:text-lf-espresso",
             actionRing,
             ringOffset,
           )}

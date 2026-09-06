@@ -26,9 +26,12 @@ describe("MoneyFigure", () => {
     expect(screen.getByText("$9,999")).toBeInTheDocument();
   });
 
-  it("applies the forest money tone (green only ever means money)", () => {
+  it("uses the surface-aware money token for the legacy forest tone", () => {
+    // The tone name is vestigial. A LOT MORE retired money-green; money reads
+    // through scale and weight in carbon (docs/design/design-system.md 2.6).
     const { container } = render(<MoneyFigure value={100} tone="forest" />);
-    expect(container.firstChild).toHaveClass("text-lf-forest");
+    expect(container.firstChild).toHaveClass("text-lf-money");
+    expect(container.firstChild).not.toHaveClass("text-lf-forest");
   });
 
   it("applies the on-dark money tone", () => {

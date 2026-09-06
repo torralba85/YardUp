@@ -31,7 +31,7 @@ export default function Error({
         </Button>
         <Link
           href="/help"
-          className="inline-flex h-11 items-center rounded-full border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
+          className="inline-flex h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
         >
           Get help
         </Link>

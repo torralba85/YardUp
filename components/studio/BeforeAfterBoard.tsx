@@ -143,13 +143,13 @@ export default function BeforeAfterBoard({
       aria-modal="true"
       aria-labelledby="board-title"
     >
-      <div className="w-full max-w-5xl border-[1.5px] border-lf-espresso bg-lf-card p-6 md:p-8 text-lf-espresso relative font-sans shadow-2xl lf-stamp select-text">
+      <div className="w-full max-w-5xl border-[1.5px] border-lf-espresso bg-lf-card p-6 md:p-8 text-lf-espresso relative font-sans shadow-none lf-stamp select-text">
         {/* Close Button */}
         <button
           ref={closeButtonRef}
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-lf-hairline text-lf-muted transition hover:bg-lf-sand-2 hover:text-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
+          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-[3px] border border-lf-hairline text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
           aria-label="Close dialog"
         >
           <X size={20} aria-hidden="true" />
@@ -205,7 +205,7 @@ export default function BeforeAfterBoard({
               />
               {/* Rotated Concept Stamp */}
               <div
-                className="absolute right-4 bottom-4 border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 lf-kicker-dense font-bold opacity-90 select-none shadow-sm"
+                className="absolute right-4 bottom-4 border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 lf-kicker-dense font-bold opacity-90 select-none shadow-none"
                 style={{ transform: "rotate(5deg)" }}
               >
                 Concept · not a permit
@@ -217,7 +217,7 @@ export default function BeforeAfterBoard({
         {/* Metadata Bar */}
         <div className="bg-lf-sand-2 border border-lf-hairline p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5">
-            <div className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+            <div className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
               {`STYLE MATCH ${styleName} · ${matchPercentage}%`.toUpperCase()}
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
@@ -232,7 +232,7 @@ export default function BeforeAfterBoard({
             </div>
           </div>
           {lotSizeInfo && (
-            <div className="flex flex-col items-start md:items-end justify-center font-mono text-xs text-lf-muted">
+            <div className="flex flex-col items-start md:items-end justify-center font-sans text-xs text-lf-muted">
               <span className="text-[10px] uppercase tracking-[0.14em] text-lf-muted/70">
                 Lot info
               </span>
@@ -249,7 +249,7 @@ export default function BeforeAfterBoard({
             <button
               type="button"
               onClick={onToggleAttach}
-              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold transition select-none rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink ${
+              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold motion-safe:transition select-none rounded-[3px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink ${
                 isAttached
                   ? "bg-lf-forest text-lf-sand hover:bg-lf-forest-strong"
                   : "border-[1.5px] border-lf-clay bg-lf-card text-lf-espresso hover:bg-lf-sand-2"
@@ -270,7 +270,7 @@ export default function BeforeAfterBoard({
             <button
               type="button"
               onClick={onRecast}
-              className="flex min-h-11 items-center justify-center gap-2 border border-lf-hairline bg-lf-card px-5 py-2 text-sm font-semibold text-lf-espresso transition hover:border-lf-clay hover:bg-lf-sand-2 rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
+              className="flex min-h-11 items-center justify-center gap-2 border border-lf-hairline bg-lf-card px-5 py-2 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-clay hover:bg-lf-sand-2 rounded-[3px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
             >
               <RefreshCcw size={16} aria-hidden="true" />
               Cast another

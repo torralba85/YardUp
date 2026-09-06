@@ -9,9 +9,8 @@
 // - API and cross-origin requests are never cached.
 // Bump on any release that changes the app shell. `activate` deletes every
 // cache whose name does not match the current VERSION, so this is what forces
-// returning visitors off the previous shell. v5: Newsreader/Instrument Sans/DM
-// Mono type system and the baseline security headers.
-const VERSION = "v5";
+// returning visitors off the previous shell. v6: project-wide A LOT MORE.
+const VERSION = "v6";
 const PRECACHE = `lotfoundry-precache-${VERSION}`;
 const RUNTIME = `lotfoundry-runtime-${VERSION}`;
 const OFFLINE_URL = "/offline.html";

@@ -232,7 +232,7 @@ export default function CertificatePanel({
         reportCtaBusy={reportBusy}
       />
 
-      <div className="rounded-lg border border-lf-hairline bg-lf-sand-2 px-6 py-5">
+      <div className="rounded-none border border-lf-hairline bg-lf-sand-2 px-6 py-5">
         {purchased ? (
           <div className="flex items-start gap-3">
             <ShieldCheck size={20} className="mt-0.5 shrink-0 text-lf-forest" />
@@ -305,7 +305,7 @@ export default function CertificatePanel({
               decision record you can review with builders, lenders, and local professionals.
             </p>
             <div
-              className={`mt-4 flex items-start gap-3 rounded-lg border px-4 py-3 ${
+              className={`mt-4 flex items-start gap-3 rounded-none border px-4 py-3 ${
                 siteFitStatus.tone === "ok"
                   ? "border-lf-forest/25 bg-lf-forest/5"
                   : "border-lf-amber/35 bg-lf-amber/5"
@@ -343,7 +343,7 @@ export default function CertificatePanel({
                 </li>
               ))}
             </ul>
-            <p className="mt-4 rounded-md border border-lf-hairline bg-lf-card px-3 py-2 text-xs leading-5 text-lf-espresso">
+            <p className="mt-4 rounded-none border border-lf-hairline bg-lf-card px-3 py-2 text-xs leading-5 text-lf-espresso">
               <strong>One purchase unlocks this property.</strong> Revise the ADU concept and
               regenerate its certificate without paying again.
             </p>

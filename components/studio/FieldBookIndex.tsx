@@ -14,7 +14,7 @@ const TICK_META: Record<PlateTick, { glyph: string; label: string; className: st
   review: { glyph: "△", label: "review", className: "text-lf-amber-on-dark" },
   // On mahogany sidebar — use on-dark brick for AA contrast.
   unlikely: { glyph: "✕", label: "unlikely", className: "text-lf-brick-on-dark" },
-  pending: { glyph: "·", label: "not started", className: "text-lf-taupe/60" },
+  pending: { glyph: "·", label: "not started", className: "text-lot-stone-on-dark" },
   ready: { glyph: "◦", label: "ready to record", className: "text-lf-money-on-dark" },
 };
 
@@ -34,14 +34,14 @@ export default function FieldBookIndex({
   return (
     <div>
       <div className="px-2 pb-4">
-        <p className="lf-dataprint text-lf-taupe">
+        <p className="lf-dataprint text-lot-stone-on-dark">
           Survey of
         </p>
         <p className="mt-1 truncate font-display text-base font-semibold text-lf-sand">
           {subject.address}
         </p>
         {(subject.apn || subject.zone) && (
-          <p className="mt-0.5 font-mono text-[10px] text-lf-taupe">
+          <p className="mt-0.5 font-sans text-[10px] text-lot-stone-on-dark">
             {subject.apn ? `⌖ APN ${subject.apn}` : ""}
             {subject.apn && subject.zone ? " · " : ""}
             {subject.zone ?? ""}
@@ -59,37 +59,37 @@ export default function FieldBookIndex({
               type="button"
               onClick={() => onNavigate(plate.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex w-full min-h-11 items-center gap-3 rounded-lg py-2 pl-3 pr-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-on-dark focus-visible:ring-inset ${
+              className={`relative flex w-full min-h-11 items-center gap-3 rounded-[3px] py-2 pl-3 pr-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset ${
                 isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-lf-sand/5"
               }`}
             >
               {/* Sliding monument marker — the "you are here" gesture. */}
               <span
                 aria-hidden
-                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-lf-clay transition-opacity ${
+                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-none bg-lf-clay motion-safe:transition-opacity ${
                   isActive ? "opacity-100" : "opacity-0"
                 }`}
               />
               <span
-                className={`w-6 shrink-0 font-mono text-[11px] font-semibold tracking-widest ${
-                  isActive ? "text-lf-sand" : "text-lf-taupe"
+                className={`w-6 shrink-0 font-sans text-[11px] font-semibold tracking-widest ${
+                  isActive ? "text-lf-sand" : "text-lot-stone-on-dark"
                 }`}
               >
                 {plate.numeral}
               </span>
               <span className="min-w-0 flex-1">
                 <span
-                  className={`block text-sm font-medium ${isActive ? "text-lf-sand" : "text-lf-taupe"}`}
+                  className={`block text-sm font-medium ${isActive ? "text-lf-sand" : "text-lot-stone-on-dark"}`}
                 >
                   {plate.title}
                   {plate.optional && (
-                    <span className="lf-dataprint ml-1.5 text-lf-taupe/70">
+                    <span className="lf-dataprint ml-1.5 text-lot-stone-on-dark">
                       optional
                     </span>
                   )}
                 </span>
               </span>
-              <span className={`shrink-0 font-mono text-xs ${tick.className}`} title={tick.label}>
+              <span className={`shrink-0 font-sans text-xs ${tick.className}`} title={tick.label}>
                 {tick.glyph}
                 <span className="sr-only"> {tick.label}</span>
               </span>

@@ -6,6 +6,16 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+
+- A LOT MORE now spans login and consent, account and builder screens, desktop/mobile Studio,
+  and generated certificates: chalk/carbon/orange, Space Grotesk/Manrope, square surfaces,
+  readable controls, and neutral financial figures matching the landing.
+- Shared landing identity, gallery-style scene lighting, updated offline/shell colors, and a
+  refreshed service-worker cache bring returning visitors onto the new design.
+- `docs/design/` defines the project-wide design authority; browser checks now enforce rendered
+  fonts, color contrast roles, consent defaults, responsive overflow, and modal focus restoration.
+
 ### Added
 - Public-release foundations: a safe environment template, evaluation license,
   documentation index, Devpost evidence guide, Android configuration validator,

@@ -7,7 +7,7 @@ import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "@/lib/feedback";
 import { Button } from "@/components/ui/Button";
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20";
+  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20";
 
 /**
  * The public feedback form: category, message, optional reply email, and a
@@ -59,13 +59,13 @@ export function FeedbackForm() {
 
   if (ticketId) {
     return (
-      <div role="status" className="rounded-lg border border-lf-hairline bg-lf-card p-5">
+      <div role="status" className="rounded-none border border-lf-hairline bg-lf-card p-5">
         <p className="lf-body text-lf-espresso">
           Thank you — your note is in. We read every submission.
         </p>
         <p className="lf-body-sm mt-3 text-lf-muted">
           Ticket ID{" "}
-          <span className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+          <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
             {ticketId}
           </span>
           {email ? " — we'll reply to the email you provided if follow-up is needed." : ""}

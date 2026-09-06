@@ -201,7 +201,7 @@ export default function BuilderInbox({
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
-          <span className="self-start rounded-md border border-lf-hairline px-2 py-1 lf-kicker-dense text-lf-muted">
+          <span className="self-start rounded-none border border-lf-hairline px-2 py-1 lf-kicker-dense text-lf-muted">
             {profile.active ? "Active" : "Inactive"}
           </span>
         </div>
@@ -248,7 +248,7 @@ export default function BuilderInbox({
               </div>
 
               {/* Cards vs Table View Mode Segment Toggle */}
-              <div className="flex rounded-full border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card">
+              <div className="flex rounded-none border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card">
                 <Button
                   type="button"
                   size="sm"
@@ -330,39 +330,39 @@ export default function BuilderInbox({
                               setSelectedItemId(item.request.id);
                             }
                           }}
-                          className={`group border-b border-lf-hairline cursor-pointer transition hover:bg-lf-sand-2/50 ${
+                          className={`group border-b border-lf-hairline cursor-pointer motion-safe:transition hover:bg-lf-sand-2/50 ${
                             isSelected ? "bg-lf-sand-2 border-l-[3px] border-l-lf-clay" : ""
                           }`}
                         >
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-mono text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay-ink transition">
+                            <div className="font-sans text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay-ink motion-safe:transition">
                               {item.request.preview.previewSerial}
                             </div>
-                            <div className="font-mono text-[9px] text-lf-muted mt-0.5">{dateStr}</div>
+                            <div className="font-sans text-[9px] text-lf-muted mt-0.5">{dateStr}</div>
                           </td>
                           <td className="px-4 py-3.5">
                             <div className="font-semibold text-lf-espresso text-xs truncate max-w-[180px]">
                               {hasAccess && itemContact ? itemContact.streetAddress : item.request.preview.neighborhood}
                             </div>
-                            <div className="font-mono text-[9.5px] text-lf-muted mt-0.5">{item.request.preview.zip}</div>
+                            <div className="font-sans text-[9.5px] text-lf-muted mt-0.5">{item.request.preview.zip}</div>
                           </td>
-                          <td className="px-4 py-3.5 text-right lf-money-sm text-lf-forest whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right lf-money-sm text-lf-money whitespace-nowrap">
                             {formatCurrency(item.request.preview.rentBand)}
-                            <span className="font-mono text-[9px] font-normal text-lf-muted ml-0.5">/mo</span>
+                            <span className="font-sans text-[9px] font-normal text-lf-muted ml-0.5">/mo</span>
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-mono text-[9.5px] text-lf-espresso font-medium">
+                            <div className="font-sans text-[9.5px] text-lf-espresso font-medium">
                               {item.request.preview.aduSqft.toLocaleString()} sf ADU
                             </div>
-                            <div className="font-mono text-[9px] text-lf-muted mt-0.5">
+                            <div className="font-sans text-[9px] text-lf-muted mt-0.5">
                               {item.request.preview.lotSqft.toLocaleString()} sf lot
                             </div>
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-mono text-[9.5px] text-lf-espresso">
+                            <div className="font-sans text-[9.5px] text-lf-espresso">
                               Build: {formatCompactCurrency(item.request.preview.buildBandLow)}–{formatCompactCurrency(item.request.preview.buildBandHigh)}
                             </div>
-                            <div className="font-mono text-[9px] text-lf-muted mt-0.5">
+                            <div className="font-sans text-[9px] text-lf-muted mt-0.5">
                               Payback: {item.request.preview.paybackYears} yrs
                             </div>
                           </td>
@@ -371,7 +371,7 @@ export default function BuilderInbox({
                               {itemAccess === "locked" && <Lock size={12} className="text-lf-muted" />}
                               {itemAccess === "unlocked" && <Unlock size={12} className="text-lf-forest" />}
                               {itemAccess === "confirming" && (
-                                <span className="h-2 w-2 rounded-full bg-lf-amber animate-pulse" />
+                                <span className="h-2 w-2 rounded-full bg-lf-amber motion-safe:animate-pulse" />
                               )}
                               <span className="lf-dataprint text-lf-muted ml-0.5">
                                 {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
@@ -486,7 +486,7 @@ export default function BuilderInbox({
                           {itemAccess === "locked" && (
                             <div className="space-y-4">
                               <div>
-                                <p className="lf-money-md text-lf-forest">
+                                <p className="lf-money-md text-lf-money">
                                   {formatCurrency(selectedItem.request.preview.rentBand)}
                                   <span className="ml-1.5 lf-kicker-dense text-lf-muted">
                                     /mo rent potential
@@ -502,7 +502,7 @@ export default function BuilderInbox({
                                 </p>
                               </div>
 
-                              <div className="space-y-3 rounded-lg border border-dashed border-lf-taupe bg-lf-sand-2/30 p-4 text-center">
+                              <div className="space-y-3 rounded-none border border-dashed border-lf-taupe bg-lf-sand-2/30 p-4 text-center">
                                 <Lock size={24} className="mx-auto text-lf-taupe" />
                                 <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
                                   Feasibility Certificate Locked
@@ -534,8 +534,8 @@ export default function BuilderInbox({
 
                           {/* 2. Confirming State Panel */}
                           {itemAccess === "confirming" && (
-                            <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3 rounded-lg">
-                              <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-amber-ink">
+                            <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3 rounded-none">
+                              <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-amber-ink">
                                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber-ink" />
                                 Recording lead unlock…
                               </div>
@@ -549,11 +549,11 @@ export default function BuilderInbox({
                           {itemAccess === "unlocked" && itemContact && (
                             <div className="space-y-4 lf-stamp">
                               {/* Homeowner Info Block */}
-                              <div className="border border-lf-forest bg-lf-forest-soft p-4 rounded-lg">
+                              <div className="border border-lf-forest bg-lf-forest-soft p-4 rounded-none">
                                 <div className="flex items-center justify-between lf-dataprint text-lf-forest">
                                   <span>Owner Contact Unlocked{demo ? " · Demo" : ""}</span>
                                 </div>
-                                <address className="mt-2 font-mono text-xs not-italic leading-relaxed text-lf-espresso">
+                                <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lf-espresso">
                                   <span className="block font-semibold text-sm">{itemContact.ownerContact.name}</span>
                                   <span className="block mt-1">
                                     <Mail size={11} className="inline mr-1 text-lf-muted" />
@@ -568,7 +568,7 @@ export default function BuilderInbox({
                                 </address>
                                 {itemContact.ownerContact.message && (
                                   <div className="mt-3 border-t border-dashed border-lf-hairline pt-2">
-                                    <span className="font-mono text-[9px] uppercase text-lf-muted font-medium">Homeowner Message:</span>
+                                    <span className="font-sans text-[9px] uppercase text-lf-muted font-medium">Homeowner Message:</span>
                                     <p className="text-xs italic text-lf-espresso mt-1 leading-relaxed bg-lf-card/60 p-2 border-l border-lf-taupe">
                                       &ldquo;{itemContact.ownerContact.message}&rdquo;
                                     </p>
@@ -585,7 +585,7 @@ export default function BuilderInbox({
                                 {(!itemContact.snapshot?.result || !itemContact.snapshot?.parcel || !itemContact.snapshot?.config) ? (
                                   /* Defensively Fallback to Plain Text Report if structure is not present (e.g. tests) */
                                   <div className="max-h-[300px] overflow-y-auto border border-lf-hairline bg-lf-card/60 p-3.5">
-                                    <pre className="whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-lf-espresso">
+                                    <pre className="whitespace-pre-wrap font-sans text-[10px] leading-relaxed text-lf-espresso">
                                       {itemContact.snapshot?.reportText || "Feasibility certificate data unavailable."}
                                     </pre>
                                   </div>
@@ -596,7 +596,7 @@ export default function BuilderInbox({
                                       <div className="border-b border-lf-hairline pb-2 text-center">
                                         <div className="lf-dataprint text-lf-clay-ink">LotFoundry</div>
                                         <h5 className="mt-0.5 font-display text-sm font-semibold leading-tight text-lf-espresso">Certificate of Feasibility</h5>
-                                        <p className="mt-1 truncate font-mono text-[9px] text-lf-muted">
+                                        <p className="mt-1 truncate font-sans text-[9px] text-lf-muted">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
                                         </p>
                                       </div>
@@ -610,7 +610,7 @@ export default function BuilderInbox({
                                               <span className="font-semibold block text-lf-espresso">Gross Rent (annual)</span>
                                               <span className="text-[9px] text-lf-muted">ADU rent potential</span>
                                             </div>
-                                            <div className="text-right font-mono font-semibold text-lf-espresso">
+                                            <div className="text-right font-sans font-semibold text-lf-espresso">
                                               {formatCurrency(itemContact.snapshot.result.monthlyRent * 12)}
                                             </div>
                                           </div>
@@ -619,13 +619,13 @@ export default function BuilderInbox({
                                               <span className="font-semibold block text-lf-espresso">Allowance</span>
                                               <span className="text-[9px] text-lf-muted">Maint, vacancy, taxes</span>
                                             </div>
-                                            <div className="text-right font-mono text-lf-muted">
+                                            <div className="text-right font-sans text-lf-muted">
                                               -{formatCurrency((itemContact.snapshot.result.monthlyRent * 12) - itemContact.snapshot.result.annualNoi)}
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-2 p-1.5 bg-lf-forest-soft text-lf-forest font-semibold">
+                                          <div className="grid grid-cols-2 p-1.5 bg-lf-sand-2 text-lf-money font-semibold">
                                             <div>Net Income (NOI)</div>
-                                            <div className="text-right font-mono">
+                                            <div className="text-right font-sans">
                                               {formatCurrency(itemContact.snapshot.result.annualNoi)}
                                             </div>
                                           </div>
@@ -766,20 +766,20 @@ function ZeroEverEmptyState() {
           <span className="lf-kicker-dense text-lf-muted">
             NO. LF-EXAMPLE
           </span>
-          <span className="rounded-md bg-lf-taupe-soft px-2.5 py-1 lf-kicker-dense text-lf-muted">
+          <span className="rounded-none bg-lf-taupe-soft px-2.5 py-1 lf-kicker-dense text-lf-muted">
             Example
           </span>
         </div>
         <p className="mt-2 font-semibold text-lf-espresso">
           Ballard, WA
-          <span className="ml-1.5 font-mono text-[10.5px] font-normal text-lf-muted">98107</span>
+          <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lf-muted">98107</span>
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
           <span>6,200 sqft</span>
           <span>800 sf ADU</span>
           <span>Compliant</span>
         </p>
-        <p className="mt-2 lf-money-md text-lf-forest">
+        <p className="mt-2 lf-money-md text-lf-money">
           $2,500
           <span className="ml-1.5 lf-kicker-dense text-lf-muted">
             /mo rent potential
@@ -990,7 +990,7 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(5)}
           disabled={loading !== null || prices === null}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left motion-safe:transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
@@ -998,7 +998,7 @@ function CreditShop() {
               {prices ? prices[5].perLead : "Loading price"}
             </div>
           </div>
-          <div className="lf-money-md text-lf-forest">
+          <div className="lf-money-md text-lf-money">
             {loading === 5 ? "…" : prices?.[5].total ?? "—"}
           </div>
         </button>
@@ -1006,7 +1006,7 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(10)}
           disabled={loading !== null || prices === null}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left motion-safe:transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>

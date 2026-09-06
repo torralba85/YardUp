@@ -69,43 +69,43 @@ interface ParcelSceneProps {
 /** Camera framing modes, shared with `lib/scene-camera-fit.ts`. */
 type ViewMode = SceneView;
 
-// Scene palette — "surveyor's desk at golden hour" (DESIGN.md). Two registers:
-// SEMANTIC colors trace to DESIGN.md tokens (plat ink, review amber, eligible
-// forest, clay drafting lines, sand label chips); WORLD colors are the
-// sanctioned scene-only material palette for lawn, timber, and glazing
-// (logged in the DESIGN.md Decisions Log, 2026-07-03).
+// Scene palette — A LOT MORE Architectural Exhibition (Phase 5).
+// The Possibility Series: miniature architectural maquette on a thick
+// cut-earth slab, ivory plaster main house with graphite roof, deep glazing,
+// signal orange proposal interactions, drafting setbacks, and clean
+// daylighting against a gallery backdrop (docs/design/design-system.md §8).
 const SCENE = {
-  // Semantic — must trace to DESIGN.md tokens
-  ink: "#261307", // --lf-espresso: plat boundary, corner ticks, label text
-  eligible: "#2F4A38", // --lf-forest: compliance ring/footprint (eligible)
-  review: "#C8922A", // --lf-amber: over-limit boundary/ring (review needed)
-  setback: "#8C5B3F", // --lf-clay: dashed drafting setback lines
-  labelChip: "rgba(242,229,213,0.92)", // --lf-sand: LabelSprite chip fill
-  hoverGlow: "#8C5B3F", // --lf-clay: interactive affordance glow on the ADU
-  // World — scene-only material palette
-  ground: "#85925F", // warm sage lawn
-  groundPaper: "#E7D8BE", // surveyor graph-paper context plane
-  wall: "#d8d2c8", // warm cream existing-house walls
-  roof: "#3d3428", // warm dark brown roof
-  glass: "#1a2a34", // deep blue-green glazing
-  slab: "#c4bfb3", // warm concrete
-  tree: "#4a6e3a", // tree canopy green
-  treeLight: "#5b7d46", // sunlit canopy lobe
-  treeDark: "#3f6132", // shaded canopy lobe
-  treeTrunk: "#5a4430", // bark brown
-  fence: "#8a7e6e", // weathered wood fence
-  driveway: "#9e9688", // gravel driveway
-  sun: "#ffdcae", // low golden-hour key light
-  ambient: "#f6e8d2", // warm ambient fill
-  fog: "#ddcbaa", // warm sand haze
+  // Semantic — traces to A LOT MORE tokens
+  ink: "#161616", // --color-lot-ink: plat boundary, corner ticks, label text
+  eligible: "#176B4C", // --color-status-eligible: compliance ring/footprint
+  review: "#8A5300", // --color-status-review: over-limit boundary/ring
+  setback: "#65655F", // --color-lot-stone: dashed drafting setback lines
+  labelChip: "rgba(245,245,240,0.95)", // --color-lot-chalk: LabelSprite chip fill
+  hoverGlow: "#FF5B24", // --color-lot-orange: interactive affordance glow on the ADU
+  // World — Possibility Series architectural maquette palette
+  ground: "#768763", // architectural museum lawn / moss
+  groundPaper: "#EBEBE6", // chalk graph-paper architectural context plane
+  wall: "#F5F5F0", // ivory plaster existing-house walls
+  roof: "#2B2B2B", // graphite pitched roof
+  glass: "#161616", // deep charcoal glazing with slender frames
+  slab: "#DADAD3", // concrete cut-earth slab datum
+  tree: "#476138", // tree canopy architectural green
+  treeLight: "#587348", // sunlit canopy lobe
+  treeDark: "#394d2d", // shaded canopy lobe
+  treeTrunk: "#42372d", // bark dark umber
+  fence: "#6e675f", // architectural slatted fence
+  driveway: "#8c887f", // honed gravel driveway
+  sun: "#ffffff", // clean gallery daylight key light
+  ambient: "#F5F5F0", // gallery-diffuse ambient fill
+  fog: "#F5F5F0", // clean daylight gallery fog
 };
 
 const SCENE_BACKDROP =
-  "linear-gradient(180deg, #b7c4ba 0%, #ded4b8 38%, #ecd9b2 64%, #d9c199 100%)";
+  "#F5F5F0";
 
 /**
  * Canvas graph-paper tile: 5 ft minor lines inside a 25 ft major cell, inked
- * in espresso at low alpha over the given base. One tile repeats per 25 ft of
+ * in carbon at low alpha over the given base. One tile repeats per 25 ft of
  * plane, so the grid stays true to lot dimensions.
  *
  * This returns the plain CPU canvas, not a `THREE.CanvasTexture`. The GPU
@@ -122,7 +122,7 @@ function makeSurveyGridCanvas(base: string, minorAlpha: number, majorAlpha: numb
   if (!ctx) return null;
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, size, size);
-  ctx.strokeStyle = `rgba(38,19,7,${minorAlpha})`;
+  ctx.strokeStyle = `rgba(22,22,22,${minorAlpha})`;
   ctx.lineWidth = 1;
   for (let i = 1; i < 5; i++) {
     const p = Math.round((i * size) / 5) + 0.5;
@@ -133,7 +133,7 @@ function makeSurveyGridCanvas(base: string, minorAlpha: number, majorAlpha: numb
     ctx.lineTo(size, p);
     ctx.stroke();
   }
-  ctx.strokeStyle = `rgba(38,19,7,${majorAlpha})`;
+  ctx.strokeStyle = `rgba(22,22,22,${majorAlpha})`;
   ctx.lineWidth = 2;
   ctx.strokeRect(1, 1, size - 2, size - 2);
   return canvas;
@@ -324,25 +324,25 @@ function SetbackDimensions({ parcel }: { parcel: Parcel }) {
 }
 
 /**
- * The brand mono stack for canvas drawing. Canvas text does not inherit CSS
- * fonts, and next/font registers IBM Plex Mono under a hashed family name —
- * so resolve the `--font-mono` variable at runtime instead of hardcoding.
+ * The brand body face stack for canvas drawing. Canvas text does not inherit CSS
+ * fonts, and next/font registers Manrope under a hashed family name —
+ * so resolve the `--font-sans` variable at runtime instead of hardcoding.
  */
-function monoFontStack(): string {
-  if (typeof window === "undefined") return "monospace";
+function bodyFontStack(): string {
+  if (typeof window === "undefined") return "sans-serif";
   const stack = getComputedStyle(document.documentElement)
-    .getPropertyValue("--font-mono")
+    .getPropertyValue("--font-sans")
     .trim();
-  return stack || "monospace";
+  return stack || "sans-serif";
 }
 
 /**
  * In-scene text label drawn to a canvas sprite (Drei/Troika `Text` loads fonts
  * over CDN and fails silently in dev — see CLAUDE.md). Labels are recorded
- * facts, so they render as UPPERCASE tracked IBM Plex Mono in espresso ink on
- * a rectangular sand chip (pills are reserved for clickable controls). The
+ * facts, so they render as UPPERCASE tracked Manrope in carbon ink on
+ * a rectangular chalk chip. The
  * canvas is scaled by devicePixelRatio so sprite text stays crisp on mobile,
- * and redrawn once `document.fonts` settles so the brand mono actually lands.
+ * and redrawn once `document.fonts` settles so the brand body face lands.
  */
 function LabelSprite({ text, position, scale = 6 }: { text: string; position: [number, number, number]; scale?: number }) {
   const [positionX, positionY, positionZ] = position;
@@ -361,7 +361,7 @@ function LabelSprite({ text, position, scale = 6 }: { text: string; position: [n
     const draw = () => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, baseW, baseH);
-      ctx.font = `600 30px ${monoFontStack()}`;
+      ctx.font = `600 30px ${bodyFontStack()}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const metrics = ctx.measureText(label);
@@ -1021,10 +1021,10 @@ export default function ParcelScene({
   const budget = SCENE_QUALITY[quality];
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-lf-sand">
+    <div className="flex h-full min-h-0 flex-col bg-[#F5F5F0]">
       <div
-        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay lg:min-h-[360px]"
-        style={{ backgroundImage: SCENE_BACKDROP }}
+        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#161616] lg:min-h-[360px]"
+        style={{ backgroundColor: SCENE_BACKDROP }}
         tabIndex={0}
         role="group"
         aria-label="Interactive ADU placement model"
@@ -1176,7 +1176,7 @@ export default function ParcelScene({
         <div
           role="group"
           aria-label="Camera view"
-          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-full border border-lf-hairline/70 bg-lf-card/95 p-1 shadow-sm"
+          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-none border border-[#DADAD3] bg-[#F5F5F0]/95 p-1"
         >
           {[
             { mode: "overview" as const, label: "Frame lot", icon: Home },
@@ -1192,16 +1192,16 @@ export default function ParcelScene({
                 variant={active ? "selected" : "ghost"}
                 onClick={() => selectView(mode)}
                 aria-pressed={active}
-                className="h-11 gap-1.5 px-3 leading-none aria-[pressed=false]:text-lf-espresso aria-[pressed=false]:hover:bg-lf-taupe/10"
+                className="h-11 gap-1.5 px-3 leading-none aria-[pressed=false]:text-[#161616] aria-[pressed=false]:hover:bg-[#161616]/5"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="text-xs">{label}</span>
+                <span className="text-xs font-medium">{label}</span>
               </Button>
             );
           })}
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-widest text-[#F5F5F0]">
           N
         </div>
       </div>
@@ -1217,22 +1217,22 @@ export default function ParcelScene({
 
       <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
 
-      <details className="shrink-0 border-t border-lf-hairline bg-lf-card px-3">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-clay-ink">
+      <details className="shrink-0 border-t border-[#DADAD3] bg-[#F5F5F0] px-3">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#161616]">
           Lighting and quality
         </summary>
         <div className="space-y-3 pb-3">
           <div
-            className="flex items-center gap-2 text-lf-espresso"
+            className="flex items-center gap-2 text-[#161616]"
             role="group"
             aria-label="Illustrative shadow preview"
           >
-            <Sun className="h-4 w-4 shrink-0 text-lf-clay-ink" aria-hidden="true" />
+            <Sun className="h-4 w-4 shrink-0 text-[#161616]" aria-hidden="true" />
             <span className="flex min-w-16 flex-col leading-none">
-              <span className="lf-dataprint text-lf-muted">Shadow preview</span>
+              <span className="lf-dataprint text-[#65655F]">Shadow preview</span>
               <output
                 htmlFor="shadow-preview-hour"
-                className="mt-1 font-mono text-xs font-semibold tracking-[0.14em]"
+                className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.14em]"
               >
                 {formatPreviewHour(sunHour)}
               </output>
@@ -1247,7 +1247,7 @@ export default function ParcelScene({
               disabled={!goldenHour}
               onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
               aria-label="Preview time"
-              className="h-8 w-28 cursor-pointer accent-lf-clay disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-8 w-28 cursor-pointer accent-[#FF5B24] disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div role="group" aria-label="Lighting preset" className="flex flex-wrap gap-1">
@@ -1280,13 +1280,13 @@ export default function ParcelScene({
               </Button>
             ))}
           </div>
-          <p className="text-xs leading-4 text-lf-muted">
+          <p className="text-xs leading-4 text-[#65655F]">
             Both presets are illustrative studio lighting, not a location- or
             date-based solar study. The shadow preview applies to Golden Hour
             only. Quality tiers set pixel ratio and shadow resolution; they are
             budget settings, not measured frame rates.
           </p>
-          <p className="text-xs leading-4 text-lf-muted">
+          <p className="text-xs leading-4 text-[#65655F]">
             Drag to move · Arrow keys when the model has focus
           </p>
         </div>
@@ -1316,17 +1316,17 @@ function Parcel2DScene({
   const outline = buildParcelOutline(parcel);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-lf-sand">
+    <div className="flex h-full min-h-0 flex-col bg-[#F5F5F0]">
       <div
         className="relative min-h-[220px] flex-1 overflow-hidden p-4"
         style={{ backgroundImage: SCENE_BACKDROP }}
       >
-        <div className="absolute left-4 top-4 z-(--z-index-scene) flex gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm">
-          <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
-          <span className="px-2 py-1 text-lf-muted">WebGL fallback</span>
+        <div className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-2 rounded-none border border-[#DADAD3] bg-[#F5F5F0] p-1.5 text-xs font-medium text-[#161616]">
+          <span className="rounded-none bg-[#161616] px-2 py-1 font-sans text-[11px] font-bold text-[#F5F5F0]">2D SITE PLAN</span>
+          <span className="px-1.5 py-0.5 font-sans text-xs text-[#65655F]">WebGL fallback</span>
         </div>
 
-        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-widest text-[#F5F5F0]">
           N
         </div>
 
