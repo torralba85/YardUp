@@ -90,7 +90,10 @@ export const inspirationItems: InspirationItem[] = [
     id: "coastal-adu",
     title: "Coastal Long-Lot ADU",
     style: "Coastal Minimal",
-    sqft: 700,
+    // `sqft` must equal width x length: `isValidAduConfig` enforces it exactly
+    // (lib/scenario-design.ts), and applying a template that breaks it produces
+    // a config the scenario URL serializer rejects. 16 x 44 = 704, not 700.
+    sqft: 704,
     width: 16,
     length: 44,
     roof: "flat",

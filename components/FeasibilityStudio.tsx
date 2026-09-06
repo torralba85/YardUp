@@ -24,7 +24,12 @@ import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
-import { defaultPose, isValidPose } from "@/lib/scenario-design";
+import {
+  defaultPose,
+  isValidAduConfig,
+  isValidFinancialAssumptions,
+  isValidPose,
+} from "@/lib/scenario-design";
 import { getScenePlacement } from "@/lib/site-fit";
 import { buildAduHeightModel, type Pose2D } from "@/lib/scene-model";
 import type { SavedScenario } from "@/lib/saved-scenarios";
@@ -412,6 +417,14 @@ function FeasibilityStudioInner() {
 
   useEffect(() => {
     if (!hydratedFromUrl || typeof window === "undefined") return;
+    // `serializeScenarioParams` throws on an invalid scenario, which is right for
+    // an explicit share action but fatal here: this effect runs on every state
+    // change, so a single out-of-range value took down the whole studio through
+    // the error boundary rather than just failing to update the URL. Keeping the
+    // address bar stale is the correct degradation — the studio stays usable.
+    if (!isValidAduConfig(config) || !isValidFinancialAssumptions(assumptions) || !isValidPose(pose)) {
+      return;
+    }
     const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
     const next = `${window.location.pathname}?${serialized}`;
     // Preserve the current entry's state — never pass `null` here. This
