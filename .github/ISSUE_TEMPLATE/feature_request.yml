@@ -1,0 +1,57 @@
+﻿name: "✨ Feature Request"
+description: "Suggest an enhancement or new capability for YardUp"
+title: "[FEATURE]: "
+labels: ["type: feature", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature! Please describe your proposed addition clearly.
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Target Area"
+      description: "Which area does this feature relate to?"
+      options:
+        - "area: studio (FeasibilityStudio, ParcelScene, constraints)"
+        - "area: landing (Marketing, BlueHourHero, Nocturne)"
+        - "area: parcel (Parcel ingest, geocoding, boundary detection)"
+        - "area: builder (Builder inbox, lead unlocking, dashboard)"
+        - "area: ai (ADU concept, AI project brief, OpenAI pipeline)"
+        - "area: stripe (Payments, checkout, credits)"
+        - "area: auth (Sign in, sign up, session management)"
+        - "area: firebase (Functions, Hosting, Firestore rules)"
+        - "area: ci (GitHub Actions, workflows, tests)"
+        - "Other"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem or Opportunity"
+      description: "What user problem or use case does this solve?"
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed Solution"
+      description: "Describe the proposed functionality, UX, or architecture."
+      placeholder: "A clear description of what should be built..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives Considered"
+      description: "Any alternative solutions or workarounds you have considered."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Preflight Checks"
+      options:
+        - label: "I have checked that a similar feature request does not already exist"
+          required: true
