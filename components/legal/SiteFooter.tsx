@@ -16,16 +16,15 @@ const FOOTER_LINKS = [
 /**
  * Shared public footer: About, Help, Feedback, Terms, Privacy, Delete account.
  * Used on legal/support surfaces and any public shell that needs consistent nav.
+ *
+ * These are product surfaces, so they keep the warm studio palette documented
+ * in `docs/design/product-surfaces.md`. The marketing landing (`/`) ships its
+ * own scoped footer in `components/landing/lot-more/` and does not use this.
  */
-export function SiteFooter({
-  tone = "light",
-}: {
-  /** `light` for Golden Hour sand pages; `dark` for Blue Hour landing. */
-  tone?: "light" | "dark";
-}) {
-  const muted = tone === "dark" ? "text-ln-slate" : "text-lf-muted";
-  const hover = tone === "dark" ? "hover:text-ln-mist" : "hover:text-lf-espresso";
-  const border = tone === "dark" ? "border-ln-hairline/60" : "border-lf-hairline/50";
+export function SiteFooter() {
+  const muted = "text-lf-muted";
+  const hover = "hover:text-lf-espresso";
+  const border = "border-lf-hairline/50";
 
   return (
     <footer className={`border-t ${border}`}>
