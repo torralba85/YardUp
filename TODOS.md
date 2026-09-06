@@ -1,6 +1,6 @@
 # LotFoundry Completion Register
 
-Last audited: 2026-07-19
+Last audited: 2026-09-06
 
 This file is the top-level completion and backlog register for LotFoundry. It
 separates shipped work, AI-agent-manageable work, human-required launch tasks,
@@ -16,25 +16,35 @@ settings, data export, support, legal, feedback, deletion, and Firebase deployme
 wiring are present. Purchase routing is also in place for web Stripe, iOS StoreKit,
 and Android Play Billing, with server-side verification for native grants.
 
-It is not launch-complete. Stripe live-mode checks, Firebase smoke credentials,
-production-domain decisions, Apple and Google console configuration, signing,
-native sandbox validation, store submission, legal review, and real
-builder-network operations still need human access or business decisions.
+It is not launch-complete. The blocking item is Play Billing verification: no
+`GOOGLE_PLAY_*` or `APPLE_*` secret exists and `ENABLE_NATIVE_STORE_VERIFICATION`
+is unset, so an Android purchase is charged and never granted. Stripe live-mode
+checks, Firebase smoke credentials, Apple and Google console configuration,
+signing, native sandbox validation, store submission, legal review, and real
+builder-network operations also still need human access or business decisions.
 
 Latest verification in this audit:
 
-- Repository truth: `origin/master` reached `837bf90` after PRs #151–#154; each
-  pull request passed repository hygiene, lint, unit tests, TypeScript, production
-  build, and Playwright before merge.
-- Last explicitly documented production deployment evidence remains
-  `origin/master` at `c76f936`; GitHub run `29599585306` passed verification and
-  deployed Hosting, Functions, and Firestore rules. Confirm the newest `master`
-  deploy in Actions before using it as release evidence.
+- Repository truth: `origin/master` reached `15e1f59` after PRs #177, #181, and
+  #182. GitHub run `34049202784` passed `verify` and deployed Hosting, Functions,
+  and Firestore rules. That run is the current release evidence.
+- Live HTTP smoke against `https://lotfoundry.net` after that deploy: 200 on `/`,
+  `/studio`, `/settings`, `/privacy`, `/terms`, `/help`, `/delete-account`,
+  `/builder`, `/api/suggest`, `/api/geocode`, and
+  `/.well-known/assetlinks.json`. Places and Geocoding returned live data rather
+  than fallbacks, and the 3D studio rendered with no application console errors.
+- Production domain is `lotfoundry.net`, served directly with no redirect, which
+  is what the TWA requires. `yardup-2026.web.app` remains a working alias.
+- Cloud Functions deployed: `app`, `api`, `apiAi`, `apiStripe`, `apiStore` - all
+  gen-2 on Node 22. The six `ext-firestore-stripe-payments-*` extension functions
+  still run on the deprecated Node 20 runtime; that is an extension update, not a
+  code change.
+- Android: a signed AAB for v1.0.7 / versionCode 8 was built by run
+  `34048176925` - 1,742,113 bytes, SHA-256
+  `B6D0F3AA787D70AA1497B5DEB74ECE3DC2A54B7482D8B857F00F5E51126CD43D`, signer
+  verified against the trusted upload key. It has **not** been uploaded to Play.
 - GitHub: default branch `master`; PR work must compare against live
   `origin/master`, not a potentially stale local `master`.
-- The prior live HTTP smoke recorded 200 responses for `/`, `/studio`,
-  `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`, `/privacy`, and
-  `/terms`; rerun smoke checks against the current deployment before release.
 - Use a clean worktree and `npm ci` for local release verification. Do not use
   untracked tooling directories or another worktree's changes as release evidence.
 
@@ -51,9 +61,14 @@ healthy, and both store listings are actually available to users.
 
 ## Done / Shipped
 
-- Brand and design system: LotFoundry identity, warm field-book palette, font
-  trio, money scale, pill-radius rules, landing hero, and store coming-soon
-  banner are implemented.
+- Brand and design system: the A LOT MORE system (chalk `#F5F5F0`, carbon
+  `#161616`, signal orange `#FF5B24`, Space Grotesk + Manrope, square surfaces,
+  3px controls, hard-offset elevation) is implemented project-wide as of #180 -
+  landing, auth and consent, account, builder, Studio, and generated
+  reports/certificates share the global tokens, with no legacy route-theme
+  boundary. `docs/design/` is the source of truth. The retired warm field-book
+  palette, font trio, and pill-radius rules live in `docs/design/archive/` and
+  must not be applied to new work.
 - Core owner flow: landing address handoff, `/studio`, demo presets, live parcel
   search, estimated parcels, aerial fallback, 3D parcel scene, ADU placement,
   feasibility metrics, rent scenarios, and guided desktop/mobile spine are live.
@@ -85,6 +100,18 @@ healthy, and both store listings are actually available to users.
 - Deployment: Firebase Hosting + Functions + Firestore rules path is configured;
   CI verifies and deploys `master`; `apiAi`, `apiStripe`, `apiStore`, and generic
   `api` rewrites are separated.
+- CI hardening (#177): third-party actions pinned to immutable commit SHAs,
+  `persist-credentials: false` on checkouts, least-privilege `permissions`
+  blocks, and structured GitHub Issue Forms. Note that the new workflow-level
+  `concurrency` group keeps only one pending run per branch, so back-to-back
+  merges cancel the intermediate run - a given commit is not guaranteed its own
+  deploy, only that the newest commit is deployed.
+- Scenario persistence (#181): `normalizeLiveParcel` reduces an untrusted parcel
+  to exactly the fields `firestore.rules` accepts, and the rules dropped the
+  redundant `hasAll()` clauses that pushed a fully populated parcel past
+  Firestore's hard ceiling of 1000 evaluated expressions per request. Saving a
+  scenario with a complete live parcel previously failed with permission-denied
+  in production.
 
 ## To Complete - AI-Agent Manageable
 
@@ -170,8 +197,10 @@ P1 - release-hardening tasks an agent can prepare:
   and Android tablet store assets.
 - Run an agency-bar visual QA sweep against `docs/design/design-system.md` for
   the landing and mobile breakpoints, and against `docs/design/product-surfaces.md`
-  for studio, builder, auth, and certificate/report (still on the legacy palette);
-  file issues for any typography, radius, contrast, or semantic-color drift.
+  for studio, builder, auth, and certificate/report; file issues for any
+  typography, radius, contrast, or semantic-color drift. The "still on the legacy
+  palette" caveat that used to sit here was resolved by #180 - every surface is on
+  A LOT MORE, so this is drift detection now, not migration.
 - ~~Honor parcel query and address handoff on mobile/tablet studio entry so the
   first visible state includes the selected lot and a money figure, not the
   generic onboarding plate.~~ ✅ 2026-07-19 — address handoff already advanced
@@ -179,9 +208,12 @@ P1 - release-hardening tasks an agent can prepare:
   open on the Earn reveal (`isNonDefaultScenario`), with mobile e2e coverage
   in `e2e/mobile-studio.spec.ts`.
 - Expand remaining auth secondary links and footer links to 44px tap targets
-  while preserving the compact Golden Hour auth layout.
+  while preserving the compact A LOT MORE auth layout. (This item used to say
+  "Golden Hour"; that system was retired 2026-09-05 and must not guide the fix.)
 - Audit shared studio controls and tabs for 44px interaction targets; keep
-  read-only data chips compact per the pill-radius system.
+  read-only data chips compact using the A LOT MORE radius rules - `0` for
+  surfaces, `3px` for controls. (This item used to reference the retired
+  pill-radius system.)
 - ~~Associate every `AuthModal` field label with its input via `htmlFor`/`id`,
   then verify the modal with keyboard and screen-reader navigation.~~ ✅
   2026-07-19 — explicit label associations, focus trapping/restoration, Escape
@@ -208,8 +240,27 @@ P2 - larger agent work that needs a focused branch:
 
 ## To Complete - Human Required
 
-- Confirm production domain strategy and set `NEXT_PUBLIC_APP_URL` to the final
-  canonical URL if it should not remain `https://yardup-2026.web.app`.
+- ~~Confirm production domain strategy and set `NEXT_PUBLIC_APP_URL`.~~
+  ✅ 2026-09-06 - resolved. `lotfoundry.net` is the canonical domain, is the code
+  default in `app/layout.tsx`, `app/robots.ts`, and `app/sitemap.ts`, and the live
+  `robots.txt` and `sitemap.xml` emit it. Stripe return URLs derive from the
+  request origin first, so no secret needs setting. Do not reopen this.
+- **BLOCKER - Play Billing grants nothing.** No `GOOGLE_PLAY_PACKAGE_NAME`,
+  `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`, `APPLE_BUNDLE_ID`, or
+  `APPLE_ROOT_CA_FINGERPRINT256` exists in Secret Manager, and
+  `ENABLE_NATIVE_STORE_VERIFICATION` is unset. In a TWA the purchase channel
+  resolves to `google-play` with no Stripe fallback, so `PaymentRequest.show()`
+  charges the card and the server verify then refuses the grant. The purchase is
+  never consumed, so Play auto-refunds after three days, but the buyer receives
+  nothing at the time of purchase. Provision the Play service account, set all
+  four secrets (they are declared as a group, so a missing Apple one breaks the
+  deploy), set the flag, redeploy, and confirm a sandbox purchase actually grants
+  before opening any paid track - including internal testing. Full sequence in
+  `docs/play-production-release.md`.
+- Upload the signed v1.0.7 / versionCode 8 AAB to Play. versionCode 7 was
+  uploaded 2026-09-06 and rejected for carrying Play Billing Library 7.1.1; code 8
+  upgrades to 9.1.0. The artifact from run `34048176925` is retained 14 days -
+  rebuild via the **Android release bundle** workflow if it expires.
 - Verify in Google Cloud Console that the browser Places key behind
   `NEXT_PUBLIC_GOOGLE_PLACES_KEY` is the intended restricted key and that the
   server key has Maps Static, Geocoding, and Places access without an invalid
