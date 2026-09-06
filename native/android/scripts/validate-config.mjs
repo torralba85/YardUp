@@ -53,9 +53,9 @@ expect(twa.host === "lotfoundry.net", "TWA host must be lotfoundry.net.");
 expect(twa.startUrl === "/studio", "TWA start URL must be /studio.");
 expect(twa.display === "standalone", "TWA display mode must be standalone.");
 expect(twa.minSdkVersion >= 24, "Minimum Android SDK must be API 24 or newer.");
-// Highest versionCode already published to Google Play. Play rejects any upload whose
+// Highest versionCode already uploaded to Google Play. Play rejects any upload whose
 // versionCode does not exceed it, so the checked-in manifest must stay ahead of it.
-const PUBLISHED_VERSION_CODE = 6; // versionName 1.0.5, uploaded 2026-08-11
+const PUBLISHED_VERSION_CODE = 7; // versionName 1.0.6, uploaded 2026-09-06 (consumed by Play Console draft)
 expect(
   twa.appVersionCode > PUBLISHED_VERSION_CODE,
   `Android version code (${twa.appVersionCode}) must exceed the published Play version code (${PUBLISHED_VERSION_CODE}).`,

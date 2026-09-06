@@ -69,8 +69,8 @@ android {
         applicationId "com.lotfoundry.app"
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 7
-        versionName "1.0.6"
+        versionCode 8
+        versionName "1.0.7"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -256,8 +256,7 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     
-        implementation 'com.google.androidbrowserhelper:billing:1.1.0'
-    
-        implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.0-alpha02'
-    
+    implementation 'com.google.androidbrowserhelper:billing:1.2.0'
+    implementation 'com.android.billingclient:billing:9.1.0'
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.0-alpha02'
 }

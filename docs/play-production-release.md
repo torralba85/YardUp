@@ -1,6 +1,6 @@
-# Google Play production release runbook — v1.0.6 (versionCode 7)
+# Google Play production release runbook — v1.0.7 (versionCode 8)
 
-**Updated:** 2026-09-03
+**Updated:** 2026-09-06
 **App:** LotFoundry, `com.lotfoundry.app`, a Trusted Web Activity over
 `https://lotfoundry.net`.
 
@@ -46,7 +46,7 @@ Confirmed 2026-09-03 against the live host:
 - `/.well-known/assetlinks.json` returns 200 as `application/json`, carrying
   both the upload-key and Play App Signing fingerprints, matching
   `native/android/twa-manifest.json` exactly.
-- `versionCode 7` exceeds the `PUBLISHED_VERSION_CODE = 6` ceiling.
+- `versionCode 8` exceeds the `PUBLISHED_VERSION_CODE = 7` ceiling.
 - Repo gate green: lint and 136 Vitest files / 782 tests on 2026-09-03; the
   preceding release audit also passed `tsc --noEmit` and the production build.
 
