@@ -1,6 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { radioIndex } from "@/lib/radio-navigation";
+import { NumericField } from "../../NumericField";
 import { ArrowRight, SlidersHorizontal } from "lucide-react";
 import {
   configForFootprint,
@@ -52,6 +54,8 @@ export default function ShapeStep({
   onFineTune,
   onContinue,
 }: ShapeStepProps) {
+  const sizes=useRef<(HTMLButtonElement|null)[]>([]);
+  const finishes=useRef<(HTMLButtonElement|null)[]>([]);
   return (
     <section
       aria-label="Shape your ADU"
@@ -60,7 +64,7 @@ export default function ShapeStep({
     >
       {/* Taller scene band so massing, gesture hint, and view chrome all fit
           without clipping on modern phones; still leaves room for controls. */}
-      <div className="relative h-[38dvh] min-h-[220px] max-h-[320px] shrink-0 overflow-hidden bg-lf-espresso">
+      <div className="relative h-[52dvh] min-h-[360px] max-h-[560px] shrink-0 overflow-hidden bg-lf-espresso">
         {scene}
       </div>
 
@@ -74,18 +78,22 @@ export default function ShapeStep({
           </div>
           <div className="text-right">
             <p className="lf-dataprint text-lf-muted">
-              Now earning
+              Projected rent / mo
             </p>
             <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
           </div>
         </div>
 
         <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="ADU size">
-          {SIZE_OPTIONS.map((option) => {
-            const selected = config.footprint === option.footprint;
+          {SIZE_OPTIONS.map((option,index) => {
+            const preset=configForFootprint(option.footprint,config);
+            const selected = config.width===preset.width && config.length===preset.length;
             return (
               <button
                 key={option.footprint}
+                ref={node=>{ sizes.current[index]=node; }}
+                tabIndex={selected || (index===0 && !SIZE_OPTIONS.some(o=>{const p=configForFootprint(o.footprint,config);return p.width===config.width && p.length===config.length;})) ? 0 : -1}
+                onKeyDown={event=>{const next=radioIndex(event.key,index,SIZE_OPTIONS.length);if(next===null)return;event.preventDefault();onConfigChange(configForFootprint(SIZE_OPTIONS[next].footprint,config));sizes.current[next]?.focus();}}
                 type="button"
                 role="radio"
                 aria-checked={selected}
@@ -101,15 +109,24 @@ export default function ShapeStep({
           })}
         </div>
 
+        <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Exact ADU dimensions">
+          <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
+          <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
+          <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
+        </div>
+
         <p className="mt-5 lf-kicker-dense text-lf-muted">
           Style
         </p>
         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Exterior style">
-          {FINISHES.map((finish) => {
+          {FINISHES.map((finish,index) => {
             const selected = config.finish === finish;
             return (
               <Button
                 key={finish}
+                ref={node=>{ finishes.current[index]=node; }}
+                tabIndex={selected?0:-1}
+                onKeyDown={event=>{const next=radioIndex(event.key,index,FINISHES.length);if(next===null)return;event.preventDefault();onConfigChange({...config,finish:FINISHES[next]});finishes.current[next]?.focus();}}
                 type="button"
                 size="md"
                 variant={selected ? "selected" : "secondary"}

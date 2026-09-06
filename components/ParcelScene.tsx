@@ -1,16 +1,35 @@
 "use client";
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree, type RootState, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useThree, type RootState } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import type { ADUConfig, ExteriorFinish, Parcel } from "@/lib/feasibility";
-import { finishColors } from "@/lib/feasibility";
-import { formatPreviewHour, getIllustrativeSunPosition } from "@/lib/scene-lighting";
-import { getAduPlacementBounds, getSiteFitCapacityStatus } from "@/lib/site-fit";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import { formatPreviewHour, getIllustrativeSunPosition, LIGHTING_PRESETS, type LightingPresetId } from "@/lib/scene-lighting";
+import { getDefaultAduPose, getScenePlacement } from "@/lib/site-fit";
+import { describePlacement } from "@/lib/placement-validation";
+import {
+  buildAduSceneModel,
+  buildExistingHouseSceneModel,
+  buildParcelOutline,
+  SLAB_DATUM_FT,
+  type LocalBounds,
+  type Pose2D,
+} from "@/lib/scene-model";
+import { SCENE_QUALITY, type SceneQuality } from "@/lib/scene-quality";
+import { useSceneDrag } from "@/lib/use-scene-drag";
+import type { SceneView } from "@/lib/scene-camera-fit";
 import { Button } from "@/components/ui/Button";
+import { StudioMeasurementAdapter, type StudioMeasurementAdapterProps } from "@/components/studio/StudioMeasurementAdapter";
+import { AduArchitecture } from "@/components/studio/AduArchitecture";
+import { InstancedFence } from "@/components/studio/InstancedFence";
+import { ParcelPlan } from "@/components/studio/ParcelPlan";
+import { PlacementEditor } from "@/components/studio/PlacementEditor";
+import { SceneCameraController, SceneCameras } from "@/components/studio/SceneCameraController";
+import { SceneStatus } from "@/components/studio/SceneStatus";
+import { SceneVisibility } from "@/components/studio/SceneVisibility";
 
 /** Minimal error boundary that falls back to a render function. */
 class ErrorBoundary extends Component<
@@ -37,11 +56,18 @@ interface ParcelSceneProps {
   config: ADUConfig;
   isCompliant: boolean;
   remainingCapacity: number;
-  aduPosition?: [number, number];
-  onAduPositionChange?: (pos: [number, number]) => void;
+  /**
+   * The committed ADU pose. Optional so the dev measurement harness and the
+   * 2D fallback can mount the scene without owning scenario state; when it is
+   * absent the scene keeps its own pose and still reports commits.
+   */
+  pose?: Pose2D;
+  onPoseCommit?: (pose: Pose2D) => void;
+  measurement?: StudioMeasurementAdapterProps;
 }
 
-type ViewMode = "overview" | "adu" | "setbacks";
+/** Camera framing modes, shared with `lib/scene-camera-fit.ts`. */
+type ViewMode = SceneView;
 
 // Scene palette — "surveyor's desk at golden hour" (DESIGN.md). Two registers:
 // SEMANTIC colors trace to DESIGN.md tokens (plat ink, review amber, eligible
@@ -74,22 +100,20 @@ const SCENE = {
   fog: "#ddcbaa", // warm sand haze
 };
 
-const FINISH_ROUGHNESS: Record<ExteriorFinish, number> = {
-  cedar: 0.85,
-  lap: 0.6,
-  stucco: 0.9,
-  board: 0.5,
-};
-
 const SCENE_BACKDROP =
   "linear-gradient(180deg, #b7c4ba 0%, #ded4b8 38%, #ecd9b2 64%, #d9c199 100%)";
 
 /**
- * Canvas graph-paper texture: 5 ft minor lines inside a 25 ft major cell,
- * inked in espresso at low alpha over the given base. One tile repeats per
- * 25 ft of plane, so the grid stays true to lot dimensions.
+ * Canvas graph-paper tile: 5 ft minor lines inside a 25 ft major cell, inked
+ * in espresso at low alpha over the given base. One tile repeats per 25 ft of
+ * plane, so the grid stays true to lot dimensions.
+ *
+ * This returns the plain CPU canvas, not a `THREE.CanvasTexture`. The GPU
+ * texture is created as a declarative `<canvasTexture>` child so R3F owns its
+ * lifetime and disposes it with the material (D6) — a texture handed in through
+ * a `map={...}` prop is not owned by anything and leaked on every remount.
  */
-function makeSurveyGridTexture(base: string, minorAlpha: number, majorAlpha: number) {
+function makeSurveyGridCanvas(base: string, minorAlpha: number, majorAlpha: number) {
   const size = 256;
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -112,11 +136,7 @@ function makeSurveyGridTexture(base: string, minorAlpha: number, majorAlpha: num
   ctx.strokeStyle = `rgba(38,19,7,${majorAlpha})`;
   ctx.lineWidth = 2;
   ctx.strokeRect(1, 1, size - 2, size - 2);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.anisotropy = 4;
-  return texture;
+  return canvas;
 }
 
 const GRID_CELL_FT = 25;
@@ -137,20 +157,27 @@ function SurveyGround({
   majorAlpha: number;
   y?: number;
 }) {
-  const texture = useMemo(() => {
-    const tex = makeSurveyGridTexture(base, minorAlpha, majorAlpha);
-    tex?.repeat.set(width / GRID_CELL_FT, length / GRID_CELL_FT);
-    return tex;
-  }, [base, minorAlpha, majorAlpha, width, length]);
+  const canvas = useMemo(
+    () => makeSurveyGridCanvas(base, minorAlpha, majorAlpha),
+    [base, minorAlpha, majorAlpha],
+  );
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} receiveShadow>
       <planeGeometry args={[width, length]} />
-      {texture ? (
-        <meshStandardMaterial map={texture} roughness={0.95} />
-      ) : (
-        <meshStandardMaterial color={base} roughness={0.95} />
-      )}
+      <meshStandardMaterial color={canvas ? "#ffffff" : base} roughness={0.95}>
+        {canvas && (
+          <canvasTexture
+            attach="map"
+            args={[canvas]}
+            wrapS={THREE.RepeatWrapping}
+            wrapT={THREE.RepeatWrapping}
+            anisotropy={4}
+            repeat={[width / GRID_CELL_FT, length / GRID_CELL_FT]}
+            colorSpace={THREE.SRGBColorSpace}
+          />
+        )}
+      </meshStandardMaterial>
     </mesh>
   );
 }
@@ -165,7 +192,7 @@ function ContactShadow({
   length: number;
   opacity?: number;
 }) {
-  const texture = useMemo(() => {
+  const canvas = useMemo(() => {
     const size = 128;
     const canvas = document.createElement("canvas");
     canvas.width = size;
@@ -178,94 +205,18 @@ function ContactShadow({
     gradient.addColorStop(1, "rgba(38,19,7,0)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, size, size);
-    return new THREE.CanvasTexture(canvas);
+    return canvas;
   }, []);
 
-  if (!texture) return null;
+  if (!canvas) return null;
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
       <planeGeometry args={[width, length]} />
-      <meshBasicMaterial map={texture} transparent opacity={opacity} depthWrite={false} />
+      <meshBasicMaterial transparent opacity={opacity} depthWrite={false}>
+        <canvasTexture attach="map" args={[canvas]} colorSpace={THREE.SRGBColorSpace} />
+      </meshBasicMaterial>
     </mesh>
   );
-}
-
-function SceneCameraChoreography({
-  mode,
-  parcel,
-  config,
-  aduPos,
-}: {
-  mode: ViewMode;
-  parcel: Parcel;
-  config: ADUConfig;
-  aduPos: [number, number];
-}) {
-  const camera = useThree((state) => state.camera);
-  const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
-  const active = useRef(true);
-  // DESIGN.md: always guard motion. Reduced-motion users get an instant cut
-  // to the destination instead of the lerped camera flight.
-  const reduceMotion = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    [],
-  );
-
-  const destination = useMemo(() => {
-    const [aduX, aduZ] = aduPos;
-    if (mode === "adu") {
-      return {
-        position: new THREE.Vector3(aduX + 30, Math.max(config.height + 24, 32), aduZ + 34),
-        target: new THREE.Vector3(aduX, config.height * 0.45, aduZ),
-      };
-    }
-    if (mode === "setbacks") {
-      // Frame the whole plat top-down: fit the lot's long axis (plus margin
-      // for the dimension labels) inside the camera's vertical FOV.
-      const fovRad = (42 * Math.PI) / 180;
-      const fitHeight = (parcel.lotLength / 2 + 16) / Math.tan(fovRad / 2);
-      return {
-        position: new THREE.Vector3(0, Math.max(fitHeight, 96), 0.02),
-        target: new THREE.Vector3(0, 0, 0),
-      };
-    }
-    return {
-      position: new THREE.Vector3(58, 58, 72),
-      target: new THREE.Vector3(0, 0, 0),
-    };
-  }, [aduPos, config.height, mode, parcel.lotLength]);
-
-  useEffect(() => {
-    active.current = true;
-  }, [destination]);
-
-  useFrame((_, delta) => {
-    if (!active.current) return;
-    const alpha = reduceMotion ? 1 : 1 - Math.exp(-delta * 4.8);
-    camera.position.lerp(destination.position, alpha);
-    if (controls) {
-      controls.target.lerp(destination.target, alpha);
-      controls.update();
-    } else {
-      camera.lookAt(destination.target);
-    }
-    const positionSettled = camera.position.distanceTo(destination.position) < 0.08;
-    const targetSettled = !controls || controls.target.distanceTo(destination.target) < 0.08;
-    if (positionSettled && targetSettled) {
-      camera.position.copy(destination.position);
-      if (controls) {
-        controls.target.copy(destination.target);
-        controls.update();
-      } else {
-        camera.lookAt(destination.target);
-      }
-      active.current = false;
-    }
-  });
-
-  return null;
 }
 
 /**
@@ -480,6 +431,16 @@ function GableRoof({
     [],
   );
 
+  // These geometries and this material are constructed objects handed to R3F as
+  // props, not declarative children, so R3F does not own them and will not free
+  // them. Without this they leak a buffer set on every parcel change (D6).
+  useEffect(
+    () => () => {
+      roofMat.dispose();
+    },
+    [roofMat],
+  );
+
   const frontGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     const verts = new Float32Array([
@@ -524,6 +485,15 @@ function GableRoof({
     return geo;
   }, [eaveW, eaveZ, eaveY, ridgeY]);
 
+  useEffect(
+    () => () => {
+      frontGeo.dispose();
+      rearGeo.dispose();
+      gableGeo.dispose();
+    },
+    [frontGeo, rearGeo, gableGeo],
+  );
+
   return (
     <group>
       <mesh geometry={frontGeo} material={roofMat} castShadow />
@@ -533,13 +503,21 @@ function GableRoof({
   );
 }
 
+/**
+ * The existing house, sized and placed by T01's shared scene model rather than
+ * by a second copy of the sizing formula. The audit found Seattle's coverage
+ * math using a 1,380 sf house while this renderer drew 546 sf (D1); both now
+ * read `buildExistingHouseSceneModel`, so they cannot disagree. An unknown
+ * footprint renders nothing instead of a guessed box.
+ */
 function ExistingHouse({ parcel }: { parcel: Parcel }) {
-  const maxBuildableWidth = parcel.lotWidth - parcel.setbacks.side * 2;
-  const width = Math.max(Math.min(maxBuildableWidth * 0.65, 32), 10);
-  const depth = Math.max(Math.min(parcel.existingHouseSqft / width, 28), 8);
+  const model = buildExistingHouseSceneModel(parcel);
+  const width = model.footprint.width;
+  const depth = model.footprint.depth;
+  if (width === null || depth === null || model.pose === null) return null;
   const wallHeight = 9;
   const ridgeHeight = 5;
-  const zPos = parcel.lotLength / 2 - depth - parcel.setbacks.front + 2;
+  const zPos = model.pose.z;
 
   return (
     <group position={[0, 0, zPos]}>
@@ -561,13 +539,14 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
       {/* Proper gable roof */}
       <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
 
-      {/* Front door */}
-      <mesh position={[width * 0.28, 2.2, depth / 2 + 0.05]}>
-        <boxGeometry args={[2.5, 4.4, 0.3]} />
+      {/* Front door — a 6'-8" leaf in a cased opening, not the 4.4 ft door the
+          audit found reinforcing a toy-like scale (D4). */}
+      <mesh position={[width * 0.28, 3.35, depth / 2 + 0.05]}>
+        <boxGeometry args={[3, 6.7, 0.3]} />
         <meshStandardMaterial color="#5a3a20" roughness={0.55} />
       </mesh>
-      <mesh position={[width * 0.28, 4.6, depth / 2 + 0.06]}>
-        <boxGeometry args={[3.0, 0.5, 0.35]} />
+      <mesh position={[width * 0.28, 6.9, depth / 2 + 0.06]}>
+        <boxGeometry args={[3.5, 0.4, 0.35]} />
         <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
       </mesh>
 
@@ -628,384 +607,337 @@ function Tree({ position, height = 8, radius = 3 }: { position: [number, number,
   );
 }
 
-/** Fence along a property line: posts plus two horizontal rails. */
-function FenceLine({ start, end, postSpacing = 8, postHeight = 3 }: { start: [number, number, number]; end: [number, number, number]; postSpacing?: number; postHeight?: number }) {
-  const { posts, rails } = useMemo(() => {
-    const dx = end[0] - start[0];
-    const dz = end[2] - start[2];
-    const len = Math.sqrt(dx * dx + dz * dz);
-    const count = Math.floor(len / postSpacing);
-    const nx = dx / len;
-    const nz = dz / len;
-    const angle = Math.atan2(dx, dz);
-    const posts: { position: [number, number, number]; angle: number }[] = [];
-    for (let i = 0; i <= count; i++) {
-      posts.push({
-        position: [start[0] + nx * postSpacing * i, postHeight / 2, start[2] + nz * postSpacing * i],
-        angle,
-      });
-    }
-    const mid: [number, number] = [(start[0] + end[0]) / 2, (start[2] + end[2]) / 2];
-    const rails = [postHeight * 0.52, postHeight * 0.86].map((y) => ({
-      position: [mid[0], y, mid[1]] as [number, number, number],
-      angle,
-      length: len,
-    }));
-    return { posts, rails };
-  }, [start, end, postSpacing, postHeight]);
-
-  return (
-    <>
-      {posts.map((p, i) => (
-        <mesh key={i} position={p.position} rotation={[0, p.angle, 0]} castShadow>
-          <boxGeometry args={[0.3, postHeight, 0.3]} />
-          <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
-        </mesh>
-      ))}
-      {rails.map((r, i) => (
-        <mesh key={`rail-${i}`} position={r.position} rotation={[0, r.angle, 0]} castShadow>
-          <boxGeometry args={[0.12, 0.28, r.length]} />
-          <meshStandardMaterial color={SCENE.fence} roughness={0.88} />
-        </mesh>
-      ))}
-    </>
-  );
-}
-
-/** Draggable ADU: click-drag on the lot to reposition within setback bounds. */
+/**
+ * The proposed ADU: T07's architecture under a shared drag gesture.
+ *
+ * Three audit fixes live in this seam. The gesture comes from `useSceneDrag`,
+ * which preserves the grab offset (so the building no longer jumps to the
+ * cursor on press) and restores OrbitControls on pointerup, cancel, lost
+ * capture, Escape, blur and unmount (D8). Selection graphics — the hover ring
+ * and the footprint tint — are separate meshes, so hovering no longer lifts the
+ * model 0.35 ft off its slab or tints its finish (D4). And the pose is the
+ * caller's committed pose: this component owns no placement state of its own.
+ */
 function ProposedAdu({
   config,
-  parcel,
-  position: aduPos,
-  onPositionChange,
+  pose,
+  placementTone,
+  onPreview,
+  onCommit,
+  constrain,
 }: {
   config: ADUConfig;
-  parcel: Parcel;
-  position: [number, number];
-  onPositionChange?: (pos: [number, number]) => void;
+  pose: Pose2D;
+  placementTone: "clear" | "review" | "blocked";
+  onPreview: (pose: Pose2D) => void;
+  onCommit: (pose: Pose2D) => void;
+  constrain?: (pose: Pose2D) => Pose2D;
 }) {
-  const finishColor = finishColors[config.finish];
-  const finishRoughness = FINISH_ROUGHNESS[config.finish];
-  const y = config.height / 2;
-  const groundPlaneRef = useRef<THREE.Mesh>(null);
-  const isDragging = useRef(false);
-  const [isDraggingActive, setIsDraggingActive] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  // OrbitControls instance (registered via `makeDefault`). We suspend it while
-  // the ADU is being dragged so a press on the building never doubles as a
-  // camera orbit â€” mouse drag on empty ground still orbits as normal. Held in a
-  // ref so the pointer handlers can toggle `.enabled` without the React Compiler
-  // flagging a render-scoped mutation.
-  const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
-  const controlsRef = useRef(controls);
-  useEffect(() => {
-    controlsRef.current = controls;
-  }, [controls]);
-
-  const buildableArea = getAduPlacementBounds(parcel, config);
-
-  // Clamp position within buildable area
-  const clampPos = useCallback(
-    (x: number, z: number): [number, number] => {
-      const cx = Math.max(buildableArea.minX, Math.min(buildableArea.maxX, x));
-      const cz = Math.max(buildableArea.minZ, Math.min(buildableArea.maxZ, z));
-      return [cx, cz];
-    },
-    [buildableArea],
-  );
-
-  const handlePointerDown = useCallback(
-    (e: ThreeEvent<PointerEvent>) => {
-      if (!onPositionChange) return;
-      e.stopPropagation();
-      isDragging.current = true;
-      setIsDraggingActive(true);
-      setIsHovered(true);
-      if (controlsRef.current) controlsRef.current.enabled = false;
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    },
-    [onPositionChange],
-  );
-
-  const handlePointerMove = useCallback(
-    (e: ThreeEvent<PointerEvent>) => {
-      if (!isDragging.current || !onPositionChange) return;
-      // e.ray is the pre-computed raycasting ray from R3F â€” no allocation needed.
-      const { origin, direction } = e.ray;
-      if (direction.y === 0) return;
-      const t = -origin.y / direction.y;
-      if (t < 0) return;
-      const [cx, cz] = clampPos(origin.x + direction.x * t, origin.z + direction.z * t);
-      onPositionChange([cx, cz]);
-    },
-    [onPositionChange, clampPos],
-  );
-
-  const handlePointerUp = useCallback(() => {
-    isDragging.current = false;
-    setIsDraggingActive(false);
-    if (controlsRef.current) controlsRef.current.enabled = true;
-  }, []);
-
-  const [x, z] = aduPos;
-  const isInsideSetback = x >= buildableArea.minX && x <= buildableArea.maxX && z >= buildableArea.minZ && z <= buildableArea.maxZ;
+  const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
+  const drag = useSceneDrag({ pose, controls, onPreview, onCommit, constrain });
+  const [hovered, setHovered] = useState(false);
+  const statusColor = placementTone === "clear" ? SCENE.eligible : SCENE.review;
 
   useEffect(() => {
-    if (!isHovered && !isDraggingActive) return;
+    if (!hovered && !drag.active) return;
     const previousCursor = document.body.style.cursor;
-    document.body.style.cursor = isDraggingActive ? "grabbing" : "grab";
+    document.body.style.cursor = drag.active ? "grabbing" : "grab";
     return () => {
       document.body.style.cursor = previousCursor;
     };
-  }, [isDraggingActive, isHovered]);
+  }, [drag.active, hovered]);
 
   return (
-    <>
-      {/* Invisible ground plane: tracks the cursor across the whole lot during
-          an active drag. It deliberately has NO onPointerDown â€” a drag can only
-          begin on the ADU group below, so pressing empty ground orbits the
-          camera instead of snatching the building. */}
-      <mesh
-        ref={groundPlaneRef}
-        visible={false}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.01, 0]}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <planeGeometry args={[parcel.lotWidth, parcel.lotLength]} />
+    <group
+      position={[pose.x, 0, pose.z]}
+      rotation={[0, (-pose.rotationDeg * Math.PI) / 180, 0]}
+      onPointerDown={drag.onPointerDown}
+      onPointerMove={drag.onPointerMove}
+      onPointerUp={drag.onPointerUp}
+      onPointerCancel={drag.onPointerCancel}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={() => {
+        if (!drag.active) setHovered(false);
+      }}
+    >
+      <ContactShadow width={config.width + 5} length={config.length + 5} opacity={0.34} />
+
+      {/* Footprint tint and ring are selection/compliance graphics, deliberately
+          drawn outside the architectural materials. */}
+      <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[config.width + 1, config.length + 1]} />
+        <meshBasicMaterial color={statusColor} opacity={placementTone === "clear" ? 0.15 : 0.22} transparent />
       </mesh>
 
-      <group
-        position={[x, isHovered ? 0.35 : 0, z]}
-        onPointerDown={handlePointerDown}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          setIsHovered(true);
-        }}
-        onPointerOut={() => {
-          if (!isDragging.current) setIsHovered(false);
-        }}
-        onPointerUp={handlePointerUp}
-      >
-        {/* Soft contact shadow grounding the massing */}
-        <ContactShadow width={config.width + 5} length={config.length + 5} opacity={0.34} />
+      <AduArchitecture config={config} />
 
-        {/* Footprint compliance tint (eligible forest / review amber) */}
-        <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[config.width + 1, config.length + 1]} />
-          <meshBasicMaterial
-            color={isInsideSetback ? SCENE.eligible : SCENE.review}
-            opacity={isInsideSetback ? 0.15 : 0.22}
-            transparent
+      {/* Concrete pad */}
+      <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
+        <boxGeometry args={[config.width + 5, 0.24, 5]} />
+        <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
+      </mesh>
+
+      {(hovered || drag.active) && (
+        <>
+          <LabelSprite
+            text="PROPOSED ADU"
+            position={[0, config.height + 3, config.length / 2 + 0.2]}
+            scale={config.width * 0.35}
           />
-        </mesh>
-
-        {/* ADU body — finish material dynamically reflects cedar/lap/stucco/board */}
-        <mesh position={[0, y, 0]} castShadow receiveShadow>
-          <boxGeometry args={[config.width, config.height, config.length]} />
-          <meshStandardMaterial
-            color={finishColor}
-            roughness={finishRoughness}
-            emissive={isHovered ? SCENE.hoverGlow : "#000000"}
-            emissiveIntensity={isHovered ? 0.22 : 0}
+          <Line
+            points={[
+              [-config.width / 2, 0.1, -config.length / 2],
+              [config.width / 2, 0.1, -config.length / 2],
+              [config.width / 2, 0.1, config.length / 2],
+              [-config.width / 2, 0.1, config.length / 2],
+              [-config.width / 2, 0.1, -config.length / 2],
+            ]}
+            color={SCENE.hoverGlow}
+            lineWidth={2.5}
           />
-        </mesh>
+        </>
+      )}
 
-        {/* Roof. Gable ridge runs along the ADU's length: GableRoof pitches
-            across its `depth`, so swap axes and rotate the group 90deg. */}
-        {config.roof === "gable" ? (
-          <group rotation={[0, Math.PI / 2, 0]}>
-            <GableRoof
-              width={config.length}
-              depth={config.width}
-              wallHeight={config.height}
-              ridgeHeight={Math.min(Math.max(config.width * 0.18, 1.6), 4)}
-            />
-          </group>
-        ) : config.roof === "shed" ? (
-          // Sloped slab seated on the wall top: rear eave at wall height,
-          // rising 2.1ft toward the front, with a small overhang all around.
-          <mesh
-            position={[0, config.height + 1.05, 0]}
-            rotation={[-Math.atan2(2.1, config.length + 1.4), 0, 0]}
-            castShadow
-          >
-            <boxGeometry args={[config.width + 1.2, 0.5, Math.hypot(config.length + 1.4, 2.1)]} />
-            <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
-          </mesh>
-        ) : (
-          <mesh position={[0, config.height + 0.3, 0]} castShadow>
-            <boxGeometry args={[config.width + 1.2, 0.6, config.length + 1.2]} />
-            <meshStandardMaterial color={SCENE.roof} roughness={0.68} />
-          </mesh>
-        )}
-
-        {/* Windows and door */}
-        {config.includeOpenings && (
-          <group position={[0, config.height * 0.45, config.length / 2 + 0.08]}>
-            <mesh position={[-config.width * 0.23, 0, 0]}>
-              <boxGeometry args={[config.width * 0.24, config.height * 0.42, 0.22]} />
-              <meshStandardMaterial color={SCENE.glass} roughness={0.25} metalness={0.25} />
-            </mesh>
-            <mesh position={[config.width * 0.18, -0.5, 0]}>
-              <boxGeometry args={[config.width * 0.32, config.height * 0.58, 0.24]} />
-              <meshStandardMaterial color="#5a3a20" roughness={0.55} />
-            </mesh>
-          </group>
-        )}
-
-        {/* Concrete pad */}
-        <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
-          <boxGeometry args={[config.width + 5, 0.24, 5]} />
-          <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
-        </mesh>
-
-        {/* Label — only surfaces on hover/drag so the scene stays quiet at rest */}
-        {(isHovered || isDraggingActive) && (
-          <LabelSprite text="PROPOSED ADU" position={[0, config.height + 3, config.length / 2 + 0.2]} scale={config.width * 0.35} />
-        )}
-
-        {/* Setback compliance indicator ring */}
-        <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
-          <meshBasicMaterial
-            color={isInsideSetback ? SCENE.eligible : SCENE.review}
-            transparent
-            opacity={isHovered ? 0.86 : 0.6}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      </group>
-    </>
+      <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
+        <meshBasicMaterial
+          color={statusColor}
+          transparent
+          opacity={hovered || drag.active ? 0.86 : 0.6}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
   );
+}
+
+/** Feet per second while an arrow key is held. */
+const KEYBOARD_SPEED_FT_S = 22;
+/** Feet moved by a single arrow-key tap. */
+const KEYBOARD_NUDGE_FT = 1;
+
+/** Clamp a pose so the ADU's rotated footprint stays on the lot. */
+function clampToLot(pose: Pose2D, parcel: Parcel, config: ADUConfig): Pose2D {
+  const bounds = buildAduSceneModel(config, { ...pose, x: 0, z: 0 }).footprintBoundsLocal;
+  if (!bounds) return pose;
+  const halfWidth = (bounds.maxX - bounds.minX) / 2;
+  const halfDepth = (bounds.maxZ - bounds.minZ) / 2;
+  const limitX = Math.max(parcel.lotWidth / 2 - halfWidth, 0);
+  const limitZ = Math.max(parcel.lotLength / 2 - halfDepth, 0);
+  return {
+    ...pose,
+    x: Math.min(Math.max(pose.x, -limitX), limitX),
+    z: Math.min(Math.max(pose.z, -limitZ), limitZ),
+  };
 }
 
 /**
  * Interactive 3D scene of the lot with the existing house and a draggable ADU
  * massing, derived from the parcel's dimensions and setbacks. Built on R3F with
  * an {@link ErrorBoundary} and a WebGL-availability check so it degrades
- * gracefully when 3D is unavailable. ADU placement is reported via
- * `onAduPositionChange`; positions are derived, never hardcoded.
+ * gracefully when 3D is unavailable.
  *
- * @param props - Parcel, ADU config, compliance flag, and ADU position state.
+ * This component is the integration seam for the studio refinement packets: it
+ * owns the Canvas and the adapters, while geometry (T01), placement validation
+ * (T02), scenario pose (T03), camera and gesture behaviour (T05), the render
+ * budget (T06) and architectural materials (T07) each live in their own module.
+ *
+ * Placement is deliberately *not* clamped to the setback envelope. Dragging is
+ * bounded by the lot itself, and an ADU that overlaps the house or breaks a
+ * setback is reported honestly by {@link SceneStatus} rather than quietly
+ * prevented (U1) — the audit found the old scene accepting a collision while
+ * still reading "Likely Feasible".
+ *
+ * @param props - Parcel, ADU config, compliance flag, committed pose, and the
+ *   optional dev measurement adapter.
  */
 export default function ParcelScene({
   parcel,
   config,
   isCompliant,
   remainingCapacity,
-  aduPosition,
-  onAduPositionChange,
+  pose,
+  onPoseCommit,
+  measurement,
 }: ParcelSceneProps) {
   const [webglAvailable, setWebglAvailable] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [frameCommand, setFrameCommand] = useState(0);
   const [sunHour, setSunHour] = useState<number>(14);
-
-  const sunPosition = useMemo(() => getIllustrativeSunPosition(sunHour), [sunHour]);
-  const siteFitStatus = getSiteFitCapacityStatus(remainingCapacity);
+  const [lighting, setLighting] = useState<LightingPresetId>("golden-hour");
+  const [quality, setQuality] = useState<SceneQuality>("balanced");
   const restoreTimer = useRef<number | null>(null);
+
+  // --- Pose ---------------------------------------------------------------
+  // `pose` is the committed scenario value when the studio owns it. `preview`
+  // is the transient gesture position, deliberately kept out of scenario
+  // history until the gesture ends (T03). `local` only carries the pose when
+  // no parent owns one, so the dev harness and tests still get a live scene.
+  const fallbackPose = useMemo(() => getDefaultAduPose(parcel, config), [parcel, config]);
+  const poseKey = `${parcel.lotWidth}x${parcel.lotLength}|${config.width}x${config.length}`;
+  const [local, setLocal] = useState<{ key: string; pose: Pose2D } | null>(null);
+  const [preview, setPreview] = useState<{ key: string; pose: Pose2D } | null>(null);
+  const committedPose = pose ?? (local?.key === poseKey ? local.pose : fallbackPose);
+  const activePose = preview?.key === poseKey ? preview.pose : committedPose;
+
+  const constrain = useCallback(
+    (next: Pose2D) => clampToLot(next, parcel, config),
+    [parcel, config],
+  );
+  const previewPose = useCallback(
+    (next: Pose2D) => setPreview({ key: poseKey, pose: next }),
+    [poseKey],
+  );
+  const commitPose = useCallback(
+    (next: Pose2D) => {
+      const clamped = clampToLot(next, parcel, config);
+      setPreview(null);
+      setLocal({ key: poseKey, pose: clamped });
+      onPoseCommit?.(clamped);
+    },
+    [config, onPoseCommit, parcel, poseKey],
+  );
+
+  const placement = useMemo(
+    () => getScenePlacement(parcel, config, activePose),
+    [parcel, config, activePose],
+  );
+  const placementTone = describePlacement(placement).tone;
+
+  // --- Camera framing ------------------------------------------------------
+  // The controller reads `bounds` from a ref and only refits when a framing
+  // command, the view mode, the viewport, or the *geometry* changes. Ordinary
+  // position edits therefore never start a camera flight (D8); re-tapping the
+  // current view button bumps `frameCommand` to reframe deliberately.
+  const existingHouse = useMemo(() => buildExistingHouseSceneModel(parcel), [parcel]);
+  const parcelOutline = useMemo(() => buildParcelOutline(parcel), [parcel]);
+  const aduModel = useMemo(() => buildAduSceneModel(config, activePose), [config, activePose]);
+  const existingHouseMaxY = existingHouse.boundsLocal?.maxY;
+  const aduMaxY = aduModel.roofBoundsLocal?.maxY;
+  const lotBounds: LocalBounds = useMemo(
+    () => ({
+      minX: -parcel.lotWidth / 2,
+      maxX: parcel.lotWidth / 2,
+      minZ: -parcel.lotLength / 2,
+      maxZ: parcel.lotLength / 2,
+      minY: SLAB_DATUM_FT,
+      maxY: Math.max(existingHouseMaxY ?? 14, aduMaxY ?? config.height),
+    }),
+    [parcel.lotWidth, parcel.lotLength, existingHouseMaxY, aduMaxY, config.height],
+  );
+  const cameraBounds = viewMode === "adu" ? aduModel.roofBoundsLocal ?? lotBounds : lotBounds;
+  const geometryRevision = `${parcel.lotWidth}x${parcel.lotLength}|${config.width}x${config.length}x${config.height}|${config.roof}`;
+  const reducedMotion = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    [],
+  );
+  const selectView = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    setFrameCommand((id) => id + 1);
+  }, []);
+
+  // --- Keyboard placement --------------------------------------------------
+  // The movement loop starts on key input and stops when the last key is
+  // released, instead of running a rAF forever against an idle scene (D5). A
+  // held key previews continuously and commits once, on release.
   const keysDown = useRef(new Set<string>());
   const animFrame = useRef<number | null>(null);
-
-  // Buildable area (mirrors ProposedAdu logic)
-  const buildableBounds = getAduPlacementBounds(parcel, config);
-
-  // Default ADU position: centered, at rear setback (clear of the house)
-  const defaultAduPos = useMemo(
-    (): [number, number] => [0, Math.min(buildableBounds.minZ + 3, buildableBounds.maxZ)],
-    [buildableBounds.minZ, buildableBounds.maxZ],
-  );
-
-  const [aduPos, setAduPos] = useState<[number, number]>(aduPosition ?? defaultAduPos);
-  // Mirror of aduPos read by the rAF movement loop, so the loop never re-subscribes
-  // on every keystroke and never reads a stale position from a captured closure.
-  const aduPosRef = useRef<[number, number]>(aduPos);
+  const gesture = useRef({ pose: activePose, constrain, previewPose, commitPose, dirty: false });
   useEffect(() => {
-    aduPosRef.current = aduPos;
-  }, [aduPos]);
+    gesture.current.pose = activePose;
+    gesture.current.constrain = constrain;
+    gesture.current.previewPose = previewPose;
+    gesture.current.commitPose = commitPose;
+  }, [activePose, constrain, previewPose, commitPose]);
 
-  // Re-sync when parcel or config changes (e.g., switching presets)
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    setAduPos(defaultAduPos);
-  }, [defaultAduPos]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  const stopKeyboardMovement = useCallback(() => {
+    keysDown.current.clear();
+    if (animFrame.current !== null) {
+      cancelAnimationFrame(animFrame.current);
+      animFrame.current = null;
+    }
+    if (gesture.current.dirty) {
+      gesture.current.dirty = false;
+      gesture.current.commitPose(gesture.current.pose);
+    }
+  }, []);
 
-  const handleAduPosChange = useCallback(
-    (pos: [number, number]) => {
-      aduPosRef.current = pos;
-      setAduPos(pos);
-      onAduPositionChange?.(pos);
-    },
-    [onAduPositionChange],
-  );
-
-  // Arrow-key ADU placement: â†â†’ moves X (side-to-side), â†‘â†“ moves Z (front/back).
-  // Movement is delta-time based (feet per *second*), so it feels identical on a
-  // 60Hz or 120Hz display and a quick tap nudges rather than rockets the ADU.
-  useEffect(() => {
-    const SPEED = 22; // feet per second while key is held
+  const runKeyboardLoop = useCallback(() => {
+    if (animFrame.current !== null) return;
     let last = performance.now();
-    const loop = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.05); // clamp after tab-away
+    const advance = (now: number) => {
+      const delta = Math.min((now - last) / 1000, 0.05);
       last = now;
-      const k = keysDown.current;
-      if (k.size > 0) {
-        const d = SPEED * dt;
-        let [x, z] = aduPosRef.current;
-        if (k.has("ArrowLeft")) x -= d;
-        if (k.has("ArrowRight")) x += d;
-        if (k.has("ArrowUp")) z -= d;
-        if (k.has("ArrowDown")) z += d;
-        // Clamp to buildable bounds
-        x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
-        z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
-        if (x !== aduPosRef.current[0] || z !== aduPosRef.current[1]) {
-          handleAduPosChange([x, z]);
-        }
+      const keys = keysDown.current;
+      if (keys.size === 0) {
+        animFrame.current = null;
+        return;
       }
-      animFrame.current = requestAnimationFrame(loop);
+      const distance = KEYBOARD_SPEED_FT_S * delta;
+      const current = gesture.current.pose;
+      let x = current.x;
+      let z = current.z;
+      if (keys.has("ArrowLeft")) x -= distance;
+      if (keys.has("ArrowRight")) x += distance;
+      if (keys.has("ArrowUp")) z -= distance;
+      if (keys.has("ArrowDown")) z += distance;
+      const next = gesture.current.constrain({ ...current, x, z });
+      if (next.x !== current.x || next.z !== current.z) {
+        gesture.current.pose = next;
+        gesture.current.dirty = true;
+        gesture.current.previewPose(next);
+      }
+      animFrame.current = requestAnimationFrame(advance);
     };
-    animFrame.current = requestAnimationFrame(loop);
+    animFrame.current = requestAnimationFrame(advance);
+  }, []);
 
-    return () => {
+  useEffect(
+    () => () => {
       if (animFrame.current !== null) cancelAnimationFrame(animFrame.current);
-    };
-  }, [buildableBounds, handleAduPosChange]);
+    },
+    [],
+  );
 
   const handleSceneKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (event.target !== event.currentTarget) return;
-      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-        return;
-      }
-
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
       event.preventDefault();
       if (!event.repeat) {
-        const NUDGE = 1;
-        let [x, z] = aduPosRef.current;
-        if (event.key === "ArrowLeft") x -= NUDGE;
-        if (event.key === "ArrowRight") x += NUDGE;
-        if (event.key === "ArrowUp") z -= NUDGE;
-        if (event.key === "ArrowDown") z += NUDGE;
-        x = Math.max(buildableBounds.minX, Math.min(buildableBounds.maxX, x));
-        z = Math.max(buildableBounds.minZ, Math.min(buildableBounds.maxZ, z));
-        handleAduPosChange([x, z]);
+        const current = gesture.current.pose;
+        let x = current.x;
+        let z = current.z;
+        if (event.key === "ArrowLeft") x -= KEYBOARD_NUDGE_FT;
+        if (event.key === "ArrowRight") x += KEYBOARD_NUDGE_FT;
+        if (event.key === "ArrowUp") z -= KEYBOARD_NUDGE_FT;
+        if (event.key === "ArrowDown") z += KEYBOARD_NUDGE_FT;
+        const next = gesture.current.constrain({ ...current, x, z });
+        gesture.current.pose = next;
+        gesture.current.dirty = true;
+        gesture.current.previewPose(next);
       }
       keysDown.current.add(event.key);
+      runKeyboardLoop();
     },
-    [buildableBounds, handleAduPosChange],
+    [runKeyboardLoop],
   );
 
-  const handleSceneKeyUp = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    keysDown.current.delete(event.key);
-  }, []);
+  const handleSceneKeyUp = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      keysDown.current.delete(event.key);
+      if (keysDown.current.size === 0) stopKeyboardMovement();
+    },
+    [stopKeyboardMovement],
+  );
 
-  const stopKeyboardMovement = useCallback(() => {
-    keysDown.current.clear();
-  }, []);
-
+  // --- WebGL availability --------------------------------------------------
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     let cancelled = false;
@@ -1035,7 +967,7 @@ export default function ParcelScene({
   }, []);
 
   // R3F sizes the canvas from react-use-measure's initial ResizeObserver callback,
-  // which is dropped under Next dev's StrictMode double-mount â€” the canvas stays at
+  // which is dropped under Next dev's StrictMode double-mount — the canvas stays at
   // its 300x150 default and the scene renders into a tiny corner. The hook's window
   // 'resize' listener stays live, so dispatching one resize after layout forces the
   // canvas to fill its parent. Harmless in production where the initial measure works.
@@ -1079,390 +1011,334 @@ export default function ParcelScene({
         config={config}
         isCompliant={isCompliant}
         remainingCapacity={remainingCapacity}
+        pose={activePose}
       />
     );
   }
 
+  const preset = LIGHTING_PRESETS[lighting];
+  const goldenHour = lighting === "golden-hour";
+  const budget = SCENE_QUALITY[quality];
+
   return (
-    <div
-      className="relative h-full min-h-[220px] overflow-hidden bg-lf-sand outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay lg:min-h-[460px]"
-      style={{ backgroundImage: SCENE_BACKDROP }}
-      tabIndex={0}
-      role="group"
-      aria-label="Interactive ADU placement model"
-      aria-describedby="studio-site-fit-status"
-      onKeyDown={handleSceneKeyDown}
-      onKeyUp={handleSceneKeyUp}
-      onBlur={stopKeyboardMovement}
-    >
-      <ErrorBoundary
-        fallbackRender={() => {
-          setWebglAvailable(false);
-          return null;
-        }}
-      >
-        <Canvas
-          shadows
-          camera={{ position: [58, 58, 72], fov: 42, near: 1, far: 500 }}
-          dpr={[1, 1.8]}
-          gl={{ alpha: true, antialias: true }}
-          onCreated={handleCreated}
-          className="relative z-0 h-full w-full"
-          style={{ background: "transparent" }}
-        >
-        {/* Golden-hour envelope: warm low key light, warm ambient fill, sand
-            haze. The fog far plane sits beyond the top-down plat framing so
-            the Setbacks view never washes out. */}
-        <fog attach="fog" args={[SCENE.fog, 170, 430]} />
-        <ambientLight intensity={1.15} color={SCENE.ambient} />
-        <directionalLight
-          castShadow
-          position={sunPosition}
-          intensity={Math.max(3.6 * (1 - Math.abs(sunHour - 13) / 10), 1.2)}
-          color={sunHour < 9 || sunHour > 17 ? "#ffaa66" : SCENE.sun}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-left={-90}
-          shadow-camera-right={90}
-          shadow-camera-top={90}
-          shadow-camera-bottom={-90}
-        />
-
-        {/* Lot lawn and surrounding context, both carrying the surveyor
-            graph-paper grid (5 ft minors, 25 ft majors). */}
-        <SurveyGround
-          width={parcel.lotWidth}
-          length={parcel.lotLength}
-          base={SCENE.ground}
-          minorAlpha={0.05}
-          majorAlpha={0.1}
-        />
-        <SurveyGround
-          width={parcel.lotWidth + 26}
-          length={parcel.lotLength + 26}
-          base={SCENE.groundPaper}
-          minorAlpha={0.07}
-          majorAlpha={0.13}
-          y={-0.08}
-        />
-
-        <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
-        <SetbackLines parcel={parcel} />
-        {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
-        <ExistingHouse parcel={parcel} />
-        <ProposedAdu
-          config={config}
-          parcel={parcel}
-          position={aduPos}
-          onPositionChange={handleAduPosChange}
-        />
-
-        {/* Landscape elements */}
-        <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
-        <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
-        <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />
-        <Tree position={[parcel.lotWidth / 2 - 5, 0, -parcel.lotLength / 2 + 8]} height={9} radius={3.5} />
-
-        {/* Side fences */}
-        <FenceLine
-          start={[-parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
-          end={[-parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
-          postSpacing={6}
-          postHeight={4}
-        />
-        <FenceLine
-          start={[parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
-          end={[parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
-          postSpacing={6}
-          postHeight={4}
-        />
-
-        {/* Driveway strip along one side */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[parcel.lotWidth / 2 - 3, 0.02, 0]} receiveShadow>
-          <planeGeometry args={[5, parcel.lotLength * 0.6]} />
-          <meshStandardMaterial color={SCENE.driveway} roughness={0.95} />
-        </mesh>
-
-        <OrbitControls enableDamping dampingFactor={0.06} makeDefault maxPolarAngle={Math.PI / 2.05} minDistance={42} maxDistance={240} />
-        <SceneCameraChoreography mode={viewMode} parcel={parcel} config={config} aduPos={aduPos} />
-      </Canvas>
-      </ErrorBoundary>
-
+    <div className="flex h-full min-h-0 flex-col bg-lf-sand">
       <div
-        id="studio-site-fit-status"
-        className={`pointer-events-none absolute bottom-16 left-3 z-(--z-index-scene) max-w-[min(19rem,calc(100%-1.5rem))] rounded-lg border bg-lf-card/95 px-3 py-2.5 shadow-sm lg:bottom-20 lg:left-5 ${
-          siteFitStatus.tone === "ok"
-            ? "border-lf-forest/30"
-            : "border-lf-amber/40"
-        }`}
-        role="status"
-        aria-live="polite"
-        aria-label="Modeled site fit status"
-      >
-        <p className="lf-dataprint text-lf-clay-ink">Modeled site fit</p>
-        <p className="mt-1 text-sm font-semibold leading-5 text-lf-espresso">
-          {siteFitStatus.title}
-        </p>
-        <p className="mt-0.5 text-[11px] leading-4 text-lf-muted">
-          {siteFitStatus.action}
-        </p>
-        <p className="sr-only font-semibold uppercase tracking-[0.08em] text-lf-muted sm:not-sr-only sm:mt-1 sm:text-[10px]">
-          Drag to move · Arrow keys when focused
-        </p>
-      </div>
-
-      {/* This is an illustrative lighting preview, not a location/date-based solar study. */}
-      <div
-        className="absolute left-4 top-20 z-(--z-index-scene) flex items-center gap-2 rounded-full border border-lf-hairline/70 bg-lf-card/95 px-3 py-1.5 text-lf-espresso shadow-sm sm:left-52 sm:top-5"
+        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay lg:min-h-[360px]"
+        style={{ backgroundImage: SCENE_BACKDROP }}
+        tabIndex={0}
         role="group"
-        aria-label="Illustrative shadow preview"
+        aria-label="Interactive ADU placement model"
+        aria-describedby="studio-site-fit-status"
+        onKeyDown={handleSceneKeyDown}
+        onKeyUp={handleSceneKeyUp}
+        onBlur={stopKeyboardMovement}
       >
-        <Sun className="h-4 w-4 shrink-0 text-lf-clay-ink" aria-hidden="true" />
-        <span className="flex min-w-16 flex-col leading-none">
-          <span className="lf-dataprint text-lf-muted">Shadow preview</span>
-          <output
-            htmlFor="shadow-preview-hour"
-            className="mt-1 font-mono text-xs font-semibold tracking-[0.14em]"
+        <ErrorBoundary
+          fallbackRender={() => {
+            setWebglAvailable(false);
+            return null;
+          }}
+        >
+          <Canvas
+            shadows
+            frameloop="demand"
+            dpr={budget.dpr}
+            gl={{ alpha: true, antialias: true }}
+            onCreated={handleCreated}
+            className="relative z-0 h-full w-full"
+            style={{ background: "transparent" }}
           >
-            {formatPreviewHour(sunHour)}
-          </output>
-        </span>
-        <input
-          id="shadow-preview-hour"
-          type="range"
-          min="7"
-          max="19"
-          step="0.5"
-          value={sunHour}
-          onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
-          aria-label="Preview time"
-          className="h-8 w-20 cursor-pointer accent-lf-clay sm:w-24"
-        />
+            {process.env.NEXT_PUBLIC_PROFILE_STUDIO === "true" && measurement && (
+              <StudioMeasurementAdapter {...measurement} />
+            )}
+            {/* Stops drawing entirely while the scene is scrolled out of view
+                or the tab is hidden (D5). */}
+            <SceneVisibility />
+            <SceneCameras mode={viewMode} />
+            <OrbitControls
+              enableDamping
+              dampingFactor={0.06}
+              makeDefault
+              maxPolarAngle={Math.PI / 2.05}
+            />
+            <SceneCameraController
+              commandId={frameCommand}
+              mode={viewMode}
+              bounds={cameraBounds}
+              geometryRevision={geometryRevision}
+              reducedMotion={reducedMotion}
+            />
+
+            {/* Golden Hour stays the default presentation register; Neutral
+                Inspection exists so the four finishes can be compared under
+                even light (D7). Both are illustrative — neither is a solar
+                study. */}
+            <fog
+              attach="fog"
+              args={[
+                goldenHour ? SCENE.fog : "#e8ecef",
+                goldenHour ? 170 : 320,
+                goldenHour ? 430 : 900,
+              ]}
+            />
+            <ambientLight
+              intensity={goldenHour ? 1.15 : preset.ambientIntensity * 1.8}
+              color={goldenHour ? SCENE.ambient : preset.ambientColor}
+            />
+            <directionalLight
+              castShadow
+              position={goldenHour ? getIllustrativeSunPosition(sunHour) : preset.sunPosition}
+              intensity={
+                goldenHour
+                  ? Math.max(3.6 * (1 - Math.abs(sunHour - 13) / 10), 1.2)
+                  : preset.sunIntensity * 2.2
+              }
+              color={
+                goldenHour ? (sunHour < 9 || sunHour > 17 ? "#ffaa66" : SCENE.sun) : preset.sunColor
+              }
+              shadow-mapSize-width={budget.shadowResolution}
+              shadow-mapSize-height={budget.shadowResolution}
+              shadow-camera-left={-90}
+              shadow-camera-right={90}
+              shadow-camera-top={90}
+              shadow-camera-bottom={-90}
+            />
+            {!goldenHour && (
+              <directionalLight
+                position={preset.fillPosition}
+                intensity={preset.fillIntensity * 2}
+                color={preset.fillColor}
+              />
+            )}
+
+            {/* Lot lawn and surrounding context, both carrying the surveyor
+                graph-paper grid (5 ft minors, 25 ft majors). */}
+            <SurveyGround
+              width={parcel.lotWidth}
+              length={parcel.lotLength}
+              base={SCENE.ground}
+              minorAlpha={0.05}
+              majorAlpha={0.1}
+            />
+            <SurveyGround
+              width={parcel.lotWidth + 26}
+              length={parcel.lotLength + 26}
+              base={SCENE.groundPaper}
+              minorAlpha={0.07}
+              majorAlpha={0.13}
+              y={-0.08}
+            />
+
+            <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
+            <SetbackLines parcel={parcel} />
+            {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
+            <ExistingHouse parcel={parcel} />
+            <ProposedAdu
+              config={config}
+              pose={activePose}
+              placementTone={placementTone}
+              onPreview={previewPose}
+              onCommit={commitPose}
+              constrain={constrain}
+            />
+
+            {/* Landscape elements */}
+            <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
+            <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
+            <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />
+            <Tree position={[parcel.lotWidth / 2 - 5, 0, -parcel.lotLength / 2 + 8]} height={9} radius={3.5} />
+
+            {/* Side fences: one instanced draw per line instead of a mesh per
+                post — the Seattle lot alone produced 42 post meshes (D5). */}
+            <InstancedFence
+              start={[-parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
+              end={[-parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+              postSpacing={6}
+              postHeight={4}
+            />
+            <InstancedFence
+              start={[parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
+              end={[parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+              postSpacing={6}
+              postHeight={4}
+            />
+
+            {/* Driveway strip along one side */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[parcel.lotWidth / 2 - 3, 0.02, 0]} receiveShadow>
+              <planeGeometry args={[5, parcel.lotLength * 0.6]} />
+              <meshStandardMaterial color={SCENE.driveway} roughness={0.95} />
+            </mesh>
+          </Canvas>
+        </ErrorBoundary>
+
+        {/* Compact viewport toolbar. Button names stay visible at every width —
+            the audit found them collapsing to bare icons below `sm` (U4). */}
+        <div
+          role="group"
+          aria-label="Camera view"
+          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-full border border-lf-hairline/70 bg-lf-card/95 p-1 shadow-sm"
+        >
+          {[
+            { mode: "overview" as const, label: "Frame lot", icon: Home },
+            { mode: "adu" as const, label: "Frame ADU", icon: Box },
+            { mode: "setbacks" as const, label: "Plan", icon: Ruler },
+          ].map(({ mode, label, icon: Icon }) => {
+            const active = viewMode === mode;
+            return (
+              <Button
+                key={mode}
+                type="button"
+                size="sm"
+                variant={active ? "selected" : "ghost"}
+                onClick={() => selectView(mode)}
+                aria-pressed={active}
+                className="h-11 gap-1.5 px-3 leading-none aria-[pressed=false]:text-lf-espresso aria-[pressed=false]:hover:bg-lf-taupe/10"
+              >
+                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="text-xs">{label}</span>
+              </Button>
+            );
+          })}
+        </div>
+
+        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+          N
+        </div>
       </div>
 
-      {/* View-mode toggle. Docked to the scene bottom — the old bottom-sheet
-          offset (bottom-44) clipped these controls inside the mobile journey's
-          34dvh Shape reveal. 44px touch floor below `sm`. */}
-      <div className="absolute bottom-3 right-3 z-(--z-index-scene) flex rounded-full border border-lf-hairline/70 bg-lf-card p-1 shadow-sm lg:bottom-6 lg:right-5">
-        {[
-          { mode: "overview" as const, label: "Overview", icon: Home },
-          { mode: "adu" as const, label: "ADU", icon: Box },
-          { mode: "setbacks" as const, label: "Setbacks", icon: Ruler },
-        ].map(({ mode, label, icon: Icon }) => {
-          const active = viewMode === mode;
-          return (
-            <Button
-              key={mode}
-              type="button"
-              size="sm"
-              variant={active ? "selected" : "ghost"}
-              onClick={() => setViewMode(mode)}
-              aria-pressed={active}
-              className="h-11 min-w-11 px-2.5 leading-none aria-[pressed=false]:text-lf-espresso aria-[pressed=false]:hover:bg-lf-taupe/10 aria-[pressed=false]:focus-visible:bg-lf-taupe/10 sm:h-9 sm:min-w-[86px]"
-            >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="hidden sm:inline">{label}</span>
-            </Button>
-          );
-        })}
-      </div>
+      {/* Status and editing sit below the viewport instead of floating over it —
+          the audit measured phone overlays covering 40.4% of the scene (U3). */}
+      <SceneStatus
+        id="studio-site-fit-status"
+        placement={placement}
+        remainingCapacity={remainingCapacity}
+        isProxy={parcelOutline.isProxy}
+      />
 
-      <div className="pointer-events-none absolute right-5 top-5 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
-        N
-      </div>
+      <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
+
+      <details className="shrink-0 border-t border-lf-hairline bg-lf-card px-3">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-clay-ink">
+          Lighting and quality
+        </summary>
+        <div className="space-y-3 pb-3">
+          <div
+            className="flex items-center gap-2 text-lf-espresso"
+            role="group"
+            aria-label="Illustrative shadow preview"
+          >
+            <Sun className="h-4 w-4 shrink-0 text-lf-clay-ink" aria-hidden="true" />
+            <span className="flex min-w-16 flex-col leading-none">
+              <span className="lf-dataprint text-lf-muted">Shadow preview</span>
+              <output
+                htmlFor="shadow-preview-hour"
+                className="mt-1 font-mono text-xs font-semibold tracking-[0.14em]"
+              >
+                {formatPreviewHour(sunHour)}
+              </output>
+            </span>
+            <input
+              id="shadow-preview-hour"
+              type="range"
+              min="7"
+              max="19"
+              step="0.5"
+              value={sunHour}
+              disabled={!goldenHour}
+              onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
+              aria-label="Preview time"
+              className="h-8 w-28 cursor-pointer accent-lf-clay disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+          <div role="group" aria-label="Lighting preset" className="flex flex-wrap gap-1">
+            {(Object.keys(LIGHTING_PRESETS) as LightingPresetId[]).map((id) => (
+              <Button
+                key={id}
+                type="button"
+                size="sm"
+                variant={lighting === id ? "selected" : "secondary"}
+                aria-pressed={lighting === id}
+                className="min-h-11"
+                onClick={() => setLighting(id)}
+              >
+                {LIGHTING_PRESETS[id].name}
+              </Button>
+            ))}
+          </div>
+          <div role="group" aria-label="Render quality" className="flex flex-wrap gap-1">
+            {(Object.keys(SCENE_QUALITY) as SceneQuality[]).map((tier) => (
+              <Button
+                key={tier}
+                type="button"
+                size="sm"
+                variant={quality === tier ? "selected" : "secondary"}
+                aria-pressed={quality === tier}
+                className="min-h-11 capitalize"
+                onClick={() => setQuality(tier)}
+              >
+                {tier}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs leading-4 text-lf-muted">
+            Both presets are illustrative studio lighting, not a location- or
+            date-based solar study. The shadow preview applies to Golden Hour
+            only. Quality tiers set pixel ratio and shadow resolution; they are
+            budget settings, not measured frame rates.
+          </p>
+          <p className="text-xs leading-4 text-lf-muted">
+            Drag to move · Arrow keys when the model has focus
+          </p>
+        </div>
+      </details>
     </div>
   );
 }
 
+/**
+ * WebGL fallback. It renders the shared {@link ParcelPlan} and the shared
+ * {@link SceneStatus}, so it now shows the same house size, the same ADU size,
+ * and the same committed pose as the 3D scene. The audit found this fallback
+ * drawing its own house dimensions and pinning the ADU to a fixed position that
+ * ignored placement entirely (D3).
+ *
+ * It is a read-only view: without WebGL there is no drag surface, and the
+ * numeric placement controls stay with the 3D scene.
+ */
 function Parcel2DScene({
   parcel,
   config,
-  isCompliant,
   remainingCapacity,
+  pose,
 }: ParcelSceneProps) {
-  const finishColor = finishColors[config.finish];
-  const siteFitStatus = getSiteFitCapacityStatus(remainingCapacity);
-
-  // Calculate existing house dimensions
-  const houseWidth = Math.min(parcel.lotWidth - parcel.setbacks.side * 2 - 4, 28);
-  const houseLength = Math.min(parcel.existingHouseSqft / houseWidth, 36);
-
-  // Calculate SVG ViewBox
-  const viewBoxWidth = parcel.lotWidth + 30;
-  const viewBoxLength = parcel.lotLength + 30;
-  const viewBoxX = -viewBoxWidth / 2;
-  const viewBoxY = -viewBoxLength / 2;
-
-  // Setback coordinates
-  const leftSetback = -parcel.lotWidth / 2 + parcel.setbacks.side;
-  const rightSetback = parcel.lotWidth / 2 - parcel.setbacks.side;
-  const frontSetback = parcel.lotLength / 2 - parcel.setbacks.front;
-  const rearSetback = -parcel.lotLength / 2 + parcel.setbacks.rear;
-
-  const boundaryStroke = isCompliant ? SCENE.eligible : SCENE.review;
+  const planPose = pose ?? getDefaultAduPose(parcel, config);
+  const placement = getScenePlacement(parcel, config, planPose);
+  const outline = buildParcelOutline(parcel);
 
   return (
-    <div
-      className="relative flex h-full min-h-[220px] flex-col items-center justify-center overflow-hidden bg-lf-sand p-6 lg:min-h-[460px]"
-      style={{ backgroundImage: SCENE_BACKDROP }}
-    >
-      {/* 2D Mode Badge â€” hidden on mobile to match the 3D badge and avoid
-          overlapping the income-potential overlay card on narrow screens. */}
-      <div className="absolute right-5 top-20 z-(--z-index-scene) hidden gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm sm:flex">
-        <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
-        <span className="px-2 py-1 text-lf-muted">WebGL Fallback</span>
-      </div>
-
-      <div className="absolute right-5 top-5 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
-        N
-      </div>
-
+    <div className="flex h-full min-h-0 flex-col bg-lf-sand">
       <div
-        className={`absolute bottom-5 left-5 right-5 z-(--z-index-scene) max-w-md rounded-lg border px-4 py-3 shadow-sm ${
-          siteFitStatus.tone === "ok"
-            ? "border-lf-forest/30 bg-lf-card/95"
-            : "border-lf-amber/40 bg-lf-card/95"
-        }`}
-        role="status"
-        aria-live="polite"
-        aria-label="Modeled site fit status"
+        className="relative min-h-[220px] flex-1 overflow-hidden p-4"
+        style={{ backgroundImage: SCENE_BACKDROP }}
       >
-        <p className="lf-dataprint text-lf-clay-ink">Modeled site fit</p>
-        <p className="mt-1 text-sm font-semibold text-lf-espresso">
-          {siteFitStatus.title}
-        </p>
-        <p className="mt-1 text-xs leading-5 text-lf-muted">
-          {siteFitStatus.action}
-        </p>
+        <div className="absolute left-4 top-4 z-(--z-index-scene) flex gap-2 rounded-md border border-lf-hairline/70 bg-lf-card p-2 text-xs font-medium text-lf-espresso shadow-sm">
+          <span className="rounded bg-lf-mahogany px-2 py-1 text-lf-sand">2D SITE PLAN</span>
+          <span className="px-2 py-1 text-lf-muted">WebGL fallback</span>
+        </div>
+
+        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-full border border-lf-taupe/30 bg-lf-espresso/90 px-3 py-2 text-xs font-semibold text-lf-sand shadow-sm">
+          N
+        </div>
+
+        <ParcelPlan parcel={parcel} config={config} pose={planPose} />
       </div>
 
-      <svg
-        viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxLength}`}
-        className="w-full h-full max-h-[480px]"
-        style={{ filter: "drop-shadow(0 8px 18px rgba(38,31,23,0.18))" }}
-      >
-        {/* Outer Grid Representation */}
-        <defs>
-          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(38,31,23,0.06)" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect x={viewBoxX} y={viewBoxY} width={viewBoxWidth} height={viewBoxLength} fill="url(#grid)" />
-
-        {/* Lot Boundary Background (sage lawn) */}
-        <rect
-          x={-parcel.lotWidth / 2}
-          y={-parcel.lotLength / 2}
-          width={parcel.lotWidth}
-          height={parcel.lotLength}
-          fill="rgba(138, 147, 126, 0.32)"
-          stroke={boundaryStroke}
-          strokeWidth="0.8"
-        />
-
-        {/* Setback Guideline Envelope */}
-        <rect
-          x={leftSetback}
-          y={rearSetback}
-          width={rightSetback - leftSetback}
-          height={frontSetback - rearSetback}
-          fill="none"
-          stroke="#8a8478"
-          strokeWidth="0.4"
-          strokeDasharray="2, 1.5"
-          opacity="0.7"
-        />
-
-        {/* Existing House */}
-        <g>
-          <rect
-            x={-houseWidth / 2}
-            y={18 - houseLength / 2}
-            width={houseWidth}
-            height={houseLength}
-            fill={SCENE.wall}
-            stroke={SCENE.roof}
-            strokeWidth="0.5"
-            rx="1"
-          />
-          <text
-            x="0"
-            y="18"
-            fill={SCENE.ink}
-            fontSize="3.2"
-            fontWeight="bold"
-            textAnchor="middle"
-            alignmentBaseline="middle"
-            className="font-sans pointer-events-none select-none"
-          >
-            EXISTING HOUSE
-          </text>
-        </g>
-
-        {/* Proposed ADU */}
-        <g>
-          <rect
-            x={-config.width / 2}
-            y={-32 - config.length / 2}
-            width={config.width}
-            height={config.length}
-            fill={finishColor}
-            stroke={boundaryStroke}
-            strokeWidth="0.8"
-            rx="1"
-          />
-          <text
-            x="0"
-            y="-32"
-            fill={SCENE.ink}
-            fontSize="3.2"
-            fontWeight="bold"
-            textAnchor="middle"
-            alignmentBaseline="middle"
-            className="font-sans pointer-events-none select-none"
-          >
-            PROPOSED ADU
-          </text>
-          {/* ADU Dimensions Labels */}
-          <text
-            x="0"
-            y={-32 - config.length / 2 - 3}
-            fill="#5b6150"
-            fontSize="2.5"
-            textAnchor="middle"
-            className="font-mono pointer-events-none select-none"
-          >
-            {config.width}&apos; w x {config.length}&apos; l
-          </text>
-        </g>
-
-        {/* Lot Dimension Labels */}
-        <text
-          x={-parcel.lotWidth / 2 - 4}
-          y="0"
-          fill="#6b6f63"
-          fontSize="3.2"
-          textAnchor="middle"
-          transform={`rotate(-90, ${-parcel.lotWidth / 2 - 4}, 0)`}
-          className="font-mono pointer-events-none select-none"
-        >
-          {parcel.lotLength}&apos; Length
-        </text>
-        <text
-          x="0"
-          y={parcel.lotLength / 2 + 5}
-          fill="#6b6f63"
-          fontSize="3.2"
-          textAnchor="middle"
-          className="font-mono pointer-events-none select-none"
-        >
-          {parcel.lotWidth}&apos; Width
-        </text>
-
-        {/* Compass Helper (North indicator) */}
-        <line x1="0" y1={-parcel.lotLength / 2 - 6} x2="0" y2={-parcel.lotLength / 2 - 12} stroke="#6b6f63" strokeWidth="0.5" />
-        <polygon points={`0,${-parcel.lotLength / 2 - 13} -2,${-parcel.lotLength / 2 - 9} 2,${-parcel.lotLength / 2 - 9}`} fill="#6b6f63" />
-      </svg>
+      <SceneStatus
+        id="studio-site-fit-status"
+        placement={placement}
+        remainingCapacity={remainingCapacity}
+        isProxy={outline.isProxy}
+      />
     </div>
   );
 }

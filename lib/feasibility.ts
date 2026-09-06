@@ -1,3 +1,5 @@
+import type { PlacementResult } from "./placement-validation";
+import type { Pose2D } from "./scene-model";
 /**
  * Core feasibility and financial engine for ADU (accessory dwelling unit) studies.
  *
@@ -53,7 +55,7 @@ export interface ADUConfig {
   width: number;
   /** ADU length in feet. */
   length: number;
-  /** ADU height in feet; values above 16 trigger a review warning. */
+  /** Wall height in feet. Roof rise is added by the shared scene model. */
   height: number;
   /** Roof geometry, which adds a per-square-foot cost premium. */
   roof: RoofStyle;
@@ -83,6 +85,9 @@ export interface FinancialAssumptions {
  * range, and the income/return summary for the configured ADU.
  */
 export interface FeasibilityResult {
+  /** Current committed placement; coverage remains an independent calculation. */
+  placement?: PlacementResult;
+  placementPose?: Pose2D;
   /** ADU floor area in square feet (`width * length`). */
   aduSqft: number;
   /** Combined footprint of the existing house plus the ADU, in square feet. */

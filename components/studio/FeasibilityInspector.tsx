@@ -1,6 +1,7 @@
 "use client";
 
 import { Bookmark, BookmarkPlus, Building2, Check, ChevronDown, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { NumericField } from "./NumericField";
 import { useEffect, useState } from "react";
 import {
   configForFootprint,
@@ -57,6 +58,7 @@ function clamp(value: number, min: number, max: number) {
 
 /** Props for {@link FeasibilityInspector}. */
 export interface FeasibilityInspectorProps {
+  initialStep?: 1 | 2 | 3;
   /** Id of the active parcel preset. */
   parcelId: string;
   /** Current ADU design configuration. */
@@ -92,6 +94,7 @@ export interface FeasibilityInspectorProps {
  * @param props - The {@link FeasibilityInspectorProps}.
  */
 export default function FeasibilityInspector({
+  initialStep = 1,
   parcelId,
   config,
   assumptions,
@@ -106,7 +109,7 @@ export default function FeasibilityInspector({
   saveNotice,
 }: FeasibilityInspectorProps) {
   const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, searchByAddress, resetToPreset } = useParcel();
-  const [openStep, setOpenStep] = useState<1 | 2 | 3>(1);
+  const [openStep, setOpenStep] = useState<1 | 2 | 3>(initialStep);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
@@ -359,6 +362,11 @@ export default function FeasibilityInspector({
 
               <div className="space-y-4">
                 <LabelRow label="Fine-tune dimensions" />
+                <div className="grid grid-cols-3 gap-2">
+                  <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
+                  <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
+                  <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
+                </div>
                 <Slider
                   label="Width"
                   value={config.width}
@@ -746,7 +754,7 @@ function Slider({
         max={max}
         value={value}
         onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
-        className="w-full accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+        className="h-11 w-full accent-lf-clay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
       />
     </label>
   );

@@ -1,4 +1,52 @@
 import type { ADUConfig, Parcel } from "./feasibility";
+import { buildExistingHouseSceneModel, type Pose2D } from "./scene-model";
+import { buildSetbackEnvelope, validatePlacement } from "./placement-validation";
+
+export function getScenePlacement(parcel: Parcel, config: Pick<ADUConfig, "width" | "length">, pose: Pose2D) {
+  return validatePlacement({ aduWidth: config.width, aduLength: config.length, pose,
+    envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, parcel.setbacks),
+    existingHouseCorners: buildExistingHouseSceneModel(parcel).corners });
+}
+
+/** Feet of breathing room left between the ADU and the existing structure when choosing a starting position. */
+const DEFAULT_POSE_CLEARANCE_FT = 3;
+
+/**
+ * A starting ADU position: rear-biased, but stepped clear of the existing
+ * house when that house's footprint is known.
+ *
+ * The old rear-biased default was only ever workable because the renderer drew
+ * a house far smaller than the recorded area (D1). Now that the modeled house
+ * carries its real footprint, a blind rear placement can start the ADU inside
+ * it. This tries the rear position first, then the gap behind the house, then
+ * the gap in front, and takes the first that sits inside the setback envelope
+ * and clears the house.
+ *
+ * When nothing clears — a genuinely full lot — it returns the rear-biased
+ * position anyway rather than inventing room. Placement validation then reports
+ * the overlap honestly, which is the intended outcome: a starting position is a
+ * convenience, not a claim that the ADU fits.
+ */
+export function getDefaultAduPose(parcel: Parcel, config: Pick<ADUConfig, "width" | "length">): Pose2D {
+  const bounds = getAduPlacementBounds(parcel, config);
+  const rearBiased = Math.min(bounds.minZ + 3, bounds.maxZ);
+  const house = buildExistingHouseSceneModel(parcel).boundsLocal;
+  const halfLength = config.length / 2;
+  if (!house || !Number.isFinite(halfLength)) return { x: 0, z: rearBiased, rotationDeg: 0 };
+
+  const clearsHouse = (z: number) =>
+    z + halfLength <= house.minZ - DEFAULT_POSE_CLEARANCE_FT ||
+    z - halfLength >= house.maxZ + DEFAULT_POSE_CLEARANCE_FT;
+  const inEnvelope = (z: number) => z >= bounds.minZ && z <= bounds.maxZ;
+
+  const candidates = [
+    rearBiased,
+    house.minZ - DEFAULT_POSE_CLEARANCE_FT - halfLength,
+    house.maxZ + DEFAULT_POSE_CLEARANCE_FT + halfLength,
+  ];
+  const clear = candidates.find((z) => inEnvelope(z) && clearsHouse(z));
+  return { x: 0, z: clear ?? rearBiased, rotationDeg: 0 };
+}
 
 export interface SiteFitCapacityStatus {
   title: string;

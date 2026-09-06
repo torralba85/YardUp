@@ -3,6 +3,7 @@ import {
   defaultAduConfig,
   defaultFinancialAssumptions,
   footprintOptions,
+  getParcelById,
   parcelPresets,
   type ADUConfig,
   type ExteriorFinish,
@@ -10,12 +11,17 @@ import {
   type RentScenario,
   type RoofStyle,
 } from "./feasibility";
+import { defaultPose, HEIGHT_CONVENTION, isValidAduConfig, isValidFinancialAssumptions, isValidPose, SCENARIO_VERSION } from "./scenario-design";
+import type { Pose2D } from "./scene-model";
 
 /**
  * The minimal scenario state that can be encoded in, and restored from, the
  * studio URL's query string. This makes a configured study shareable via link.
  */
 export interface ScenarioState {
+  version?: 2;
+  heightConvention?: "wall";
+  pose?: Pose2D;
   /** Id of the selected parcel preset. */
   parcelId: string;
   /** The ADU design configuration. */
@@ -33,6 +39,9 @@ const validFootprints = new Set(footprintOptions.map((option) => option.value));
 
 /** The baseline scenario state used when no URL params are present. */
 export const defaultScenarioState: ScenarioState = {
+  version: SCENARIO_VERSION,
+  heightConvention: HEIGHT_CONVENTION,
+  pose: defaultPose(parcelPresets[0], defaultAduConfig),
   parcelId: parcelPresets[0].id,
   config: defaultAduConfig,
   assumptions: defaultFinancialAssumptions,
@@ -47,6 +56,9 @@ export const defaultScenarioState: ScenarioState = {
  * @returns A partial state containing only the fields that were validly provided.
  */
 export function parseScenarioParams(searchParams: URLSearchParams): Partial<ScenarioState> {
+  const version = searchParams.get("v");
+  if (version && version !== "1" && version !== "2") return {};
+  if (version === "2") return parseCurrentParams(searchParams);
   const partial: Partial<ScenarioState> = {};
 
   const parcel = searchParams.get("parcel");
@@ -104,14 +116,60 @@ export function parseScenarioParams(searchParams: URLSearchParams): Partial<Scen
  * @returns A query string (without leading `?`), e.g. `"parcel=oak-street&size=600&..."`.
  */
 export function serializeScenarioParams(state: ScenarioState): string {
+  if (!isValidAduConfig(state.config) || !isValidFinancialAssumptions(state.assumptions)) {
+    throw new Error("Cannot share an invalid scenario.");
+  }
+  const parcelId = validParcelIds.has(state.parcelId) ? state.parcelId : parcelPresets[0].id;
+  const pose = state.pose ?? defaultPose(getParcelById(parcelId), state.config);
+  if (!isValidPose(pose)) throw new Error("Cannot share an invalid placement.");
   const params = new URLSearchParams();
-  params.set("parcel", state.parcelId);
+  params.set("v", "2");
+  params.set("hc", HEIGHT_CONVENTION);
+  params.set("parcel", parcelId);
+  params.set("w", String(state.config.width));
+  params.set("l", String(state.config.length));
+  params.set("h", String(state.config.height));
+  params.set("x", String(pose.x));
+  params.set("z", String(pose.z));
+  params.set("rotation", String(pose.rotationDeg));
   params.set("size", String(state.config.footprint));
   params.set("roof", state.config.roof);
   params.set("finish", state.config.finish);
   params.set("rent", state.assumptions.rentScenario);
   params.set("openings", state.config.includeOpenings ? "1" : "0");
+  for (const finish of validFinishes) params.set(`cost_${finish}`, String(state.assumptions.costPerSqft[finish]));
+  params.set("soft", String(state.assumptions.softCostMultiplier));
+  params.set("opex", String(state.assumptions.operatingExpenseRatio));
   return params.toString();
+}
+
+function parseCurrentParams(params: URLSearchParams): Partial<ScenarioState> {
+  const number = (key: string) => {
+    const value = params.get(key);
+    return value !== null && value.trim() !== "" ? Number(value) : NaN;
+  };
+  const partial: Partial<ScenarioState> = {};
+  const parcelId = params.get("parcel");
+  if (parcelId && validParcelIds.has(parcelId)) partial.parcelId = parcelId;
+  const config = {
+    width: number("w"), length: number("l"), height: number("h"), footprint: number("size"),
+    roof: params.get("roof"), finish: params.get("finish"),
+    includeOpenings: params.get("openings") === "1" ? true : params.get("openings") === "0" ? false : null,
+  };
+  const pose = { x: number("x"), z: number("z"), rotationDeg: number("rotation") };
+  // The design is atomic: an invalid pose cannot be applied to valid dimensions silently.
+  if (params.get("hc") === HEIGHT_CONVENTION && isValidAduConfig(config) && isValidPose(pose)) {
+    partial.version = SCENARIO_VERSION;
+    partial.heightConvention = HEIGHT_CONVENTION;
+    partial.config = config;
+    partial.pose = pose;
+  }
+  const assumptions = {
+    costPerSqft: Object.fromEntries(validFinishes.map((finish) => [finish, number(`cost_${finish}`)])),
+    softCostMultiplier: number("soft"), operatingExpenseRatio: number("opex"), rentScenario: params.get("rent"),
+  };
+  if (isValidFinancialAssumptions(assumptions)) partial.assumptions = assumptions;
+  return partial;
 }
 
 /**
@@ -146,9 +204,14 @@ export function isNonDefaultScenario(partial: Partial<ScenarioState>): boolean {
  * @returns A complete {@link ScenarioState}.
  */
 export function mergeScenarioPartial(partial: Partial<ScenarioState>): ScenarioState {
+  const parcelId = partial.parcelId ?? defaultScenarioState.parcelId;
+  const config = partial.config ?? { ...defaultScenarioState.config };
   return {
-    parcelId: partial.parcelId ?? defaultScenarioState.parcelId,
-    config: partial.config ?? { ...defaultScenarioState.config },
+    version: SCENARIO_VERSION,
+    heightConvention: HEIGHT_CONVENTION,
+    pose: partial.pose ? { ...partial.pose } : defaultPose(getParcelById(parcelId), config),
+    parcelId,
+    config,
     assumptions: partial.assumptions ?? { ...defaultScenarioState.assumptions, costPerSqft: { ...defaultScenarioState.assumptions.costPerSqft } },
   };
 }
