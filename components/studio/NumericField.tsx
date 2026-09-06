@@ -18,6 +18,6 @@ export function NumericField({label,value,min,max,step=0.5,onChange}: {
     <input id={id} type="number" inputMode="decimal" min={min} max={max} step={step} value={draft}
       onChange={event=>setDraft(event.target.value)} onBlur={commit}
       onKeyDown={event=>{ if(event.key==="Enter") event.currentTarget.blur(); if(event.key==="Escape") { setDraft(String(value)); event.currentTarget.blur(); } }}
-      className="mt-1 h-11 w-full min-w-0 rounded border border-lf-hairline bg-lf-card px-2 font-mono text-sm text-lf-espresso focus-visible:outline-2 focus-visible:outline-lf-clay" />
+      className="mt-1 h-11 w-full min-w-0 rounded-md border border-lf-hairline bg-lf-card px-2.5 font-mono text-sm text-lf-espresso transition-colors hover:border-lf-taupe focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card" />
   </label>;
 }

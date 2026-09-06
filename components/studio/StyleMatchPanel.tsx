@@ -387,25 +387,25 @@ export default function StyleMatchPanel({
                 <div className="font-mono text-[9px] uppercase text-lf-clay-ink text-center font-bold">
                   Dev Test Controls
                 </div>
-                <div className="flex gap-1 justify-center">
+                <div className="flex flex-wrap gap-2 justify-center">
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="bg-lf-forest text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                    className="inline-flex min-h-11 items-center rounded-md bg-lf-forest px-3 py-1 font-mono text-[10px] font-semibold text-lf-sand transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="bg-lf-brick text-lf-sand text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                    className="inline-flex min-h-11 items-center rounded-md bg-lf-brick px-3 py-1 font-mono text-[10px] font-semibold text-lf-sand transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="border border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink text-[9px] font-mono font-semibold px-2 py-1 cursor-pointer"
+                    className="inline-flex min-h-11 items-center rounded-md border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-mono text-[10px] font-semibold text-lf-amber-ink transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>
