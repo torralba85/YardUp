@@ -152,34 +152,47 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 
 ## Design System
 
-See `DESIGN.md` for the full brand spec and use it as the source of truth before visual or UI changes. Key rules:
+**`docs/design/` is the source of truth.** Read `docs/design/README.md` before any visual or UI change,
+then `docs/design/design-system.md` (the A LOT MORE system, adopted 2026-09-05).
+
+The previous system - Blue Hour / Golden Hour, clay/forest/amber/brick, Cormorant Garamond / Libre
+Franklin / IBM Plex Mono, the pill-radius system - was retired and moved to `docs/design/archive/`.
+Do not apply it to new work.
 
 ### Colors
-- **Base clay** (`--lf-clay`) = interactive fills, borders, and large accents
-- **Clay ink** (`--lf-clay-ink`) = interactive text, icons, and focus on light surfaces
-- **Clay on dark** (`--lf-clay-on-dark`) = interactive text and focus on mahogany or espresso
-- **Forest** (`--lf-forest`) = money, eligibility, completed/readiness states, and commit CTAs; current/selected states remain clay and commit hover uses `--lf-forest-strong`
-- **Mahogany** (`--lf-mahogany`) = dark panels, rails
-- **Amber** (`--lf-amber`) = permit risk, review needed
-- **Amber ink** (`--lf-amber-ink`) = amber text/icons on light surfaces
-- **Amber on dark** (`--lf-amber-on-dark`) = amber text/icons on mahogany or espresso
-- **Brick** (`--lf-brick`) = genuine blockers
+- **Chalk** `#F5F5F0` = ground. Warm off-white, never pure white.
+- **Carbon** `#161616` = ink, and the ground for inverted sections.
+- **Signal orange** `#FF5B24` = action, and the proposed structure. **Fill only** - orange text on chalk
+  is 2.83:1 and fails AA; use `#C43708` for orange type on chalk.
+- **Stone** `#65655F` = muted text on chalk. On carbon use `#B7B7AE` instead.
+- **Drafting line** `#DADAD3` = decorative hairlines only; a border that carries state must clear 3:1.
+- **Status** (label + icon always, never colour alone): eligible `#176B4C` / `#5FBF93`, review-needed
+  `#8A5300` / `#E0A33C`, blocked `#A82D16` / `#F0705A` (on chalk / on carbon).
+- **Money is not a colour.** It is carbon, large, `tabular-nums`. Green means eligible, never money.
 
 ### Typography
-- **Cormorant Garamond** = display, hero headlines, and money figures
-- **Libre Franklin** = body text, labels, controls, nav, and dense UI
-- **IBM Plex Mono** = APNs, dimensions, zoning codes, status chips, eyebrows, and tabular recorded facts
+- **Space Grotesk** = display, headlines, metrics. Negative tracking that tightens as size grows.
+- **Manrope** = body, controls, labels, tables, micro-print.
+- Two families only. No serif, no mono layer.
 
 ### Layout
-- Landing first viewport is a poster, not a centered hero stack: warm parcel composition, oversized serif headline left/low, address search as a survey instrument, and an income rail docked to the bottom edge.
-- Studio uses a mahogany sidebar, espresso money band, dominant map/3D scene, calibrated right rail, and metric cards below.
-- Grid: 12 columns on desktop, 4 columns on mobile, max content width 1180px.
+- Percentage gutters (`4.5%` standard, up to `12%` feature, capped above 1700px), not a fixed container.
+- Spacing is an optical scale, not a 4/8px grid. Do not "snap" it - that is a regression.
+- Breakpoints are `1700 / 1150 / 800 / 480`, not Tailwind defaults, on A LOT MORE surfaces.
 
-### Radius
-- 2026-06-27 pill-radius system (final): clickable controls, CTAs, nav links, and search instruments (field + button together) use `rounded-full`.
-- Tabular data chips and read-only content frames (dashed placeholders, suggestion dropdowns, risk banners) stay rectangular (`rounded-lg`/`rounded-md`).
-- Circle indicators (avatars, step dots, progress markers, numbered badges) need explicit equal width/height so they render as true circles, not ovals.
-- On stacked mobile layouts where a full pill would render as an oblong stadium, scale the radius down rather than forcing `rounded-full`.
+### Radius and elevation
+- `0` for surfaces, cards, image frames and sections; `3px` for controls; `50%` for dots.
+- Elevation is a hard offset shadow (`12px 16px 0 #E7E7DF`), no blur, except floating elements.
+
+### Accessibility
+- Focus ring is `2px` at `outline-offset: 5px`, pinned to the ground - **never `currentColor`**, which
+  renders invisible on light-labelled controls.
+- Touch targets `min-height: 44px`. All motion inside `prefers-reduced-motion: no-preference`.
+
+### Surfaces not yet migrated
+`/studio`, auth, builder, report, certificate and email still run the legacy Golden Hour palette.
+`docs/design/product-surfaces.md` is the accurate record of what they use and how they migrate. Fix
+bugs there; do not build new components in it, and do not partially reskin a surface.
 
 ---
 
@@ -220,7 +233,7 @@ _Last updated 2026-07-18 (accessible color roles, mobile release configuration, 
 
 | Dimension | Status | Notes |
 |---|---|---|
-| Brand/Identity | ✅ Complete | LotFoundry fully integrated; field-book design system (`DESIGN.md`) |
+| Brand/Identity | ✅ Complete | LotFoundry fully integrated; A LOT MORE design system (`docs/design/`) |
 | Core Feasibility Logic | ✅ Complete | 3 presets + live parcel (Regrid); address-specific market rents/costs/opex (HUD FMR index + key-gated live seam, `lib/server/market/`); provenance stamped on every result |
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
 | Guided Spine (P0–P4) | ✅ Landed | Desktop: Lot → Feasibility → Design → Certificate → Builders rail. Mobile: five-reveal journey Find → Earn → Shape → Check → Act (`components/studio/mobile/journey/`, issue #130) — replaced the bottom sheet + first-run wizard |
@@ -241,7 +254,7 @@ _Last updated 2026-07-18 (accessible color roles, mobile release configuration, 
 2. **`NEXT_PUBLIC_APP_URL`** — set to the real domain or Stripe redirects land on `yardup-2026.web.app`.
 3. **Stripe live-mode verification** — webhook endpoint registered in the dashboard, one live test checkout for certificate + lead-unlock flows.
 4. **Store packaging** — Android TWA configuration and upload-key association exist; generate and review the Bubblewrap project, add the Play App Signing SHA-256, capture manifest/store screenshots, build a signed `.aab`, and generate the iOS project on macOS (`docs/store-deployment-readiness.md` §2–3).
-5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `DESIGN.md`, covering clay interaction and focus roles, forest readiness, amber/brick status semantics, the pill-radius system, and the typography trio across landing, studio, and builder dashboard.
+5. **Design/QA sweep at the agency bar** — desktop + mobile pass against `docs/design/design-system.md`, covering contrast (especially orange-on-chalk), focus-ring visibility on every ground, touch targets, reduced motion, and status semantics. The studio and builder dashboard are still on the legacy palette; audit them against `docs/design/product-surfaces.md`, not against the new system.
 6. **Builder network growth** — real builder onboarding flow; zero-state city coverage is honest but the network is empty.
 7. **Solar simulation / view modes / aerial polish** — deferred scene enhancements from the earlier audit.
 8. **Full HUD FMR coverage** — the checked-in market index (`lib/server/market/data/fmr.json`) is a seed extract (demo metros + CA/TX benchmark counties); run `scripts/build-market-data.js` against a full HUD release for nationwide ZIP/county coverage. Out-of-seed addresses resolve at the state/national tier, surfaced as low-confidence.

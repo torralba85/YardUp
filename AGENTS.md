@@ -80,7 +80,7 @@ Key entry points:
 
 - `CLAUDE.md` - the Claude-facing twin of this file; keep both in sync.
 - `docs/AGENTS.md` - full architecture map, current status, pitfalls, and next priorities.
-- `DESIGN.md` - mandatory before visual or UI decisions.
+- `docs/design/` - **the source of truth for design.** Mandatory before visual or UI decisions; start at `docs/design/README.md`.
 - `README.md` - product scope, local setup, environment variables, verification, CI, deployment.
 - `docs/deployment.md` - Firebase deploy flow, CI secrets, rollback, deployment troubleshooting.
 - `docs/cloudflare-dns.md` - DNS/edge state for `lotfoundry.net`, the open `www` redirect, and verification commands.
@@ -95,16 +95,36 @@ Key entry points:
 
 ## Design System
 
-Always read `DESIGN.md` before making visual or UI changes. Fonts, colors, spacing, layout direction, and brand tone are defined there. Do not deviate without explicit user approval. In QA or review mode, flag code that does not match `DESIGN.md`.
+**`docs/design/` is the source of truth.** Read `docs/design/README.md` before any visual or UI change,
+then `docs/design/design-system.md` (the A LOT MORE system). Do not deviate without explicit user
+approval. In QA or review mode, flag code that does not match it.
+
+`DESIGN.md` at the repo root is now only a pointer. The system it used to contain (Blue Hour / Golden
+Hour dual lighting, clay/forest/amber/brick semantics, Cormorant Garamond / Libre Franklin / IBM Plex
+Mono, the pill-radius system) was retired 2026-09-05 and lives in `docs/design/archive/`. **Do not apply
+anything from the archive to new work**, and do not repeat those rules from memory or from the older
+specs under `docs/superpowers/specs/`, which still reference them as history.
 
 Project-specific design rules:
-- `DESIGN.md` is the shared semantic-color reference. Use base clay (`lf-clay`) for interactive fills, borders, and large accents; use `lf-clay-ink` for interactive text, icons, and focus on light surfaces; use `lf-clay-on-dark` for interactive text and focus on mahogany or espresso.
-- Forest is reserved for positive financial value, eligibility, completed/readiness states, and commit CTAs. Current or selected states remain clay; forest commit CTAs use the solid `lf-forest-strong` hover role.
-- Amber signals permit risk or review-needed states.
-- Use base amber for fills/accents, `lf-amber-ink` for warning text/icons on light surfaces, and `lf-amber-on-dark` for warning text/icons on mahogany or espresso.
-- Brick signals genuine blockers.
-- Use Cormorant Garamond for display/hero numbers and dollar figures, Libre Franklin for body/control text, and IBM Plex Mono for tabular/recorded-fact values (APNs, dimensions, status chips). `DESIGN.md` is the source of truth — defer to it if it diverges.
-- Use the 2026-06-27 pill-radius system: clickable controls, CTAs, nav links, and search instruments (including their inputs) use `rounded-full`; tabular data chips and read-only content frames (dashed placeholders, suggestion dropdowns, risk banners) stay rectangular (`rounded-lg`/`rounded-md`). Circle-shaped indicators (avatars, step dots, progress markers, numbered badges) must have equal explicit width and height so they render as true circles, not ovals. On stacked mobile layouts where a full pill would render as an oblong stadium, scale the radius down instead of forcing `rounded-full`.
+- New UI uses A LOT MORE: chalk `#F5F5F0` ground, carbon `#161616` ink, signal orange `#FF5B24` action,
+  stone `#65655F` muted text on chalk (`#B7B7AE` on carbon), drafting line `#DADAD3` hairlines.
+- Space Grotesk for display, Manrope for body. Two families only - no serif, no mono layer.
+- Radius: `0` for surfaces and cards, `3px` for controls. Elevation is a hard offset shadow, no blur.
+- Money is typographic, not chromatic: carbon, large, `tabular-nums`. Green is an eligible/verified
+  status colour and **never** money.
+- Status colours (label + icon always, never colour alone): eligible `#176B4C` on chalk / `#5FBF93` on
+  carbon; review-needed `#8A5300` / `#E0A33C`; blocked `#A82D16` / `#F0705A`.
+- **Orange is never text on chalk** - it is 2.83:1 and fails AA. Orange is a fill colour. Use `#C43708`
+  when you need orange type on chalk.
+- **Never set a focus ring to `currentColor`** - the ring is drawn outside the control, on the parent
+  ground, so `currentColor` goes invisible on light-labelled controls. Pin it: carbon on chalk and on
+  orange, chalk on carbon.
+- Touch targets are `min-height: 44px`. All motion sits inside `prefers-reduced-motion: no-preference`.
+- Do not "snap" the landing's spacing to a 4/8px grid - the odd values are optically tuned, and that
+  cleanup is a regression.
+- `/studio`, auth, builder, report, certificate and email still run the legacy Golden Hour palette; see
+  `docs/design/product-surfaces.md`. Fix bugs there, but do not build new components in it and do not
+  partially reskin a surface.
 
 ## Environment
 
