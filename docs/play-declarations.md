@@ -148,10 +148,10 @@ marketplace-sharing rows above.
 | Field | Value |
 |---|---|
 | Artifact | `native/android/app/build/outputs/bundle/release/app-release.aab` (or the GitHub Actions artifact `lotfoundry-android-release-aab`) |
-| Version name | `1.0.6` |
-| Version code | `7` |
-| Release notes | `First LotFoundry Android release with the feasibility studio, saved studies, builder connections, and Google Play Billing.` |
+| Version name | `1.0.8` |
+| Version code | `9` |
+| Release notes | `Updates LotFoundry for the latest feasibility studio experience and current Google Play Billing support.` |
 
 Before upload, confirm in Play Console that the highest accepted version code is
-less than `7`; Play rejects a duplicate or lower code. After upload, test on a
+less than `9`; Play rejects a duplicate or lower code. After upload, test on a
 physical device that the app opens full-screen without Chrome browser controls.
