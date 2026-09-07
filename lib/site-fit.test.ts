@@ -36,10 +36,8 @@ describe("getSiteFitCapacityStatus", () => {
 
 describe("getDefaultAduPose", () => {
   it("steps a new ADU clear of the modeled existing house", () => {
-    // Oak Street's 1,380 sf house models as a 19.5 x 70.8 ft footprint spanning
-    // most of the lot's length, so the old rear-biased default started the ADU
-    // inside it. That default only ever looked reasonable because the renderer
-    // drew a much smaller house than the recorded area (D1).
+    // The Seattle house and ADU must retain their declared footprints while
+    // leaving a usable separation inside the actual setback envelope.
     const parcel = parcelPresets[0];
     const pose = getDefaultAduPose(parcel, defaultAduConfig);
     const house = buildExistingHouseSceneModel(parcel).boundsLocal!;
@@ -47,6 +45,7 @@ describe("getDefaultAduPose", () => {
 
     expect(pose.z - halfLength >= house.maxZ || pose.z + halfLength <= house.minZ).toBe(true);
     expect(getScenePlacement(parcel, defaultAduConfig, pose).status).toBe("fits");
+    expect(pose.z + halfLength).toBeLessThanOrEqual(house.minZ - 3);
   });
 
   it("stays inside the setback envelope", () => {

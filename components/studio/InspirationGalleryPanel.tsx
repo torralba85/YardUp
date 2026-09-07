@@ -2,23 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { CheckCircle2, Sparkles, Camera, Layers } from "lucide-react";
+import { ArrowRight, CheckCircle2, Plus } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import StyleMatchPanel from "./StyleMatchPanel";
 import { Button } from "@/components/ui/Button";
 
-/** Props for {@link InspirationGalleryPanel}. */
+/** Curated starting points and the existing photo-matching workflow. */
 export interface InspirationGalleryPanelProps {
-  /** Active parcel context sent to the embedded style-match generation flow. */
   parcel: Parcel & { zoning?: string; source?: string };
-  /** Active ADU configuration sent to the embedded style-match generation flow. */
   config: ADUConfig;
-  /** Called when the user applies a concept's config to the studio. */
   onApply: (item: InspirationItem) => void;
-  /** AI style-match concepts to show alongside the curated gallery. */
   generatedConcepts?: InspirationItem[];
-  /** Called when a style-match generation completes with its result. */
   onGenerationComplete?: (concept: {
     photoUrl: string;
     conceptUrl: string;
@@ -26,312 +21,120 @@ export interface InspirationGalleryPanelProps {
     matchPercentage: number;
     traits: string[];
   }) => void;
-  /** Called to open the before/after comparison for a concept. */
   onViewComparison?: (item: InspirationItem) => void;
-  /** Key that, when changed, resets the embedded style-match panel. */
   styleMatchKey?: number | string;
 }
 
-/**
- * The inspiration gallery: a grid of curated ADU concepts plus any AI
- * style-matched concepts, with actions to apply a concept to the studio or open
- * its before/after comparison. Embeds the {@link StyleMatchPanel} uploader.
- *
- * @param props - The {@link InspirationGalleryPanelProps}.
- */
+const finishLabels = { cedar: "Cedar", board: "Board & batten", lap: "Lap siding", stucco: "Stucco" };
+const roofLabels = { shed: "Shed", flat: "Flat", gable: "Gable" };
+
+/** Full-width catalogue whose height follows its content. */
 export default function InspirationGalleryPanel({
-  parcel,
-  config,
-  onApply,
-  generatedConcepts = [],
-  onGenerationComplete,
-  onViewComparison,
-  styleMatchKey,
+  parcel, config, onApply, generatedConcepts = [],
+  onGenerationComplete, onViewComparison, styleMatchKey,
 }: InspirationGalleryPanelProps) {
   const [appliedId, setAppliedId] = useState<string | null>(null);
-  const [viewModes, setViewModes] = useState<Record<string, "image" | "diagram">>({});
+  const [announcement, setAnnouncement] = useState("");
   const appliedTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (appliedTimerRef.current !== null) window.clearTimeout(appliedTimerRef.current);
-    };
+  useEffect(() => () => {
+    if (appliedTimerRef.current !== null) window.clearTimeout(appliedTimerRef.current);
   }, []);
 
   const handleApply = (item: InspirationItem) => {
     onApply(item);
     setAppliedId(item.id);
+    setAnnouncement(`${item.title} applied to Studio.`);
     if (appliedTimerRef.current !== null) window.clearTimeout(appliedTimerRef.current);
     appliedTimerRef.current = window.setTimeout(() => setAppliedId(null), 1500);
   };
 
-  const getViewMode = (id: string) => viewModes[id] || "image";
-  const setCardView = (id: string, mode: "image" | "diagram") => {
-    setViewModes((prev) => ({ ...prev, [id]: mode }));
-  };
-
-  const allItems = [...generatedConcepts, ...inspirationItems];
-
   return (
-    <section
-      aria-label="Inspiration gallery panel"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-hidden xl:w-[404px] xl:border-l"
-    >
-      <div className="flex h-full flex-col lg:min-h-0">
-        <div className="border-b border-lf-hairline px-6 py-5">
-          <h2 className="text-2xl font-semibold tracking-tight text-lf-espresso font-display">
-            Inspiration Gallery
+    <section aria-label="Inspiration gallery panel"
+      className="w-full min-w-0 shrink-0 border-t border-lot-line bg-lot-chalk px-5 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+        <div>
+          <h2 className="font-display text-[34px] leading-[1.06] font-medium tracking-[-0.055em] text-lot-ink lg:text-[42px]">
+            A small home, considered.
           </h2>
-          <p className="mt-1 text-sm text-lf-muted">
-            Explore standard ADU designs. Toggle between real-world 3D rendering and site-fit massing.
+          <p className="mt-3 text-sm leading-relaxed text-lot-stone">
+            Explore six starting points. Apply a footprint, then refine it on your lot.
           </p>
         </div>
-
-        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4 lg:min-h-0">
-          <StyleMatchPanel
-            key={styleMatchKey}
-            onGenerationComplete={onGenerationComplete}
-            parcel={parcel}
-            config={config}
-          />
-
-          {allItems.map((item) => {
-            const viewMode = getViewMode(item.id);
-            return (
-              <div
-                key={item.id}
-                className="group overflow-hidden rounded-none border border-lf-hairline bg-lf-card shadow-none motion-safe:transition-[border-color,box-shadow] motion-safe:duration-300 hover:border-lf-clay/50 hover:shadow-none"
-              >
-                {/* Media area with toggling Views */}
-                <div className="relative h-44 w-full overflow-hidden bg-lf-sand-2 border-b border-lf-hairline">
-                  {/* Real View (Image) — photo cover only; no decorative gradient scrim. */}
-                  <div
-                    className={`absolute inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-in-out ${
-                      viewMode === "image" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-                    }`}
-                  >
-                    <Image
-                      src={item.imagePath}
-                      alt={`${item.title} Real 3D Render`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 384px"
-                      className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:group-hover:scale-105"
-                      unoptimized // Served locally, bypass dynamic resizing costs/issues
-                    />
-                  </div>
-
-                  {item.isStyleMatched && (
-                    <div className="absolute top-3 left-3 z-20 rounded-none bg-lf-clay px-2 py-0.5 border border-lf-sand/20 shadow-none">
-                      <span className="lf-dataprint font-bold text-lf-primary-label">
-                        Style-Matched
-                      </span>
-                    </div>
-                  )}
-
-
-                  {/* 3D Massing View (SVG) */}
-                  <div
-                    className={`absolute inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-in-out ${
-                      viewMode === "diagram" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-                    }`}
-                  >
-                    <ConceptDiagram item={item} />
-                  </div>
-
-                  {/* Toggle Capsule — min 44px touch via before: hit area on mobile. */}
-                  <div className="absolute top-3 right-3 z-20 flex gap-0.5 rounded-none bg-lf-espresso/85 p-0.5 backdrop-blur-md border border-lf-sand/10 shadow-none">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={viewMode === "image" ? "selected" : "ghost"}
-                      onClick={() => setCardView(item.id, "image")}
-                      aria-pressed={viewMode === "image"}
-                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-primary-label aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-none aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lot-stone-on-dark aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
-                      leftIcon={<Camera size={10} />}
-                    >
-                      Real View
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={viewMode === "diagram" ? "selected" : "ghost"}
-                      onClick={() => setCardView(item.id, "diagram")}
-                      aria-pressed={viewMode === "diagram"}
-                      className="relative px-2.5 lf-dataprint text-[9px] leading-[13px] focus-visible:ring-1 focus-visible:ring-lf-clay-on-dark focus-visible:ring-offset-1 focus-visible:ring-offset-lf-espresso before:absolute before:-inset-y-2 before:-inset-x-1 aria-[pressed=true]:border-transparent aria-[pressed=true]:bg-lf-clay aria-[pressed=true]:text-lf-primary-label aria-[pressed=true]:ring-0 aria-[pressed=true]:shadow-none aria-[pressed=true]:hover:bg-lf-clay-strong aria-[pressed=false]:text-lot-stone-on-dark aria-[pressed=false]:hover:bg-transparent aria-[pressed=false]:hover:text-lf-sand"
-                      leftIcon={<Layers size={10} />}
-                    >
-                      Massing
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Card Details */}
-                <div className="space-y-3 p-4">
-                  <div>
-                    <h3 className="font-display text-base font-semibold leading-snug text-lf-espresso motion-safe:transition-colors motion-safe:duration-200 group-hover:text-lf-clay-ink-ink">
-                      {item.title}
-                    </h3>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded-none border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 lf-kicker-dense font-medium text-lf-muted">
-                        {item.style}
-                      </span>
-                      <span className="rounded-none border border-lf-hairline bg-lf-sand/30 px-1.5 py-0.5 font-sans text-[10px] font-medium text-lf-muted tracking-[0.14em]">
-                        {item.sqft} sf ({item.width}&apos;x{item.length}&apos;)
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs leading-relaxed text-lf-muted">{item.summary}</p>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {item.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-none bg-lf-taupe-soft px-2 py-0.5 lf-dataprint text-lf-muted"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-1 flex items-center justify-between border-t border-lf-hairline pt-3 gap-2">
-                    <div className="flex items-center gap-2">
-                      {/* Build cost band is cost, not payable income — espresso ink. */}
-                      <span className="lf-kicker font-bold text-lf-espresso">
-                        {item.budgetBand}
-                      </span>
-                      {item.isStyleMatched && onViewComparison && (
-                        <>
-                          <span className="text-lf-hairline">|</span>
-                          <button
-                            type="button"
-                            onClick={() => onViewComparison(item)}
-                            className="relative flex min-h-11 items-center gap-1 lf-kicker-dense font-bold text-lf-clay-ink hover:text-lf-clay-strong motion-safe:transition-colors cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-2"
-                          >
-                            Compare
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    <Button
-                      type="button"
-                      variant={appliedId === item.id ? "commit" : "primary"}
-                      size="md"
-                      onClick={() => handleApply(item)}
-                      leftIcon={appliedId === item.id ? <CheckCircle2 size={13} /> : <Sparkles size={13} />}
-                    >
-                      {appliedId === item.id ? "Applied" : "Apply to Studio"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <p className="max-w-xs text-xs leading-relaxed text-lot-stone">
+          Illustrative concepts · Not construction plans.<br />
+          Dimensions, roof and finish apply to the Studio model.
+        </p>
       </div>
+      <p role="status" className="sr-only">{announcement}</p>
+      <div className="grid grid-cols-1 gap-x-6 gap-y-9 md:grid-cols-2 xl:grid-cols-3">
+        {[...generatedConcepts, ...inspirationItems].map((item) => (
+          <article key={item.id} aria-label={item.title} className="flex min-w-0 flex-col">
+            <figure>
+              <div className="relative aspect-[3/2] overflow-hidden bg-lot-chalk">
+                {item.mobileImagePath ? (
+                  // Static width-descriptor variants let the browser pick per card
+                  // width and pixel density, with no runtime image service. A
+                  // viewport media query cannot work here: the gallery only renders
+                  // at >=1024px (FeasibilityStudio's `isDesktop`), so any
+                  // `max-width` source below that never matches.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.imagePath} alt={`${item.title} illustrative architectural model`}
+                    srcSet={`${item.mobileImagePath} 600w, ${item.imagePath} 960w`}
+                    sizes="(min-width: 1280px) calc((100vw - 320px) / 3), calc((100vw - 300px) / 2)"
+                    width={960} height={640} loading="lazy" decoding="async"
+                    className="h-full w-full object-contain" />
+                ) : (
+                  <Image src={item.imagePath} alt={`${item.title} illustrative concept`}
+                    fill sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                    className="object-contain" unoptimized />
+                )}
+              </div>
+              <figcaption className="mt-2 text-[10px] leading-relaxed text-lot-stone">
+                {item.isStyleMatched ? "Style-Matched · Illustrative concept" : "Illustrative concept"}
+              </figcaption>
+            </figure>
+            <h3 className="mt-2 font-display text-[22px] leading-tight font-medium tracking-[-0.035em] text-lot-ink">
+              {item.title}
+            </h3>
+            <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs leading-relaxed text-lot-stone tabular-nums">
+              <span>{item.sqft.toLocaleString()} sf</span><span aria-hidden="true">/</span>
+              <span>{item.width} × {item.length} ft</span><span aria-hidden="true">/</span>
+              <span>{finishLabels[item.finish]} · {roofLabels[item.roof]}</span>
+            </p>
+            <p className="mt-2 mb-4 text-sm leading-relaxed text-lot-stone">{item.summary}</p>
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-lot-line pt-4">
+              <div>
+                <p className="text-[10px] text-lot-stone">Illustrative build budget</p>
+                <p className="mt-1 text-sm font-semibold text-lot-ink tabular-nums">{item.budgetBand}</p>
+              </div>
+              <Button type="button" variant={appliedId === item.id ? "commit" : "primary"}
+                size="md" className="min-h-12 px-4" onClick={() => handleApply(item)}
+                rightIcon={appliedId === item.id ? <CheckCircle2 size={18} /> : <ArrowRight size={18} />}>
+                {appliedId === item.id ? "Applied" : "Apply to Studio"}
+              </Button>
+              {item.isStyleMatched && onViewComparison && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => onViewComparison(item)}>
+                  Compare
+                </Button>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+      <details className="group mt-8 border-t border-lot-line">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-5 py-4 text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-ink [&::-webkit-details-marker]:hidden">
+          <span className="flex flex-wrap items-baseline gap-x-7 gap-y-1">
+            <span className="font-display text-lg font-medium tracking-tight">Match your own home</span>
+            <span className="text-sm text-lot-stone">Explore a concept inspired by your existing exterior.</span>
+          </span>
+          <Plus size={22} aria-hidden="true" className="shrink-0 group-open:rotate-45 motion-safe:transition-transform motion-safe:duration-200" />
+        </summary>
+        <div className="pt-2 pb-4">
+          <StyleMatchPanel key={styleMatchKey} onGenerationComplete={onGenerationComplete}
+            parcel={parcel} config={config} />
+        </div>
+      </details>
     </section>
-  );
-}
-
-/** Parcel outline of the diagram, and its untokenized warm-earth fill. */
-const LOT_PATH = "M46 22 294 34 278 138 34 126Z";
-const LOT_FILL = "#E9D4B7";
-
-function ConceptDiagram({ item }: { item: InspirationItem }) {
-  const aduWidth = Math.max(48, Math.min(104, item.width * 3.1));
-  const aduLength = Math.max(54, Math.min(118, item.length * 2.4));
-  const aduX = 168 - aduWidth / 2;
-  const aduY = 88 - aduLength / 2;
-  const roofPeak = item.roof === "gable" ? aduY - 16 : aduY + 10;
-  // Component-local material swatches. These are illustration colours for the
-  // cedar/lap/stucco/board finishes, not semantic UI roles — forcing them into
-  // brand tokens would weaken the token model.
-  const finishFill: Record<InspirationItem["finish"], string> = {
-    cedar: "#B16C39",
-    lap: "#CFC8B8",
-    stucco: "#D9D1BF",
-    board: "#253038",
-  };
-
-  return (
-    <svg
-      viewBox="0 0 336 160"
-      className="h-full w-full bg-lf-sand-2"
-      role="img"
-      aria-label={`${item.title} parcel-fit diagram`}
-    >
-      <defs>
-        {/* Adds a soft 3D-like depth to the massing model */}
-        <filter id="adu-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="var(--color-lf-espresso)" floodOpacity="0.22" />
-        </filter>
-        <filter id="roof-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="2" floodColor="var(--color-lf-espresso)" floodOpacity="0.3" />
-        </filter>
-      </defs>
-      <rect width="336" height="160" fill="var(--color-lf-sand-2)" />
-      {/* Parcel Lot */}
-      {/* LOT_FILL sits between sand and hairline; no exact brand token. */}
-      <path d={LOT_PATH} fill={LOT_FILL} stroke="var(--color-lf-clay)" strokeWidth="1.5" />
-      {/* Setback lines */}
-      <path
-        d="M70 42 268 51 256 118 58 110Z"
-        fill="var(--color-lf-card)"
-        fillOpacity="0.45"
-        stroke="var(--color-lf-clay)"
-        strokeDasharray="6 6"
-        strokeWidth="1.2"
-      />
-      {/* ADU Footprint Massing */}
-      <rect
-        x={aduX}
-        y={aduY}
-        width={aduWidth}
-        height={aduLength}
-        rx="3"
-        fill={finishFill[item.finish]}
-        stroke="var(--color-lf-mahogany)"
-        strokeWidth="1.5"
-        filter="url(#adu-shadow)"
-      />
-      {/* Roof Style Overlay */}
-      {item.roof === "gable" ? (
-        <path
-          d={`M${aduX - 6} ${aduY + 8} L168 ${roofPeak} L${aduX + aduWidth + 6} ${aduY + 8}`}
-          fill="none"
-          stroke="var(--color-lf-mahogany)"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="5"
-          filter="url(#roof-shadow)"
-        />
-      ) : (
-        <path
-          d={`M${aduX - 4} ${aduY + 12} L${aduX + aduWidth + 4} ${roofPeak}`}
-          fill="none"
-          stroke="var(--color-lf-mahogany)"
-          strokeLinecap="round"
-          strokeWidth="5"
-          filter="url(#roof-shadow)"
-        />
-      )}
-      {/* Door and Window representation */}
-      <rect x={aduX + aduWidth * 0.2} y={aduY + aduLength * 0.38} width="16" height="22" rx="2" fill="var(--color-lf-sand)" opacity="0.82" />
-      <rect x={aduX + aduWidth * 0.58} y={aduY + aduLength * 0.42} width="18" height="28" rx="2" fill="var(--color-lf-sand)" opacity="0.82" />
-      {/* Trees & Landscaping paths */}
-      <path d="M60 116 C112 106 133 121 168 124 C205 128 228 116 270 122" fill="none" stroke="var(--color-lf-forest)" strokeOpacity="0.34" strokeWidth="8" strokeLinecap="round" />
-      <circle cx="70" cy="52" r="10" fill="var(--color-lf-forest)" opacity="0.85" />
-      <circle cx="286" cy="64" r="13" fill="var(--color-lf-forest)" opacity="0.72" />
-      {/* Dimension badge */}
-      <g transform="translate(18 18)">
-        <rect width="78" height="28" rx="4" fill="var(--color-lf-espresso)" />
-        <text x="10" y="12" fill="var(--color-lf-sand)" fontSize="7" fontWeight="700" style={{ fontFamily: "var(--font-mono)" }} letterSpacing="1.1">
-          TEMPLATE
-        </text>
-        <text x="10" y="23" fill="var(--color-lf-sand)" fontSize="10" fontWeight="800" style={{ fontFamily: "var(--font-mono)" }}>
-          {item.sqft} sf
-        </text>
-      </g>
-    </svg>
   );
 }

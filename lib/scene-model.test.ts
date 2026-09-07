@@ -29,6 +29,14 @@ import { defaultAduConfig } from "./feasibility";
 import type { GeoJsonPolygon } from "./parcel-types";
 
 describe("buildExistingHouseFootprint — D1 area agreement", () => {
+  it("gives the Seattle sample a balanced footprint without changing its area", () => {
+    const seattle = demoPresets[0];
+    const footprint = buildExistingHouseFootprint(seattle);
+    expect(footprint.width).toBe(30);
+    expect(footprint.depth).toBe(46);
+    expect(footprint.areaSqft).toBe(1380);
+  });
+
   it("preserves the declared existingHouseSqft exactly for all three demo presets", () => {
     for (const parcel of demoPresets) {
       const footprint = buildExistingHouseFootprint(parcel);
@@ -39,8 +47,8 @@ describe("buildExistingHouseFootprint — D1 area agreement", () => {
     }
   });
 
-  it("does not cap depth even when it would exceed the demo lot's buildable length (Austin)", () => {
-    const austin = demoPresets.find((p) => p.id === "compact-lot")!;
+  it("does not shrink a large house to manufacture room inside the buildable length", () => {
+    const austin = { ...demoPresets.find((p) => p.id === "compact-lot")!, existingHouseSqft: 3000 };
     const footprint = buildExistingHouseFootprint(austin);
     const buildableLength = austin.lotLength - austin.setbacks.front - austin.setbacks.rear;
     expect(footprint.depth).toBeGreaterThan(buildableLength);
@@ -76,6 +84,13 @@ describe("buildExistingHouseFootprint — D1 area agreement", () => {
 });
 
 describe("buildExistingHouseSceneModel", () => {
+  it("places the front wall at the front setback using half the house depth", () => {
+    const parcel = demoPresets[0];
+    const house = buildExistingHouseSceneModel(parcel);
+    expect(house.boundsLocal!.maxZ).toBeCloseTo(parcel.lotLength / 2 - parcel.setbacks.front, 6);
+    expect(house.boundsLocal!.minZ).toBeCloseTo(-3.5, 6);
+  });
+
   it("returns null pose/corners/bounds when the footprint is unknown", () => {
     const model = buildExistingHouseSceneModel(fallbackLiveParcel);
     expect(model.pose).toBeNull();

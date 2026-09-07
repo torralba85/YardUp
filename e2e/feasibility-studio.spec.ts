@@ -76,10 +76,10 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/studio");
     // Navigating via sidebar navigation button
     await page.getByRole("button", { name: /Design/i }).click();
-    await expect(page.getByRole("heading", { name: /Inspiration Gallery/i })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Courtyard Studio with Clerestory Light/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /A small home, considered/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Courtyard Studio" })).toBeVisible();
 
-    // Click Apply on the first inspiration card (Canyon Courtyard)
+    // Click Apply on the first inspiration card (Courtyard Studio)
     const applyButton = page.getByRole("button", { name: /Apply to Studio/i }).first();
     await applyButton.click();
 

@@ -198,14 +198,14 @@ export function buildParcelOutline(parcel: ParcelOutlineInput): ParcelOutline {
 
 // --- Existing house footprint ---------------------------------------------
 
-const HOUSE_WIDTH_RATIO = 0.65;
+const HOUSE_DEPTH_TO_WIDTH_RATIO = 1.5;
 const MIN_HOUSE_WIDTH_FT = 10;
 const MAX_HOUSE_WIDTH_FT = 32;
 
 /**
  * Derive an area-preserving rectangular proxy for the existing house from
- * its declared `existingHouseSqft`. Width is a styling choice (clamped to a
- * plausible range against the buildable lot width); depth is always
+ * its declared `existingHouseSqft`. Start with a balanced 1:1.5 rectangle,
+ * constrained by the buildable lot width and the proxy's width range; depth is always
  * `areaSqft / width` with no upper clamp, so the modeled footprint area
  * always equals the declared area exactly (D1 — the previous renderer
  * capped depth at 28 ft and silently understated area by up to ~70%).
@@ -229,7 +229,7 @@ export function buildExistingHouseFootprint(
   }
   const maxBuildableWidth = lotWidth - setbacks.side * 2;
   const width = Math.max(
-    Math.min(maxBuildableWidth * HOUSE_WIDTH_RATIO, MAX_HOUSE_WIDTH_FT),
+    Math.min(Math.sqrt(existingHouseSqft / HOUSE_DEPTH_TO_WIDTH_RATIO), maxBuildableWidth, MAX_HOUSE_WIDTH_FT),
     MIN_HOUSE_WIDTH_FT,
   );
   const depth = existingHouseSqft / width;
@@ -258,14 +258,10 @@ const EXISTING_HOUSE_WALL_HEIGHT_FT = 9;
 const EXISTING_HOUSE_RIDGE_RISE_FT = 5;
 
 /**
- * Position the existing house using the current front-biased convention
- * (`ParcelScene.tsx`'s `ExistingHouse`): centered on the width axis, set
- * back from the front line by `setbacks.front`, with the same +2 ft nudge
- * clear of the setback line. This reproduces the legacy renderer's
- * placement formula verbatim for visual continuity — it is a rendering
- * convention, not evidence of the real property's true orientation or
- * building placement, and depth is not clamped (see the Austin fixture in
- * `scene-model.test.ts`).
+ * Center the existing house on the width axis with its front wall on the
+ * front setback. The pose locates the center, so subtract half the depth.
+ * This is an estimated placement convention, not evidence of the property's
+ * true orientation or building placement. Depth is never shortened to fit.
  *
  * Returns `pose: null` when the footprint is unknown, or when `lotLength` is
  * missing, non-positive, or not finite, or `setbacks.front` is missing,
@@ -289,7 +285,7 @@ export function buildExistingHouseSceneModel(
   if (!poseInputsValid) {
     return { footprint, pose: null, corners: null, boundsLocal: null };
   }
-  const z = lotLength / 2 - footprint.depth - setbacks.front + 2;
+  const z = lotLength / 2 - footprint.depth / 2 - setbacks.front;
   const pose: Pose2D = { x: 0, z, rotationDeg: 0 };
   const corners = rectangleCorners({ x: pose.x, z: pose.z }, footprint.width, footprint.depth, 0);
   const boundsLocal = boundsOfCorners(
