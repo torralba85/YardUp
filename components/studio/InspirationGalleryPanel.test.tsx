@@ -13,8 +13,8 @@ describe("InspirationGalleryPanel component", () => {
   it("renders inspiration cards list", () => {
     const onApply = vi.fn();
     render(<InspirationGalleryPanel {...galleryProps} onApply={onApply} />);
-    expect(screen.getByText(/Courtyard Studio with Clerestory Light/i)).toBeInTheDocument();
-    expect(screen.getByText(/Garage Conversion with Garden Entry/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Courtyard Studio" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Garden Pavilion" })).toBeInTheDocument();
   });
 
   it("calls onApply when clicking the apply button", () => {
@@ -60,7 +60,24 @@ describe("InspirationGalleryPanel component", () => {
     );
 
     expect(screen.getByText("Matched Craftsman Concept")).toBeInTheDocument();
-    expect(screen.getByText("Style-Matched")).toBeInTheDocument();
+    expect(screen.getByText("Style-Matched · Illustrative concept")).toBeInTheDocument();
+  });
+
+  // The gallery only mounts at >=1024px (FeasibilityStudio's `isDesktop`), so a
+  // `<source media="(max-width: N)">` below that can never match and the small
+  // variant would be dead weight. Width descriptors are chosen per card instead.
+  it("offers both catalogue variants through srcSet rather than a viewport media query", () => {
+    const { container } = render(<InspirationGalleryPanel {...galleryProps} onApply={vi.fn()} />);
+
+    expect(container.querySelector("picture source[media]")).toBeNull();
+
+    const item = inspirationItems.find((i) => i.mobileImagePath);
+    expect(item).toBeDefined();
+    const img = screen.getByAltText(`${item!.title} illustrative architectural model`);
+    expect(img.getAttribute("srcSet") ?? img.getAttribute("srcset")).toBe(
+      `${item!.mobileImagePath} 600w, ${item!.imagePath} 960w`,
+    );
+    expect(img.getAttribute("sizes")).toContain("min-width: 1280px");
   });
 
   it("calls onViewComparison when Compare button is clicked", () => {

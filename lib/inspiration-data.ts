@@ -30,6 +30,8 @@ export interface InspirationItem {
   budgetBand: string;
   /** Path to the concept's preview image under `/public`. */
   imagePath: string;
+  /** Smaller local preview for narrow gallery cards. */
+  mobileImagePath?: string;
   /** True when this item was produced by the AI style-match flow. */
   isStyleMatched?: boolean;
   /** URL of the user's uploaded reference photo (style-match only). */
@@ -46,7 +48,7 @@ export interface InspirationItem {
 export const inspirationItems: InspirationItem[] = [
   {
     id: "canyon-courtyard",
-    title: "Courtyard Studio with Clerestory Light",
+    title: "Courtyard Studio",
     style: "Warm Modern",
     sqft: 640,
     width: 20,
@@ -54,27 +56,29 @@ export const inspirationItems: InspirationItem[] = [
     roof: "shed",
     finish: "cedar",
     tags: ["studio", "courtyard", "daylight"],
-    summary: "A compact detached layout with a private entry court and high daylight clerestory windows.",
+    summary: "Warm cedar and a sloping roof on a compact rectangular footprint.",
     budgetBand: "$250k - $400k",
-    imagePath: "/inspiration/canyon-courtyard.webp",
+    imagePath: "/inspiration/catalogue/courtyard-studio.webp",
+    mobileImagePath: "/inspiration/catalogue/courtyard-studio-mobile.webp",
   },
   {
     id: "garage-laneway",
-    title: "Garage Conversion with Garden Entry",
-    style: "California Bungalow",
+    title: "Garden Pavilion",
+    style: "Garden Modern",
     sqft: 520,
     width: 20,
     length: 26,
     roof: "flat",
     finish: "board",
-    tags: ["garage", "conversion", "compact"],
-    summary: "A reuse-first concept for homeowners prioritizing speed, budget control, and rental utility.",
+    tags: ["detached", "garden", "compact"],
+    summary: "A simple garden-facing volume with vertical siding and a flat roof.",
     budgetBand: "Under $250k",
-    imagePath: "/inspiration/garage-laneway.webp",
+    imagePath: "/inspiration/catalogue/garden-pavilion.webp",
+    mobileImagePath: "/inspiration/catalogue/garden-pavilion-mobile.webp",
   },
   {
     id: "bay-window",
-    title: "One-Bedroom with Bay-Facing Lounge",
+    title: "Gabled One-Bedroom",
     style: "Urban Craftsman",
     sqft: 780,
     width: 24,
@@ -82,14 +86,15 @@ export const inspirationItems: InspirationItem[] = [
     roof: "gable",
     finish: "lap",
     tags: ["one bedroom", "premium", "work nook"],
-    summary: "A larger rental-ready layout with a defined living room, bay windows, and a small work alcove.",
+    summary: "A generous starting footprint with lap siding and a traditional gable.",
     budgetBand: "Over $400k",
-    imagePath: "/inspiration/bay-window.webp",
+    imagePath: "/inspiration/catalogue/gabled-one-bedroom.webp",
+    mobileImagePath: "/inspiration/catalogue/gabled-one-bedroom-mobile.webp",
   },
   {
     id: "coastal-adu",
-    title: "Coastal Long-Lot ADU",
-    style: "Coastal Minimal",
+    title: "Long-Lot Retreat",
+    style: "Quiet Minimal",
     // `sqft` must equal width x length: `isValidAduConfig` enforces it exactly
     // (lib/scenario-design.ts), and applying a template that breaks it produces
     // a config the scenario URL serializer rejects. 16 x 44 = 704, not 700.
@@ -98,28 +103,30 @@ export const inspirationItems: InspirationItem[] = [
     length: 44,
     roof: "flat",
     finish: "stucco",
-    tags: ["detached", "long lot", "beach style"],
-    summary: "A narrow footprint designed to preserve outdoor living space on tighter seaside lots.",
+    tags: ["detached", "long lot", "stucco"],
+    summary: "A slender stucco volume to explore on a deep, narrow lot.",
     budgetBand: "$250k - $400k",
-    imagePath: "/inspiration/coastal-adu.webp",
+    imagePath: "/inspiration/catalogue/long-lot-retreat.webp",
+    mobileImagePath: "/inspiration/catalogue/long-lot-retreat-mobile.webp",
   },
   {
     id: "valley-jadu",
-    title: "JADU Suite inside Existing Home",
+    title: "Compact Studio",
     style: "Simple Contemporary",
     sqft: 400,
     width: 20,
     length: 20,
     roof: "flat",
     finish: "board",
-    tags: ["jadu", "conversion", "existing space"],
-    summary: "A modest suite conversion for family flexibility with a lower construction footprint.",
+    tags: ["detached", "studio", "compact"],
+    summary: "A square footprint with a flat roof and crisp vertical siding.",
     budgetBand: "Under $250k",
-    imagePath: "/inspiration/valley-jadu.webp",
+    imagePath: "/inspiration/catalogue/compact-studio.webp",
+    mobileImagePath: "/inspiration/catalogue/compact-studio-mobile.webp",
   },
   {
     id: "clean-gable",
-    title: "Permit-Ready Inspired Cottage",
+    title: "Classic Cottage",
     style: "Clean Gable",
     sqft: 600,
     width: 20,
@@ -127,9 +134,10 @@ export const inspirationItems: InspirationItem[] = [
     roof: "gable",
     finish: "lap",
     tags: ["one bedroom", "cottage", "gable"],
-    summary: "A straightforward detached concept intended to align with permit-ready plan thinking.",
+    summary: "Familiar cottage proportions with a simple gable and lap siding.",
     budgetBand: "$250k - $400k",
-    imagePath: "/inspiration/clean-gable.webp",
+    imagePath: "/inspiration/catalogue/classic-cottage.webp",
+    mobileImagePath: "/inspiration/catalogue/classic-cottage-mobile.webp",
   },
 ];
 
