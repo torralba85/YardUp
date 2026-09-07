@@ -25,16 +25,21 @@ export interface Parcel {
 }
 
 /**
- * A parcel returned by the Regrid API via /api/parcel.
- * source === "fallback" means Regrid had no data and we used the
- * closest preset instead — the UI should display a caveat.
+ * A parcel resolved by /api/parcel, from whichever provider answered first.
+ *
+ * - `regrid` — the paid Regrid parcel record.
+ * - `county-gis` — a free public county or statewide ArcGIS parcel service.
+ *   Real surveyed geometry, so it carries no accuracy caveat, but it has no
+ *   zoning attribute; zoning reads "Unknown".
+ * - `fallback` — no provider had data and we used the closest preset's
+ *   typical dimensions instead. The UI must display a caveat for this one.
  */
 export interface LiveParcelData extends Parcel {
   zoning: string; // raw zoning code, e.g. "R-1"
   boundaryGeoJson: GeoJsonPolygon | null;
   lat: number;
   lng: number;
-  source: "regrid" | "fallback";
+  source: "regrid" | "county-gis" | "fallback";
   /** Two-letter state, e.g. "WA". Empty when the lookup could not resolve it. */
   state: string;
   /** 5-digit ZIP. Empty when the lookup could not resolve it. */

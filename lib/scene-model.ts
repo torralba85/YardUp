@@ -175,7 +175,7 @@ export interface ParcelOutline {
 /** Parcel shape narrow enough to describe a live (Regrid-backed) lookup without importing the full LiveParcelData type. */
 interface ParcelOutlineInput extends Pick<Parcel, "lotWidth" | "lotLength"> {
   boundaryGeoJson?: GeoJsonPolygon | null;
-  source?: "regrid" | "fallback";
+  source?: "regrid" | "county-gis" | "fallback";
 }
 
 export function buildParcelOutline(parcel: ParcelOutlineInput): ParcelOutline {

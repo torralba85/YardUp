@@ -106,7 +106,9 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     isFiniteNumber(value.lng) &&
     value.lng >= -180 &&
     value.lng <= 180 &&
-    (value.source === "regrid" || value.source === "fallback") &&
+    (value.source === "regrid" ||
+      value.source === "county-gis" ||
+      value.source === "fallback") &&
     // Mirrors isValidLiveParcel in firestore.rules. Absent is tolerated so
     // scenarios saved before these fields existed stay readable;
     // normalizeLiveParcel fills them in before the record reaches the app.

@@ -162,7 +162,7 @@ Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API acce
 
 Firebase App Check uses the registered reCAPTCHA Enterprise provider in production. Local authenticated development needs a registered `NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` in `.env.local`; never commit or deploy that token. Generic Playwright CI must not create accounts in the production Firebase project.
 
-Without parcel API keys, the app must still run in demo mode with Seattle, Portland, and Austin presets. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
+Without parcel API keys, the app must still resolve real lots wherever the free tier reaches: `/api/parcel` chains Regrid (paid, optional) to the public county/statewide GIS services in `lib/server/county-parcels.ts`, resolves state/ZIP/county from the keyless US Census geocoder (`lib/server/census-geocode.ts`), and fills known parcel polygons from the public USA Structures footprint layer (`lib/server/building-footprints.ts`). It degrades to the Seattle, Portland, and Austin presets only where no parcel provider has coverage. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
 
 ## Critical Gotchas
 

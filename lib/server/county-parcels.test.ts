@@ -375,3 +375,119 @@ describe("fetchCountyParcel — failure modes (must all return null, never throw
     expect(await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng)).toBeNull();
   });
 });
+
+describe("fetchCountyParcel — statewide backstop", () => {
+  /** Manhattan: inside the New York statewide bbox and no county service. */
+  const NY_POINT = { lat: 40.7484, lng: -73.9857 };
+  /** A ~50x100 ft lot around NY_POINT. */
+  const NY_POLYGON = {
+    type: "Polygon",
+    coordinates: [
+      [
+        [-73.98576, 40.74833],
+        [-73.98558, 40.74833],
+        [-73.98558, 40.74861],
+        [-73.98576, 40.74861],
+        [-73.98576, 40.74833],
+      ],
+    ],
+  };
+
+  it("registers the verified statewide query endpoints and area fields", () => {
+    const byLabel = (label: string) =>
+      COUNTY_GIS_SOURCES.find((source) => source.county === label);
+
+    expect(byLabel("New York (statewide)")?.queryUrl).toBe(
+      "https://gisservices.its.ny.gov/arcgis/rest/services/NYS_Tax_Parcels_Public/MapServer/1/query",
+    );
+    expect(byLabel("New York (statewide)")?.areaField).toBe("SQ_FT");
+    expect(byLabel("New York (statewide)")?.areaUnit).toBe("sqft");
+    expect(byLabel("Ohio (statewide)")?.areaUnit).toBe("acres");
+    expect(byLabel("Wisconsin (statewide)")?.areaField).toBe("GISACRES");
+    expect(byLabel("Florida (statewide)")?.areaField).toBe("LND_SQFOOT");
+    // California and Washington publish no area attribute; the module falls
+    // back to the polygon's own computed area for those.
+    expect(byLabel("California (statewide)")?.areaField).toBeUndefined();
+    expect(byLabel("Washington (statewide)")?.areaField).toBeUndefined();
+  });
+
+  it("orders county services ahead of the statewide layer covering them", () => {
+    const kingIndex = COUNTY_GIS_SOURCES.findIndex((s) => s.county === "King");
+    const waIndex = COUNTY_GIS_SOURCES.findIndex(
+      (s) => s.county === "Washington (statewide)",
+    );
+    expect(kingIndex).toBeGreaterThanOrEqual(0);
+    expect(kingIndex).toBeLessThan(waIndex);
+  });
+
+  it("falls through to the statewide layer when the county service has no parcel", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ features: [] }) })
+      .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(result).not.toBeNull();
+    expect(result!.county).toBe("Washington (statewide)");
+    const king = COUNTY_GIS_SOURCES.find((s) => s.county === "King")!;
+    const wa = COUNTY_GIS_SOURCES.find((s) => s.county === "Washington (statewide)")!;
+    expect(String(fetchSpy.mock.calls[0][0]).startsWith(king.queryUrl)).toBe(true);
+    expect(String(fetchSpy.mock.calls[1][0]).startsWith(wa.queryUrl)).toBe(true);
+  });
+
+  it("falls through when the county service errors rather than ending the lookup", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("Network error"))
+      .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.county).toBe("Washington (statewide)");
+  });
+
+  it("reads the real county name from a statewide layer's attributes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        geojsonResponse(NY_POLYGON, { SQ_FT: 4000, COUNTY_NAME: "Albany" }),
+      ),
+    );
+    const result = await fetchCountyParcel(NY_POINT.lat, NY_POINT.lng);
+    expect(result!.county).toBe("Albany");
+    expect(result!.lotAreaSqft).toBe(4000);
+  });
+
+  it("requests both the area and county attributes for a statewide layer", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(geojsonResponse(NY_POLYGON, { SQ_FT: 4000 }));
+    vi.stubGlobal("fetch", fetchSpy);
+    await fetchCountyParcel(NY_POINT.lat, NY_POINT.lng);
+    const outFields = new URL(String(fetchSpy.mock.calls[0][0])).searchParams.get("outFields");
+    expect(outFields).toBe("SQ_FT,COUNTY_NAME");
+  });
+
+  it("ignores a FIPS code sitting in the county-name attribute", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(geojsonResponse(NY_POLYGON, { SQ_FT: 4000, COUNTY_NAME: "36" })),
+    );
+    const result = await fetchCountyParcel(NY_POINT.lat, NY_POINT.lng);
+    expect(result!.county).toBe("New York (statewide)");
+  });
+
+  it("strips a County suffix from a statewide layer's county attribute", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          geojsonResponse(NY_POLYGON, { SQ_FT: 4000, COUNTY_NAME: "Albany County" }),
+        ),
+    );
+    const result = await fetchCountyParcel(NY_POINT.lat, NY_POINT.lng);
+    expect(result!.county).toBe("Albany");
+  });
+});

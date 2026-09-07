@@ -422,7 +422,7 @@ service cloud.firestore {
         parcel.lng is number &&
         parcel.lng >= -180 &&
         parcel.lng <= 180 &&
-        parcel.source in ["regrid", "fallback"] &&
+        parcel.source in ["regrid", "county-gis", "fallback"] &&
         (!("state" in parcel) || (parcel.state is string && parcel.state.size() <= 20)) &&
         (!("zip" in parcel) || (parcel.zip is string && parcel.zip.size() <= 20)) &&
         (!("county" in parcel) || (parcel.county is string && parcel.county.size() <= 100)) &&

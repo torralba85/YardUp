@@ -37,6 +37,12 @@ describe("parcel-handoff", () => {
     expect(peekInitialParcel()).toEqual(parcel);
   });
 
+  it("round-trips a county GIS parcel", () => {
+    const countyParcel: LiveParcelData = { ...parcel, source: "county-gis" };
+    expect(stashInitialParcel(countyParcel)).toBe(true);
+    expect(peekInitialParcel()).toEqual(countyParcel);
+  });
+
   it("clears the stashed parcel", () => {
     stashInitialParcel(parcel);
     clearInitialParcel();

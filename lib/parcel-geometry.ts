@@ -173,3 +173,43 @@ export function polygonAreaSqft(polygon: GeoJsonPolygon): number {
   }
   return Math.abs(sum / 2);
 }
+
+/**
+ * Ray-casting point-in-ring test in [lng, lat] coordinates. Degrees are used
+ * directly: the test is topological, so the latitude distortion that matters
+ * for area does not affect which side of an edge a point falls on.
+ */
+export function ringContainsPoint(
+  ring: number[][],
+  lng: number,
+  lat: number,
+): boolean {
+  if (!Array.isArray(ring) || ring.length < 4) return false;
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const intersects =
+      yi > lat !== yj > lat &&
+      lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Hole-aware point-in-polygon test: inside the exterior ring (coordinates[0])
+ * and outside every hole ring that follows it.
+ */
+export function polygonContainsPoint(
+  polygon: GeoJsonPolygon,
+  lng: number,
+  lat: number,
+): boolean {
+  const [outer, ...holes] = polygon?.coordinates ?? [];
+  if (!outer) return false;
+  return (
+    ringContainsPoint(outer, lng, lat) &&
+    !holes.some((ring) => ringContainsPoint(ring, lng, lat))
+  );
+}

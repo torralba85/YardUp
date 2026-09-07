@@ -68,7 +68,9 @@ function isLiveParcelData(value: unknown): value is LiveParcelData {
     typeof parcel.existingHouseSqft === "number" &&
     typeof parcel.maxLotCoveragePercent === "number" &&
     typeof parcel.zoning === "string" &&
-    (parcel.source === "regrid" || parcel.source === "fallback") &&
+    (parcel.source === "regrid" ||
+      parcel.source === "county-gis" ||
+      parcel.source === "fallback") &&
     !!parcel.setbacks &&
     typeof parcel.setbacks.front === "number" &&
     typeof parcel.setbacks.rear === "number" &&

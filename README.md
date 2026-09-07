@@ -20,7 +20,8 @@ Home and feasibility studio on phone, and the studio on tablet.
 
 ## What it does
 
-- Searches real residential parcels through Regrid and Google Maps integrations.
+- Searches real residential parcels through Regrid, public parcel GIS services,
+  the US Census geocoder, and Google Maps integrations.
 - Visualizes the lot, existing home, setbacks, and a movable ADU concept in 3D.
 - Estimates build cost, rent, annual NOI, payback, and basic zoning fit.
 - Uses authenticated OpenAI Responses API workflows for a parcel-and-permit
@@ -30,7 +31,8 @@ Home and feasibility studio on phone, and the studio on tablet.
   local to the browser.
 - Supports homeowner-to-builder handoff and verified web/native purchase
   channels.
-- Runs without paid API keys using Seattle, Portland, and Austin demo parcels.
+- Resolves real lots without a paid parcel API wherever the public GIS registry
+  has coverage, then falls back to the Seattle, Portland, and Austin demo parcels.
 
 LotFoundry is an early planning instrument, not a permit decision, appraisal,
 construction document, or substitute for professional advice.
