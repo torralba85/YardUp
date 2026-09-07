@@ -31,6 +31,20 @@ describe("Firebase Functions provider secret bindings", () => {
     expect(functionsEntry).toContain(
       "process.env.ENABLE_NATIVE_STORE_VERIFICATION === \"true\"",
     );
+    expect(functionsEntry).toMatch(
+      /const appleStoreVerificationEnabled =\s*nativeStoreVerificationEnabled \|\|\s*process\.env\.ENABLE_APPLE_STORE_VERIFICATION === "true"/,
+    );
+    expect(functionsEntry).toMatch(
+      /const googlePlayVerificationEnabled =\s*nativeStoreVerificationEnabled \|\|\s*process\.env\.ENABLE_GOOGLE_PLAY_VERIFICATION === "true"/,
+    );
+    expect(functionsEntry).toContain("const appleStoreSecretParams");
+    expect(functionsEntry).toContain("const googlePlaySecretParams");
+    expect(functionsEntry).toContain(
+      "...(appleStoreSecretParams ? Object.values(appleStoreSecretParams) : [])",
+    );
+    expect(functionsEntry).toContain(
+      "...(googlePlaySecretParams ? Object.values(googlePlaySecretParams) : [])",
+    );
     expect(functionsEntry).toContain(
       "{ ...aiFnOpts, secrets: [openAiApiKey] }",
     );
@@ -53,6 +67,12 @@ describe("Firebase Functions provider secret bindings", () => {
     expect(envWrite).toBeDefined();
     expect(envWrite).toContain(
       'ENABLE_NATIVE_STORE_VERIFICATION="${{ secrets.ENABLE_NATIVE_STORE_VERIFICATION }}"',
+    );
+    expect(envWrite).toContain(
+      'ENABLE_APPLE_STORE_VERIFICATION="${{ secrets.ENABLE_APPLE_STORE_VERIFICATION }}"',
+    );
+    expect(envWrite).toContain(
+      'ENABLE_GOOGLE_PLAY_VERIFICATION="${{ secrets.ENABLE_GOOGLE_PLAY_VERIFICATION }}"',
     );
     expect(envWrite).not.toMatch(
       /GOOGLE_MAPS_API_KEY|GOOGLE_PLACES_SERVER_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON/,
