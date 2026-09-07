@@ -88,6 +88,8 @@ jobs:
           cat > functions/.env <<EOF
           NEXT_PUBLIC_GOOGLE_PLACES_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_PLACES_KEY }}"
           ENABLE_NATIVE_STORE_VERIFICATION="${{ secrets.ENABLE_NATIVE_STORE_VERIFICATION }}"
+          ENABLE_APPLE_STORE_VERIFICATION="${{ secrets.ENABLE_APPLE_STORE_VERIFICATION }}"
+          ENABLE_GOOGLE_PLAY_VERIFICATION="${{ secrets.ENABLE_GOOGLE_PLAY_VERIFICATION }}"
           EOF
           cat > .env.production.local <<EOF
           NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"

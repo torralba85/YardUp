@@ -1,6 +1,6 @@
-# Google Play production release runbook — v1.0.7 (versionCode 8)
+# Google Play production release runbook — v1.0.8 (versionCode 9)
 
-**Updated:** 2026-09-06
+**Updated:** 2026-09-07
 **App:** LotFoundry, `com.lotfoundry.app`, a Trusted Web Activity over
 `https://lotfoundry.net`.
 
@@ -15,20 +15,26 @@ Verify this before any paid track, including internal testing.
 
 `lib/server/store-purchases.ts` returns `"Google Play verification is not
 configured."` unless both `GOOGLE_PLAY_PACKAGE_NAME` and
-`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` are present, and `functions/index.js` binds
-those secrets only when `ENABLE_NATIVE_STORE_VERIFICATION=true` at deploy time.
+`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` are present. `functions/index.js` binds
+those secrets only when `ENABLE_GOOGLE_PLAY_VERIFICATION=true` at deploy time
+(the legacy `ENABLE_NATIVE_STORE_VERIFICATION=true` flag still enables both
+Google and Apple verification).
 Ship without them and Play still charges the card while
 `POST /api/store/purchases/verify` refuses the grant — the user pays and
 receives nothing.
 
 Required, in order:
 
-1. Create a Play Console service account with the `androidpublisher` scope and
-   grant it access to the app.
+1. Enable the Google Play Android Developer API in the backend's Google Cloud
+   project, create a dedicated service account, and invite it to the LotFoundry
+   app in Play Console. Grant only `View financial data, orders, and
+   cancellation survey responses` and `Manage orders and subscriptions`, the
+   two permissions Google requires for Play Billing API access. The backend
+   requests the `androidpublisher` OAuth scope when it authenticates.
 2. Set the `GOOGLE_PLAY_PACKAGE_NAME` and `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
-   secrets, plus `APPLE_BUNDLE_ID` and `APPLE_ROOT_CA_FINGERPRINT256` — the
-   binding in `functions/index.js` defines all four together.
-3. Deploy with `ENABLE_NATIVE_STORE_VERIFICATION=true`.
+   secrets. Apple credentials are separate and are not required for Android.
+3. Deploy with `ENABLE_GOOGLE_PLAY_VERIFICATION=true` (or keep the legacy
+   `ENABLE_NATIVE_STORE_VERIFICATION=true` flag while migrating).
 4. Confirm a sandbox purchase actually grants the entitlement before opening a
    paid track to anyone outside the test group.
 
@@ -38,7 +44,7 @@ for refunds and revocations.
 
 ## Already verified — do not redo
 
-Confirmed 2026-09-03 against the live host:
+Confirmed 2026-09-07 against the live host:
 
 - `lotfoundry.net` serves `/`, `/studio`, `/privacy`, `/delete-account`,
   `/help`, `/terms`, `/manifest.json`, `/icon-512.png`, and
@@ -46,9 +52,9 @@ Confirmed 2026-09-03 against the live host:
 - `/.well-known/assetlinks.json` returns 200 as `application/json`, carrying
   both the upload-key and Play App Signing fingerprints, matching
   `native/android/twa-manifest.json` exactly.
-- `versionCode 8` exceeds the `PUBLISHED_VERSION_CODE = 7` ceiling.
-- Repo gate green: lint and 136 Vitest files / 782 tests on 2026-09-03; the
-  preceding release audit also passed `tsc --noEmit` and the production build.
+- `versionCode 9` exceeds the `PUBLISHED_VERSION_CODE = 8` ceiling.
+- Repo gate green: lint, `tsc --noEmit`, production build, and 154 Vitest files /
+  974 tests on 2026-09-07 (plus one skipped file and 20 skipped tests).
 
 `npm run android:validate:release` re-checks the listed live endpoints,
 asset-links content, and the built AAB's signer. It does not re-run lint,
@@ -195,11 +201,10 @@ bundle.
 
 ## 6. Rollout
 
-Upload to the intended track with version name `1.0.7`, version code `8`, and
+Upload to the intended track with version name `1.0.8`, version code `9`, and
 the release note from `docs/play-declarations.md`. Confirm in Console that the
-highest accepted version code is below 8 before uploading. Code 7 was uploaded
-as a draft on 2026-09-06 and rejected for carrying Play Billing Library 7.1.1;
-code 8 is the build that answers that rejection.
+highest accepted version code is below 9 before uploading. Code 8 is active on
+Internal testing, so only code 9 or greater can be accepted as a new bundle.
 
 A personal Play account created after November 2023 needs 12 testers opted in
 for 14 continuous days before it can request production access. This account has
@@ -210,7 +215,7 @@ the clock is long if it does apply.
 
 Both in the same commit, or the next release build fails validation:
 
-1. Raise `PUBLISHED_VERSION_CODE` to `8` in
+1. Raise `PUBLISHED_VERSION_CODE` to `9` in
    `native/android/scripts/validate-config.mjs`.
 2. Raise `appVersionCode`/`appVersionName` in
    `native/android/twa-manifest.json` and `versionCode`/`versionName` in

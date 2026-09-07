@@ -42,7 +42,8 @@ must be raised whenever a new bundle is accepted.
 | 1.0.4 | 5 | see Play Console | Play Billing wired via Bubblewrap regeneration (`cd9c621`). |
 | 1.0.5 | 6 | published 2026-08-11 | Built locally with `bubblewrap-cli`; the version bump was never committed and no AAB was retained. Shell config is identical to `cd9c621` apart from the version, so it points at `yardup-2026.web.app`, not `lotfoundry.net`. |
 | 1.0.6 | 7 | draft uploaded 2026-09-06 | First build carrying the `lotfoundry.net` host. Rejected by Play Console: requires Play Billing Library >= 8.0.0 (carried 7.1.1). |
-| 1.0.7 | 8 | built 2026-09-06, awaiting upload | Upgraded `com.google.androidbrowserhelper:billing` to 1.2.0 and added `com.android.billingclient:billing:9.1.0`. Signed AAB from **Android release bundle** run `34048176925`. |
+| 1.0.7 | 8 | internal testing since 2026-09-06 | Upgraded `com.google.androidbrowserhelper:billing` to 1.2.0 and added `com.android.billingclient:billing:9.1.0`. Signed AAB from **Android release bundle** run `34048176925`. |
+| 1.0.8 | 9 | awaiting build | Next production candidate after Play consumed versionCode 8 on the internal track. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
 cross-origin redirect when verifying Digital Asset Links, so a bundle built

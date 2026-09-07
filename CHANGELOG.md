@@ -8,6 +8,8 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Changed
 
+- Android release metadata advances to v1.0.8/versionCode 9 after Play accepted
+  v1.0.7/versionCode 8 on the internal testing track.
 - A LOT MORE now spans login and consent, account and builder screens, desktop/mobile Studio,
   and generated certificates: chalk/carbon/orange, Space Grotesk/Manrope, square surfaces,
   readable controls, and neutral financial figures matching the landing.
