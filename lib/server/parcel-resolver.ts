@@ -193,9 +193,12 @@ export class ParcelResolver {
       const geometry = feature?.geometry ?? null;
       const boundaryGeoJson = geometry?.type === "Polygon" ? geometry : null;
 
-      const lotAreaSqft = fields.ll_gisacre
-        ? Math.round(fields.ll_gisacre * 43560)
-        : 5000;
+      // ll_gisacre can arrive as a numeric string. The old route read the
+      // Regrid payload as `any` and let JS coerce during the multiply, which
+      // silently produced NaN for a non-numeric value. Coerce explicitly and
+      // fall back to the default when the field is unusable.
+      const gisAcres = positiveNumber(fields.ll_gisacre);
+      const lotAreaSqft = gisAcres ? Math.round(gisAcres * 43560) : 5000;
 
       const regridFootprint = positiveNumber(fields.ll_bldg_footprint_sqft);
       const structuresPromise =
@@ -210,6 +213,12 @@ export class ParcelResolver {
         estimateLotDimensions(lotAreaSqft);
 
       const setbacks = parseSetbacks(fields.zoning_setbacks);
+
+      // Regrid returns zoning as a number for purely numeric codes.
+      // deriveMaxCoverage calls toUpperCase, so normalize once here rather
+      // than crashing on the rare numeric district.
+      const zoningCode =
+        fields.zoning === undefined ? undefined : String(fields.zoning);
 
       const [census, structures] = await Promise.all([
         censusLocation,
@@ -230,9 +239,9 @@ export class ParcelResolver {
         lotWidth,
         lotLength,
         existingHouseSqft: Math.round(existingHouseSqft),
-        maxLotCoveragePercent: deriveMaxCoverage(fields.zoning),
+        maxLotCoveragePercent: deriveMaxCoverage(zoningCode),
         setbacks,
-        zoning: fields.zoning ?? "Unknown",
+        zoning: zoningCode ?? "Unknown",
         boundaryGeoJson,
         lat,
         lng,
@@ -440,15 +449,42 @@ function nearestPreset(lat: number, lng: number) {
   return parcelPresets.find((p) => p.id === bestId) ?? parcelPresets[0];
 }
 
+// Regrid returns zoning_setbacks as a nested object while every other entry on
+// `fields` is scalar, so the record's index signature does not describe it.
+// Take it as unknown and validate here instead of widening that signature and
+// making every other field read imprecise.
 function parseSetbacks(
-  raw: Record<string, number> | null | undefined,
+  raw: unknown,
 ): { front: number; rear: number; side: number } {
-  if (!raw) return DEFAULT_SETBACKS;
+  if (!raw || typeof raw !== "object") return DEFAULT_SETBACKS;
+  const record = raw as Record<string, unknown>;
   return {
-    front: raw.front ?? raw.front_setback ?? DEFAULT_SETBACKS.front,
-    rear: raw.rear ?? raw.rear_setback ?? DEFAULT_SETBACKS.rear,
-    side: raw.side ?? raw.side_setback ?? DEFAULT_SETBACKS.side,
+    front:
+      setbackValue(record.front) ??
+      setbackValue(record.front_setback) ??
+      DEFAULT_SETBACKS.front,
+    rear:
+      setbackValue(record.rear) ??
+      setbackValue(record.rear_setback) ??
+      DEFAULT_SETBACKS.rear,
+    side:
+      setbackValue(record.side) ??
+      setbackValue(record.side_setback) ??
+      DEFAULT_SETBACKS.side,
   };
+}
+
+// Deliberately not positiveNumber: 0 is a legitimate setback, since dense urban
+// zoning really does allow building to the lot line. Treating it as missing
+// would silently push those parcels back to the 20 ft default.
+function setbackValue(value: unknown): number | null {
+  const number =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim() !== ""
+        ? Number(value)
+        : NaN;
+  return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
 function deriveMaxCoverage(zoning?: string): number {

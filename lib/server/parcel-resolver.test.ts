@@ -230,4 +230,79 @@ describe("ParcelResolver", () => {
     expect(result.lotArea).toBe(5000);
     expect(result.marketData).toBeDefined();
   });
+
+  // The Regrid `fields` record is scalar by declaration but the payload is
+  // whatever the API sends. These three cover the coercions the resolver has to
+  // do at that boundary; before they existed the reads were unchecked because
+  // the response was consumed as `any`.
+  function resolverWithFields(
+    fields: Record<string, unknown>,
+  ): ParcelResolver {
+    return new ParcelResolver({
+      regridApiKey: "test-regrid-key",
+      fetchRegrid: async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          parcels: {
+            features: [{ geometry: null, properties: { fields } }],
+          },
+        }),
+      }),
+      fetchCensusLocation: async () => ({
+        state: "WA",
+        county: "King",
+        zip: "98101",
+      }),
+      resolveMarketData: async () => sampleMarketData,
+    });
+  }
+
+  const query = {
+    lat: 47.6062,
+    lng: -122.3321,
+    address: "123 Main St, Seattle, WA",
+  };
+
+  it("keeps a zero setback instead of falling back to the default", async () => {
+    // Dense urban zoning really does allow building to the lot line. A 0 here
+    // is data, not a missing value, so it must survive the ?? fallthrough.
+    const result = await resolverWithFields({
+      ll_gisacre: 0.11478,
+      zoning: "R1",
+      zoning_setbacks: { front: 0, rear: 0, side: 0 },
+    }).resolve(query);
+
+    expect(result.setbacks).toEqual({ front: 0, rear: 0, side: 0 });
+  });
+
+  it("reads a numeric string acreage rather than producing NaN", async () => {
+    const result = await resolverWithFields({
+      ll_gisacre: "0.11478",
+      zoning: "R1",
+    }).resolve(query);
+
+    expect(result.lotArea).toBe(5000);
+  });
+
+  it("survives a numeric zoning code", async () => {
+    // deriveMaxCoverage calls toUpperCase, which throws on a raw number.
+    const result = await resolverWithFields({
+      ll_gisacre: 0.11478,
+      zoning: 2,
+    }).resolve(query);
+
+    expect(result.zoning).toBe("2");
+    expect(result.maxLotCoveragePercent).toBeGreaterThan(0);
+  });
+
+  it("falls back to defaults when setbacks are absent or unusable", async () => {
+    const result = await resolverWithFields({
+      ll_gisacre: 0.11478,
+      zoning: "R1",
+      zoning_setbacks: { front: "not-a-number" },
+    }).resolve(query);
+
+    expect(result.setbacks).toEqual({ front: 20, rear: 20, side: 5 });
+  });
 });
