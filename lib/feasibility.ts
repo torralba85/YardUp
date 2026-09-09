@@ -85,6 +85,10 @@ export interface FinancialAssumptions {
  * range, and the income/return summary for the configured ADU.
  */
 export interface FeasibilityResult {
+  /** False means coverage arithmetic omits an unknown existing footprint. */
+  footprintKnown?: boolean;
+  /** True means the regulatory limits are assumptions, not confirmed rules. */
+  regulationsEstimated?: boolean;
   /** Current committed placement; coverage remains an independent calculation. */
   placement?: PlacementResult;
   placementPose?: Pose2D;

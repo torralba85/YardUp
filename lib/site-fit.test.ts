@@ -35,6 +35,11 @@ describe("getSiteFitCapacityStatus", () => {
 });
 
 describe("getDefaultAduPose", () => {
+  it("does not label unknown or assumed county GIS capacity as clear", () => {
+    const parcel = { ...parcelPresets[0], source: "county-gis", zoning: "Unknown", existingHouseSqft: 0 };
+    expect(getSiteFitCapacityStatus(1800, parcel)).toMatchObject({ title: "Coverage capacity unknown", tone: "warn" });
+    expect(getSiteFitCapacityStatus(800, { ...parcel, existingHouseSqft: 1000 })).toMatchObject({ tone: "warn" });
+  });
   it("steps a new ADU clear of the modeled existing house", () => {
     // The Seattle house and ADU must retain their declared footprints while
     // leaving a usable separation inside the actual setback envelope.

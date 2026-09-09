@@ -200,7 +200,7 @@ export default function CertificatePanel({
   }
 
   const price = formatCertificatePrice();
-  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity);
+  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel);
   const reportBusy = busy || loading || preparingBrief || projectBriefLoading;
   const ctaLabel = reportBusy
     ? purchased

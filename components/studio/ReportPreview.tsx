@@ -265,7 +265,7 @@ export default function ReportPreview({
                 <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
                 <ReportFact
                   icon={Ruler}
-                  text={`${result.coveragePercent.toFixed(1)}% projected lot coverage`}
+                  text={result.footprintKnown === false ? "Lot coverage unknown — existing footprint unavailable" : `${result.coveragePercent.toFixed(1)}% projected lot coverage${result.regulationsEstimated ? " · maximum coverage unverified" : ""}`}
                   tone={result.remainingCapacity < 0 ? "blocked" : "default"}
                 />
                 <ReportFact

@@ -22,6 +22,7 @@ import {
   type Parcel,
 } from "./feasibility";
 import { describePlacement, type PlacementResult } from "./placement-validation";
+import { parcelConfidence } from "./parcel-confidence";
 
 export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
 
@@ -137,6 +138,8 @@ export function summarizeFeasibility(
   placement: PlacementResult | undefined = result.placement,
 ): FeasibilitySummary {
   const buildableSqft = buildableArea(parcel);
+  const { footprintKnown, regulationsEstimated } = parcelConfidence(parcel);
+  const coverageUnverified = !footprintKnown || regulationsEstimated;
   const compliant = result.zoningStatus === "Compliant";
   const hasCapacity = result.remainingCapacity >= 0;
   // remainingCapacity is the engine's canonical coverage signal and also
@@ -156,36 +159,42 @@ export function summarizeFeasibility(
       id: "zoning",
       group: "Zoning & setbacks",
       label: "Zoning · ADU allowed",
-      detail: compliant
+      detail: regulationsEstimated
+        ? "Zoning and ADU permission are unverified — confirm local planning rules"
+        : compliant
         ? `${zoneCode ? zoneCode + " — " : ""}ADU appears permitted under current rules`
         : "Proposed footprint needs review against local limits",
-      status: compliant ? "clear" : "review",
+      status: compliant && !regulationsEstimated ? "clear" : "review",
     },
     {
       id: "buildable",
       group: "Zoning & setbacks",
       label: "Buildable area after setbacks",
-      detail: `${parcel.setbacks.side}′ side · ${parcel.setbacks.front}′ front · ${parcel.setbacks.rear}′ rear`,
-      status: envelopeFits ? "clear" : "review",
+      detail: `${regulationsEstimated ? "Assumed setbacks: " : ""}${parcel.setbacks.side}′ side · ${parcel.setbacks.front}′ front · ${parcel.setbacks.rear}′ rear`,
+      status: envelopeFits && !regulationsEstimated ? "clear" : "review",
       value: `${buildableSqft.toLocaleString()} sf`,
     },
     {
       id: "capacity",
       group: "Zoning & setbacks",
       label: "Remaining build capacity",
-      detail: hasCapacity
+      detail: !footprintKnown ? "Existing building footprint is unknown"
+        : regulationsEstimated ? "Estimate using an unverified coverage limit"
+        : hasCapacity
         ? "Headroom under the lot-coverage allowance"
         : "Exceeds the lot-coverage allowance",
-      status: hasCapacity ? "info" : "blocked",
-      value: `${result.remainingCapacity.toLocaleString()} sf`,
+      status: coverageUnverified ? "review" : hasCapacity ? "info" : "blocked",
+      value: !footprintKnown ? "Unknown" : `${result.remainingCapacity.toLocaleString()} sf${regulationsEstimated ? " (assumed)" : ""}`,
     },
     {
       id: "coverage",
       group: "Zoning & setbacks",
       label: "Lot coverage vs. max",
-      detail: "Existing house plus the proposed ADU",
-      status: coverageOk ? "clear" : "blocked",
-      value: `${Math.round(result.coveragePercent)}% / ${result.maxCoveragePercent}%`,
+      detail: !footprintKnown ? "Existing building footprint is unknown"
+        : regulationsEstimated ? "Maximum coverage is assumed — verify locally"
+        : "Existing house plus the proposed ADU",
+      status: coverageUnverified ? "review" : coverageOk ? "clear" : "blocked",
+      value: !footprintKnown ? "Unknown" : `${Math.round(result.coveragePercent)}% / ${result.maxCoveragePercent}%${regulationsEstimated ? " (assumed max)" : ""}`,
     },
     // ── Not in the engine — honest, always-verify lines ──────────────
     {
@@ -234,8 +243,8 @@ export function summarizeFeasibility(
   // can flag zoning independently. A selected concept that misses the setback
   // envelope is reviewable; only failure to fit the minimum 20x20 unit makes
   // the lot itself unlikely.
-  const overCoverage = !coverageOk;
-  const zoningReview = !compliant && !overCoverage;
+  const overCoverage = !coverageOk && !coverageUnverified;
+  const zoningReview = coverageUnverified || (!compliant && !overCoverage);
   const envelopeTooSmall = !minimumEnvelopeFits;
   const envelopeReview = !envelopeTooSmall && !envelopeFits;
   const verifyOpen = 2;

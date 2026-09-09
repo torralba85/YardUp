@@ -15,6 +15,20 @@ function makeInput() {
   return { parcel, config, result };
 }
 
+it("keeps unknown county GIS coverage out of text, HTML, and CSV certificates", () => {
+  const parcel = { ...getParcelById("oak-street"), source: "county-gis", zoning: "Unknown", existingHouseSqft: 0 };
+  const config = defaultAduConfig;
+  const result = calculateFeasibility(parcel, config, defaultFinancialAssumptions);
+  const input = { parcel, config, result };
+  for (const report of [buildReportText(input), buildReportHtml(input), buildReportCsv(input)]) {
+    expect(report).toContain("Unknown");
+    expect(report).toContain("Review needed");
+    expect(report).not.toContain("12.0%");
+  }
+  expect(buildReportText(input)).toContain("Setbacks (assumed)");
+  expect(buildReportCsv(input)).toContain("Regulatory assumptions");
+});
+
 function makeProjectBrief(): AIProjectBrief {
   return {
     headline: "A workable backyard concept with two review items",

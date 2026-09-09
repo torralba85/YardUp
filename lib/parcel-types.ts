@@ -29,8 +29,8 @@ export interface Parcel {
  *
  * - `regrid` — the paid Regrid parcel record.
  * - `county-gis` — a free public county or statewide ArcGIS parcel service.
- *   Real surveyed geometry, so it carries no accuracy caveat, but it has no
- *   zoning attribute; zoning reads "Unknown".
+ *   Published parcel geometry; zoning, setbacks and coverage remain
+ *   unverified assumptions. A zero building footprint means unknown.
  * - `fallback` — no provider had data and we used the closest preset's
  *   typical dimensions instead. The UI must display a caveat for this one.
  */
