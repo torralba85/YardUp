@@ -50,6 +50,8 @@ desktop.ini
 brand/_plate_render.png
 public/demo/*.mp4
 public/demo/*.wav
+public/kickstarter/*.mp4
+public/kickstarter/*.wav
 *.apk
 *.aab
 *.ipa
