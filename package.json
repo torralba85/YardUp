@@ -29,7 +29,10 @@
     "hero:render": "npm run hero:mp4 && npm run hero:still",
     "demo:mp4": "remotion render remotion/index.ts LotFoundryDemo public/demo/lotfoundry-demo.mp4",
     "demo:still": "remotion still remotion/index.ts LotFoundryDemo public/demo/lotfoundry-demo-poster.jpg --frame=55",
-    "demo:render": "npm run demo:mp4 && npm run demo:still"
+    "demo:render": "npm run demo:mp4 && npm run demo:still",
+    "kickstarter:mp4": "remotion render remotion/index.ts KickstarterDemo public/kickstarter/lotfoundry-kickstarter.mp4",
+    "kickstarter:still": "remotion still remotion/index.ts KickstarterDemo public/kickstarter/lotfoundry-kickstarter-poster.jpg --frame=50",
+    "kickstarter:render": "npm run kickstarter:mp4 && npm run kickstarter:still"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
@@ -76,6 +79,7 @@
   },
   "overrides": {
     "postcss": "^8.5.10",
+    "qs": "^6.16.0",
     "uuid": "^11.1.1",
     "websocket-driver": "^0.7.5"
   }
