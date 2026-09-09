@@ -5,29 +5,62 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    labels:
+      - "type: chore"
+      - "area: ci"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
       minor-and-patch:
+        applies-to: "version-updates"
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+      security-patches:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/functions"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    labels:
+      - "type: chore"
+      - "area: ci"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
       minor-and-patch:
+        applies-to: "version-updates"
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+      security-patches:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 3
+    labels:
+      - "type: chore"
+      - "area: ci"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
