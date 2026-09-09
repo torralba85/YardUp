@@ -392,7 +392,7 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.city).toBe("San Jose, CA 95110");
   });
 
-  it("returns 503 with Retry-After when Regrid rate-limits (429)", async () => {
+  it("degrades gracefully down the chain when Regrid rate-limits (429, ADR-0001)", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -403,8 +403,9 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     );
 
     const res = await GET(makeRequest(47.65, -122.31));
-    expect(res.status).toBe(503);
-    expect(res.headers.get("Retry-After")).toBe("10");
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("fallback");
   });
 
   it("400s when lat/lng are missing", async () => {
