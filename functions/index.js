@@ -21,22 +21,35 @@ const regridApiKey = defineSecret("REGRID_API_KEY_SECRET");
 const openAiApiKey = defineSecret("OPENAI_API_KEY_SECRET");
 
 // Native store verification is optional until the App Store / Play Console
-// credentials are provisioned. Keeping the bindings behind an explicit flag
-// prevents non-interactive CI deploys from prompting for secrets that do not
-// exist yet, while still isolating them from unrelated API routes when enabled.
+// credentials are provisioned. Platform-specific flags let Android and iOS ship
+// independently; the legacy umbrella flag still enables both for compatibility.
+// Keeping the bindings behind explicit flags prevents non-interactive CI deploys
+// from prompting for secrets that do not exist yet, while still isolating them
+// from unrelated API routes when enabled.
 const nativeStoreVerificationEnabled =
   process.env.ENABLE_NATIVE_STORE_VERIFICATION === "true";
-const nativeStoreSecretParams = nativeStoreVerificationEnabled
+const appleStoreVerificationEnabled =
+  nativeStoreVerificationEnabled ||
+  process.env.ENABLE_APPLE_STORE_VERIFICATION === "true";
+const googlePlayVerificationEnabled =
+  nativeStoreVerificationEnabled ||
+  process.env.ENABLE_GOOGLE_PLAY_VERIFICATION === "true";
+const appleStoreSecretParams = appleStoreVerificationEnabled
   ? {
       appleBundleId: defineSecret("APPLE_BUNDLE_ID"),
       appleRootCaFingerprint256: defineSecret("APPLE_ROOT_CA_FINGERPRINT256"),
+    }
+  : null;
+const googlePlaySecretParams = googlePlayVerificationEnabled
+  ? {
       googlePlayPackageName: defineSecret("GOOGLE_PLAY_PACKAGE_NAME"),
       googlePlayServiceAccountJson: defineSecret("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"),
     }
   : null;
-const nativeStoreSecrets = nativeStoreSecretParams
-  ? Object.values(nativeStoreSecretParams)
-  : [];
+const nativeStoreSecrets = [
+  ...(appleStoreSecretParams ? Object.values(appleStoreSecretParams) : []),
+  ...(googlePlaySecretParams ? Object.values(googlePlaySecretParams) : []),
+];
 
 // scripts/prepare-firebase.js copies the Next.js standalone build into
 // functions/.next/standalone/. The compiled app (BUILD_ID, server/, manifests)
@@ -118,14 +131,16 @@ exports.api = onRequest(
 exports.apiStore = onRequest(
   { ...fnOpts, secrets: nativeStoreSecrets },
   async (req, res) => {
-    if (nativeStoreSecretParams) {
-      process.env.APPLE_BUNDLE_ID = nativeStoreSecretParams.appleBundleId.value();
+    if (appleStoreSecretParams) {
+      process.env.APPLE_BUNDLE_ID = appleStoreSecretParams.appleBundleId.value();
       process.env.APPLE_ROOT_CA_FINGERPRINT256 =
-        nativeStoreSecretParams.appleRootCaFingerprint256.value();
+        appleStoreSecretParams.appleRootCaFingerprint256.value();
+    }
+    if (googlePlaySecretParams) {
       process.env.GOOGLE_PLAY_PACKAGE_NAME =
-        nativeStoreSecretParams.googlePlayPackageName.value();
+        googlePlaySecretParams.googlePlayPackageName.value();
       process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON =
-        nativeStoreSecretParams.googlePlayServiceAccountJson.value();
+        googlePlaySecretParams.googlePlayServiceAccountJson.value();
     }
     const handle = await ready();
     return handle(requestForNext(req), res);

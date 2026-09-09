@@ -66,6 +66,9 @@ OPENAI_API_KEY
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 NEXT_PUBLIC_APP_URL
+ENABLE_NATIVE_STORE_VERIFICATION     # legacy umbrella flag; enables both platforms
+ENABLE_APPLE_STORE_VERIFICATION      # bind Apple credentials only
+ENABLE_GOOGLE_PLAY_VERIFICATION      # bind Google Play credentials only
 APPLE_BUNDLE_ID                      # native verification only
 APPLE_ROOT_CA_FINGERPRINT256         # native verification only
 GOOGLE_PLAY_PACKAGE_NAME             # native verification only
@@ -74,8 +77,10 @@ GOOGLE_PLAY_SERVICE_ACCOUNT_JSON     # native verification only
 
 Store production server-only values in Google Secret Manager. `functions/index.js`
 binds `OPENAI_API_KEY` only to `apiAi`, Stripe values only to `apiStripe`, Google
-Maps/server Places fallback/Regrid values only to `api`, and native-store credentials only
-to `apiStore` when `ENABLE_NATIVE_STORE_VERIFICATION=true`. The production secret
+Maps/server Places fallback/Regrid values only to `api`, and platform-specific
+native-store credentials only to `apiStore` when the matching Apple or Google
+verification flag is enabled. The legacy `ENABLE_NATIVE_STORE_VERIFICATION`
+flag enables both platforms. The production secret
 IDs are `OPENAI_API_KEY_SECRET`, `GOOGLE_MAPS_API_KEY_SECRET`,
 `GOOGLE_PLACES_SERVER_KEY_SECRET`, and `REGRID_API_KEY_SECRET`; the handler maps
 those values to the runtime variable names consumed by Next.js. Do not place

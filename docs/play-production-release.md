@@ -15,20 +15,25 @@ Verify this before any paid track, including internal testing.
 
 `lib/server/store-purchases.ts` returns `"Google Play verification is not
 configured."` unless both `GOOGLE_PLAY_PACKAGE_NAME` and
-`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` are present, and `functions/index.js` binds
-those secrets only when `ENABLE_NATIVE_STORE_VERIFICATION=true` at deploy time.
+`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` are present. `functions/index.js` binds
+those secrets only when `ENABLE_GOOGLE_PLAY_VERIFICATION=true` at deploy time
+(the legacy `ENABLE_NATIVE_STORE_VERIFICATION=true` flag still enables both
+Google and Apple verification).
 Ship without them and Play still charges the card while
 `POST /api/store/purchases/verify` refuses the grant — the user pays and
 receives nothing.
 
 Required, in order:
 
-1. Create a Play Console service account with the `androidpublisher` scope and
-   grant it access to the app.
+1. Enable the Google Play Android Developer API in the backend's Google Cloud
+   project, create a dedicated service account, and invite it to the LotFoundry
+   app in Play Console. Grant only `View financial data, orders, and
+   cancellation survey responses` and `Manage orders and subscriptions`, the
+   two permissions Google requires for Play Billing API access. The backend
+   requests the `androidpublisher` OAuth scope when it authenticates.
 2. Set the `GOOGLE_PLAY_PACKAGE_NAME` and `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
-   secrets, plus `APPLE_BUNDLE_ID` and `APPLE_ROOT_CA_FINGERPRINT256` — the
-   binding in `functions/index.js` defines all four together.
-3. Deploy with `ENABLE_NATIVE_STORE_VERIFICATION=true`.
+   secrets. Apple credentials are separate and are not required for Android.
+3. Deploy with `ENABLE_GOOGLE_PLAY_VERIFICATION=true`.
 4. Confirm a sandbox purchase actually grants the entitlement before opening a
    paid track to anyone outside the test group.
 

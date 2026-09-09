@@ -56,7 +56,7 @@ release evidence.
 | Browser Places | `NEXT_PUBLIC_GOOGLE_PLACES_KEY` is the public client seam | Confirm the live key is the intended referrer-restricted key and Places (New) is enabled |
 | Server Maps and Regrid | Bound only to generic `api` in `functions/index.js` | Verify API restrictions are server-safe and required APIs are enabled |
 | Stripe | `apiStripe` isolates checkout/webhook secrets | Register webhook, validate signing secret, and run certificate, lead-unlock, and credit tests |
-| Native purchase verification | `apiStore` is separate and activates native secret bindings only with `ENABLE_NATIVE_STORE_VERIFICATION=true` | Provision Apple/Google credentials and complete sandbox device tests |
+| Native purchase verification | `apiStore` is separate and activates Apple and Google secret bindings independently with platform-specific flags; the legacy umbrella flag enables both | Provision each platform's credentials and complete sandbox device tests |
 | Digital Asset Links | Upload-key and Play App Signing SHA-256 fingerprints are both checked into `public/.well-known/assetlinks.json` and mirrored in `native/android/twa-manifest.json` | Redeploy when the statement changes and re-verify with the Play Console App integrity page |
 | Canonical app URL | Falls back to `https://yardup-2026.web.app` | Set `NEXT_PUBLIC_APP_URL` when the owned production domain is chosen |
 
