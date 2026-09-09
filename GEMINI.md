@@ -130,7 +130,9 @@ not a separate theme. See `docs/design/product-surfaces.md`.
 
 Obsidian is the durable second brain and memory layer for LotFoundry. `GEMINI.md` (and `AGENTS.md` / `CLAUDE.md`) is the compact context router for this repo; do not bloat it with session logs, source dumps, scratchpad notes, or long-lived research that belongs in Obsidian.
 
-Use the Obsidian MCP or the configured Obsidian vault whenever the task depends on prior decisions, saved research, user preferences, project memory, meeting notes, source documents, or cross-session continuity. If Obsidian tooling is unavailable, say so clearly and request the vault path or exported notes instead of inventing memory.
+Use the Obsidian MCP before and after every conversation. Before responding or acting, read `C:\Users\Andrew\Obsidian Vault\wiki\index.md`, review the newest relevant entries in `wiki\log.md`, and search the relevant project pages and handoffs. Before the final response, recheck the relevant pages and record any durable outcome, decision, changed system, blocker, user preference, or next action. Complete the end-of-conversation review even when no write is needed; do not add a noise-only entry.
+
+If the Obsidian MCP is unavailable but the local vault is accessible, use the local Markdown files directly and disclose the fallback. If neither is accessible, state the limitation and do not invent prior context. The shared protocol is `C:\Users\Andrew\Obsidian Vault\wiki\ai-agent-memory-protocol.md`.
 
 ### Vault Structure (Karpathy / Keet LLM Wiki)
 
@@ -150,7 +152,7 @@ Update or create notes in Obsidian when:
 - **Synthesized Research**: External market data, municipal zoning bylaws, technical investigation notes.
 
 ### Obsidian MCP Update Rules & Invariants
-1. **MCP Preflight**: Check if Obsidian MCP tools (`search_notes`, `read_note`, `create_note`, `patch_note`, `append_content`) are active in your environment. Use them directly to query and modify vault contents. Never ask the user to do what MCP can do. If tools are unavailable, output the markdown payload ready to paste and ask for the vault path.
+1. **MCP Preflight**: Check if the `obsidian` MCP tools (`obsidian_search_vault`, `obsidian_read_note`, `obsidian_create_note`, `obsidian_edit_note`) are active in your environment. Use vault id `second-brain`. Use them directly to query and modify vault contents. Never ask the user to do what MCP can do. If tools are unavailable, use the local vault at `C:\Users\Andrew\Obsidian Vault` directly and disclose the fallback.
 2. **Page File Naming**: All pages in `wiki/` must be lowercase kebab-case (e.g. `wiki/design-system-a-lot-more.md`, `wiki/firestore-rules-v2.md`).
 3. **Strict Page Header Structure**: Every page in `wiki/` must begin with:
    ```markdown
