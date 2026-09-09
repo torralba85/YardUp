@@ -8,6 +8,15 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Changed
 
+- Production deploys now push `app`, `api`, `apiAi`, and `apiStripe` as a single
+  Firebase operation instead of four sequential ones, so the functions payload
+  uploads once and Firebase updates them concurrently. The four have no ordering
+  relationship to each other; `apiStore`, Firestore rules, and Hosting still go
+  out first and in order. This cut roughly seven minutes from a nine-minute
+  deploy step that was 39% of the whole pipeline.
+- The deploy job pins `firebase-tools` to the same version the verify job
+  already pinned. The unpinned global install let a new major reach production
+  deploys with no change to this repository.
 - Android release metadata advances to v1.0.8/versionCode 9 after Play accepted
   v1.0.7/versionCode 8 on the internal testing track.
 - After Play accepted the code-9 upload, next-build metadata advances to
@@ -109,6 +118,15 @@ All notable changes to LotFoundry are documented here. Format follows
   icon per design-audit findings (FINDING-001, FINDING-002).
 
 ### Fixed
+- Hashed `/_next/static/*` chunks are now served by Firebase Hosting instead
+  of falling through the `**` rewrite to the `app` Cloud Function. The build
+  wrote them only to `dist/.next/static`, which `firebase.json` excludes from
+  the Hosting upload, so Hosting published 49 files and every chunk request hit
+  a function. That cost Hosting's brotli (17.6% more bytes than gzip across
+  4.2 MB of chunks), attached a `Vary: cookie` that fragmented the CDN cache per
+  signed-in user, and billed a function invocation per asset miss. The
+  `max-age=31536000, immutable` rule declared for `/_next/static/**` also never
+  fired, because Hosting had no matching files.
 - Kept the landing ADU fully framed and unobstructed on narrow screens while
   reducing mobile WebGL load to avoid silent renderer failures.
 - Client fetches to `/api/geocode`, `/api/parcel`, `/api/aerial`, and

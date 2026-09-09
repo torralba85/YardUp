@@ -84,7 +84,7 @@ describe("Firebase AI API routing", () => {
       "firebase deploy --only hosting --project yardup-2026",
     );
     const appDeployIndex = ciWorkflow.indexOf(
-      "for target in functions:app functions:api functions:apiAi functions:apiStripe",
+      'deploy_target "functions:app,functions:api,functions:apiAi,functions:apiStripe"',
     );
 
     expect(storeDeployIndex).toBeGreaterThanOrEqual(0);
@@ -101,8 +101,16 @@ describe("Firebase AI API routing", () => {
       "deploy_target functions:apiStore || exit $?",
     );
     expect(ciWorkflow).toContain(
-      'deploy_target "$target" || exit $?',
+      'deploy_target "functions:app,functions:api,functions:apiAi,functions:apiStripe" || exit $?',
     );
+  });
+
+  it("pins the Firebase CLI used for production deploys", () => {
+    // The verify job has always pinned it. An unpinned global install in the
+    // deploy job let a new firebase-tools major reach production with no
+    // change to this repository.
+    expect(ciWorkflow).toContain("npm install -g firebase-tools@15.26.0");
+    expect(ciWorkflow).not.toMatch(/npm install -g firebase-tools\s*$/m);
   });
 
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {

@@ -64,11 +64,37 @@ function assertFunctionsDependencies() {
 console.log("[firebase] Building dist/ for Hosting...");
 copyDir(STANDALONE, DIST);
 
-// 2. Copy .next/static into dist/_next/static (Next.js standalone expects this).
+// 2. Copy .next/static into BOTH locations under dist/. They serve different
+//    consumers and neither one is redundant:
+//
+//    a) dist/.next/static  - keeps the standalone layout copied in step 1
+//       intact, which is where `dist/server.js` looks when it is run directly
+//       (local checks, emulator). firebase.json ignores `.next/**` and
+//       `server.js`, so none of this reaches Hosting.
+//    b) dist/_next/static  - the URL path browsers actually request. Firebase
+//       Hosting serves a matching static file before it applies a rewrite, so
+//       this is what keeps /_next/static/* on the CDN. This is the copy
+//       production depends on.
+//
+//    Without (b) every hashed chunk fell through the `**` rewrite to the `app`
+//    Cloud Function, which meant gzip instead of Hosting's brotli, a
+//    `Vary: cookie` that fragmented the CDN cache per signed-in user, and a
+//    billable function invocation per asset miss. The `max-age=31536000,
+//    immutable` rule firebase.json declares for /_next/static/** also never
+//    fired, because Hosting had no such files to apply it to.
+//
+//    Do not "simplify" this to a single copy. firebase.json's hosting `ignore`
+//    list contains `.next/**`, so (a) is excluded from the Hosting upload by
+//    design and cannot stand in for (b); and (b) is not where the standalone
+//    server looks, so it cannot stand in for (a).
 console.log("[firebase] Copying static assets...");
 const distNext = path.resolve(DIST, ".next");
 fs.mkdirSync(distNext, { recursive: true });
 copyDir(STATIC, path.resolve(distNext, "static"));
+
+const distUnderscoreNext = path.resolve(DIST, "_next");
+fs.mkdirSync(distUnderscoreNext, { recursive: true });
+copyDir(STATIC, path.resolve(distUnderscoreNext, "static"));
 
 // 3. Copy public files into dist/ (root-level assets).
 console.log("[firebase] Copying public/ files...");
