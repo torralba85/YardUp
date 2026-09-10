@@ -33,6 +33,9 @@ export interface CensusLocation {
  * endpoint (it alone returns a ZIP) and falls back to the coordinate
  * endpoint, so a mistyped or unmatched address still yields state/county.
  *
+ * Both attempts share one timeout budget so an address lookup that consumes
+ * most of the deadline cannot add a second full timeout to the parcel route.
+ *
  * @param input - The searched `lat`/`lng` and, when known, the address text.
  * @returns The resolved location, or null when neither endpoint matched.
  */
@@ -41,23 +44,30 @@ export async function fetchCensusLocation(input: {
   lng: number;
   address?: string;
 }): Promise<CensusLocation | null> {
+  const deadline = Date.now() + TIMEOUT_MS;
   if (input.address) {
-    const matched = await lookupByAddress(input.address);
+    const matched = await lookupByAddress(input.address, remainingBudget(deadline));
     // A ZIP-less match still beats the coordinate endpoint: it agreed with
     // the address text the user actually typed.
     if (matched) return matched;
   }
-  return await lookupByCoordinates(input.lat, input.lng);
+  const budget = remainingBudget(deadline);
+  if (budget <= 0) return null;
+  return await lookupByCoordinates(input.lat, input.lng, budget);
 }
 
-async function lookupByAddress(address: string): Promise<CensusLocation | null> {
+async function lookupByAddress(
+  address: string,
+  timeoutMs: number,
+): Promise<CensusLocation | null> {
+  if (timeoutMs <= 0) return null;
   const url = new URL(`${CENSUS_API}/onelineaddress`);
   url.searchParams.set("address", address);
   url.searchParams.set("benchmark", BENCHMARK);
   url.searchParams.set("vintage", VINTAGE);
   url.searchParams.set("format", "json");
 
-  const json = await getJson(url);
+  const json = await getJson(url, timeoutMs);
   const match = asArray(json?.result?.addressMatches)[0];
   if (!match || typeof match !== "object") return null;
 
@@ -73,7 +83,9 @@ async function lookupByAddress(address: string): Promise<CensusLocation | null> 
 async function lookupByCoordinates(
   lat: number,
   lng: number,
+  timeoutMs: number,
 ): Promise<CensusLocation | null> {
+  if (timeoutMs <= 0) return null;
   const url = new URL(`${CENSUS_API}/coordinates`);
   url.searchParams.set("x", String(lng));
   url.searchParams.set("y", String(lat));
@@ -81,7 +93,7 @@ async function lookupByCoordinates(
   url.searchParams.set("vintage", VINTAGE);
   url.searchParams.set("format", "json");
 
-  const json = await getJson(url);
+  const json = await getJson(url, timeoutMs);
   const location = readGeographies(json?.result?.geographies);
   // The coordinate endpoint carries no ZIP; callers fall back to the ZIP
   // parsed out of the searched address.
@@ -129,11 +141,19 @@ function zipFromMatchedAddress(matchedAddress: unknown): string {
   return /^\d{5}$/.test(last) ? last : "";
 }
 
+function remainingBudget(deadline: number): number {
+  return Math.max(0, deadline - Date.now());
+}
+
 /** Fetch and parse JSON under a timeout; null on any failure. */
-async function getJson(url: URL): Promise<GeocoderResponse | null> {
+async function getJson(
+  url: URL,
+  timeoutMs: number,
+): Promise<GeocoderResponse | null> {
+  if (timeoutMs <= 0) return null;
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch(url.toString(), { signal: controller.signal });
       if (!res.ok) return null;
