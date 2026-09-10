@@ -151,7 +151,7 @@ export interface CountyParcelResult {
    * later rings are holes.
    */
   polygon: GeoJsonPolygon;
-  /** Assessor/GIS area when available, else hole-aware area of every part. */
+  /** Area of the returned polygon scope. */
   lotAreaSqft: number | null;
 }
 
@@ -162,8 +162,9 @@ export interface CountyParcelResult {
  * hole falls through to the next instead of ending the lookup.
  *
  * Returns null on any failure: GIS outages must never break the parcel route.
- * The whole walk shares a single {@link TIMEOUT_MS} budget, so adding sources
- * widens coverage without widening the caller's worst-case latency.
+ * The whole walk shares a single {@link TIMEOUT_MS} budget. When multiple
+ * candidates match, each gets a bounded share so an earlier county endpoint
+ * cannot consume the entire deadline and starve a statewide fallback.
  */
 export async function fetchCountyParcel(
   lat: number,
@@ -179,10 +180,12 @@ export async function fetchCountyParcel(
   if (candidates.length === 0) return null;
 
   const deadline = Date.now() + TIMEOUT_MS;
-  for (const source of candidates) {
-    const budget = deadline - Date.now();
-    if (budget <= 0) break;
-    const result = await queryGisSource(source, lat, lng, budget);
+  for (let index = 0; index < candidates.length; index++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    const remainingCandidates = candidates.length - index;
+    const budget = Math.max(1, Math.floor(remaining / remainingCandidates));
+    const result = await queryGisSource(candidates[index], lat, lng, budget);
     if (result) return result;
   }
   return null;
@@ -216,8 +219,6 @@ async function queryGisSource(
         signal: controller.signal,
       });
       if (!res.ok) return null;
-      // Keep the abort timer armed through the body read so a stalled stream
-      // trips the same bound as stalled headers.
       json = await res.json();
     } finally {
       clearTimeout(timer);
@@ -227,12 +228,11 @@ async function queryGisSource(
     const best = pickBestFeature(features, lat, lng);
     if (!best) return null;
 
-    // Try both field containers: a server can send an empty `properties`
-    // object alongside populated Esri-style `attributes`.
-    const lotAreaSqft =
+    const providerArea =
       readAreaField(best.feature.properties, source) ??
-      readAreaField(best.feature.attributes, source) ??
-      roundedPositive(best.totalAreaSqft);
+      readAreaField(best.feature.attributes, source);
+    const selectedArea = roundedPositive(partAreaSqft(best.polygon));
+    const lotAreaSqft = best.partCount === 1 ? providerArea ?? selectedArea : selectedArea;
 
     const county =
       readCountyField(best.feature.properties, source) ??
@@ -247,25 +247,18 @@ async function queryGisSource(
 
 interface RawFeature {
   geometry?: unknown;
-  /** GeoJSON responses put fields here… */
   properties?: Record<string, unknown>;
-  /** …Esri JSON responses (servers that ignore f=geojson) put them here. */
   attributes?: Record<string, unknown>;
 }
 
 interface ScoredFeature {
   feature: RawFeature;
   polygon: GeoJsonPolygon;
-  totalAreaSqft: number;
+  selectedAreaSqft: number;
   containsPoint: boolean;
+  partCount: number;
 }
 
-/**
- * Stacked layers (condos, vertical parcels) can return several features for
- * one point, and a feature can be multipart. Prefer the feature whose
- * geometry actually contains the point, then the largest; within a feature,
- * return the part containing the point (largest part as fallback).
- */
 function pickBestFeature(
   features: unknown[],
   lat: number,
@@ -277,54 +270,41 @@ function pickBestFeature(
     const feature = raw as RawFeature;
     const parts = normalizeParts(feature.geometry);
     if (parts.length === 0) continue;
-    const totalAreaSqft = parts.reduce(
-      (sum, part) => sum + partAreaSqft(part),
-      0,
-    );
-    const containing = parts.find((part) =>
-      polygonContainsPoint(part, lng, lat),
-    );
+    const containing = parts.find((part) => polygonContainsPoint(part, lng, lat));
     const polygon =
       containing ??
       parts.reduce((a, b) => (partAreaSqft(b) > partAreaSqft(a) ? b : a));
+    const selectedAreaSqft = partAreaSqft(polygon);
     const containsPoint = containing !== undefined;
     const beatsBest =
       !best ||
       (containsPoint && !best.containsPoint) ||
-      (containsPoint === best.containsPoint &&
-        totalAreaSqft > best.totalAreaSqft);
+      (containsPoint === best.containsPoint && selectedAreaSqft > best.selectedAreaSqft);
     if (beatsBest) {
-      best = { feature, polygon, totalAreaSqft, containsPoint };
+      best = {
+        feature,
+        polygon,
+        selectedAreaSqft,
+        containsPoint,
+        partCount: parts.length,
+      };
     }
   }
   return best;
 }
 
-/**
- * Accept GeoJSON Polygon/MultiPolygon or Esri JSON rings as a list of
- * single-polygon parts (ring 0 exterior, later rings holes); else [].
- */
 function normalizeParts(geometry: unknown): GeoJsonPolygon[] {
   if (!geometry || typeof geometry !== "object") return [];
-  const g = geometry as {
-    type?: string;
-    coordinates?: unknown;
-    rings?: unknown;
-  };
+  const g = geometry as { type?: string; coordinates?: unknown; rings?: unknown };
   if (g.type === "Polygon" && isRingArray(g.coordinates)) {
     return [{ type: "Polygon", coordinates: g.coordinates as number[][][] }];
   }
   if (g.type === "MultiPolygon" && Array.isArray(g.coordinates)) {
     return (g.coordinates as unknown[])
       .filter(isRingArray)
-      .map((part) => ({
-        type: "Polygon" as const,
-        coordinates: part as number[][][],
-      }));
+      .map((part) => ({ type: "Polygon" as const, coordinates: part as number[][][] }));
   }
-  if (isRingArray(g.rings)) {
-    return esriRingsToParts(g.rings as number[][][]);
-  }
+  if (isRingArray(g.rings)) return esriRingsToParts(g.rings as number[][][]);
   return [];
 }
 
@@ -334,12 +314,6 @@ function isRingArray(value: unknown): boolean {
   return Array.isArray(first) && first.length > 0 && Array.isArray(first[0]);
 }
 
-/**
- * Esri JSON flattens every part and hole into one rings array, encoding the
- * role by winding order (clockwise = exterior) instead of nesting. Ring order
- * is not guaranteed to interleave holes with their shells, so attach each
- * hole to the exterior ring that contains it.
- */
 function esriRingsToParts(rings: number[][][]): GeoJsonPolygon[] {
   const parts: GeoJsonPolygon[] = [];
   const holes: number[][][] = [];
@@ -351,8 +325,6 @@ function esriRingsToParts(rings: number[][][]): GeoJsonPolygon[] {
       holes.push(ring);
     }
   }
-  // Largest-first lets an uncontained, sloppily wound exterior become a
-  // shell before any smaller rings it contains are assigned.
   holes.sort(
     (a, b) => Math.abs(ringSignedArea(b)) - Math.abs(ringSignedArea(a)),
   );
@@ -370,15 +342,12 @@ function esriRingsToParts(rings: number[][][]): GeoJsonPolygon[] {
     if (host) {
       host.coordinates.push(hole);
     } else {
-      // No containing exterior: most likely a sloppily wound exterior from a
-      // lax service — keep it as its own part rather than corrupt another.
       parts.push({ type: "Polygon", coordinates: [hole] });
     }
   }
   return parts;
 }
 
-/** Shoelace signed area in degrees²; negative = clockwise in [lng, lat]. */
 function ringSignedArea(ring: number[][]): number {
   let sum = 0;
   for (let i = 0; i < ring.length - 1; i++) {
@@ -387,13 +356,11 @@ function ringSignedArea(ring: number[][]): number {
   return sum / 2;
 }
 
-/** Hole-aware part area: exterior ring minus hole rings, floored at zero. */
 function partAreaSqft(part: GeoJsonPolygon): number {
   const [outer, ...holes] = part.coordinates;
   const outerArea = polygonAreaSqft({ type: "Polygon", coordinates: [outer] });
   const holeArea = holes.reduce(
-    (sum, ring) =>
-      sum + polygonAreaSqft({ type: "Polygon", coordinates: [ring] }),
+    (sum, ring) => sum + polygonAreaSqft({ type: "Polygon", coordinates: [ring] }),
     0,
   );
   return Math.max(outerArea - holeArea, 0);
@@ -405,8 +372,6 @@ function readAreaField(
 ): number | null {
   if (!source.areaField || !properties) return null;
   const raw = properties[source.areaField];
-  // GIS attribute tables often store numerics as strings. Number() rejects
-  // ambiguous values like "1,234" so bad data falls back to computed area.
   const value =
     typeof raw === "number"
       ? raw
@@ -419,15 +384,6 @@ function readAreaField(
   );
 }
 
-/**
- * Read a statewide layer's county-name attribute, normalized the way
- * {@link CountyParcelResult} promises: no "County" suffix, trimmed.
- *
- * Rejects all-digit values, because several statewide layers put a FIPS code
- * in the field a name is expected in. Spelling still varies by publisher
- * (New York's layer spells its own county "NewYork"), so callers that have an
- * authoritative county — the Census geocoder — should prefer theirs.
- */
 function readCountyField(
   properties: Record<string, unknown> | undefined,
   source: CountyGisSource,
