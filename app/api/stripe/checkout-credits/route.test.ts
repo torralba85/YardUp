@@ -49,6 +49,19 @@ describe("POST /api/stripe/checkout-credits", () => {
     expect((await POST(postRequest({ pack: 3 }))).status).toBe(400);
   });
 
+  it("rejects malformed checkout attempt ids", async () => {
+    expect(
+      (await POST(postRequest({ pack: 5, checkoutAttemptId: "" }))).status,
+    ).toBe(400);
+    expect(
+      (
+        await POST(
+          postRequest({ pack: 5, checkoutAttemptId: "x".repeat(101) }),
+        )
+      ).status,
+    ).toBe(400);
+  });
+
   it("requires an existing builder profile", async () => {
     mocks.profileExists = false;
     expect((await POST(postRequest({ pack: 5 }))).status).toBe(403);
@@ -70,7 +83,9 @@ describe("POST /api/stripe/checkout-credits", () => {
         },
       };
 
-      const res = await POST(postRequest({ pack }));
+      const res = await POST(
+        postRequest({ pack, checkoutAttemptId: `attempt-${pack}` }),
+      );
 
       expect(await res.json()).toEqual({ url: "https://stripe.test/credits" });
       expect(mocks.stripe.checkout.sessions.create.mock.calls[0][0]).not.toHaveProperty(
@@ -102,6 +117,27 @@ describe("POST /api/stripe/checkout-credits", () => {
       );
     },
   );
+
+  it("uses different idempotency keys for separate legacy purchase attempts", async () => {
+    mocks.stripe = {
+      checkout: {
+        sessions: {
+          create: vi
+            .fn()
+            .mockResolvedValue({ url: "https://stripe.test/credits" }),
+        },
+      },
+    };
+
+    await POST(postRequest({ pack: 5 }));
+    await POST(postRequest({ pack: 5 }));
+
+    const firstKey = mocks.stripe.checkout.sessions.create.mock.calls[0][1]
+      .idempotencyKey;
+    const secondKey = mocks.stripe.checkout.sessions.create.mock.calls[1][1]
+      .idempotencyKey;
+    expect(firstKey).not.toBe(secondKey);
+  });
 
   it("fails closed in production when Stripe is unavailable", async () => {
     vi.stubEnv("NODE_ENV", "production");
