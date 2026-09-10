@@ -420,19 +420,38 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.city).toBe("San Jose, CA 95110");
   });
 
-  it("returns 503 with Retry-After when Regrid rate-limits (429)", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
-        status: 429,
-        json: async () => ({}),
-      }),
-    );
+  it("degrades to county GIS when Regrid rate-limits (429)", async () => {
+    // Rate limiting is a provider failure, not a request failure. The free
+    // public chain still answers, so the lookup must not surface an error.
+    stubProviders({
+      regrid: { ok: false, status: 429, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(
+        rotatedRectPolygon(47.65, -122.31, 50, 120, 0),
+        { Shape__Area: 6000 },
+      ),
+    });
 
     const res = await GET(makeRequest(47.65, -122.31));
-    expect(res.status).toBe(503);
-    expect(res.headers.get("Retry-After")).toBe("10");
+    expect(res.status).toBe(200);
+
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+  });
+
+  it("degrades to the preset fallback when Regrid rate-limits with no GIS cover", async () => {
+    stubProviders({
+      regrid: { ok: false, status: 429, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: EMPTY_FEATURES,
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    expect(res.status).toBe(200);
+
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("fallback");
   });
 
   it("400s when lat/lng are missing", async () => {

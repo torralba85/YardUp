@@ -3,7 +3,10 @@ import { NextRequest } from "next/server";
 
 const deleteUser = vi.fn(async () => undefined);
 
-type Ref = { kind: "scenario" | "contact" | "lead" | "feedback"; id: string };
+type Ref = {
+  kind: "scenario" | "contact" | "lead" | "feedback" | "checkout";
+  id: string;
+};
 
 const ops = {
   deleted: [] as Ref[],
@@ -13,6 +16,7 @@ const ops = {
   userSet: null as Record<string, unknown> | null,
   scenarioIds: [] as string[],
   feedbackIds: [] as string[],
+  checkoutReservationIds: [] as string[],
   connectionRequests: [] as { id: string; ownerUid: string }[],
   failCommit: false,
 };
@@ -52,6 +56,17 @@ function makeDb() {
                     }),
                   },
                 })),
+            }),
+          }),
+        };
+      }
+      if (name === "activeCheckoutSessions") {
+        return {
+          where: () => ({
+            get: async () => ({
+              docs: ops.checkoutReservationIds.map((id) => ({
+                ref: { kind: "checkout", id } as Ref,
+              })),
             }),
           }),
         };
@@ -129,6 +144,7 @@ describe("POST /api/account/delete", () => {
     ops.userSet = null;
     ops.scenarioIds = [];
     ops.feedbackIds = [];
+    ops.checkoutReservationIds = [];
     ops.connectionRequests = [];
     ops.failCommit = false;
     throwOnDb = false;
@@ -138,6 +154,8 @@ describe("POST /api/account/delete", () => {
   it("deletes saved scenarios, feedback, builder data, and the user tombstone", async () => {
     ops.scenarioIds = ["s1", "s2"];
     ops.feedbackIds = ["f1"];
+    // Reservations hold checkout presentation data, so they go before Auth.
+    ops.checkoutReservationIds = ["cr1"];
 
     const res = await POST(postRequest());
     expect(res.status).toBe(200);
@@ -145,6 +163,7 @@ describe("POST /api/account/delete", () => {
     expect(ops.deleted).toEqual([
       { kind: "scenario", id: "s1" },
       { kind: "scenario", id: "s2" },
+      { kind: "checkout", id: "cr1" },
       { kind: "feedback", id: "f1" },
     ]);
     expect(ops.builderDeleted).toBe(true);

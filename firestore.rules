@@ -587,6 +587,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Resumable Stripe Checkout reservations (Admin SDK only). One document
+    // per entitlement, keyed by a hash of account + purchase, holding the
+    // Session id a buyer resumes. No client ever reads or writes them.
+    match /activeCheckoutSessions/{reservationId} {
+      allow read, write: if false;
+    }
+
     // Play RTDN dedupe ledger (Admin SDK only). Pub/Sub message ids are an
     // internal idempotency record; no client ever reads or writes them.
     match /rtdnEvents/{messageId} {

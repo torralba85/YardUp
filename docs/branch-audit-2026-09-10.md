@@ -54,21 +54,44 @@ work is unlanded — every branch below was additionally checked by content.
 - **`TODOS.md`** — two P2 backlog entries: public per-jurisdiction ADU pages, and the
   Kickstarter campaign rewording.
 
-## Deferred — needs a decision, not a cleanup
+## Picked up from the deferred list
 
-- **Resumable Stripe Checkout sessions** (`lib/server/active-checkout-sessions.ts`, from
-  `fix/166-checkout-attempt-idempotency`). Reserves one resumable Checkout session per
-  entitlement, replaces it only after Stripe confirms expiry, and clears reservations on
-  account deletion. Needs a new `activeCheckoutSessions` collection plus matching
-  `firestore.rules`, so it is a payments feature with a rules deploy, not a salvage.
+- **Resumable Stripe Checkout sessions.** `lib/server/active-checkout-sessions.ts` and its
+  tests are ported from `fix/166-checkout-attempt-idempotency` and wired into both the
+  lead-unlock and certificate checkout routes. One reservation per entitlement, resumed
+  while Stripe reports the Session open, replaced only once Stripe confirms it expired.
+  Account deletion clears reservations before the Auth identity goes away, and
+  `firestore.rules` denies all client access to the new `activeCheckoutSessions`
+  collection. **This needs a rules deploy** (`npm run deploy:rules`, or a full deploy).
+
+  This changes a documented behaviour. Previously each `checkoutAttemptId` produced its own
+  Stripe idempotency key, so a fresh attempt minted a second payable Session. The
+  reservation now decides, so a second tab resumes the first tab's Session instead. The
+  route tests were rewritten to assert the new contract.
+
+- **Regrid rate-limit degradation.** `app/api/parcel/route.ts` returned HTTP 503 with
+  `Retry-After: 10` on a Regrid 429 — the only Regrid failure mode that did not fall
+  through the provider chain. It now degrades to the public county/statewide GIS tier and
+  the preset fallback, like every other failure. Recorded in
+  `docs/adr/0001-parcel-resolution-rate-limit-degradation.md`, which now matches the code.
+
+## Still deferred
+
 - **Kickstarter Remotion composition** (`remotion/kickstarter/*`, from
   `wip/local-backup-2026-09-09`). About 1,350 lines, a poster asset, three npm render
   scripts, and a `qs` override. Self-contained but a feature addition.
-- **`docs/adr/0001-parcel-resolution-rate-limit-degradation.md`** (from
-  `wip/local-backup-2026-09-09`). It states that Regrid 429 responses degrade to the
-  public GIS chain. `app/api/parcel/route.ts` still returns HTTP 503 with `Retry-After: 10`
-  on a 429. Landing the document as written would record behaviour the code does not have.
-  Either implement the degradation or drop the ADR.
 - **Dependabot pull-request limits** (from `codex/ci-maintenance-2026-08-31`). Proposes
   5/5/3 to 3/2/1. `master` re-established 5/5/3 later via #177, so this reads as
   deliberately superseded rather than unlanded.
+
+## Executing the deletions
+
+This session could not create the archive tags Step 4 of
+`.github/stale_branch_cleanup.md` calls for: pushing to `refs/tags/*` is refused with
+HTTP 403 while branch pushes to the session's own branch succeed, so the credential is
+scoped to that branch. No branch was deleted, because the archive snapshot is the
+safeguard that makes deletion reversible.
+
+`scripts/cleanup-stale-branches.sh` performs both halves from a checkout with full push
+rights. It tags every branch first, verifies each tag landed on the remote, and only then
+deletes. Run it with `--dry-run` first.
