@@ -110,11 +110,11 @@ describe("createConnectionRequest paywall split", () => {
     vi.clearAllMocks();
   });
 
-  async function submit() {
+  async function submit(snapshotOverride = snapshot) {
     await createConnectionRequest({
       ownerUid: "owner-1",
       ownerContact: contact,
-      snapshot,
+      snapshot: snapshotOverride,
       matchedBuilderIds: ["builder-1", "builder-2"],
     });
     const root = recorder.writes.find((w) => w.path.match(/^connectionRequests\/[^/]+$/));
@@ -143,6 +143,27 @@ describe("createConnectionRequest paywall split", () => {
     expect(contactDoc!.data.ownerContact).toEqual(contact);
     expect(contactDoc!.data.streetAddress).toBe(snapshot.parcelAddress);
     expect(contactDoc!.data.snapshot).toBeDefined();
+  });
+
+  it("strips provider-only GeoJSON before writing a live parcel snapshot", async () => {
+    const liveSnapshot = {
+      ...snapshot,
+      parcel: {
+        ...snapshot.parcel,
+        source: "county-gis",
+        boundaryGeoJson: {
+          type: "Polygon",
+          coordinates: [[[-122.31, 47.65], [-122.30, 47.65], [-122.31, 47.65]]],
+        },
+      },
+    } as typeof snapshot;
+
+    const { contactDoc } = await submit(liveSnapshot);
+    const storedSnapshot = contactDoc!.data.snapshot as typeof snapshot;
+
+    expect(storedSnapshot.parcel).not.toHaveProperty("boundaryGeoJson");
+    expect(storedSnapshot.parcel).not.toHaveProperty("source");
+    expect(storedSnapshot.parcel.address).toBe(snapshot.parcel.address);
   });
 
   it("commits the root before the batched subdocs (rules see committed state)", async () => {

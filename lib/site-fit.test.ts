@@ -32,6 +32,19 @@ describe("getSiteFitCapacityStatus", () => {
       tone: "ok",
     });
   });
+
+  it("preserves over-capacity wording when county GIS rules are estimated", () => {
+    const parcel = {
+      ...parcelPresets[0],
+      source: "county-gis",
+      zoning: "Unknown",
+      existingHouseSqft: 1000,
+    };
+    expect(getSiteFitCapacityStatus(-380, parcel)).toMatchObject({
+      title: "380 sf over assumed coverage allowance",
+      tone: "warn",
+    });
+  });
 });
 
 describe("getDefaultAduPose", () => {
