@@ -43,8 +43,8 @@ must be raised whenever a new bundle is accepted.
 | 1.0.5 | 6 | published 2026-08-11 | Built locally with `bubblewrap-cli`; the version bump was never committed and no AAB was retained. Shell config is identical to `cd9c621` apart from the version, so it points at `yardup-2026.web.app`, not `lotfoundry.net`. |
 | 1.0.6 | 7 | draft uploaded 2026-09-06 | First build carrying the `lotfoundry.net` host. Rejected by Play Console: requires Play Billing Library >= 8.0.0 (carried 7.1.1). |
 | 1.0.7 | 8 | internal testing since 2026-09-06 | Upgraded `com.google.androidbrowserhelper:billing` to 1.2.0 and added `com.android.billingclient:billing:9.1.0`. Signed AAB from **Android release bundle** run `34048176925`. |
-| 1.0.8 | 9 | internal draft uploaded 2026-09-07 | Production candidate built by **Android release bundle** run `34150101419` from merge `a86601c`. |
-| 1.0.9 | 10 | next build | Reserved after Play accepted versionCode 9; no code-10 AAB has been built. |
+| 1.0.8 | 9 | available to internal testers, verified 2026-09-10 | Built by **Android release bundle** run `34150101419` from merge `a86601c`. |
+| 1.0.9 | 10 | production change saved 2026-09-10; not submitted for review | Locally signed AAB accepted by Play. Chalk launch/system-bar colors. See the [mobile audit](../../docs/design/2026-09-10-mobile-audit.md) for the artifact hash and outstanding device, billing, and web-deployment gates. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
 cross-origin redirect when verifying Digital Asset Links, so a bundle built

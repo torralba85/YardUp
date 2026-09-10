@@ -27,6 +27,8 @@ test.describe("mobile studio journey", () => {
     await page.getByRole("radio", { name: /2 bedroom/i }).click();
     await page.getByRole("radio", { name: /stucco/i }).click();
     await page.getByRole("button", { name: /check feasibility/i }).click();
+    await expect(page.getByRole("main")).toBeFocused();
+    await expect.poll(() => page.getByRole("main").evaluate((el) => el.scrollTop)).toBe(0);
 
     // Reveal 4 · Check — the plain-language verdict leads, then the
     // verification items follow it.
@@ -42,6 +44,24 @@ test.describe("mobile studio journey", () => {
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /save scenario/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /share link/i })).toBeVisible();
+  });
+
+  test("progress targets stay labeled and at least 44px at narrow widths", async ({ page }) => {
+    await page.goto("/studio");
+    for (const width of [320, 390, 440, 768]) {
+      await page.setViewportSize({ width, height: 844 });
+      const rail = page.getByRole("navigation", { name: "Journey progress" });
+      const buttons = rail.locator("ol button");
+      await expect(buttons).toHaveCount(5);
+      for (const button of await buttons.all()) {
+        const box = await button.boundingBox();
+        expect(box?.width).toBeGreaterThanOrEqual(44);
+        expect(box?.height).toBeGreaterThanOrEqual(44);
+      }
+      await expect(rail.getByText("Find", { exact: true })).toBeVisible();
+      await expect(rail.getByText("Act", { exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
   });
 
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {

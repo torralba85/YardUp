@@ -8,6 +8,12 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Changed
 
+- Mobile journey progress now keeps all five labels visible with at least 44px
+  touch targets. Moving to another step resets scroll and focuses its named main
+  region, while changes within the same step preserve scroll.
+- Android launch and system-bar colors now match the A LOT MORE chalk palette.
+  Version 1.0.9/code 10 is saved in Play production, awaiting review submission;
+  the mobile web changes require their own deployment.
 - Production deploys now push `app`, `api`, `apiAi`, and `apiStripe` as a single
   Firebase operation instead of four sequential ones, so the functions payload
   uploads once and Firebase updates them concurrently. The four have no ordering
