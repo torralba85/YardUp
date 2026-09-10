@@ -16,58 +16,23 @@ import { parseCoordinateParams } from "@/lib/server/request-validation";
 
 const REGRID_API = "https://app.regrid.com/api/v2/parcels/point";
 const TIMEOUT_MS = 5000;
-
-/** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
-
-/** Rough R-1 fallback setbacks used when Regrid has no zoning data. */
 const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
 
-/**
- * GET /api/parcel?lat={lat}&lng={lng}
- *
- * Resolves parcel data through the configured provider preference: paid
- * Regrid record → free public county/statewide GIS parcel → the nearest
- * preset's typical dimensions. Returns a LiveParcelData object.
- *
- * The free US Census geocoder resolves state/ZIP/county alongside the chain
- * for every path, so financials key off the address's own geography even when
- * no parcel provider answers. Responses are cached for an hour.
- */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-
-  const limited = checkRateLimit(request, {
-    limit: 60,
-    namespace: "parcel",
-    windowMs: 60_000,
-  });
+  const limited = checkRateLimit(request, { limit: 60, namespace: "parcel", windowMs: 60_000 });
   if (limited) return limited;
 
   const coordinates = parseCoordinateParams(searchParams);
   if (coordinates instanceof NextResponse) return coordinates;
   const { lat, lng } = coordinates;
   const requestedAddress = sanitizeAddress(searchParams.get("address"));
-
-  // Kicked off before the parcel providers so the two run concurrently: the
-  // geocoder is free and keyless, so the only cost of always asking is one
-  // parallel request that never extends the critical path.
-  const censusLocation = fetchCensusLocation({
-    lat,
-    lng,
-    address: requestedAddress,
-  });
+  const censusLocation = fetchCensusLocation({ lat, lng, address: requestedAddress });
 
   const regridKey = process.env.REGRID_API_KEY;
   if (!regridKey) {
-    // Keyless demo: no Regrid configured. Free county/statewide GIS still
-    // gives real geometry for a covered address before presets are used.
-    return await successWithoutRegrid(
-      lat,
-      lng,
-      requestedAddress,
-      censusLocation,
-    );
+    return await successWithoutRegrid(lat, lng, requestedAddress, censusLocation);
   }
 
   try {
@@ -79,7 +44,6 @@ export async function GET(request: NextRequest) {
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
     let regridRes: Response;
     try {
       regridRes = await fetch(url.toString(), { signal: controller.signal });
@@ -90,72 +54,35 @@ export async function GET(request: NextRequest) {
     if (regridRes.status === 429) {
       return NextResponse.json(
         { error: "Rate limit reached — please try again shortly" },
-        {
-          status: 503,
-          headers: { "Retry-After": "10" },
-        },
+        { status: 503, headers: { "Retry-After": "10" } },
       );
     }
-
-    if (!regridRes.ok) {
-      throw new Error(`Regrid returned ${regridRes.status}`);
-    }
+    if (!regridRes.ok) throw new Error(`Regrid returned ${regridRes.status}`);
 
     const json = await regridRes.json();
     const parcels = json?.parcels?.features ?? json?.results?.features ?? [];
     if (parcels.length === 0) {
-      return await successWithoutRegrid(
-        lat,
-        lng,
-        requestedAddress,
-        censusLocation,
-      );
+      return await successWithoutRegrid(lat, lng, requestedAddress, censusLocation);
     }
 
     const feature = parcels[0];
     const fields = feature?.properties?.fields ?? {};
     const geometry = feature?.geometry ?? null;
-    const boundaryGeoJson =
-      geometry?.type === "Polygon" ? geometry : null;
-
-    const lotAreaSqft = fields.ll_gisacre
-      ? Math.round(fields.ll_gisacre * 43560)
-      : 5000;
-
+    const boundaryGeoJson = geometry?.type === "Polygon" ? geometry : null;
+    const lotAreaSqft = fields.ll_gisacre ? Math.round(fields.ll_gisacre * 43560) : 5000;
     const regridFootprint = positiveNumber(fields.ll_bldg_footprint_sqft);
     const structuresPromise =
       regridFootprint === null && boundaryGeoJson
         ? fetchBuildingFootprint(boundaryGeoJson)
         : Promise.resolve(null);
-
-    // Prefer the real parcel shape's oriented bounding box (latitude-corrected,
-    // rotation-proof); otherwise estimate proportions from lot area so the 3D
-    // lot still responds to the address instead of assuming a 40 ft width.
     const { lotWidth, lotLength } =
-      orientedLotDimensions(
-        geometry?.type === "Polygon" ? geometry : null,
-        lotAreaSqft,
-      ) ?? estimateLotDimensions(lotAreaSqft);
-
-    // Regrid's standard parcel schema does not include zoning setbacks, so
-    // this resolves to DEFAULT_SETBACKS. Kept as a single seam so a future
-    // zoning data source can populate setbacks without touching the mapper.
+      orientedLotDimensions(boundaryGeoJson, lotAreaSqft) ?? estimateLotDimensions(lotAreaSqft);
     const setbacks = parseSetbacks(fields.zoning_setbacks);
-
-    // Financial figures must resolve to the address's own market. Regrid's
-    // own location fields win when populated — they are parcel-level — with
-    // the Census geocoder filling the gaps its standard schema leaves.
-    const [census, structures] = await Promise.all([
-      censusLocation,
-      structuresPromise,
-    ]);
+    const [census, structures] = await Promise.all([censusLocation, structuresPromise]);
     const loc = mergeLocations(extractRegridLocation(fields), census);
     const marketData = await resolveMarketData({ lat, lng, ...loc });
     const existingHouseSqft =
-      regridFootprint ??
-      positiveNumber(structures?.totalSqft) ??
-      positiveNumber(fields.sqft) ??
-      0;
+      regridFootprint ?? positiveNumber(structures?.totalSqft) ?? positiveNumber(fields.sqft) ?? 0;
 
     const parcelData: LiveParcelData = {
       address: formatAddress(fields, requestedAddress, lat, lng),
@@ -182,25 +109,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("[/api/parcel] Regrid fetch failed:", err);
-    return await successWithoutRegrid(
-      lat,
-      lng,
-      requestedAddress,
-      censusLocation,
-    );
+    return await successWithoutRegrid(lat, lng, requestedAddress, censusLocation);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Everything below Regrid in the chain: try the free public county/statewide
- * GIS services for real geometry, then settle for the nearest preset. Shared
- * by the no-key, no-match, and fetch-failure paths so all three degrade the
- * same way.
- */
 async function successWithoutRegrid(
   lat: number,
   lng: number,
@@ -212,21 +124,12 @@ async function successWithoutRegrid(
     censusLocation,
   ]);
 
-  // A GIS hit without a usable area cannot describe a lot, so it falls
-  // through to the preset rather than yielding a zero-area parcel.
   if (countyParcel && (countyParcel.lotAreaSqft ?? 0) > 0) {
-    return await countyGisResponse(
-      lat,
-      lng,
-      requestedAddress,
-      countyParcel,
-      census,
-    );
+    return await countyGisResponse(lat, lng, requestedAddress, countyParcel, census);
   }
   return await presetFallbackResponse(lat, lng, requestedAddress, census);
 }
 
-/** Build a LiveParcelData from a free county/statewide GIS parcel polygon. */
 async function countyGisResponse(
   lat: number,
   lng: number,
@@ -234,21 +137,15 @@ async function countyGisResponse(
   countyParcel: NonNullable<Awaited<ReturnType<typeof fetchCountyParcel>>>,
   census: CensusLocation | null,
 ): Promise<NextResponse> {
-  const preset = nearestPreset(lat, lng);
-  const location = formatFallbackLocation(requestedAddress, preset);
   const lotArea = countyParcel.lotAreaSqft as number;
   const { lotWidth, lotLength } =
-    orientedLotDimensions(countyParcel.polygon, lotArea) ??
-    estimateLotDimensions(lotArea);
-
-  // The Census geocoder is the authority here, not the parcel layer: GIS
-  // publishers spell their own county inconsistently ("NewYork", "DANE"),
-  // and a spelling the market index cannot key on silently downgrades the
-  // financials to national averages. The layer's name is only a backstop.
+    orientedLotDimensions(countyParcel.polygon, lotArea) ?? estimateLotDimensions(lotArea);
+  const location = formatResolvedLocation(requestedAddress, census, lat, lng);
+  const gisState = inferStateFromCountySource(countyParcel.county);
   const loc = {
-    state: census?.state ?? "",
+    state: census?.state || gisState,
     zip: census?.zip ?? "",
-    county: census?.county || countyParcel.county,
+    county: census?.county || stripStatewideLabel(countyParcel.county),
   };
   const [marketData, structures] = await Promise.all([
     resolveMarketData({ lat, lng, ...loc }),
@@ -261,9 +158,6 @@ async function countyGisResponse(
     lotArea,
     lotWidth,
     lotLength,
-    // County parcel layers describe land rather than structures. The free
-    // USA Structures layer fills this only when it finds a positive footprint
-    // whose published centroid lies inside the parcel; zero remains unknown.
     existingHouseSqft: positiveNumber(structures?.totalSqft) ?? 0,
     maxLotCoveragePercent: deriveMaxCoverage(undefined),
     setbacks: DEFAULT_SETBACKS,
@@ -289,18 +183,12 @@ async function presetFallbackResponse(
   census: CensusLocation | null,
 ): Promise<NextResponse> {
   const preset = nearestPreset(lat, lng);
-  const location = formatFallbackLocation(requestedAddress, preset);
-  // The preset only lends typical *dimensions*. Financial market data must
-  // still resolve from the searched address's own geography — a California
-  // address must never inherit Seattle/Portland/Austin economics just
-  // because the parcel lookup fell back. The Census geocoder resolves that
-  // geography directly; parsing the address string is the last resort.
+  const location = requestedAddress
+    ? formatResolvedLocation(requestedAddress, census, lat, lng)
+    : { address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, city: censusCityLabel(census) };
   const area = requestedAddress ? parseParcelCityState(location.city) : null;
   const parsedZip = requestedAddress ? extractZip(requestedAddress) : "";
-  const loc = mergeLocations(
-    { state: area?.state ?? "", zip: parsedZip },
-    census,
-  );
+  const loc = mergeLocations({ state: area?.state ?? "", zip: parsedZip }, census);
   const marketData = await resolveMarketData({ lat, lng, ...loc });
   const fallback: LiveParcelData = {
     address: location.address,
@@ -326,13 +214,6 @@ async function presetFallbackResponse(
   });
 }
 
-/**
- * Overlay a Census geocoder result onto a provider's own location fields,
- * per field: the provider wins wherever it actually has a value, and the
- * geocoder fills the rest. Neither source is complete on its own — Regrid's
- * standard schema often omits all three, and the Census coordinate endpoint
- * never returns a ZIP.
- */
 function mergeLocations(
   primary: { state: string; zip: string; county?: string },
   census: CensusLocation | null,
@@ -341,6 +222,54 @@ function mergeLocations(
     state: primary.state || census?.state || "",
     zip: primary.zip || census?.zip || "",
     county: primary.county || census?.county,
+  };
+}
+
+function inferStateFromCountySource(county: string): string {
+  const match = county.match(/^(California|Washington|New York|Ohio|Wisconsin|Florida|Vermont|Nevada) \(statewide\)$/);
+  if (!match) return "";
+  const map: Record<string, string> = {
+    California: "CA",
+    Washington: "WA",
+    "New York": "NY",
+    Ohio: "OH",
+    Wisconsin: "WI",
+    Florida: "FL",
+    Vermont: "VT",
+    Nevada: "NV",
+  };
+  return map[match[1]] ?? "";
+}
+
+function stripStatewideLabel(county: string): string {
+  return county.endsWith(" (statewide)") ? "" : county;
+}
+
+function censusCityLabel(census: CensusLocation | null): string {
+  return [census?.county ? `${census.county} County` : "", census?.state ?? "", census?.zip ?? ""]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function formatResolvedLocation(
+  requestedAddress: string | undefined,
+  census: CensusLocation | null,
+  lat: number,
+  lng: number,
+): { address: string; city: string } {
+  if (!requestedAddress) {
+    return {
+      address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+      city: censusCityLabel(census),
+    };
+  }
+  const [street, ...rest] = requestedAddress
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return {
+    address: street || requestedAddress,
+    city: rest.join(", ") || censusCityLabel(census),
   };
 }
 
@@ -360,41 +289,12 @@ function sanitizeAddress(value: string | null): string | undefined {
   return trimmed.slice(0, 240);
 }
 
-function formatFallbackLocation(
-  requestedAddress: string | undefined,
-  preset: (typeof parcelPresets)[number],
-): { address: string; city: string } {
-  if (!requestedAddress) {
-    return { address: preset.address, city: preset.city };
-  }
-
-  const [street, ...rest] = requestedAddress
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  if (!street) {
-    return { address: requestedAddress, city: preset.city };
-  }
-
-  return {
-    address: street,
-    city: rest.join(", ") || preset.city,
-  };
-}
-
-/**
- * Pick the closest preset by rough Euclidean lat/lng distance.
- * (Good enough for coarse region matching; not geodesically precise.)
- */
 function nearestPreset(lat: number, lng: number) {
-  // Known approximate centers for our presets
   const centers: { id: string; lat: number; lng: number }[] = [
-    { id: "oak-street", lat: 47.68, lng: -122.29 },   // Seattle
-    { id: "corner-lot", lat: 45.54, lng: -122.63 },   // Portland
-    { id: "compact-lot", lat: 30.25, lng: -97.75 },   // Austin
+    { id: "oak-street", lat: 47.68, lng: -122.29 },
+    { id: "corner-lot", lat: 45.54, lng: -122.63 },
+    { id: "compact-lot", lat: 30.25, lng: -97.75 },
   ];
-
   let bestId = "oak-street";
   let bestDist = Infinity;
   for (const c of centers) {
@@ -429,35 +329,25 @@ function deriveMaxCoverage(zoning?: string): number {
 }
 
 function formatAddress(
-  fields: Record<string, string | number | undefined>,
+  fields: Record<string, unknown>,
   requestedAddress: string | undefined,
   lat: number,
   lng: number,
 ): string {
-  // Regrid returns the full street address in the `saddress` (Situs Address) or fallback `address` field.
-  // Fall back to the searched address, then to coordinates, if it's missing.
-  const address = fields.saddress ?? fields.address;
-  if (address) return String(address).trim();
-  const street = requestedAddress?.split(",")[0]?.trim();
-  if (street) return street;
+  const provider = String(fields.address ?? fields.saddr ?? "").trim();
+  if (provider) return provider;
+  if (requestedAddress) return requestedAddress.split(",")[0]?.trim() || requestedAddress;
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 
-function cityFromRequestedAddress(requestedAddress: string | undefined): string {
-  if (!requestedAddress) return "";
-  const parts = requestedAddress
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return parts.slice(1).join(", ");
+function formatCity(fields: Record<string, unknown>): string {
+  const city = String(fields.city ?? fields.scity ?? "").trim();
+  const state = String(fields.state2 ?? fields.state ?? "").trim();
+  const zip = String(fields.szip5 ?? fields.zip ?? "").trim();
+  return [city, state, zip].filter(Boolean).join(", ").replace(", ,", ",");
 }
 
-function formatCity(
-  fields: Record<string, string | number | undefined>,
-): string {
-  const city = fields.scity ?? fields.city ?? "";
-  const state = fields.state2 ?? fields.state ?? "";
-  const zip = fields.szip5 ?? fields.zip ?? "";
-  if (city && state) return `${city}, ${state} ${zip}`.trim();
-  return String(city || "");
+function cityFromRequestedAddress(requestedAddress?: string): string {
+  if (!requestedAddress) return "";
+  return requestedAddress.split(",").slice(1).map((part) => part.trim()).filter(Boolean).join(", ");
 }
