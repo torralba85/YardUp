@@ -10,7 +10,11 @@ import {
 import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
 import { fetchCountyParcel } from "@/lib/server/county-parcels";
 import { resolveMarketData } from "@/lib/server/market/resolve-market";
-import { extractRegridLocation } from "@/lib/server/parcel-location";
+import {
+  extractRegridLocation,
+  inferStateFromCountySource,
+  stripStatewideLabel,
+} from "@/lib/server/parcel-location";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
@@ -234,21 +238,27 @@ async function countyGisResponse(
   countyParcel: NonNullable<Awaited<ReturnType<typeof fetchCountyParcel>>>,
   census: CensusLocation | null,
 ): Promise<NextResponse> {
-  const preset = nearestPreset(lat, lng);
-  const location = formatFallbackLocation(requestedAddress, preset);
   const lotArea = countyParcel.lotAreaSqft as number;
   const { lotWidth, lotLength } =
     orientedLotDimensions(countyParcel.polygon, lotArea) ??
     estimateLotDimensions(lotArea);
 
+  // This is a real parcel at real coordinates, so it must never borrow the
+  // nearest demo preset's street address: labelling a Fresno lot "1421 NW
+  // Oak Street, Seattle" reads as a wrong answer rather than a fallback.
+  const location = formatResolvedLocation(requestedAddress, census, lat, lng);
+
   // The Census geocoder is the authority here, not the parcel layer: GIS
   // publishers spell their own county inconsistently ("NewYork", "DANE"),
   // and a spelling the market index cannot key on silently downgrades the
-  // financials to national averages. The layer's name is only a backstop.
+  // financials to national averages. The layer's name is only a backstop —
+  // and a statewide layer's label ("Ohio (statewide)") names no county at
+  // all, so it is dropped rather than passed to the market index. The layer
+  // identity still carries a usable state when Census is unavailable.
   const loc = {
-    state: census?.state ?? "",
+    state: census?.state || inferStateFromCountySource(countyParcel.county),
     zip: census?.zip ?? "",
-    county: census?.county || countyParcel.county,
+    county: census?.county || stripStatewideLabel(countyParcel.county),
   };
   const [marketData, structures] = await Promise.all([
     resolveMarketData({ lat, lng, ...loc }),
@@ -289,12 +299,15 @@ async function presetFallbackResponse(
   census: CensusLocation | null,
 ): Promise<NextResponse> {
   const preset = nearestPreset(lat, lng);
-  const location = formatFallbackLocation(requestedAddress, preset);
-  // The preset only lends typical *dimensions*. Financial market data must
-  // still resolve from the searched address's own geography — a California
-  // address must never inherit Seattle/Portland/Austin economics just
-  // because the parcel lookup fell back. The Census geocoder resolves that
-  // geography directly; parsing the address string is the last resort.
+  // The preset only lends typical *dimensions*, never its identity: a
+  // coordinate-only lookup reports its own coordinates and whatever geography
+  // the Census geocoder resolved, not the preset's street address.
+  const location = formatResolvedLocation(requestedAddress, census, lat, lng);
+  // Financial market data must still resolve from the searched address's own
+  // geography — a California address must never inherit Seattle/Portland/
+  // Austin economics just because the parcel lookup fell back. The Census
+  // geocoder resolves that geography directly; parsing the address string is
+  // the last resort.
   const area = requestedAddress ? parseParcelCityState(location.city) : null;
   const parsedZip = requestedAddress ? extractZip(requestedAddress) : "";
   const loc = mergeLocations(
@@ -360,12 +373,38 @@ function sanitizeAddress(value: string | null): string | undefined {
   return trimmed.slice(0, 240);
 }
 
-function formatFallbackLocation(
+/**
+ * Best available `"City, ST ZIP"` label from the Census geocoder alone, for
+ * the paths that have no address string to split. The coordinate endpoint
+ * returns no place name, so the county stands in for the city.
+ */
+function censusCityLabel(census: CensusLocation | null): string {
+  const county = census?.county ? `${census.county} County` : "";
+  const stateZip = [census?.state ?? "", census?.zip ?? ""]
+    .filter(Boolean)
+    .join(" ");
+  return [county, stateZip].filter(Boolean).join(", ");
+}
+
+/**
+ * Label a parcel from what was actually resolved — the searched address, else
+ * the coordinates themselves — never from a demo preset.
+ *
+ * A preset lends typical lot *dimensions* to a fallback response. Lending its
+ * address too would report a Fresno lookup as a Seattle street address, which
+ * a caller cannot tell apart from a real answer.
+ */
+function formatResolvedLocation(
   requestedAddress: string | undefined,
-  preset: (typeof parcelPresets)[number],
+  census: CensusLocation | null,
+  lat: number,
+  lng: number,
 ): { address: string; city: string } {
   if (!requestedAddress) {
-    return { address: preset.address, city: preset.city };
+    return {
+      address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+      city: censusCityLabel(census),
+    };
   }
 
   const [street, ...rest] = requestedAddress
@@ -374,14 +413,15 @@ function formatFallbackLocation(
     .filter(Boolean);
 
   if (!street) {
-    return { address: requestedAddress, city: preset.city };
+    return { address: requestedAddress, city: censusCityLabel(census) };
   }
 
   return {
     address: street,
-    city: rest.join(", ") || preset.city,
+    city: rest.join(", ") || censusCityLabel(census),
   };
 }
+
 
 /**
  * Pick the closest preset by rough Euclidean lat/lng distance.
