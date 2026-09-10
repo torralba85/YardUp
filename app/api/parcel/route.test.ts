@@ -227,6 +227,34 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.lng).toBe(-122.31);
   });
 
+  it("prefers Regrid's situs fields over the mailing-address fields", async () => {
+    // `saddress`/`scity` describe the property; `address`/`city` can carry the
+    // owner's mailing address, which belongs to a different lot entirely.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({
+          ll_gisacre: 0.25,
+          zoning: "R-1",
+          saddress: "123 Oak St",
+          address: "PO Box 4120",
+          scity: "Seattle",
+          city: "Bellevue",
+          state2: "WA",
+          state: "OR",
+          szip5: "98105",
+          zip: "97201",
+        }),
+      ),
+    );
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.address).toBe("123 Oak St");
+    expect(data.city).toBe("Seattle, WA 98105");
+  });
+
   it("falls back to coordinates when the address field is missing", async () => {
     vi.stubGlobal(
       "fetch",
