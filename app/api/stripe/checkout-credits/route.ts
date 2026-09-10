@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
@@ -15,10 +16,23 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const pack = body?.pack;
+  const checkoutAttemptId =
+    body?.checkoutAttemptId === undefined
+      ? randomUUID()
+      : typeof body.checkoutAttemptId === "string"
+        ? body.checkoutAttemptId.trim()
+        : "";
 
   if (!isCreditPackSize(pack)) {
     return NextResponse.json(
       { error: "Invalid credit pack selected" },
+      { status: 400 },
+    );
+  }
+
+  if (!checkoutAttemptId || checkoutAttemptId.length > 100) {
+    return NextResponse.json(
+      { error: "A valid checkoutAttemptId is required" },
       { status: 400 },
     );
   }
@@ -123,6 +137,7 @@ export async function POST(request: NextRequest) {
           "credit_pack",
           builderId,
           String(pack),
+          checkoutAttemptId,
         ),
       },
     );
