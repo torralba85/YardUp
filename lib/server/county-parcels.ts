@@ -151,7 +151,15 @@ export interface CountyParcelResult {
    * later rings are holes.
    */
   polygon: GeoJsonPolygon;
-  /** Assessor/GIS area when available, else hole-aware area of every part. */
+  /**
+   * Area of {@link polygon} — the same scope downstream measures against.
+   *
+   * A single-part feature prefers the assessor/GIS area field, which is more
+   * authoritative than anything derivable from the published geometry. A
+   * multipart feature falls back to the returned part's own hole-aware area:
+   * the provider's field covers every part, so using it here would overstate
+   * the lot that {@link polygon} actually describes.
+   */
   lotAreaSqft: number | null;
 }
 
@@ -163,7 +171,10 @@ export interface CountyParcelResult {
  *
  * Returns null on any failure: GIS outages must never break the parcel route.
  * The whole walk shares a single {@link TIMEOUT_MS} budget, so adding sources
- * widens coverage without widening the caller's worst-case latency.
+ * widens coverage without widening the caller's worst-case latency. Each
+ * candidate gets a bounded share of what is left, so a hanging county
+ * endpoint cannot spend the entire deadline and starve the statewide
+ * fallback behind it.
  */
 export async function fetchCountyParcel(
   lat: number,
@@ -179,10 +190,14 @@ export async function fetchCountyParcel(
   if (candidates.length === 0) return null;
 
   const deadline = Date.now() + TIMEOUT_MS;
-  for (const source of candidates) {
-    const budget = deadline - Date.now();
-    if (budget <= 0) break;
-    const result = await queryGisSource(source, lat, lng, budget);
+  for (let index = 0; index < candidates.length; index++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    // Split what is left evenly across the candidates still to try, so the
+    // first source cannot consume the whole budget. A source that answers
+    // early hands its unused share to the ones behind it.
+    const budget = Math.max(1, Math.floor(remaining / (candidates.length - index)));
+    const result = await queryGisSource(candidates[index], lat, lng, budget);
     if (result) return result;
   }
   return null;
@@ -229,10 +244,15 @@ async function queryGisSource(
 
     // Try both field containers: a server can send an empty `properties`
     // object alongside populated Esri-style `attributes`.
-    const lotAreaSqft =
+    const providerArea =
       readAreaField(best.feature.properties, source) ??
-      readAreaField(best.feature.attributes, source) ??
-      roundedPositive(best.totalAreaSqft);
+      readAreaField(best.feature.attributes, source);
+    // The provider's field covers the whole feature. Only a single-part
+    // feature shares its scope with the polygon returned above, so a
+    // multipart feature must report the selected part's own area instead.
+    const selectedArea = roundedPositive(best.selectedAreaSqft);
+    const lotAreaSqft =
+      best.partCount === 1 ? providerArea ?? selectedArea : selectedArea;
 
     const county =
       readCountyField(best.feature.properties, source) ??
@@ -256,8 +276,11 @@ interface RawFeature {
 interface ScoredFeature {
   feature: RawFeature;
   polygon: GeoJsonPolygon;
-  totalAreaSqft: number;
+  /** Hole-aware area of {@link polygon} alone, not of every part. */
+  selectedAreaSqft: number;
   containsPoint: boolean;
+  /** Parts the feature carried, so callers can tell multipart from single. */
+  partCount: number;
 }
 
 /**
@@ -265,6 +288,10 @@ interface ScoredFeature {
  * one point, and a feature can be multipart. Prefer the feature whose
  * geometry actually contains the point, then the largest; within a feature,
  * return the part containing the point (largest part as fallback).
+ *
+ * Ranking compares the part each feature would actually return rather than
+ * its total across parts, so a feature is never chosen for area the caller
+ * will not receive.
  */
 function pickBestFeature(
   features: unknown[],
@@ -277,24 +304,27 @@ function pickBestFeature(
     const feature = raw as RawFeature;
     const parts = normalizeParts(feature.geometry);
     if (parts.length === 0) continue;
-    const totalAreaSqft = parts.reduce(
-      (sum, part) => sum + partAreaSqft(part),
-      0,
-    );
     const containing = parts.find((part) =>
       polygonContainsPoint(part, lng, lat),
     );
     const polygon =
       containing ??
       parts.reduce((a, b) => (partAreaSqft(b) > partAreaSqft(a) ? b : a));
+    const selectedAreaSqft = partAreaSqft(polygon);
     const containsPoint = containing !== undefined;
     const beatsBest =
       !best ||
       (containsPoint && !best.containsPoint) ||
       (containsPoint === best.containsPoint &&
-        totalAreaSqft > best.totalAreaSqft);
+        selectedAreaSqft > best.selectedAreaSqft);
     if (beatsBest) {
-      best = { feature, polygon, totalAreaSqft, containsPoint };
+      best = {
+        feature,
+        polygon,
+        selectedAreaSqft,
+        containsPoint,
+        partCount: parts.length,
+      };
     }
   }
   return best;

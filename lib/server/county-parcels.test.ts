@@ -57,6 +57,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe("fetchCountyParcel — routing", () => {
@@ -113,6 +114,39 @@ describe("fetchCountyParcel — routing", () => {
     );
     expect((await fetchCountyParcel(TRAVIS_POINT.lat, TRAVIS_POINT.lng))!.county).toBe("Travis");
   });
+
+  it("reserves budget for the statewide fallback when the county service hangs", async () => {
+    vi.useFakeTimers();
+    const washington = COUNTY_GIS_SOURCES.find(
+      (source) => source.county === "Washington (statewide)",
+    )!;
+    // King never answers. Before the budget was shared, its request held the
+    // whole 5s deadline and Washington was never tried at all.
+    const fetchSpy = vi.fn((input: unknown, init?: RequestInit) => {
+      if (String(input).startsWith(washington.queryUrl)) {
+        return Promise.resolve(geojsonResponse(SEATTLE_POLYGON));
+      }
+      return new Promise((_, reject) => {
+        init?.signal?.addEventListener("abort", () =>
+          reject(new DOMException("Aborted", "AbortError")),
+        );
+      });
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const pending = fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    // Past King's half of the deadline, but well inside the full 5s.
+    await vi.advanceTimersByTimeAsync(2600);
+    const result = await pending;
+
+    expect(result).not.toBeNull();
+    expect(result!.county).toBe("Washington (statewide)");
+    expect(
+      fetchSpy.mock.calls.some((call) =>
+        String(call[0]).startsWith(washington.queryUrl),
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("fetchCountyParcel — response parsing", () => {
@@ -148,7 +182,7 @@ describe("fetchCountyParcel — response parsing", () => {
     expect(result!.polygon.coordinates).toEqual(SEATTLE_POLYGON.coordinates);
   });
 
-  it("returns the point-containing part of a MultiPolygon and sums area over all parts", async () => {
+  it("scopes multipart area to the part it returns, not the sum of all parts", async () => {
     // A second split-parcel part ~250 ft west of the query point, listed
     // first so selection cannot pass by luck of array order.
     const multi = {
@@ -158,9 +192,40 @@ describe("fetchCountyParcel — response parsing", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(multi)));
     const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
     expect(result!.polygon.coordinates).toEqual(SEATTLE_POLYGON.coordinates);
-    // Two ~4,900 sq ft parts → computed fallback area must cover both.
-    expect(result!.lotAreaSqft).toBeGreaterThan(8000);
-    expect(result!.lotAreaSqft).toBeLessThan(12000);
+    // Downstream measures building coverage against the polygon returned
+    // here, so the area must describe that one ~4,900 sq ft part alone —
+    // summing both parts would understate how much of the lot is built on.
+    expect(result!.lotAreaSqft).toBeGreaterThan(3000);
+    expect(result!.lotAreaSqft).toBeLessThan(7000);
+  });
+
+  it("ignores a whole-feature area field on a multipart parcel", async () => {
+    // The provider's field covers both parts; only the returned part counts.
+    const multi = {
+      type: "MultiPolygon",
+      coordinates: [FAR_PART.coordinates, SEATTLE_POLYGON.coordinates],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(geojsonResponse(multi, { Shape__Area: 99999 })),
+    );
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.polygon.coordinates).toEqual(SEATTLE_POLYGON.coordinates);
+    expect(result!.lotAreaSqft).toBeGreaterThan(3000);
+    expect(result!.lotAreaSqft).toBeLessThan(7000);
+  });
+
+  it("still prefers the provider's area field on a single-part parcel", async () => {
+    // Single-part features share their scope with the returned polygon, so
+    // the assessor's own number stays more authoritative than the geometry.
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(geojsonResponse(SEATTLE_POLYGON, { Shape__Area: 4051.87 })),
+    );
+    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    expect(result!.lotAreaSqft).toBe(4052);
   });
 
   it("converts Esri JSON rings when the server ignores f=geojson", async () => {
