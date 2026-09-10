@@ -13,6 +13,25 @@ import {
 
 const preset = parcelPresets[0]; // oak-street: 5000 sf, 40×125, setbacks 20/25/5
 
+describe("public GIS data uncertainty", () => {
+  it.each([0, 1000])("keeps unverified rules in review with a %s sf footprint", (existingHouseSqft) => {
+    const parcel = { ...preset, source: "county-gis", zoning: "Unknown", existingHouseSqft,
+      lotArea: 6000, lotWidth: 60, lotLength: 100 };
+    const result = calculateFeasibility(parcel, defaultAduConfig, defaultFinancialAssumptions);
+    const summary = summarizeFeasibility(parcel, result, defaultAduConfig);
+    expect(result.zoningStatus).toBe("Review needed");
+    expect(summary.verdict).toBe("Needs Review");
+    for (const id of ["zoning", "buildable", "coverage", "capacity"]) {
+      expect(summary.constraints.find((item) => item.id === id)?.status).toBe("review");
+    }
+    expect(summary.constraints.find((item) => item.id === "zoning")?.detail).not.toContain("appears permitted");
+    if (existingHouseSqft === 0) {
+      expect(summary.constraints.find((item) => item.id === "coverage")?.value).toBe("Unknown");
+      expect(summary.constraints.find((item) => item.id === "capacity")?.value).toBe("Unknown");
+    }
+  });
+});
+
 /**
  * A compliant baseline result for the default preset + config. Crafted so each
  * verdict branch can be exercised by overriding individual fields, independent

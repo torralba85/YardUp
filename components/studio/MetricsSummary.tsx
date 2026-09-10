@@ -63,8 +63,8 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       key: "lot-coverage",
       icon: Layers3,
       label: "Lot Coverage",
-      value: `${Math.round(result.coveragePercent)}%`,
-      detail: `of ${result.maxCoveragePercent}% max`,
+      value: result.footprintKnown === false ? "Unknown" : `${Math.round(result.coveragePercent)}%`,
+      detail: result.footprintKnown === false ? "Existing footprint unavailable" : `of ${result.maxCoveragePercent}% ${result.regulationsEstimated ? "assumed max" : "max"}`,
       detailMono: true,
       valueClass: `font-sans font-semibold text-xl ${
         result.remainingCapacity < 0 ? "text-lf-brick" : "text-lf-espresso"

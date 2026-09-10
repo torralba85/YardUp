@@ -131,9 +131,65 @@ describe("saved scenario Firestore helpers", () => {
     expect(firestoreMocks.addDoc).toHaveBeenCalledWith(
       { path: "users/user-1/savedScenarios" },
       expect.objectContaining({
-        liveParcel,
+        liveParcel: expect.objectContaining({
+          ...liveParcel,
+          boundaryGeoJson: null,
+        }),
       }),
     );
+  });
+
+  it("encodes GeoJSON rings into Firestore-compatible maps and restores them", async () => {
+    firestoreMocks.addDoc.mockResolvedValue({ id: "scenario-1" });
+    const boundaryGeoJson = {
+      type: "Polygon" as const,
+      coordinates: [
+        [[-122.3, 47.6], [-122.3, 47.61], [-122.29, 47.61], [-122.3, 47.6]],
+        [[-122.299, 47.602], [-122.298, 47.602], [-122.299, 47.602]],
+      ],
+    };
+
+    const saved = await saveSavedScenario("user-1", {
+      name: "Mapped parcel suite",
+      parcelId: "oak-street",
+      liveParcel: { ...liveParcel, boundaryGeoJson },
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    const [, payload] = firestoreMocks.addDoc.mock.calls[0];
+    expect(payload.liveParcel.boundaryGeoJson).toEqual({
+      type: "Polygon",
+      coordinates: [
+        {
+          points: [
+            { lng: -122.3, lat: 47.6 },
+            { lng: -122.3, lat: 47.61 },
+            { lng: -122.29, lat: 47.61 },
+            { lng: -122.3, lat: 47.6 },
+          ],
+        },
+        {
+          points: [
+            { lng: -122.299, lat: 47.602 },
+            { lng: -122.298, lat: 47.602 },
+            { lng: -122.299, lat: 47.602 },
+          ],
+        },
+      ],
+    });
+    expect(saved.liveParcel?.boundaryGeoJson).toEqual(boundaryGeoJson);
+
+    firestoreMocks.getDocs.mockResolvedValue({
+      docs: [
+        {
+          id: "scenario-1",
+          data: () => ({ ...payload, createdAt: "2026-09-07T00:00:00.000Z" }),
+        },
+      ],
+    });
+    const [hydrated] = await fetchSavedScenarios("user-1");
+    expect(hydrated.liveParcel?.boundaryGeoJson).toEqual(boundaryGeoJson);
   });
 
   it("omits liveParcel when saving preset-only scenarios", async () => {
@@ -220,6 +276,14 @@ describe("saved scenario Firestore helpers", () => {
     expect(payload.liveParcel.boundaryGeoJson).not.toHaveProperty("bbox");
     expect(payload.liveParcel.marketData).not.toHaveProperty("vendorDebug");
     expect(Object.keys(payload.liveParcel.boundaryGeoJson)).toEqual(["type", "coordinates"]);
+    expect(payload.liveParcel.boundaryGeoJson.coordinates[0]).toEqual({
+      points: [
+        { lng: 0, lat: 0 },
+        { lng: 0, lat: 1 },
+        { lng: 1, lat: 1 },
+        { lng: 0, lat: 0 },
+      ],
+    });
   });
 
   it("coerces a stored null state or zip rather than letting it through", async () => {

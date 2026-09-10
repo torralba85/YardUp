@@ -1,6 +1,7 @@
 import type { PlacementResult } from "@/lib/placement-validation";
 import { describePlacement } from "@/lib/placement-validation";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
+import type { Parcel } from "@/lib/parcel-types";
 
 /**
  * The one modeled-site-fit readout, shared by the 3D scene and the 2D
@@ -17,14 +18,16 @@ export function SceneStatus({
   placement,
   remainingCapacity,
   isProxy,
+  parcel,
 }: {
   id?: string;
   placement: PlacementResult;
   remainingCapacity: number;
   isProxy: boolean;
+  parcel?: Parcel;
 }) {
   const status = describePlacement(placement);
-  const coverage = getSiteFitCapacityStatus(remainingCapacity);
+  const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel);
   const needsReview = status.tone !== "clear" || coverage.tone !== "ok";
   return (
     <div

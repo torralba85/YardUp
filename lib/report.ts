@@ -10,6 +10,13 @@ import type { Parcel } from "./parcel-types";
 import type { AIProjectBrief } from "./ai-types";
 import { buildableArea } from "./feasibility-verdict";
 import { getSiteFitCapacityStatus } from "./site-fit";
+import { parcelConfidence } from "./parcel-confidence";
+
+function coverageLabel(parcel: Parcel, result: FeasibilityResult): string {
+  const { footprintKnown, regulationsEstimated } = parcelConfidence(parcel);
+  if (!footprintKnown) return "Unknown — existing building footprint unavailable";
+  return `${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% ${regulationsEstimated ? "assumed max" : "max"}`;
+}
 
 /** Inputs needed to render any of the feasibility report formats. */
 export interface ReportInput {
@@ -72,7 +79,6 @@ export function buildReportText({
         "Review the concept with a licensed designer or builder.",
         "Update costs, financing, taxes, and rent assumptions before making decisions.",
       ];
-  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity);
   const lines = [
     "LotFoundry Certificate of Feasibility",
     `No. ${makeCertificateSerial(parcel)} - Recorded ${formatRecordedDate(recordedAt ?? new Date())}`,
@@ -87,10 +93,10 @@ export function buildReportText({
     `Openings included: ${config.includeOpenings ? "Yes" : "No"}`,
     "",
     "Site Fit",
-    `Lot coverage: ${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% max`,
-    `Setbacks: ${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
+    `Lot coverage: ${coverageLabel(parcel, result)}`,
+    `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
     `Buildable area after setbacks: ${buildableArea(parcel).toLocaleString()} sf`,
-    `Remaining coverage capacity: ${siteFitStatus.title}`,
+    `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel).title}`,
     `Zoning status: ${result.zoningStatus}`,
     ...(result.warnings.length > 0
       ? result.warnings.map((warning, index) => `Review note ${index + 1}: ${warning}`)
@@ -149,19 +155,18 @@ export function buildReportHtml({
   recordedAt,
   projectBrief,
 }: ReportInput): string {
-  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity);
   const rows: Array<[string, string]> = [
     ["Property", `${parcel.address}, ${parcel.city}`],
     ["ADU size", `${result.aduSqft.toLocaleString()} sf`],
     ["Roof", roofLabels[config.roof]],
     ["Exterior finish", finishLabels[config.finish]],
-    ["Lot coverage", `${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% max`],
+    ["Lot coverage", coverageLabel(parcel, result)],
     [
-      "Setbacks",
+      parcelConfidence(parcel).regulationsEstimated ? "Setbacks (assumed)" : "Setbacks",
       `${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
     ],
     ["Buildable area after setbacks", `${buildableArea(parcel).toLocaleString()} sf`],
-    ["Remaining coverage capacity", siteFitStatus.title],
+    ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel).title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],
@@ -615,13 +620,14 @@ export function buildReportCsv({ parcel, config, result, projectBrief }: ReportI
     ["ADU Size (sf)", String(result.aduSqft)],
     ["Roof", roofLabels[config.roof]],
     ["Exterior Finish", finishLabels[config.finish]],
-    ["Lot Coverage (%)", result.coveragePercent.toFixed(1)],
+    ["Lot Coverage (%)", parcelConfidence(parcel).footprintKnown ? result.coveragePercent.toFixed(1) : "Unknown"],
     ["Max Coverage (%)", String(result.maxCoveragePercent)],
     ["Front Setback (ft)", String(parcel.setbacks.front)],
     ["Rear Setback (ft)", String(parcel.setbacks.rear)],
     ["Side Setback (ft)", String(parcel.setbacks.side)],
     ["Buildable Area After Setbacks (sf)", String(buildableArea(parcel))],
-    ["Remaining Coverage Capacity (sf)", String(result.remainingCapacity)],
+    ["Remaining Coverage Capacity (sf)", parcelConfidence(parcel).footprintKnown ? String(result.remainingCapacity) : "Unknown"],
+    ...(parcelConfidence(parcel).regulationsEstimated ? [["Regulatory assumptions", "Zoning, setbacks and maximum coverage unverified"] as [string, string]] : []),
     ["Zoning Status", result.zoningStatus],
     ["Build Cost Low ($)", String(result.costLow)],
     ["Build Cost High ($)", String(result.costHigh)],

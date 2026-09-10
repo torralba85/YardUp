@@ -14,8 +14,85 @@ import {
   migrateSavedScenario,
   type SavedScenario,
 } from "./saved-scenarios";
+import type { GeoJsonPolygon, LiveParcelData } from "./parcel-types";
 
 const COLLECTION = "savedScenarios";
+
+type FirestoreBoundaryPolygon = {
+  type: "Polygon";
+  coordinates: Array<{
+    points: Array<{ lng: number; lat: number }>;
+  }>;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Encode GeoJSON rings without nested arrays, which Firestore rejects.
+ * Arrays separated by a map are supported, so each ring and point is stored
+ * as an object while the in-memory model remains ordinary GeoJSON.
+ */
+function encodeBoundaryForFirestore(
+  boundary: GeoJsonPolygon | null,
+): FirestoreBoundaryPolygon | null {
+  if (!boundary) return null;
+  return {
+    type: "Polygon",
+    coordinates: boundary.coordinates.map((ring) => ({
+      points: ring.map(([lng, lat]) => ({ lng, lat })),
+    })),
+  };
+}
+
+function decodeBoundaryFromFirestore(value: unknown): unknown {
+  if (!isRecord(value) || value.type !== "Polygon" || !Array.isArray(value.coordinates)) {
+    return value;
+  }
+
+  // Accept the old empty-coordinate representation and any raw GeoJSON that
+  // may have been imported outside the browser SDK.
+  if (value.coordinates.length === 0 || Array.isArray(value.coordinates[0])) {
+    return value;
+  }
+
+  const rings: number[][][] = [];
+  for (const candidateRing of value.coordinates) {
+    if (!isRecord(candidateRing) || !Array.isArray(candidateRing.points)) return value;
+    const ring: number[][] = [];
+    for (const candidatePoint of candidateRing.points) {
+      if (
+        !isRecord(candidatePoint) ||
+        typeof candidatePoint.lng !== "number" ||
+        !Number.isFinite(candidatePoint.lng) ||
+        typeof candidatePoint.lat !== "number" ||
+        !Number.isFinite(candidatePoint.lat)
+      ) {
+        return value;
+      }
+      ring.push([candidatePoint.lng, candidatePoint.lat]);
+    }
+    rings.push(ring);
+  }
+
+  return { type: "Polygon", coordinates: rings } satisfies GeoJsonPolygon;
+}
+
+function decodeLiveParcelFromFirestore(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  return {
+    ...value,
+    boundaryGeoJson: decodeBoundaryFromFirestore(value.boundaryGeoJson),
+  };
+}
+
+function encodeLiveParcelForFirestore(parcel: LiveParcelData): Record<string, unknown> {
+  return {
+    ...parcel,
+    boundaryGeoJson: encodeBoundaryForFirestore(parcel.boundaryGeoJson),
+  };
+}
 
 function userScenariosRef(uid: string) {
   return collection(db, "users", uid, COLLECTION);
@@ -33,7 +110,9 @@ function firestoreToScenario(
         ? data.createdAt.toDate().toISOString()
         : (data.createdAt as string) || new Date().toISOString(),
     parcelId: (data.parcelId as string) || "",
-    ...(data.liveParcel !== undefined ? { liveParcel: data.liveParcel } : {}),
+    ...(data.liveParcel !== undefined
+      ? { liveParcel: decodeLiveParcelFromFirestore(data.liveParcel) }
+      : {}),
     version: data.version,
     heightConvention: data.heightConvention,
     pose: data.pose,
@@ -91,7 +170,9 @@ export async function saveSavedScenario(
     parcelId: normalized.parcelId,
     config: normalized.config,
     assumptions: normalized.assumptions,
-    ...(normalized.liveParcel ? { liveParcel: normalized.liveParcel } : {}),
+    ...(normalized.liveParcel
+      ? { liveParcel: encodeLiveParcelForFirestore(normalized.liveParcel) }
+      : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };

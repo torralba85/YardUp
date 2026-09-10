@@ -8,13 +8,22 @@
  * against the live services (see the implementation plan, Task 5).
  */
 import type { GeoJsonPolygon } from "@/lib/parcel-types";
-import { polygonAreaSqft } from "@/lib/parcel-geometry";
+import {
+  polygonAreaSqft,
+  polygonContainsPoint,
+  ringContainsPoint,
+} from "@/lib/parcel-geometry";
 
 const TIMEOUT_MS = 5000;
 const SQFT_PER_ACRE = 43560;
 
 export interface CountyGisSource {
-  /** County name without the word "County", e.g. "King". */
+  /**
+   * Label for the coverage area: a county name without the word "County"
+   * (e.g. "King") for county services, or "<State> (statewide)" for the
+   * statewide layers. Used as the result's county only when the service
+   * carries no `countyField` of its own.
+   */
   county: string;
   /** Rough lat/lng bounding box for cheap point-in-county routing. */
   bbox: { minLat: number; maxLat: number; minLng: number; maxLng: number };
@@ -23,8 +32,22 @@ export interface CountyGisSource {
   /** Optional attribute holding lot area; unit says how to convert to sq ft. */
   areaField?: string;
   areaUnit?: "sqft" | "acres";
+  /** Optional attribute holding the county name, for statewide layers. */
+  countyField?: string;
 }
 
+/**
+ * Ordered candidate list: county services first (more current and more
+ * precisely attributed), statewide layers second as the backstop that
+ * covers everywhere the county registry does not reach. `fetchCountyParcel`
+ * walks every bbox match in this order, so a county outage or a coverage
+ * hole falls through to the state instead of ending the lookup.
+ *
+ * Every URL below was verified against the live service with the exact
+ * query grammar this module sends. Statewide coverage is real but uneven —
+ * WA, FL, and NV in particular return no feature for some addresses, which
+ * is why the caller must still tolerate a null result.
+ */
 export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
   {
     county: "King",
@@ -50,6 +73,74 @@ export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
     areaField: "GIS_acres",
     areaUnit: "acres",
   },
+  // --- Statewide backstops -------------------------------------------------
+  {
+    county: "California (statewide)",
+    bbox: { minLat: 32.53, maxLat: 42.01, minLng: -124.41, maxLng: -114.13 },
+    queryUrl:
+      "https://bz1uwWPKUInZBK94.svcs5.arcgis.com/bz1uwWPKUInZBK94/arcgis/rest/services/CA_Statewide_Parcels_Public_view/FeatureServer/0/query",
+    countyField: "COUNTYNAME",
+  },
+  {
+    county: "Washington (statewide)",
+    bbox: { minLat: 45.54, maxLat: 49.0, minLng: -124.85, maxLng: -116.91 },
+    queryUrl:
+      "https://services.arcgis.com/jsIt88o09Q0r1j8h/arcgis/rest/services/Current_Parcels/FeatureServer/0/query",
+  },
+  {
+    county: "New York (statewide)",
+    bbox: { minLat: 40.5, maxLat: 45.02, minLng: -79.76, maxLng: -71.86 },
+    queryUrl:
+      "https://gisservices.its.ny.gov/arcgis/rest/services/NYS_Tax_Parcels_Public/MapServer/1/query",
+    areaField: "SQ_FT",
+    areaUnit: "sqft",
+    countyField: "COUNTY_NAME",
+  },
+  {
+    county: "Ohio (statewide)",
+    bbox: { minLat: 38.4, maxLat: 42.33, minLng: -84.82, maxLng: -80.52 },
+    queryUrl:
+      "https://services2.arcgis.com/MlJ0G8iWUyC7jAmu/arcgis/rest/services/OhioStatewidePacels_full_view/FeatureServer/0/query",
+    areaField: "LandArea",
+    areaUnit: "acres",
+    countyField: "County",
+  },
+  {
+    county: "Wisconsin (statewide)",
+    bbox: { minLat: 42.49, maxLat: 47.31, minLng: -92.89, maxLng: -86.76 },
+    queryUrl:
+      "https://services3.arcgis.com/n6uYoouQZW75n5WI/arcgis/rest/services/Wisconsin_Statewide_Parcels_DB/FeatureServer/0/query",
+    areaField: "GISACRES",
+    areaUnit: "acres",
+    countyField: "CONAME",
+  },
+  {
+    county: "Florida (statewide)",
+    bbox: { minLat: 24.4, maxLat: 31.0, minLng: -87.63, maxLng: -79.97 },
+    queryUrl:
+      "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query",
+    areaField: "LND_SQFOOT",
+    areaUnit: "sqft",
+  },
+  {
+    county: "Vermont (statewide)",
+    bbox: { minLat: 42.73, maxLat: 45.02, minLng: -73.44, maxLng: -71.47 },
+    queryUrl:
+      "https://services1.arcgis.com/BkFxaEFNwHqX3tAw/arcgis/rest/services/FS_VCGI_OPENDATA_Cadastral_VTPARCELS_poly_standardized_parcels_SP_v1/FeatureServer/0/query",
+    areaField: "ACRESGL",
+    areaUnit: "acres",
+  },
+  {
+    // Nevada DOT republishes a 2018 county roll — stale for assessed values
+    // but still the correct lot geometry for all but recent subdivisions.
+    county: "Nevada (statewide)",
+    bbox: { minLat: 35.0, maxLat: 42.0, minLng: -120.01, maxLng: -114.04 },
+    queryUrl:
+      "https://gis.dot.nv.gov/agsphs/rest/services/Reference/Statewide_Parcels/MapServer/0/query",
+    areaField: "Acres",
+    areaUnit: "acres",
+    countyField: "County",
+  },
 ];
 
 export interface CountyParcelResult {
@@ -65,23 +156,45 @@ export interface CountyParcelResult {
 }
 
 /**
- * Look up the parcel polygon containing (lat, lng) from a registered county
- * GIS service. Returns null on any failure — county outages must never break
- * the parcel route.
+ * Look up the parcel polygon containing (lat, lng) from the registered GIS
+ * services, trying every bbox match in registry order — county services
+ * first, then the statewide backstop — so one service's outage or coverage
+ * hole falls through to the next instead of ending the lookup.
+ *
+ * Returns null on any failure: GIS outages must never break the parcel route.
+ * The whole walk shares a single {@link TIMEOUT_MS} budget, so adding sources
+ * widens coverage without widening the caller's worst-case latency.
  */
 export async function fetchCountyParcel(
   lat: number,
   lng: number,
 ): Promise<CountyParcelResult | null> {
-  const source = COUNTY_GIS_SOURCES.find(
+  const candidates = COUNTY_GIS_SOURCES.filter(
     (s) =>
       lat >= s.bbox.minLat &&
       lat <= s.bbox.maxLat &&
       lng >= s.bbox.minLng &&
       lng <= s.bbox.maxLng,
   );
-  if (!source) return null;
+  if (candidates.length === 0) return null;
 
+  const deadline = Date.now() + TIMEOUT_MS;
+  for (const source of candidates) {
+    const budget = deadline - Date.now();
+    if (budget <= 0) break;
+    const result = await queryGisSource(source, lat, lng, budget);
+    if (result) return result;
+  }
+  return null;
+}
+
+/** Query one registered service. Never throws; null means "no parcel here". */
+async function queryGisSource(
+  source: CountyGisSource,
+  lat: number,
+  lng: number,
+  timeoutMs: number,
+): Promise<CountyParcelResult | null> {
   const params = new URLSearchParams({
     f: "geojson",
     geometry: `${lng},${lat}`,
@@ -91,11 +204,12 @@ export async function fetchCountyParcel(
     returnGeometry: "true",
     outSR: "4326",
   });
-  if (source.areaField) params.set("outFields", source.areaField);
+  const outFields = [source.areaField, source.countyField].filter(Boolean);
+  if (outFields.length > 0) params.set("outFields", outFields.join(","));
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     let json: { features?: unknown } | null = null;
     try {
       const res = await fetch(`${source.queryUrl}?${params.toString()}`, {
@@ -103,7 +217,7 @@ export async function fetchCountyParcel(
       });
       if (!res.ok) return null;
       // Keep the abort timer armed through the body read so a stalled stream
-      // trips the same 5s bound as stalled headers.
+      // trips the same bound as stalled headers.
       json = await res.json();
     } finally {
       clearTimeout(timer);
@@ -120,7 +234,12 @@ export async function fetchCountyParcel(
       readAreaField(best.feature.attributes, source) ??
       roundedPositive(best.totalAreaSqft);
 
-    return { county: source.county, polygon: best.polygon, lotAreaSqft };
+    const county =
+      readCountyField(best.feature.properties, source) ??
+      readCountyField(best.feature.attributes, source) ??
+      source.county;
+
+    return { county, polygon: best.polygon, lotAreaSqft };
   } catch {
     return null;
   }
@@ -163,7 +282,7 @@ function pickBestFeature(
       0,
     );
     const containing = parts.find((part) =>
-      partContainsPoint(part, lng, lat),
+      polygonContainsPoint(part, lng, lat),
     );
     const polygon =
       containing ??
@@ -280,38 +399,6 @@ function partAreaSqft(part: GeoJsonPolygon): number {
   return Math.max(outerArea - holeArea, 0);
 }
 
-/** Point-in-part test: inside the exterior ring and outside every hole. */
-function partContainsPoint(
-  part: GeoJsonPolygon,
-  lng: number,
-  lat: number,
-): boolean {
-  const [outer, ...holes] = part.coordinates;
-  return (
-    ringContainsPoint(outer, lng, lat) &&
-    !holes.some((ring) => ringContainsPoint(ring, lng, lat))
-  );
-}
-
-/** Ray-casting point-in-ring test in [lng, lat] coordinates. */
-function ringContainsPoint(
-  ring: number[][],
-  lng: number,
-  lat: number,
-): boolean {
-  if (!Array.isArray(ring) || ring.length < 4) return false;
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i];
-    const [xj, yj] = ring[j];
-    const intersects =
-      yi > lat !== yj > lat &&
-      lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
-    if (intersects) inside = !inside;
-  }
-  return inside;
-}
-
 function readAreaField(
   properties: Record<string, unknown> | undefined,
   source: CountyGisSource,
@@ -330,6 +417,27 @@ function readAreaField(
   return Math.round(
     source.areaUnit === "acres" ? value * SQFT_PER_ACRE : value,
   );
+}
+
+/**
+ * Read a statewide layer's county-name attribute, normalized the way
+ * {@link CountyParcelResult} promises: no "County" suffix, trimmed.
+ *
+ * Rejects all-digit values, because several statewide layers put a FIPS code
+ * in the field a name is expected in. Spelling still varies by publisher
+ * (New York's layer spells its own county "NewYork"), so callers that have an
+ * authoritative county — the Census geocoder — should prefer theirs.
+ */
+function readCountyField(
+  properties: Record<string, unknown> | undefined,
+  source: CountyGisSource,
+): string | null {
+  if (!source.countyField || !properties) return null;
+  const raw = properties[source.countyField];
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed || /^\d+$/.test(trimmed)) return null;
+  return trimmed.replace(/\s+County$/i, "").trim() || null;
 }
 
 function roundedPositive(value: number): number | null {

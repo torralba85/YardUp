@@ -115,7 +115,7 @@ Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Au
 
 | Route | Purpose |
 |---|---|
-| `app/api/parcel/route.ts` | GET: Proxies Regrid parcel data by lat/lng, falls back to preset defaults |
+| `app/api/parcel/route.ts` | GET: Resolves parcel data through Regrid, public county/state GIS, Census geography, and USA Structures footprints, then falls back to preset defaults |
 | `app/api/aerial/route.ts` | GET: Proxies Google Maps Static satellite image by lat/lng, falls back to keyless Esri World Imagery, then an SVG placeholder |
 | `app/api/account/{delete,export}/route.ts` | Authenticated account deletion and data export |
 | `app/api/ai/{project-brief,adu-concept}/route.ts` | Authenticated, rate-limited AI project brief and ADU concept generation |
@@ -234,7 +234,7 @@ _Last updated 2026-07-18 (accessible color roles, mobile release configuration, 
 | Dimension | Status | Notes |
 |---|---|---|
 | Brand/Identity | ✅ Complete | LotFoundry fully integrated; A LOT MORE design system (`docs/design/`) |
-| Core Feasibility Logic | ✅ Complete | 3 presets + live parcel (Regrid); address-specific market rents/costs/opex (HUD FMR index + key-gated live seam, `lib/server/market/`); provenance stamped on every result |
+| Core Feasibility Logic | ✅ Complete | 3 presets + live parcels from Regrid or public county/state GIS, with Census geography and USA Structures footprints; address-specific market rents/costs/opex use the HUD FMR index + key-gated live seam in `lib/server/market/` |
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
 | Guided Spine (P0–P4) | ✅ Landed | Desktop: Lot → Feasibility → Design → Certificate → Builders rail. Mobile: five-reveal journey Find → Earn → Shape → Check → Act (`components/studio/mobile/journey/`, issue #130) — replaced the bottom sheet + first-run wizard |
 | Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; a handed-off address resolves straight into the journey's Earn reveal; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
