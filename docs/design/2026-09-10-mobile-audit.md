@@ -39,3 +39,4 @@ Baseline: master `4251785`, the hosted Studio, and a USB-connected Pixel 10 Pro 
 - Fresh checks: lint and TypeScript passed; `MobileJourney.test.tsx` passed 2 tests; the mobile Playwright suite passed 6 tests with 1 desktop-only test skipped, against the retained production build. `android:validate:live` passed.
 - The earlier session reported a successful production web build and 33 focused browser tests. Those broader checks were not rerun during recovery; no result is claimed for its interrupted full unit run.
 - ADB still sees the authorized Pixel with version 1.0.5/code 6. This is not code-10 device or purchase evidence.
+- Commit `b2af652` records the code-10 source. Subsequent metadata reserves version 1.0.10/code 11 and raises the uploaded-code ceiling to 10. No code-11 artifact was built; the retained AAB is still code 10.

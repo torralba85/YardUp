@@ -45,6 +45,7 @@ must be raised whenever a new bundle is accepted.
 | 1.0.7 | 8 | internal testing since 2026-09-06 | Upgraded `com.google.androidbrowserhelper:billing` to 1.2.0 and added `com.android.billingclient:billing:9.1.0`. Signed AAB from **Android release bundle** run `34048176925`. |
 | 1.0.8 | 9 | available to internal testers, verified 2026-09-10 | Built by **Android release bundle** run `34150101419` from merge `a86601c`. |
 | 1.0.9 | 10 | production change saved 2026-09-10; not submitted for review | Locally signed AAB accepted by Play. Chalk launch/system-bar colors. See the [mobile audit](../../docs/design/2026-09-10-mobile-audit.md) for the artifact hash and outstanding device, billing, and web-deployment gates. |
+| 1.0.10 | 11 | next build | Reserved after Play accepted code 10. No code-11 bundle has been built or uploaded. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
 cross-origin redirect when verifying Digital Asset Links, so a bundle built

@@ -14,6 +14,8 @@ All notable changes to LotFoundry are documented here. Format follows
 - Android launch and system-bar colors now match the A LOT MORE chalk palette.
   Version 1.0.9/code 10 is saved in Play production, awaiting review submission;
   the mobile web changes require their own deployment.
+- After Play accepted code 10, next-build metadata advances to version
+  1.0.10/code 11 and the validator rejects reused codes through 10.
 - Production deploys now push `app`, `api`, `apiAi`, and `apiStripe` as a single
   Firebase operation instead of four sequential ones, so the functions payload
   uploads once and Firebase updates them concurrently. The four have no ordering
