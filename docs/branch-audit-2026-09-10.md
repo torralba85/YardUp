@@ -3,6 +3,9 @@
 **Scope:** every branch on `origin` for `torralba85/YardUp`, classified against `master`
 at `0796f1f` (`fix(parcel): close GIS correctness gaps without dropping coverage`, #193).
 
+Revised 2026-09-11: `fix/mobile-production-20260910` moved from Keep to Fully merged
+when PR #190 landed, taking the delete list from eleven branches to twelve.
+
 Ahead/behind counts are `git rev-list --left-right --count origin/master...<branch>`.
 Because the repository squash-merges, a non-zero "ahead" count does not mean the
 work is unlanded — every branch below was additionally checked by content.
@@ -12,7 +15,6 @@ work is unlanded — every branch below was additionally checked by content.
 | Branch | State | Reason |
 |---|---|---|
 | `master` | default | — |
-| `fix/mobile-production-20260910` | ahead 2, behind 3 | Backs open draft PR #190. Active. |
 | `backup/expo-main` | ahead 28, behind 128 | Deliberate archive of the pre-Next.js Expo application. Its history exists nowhere else; deleting it destroys the only copy. |
 
 ## Fully merged — safe to delete
@@ -22,6 +24,7 @@ work is unlanded — every branch below was additionally checked by content.
 | `chore/dependabot-config` | ahead 0 | Zero commits `master` does not have. |
 | `codex/release-hardening-2026-09-01` | ahead 0 | Zero commits `master` does not have. |
 | `codex/play-upload-key-2026-09-03` | ahead 1 | Per-platform native-store flags landed. `ENABLE_APPLE_STORE_VERIFICATION` and `ENABLE_GOOGLE_PLAY_VERIFICATION` are both read in `functions/index.js`. |
+| `fix/mobile-production-20260910` | merged | PR #190 merged as `1262f16` on 2026-09-11, after this audit was first written. Held out of the original delete list only because that PR was open. |
 
 ## Superseded — safe to delete
 

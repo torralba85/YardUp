@@ -10,8 +10,8 @@
 #   scripts/cleanup-stale-branches.sh --dry-run   # show what would happen
 #   scripts/cleanup-stale-branches.sh             # tag, verify, delete
 #
-# Kept deliberately: master, fix/mobile-production-20260910 (open PR #190),
-# and backup/expo-main (the only copy of the pre-Next.js Expo history).
+# Kept deliberately: master and backup/expo-main (the only copy of the
+# pre-Next.js Expo history).
 
 set -euo pipefail
 
@@ -24,6 +24,7 @@ BRANCHES=(
   chore/dependabot-config
   codex/release-hardening-2026-09-01
   codex/play-upload-key-2026-09-03
+  fix/mobile-production-20260910
   # Superseded: the work landed elsewhere, or merging would regress master.
   copilot/fix-payments-scope-idempotency-keys
   fix/parcel-debug-pass-2
