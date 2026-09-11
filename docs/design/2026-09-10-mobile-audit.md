@@ -40,3 +40,12 @@ Baseline: master `4251785`, the hosted Studio, and a USB-connected Pixel 10 Pro 
 - The earlier session reported a successful production web build and 33 focused browser tests. Those broader checks were not rerun during recovery; no result is claimed for its interrupted full unit run.
 - ADB still sees the authorized Pixel with version 1.0.5/code 6. This is not code-10 device or purchase evidence.
 - Commit `b2af652` records the code-10 source. Subsequent metadata reserves version 1.0.10/code 11 and raises the uploaded-code ceiling to 10. No code-11 artifact was built; the retained AAB is still code 10.
+
+## Authorized publication follow-up
+
+- Following explicit publication authorization, submitted code 10 and United States production availability. Play submission 14 was submitted September 10 at 9:37 AM and **published at 9:55 AM**. Managed publishing is off.
+- Enabled the Android Publisher API in the production cloud project and verified the existing service account can list the four configured one-time products. This validates API access, not a purchase or entitlement.
+- Restored the four existing native-store secret bindings on the live `apiStore` function and verified it returned ACTIVE. Its legacy native-verification flag was already enabled; no new feature flag was enabled.
+- Diagnosed why deployment dropped these bindings: Firebase CLI 15.26.0 does not pass user `.env` variables during function discovery, so the conditional secret declarations are omitted. Pinned CI to verified CLI 15.29.0, which includes these variables, and added a live binding check before Hosting publication.
+- The original mobile PR head `0f8bd02` passed full CI, including lint, unit tests, Firestore rules, TypeScript, build, and browser tests. The deployment safeguard receives a separate CI run before merge.
+- Physical-device code-10 installation and a sandbox purchase/entitlement remain unverified.
