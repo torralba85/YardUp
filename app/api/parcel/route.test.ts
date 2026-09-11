@@ -64,9 +64,110 @@ function rotatedRectPolygon(
   return { type: "Polygon", coordinates: [ring] };
 }
 
+/** A US Census `onelineaddress` match, the shape the route parses. */
+function censusAddressResponse(
+  matchedAddress: string,
+  state: string,
+  county: string,
+) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      result: {
+        addressMatches: [
+          {
+            matchedAddress,
+            geographies: {
+              States: [{ STUSAB: state }],
+              Counties: [{ BASENAME: county }],
+            },
+          },
+        ],
+      },
+    }),
+  };
+}
+
+/** A US Census `coordinates` reverse match — carries no ZIP by design. */
+function censusCoordinateResponse(state: string, county: string) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      result: {
+        geographies: {
+          States: [{ STUSAB: state }],
+          Counties: [{ BASENAME: county }],
+        },
+      },
+    }),
+  };
+}
+
+/** An ArcGIS `f=geojson` parcel hit from a county/statewide GIS service. */
+function countyGisResponse(geometry: unknown, properties: Record<string, unknown> = {}) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({ features: [{ type: "Feature", geometry, properties }] }),
+  };
+}
+
+function structuresResponse(
+  sqft: number,
+  lng = -122.31,
+  lat = 47.65,
+) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      features: [
+        { attributes: { SQFEET: sqft, LONGITUDE: lng, LATITUDE: lat } },
+      ],
+    }),
+  };
+}
+
+const EMPTY_FEATURES = {
+  ok: true,
+  status: 200,
+  json: async () => ({ features: [] }),
+};
+
+/**
+ * Route fetches by host so a test can describe each provider independently.
+ * Anything unlisted resolves empty rather than reaching the network — the
+ * chain now calls three services, and none of them belong in a unit test.
+ */
+function stubProviders(providers: {
+  regrid?: unknown;
+  census?: unknown;
+  countyGis?: unknown;
+  structures?: unknown;
+}) {
+  const fetchMock = vi.fn(async (input: unknown) => {
+    const url = String(input);
+    if (url.includes("regrid.com")) return providers.regrid ?? EMPTY_FEATURES;
+    if (url.includes("geocoding.geo.census.gov")) {
+      return providers.census ?? EMPTY_FEATURES;
+    }
+    if (url.includes("USA_Structures_View")) {
+      return providers.structures ?? EMPTY_FEATURES;
+    }
+    return providers.countyGis ?? EMPTY_FEATURES;
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.stubEnv("REGRID_API_KEY", "test-token");
+  // Default every test to a fully offline provider chain; tests that care
+  // about a provider override it explicitly.
+  stubProviders({});
 });
 
 afterEach(() => {
@@ -80,8 +181,11 @@ describe("GET /api/parcel — Regrid field mapping", () => {
 
     await GET(makeRequest(47.65, -122.31));
 
-    expect(fetchMock).toHaveBeenCalledOnce();
-    const requestedUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    const regridCalls = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).includes("regrid.com"),
+    );
+    expect(regridCalls).toHaveLength(1);
+    const requestedUrl = new URL(regridCalls[0][0] as string);
     expect(requestedUrl.pathname).toBe("/api/v2/parcels/point");
     expect(requestedUrl.searchParams.get("lat")).toBe("47.65");
     expect(requestedUrl.searchParams.get("lon")).toBe("-122.31");
@@ -123,6 +227,34 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.lng).toBe(-122.31);
   });
 
+  it("prefers Regrid's situs fields over the mailing-address fields", async () => {
+    // `saddress`/`scity` describe the property; `address`/`city` can carry the
+    // owner's mailing address, which belongs to a different lot entirely.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({
+          ll_gisacre: 0.25,
+          zoning: "R-1",
+          saddress: "123 Oak St",
+          address: "PO Box 4120",
+          scity: "Seattle",
+          city: "Bellevue",
+          state2: "WA",
+          state: "OR",
+          szip5: "98105",
+          zip: "97201",
+        }),
+      ),
+    );
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.address).toBe("123 Oak St");
+    expect(data.city).toBe("Seattle, WA 98105");
+  });
+
   it("falls back to coordinates when the address field is missing", async () => {
     vi.stubGlobal(
       "fetch",
@@ -150,6 +282,38 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     const res = await GET(makeRequest(47.65, -122.31));
     const data = (await res.json()) as LiveParcelData;
     expect(data.existingHouseSqft).toBe(980);
+  });
+
+  it("uses USA Structures when Regrid omits a ground footprint", async () => {
+    const parcelPolygon = rotatedRectPolygon(47.65, -122.31, 50, 120, 0);
+    stubProviders({
+      regrid: regridResponse({ ll_gisacre: 0.14, zoning: "R-1" }, parcelPolygon),
+      structures: structuresResponse(1234),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("regrid");
+    expect(data.existingHouseSqft).toBe(1234);
+  });
+
+  it("does not call USA Structures when Regrid provides a ground footprint", async () => {
+    const parcelPolygon = rotatedRectPolygon(47.65, -122.31, 50, 120, 0);
+    const fetchMock = stubProviders({
+      regrid: regridResponse(
+        { ll_gisacre: 0.14, ll_bldg_footprint_sqft: 1400, zoning: "R-1" },
+        parcelPolygon,
+      ),
+      structures: structuresResponse(999),
+    });
+
+    const data = (await (await GET(makeRequest(47.65, -122.31))).json()) as LiveParcelData;
+
+    expect(data.existingHouseSqft).toBe(1400);
+    expect(
+      fetchMock.mock.calls.some((call) => String(call[0]).includes("USA_Structures_View")),
+    ).toBe(false);
   });
 
   it("derives oriented (not axis-aligned) dimensions from a rotated parcel polygon", async () => {
@@ -290,6 +454,219 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     const data = (await res.json()) as LiveParcelData;
     expect(data.source).toBe("fallback");
     expect(data.zoning).toBe("R-1 (estimated)");
+  });
+});
+
+describe("GET /api/parcel — Census geocoder location", () => {
+  it("fills state/ZIP/county from the Census when Regrid omits them", async () => {
+    stubProviders({
+      regrid: regridResponse({ ll_gisacre: 0.25, zoning: "R-1" }),
+      census: censusAddressResponse(
+        "1418 NW 65TH ST, SEATTLE, WA, 98117",
+        "WA",
+        "King",
+      ),
+    });
+
+    const res = await GET(
+      makeRequest(47.676, -122.3747, "1418 NW 65th St, Seattle, WA"),
+    );
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("regrid");
+    expect(data.state).toBe("WA");
+    expect(data.zip).toBe("98117");
+    expect(data.county).toBe("King");
+  });
+
+  it("keeps Regrid's own location fields when it has them", async () => {
+    stubProviders({
+      regrid: regridResponse({
+        ll_gisacre: 0.25,
+        zoning: "R-1",
+        state2: "OR",
+        szip5: "97212",
+        county: "Multnomah County",
+      }),
+      census: censusAddressResponse("WRONG ST, SEATTLE, WA, 98117", "WA", "King"),
+    });
+
+    const res = await GET(makeRequest(45.54, -122.63, "123 NE 20th Ave, Portland, OR"));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.state).toBe("OR");
+    expect(data.zip).toBe("97212");
+    expect(data.county).toBe("Multnomah");
+  });
+
+  it("resolves state/county from coordinates when the address does not match", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("WA", "King"),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("fallback");
+    expect(data.state).toBe("WA");
+    expect(data.county).toBe("King");
+    // The coordinate endpoint carries no ZIP and no address was supplied.
+    expect(data.zip).toBe("");
+  });
+
+  it("still answers when the Census geocoder is unreachable", async () => {
+    const fetchMock = vi.fn(async (input: unknown) => {
+      if (String(input).includes("geocoding.geo.census.gov")) {
+        throw new TypeError("Network error");
+      }
+      return regridResponse({ ll_gisacre: 0.25, zoning: "R-1" });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("regrid");
+    expect(data.state).toBe("");
+  });
+});
+
+describe("GET /api/parcel — free county/statewide GIS tier", () => {
+  /** A ~50x120 ft King County lot around the fixture point. */
+  const KING_LOT = rotatedRectPolygon(47.65, -122.31, 50, 120, 0);
+
+  it("uses county GIS geometry when Regrid returns no parcel", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(KING_LOT, { Shape__Area: 6000 }),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+    expect(data.boundaryGeoJson).not.toBeNull();
+    expect(data.lotWidth).toBe(50);
+    expect(data.lotLength).toBe(120);
+    // A county lot layer describes the land, not the house on it.
+    expect(data.existingHouseSqft).toBe(0);
+    expect(data.zoning).toBe("Unknown");
+  });
+
+  it("fills a county GIS parcel's existing footprint from USA Structures", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(KING_LOT, { Shape__Area: 6000 }),
+      structures: structuresResponse(1675),
+    });
+
+    const data = (await (await GET(makeRequest(47.65, -122.31))).json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.existingHouseSqft).toBe(1675);
+  });
+
+  it("serves county GIS geometry with no Regrid key configured", async () => {
+    vi.stubEnv("REGRID_API_KEY", "");
+    stubProviders({
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(KING_LOT, { Shape__Area: 6000 }),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.state).toBe("WA");
+    expect(data.county).toBe("King");
+  });
+
+  it("prefers the Census county over the GIS layer's own spelling", async () => {
+    // Statewide layers publish county names the market index cannot key on
+    // ("NewYork", "DANE"). Letting one through silently downgrades the
+    // financials to national averages, so the Census name has to win.
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(KING_LOT, {
+        Shape__Area: 6000,
+        COUNTY_NAME: "KingCounty",
+      }),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.county).toBe("King");
+  });
+
+  it("keeps the GIS layer's county when the Census cannot supply one", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: { ok: false, status: 503 },
+      countyGis: countyGisResponse(KING_LOT, { Shape__Area: 6000 }),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.county).toBe("King");
+    expect(data.state).toBe("");
+  });
+
+  it("falls through to the preset when county GIS has no parcel either", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: EMPTY_FEATURES,
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("fallback");
+    expect(data.zoning).toBe("R-1 (estimated)");
+  });
+
+  it("falls through to the preset when the GIS parcel has no usable area", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      countyGis: countyGisResponse(null, { Shape__Area: 6000 }),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("fallback");
   });
 });
 

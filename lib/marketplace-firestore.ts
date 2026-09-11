@@ -133,13 +133,31 @@ export async function createConnectionRequest(input: {
 
   const batch = writeBatch(db);
 
+  // ConnectionSnapshot.parcel is intentionally persisted as the base Parcel
+  // shape. A live parcel may carry boundaryGeoJson at runtime, whose nested
+  // GeoJSON arrays are rejected by Firestore. The exact boundary is not used
+  // by the marketplace unlock flow, so omit provider-only fields here.
+  const firestoreSafeSnapshot: ConnectionSnapshot = {
+    ...input.snapshot,
+    parcel: {
+      address: input.snapshot.parcel.address,
+      city: input.snapshot.parcel.city,
+      lotArea: input.snapshot.parcel.lotArea,
+      lotWidth: input.snapshot.parcel.lotWidth,
+      lotLength: input.snapshot.parcel.lotLength,
+      existingHouseSqft: input.snapshot.parcel.existingHouseSqft,
+      maxLotCoveragePercent: input.snapshot.parcel.maxLotCoveragePercent,
+      setbacks: { ...input.snapshot.parcel.setbacks },
+    },
+  };
+
   // PII isolated here — never on the root doc. The Firestore rule on this path
   // gates reads to the owner or a builder holding a leadUnlocks grant.
   batch.set(doc(db, REQUESTS, requestRef.id, PRIVATE, CONTACT), {
     ownerContact: input.ownerContact,
     streetAddress: input.snapshot.parcelAddress,
     exactAPN: null,
-    snapshot: input.snapshot,
+    snapshot: firestoreSafeSnapshot,
     createdAt: serverTimestamp(),
   });
 

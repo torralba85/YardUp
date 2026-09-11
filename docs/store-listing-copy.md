@@ -1,6 +1,6 @@
 # Store Listing Copy — App Store + Google Play
 
-**Updated:** 2026-07-17
+**Updated:** 2026-09-07
 
 **App:** LotFoundry — ADU Feasibility Studio (`com.lotfoundry.app`)
 
@@ -13,7 +13,7 @@ native build, provider contracts, and store guidance before submission.
 | Data | Current code path | Purpose | Notes for review |
 |---|---|---|---|
 | Email, name, avatar, Firebase UID | Firebase Auth, including email/password, Google, and Apple sign-in | Account management | Confirm final provider scopes and account-linking behavior |
-| Property address | User input sent to Regrid and Google Maps/Geocoding/Places | Feasibility and parcel lookup | Required only to use address-based estimates |
+| Property address or coordinates | User input sent to Regrid, Google Maps/Geocoding/Places, the US Census geocoder, public county/state parcel GIS services, and USA Structures | Feasibility, parcel lookup, market geography, and existing-building footprint estimates | Required only to use address-based estimates; public providers vary by parcel coverage |
 | Home photo | Client removes EXIF/GPS, then sends an in-memory upload to OpenAI for style matching | AI concept generation | The app does not persist the original upload to Firestore or Storage; confirm processor terms and disclosure wording |
 | Saved scenarios | Firestore under the authenticated user | Save, share, and restore estimates | Account deletion removes account-associated scenario data |
 | Purchase and lead-unlock history | Stripe and Firestore ledger on the web; platform purchase proof for native stores | Purchases and entitlement grants | The application never accepts raw card numbers |
@@ -34,6 +34,10 @@ each processor's current policy before completing either form.
 - Google: Firebase Auth/Firestore, Maps, Geocoding, Places, and Analytics 4
   (web, opt-in only).
 - Regrid: parcel lookup.
+- US Census Bureau and public county/state GIS publishers: free geography and
+  parcel-boundary lookup when a paid parcel record is unavailable.
+- FEMA/ORNL USA Structures: existing-building footprint estimates for parcels
+  with a known boundary.
 - OpenAI: address context and optional style-match photo generation.
 - Stripe: web Checkout and payment processing.
 - Apple and Google: native digital purchases only when a store build uses

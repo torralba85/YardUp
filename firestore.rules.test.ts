@@ -304,6 +304,41 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     );
   });
 
+  it("allows the county GIS parcel source and rejects unknown sources", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const acceptedRef = doc(
+      db,
+      "users",
+      OWNER_ID,
+      "savedScenarios",
+      "county-gis-source",
+    );
+    const rejectedRef = doc(
+      db,
+      "users",
+      OWNER_ID,
+      "savedScenarios",
+      "unknown-source",
+    );
+
+    await assertSucceeds(
+      setDoc(
+        acceptedRef,
+        sampleScenario({
+          liveParcel: sampleLiveParcel({ source: "county-gis" }),
+        }),
+      ),
+    );
+    await assertFails(
+      setDoc(
+        rejectedRef,
+        sampleScenario({
+          liveParcel: sampleLiveParcel({ source: "untrusted-provider" }),
+        }),
+      ),
+    );
+  });
+
   it("allows owner to create a scenario with every optional field populated", async () => {
     // Guards Firestore's hard ceiling of 1000 evaluated expressions per
     // request. Every optional field that is present costs another branch, so

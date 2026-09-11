@@ -1,6 +1,7 @@
 import type { ADUConfig, Parcel } from "./feasibility";
 import { buildExistingHouseSceneModel, type Pose2D } from "./scene-model";
 import { buildSetbackEnvelope, validatePlacement } from "./placement-validation";
+import { parcelConfidence } from "./parcel-confidence";
 
 export function getScenePlacement(parcel: Parcel, config: Pick<ADUConfig, "width" | "length">, pose: Pose2D) {
   return validatePlacement({ aduWidth: config.width, aduLength: config.length, pose,
@@ -85,15 +86,26 @@ export function getAduPlacementBounds(
 /** Human-readable modeled coverage capacity for the Studio and certificate. */
 export function getSiteFitCapacityStatus(
   remainingCapacity: number,
+  parcel?: Parcel,
 ): SiteFitCapacityStatus {
-  const squareFeet = Math.round(Math.abs(remainingCapacity)).toLocaleString();
+  const confidence = parcel ? parcelConfidence(parcel) : undefined;
+  if (confidence?.footprintKnown === false) {
+    return { title: "Coverage capacity unknown", action: "Confirm the existing building footprint before calculating remaining capacity.", tone: "warn" };
+  }
 
+  const squareFeet = Math.round(Math.abs(remainingCapacity)).toLocaleString();
   if (remainingCapacity < 0) {
     return {
-      title: `${squareFeet} sf over modeled coverage allowance`,
-      action: `Reduce the ADU footprint by at least ${squareFeet} sf, then confirm local requirements.`,
+      title: `${squareFeet} sf over ${confidence?.regulationsEstimated ? "assumed" : "modeled"} coverage allowance`,
+      action: confidence?.regulationsEstimated
+        ? `The concept exceeds the assumed allowance by ${squareFeet} sf. Reduce the footprint and confirm local planning rules.`
+        : `Reduce the ADU footprint by at least ${squareFeet} sf, then confirm local requirements.`,
       tone: "warn",
     };
+  }
+
+  if (confidence?.regulationsEstimated) {
+    return { title: `${Math.round(remainingCapacity).toLocaleString()} sf estimated coverage capacity`, action: "Maximum coverage and setbacks are assumed. Confirm local planning rules.", tone: "warn" };
   }
 
   return {

@@ -1210,6 +1210,7 @@ export default function ParcelScene({
           the audit measured phone overlays covering 40.4% of the scene (U3). */}
       <SceneStatus
         id="studio-site-fit-status"
+        parcel={parcel}
         placement={placement}
         remainingCapacity={remainingCapacity}
         isProxy={parcelOutline.isProxy}
@@ -1335,6 +1336,7 @@ function Parcel2DScene({
 
       <SceneStatus
         id="studio-site-fit-status"
+        parcel={parcel}
         placement={placement}
         remainingCapacity={remainingCapacity}
         isProxy={outline.isProxy}

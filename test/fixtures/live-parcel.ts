@@ -36,7 +36,7 @@ export const SAMPLE_LIVE_PARCEL = {
 
 /**
  * The widest parcel the rules must still accept: every optional field on both
- * the parcel and its market data populated, plus a real boundary polygon.
+ * the parcel and its market data populated, plus a non-null boundary value.
  *
  * Firestore evaluates at most 1000 expressions per request, and each optional
  * field that is present costs another branch. `SAMPLE_LIVE_PARCEL` leaves six
@@ -47,16 +47,21 @@ export const SAMPLE_LIVE_PARCEL = {
  */
 export const SAMPLE_LIVE_PARCEL_MAX = {
   ...SAMPLE_LIVE_PARCEL,
-  // `coordinates` is deliberately empty rather than a real ring. Firestore
-  // cannot store nested arrays at all, and a GeoJSON Polygon's coordinates are
-  // nested three deep, so the client SDK rejects the write before the rules run
-  // (normalizeLiveParcel in lib/saved-scenarios.ts passes the ring through
-  // unchanged, so a parcel that actually carries a boundary cannot be saved
-  // today). What matters here is that the non-null branch of
-  // isValidBoundaryGeoJson is exercised, which this does.
+  // The rules fixture uses the Firestore representation: arrays are separated
+  // by maps so no array directly contains another array. Runtime code decodes
+  // this back to ordinary GeoJSON after reading the document.
   boundaryGeoJson: {
     type: "Polygon",
-    coordinates: [],
+    coordinates: [
+      {
+        points: [
+          { lng: -121.89, lat: 37.33 },
+          { lng: -121.89, lat: 37.34 },
+          { lng: -121.88, lat: 37.34 },
+          { lng: -121.89, lat: 37.33 },
+        ],
+      },
+    ],
   },
   marketData: {
     ...SAMPLE_LIVE_PARCEL.marketData,

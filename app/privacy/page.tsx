@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   description: "How LotFoundry collects, uses, and protects your information.",
 };
 
-/** Privacy policy — matches Firebase, Regrid, Google, OpenAI, Stripe, marketplace. */
+/** Privacy policy — matches Firebase, Regrid, Census/public GIS, USA Structures, Google, OpenAI, Stripe, marketplace. */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: September 3, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: September 10, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect information you provide when you create an account (name, email, password
@@ -38,7 +38,14 @@ export default function PrivacyPage() {
           <strong>Cloud Functions</strong>, <strong>Firebase Authentication</strong>, and{" "}
           <strong>Cloud Firestore</strong>. Parcel and map features use{" "}
           <strong>Google Maps / Places / Geocoding</strong> and <strong>Regrid</strong> parcel
-          data. Payments use <strong>Stripe</strong> on the open web and{" "}
+          data. When you search for a property, the searched address or its coordinates may also
+          be sent to the <strong>US Census Bureau geocoder</strong> to resolve location details.
+          If public parcel geometry or building-footprint data is needed, coordinates or parcel
+          geometry may also be sent to the public <strong>county and state parcel (GIS) services</strong>
+          that publish lot lines for that area and to the federal <strong>USA Structures</strong>
+          service used to estimate existing building footprints. These calls may occur even when
+          Regrid returns a parcel record when location fields or building-footprint data are
+          incomplete. Payments use <strong>Stripe</strong> on the open web and{" "}
           <strong>Apple App Store / Google Play Billing</strong> in store apps. Optional AI
           style-match concepts use <strong>OpenAI</strong> when you consent to send a photo.
           Usage measurement uses <strong>Google Analytics 4</strong>, and only after you accept

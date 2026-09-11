@@ -102,6 +102,19 @@ describe("createSavedScenarioStore", () => {
     expect(store.load(saved.id)?.liveParcel?.address).toBe("500 Cedar Ave");
   });
 
+  it("preserves a county GIS parcel snapshot", () => {
+    const store = createSavedScenarioStore(storage);
+    const saved = store.save({
+      name: "Cedar public parcel",
+      parcelId: "oak-street",
+      liveParcel: { ...liveParcel, source: "county-gis" },
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    expect(store.load(saved.id)?.liveParcel?.source).toBe("county-gis");
+  });
+
   it("removes by id", () => {
     const store = createSavedScenarioStore(storage);
     const saved = store.save({

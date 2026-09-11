@@ -123,6 +123,7 @@ Notes for the form:
 
 For every collected data type: `Encrypted in transit: Yes`. Do not declare ads
 or third-party advertising. Firebase, Google Maps/Places/Geocoding, Regrid,
+the US Census geocoder, public county/state parcel GIS services, USA Structures,
 OpenAI, Stripe, and store billing process data for LotFoundry; the builder
 marketplace disclosure above is the only third-party sharing claim.
 

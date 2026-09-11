@@ -554,7 +554,9 @@ function FeasibilityStudioInner() {
     if (
       parcelMode === "live" &&
       "source" in activeParcel &&
-      (activeParcel.source === "regrid" || activeParcel.source === "fallback")
+      (activeParcel.source === "regrid" ||
+        activeParcel.source === "county-gis" ||
+        activeParcel.source === "fallback")
     ) {
       entry.liveParcel = activeParcel;
     }
