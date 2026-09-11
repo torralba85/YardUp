@@ -60,8 +60,10 @@ import BuilderLeadPanel, {
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
-import type { InspirationItem } from "@/lib/inspiration-data";
-import { configForFootprint } from "@/lib/feasibility";
+import {
+  configForInspirationItem,
+  type InspirationItem,
+} from "@/lib/inspiration-data";
 import { useMediaQuery } from "@/lib/use-media-query";
 import MobileHeader from "./studio/mobile/MobileHeader";
 import MobileJourney from "./studio/mobile/journey/MobileJourney";
@@ -962,16 +964,7 @@ function FeasibilityStudioInner() {
               onGenerationComplete={handleGenerationComplete}
               onViewComparison={handleViewComparison}
               styleMatchKey={styleMatchKey}
-              onApply={(item) => {
-                const baseConfig = configForFootprint(item.sqft, config);
-                setConfig({
-                  ...baseConfig,
-                  width: item.width,
-                  length: item.length,
-                  roof: item.roof,
-                  finish: item.finish,
-                });
-              }}
+              onApply={(item) => setConfig(configForInspirationItem(item, config))}
             />
           </>
         ) : activeStep === "certificate" ? (

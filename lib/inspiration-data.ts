@@ -1,4 +1,4 @@
-import type { ExteriorFinish, RoofStyle } from "./feasibility";
+import type { ADUConfig, ExteriorFinish, RoofStyle } from "./feasibility";
 
 /**
  * A single ADU concept shown in the inspiration gallery. The optional
@@ -141,3 +141,30 @@ export const inspirationItems: InspirationItem[] = [
   },
 ];
 
+/**
+ * Apply a gallery concept's geometry and materials onto the current ADU config.
+ *
+ * `footprint` is derived from the concept's own `width * length` rather than
+ * copied from its `sqft` label, so the result always satisfies the exact
+ * `width * length === footprint` equality that `isValidAduConfig` enforces
+ * (lib/scenario-design.ts). That equality is why this helper exists: routing a
+ * concept through `configForFootprint` snapped any area outside the
+ * 400/600/800/1000 option list back to 600 and left the footprint contradicting
+ * the dimensions actually applied. The studio still rendered and priced the
+ * concept correctly, because the feasibility math reads the dimensions, but the
+ * contradictory config failed validation on the way out — so the scenario URL
+ * silently stopped tracking the design and a reload or shared link reverted it.
+ */
+export function configForInspirationItem(
+  item: InspirationItem,
+  config: ADUConfig,
+): ADUConfig {
+  return {
+    ...config,
+    width: item.width,
+    length: item.length,
+    footprint: item.width * item.length,
+    roof: item.roof,
+    finish: item.finish,
+  };
+}
