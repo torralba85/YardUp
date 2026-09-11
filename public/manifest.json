@@ -2,7 +2,7 @@
   "id": "/",
   "name": "LotFoundry",
   "short_name": "LotFoundry",
-  "description": "See what your backyard can earn — ADU rent, build cost, and payback estimates",
+  "description": "See what your backyard can become — ADU feasibility, rent, and build estimates",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -45,7 +45,7 @@
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "See what your backyard can earn"
+      "label": "See what your backyard can become"
     },
     {
       "src": "/screenshots/tablet-studio.png",

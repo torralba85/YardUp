@@ -59,6 +59,9 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
           </span>{" "}
           a year in gross rent from a {result.aduSqft.toLocaleString()} sf backyard home.
         </p>
+        <p className="mt-1 font-sans text-xs text-lf-muted">
+          Estimated potential for rental income, guest space, or family living.
+        </p>
       </div>
 
       {/* Confidence teaser: where the number comes from, in one line. */}
