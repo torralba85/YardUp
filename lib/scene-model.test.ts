@@ -54,6 +54,31 @@ describe("buildExistingHouseFootprint — D1 area agreement", () => {
     expect(footprint.depth).toBeGreaterThan(buildableLength);
   });
 
+  it("models natural residential frontage on wider lots instead of clamping width to 32 ft", () => {
+    const portland = demoPresets.find((p) => p.id === "corner-lot")!;
+    const footprint = buildExistingHouseFootprint(portland);
+    // Portland (60' lot, 48' buildable width, 1,720 sf): previously pinned to 32' wide x 53.8' deep.
+    // Now models balanced frontage (~45' wide x ~38.2' deep).
+    expect(footprint.width!).toBeGreaterThan(32);
+    expect(footprint.width!).toBeLessThanOrEqual(portland.lotWidth - portland.setbacks.side * 2);
+    expect(footprint.depth!).toBeLessThan(45);
+    expect(footprint.width! * footprint.depth!).toBeCloseTo(1720, 6);
+  });
+
+  it("allows standard suburban lots to expand house width up to 55 ft rather than 32 ft", () => {
+    const suburban = {
+      lotWidth: 70,
+      existingHouseSqft: 2400,
+      setbacks: { front: 25, rear: 25, side: 7.5 },
+    };
+    const footprint = buildExistingHouseFootprint(suburban);
+    // Target width: sqrt(2400 / 0.85) ~ 53.1 ft. Fits within buildable width 55 ft (70 - 15).
+    expect(footprint.width!).toBeCloseTo(Math.sqrt(2400 / 0.85), 1);
+    expect(footprint.width!).toBeGreaterThan(50);
+    expect(footprint.depth!).toBeLessThan(50);
+    expect(footprint.areaSqft).toBe(2400);
+  });
+
   it("returns the explicit unknown state for zero existingHouseSqft", () => {
     const footprint = buildExistingHouseFootprint(fallbackLiveParcel);
     expect(footprint).toMatchObject({ areaSqft: 0, width: null, depth: null, source: "unknown" });
