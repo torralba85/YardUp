@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
+import { Check, ChevronLeft } from "lucide-react";
 import type { DerivedJourneyStep, MobileJourneyStep } from "@/lib/mobile-journey";
 
 /** Props for {@link JourneyRail}. */
@@ -20,7 +20,6 @@ export interface JourneyRailProps {
  * screen's single primary action, never the rail.
  */
 export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRailProps) {
-  const currentIndex = steps.findIndex((step) => step.state === "current");
   return (
     <nav
       aria-label="Journey progress"
@@ -37,27 +36,19 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
       >
         <ChevronLeft size={18} />
       </button>
-      <ol className="flex min-w-0 flex-1 items-center justify-center gap-0.5">
-        {steps.map((step, index) => {
+      <ol className="grid min-w-0 flex-1 grid-cols-5">
+        {steps.map((step) => {
           const isCurrent = step.state === "current";
           const isDone = step.state === "done";
           return (
-            <li key={step.id} className="flex min-w-0 items-center">
-              {index > 0 && (
-                <span
-                  aria-hidden
-                  className={`mx-1 h-px w-3 sm:w-5 ${
-                    index <= currentIndex ? "bg-[#FF5B24]" : "bg-[#DADAD3]"
-                  }`}
-                />
-              )}
+            <li key={step.id} className="flex min-w-0">
               <button
                 type="button"
                 onClick={isDone ? () => onStepSelect(step.id) : undefined}
                 disabled={!isDone && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : ""}`}
-                className={`flex min-h-11 items-center gap-1.5 rounded-[3px] px-1.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] motion-safe:transition sm:px-2 ${
+                className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-[3px] font-sans text-[9px] font-semibold uppercase tracking-[0.08em] motion-safe:transition ${
                   isCurrent
                     ? "text-[#C43708]"
                     : isDone
@@ -65,21 +56,22 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                       : "text-[#65655F]"
                 }`}
               >
-                {/* Equal explicit width/height — a true circle, never an oval. */}
+                {isDone ? <Check size={12} aria-hidden="true" /> : (
                 <span
                   aria-hidden
                   className={`block h-2 w-2 rounded-full ${
                     isCurrent ? "bg-[#FF5B24]" : isDone ? "bg-[#176B4C]" : "bg-[#DADAD3]"
                   }`}
                 />
-                <span className="hidden min-[440px]:inline">{step.label}</span>
+                )}
+                <span>{step.label}</span>
               </button>
             </li>
           );
         })}
       </ol>
       {/* Spacer balancing the back chevron so the dots stay centered. */}
-      <span aria-hidden className="w-11 shrink-0" />
+      <span aria-hidden className="hidden w-11 shrink-0 min-[440px]:block" />
     </nav>
   );
 }

@@ -109,13 +109,19 @@ describe("Firebase AI API routing", () => {
     // The verify job has always pinned it. An unpinned global install in the
     // deploy job let a new firebase-tools major reach production with no
     // change to this repository.
-    expect(ciWorkflow).toContain("npm install -g firebase-tools@15.26.0");
+    expect(ciWorkflow.match(/npm install -g firebase-tools@15\.29\.0/g)).toHaveLength(2);
     expect(ciWorkflow).not.toMatch(/npm install -g firebase-tools\s*$/m);
   });
 
   it("serializes production Firebase deploys so hosting rewrites cannot race", () => {
     expect(ciWorkflow).toContain("group: firebase-production-${{ github.ref }}");
     expect(ciWorkflow).toContain("cancel-in-progress: false");
+  });
+
+  it("checks live store bindings before publishing hosting", () => {
+    const checkIndex = ciWorkflow.indexOf("node scripts/verify-store-bindings.cjs");
+    expect(checkIndex).toBeGreaterThan(ciWorkflow.indexOf("deploy_target functions:apiStore || exit $?"));
+    expect(checkIndex).toBeLessThan(ciWorkflow.indexOf("firebase deploy --only hosting --project yardup-2026"));
   });
 
   it("replays Firebase raw request bodies before handing API POSTs to Next", () => {
