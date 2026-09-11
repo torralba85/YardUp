@@ -4,13 +4,13 @@
   "name": "LotFoundry",
   "launcherName": "LotFoundry",
   "display": "standalone",
-  "themeColor": "#F2E5D5",
-  "themeColorDark": "#F2E5D5",
-  "navigationColor": "#F2E5D5",
-  "navigationColorDark": "#F2E5D5",
-  "navigationDividerColor": "#33261307",
-  "navigationDividerColorDark": "#33261307",
-  "backgroundColor": "#F2E5D5",
+  "themeColor": "#F5F5F0",
+  "themeColorDark": "#F5F5F0",
+  "navigationColor": "#F5F5F0",
+  "navigationColorDark": "#F5F5F0",
+  "navigationDividerColor": "#DADAD3",
+  "navigationDividerColorDark": "#DADAD3",
+  "backgroundColor": "#F5F5F0",
   "enableNotifications": true,
   "startUrl": "/studio",
   "iconUrl": "https://lotfoundry.net/icon-512.png",
@@ -20,8 +20,8 @@
     "path": "./android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.9",
-  "appVersionCode": 10,
+  "appVersionName": "1.0.10",
+  "appVersionCode": 11,
   "shortcuts": [
     {
       "name": "New Study",
@@ -59,5 +59,5 @@
   ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.0.9"
+  "appVersion": "1.0.10"
 }

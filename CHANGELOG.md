@@ -8,6 +8,17 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Changed
 
+- Mobile journey progress now keeps all five labels visible with at least 44px
+  touch targets. Moving to another step resets scroll and focuses its named main
+  region, while changes within the same step preserve scroll.
+- Android launch and system-bar colors now match the A LOT MORE chalk palette.
+  Version 1.0.9/code 10 is published in Play production for the United States;
+  the mobile web changes require their own deployment.
+- After Play accepted code 10, next-build metadata advances to version
+  1.0.10/code 11 and the validator rejects reused codes through 10.
+- Firebase CLI 15.29.0 preserves conditional native-store secret bindings during
+  deployment. The pipeline now verifies live billing bindings before publishing
+  the hosted client.
 - Production deploys now push `app`, `api`, `apiAi`, and `apiStripe` as a single
   Firebase operation instead of four sequential ones, so the functions payload
   uploads once and Firebase updates them concurrently. The four have no ordering

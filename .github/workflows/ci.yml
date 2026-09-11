@@ -47,7 +47,7 @@ jobs:
           distribution: temurin
           java-version: "21"
       - name: Install Firebase CLI for rules tests
-        run: npm install -g firebase-tools@15.26.0
+        run: npm install -g firebase-tools@15.29.0
       - name: Test Firestore security rules
         run: npm run test:rules
       - run: npx tsc --noEmit
@@ -105,9 +105,9 @@ jobs:
         run: npm ci --prefix functions
       - run: npm run build:firebase
       - name: Install Firebase CLI
-        # Pinned to match the verify job. An unpinned global install let a new
-        # firebase-tools major reach production deploys with no repo change.
-        run: npm install -g firebase-tools@15.26.0
+        # Match verify and pass user .env flags during function discovery so
+        # conditional native-store secrets remain bound to apiStore.
+        run: npm install -g firebase-tools@15.29.0
       - name: Authenticate to Firebase
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.8
         with:
@@ -210,6 +210,10 @@ jobs:
           # Create/update the new target before Hosting publishes its rewrite.
           # This API-only function does not reference browser static assets.
           deploy_target functions:apiStore || exit $?
+
+          # Verify the actual runtime before publishing the client.
+          gcloud functions describe apiStore --gen2 --region=us-central1 \
+            --project=yardup-2026 --format=json | node scripts/verify-store-bindings.cjs
 
           # The old client remains valid under the new rules, while the new
           # client writes legalConsent fields rejected by the old allowlist.
