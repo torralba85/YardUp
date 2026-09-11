@@ -17,9 +17,9 @@ import { Button } from "@/components/ui/Button";
 
 /** Broad size directions — Studio / 1 Bed / 2 Bed, mapped to footprints. */
 const SIZE_OPTIONS = [
-  { footprint: 400, title: "Studio", blurb: "400 ft² · sleeps 1–2" },
-  { footprint: 600, title: "1 Bedroom", blurb: "600 ft² · most popular" },
-  { footprint: 1000, title: "2 Bedroom", blurb: "1,000 ft² · max rent" },
+  { footprint: 400, title: "Studio", blurb: "400 ft² · guest suite or rental" },
+  { footprint: 600, title: "1 Bedroom", blurb: "600 ft² · flexible living & income" },
+  { footprint: 1000, title: "2 Bedroom", blurb: "1,000 ft² · multi-gen family living" },
 ] as const;
 
 const FINISHES = Object.keys(finishLabels) as ExteriorFinish[];

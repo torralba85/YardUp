@@ -19,11 +19,11 @@ const config = {
   ios: {
     contentInset: "automatic",
     preferredContentMode: "mobile" as const,
-    backgroundColor: "#F2E5D5",
+    backgroundColor: "#F5F5F0",
   },
   plugins: {
     SplashScreen: {
-      backgroundColor: "#F2E5D5",
+      backgroundColor: "#F5F5F0",
       launchAutoHide: true,
     },
   },
