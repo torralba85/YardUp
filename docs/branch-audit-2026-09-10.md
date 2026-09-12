@@ -16,6 +16,7 @@ work is unlanded — every branch below was additionally checked by content.
 |---|---|---|
 | `master` | default | — |
 | `backup/expo-main` | ahead 28, behind 128 | Deliberate archive of the pre-Next.js Expo application. Its history exists nowhere else; deleting it destroys the only copy. |
+| `wip/local-backup-2026-09-09` | ahead 10, behind 13 | Hold, do not delete yet. A local safety copy taken before the parcel work was split into #188 / #191 / #193; its parcel lineage predates that hardening, so re-merging `lib/server/parcel-resolver.ts` would undo it. But it is still the only copy of the Kickstarter Remotion composition, which is deferred rather than decided, so it is excluded from the cleanup script until that call is made. |
 
 ## Fully merged — safe to delete
 
@@ -38,7 +39,6 @@ work is unlanded — every branch below was additionally checked by content.
 | `claude/security-scan-public-repo-fbon3u` | ahead 1, behind 107 | PR #161, closed. A lockfile-only audit fix from 2026-08-05, 107 commits stale. Both lockfiles have moved since; re-run `npm audit` instead of merging. |
 | `codex/ci-maintenance-2026-08-31` | ahead 4, behind 85 | PR #168, closed. Both investigation documents are salvaged here. The Dependabot limit change is deliberately not taken — see Deferred. |
 | `claude/project-visual-polish-mb7j3k` | ahead 7, behind 126 | No PR. Built entirely on the retired Blue Hour / Golden Hour system: it edits `components/landing/nocturne/*` (deleted), adds `remotion/nocturne/*`, and tunes `rounded-full` / `lf-clay-ink` tokens. `CLAUDE.md` forbids applying archived design to new work. |
-| `wip/local-backup-2026-09-09` | ahead 10, behind 13 | No PR. A local safety copy taken before the parcel work was split into #188 / #191 / #193. Its parcel lineage predates that hardening, so re-merging `lib/server/parcel-resolver.ts` would undo it. The genuinely unlanded pieces are salvaged or deferred below. |
 
 ## Salvaged into this branch
 
@@ -90,11 +90,34 @@ work is unlanded — every branch below was additionally checked by content.
 ## Executing the deletions
 
 This session could not create the archive tags Step 4 of
-`.github/stale_branch_cleanup.md` calls for: pushing to `refs/tags/*` is refused with
-HTTP 403 while branch pushes to the session's own branch succeed, so the credential is
-scoped to that branch. No branch was deleted, because the archive snapshot is the
-safeguard that makes deletion reversible.
+`.github/stale_branch_cleanup.md` calls for: pushing to `refs/tags/*` was refused with
+HTTP 403 while branch pushes to the session's own branch succeeded, so the credential was
+scoped to that branch. `scripts/cleanup-stale-branches.sh` was written to perform both
+halves from a checkout with full push rights: tag every branch, verify each tag landed on
+the remote, and only then delete.
 
-`scripts/cleanup-stale-branches.sh` performs both halves from a checkout with full push
-rights. It tags every branch first, verifies each tag landed on the remote, and only then
-deletes. Run it with `--dry-run` first.
+### What was executed, 2026-09-11
+
+The cleanup was run from a local checkout, with a dated tag namespace
+(`archive/2026-09-11/remote/<branch>` for remote branches, `archive/.../local/<branch>`
+for local-only ones) rather than the flat `archive/<branch>-backup` this script emits. The
+run also archived seven local-only branches this audit never saw. Nine of the twelve
+targets were archived and deleted:
+
+`chore/dependabot-config`, `codex/release-hardening-2026-09-01`,
+`codex/play-upload-key-2026-09-03`, `copilot/fix-payments-scope-idempotency-keys`,
+`fix/parcel-debug-pass-2`, `release/android-1.0.6`,
+`claude/security-scan-public-repo-fbon3u`, and `claude/project-visual-polish-mb7j3k` each
+have an `archive/2026-09-11/remote/...` tag. `fix/mobile-production-20260910` was deleted
+without a tag, which is correct — PR #190 merged its history into `master`.
+
+Three targets are still on the remote and still untagged:
+
+| Branch | What it supplies |
+|---|---|
+| `fix/166-checkout-attempt-idempotency` | `lib/server/active-checkout-sessions.ts`, salvaged in this branch |
+| `agent/stripe-checkout-sponsorship` | `.github/FUNDING.yml`, salvaged in this branch |
+| `codex/ci-maintenance-2026-08-31` | the two investigation documents, salvaged in this branch |
+
+Each is the upstream source of something this pull request carries. Holding them until it
+merges is the right order: delete them afterwards, once the salvaged work is on `master`.

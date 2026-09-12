@@ -10,8 +10,13 @@
 #   scripts/cleanup-stale-branches.sh --dry-run   # show what would happen
 #   scripts/cleanup-stale-branches.sh             # tag, verify, delete
 #
-# Kept deliberately: master and backup/expo-main (the only copy of the
-# pre-Next.js Expo history).
+# Nine of the original twelve targets were archived and deleted on 2026-09-11;
+# see docs/branch-audit-2026-09-10.md. Only the three below remain, each the
+# upstream source of work the stale-branch-cleanup pull request salvages.
+#
+# Kept deliberately: master, backup/expo-main (the only copy of the pre-Next.js
+# Expo history), and wip/local-backup-2026-09-09 (the only copy of the deferred
+# Kickstarter Remotion composition).
 
 set -euo pipefail
 
@@ -19,21 +24,17 @@ REMOTE="${REMOTE:-origin}"
 DRY_RUN=0
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
+# Tag namespace established by the 2026-09-11 cleanup run:
+#   archive/<date>/remote/<branch> for remote branches.
+# Override to re-date a later run.
+ARCHIVE_DATE="${ARCHIVE_DATE:-$(date -u +%Y-%m-%d)}"
+
 BRANCHES=(
-  # Fully merged into master.
-  chore/dependabot-config
-  codex/release-hardening-2026-09-01
-  codex/play-upload-key-2026-09-03
-  fix/mobile-production-20260910
-  # Superseded: the work landed elsewhere, or merging would regress master.
-  copilot/fix-payments-scope-idempotency-keys
-  fix/parcel-debug-pass-2
+  # Held back on 2026-09-11 because each is the upstream source of work this
+  # branch salvages. Delete only after that pull request merges.
   fix/166-checkout-attempt-idempotency
   agent/stripe-checkout-sponsorship
-  release/android-1.0.6
-  claude/security-scan-public-repo-fbon3u
   codex/ci-maintenance-2026-08-31
-  claude/project-visual-polish-mb7j3k
 )
 
 run() {
@@ -52,7 +53,7 @@ for branch in "${BRANCHES[@]}"; do
     echo "  skip $branch (not on $REMOTE)"
     continue
   fi
-  tag="archive/${branch//\//-}-backup"
+  tag="archive/${ARCHIVE_DATE}/remote/${branch}"
   echo "$branch -> $tag ($(git rev-parse --short "$REMOTE/$branch"))"
   run git tag -f "$tag" "$REMOTE/$branch"
   run git push -f "$REMOTE" "refs/tags/$tag"
@@ -63,7 +64,7 @@ echo "== Stage 2: verify every tag is on the remote =="
 missing=0
 for branch in "${BRANCHES[@]}"; do
   git rev-parse --verify --quiet "$REMOTE/$branch" >/dev/null || continue
-  tag="archive/${branch//\//-}-backup"
+  tag="archive/${ARCHIVE_DATE}/remote/${branch}"
   if [ "$DRY_RUN" -eq 1 ]; then
     echo "  would verify $tag"
   elif git ls-remote --exit-code --tags "$REMOTE" "refs/tags/$tag" >/dev/null 2>&1; then
@@ -90,4 +91,4 @@ done
 
 echo
 echo "Done. Restore any branch with:"
-echo "  git push $REMOTE archive/<branch-with-dashes>-backup:refs/heads/<branch>"
+echo "  git push $REMOTE archive/$ARCHIVE_DATE/remote/<branch>:refs/heads/<branch>"
