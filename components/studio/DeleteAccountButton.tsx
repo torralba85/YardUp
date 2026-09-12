@@ -34,7 +34,8 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
     setError(null);
     try {
       await deleteAccount();
-      // On success the user becomes null and the parent unmounts this control.
+      // On success the session ends and `deleteAccount` navigates to the public
+      // landing, so this control goes away with the rest of the signed-in tree.
     } catch (err) {
       setError(err instanceof Error ? err.message : "Account deletion failed.");
       setPending(false);

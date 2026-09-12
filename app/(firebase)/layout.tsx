@@ -7,7 +7,9 @@ import { AuthProvider } from "@/lib/auth-context";
  * `AuthProvider` used to sit in the root layout, so the marketing landing
  * downloaded and initialized all of it without a single `useAuth` consumer on
  * the page. Scoping the provider to this route group keeps that payload off
- * `/`, `/about`, `/help`, `/terms`, and `/privacy`.
+ * `/about`, `/help`, `/terms`, and `/privacy`. The landing now has a separate
+ * client-only auth island for its member navigation; it loads the SDK after
+ * hydration to resolve existing sessions, while staying outside this layout.
  *
  * The group parentheses are organizational only — every route inside keeps its
  * original URL (`app/(firebase)/studio` still serves `/studio`).

@@ -49,6 +49,7 @@ interface TriggerHost {
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { signIn, signUp, signInWithGoogle, signInWithApple, user } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [role, setRole] = useState<"user" | "builder">("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -230,7 +231,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           email,
           password,
           displayName,
-          "user",
+          role,
           CURRENT_LEGAL_CONSENT,
         );
       } else {
@@ -260,7 +261,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     setLoading(true);
     try {
-      await signInWithGoogle("user", CURRENT_LEGAL_CONSENT);
+      await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
@@ -285,7 +286,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     setLoading(true);
     try {
-      await signInWithApple("user", CURRENT_LEGAL_CONSENT);
+      await signInWithApple(role, CURRENT_LEGAL_CONSENT);
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
@@ -325,6 +326,27 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <label
+                  htmlFor="auth-role"
+                  className="lf-caption mb-1 block font-medium text-lf-taupe"
+                >
+                  Account type
+                </label>
+                <select
+                  id="auth-role"
+                  value={role}
+                  onChange={(event) =>
+                    setRole(event.target.value as "user" | "builder")
+                  }
+                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 px-3 text-base sm:text-sm text-lf-espresso motion-safe:transition-colors focus:outline-none focus:border-lf-espresso focus:ring-2 focus:ring-lf-espresso"
+                >
+                  <option value="user">Homeowner</option>
+                  <option value="builder">Builder</option>
+                </select>
+              </div>
+            )}
             {isSignUp && (
               <div>
                 <label
