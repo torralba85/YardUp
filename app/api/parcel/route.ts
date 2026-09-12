@@ -91,13 +91,16 @@ export async function GET(request: NextRequest) {
       clearTimeout(timer);
     }
 
+    // Rate limiting is a provider failure, not a request failure. Halting
+    // here used to fail the whole lookup whenever Regrid's quota spiked, even
+    // though the keyless county/statewide GIS chain below can still answer.
     if (regridRes.status === 429) {
-      return NextResponse.json(
-        { error: "Rate limit reached — please try again shortly" },
-        {
-          status: 503,
-          headers: { "Retry-After": "10" },
-        },
+      console.warn("[/api/parcel] Regrid rate-limited; degrading to public GIS");
+      return await successWithoutRegrid(
+        lat,
+        lng,
+        requestedAddress,
+        censusLocation,
       );
     }
 

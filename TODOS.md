@@ -306,6 +306,16 @@ P2 - larger agent work that needs a focused branch:
   side-by-side finances, and report versioning.
 - More jurisdiction-specific zoning: per-city rules, utility constraints,
   parking overlays, owner-occupancy flags, and permit checklist data.
+- Public per-jurisdiction ADU pages generated from `lib/regulations-data.ts`
+  (`/adu/seattle`, `/adu/san-diego`, ...), plus an `/adu` index once several
+  exist. Nine curated guides sit behind the studio today, leaving seven
+  indexable URLs and no organic entry point for city-level ADU search.
+  Publish `confidence: "high"` guides only, each carrying `verifiedAt`,
+  citations, and the planning-instrument disclaimer. Trigger: native store
+  verification live with a sandbox purchase actually granting, and counsel
+  signed off on public-facing permit language. A generic HTML sitemap page
+  is not wanted - `SiteFooter` already puts every public route one click
+  away and `app/sitemap.ts` covers search.
 - Financing model: interest rates, loan scenarios, tax assumptions, reserve
   assumptions, and sensitivity analysis.
 - Full calculation provenance: explain every number with source, timestamp,
@@ -313,3 +323,6 @@ P2 - larger agent work that needs a focused branch:
 - Solar/daylight, privacy, view-mode, and aerial polish in the 3D/2D scene.
 - Native app value-add after wrapper launch: push reminders, offline saved
   scenarios, camera-native photo capture, and store-specific onboarding.
+- Kickstarter campaign submission: reword and align the campaign submission
+  to strictly follow Kickstarter guidelines (framing as a finite, deliverable
+  release with clear scope boundaries and no recurring operational/hosting costs).

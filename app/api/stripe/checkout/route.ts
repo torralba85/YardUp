@@ -1,5 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
+import {
+  replaceExpiredActiveCheckout,
+  reserveActiveCheckout,
+  saveActiveCheckoutSession,
+} from "@/lib/server/active-checkout-sessions";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
@@ -113,40 +118,107 @@ export async function POST(request: NextRequest) {
   }
   const previewSerial = requestData?.preview?.previewSerial ?? requestId;
 
+  // One resumable Checkout Session per entitlement. A second tab is handed the
+  // Session the first one opened rather than a second payable Session.
+  const reservationInput = {
+    purchaseType: "lead_unlock" as const,
+    accountId: builderId,
+    purchaseId: requestId,
+    attemptId: checkoutAttemptId,
+    parameters: { origin, previewSerial: String(previewSerial) },
+  };
+
   try {
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: "payment",
-        submit_type: "pay",
-        integration_identifier: "lotfoundry_lead_unlock_qmvdjrxn",
-        payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: LEAD_UNLOCK_PRICE_CENTS,
-              product_data: {
-                name: `LotFoundry lead unlock — ${previewSerial}`,
+    let reservation = await reserveActiveCheckout(reservationInput);
+
+    // Two passes at most: resume the reserved Session, or replace it once
+    // Stripe confirms it expired. A third pass would mean another writer keeps
+    // winning the race, which the 409 below reports rather than looping on.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (reservation.sessionId && reservation.sessionUrl) {
+        const existing = await stripe.checkout.sessions.retrieve(
+          reservation.sessionId,
+        );
+        if (existing.status === "open") {
+          return NextResponse.json({ url: reservation.sessionUrl });
+        }
+        if (existing.status === "complete") {
+          return NextResponse.json(
+            { error: "Payment is being confirmed. Please refresh shortly." },
+            { status: 409 },
+          );
+        }
+        if (existing.status !== "expired") {
+          return NextResponse.json(
+            { error: "Payments are temporarily unavailable." },
+            { status: 503 },
+          );
+        }
+        reservation = await replaceExpiredActiveCheckout(
+          reservationInput,
+          reservation.attemptId,
+        );
+        continue;
+      }
+
+      const session = await stripe.checkout.sessions.create(
+        {
+          mode: "payment",
+          submit_type: "pay",
+          integration_identifier: "lotfoundry_lead_unlock_qmvdjrxn",
+          payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
+          line_items: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: "usd",
+                unit_amount: LEAD_UNLOCK_PRICE_CENTS,
+                product_data: {
+                  name: `LotFoundry lead unlock — ${previewSerial}`,
+                },
               },
             },
-          },
-        ],
-        metadata: { purchaseType: "lead_unlock", builderId, requestId },
-        success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
-        cancel_url: `${origin}/builder?lead=${requestId}`,
-      },
-      {
-        idempotencyKey: createStripeIdempotencyKey(
-          "lead_unlock",
-          builderId,
-          requestId,
-          checkoutAttemptId,
-        ),
-      },
-    );
+          ],
+          metadata: { purchaseType: "lead_unlock", builderId, requestId },
+          success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
+          cancel_url: `${origin}/builder?lead=${requestId}`,
+        },
+        {
+          idempotencyKey: createStripeIdempotencyKey(
+            "lead_unlock",
+            builderId,
+            requestId,
+            reservation.attemptId,
+          ),
+        },
+      );
+      if (!session.url) {
+        throw new Error("Stripe returned a Checkout Session without a URL");
+      }
 
-    return NextResponse.json({ url: session.url });
+      const saved = await saveActiveCheckoutSession(
+        reservationInput,
+        reservation,
+        {
+          id: session.id,
+          url: session.url,
+          ...(session.expires_at
+            ? { expiresAtMs: session.expires_at * 1000 }
+            : {}),
+        },
+      );
+      // A concurrent writer replaced this attempt mid-flight; loop once more so
+      // the buyer receives the reservation that actually won.
+      if (saved.attemptId === reservation.attemptId) {
+        return NextResponse.json({ url: saved.sessionUrl ?? session.url });
+      }
+      reservation = saved;
+    }
+
+    return NextResponse.json(
+      { error: "Could not resume checkout. Please try again." },
+      { status: 409 },
+    );
   } catch (err) {
     console.error("[stripe/checkout] Failed to create Checkout session:", err);
     return NextResponse.json(
