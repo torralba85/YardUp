@@ -204,6 +204,18 @@ describe("POST /api/stripe/checkout", () => {
     );
   });
 
+  it("retries an uncertain creation with the original preview serial", async () => {
+    const create = vi.fn()
+      .mockRejectedValueOnce(new Error("Connection lost after Stripe accepted creation"))
+      .mockResolvedValueOnce({ id: "cs_retry", url: "https://stripe.test/retry" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    mocks.leadDoc.data = () => ({ status: "submitted", matchedBuilderIds: ["b1"], preview: { previewSerial: "LF-RENAMED" } });
+    const retry = await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-2" }));
+    expect(retry.status).toBe(200);
+    expect(create.mock.calls[1]).toEqual(create.mock.calls[0]);
+  });
+
   it("creates an idempotent, explicitly typed Stripe Checkout session", async () => {
     mocks.stripe = {
       checkout: {

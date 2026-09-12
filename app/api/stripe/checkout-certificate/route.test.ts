@@ -136,6 +136,17 @@ afterEach(() => {
 });
 
 describe("POST /api/stripe/checkout-certificate", () => {
+  it("retries an uncertain creation with the original presentation parameters", async () => {
+    const create = vi.fn()
+      .mockRejectedValueOnce(new Error("Connection lost after Stripe accepted creation"))
+      .mockResolvedValueOnce({ id: "cs_retry", url: "https://stripe.test/retry" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+    await POST(postRequest({ certKey: "parcel-1", parcelName: "Original", checkoutAttemptId: "attempt-1" }));
+    const retry = await POST(postRequest({ certKey: "parcel-1", parcelName: "Renamed", checkoutAttemptId: "attempt-2" }));
+    expect(retry.status).toBe(200);
+    expect(create.mock.calls[1]).toEqual(create.mock.calls[0]);
+  });
+
   it("400s without a valid certKey", async () => {
     expect((await POST(postRequest({}))).status).toBe(400);
     expect((await POST(postRequest({ certKey: "x".repeat(201) }))).status).toBe(

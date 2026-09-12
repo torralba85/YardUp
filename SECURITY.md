@@ -7,6 +7,15 @@ this repository.
 
 ## Known advisories (resolved / tracked)
 
+### September 12, 2026 dependency refresh
+
+- Updated both lockfiles to `sharp@0.35.4` for GHSA-rgj7-g3m4-5g8c.
+- Updated root `js-yaml` to 4.3.2 for GHSA-2883-xcg3-v3hh.
+- Updated `qs` to 6.16.0 for GHSA-x5fp-wj9c-mxmx and
+  GHSA-4mjr-xmp4-gh2g. Functions overrides `qs` because Express 4.22.2's
+  `~6.15.1` range excludes the fixed minor release.
+- Validate both dependency trees with `npm audit` and `npm audit --prefix functions`.
+
 ### Resolved: GHSA-qx2v-qp2m-jg93 - PostCSS XSS via unescaped `</style>` (moderate)
 
 - **Status:** Resolved. The repository's PostCSS override is `^8.5.10`, so

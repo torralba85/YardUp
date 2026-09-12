@@ -161,6 +161,8 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      const reservedOrigin = reservation.parameters.origin;
+      const reservedPreviewSerial = reservation.parameters.previewSerial;
       const session = await stripe.checkout.sessions.create(
         {
           mode: "payment",
@@ -174,14 +176,14 @@ export async function POST(request: NextRequest) {
                 currency: "usd",
                 unit_amount: LEAD_UNLOCK_PRICE_CENTS,
                 product_data: {
-                  name: `LotFoundry lead unlock — ${previewSerial}`,
+                  name: `LotFoundry lead unlock — ${reservedPreviewSerial}`,
                 },
               },
             },
           ],
           metadata: { purchaseType: "lead_unlock", builderId, requestId },
-          success_url: `${origin}/builder?lead=${requestId}&unlocked=1`,
-          cancel_url: `${origin}/builder?lead=${requestId}`,
+          success_url: `${reservedOrigin}/builder?lead=${requestId}&unlocked=1`,
+          cancel_url: `${reservedOrigin}/builder?lead=${requestId}`,
         },
         {
           idempotencyKey: createStripeIdempotencyKey(

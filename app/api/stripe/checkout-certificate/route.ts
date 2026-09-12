@@ -144,6 +144,8 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      const reservedOrigin = reservation.parameters.origin;
+      const reservedParcelName = reservation.parameters.parcelName;
       const session = await stripe.checkout.sessions.create(
         {
           mode: "payment",
@@ -157,8 +159,8 @@ export async function POST(request: NextRequest) {
                 currency: "usd",
                 unit_amount: CERTIFICATE_PRICE_CENTS,
                 product_data: {
-                  name: parcelName
-                    ? `LotFoundry Certificate of Feasibility — ${parcelName}`
+                  name: reservedParcelName
+                    ? `LotFoundry Certificate of Feasibility — ${reservedParcelName}`
                     : "LotFoundry Certificate of Feasibility",
                 },
               },
@@ -168,8 +170,8 @@ export async function POST(request: NextRequest) {
           metadata: { purchaseType: "certificate", uid, certKey },
           // Stamp which certificate was bought so the return only unlocks the
           // panel whose key matches (the studio may rehydrate a different parcel).
-          success_url: `${origin}/studio?cert=${encodeURIComponent(certKey)}`,
-          cancel_url: `${origin}/studio`,
+          success_url: `${reservedOrigin}/studio?cert=${encodeURIComponent(certKey)}`,
+          cancel_url: `${reservedOrigin}/studio`,
         },
         {
           idempotencyKey: createStripeIdempotencyKey(
