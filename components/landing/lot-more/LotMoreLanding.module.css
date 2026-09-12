@@ -158,6 +158,46 @@
   align-items: center;
   gap: 26px;
 }
+.memberNav {
+  position: relative;
+}
+.memberNav summary {
+  cursor: pointer;
+  white-space: nowrap;
+}
+.memberNav summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.memberPanel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 5;
+  width: min(240px, calc(100vw - 32px));
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--chalk);
+  box-shadow: 6px 8px 0 #16161618;
+}
+.memberPanel a,
+.memberPanel button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.memberPanel a:hover,
+.memberPanel button:hover {
+  background: var(--line);
+}
 .signIn {
   font-size: 14px;
   gap: 7px;

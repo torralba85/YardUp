@@ -193,13 +193,15 @@ describe("getGooglePlayProductPrices", () => {
   it("uses the localized prices returned by Google Play", async () => {
     const getDigitalGoodsService = vi.fn(async () => ({
       getDetails: vi.fn(async () => [
+        // The amounts Play actually persists for these SKUs: a $175 / $300
+        // base sells for $174.99 / $299.99 after mandatory price charming.
         {
           itemId: STORE_PRODUCTS.builder5.id,
-          price: { value: "219.99", currency: "USD" },
+          price: { value: "174.99", currency: "USD" },
         },
         {
           itemId: STORE_PRODUCTS.builder10.id,
-          price: { value: 399.99, currency: "USD" },
+          price: { value: 299.99, currency: "USD" },
         },
       ]),
     }));
@@ -213,10 +215,10 @@ describe("getGooglePlayProductPrices", () => {
     );
 
     expect(prices[STORE_PRODUCTS.builder5.id]).toMatchObject({
-      value: 219.99,
+      value: 174.99,
       currency: "USD",
-      formatted: "$219.99",
+      formatted: "$174.99",
     });
-    expect(prices[STORE_PRODUCTS.builder10.id].formatted).toBe("$399.99");
+    expect(prices[STORE_PRODUCTS.builder10.id].formatted).toBe("$299.99");
   });
 });

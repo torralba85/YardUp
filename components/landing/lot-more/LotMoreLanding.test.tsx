@@ -12,7 +12,9 @@ const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/address-handoff", () => ({ stashAddressQuery: stash }));
 vi.mock("next/dynamic", () => ({
-  default: () =>
+  default: (loader: () => unknown) => loader.toString().includes("LandingMemberNav")
+    ? () => <nav aria-label="Member navigation" />
+    :
     function TestAuthGate({
       onAuthenticated,
       onDismiss,
@@ -50,6 +52,7 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 describe("landing address handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     vi.stubGlobal(
       "IntersectionObserver",
       class {
@@ -59,8 +62,33 @@ describe("landing address handoff", () => {
     );
   });
 
+  // The member navigation carries the Firebase client SDK. Mounting it for a
+  // signed-out visitor would put that download back on `/`, which is the cost
+  // the route group split exists to avoid.
+  it("keeps the auth island off the header until a browser has signed in", () => {
+    const guest = render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.queryByRole("navigation", { name: "Member navigation" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    guest.unmount();
+
+    window.localStorage.setItem("lf:member-session", "1");
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.getByRole("navigation", { name: "Member navigation" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+  });
+
+  it("exposes builder registration in desktop, footer, and mobile navigation", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.getAllByRole("link", { name: "Register as a builder" })).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    for (const link of screen.getAllByRole("link", { name: "Register as a builder" })) {
+      expect(link).toHaveAttribute("href", "/signup?role=builder");
+    }
+    expect(screen.getAllByRole("link", { name: "Register as a builder" })).toHaveLength(3);
+  });
+
   it("waits for confirmed authentication before storing and routing the trimmed address", () => {
-    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[0],
       { target: { value: "  456 Pine St, Denver, CO  " } },
@@ -79,7 +107,7 @@ describe("landing address handoff", () => {
   });
 
   it("dismisses authentication without discarding the address or starting a lookup", () => {
-    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[1],
       { target: { value: "456 Pine St, Denver, CO" } },
@@ -97,7 +125,7 @@ describe("landing address handoff", () => {
   });
 
   it("navigates segmented controls using keyboard arrow keys", () => {
-    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    render(<LotMoreLanding scenarios={scenarios} />);
     const sceneGroup = screen.getByRole("group", {
       name: "Property illustration view",
     });

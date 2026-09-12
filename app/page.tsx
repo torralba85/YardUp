@@ -1,7 +1,6 @@
 ﻿import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
-import { formatCertificatePrice } from "@/lib/certificate-pricing";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -74,10 +73,7 @@ export default function LandingPage() {
   );
   return (
     <div className={`${display.variable} ${body.variable}`}>
-      <LotMoreLanding
-        scenarios={scenarios}
-        certificatePrice={formatCertificatePrice()}
-      />
+      <LotMoreLanding scenarios={scenarios} />
     </div>
   );
 }

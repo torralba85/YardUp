@@ -31,6 +31,10 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { type LegalConsent } from "./legal-consent";
+import {
+  forgetMemberSession,
+  rememberMemberSession,
+} from "./member-session-hint";
 import { clearInitialParcel } from "./parcel-handoff";
 import { validateDisplayName, validateEmail, validatePassword } from "./account-settings";
 
@@ -78,6 +82,9 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Firebase Auth is shared by every client auth island. Its listeners must all
+// yield to the registration action that owns the role and consent receipt.
+const pendingAuthRoleRef: { current: UserRole | null } = { current: null };
 
 /**
  * Provide Firebase Authentication state and actions to the app.
@@ -96,7 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const pendingAuthRoleRef = useRef<UserRole | null>(null);
+  const profileRequestRef = useRef(0);
+  const authEventRef = useRef(0);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
   // Tracks whether this tab has seen a signed-in user, so we only clear the
   // parcel stash on a real sign-out (authed -> null), never on the initial
   // guest/null state that fires before the studio's ParcelProvider mounts.
@@ -111,6 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       legalConsent?: LegalConsent;
     } = {},
   ) => {
+    const request = ++profileRequestRef.current;
+    const publishProfile = (value: UserProfile) => {
+      if (request === profileRequestRef.current) setProfile(value);
+    };
     const docRef = doc(db, "users", u.uid);
     const email = options.email ?? u.email ?? "";
     const displayName = options.displayName ?? u.displayName ?? null;
@@ -162,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, { merge: true });
         }
 
-        setProfile({
+        publishProfile({
           uid: u.uid,
           email: nextEmail,
           displayName: nextDisplayName,
@@ -185,20 +198,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }, { merge: true });
-        setProfile(fallbackProfile);
+        publishProfile(fallbackProfile);
       }
     } catch (error) {
       if (options.legalConsent) throw error;
-      setProfile(fallbackProfile);
+      publishProfile(fallbackProfile);
     }
   }, []);
 
   useEffect(() => {
+    const invalidateRequests = () => {
+      ++profileRequestRef.current;
+      ++authEventRef.current;
+    };
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      // Registration owns publication until its role and consent write succeeds.
+      // Otherwise a gate can navigate on this event before signup finishes.
+      if (u && pendingAuthRoleRef.current !== null) return;
+      const event = ++authEventRef.current;
+      setLoading(true);
       setUser(u);
+      setProfile(null);
       try {
         if (u) {
           hadUserRef.current = true;
+          // Lets the Firebase-free landing know an auth island is worth loading
+          // on the next visit, without it having to ask Firebase.
+          rememberMemberSession();
           // signUp/social handlers persist the consent-bearing profile before
           // completing. Letting this listener race them could create a profile
           // without the receipt and redirect before a failed write is reported.
@@ -206,6 +232,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await ensureProfile(u);
           }
         } else {
+          ++profileRequestRef.current;
           // Only clear the stashed parcel when a real session ends (a
           // previously authed user going null — logout, deleteAccount, or an
           // external token expiry/revocation), so the next guest or account in
@@ -216,13 +243,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             hadUserRef.current = false;
             clearInitialParcel();
           }
+          // An external expiry or revocation ends the session without passing
+          // through logout, so the landing hint has to be dropped here too.
+          forgetMemberSession();
           setProfile(null);
         }
       } finally {
-        setLoading(false);
+        if (event === authEventRef.current) setLoading(false);
       }
     });
-    return unsubscribe;
+    return () => {
+      invalidateRequests();
+      unsubscribe();
+    };
   }, [ensureProfile]);
 
   const signIn = (email: string, password: string) =>
@@ -241,6 +274,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
       await ensureProfile(cred.user, { displayName, email, role, legalConsent });
+      setUser(cred.user);
+      setLoading(false);
       return cred;
     } catch (error) {
       if (cred) {
@@ -265,6 +300,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cred = await signInWithPopup(auth, provider);
       try {
         await ensureProfile(cred.user, { role, legalConsent });
+        setUser(cred.user);
+        setLoading(false);
       } catch (error) {
         await signOut(auth).catch(() => undefined);
         throw error;
@@ -287,6 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cred = await signInWithPopup(auth, provider);
       try {
         await ensureProfile(cred.user, { role, legalConsent });
+        setUser(cred.user);
+        setLoading(false);
       } catch (error) {
         await signOut(auth).catch(() => undefined);
         throw error;
@@ -297,11 +336,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    // The parcel stash mirrors this session's live lot; the next session
-    // (guest or another account) must start from demo data, not that parcel.
-    clearInitialParcel();
-    return signOut(auth);
+  const logout = async () => {
+    setLogoutError(null);
+    try {
+      await signOut(auth);
+      ++profileRequestRef.current;
+      pendingAuthRoleRef.current = null;
+      setUser(null);
+      setProfile(null);
+      clearInitialParcel();
+      forgetMemberSession();
+      // Discard mounted Studio state and the client router's protected pages.
+      window.location.replace("/");
+    } catch {
+      setLogoutError("Could not sign out. Please try again.");
+    }
   };
 
   const sendPasswordReset = (email: string) =>
@@ -368,7 +417,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Calls the server route, which uses the Admin SDK to remove the user's
    * saved scenarios, profile document (rules forbid a client delete of
    * `users/{uid}`), any builder profile, and the Firebase Auth identity itself.
-   * On success the local session is cleared. The server-side Auth deletion
+   * On success the local session is cleared and the browser is sent to the
+   * public landing, the same ending {@link logout} performs and for the same
+   * reason. The server-side Auth deletion
    * avoids the `auth/requires-recent-login` re-auth prompt a client-side
    * `deleteUser` would hit.
    *
@@ -390,9 +441,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // The Auth user is gone server-side; drop any lingering local session.
     clearInitialParcel();
+    forgetMemberSession();
     await signOut(auth).catch(() => undefined);
     setUser(null);
     setProfile(null);
+    // Deletion ends a session exactly as logout does, so it needs the same hard
+    // navigation. Clearing `user` alone leaves the Studio's mounted state and
+    // the client router's cached protected pages in place, which is what made
+    // a signed-out app keep presenting itself as signed in.
+    window.location.replace("/");
   };
 
   return (
@@ -416,6 +473,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {logoutError && (
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[100] border border-lot-carbon bg-lot-chalk p-4 text-lot-carbon">
+          {logoutError}
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }
