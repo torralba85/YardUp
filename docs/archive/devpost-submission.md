@@ -1,3 +1,7 @@
+# Archived: OpenAI Build Week 2026 Devpost Submission
+
+> [!NOTE]
+> **Archival Record**: This document is an archived historical record of the OpenAI Build Week 2026 (July–August 2026) submission notes, requirements, and draft copy. It is preserved for project history and provenance. For current operating documentation, see [docs/README.md](../README.md).
 
 ## How Codex and GPT-5.6 are used
 

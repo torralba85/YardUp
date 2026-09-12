@@ -1,12 +1,13 @@
 # LotFoundry
 
-LotFoundry is an AI-assisted ADU feasibility studio for homeowners. Enter an
-address—or use a built-in demo parcel—to explore what may fit, what it may cost,
-what it may earn, and which questions still need a local professional.
+**AI-assisted ADU feasibility studio for homeowners and residential builders.**
+
+Enter an address—or explore built-in demo parcels—to estimate what may fit, what it may cost, what it may earn, and which questions require a local professional.
 
 [Try the live app](https://lotfoundry.net) ·
 [Read the documentation](docs/README.md) ·
-[Review the Build Week submission notes](docs/devpost-submission.md)
+[Architecture guide](AGENTS.md) ·
+[Design system](docs/design/README.md)
 
 ## Preview
 
@@ -37,45 +38,14 @@ Home and feasibility studio on phone, and the studio on tablet.
 LotFoundry is an early planning instrument, not a permit decision, appraisal,
 construction document, or substitute for professional advice.
 
-## OpenAI Build Week 2026
+## AI architecture & intelligent workflows
 
-LotFoundry is entered in the **Apps for Your Life** track. The project existed
-before Build Week, so the submission evidence clearly separates the baseline
-from the work completed during the July 13–21 event window.
+LotFoundry integrates OpenAI models to augment deterministic spatial calculations with structured qualitative analysis:
 
-During Build Week, Codex was used as a hands-on engineering collaborator to:
-
-- complete account, support, consent, recovery, and deletion trust flows;
-- add mobile-store purchase routing and server-side receipt verification;
-- prepare Android TWA and iOS shell configuration;
-- improve responsive studio behavior and accessibility;
-- add release, repository-health, and public-submission checks; and
-- migrate the authenticated OpenAI workflows to GPT-5.6 Sol defaults.
-
-The authenticated AI workflows themselves run on GPT-5.6 Sol through the OpenAI
-Responses API, using structured outputs and a bounded tool loop. A parcel/permit
-tool joins jurisdiction context to the project brief, and the style-matched ADU
-concept path adds image understanding and image generation, used only after
-explicit user consent.
-
-Human decisions remained explicit: product scope, legal language, visual
-direction, architecture, release boundaries, and every external submission or
-deployment decision were reviewed by the project owner. See
-[docs/devpost-submission.md](docs/devpost-submission.md) for the evidence map,
-remaining assets, and final submission checklist.
-
-### Reviewer access
-
-The core feasibility journey (Seattle, Portland, Austin) needs no login. To try
-the authenticated paths — saved scenarios, the AI project brief, style-match
-concepts, and the builder dashboard — sign in at
-[lotfoundry.net/login](https://lotfoundry.net/login).
-
-Reviewer credentials are time-limited and issued directly by the project owner.
-They are never stored in this repository.
-
-Request access through the support route before testing saved scenarios, AI
-features, or the builder dashboard.
+- **Responses API orchestration:** AI workflows run through the OpenAI Responses API with structured JSON schemas and bounded tool-calling loops, defaulting to `gpt-5.6-sol` (configurable via environment variables).
+- **Jurisdiction & permit brief:** A bounded tool loop joins localized municipal zoning bylaws, lot dimensions, and setback requirements into a concise, plain-English summary of risks and requirements.
+- **Style-matched ADU concepts:** Multimodal vision understanding analyzes architectural details (roof pitches, cladding materials, window styles, exterior palettes) from user-uploaded photos to guide image generation of matching ADU designs. Photo uploads require explicit opt-in consent.
+- **Deterministic source of truth:** Calculations for setbacks, square footage, site coverage, construction costs, rental yields, and financial returns remain strictly deterministic. AI models do not guess arithmetic or spatial measurements.
 
 ## Run locally
 
@@ -132,20 +102,32 @@ validator must be run from the prepared release workspace after the signed AAB
 exists. A clean checkout is expected to fail the final AAB-presence check because
 release binaries and signing material are intentionally excluded from Git.
 
-## Architecture
+## Architecture & technology stack
 
-| Area | Technology |
-|---|---|
-| Web app | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| Spatial UI | Three.js, React Three Fiber, Google Maps |
-| Data and auth | Firebase Hosting, Functions, Auth, Firestore |
-| AI | OpenAI Responses API with GPT-5.6 Sol; Firebase AI Logic for parcel insights |
-| Commerce | Stripe plus App Store / Google Play receipt-verification paths |
-| Mobile | PWA, Android TWA configuration, iOS Capacitor shell scaffold |
-| Quality | ESLint, Vitest, Playwright, TypeScript, GitHub Actions |
+| Area | Technology | Purpose |
+|---|---|---|
+| **Web app** | Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4 | Core web platform, server rendering, and API routes |
+| **Spatial 3D UI** | Three.js, React Three Fiber, Google Maps JS API | Interactive lot visualization, setbacks, and ADU placement |
+| **Data & auth** | Firebase Hosting, Cloud Functions (Node 22), Auth, Firestore | Serverless hosting, microservices, auth, and database |
+| **AI** | OpenAI Responses API with GPT-5.6 Sol defaults | Structured permit briefs and style-matched concept generation |
+| **Commerce** | Stripe API, Google Play Billing & Apple App Store verification | Builder lead unlocks and cross-platform purchase verification |
+| **Mobile** | PWA, Android TWA (`com.lotfoundry.app`), iOS Capacitor shell | Mobile app packaging and store distribution |
+| **Quality** | Vitest, Playwright, ESLint, TypeScript, GitHub Actions | Unit, integration, E2E, and CI/CD release pipelines |
 
-The repository map and deeper architecture links are maintained in
-[docs/README.md](docs/README.md).
+## Documentation directory
+
+Operating documentation is maintained in the [`docs/`](docs/README.md) directory:
+
+- [**docs/README.md**](docs/README.md) — Documentation index and reading order.
+- [**AGENTS.md**](AGENTS.md) — Engineering guidelines, architecture map, and operational rules.
+- [**docs/design/**](docs/design/README.md) — Design system authority (A LOT MORE typography, colors, layout rules).
+- [**docs/deployment.md**](docs/deployment.md) — Firebase Hosting, Cloud Functions deployment, and rollback runbooks.
+- [**docs/feasibility-engine-interface.md**](docs/feasibility-engine-interface.md) — Mathematical contracts and financial calculations.
+- [**docs/ai-integration-plan.md**](docs/ai-integration-plan.md) — OpenAI Responses API schemas, prompts, and safety guards.
+- [**docs/plans/monetization-marketplace-ai.md**](docs/plans/monetization-marketplace-ai.md) — Builder marketplace and checkout architecture.
+- [**docs/release-checklist.md**](docs/release-checklist.md) — Pre-release inspection checklist.
+- [**docs/repo-governance.md**](docs/repo-governance.md) — Triage matrix, debugging methodologies, and maintenance schedules.
+- [**docs/debugging-guide.md**](docs/debugging-guide.md) — Systematic defect diagnosis and bisect procedures.
 
 ## Security and privacy
 
@@ -160,7 +142,6 @@ The repository map and deeper architecture links are maintained in
 
 ## License
 
-Copyright © 2026 Andrew Torralba. This repository is source-available for
-OpenAI Build Week evaluation under the [LotFoundry Evaluation License](LICENSE);
-it is not an open-source license and does not grant redistribution or commercial
-use.
+Copyright © 2026 Andrew Torralba. All rights reserved. This repository is source-available
+under the [LotFoundry Evaluation License](LICENSE); it is not an open-source license
+and does not grant redistribution or commercial use.

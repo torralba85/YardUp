@@ -5,13 +5,10 @@ implementation records.
 
 ## Start here
 
-- [`../README.md`](../README.md) — product overview, local setup, Build Week
-  context, and judge testing instructions.
+- [`../README.md`](../README.md) — product overview, local setup, architecture, and verification instructions.
 - [`../TODOS.md`](../TODOS.md) — active completion register and release blockers.
 - [`store-deployment-readiness.md`](store-deployment-readiness.md) — current
   iOS and Android release status.
-- [`devpost-submission.md`](devpost-submission.md) — OpenAI Build Week submission
-  requirements and evidence checklist.
 
 ## Engineering and operations
 
@@ -30,7 +27,8 @@ implementation records.
 
 ## Product and store material
 
-- [`store-listing-copy.md`](store-listing-copy.md) — draft App Store and Google
+- [`design/`](design/) — Design system authority (A LOT MORE), typography, color palettes, and component patterns.
+- [`store-listing-copy.md`](store-listing-copy.md) — App Store and Google
   Play copy and privacy declarations.
 - [`plans/monetization-marketplace-ai.md`](plans/monetization-marketplace-ai.md)
   — commerce and marketplace design.
@@ -42,3 +40,5 @@ implementation records.
 They document how features evolved but are not current backlog authority.
 Unchecked boxes there do not override `TODOS.md` or
 `store-deployment-readiness.md`.
+
+- [`archive/devpost-submission.md`](archive/devpost-submission.md) — Archived OpenAI Build Week 2026 submission notes and evidence checklist.
