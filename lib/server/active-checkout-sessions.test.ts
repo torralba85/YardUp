@@ -51,6 +51,18 @@ beforeEach(() => {
 });
 
 describe("active checkout sessions", () => {
+  it("retains a saved session past local expiry for Stripe status verification", async () => {
+    const reservation = await reserveActiveCheckout(input);
+    await saveActiveCheckoutSession(input, reservation, {
+      id: "cs_pending_webhook",
+      url: "https://stripe.test/checkout/paid",
+      expiresAtMs: Date.now() - 1000,
+    });
+    const resumed = await reserveActiveCheckout({ ...input, attemptId: "attempt-2" });
+    expect(resumed.sessionId).toBe("cs_pending_webhook");
+    expect(resumed.attemptId).toBe(reservation.attemptId);
+  });
+
   it("keeps one active reservation when a second tab supplies a new attempt", async () => {
     const first = await reserveActiveCheckout(input);
     const second = await reserveActiveCheckout({ ...input, attemptId: "attempt-2" });

@@ -37,7 +37,9 @@ export async function reserveActiveCheckout(
   return getAdminDb().runTransaction(async (transaction) => {
     const snap = await transaction.get(ref);
     const existing = readActiveCheckout(snap.data());
-    if (existing && existing.expiresAtMs > now) return existing;
+    // A saved Session may have completed while its webhook is still pending.
+    // Only Stripe's status can authorize replacing it, even past local expiry.
+    if (existing && (existing.sessionId || existing.expiresAtMs > now)) return existing;
 
     const reservation = newReservation(input, input.attemptId, now);
     transaction.set(ref, reservationDocument(input, reservation));
