@@ -161,12 +161,21 @@ Take verbatim values from `docs/play-declarations.md`:
 Create under Monetize → Products. IDs are immutable once published and must
 match `lib/commerce/products.ts` exactly.
 
-| Product ID | Price | Grants |
-|---|---|---|
-| `com.lotfoundry.certificate.credit1` | $29.00 | 1 certificate credit |
-| `com.lotfoundry.builder.credit1` | $49.00 | 1 lead unlock |
-| `com.lotfoundry.builder.credits5` | $175.00 | 5 lead unlocks |
-| `com.lotfoundry.builder.credits10` | $300.00 | 10 lead unlocks |
+| Product ID | USD base price | Charged in the US | Grants |
+|---|---|---|---|
+| `com.lotfoundry.certificate.credit1` | $29.00 | **$28.99** | 1 certificate credit |
+| `com.lotfoundry.builder.credit1` | $49.00 | **$48.99** | 1 lead unlock |
+| `com.lotfoundry.builder.credits5` | $175.00 | **$174.99** | 5 lead unlocks |
+| `com.lotfoundry.builder.credits10` | $300.00 | **$299.99** | 10 lead unlocks |
+
+**Play never charges the base price.** Price charming is mandatory and rounds
+every base down by a cent in the US, and each other country gets its own
+converted, locally charmed amount. Reconcile payouts against the *charged*
+column, never the base — comparing Play revenue to the Stripe catalog is what
+makes app and Console totals disagree. For the same reason no in-app surface
+may print the Stripe amount on a store channel: `useStorePrice`
+(`lib/commerce/store-price.ts`) reads the live figure from `getDetails()` and
+every paywall quotes that.
 
 Credit counts are server-trusted from that catalog; a client-supplied amount is
 never honored. Tax, banking, and the merchant profile must be complete before

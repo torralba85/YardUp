@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { stashAddressQuery } from "@/lib/address-handoff";
+import { useStorePrice } from "@/lib/commerce/store-price";
 import styles from "./LotMoreLanding.module.css";
 
 const LandingAuthGate = dynamic(() => import("../LandingAuthGate"), {
@@ -112,11 +113,14 @@ function handleSegmentArrowKey(
 
 export function LotMoreLanding({
   scenarios,
-  certificatePrice,
 }: {
   scenarios: LandingScenario[];
-  certificatePrice: string;
 }) {
+  // The certificate price is resolved per commerce channel rather than passed
+  // in, so the Android shell quotes Play's own charged amount instead of the
+  // Stripe catalog figure. Falls back to naming no figure at all.
+  const certPrice = useStorePrice("certificate");
+  const certificatePrice = certPrice.exact ? certPrice.amountCompact : null;
   const [query, setQuery] = useState("");
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -692,7 +696,8 @@ export function LotMoreLanding({
                 <ArrowUpRight size={18} aria-hidden="true" />
               </Link>
               <p className={styles.reportPrice}>
-                Explore free · Complete certificate {certificatePrice} one-time
+                Explore free · Complete certificate
+                {certificatePrice ? ` ${certificatePrice}` : ""} one-time
               </p>
             </div>
             <div className={styles.reportPreview}>
@@ -908,7 +913,7 @@ export function LotMoreLanding({
                 ],
                 [
                   "What is free, and what costs extra?",
-                  `Exploring the studio and its initial estimates is free. The complete Certificate of Feasibility is a one-time ${certificatePrice} purchase. You can review what is included before checkout.`,
+                  `Exploring the studio and its initial estimates is free. The complete Certificate of Feasibility is a one-time${certificatePrice ? ` ${certificatePrice}` : ""} purchase. You can review what is included before checkout.`,
                 ],
               ].map(([question, answer]) => (
                 <details key={question}>

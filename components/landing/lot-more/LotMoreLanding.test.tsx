@@ -60,7 +60,7 @@ describe("landing address handoff", () => {
   });
 
   it("waits for confirmed authentication before storing and routing the trimmed address", () => {
-    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[0],
       { target: { value: "  456 Pine St, Denver, CO  " } },
@@ -79,7 +79,7 @@ describe("landing address handoff", () => {
   });
 
   it("dismisses authentication without discarding the address or starting a lookup", () => {
-    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[1],
       { target: { value: "456 Pine St, Denver, CO" } },
@@ -97,7 +97,7 @@ describe("landing address handoff", () => {
   });
 
   it("navigates segmented controls using keyboard arrow keys", () => {
-    render(<LotMoreLanding scenarios={scenarios} certificatePrice="$29" />);
+    render(<LotMoreLanding scenarios={scenarios} />);
     const sceneGroup = screen.getByRole("group", {
       name: "Property illustration view",
     });

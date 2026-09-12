@@ -12,7 +12,7 @@ import type {
   AIRiskLevel,
 } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
-import { formatCertificatePrice } from "@/lib/certificate-pricing";
+import { useStorePrice } from "@/lib/commerce/store-price";
 
 export interface AIProjectBriefPanelProps {
   response: AIProjectBriefResponse | null;
@@ -149,7 +149,9 @@ export function ProjectBriefPreviewContent({
   preview: AIProjectBriefPreview;
   onViewCertificate: () => void;
 }) {
-  const price = formatCertificatePrice();
+  // Name a price only when it is the one this channel will bill (see
+  // `useStorePrice`: Play charms and localizes its own amount).
+  const certPrice = useStorePrice("certificate");
   const lockedLine = [
     countNoun(preview.locked.riskCount, "ranked risk"),
     `${countNoun(preview.locked.stageCount, "permit stage")} with week-by-week timing`,
@@ -218,7 +220,8 @@ export function ProjectBriefPreviewContent({
             onClick={onViewCertificate}
             className="mt-2.5"
           >
-            Unlock with the certificate &mdash; {price}
+            Unlock with the certificate
+            {certPrice.exact ? ` — ${certPrice.amountCompact}` : ""}
           </Button>
         </div>
       </div>

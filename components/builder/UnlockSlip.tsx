@@ -6,7 +6,7 @@ import {
   leadUnlockPayLabel,
   leadUnlockSecureNote,
 } from "@/lib/lead-unlock-api";
-import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
+import { useStorePrice } from "@/lib/commerce/store-price";
 import type { BuilderInboxItem } from "@/lib/marketplace-types";
 import {
   detectPurchaseChannel,
@@ -53,11 +53,18 @@ export default function UnlockSlip({
   purchaseChannel,
 }: UnlockSlipProps) {
   const { preview } = item.request;
-  const price = formatUnlockPrice();
-  const priceWithCents = formatUnlockPrice({ cents: true });
   const channel = purchaseChannel ?? detectPurchaseChannel();
+  // Quote what this channel will actually charge. Play applies its own price
+  // charming and per-country currency to `builder.credit1`, so the Stripe
+  // amount would be a total the buyer is never billed.
+  const unlockPrice = useStorePrice("builder1", { channel });
+  const price = unlockPrice.amountCompact;
+  const priceWithCents = unlockPrice.amount;
   const payLabel = leadUnlockPayLabel(Boolean(hasCredits), channel);
   const secureNote = leadUnlockSecureNote(Boolean(hasCredits), channel);
+  // Without credits and without a store quote there is no honest total to
+  // confirm against, so the purchase waits rather than showing a wrong one.
+  const priceBlocked = !hasCredits && (unlockPrice.loading || unlockPrice.error !== null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -145,16 +152,16 @@ export default function UnlockSlip({
             </div>
           </div>
 
-          {error && (
+          {(error || unlockPrice.error) && (
             <div role="alert" className="mt-3 border border-lf-brick/40 bg-lf-brick-soft px-3 py-2 text-xs text-lf-brick">
-              {error}
+              {error ?? unlockPrice.error}
             </div>
           )}
 
           <button
             type="button"
             onClick={onConfirm}
-            disabled={pending}
+            disabled={pending || priceBlocked}
             className="mt-4 flex w-full items-center justify-between rounded-[3px] bg-lf-commit px-4 py-3.5 text-sm font-semibold text-lf-sand motion-safe:transition hover:brightness-95 disabled:opacity-60"
           >
             <span>{pending ? "Recording unlock…" : payLabel}</span>

@@ -3,7 +3,7 @@
 import { CheckCircle2, CircleSlash, FileText, Flag, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { finishLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
-import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
+import { useStorePrice } from "@/lib/commerce/store-price";
 import type {
   BuilderInboxItem,
   BuilderResponseStatus,
@@ -66,6 +66,8 @@ export default function LeadCard({
   const { preview } = item.request;
   const chip = ACCESS_CHIP[access];
   const recorded = formatRecorded(item.request.createdAt);
+  // Store shells are charged Play's own localized amount, not the Stripe one.
+  const unlockPrice = useStorePrice("builder1");
   const headline =
     access === "unlocked" && contact ? contact.streetAddress : preview.neighborhood;
 
@@ -173,7 +175,7 @@ export default function LeadCard({
             </div>
             <Button variant="commit" onClick={onUnlockClick} className="mt-2.5">
               {hasCredits ? "Unlock with 1 Credit" : "Unlock lead"}
-              <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : formatUnlockPrice()}</span>
+              <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : unlockPrice.amountCompact}</span>
             </Button>
           </div>
         )}

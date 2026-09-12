@@ -170,13 +170,18 @@ export function formatCurrencyAmount(
   value: number,
   currency: string,
   locale?: string,
+  options?: { compact?: boolean },
 ): string {
   const resolvedLocale =
     locale ??
     (typeof navigator !== "undefined" ? navigator.language : "en-US");
+  // A whole amount reads better without ".00" in a tight CTA slot, but a
+  // charming price like 48.99 must keep its cents or it misquotes the total.
+  const dropCents = options?.compact === true && Number.isInteger(value);
   return new Intl.NumberFormat(resolvedLocale, {
     style: "currency",
     currency,
+    ...(dropCents ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}),
   }).format(value);
 }
 

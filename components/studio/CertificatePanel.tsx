@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { certificateKey } from "@/lib/certificate-key";
-import { formatCertificatePrice } from "@/lib/certificate-pricing";
+import { useStorePrice } from "@/lib/commerce/store-price";
 import { useCertificateAccess } from "@/lib/certificate-access";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
 import {
@@ -199,7 +199,10 @@ export default function CertificatePanel({
     }
   }
 
-  const price = formatCertificatePrice();
+  // A store shell is charged the store's own localized amount, so the paywall
+  // names a price only when it is the one that will actually be billed.
+  const certPrice = useStorePrice("certificate");
+  const price = certPrice.amountCompact;
   const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel);
   const reportBusy = busy || loading || preparingBrief || projectBriefLoading;
   const ctaLabel = reportBusy
@@ -210,7 +213,9 @@ export default function CertificatePanel({
     ? "View complete certificate"
     : !user
       ? "Sign in to generate your certificate"
-      : `Unlock complete certificate — ${price}`;
+      : certPrice.exact
+        ? `Unlock complete certificate — ${price}`
+        : "Unlock complete certificate";
 
   return (
     // Centered artifact layout; the estimate and the unlock offer are its content.
@@ -297,7 +302,8 @@ export default function CertificatePanel({
             <div className="flex items-center gap-2">
               <Lock size={16} className="shrink-0 text-lf-clay-ink" />
               <h3 className="text-sm font-semibold text-lf-espresso">
-                Unlock the complete record for {parcel.address} — one-time {price}
+                Unlock the complete record for {parcel.address}
+                {certPrice.exact ? ` — one-time ${price}` : " — one-time purchase"}
               </h3>
             </div>
             <p className="lf-body-sm mt-1 text-lf-muted">
