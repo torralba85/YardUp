@@ -46,11 +46,13 @@ test("welcome fits narrow screens and keeps both entry actions reachable", async
   }
 });
 
-test("an authenticated owner skips welcome and sign-out restores it", async ({ page }) => {
+test("an authenticated owner skips welcome and sign-out locks Studio on return", async ({ page }) => {
   test.setTimeout(60_000);
   await signInTestOwner(page);
   await expect(page.getByTestId("studio-welcome")).toHaveCount(0);
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/studio");
   await expect(page.getByTestId("studio-welcome")).toBeVisible();
   await expect(page.getByLabel("Search property address")).toHaveCount(0);
 });
