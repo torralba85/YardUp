@@ -11,6 +11,7 @@ import { consumeAddressQuery } from "@/lib/address-handoff";
 import { geocodeAddress, GeocodeError } from "@/lib/geocode-api";
 import { fetchParcel, ParcelFetchError } from "@/lib/parcel-api";
 import { peekInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
+import { parseScenarioParams } from "@/lib/scenario-url";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 
 /**
@@ -87,7 +88,10 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       return;
     }
 
-    if (peekInitialParcel() !== null) {
+    // A shared demo design stays behind authentication, then opens with its
+    // original URL intact. Never interpret a query-string address as a handoff.
+    const sharedScenario = parseScenarioParams(new URLSearchParams(window.location.search));
+    if (peekInitialParcel() !== null || sharedScenario.parcelId) {
       setStudioReady(true);
     }
   }, [lookupText]);

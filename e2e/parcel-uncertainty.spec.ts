@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { signInTestOwner } from "./fixtures/studio-auth";
+
+test.beforeEach(async ({ page }) => {
+  test.setTimeout(60_000);
+  await signInTestOwner(page);
+});
 
 test("county GIS uncertainty survives the parcel handoff into Rules & Fit", async ({ page, viewport }) => {
   await page.goto("/");

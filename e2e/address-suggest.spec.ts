@@ -30,9 +30,8 @@ test.describe("address suggestions", () => {
   test("guest address search never spends suggestion quota", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium", "desktop rail has the stable search");
 
-    // Address suggestions (browser Places or /api/suggest) cost metered API
-    // quota, so signed-out visitors get neither source: typing must fire no
-    // suggest requests and the input must carry the sign-in note instead.
+    // Guests see the welcome rather than the address input, so opening and
+    // dismissing authentication must not spend suggestion quota.
     // The signed-in googleFailed → /api/suggest fallback wiring is covered by
     // the AddressSearch unit tests.
     const suggestRequests: string[] = [];
@@ -50,14 +49,11 @@ test.describe("address suggestions", () => {
     });
 
     await page.goto("/studio");
-    await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
-
-    const search = page.getByLabel("Search property address");
-    await search.fill("1600 Pennsylvania Ave");
-
-    await expect(page.getByText("Sign in to search a real address.").first()).toBeVisible();
-    // Wait out the 300ms suggestion debounce before asserting nothing fired.
-    await page.waitForTimeout(800);
+    await expect(page.getByTestId("studio-welcome")).toBeVisible();
+    await expect(page.getByLabel("Search property address")).toHaveCount(0);
+    await page.getByRole("button", { name: "Get started" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
     expect(suggestRequests).toHaveLength(0);
     await expect(page.getByRole("option")).toHaveCount(0);
   });
