@@ -47,6 +47,14 @@ LotFoundry integrates OpenAI models to augment deterministic spatial calculation
 - **Style-matched ADU concepts:** Multimodal vision understanding analyzes architectural details (roof pitches, cladding materials, window styles, exterior palettes) from user-uploaded photos to guide image generation of matching ADU designs. Photo uploads require explicit opt-in consent.
 - **Deterministic source of truth:** Calculations for setbacks, square footage, site coverage, construction costs, rental yields, and financial returns remain strictly deterministic. AI models do not guess arithmetic or spatial measurements.
 
+## Studio access
+
+On the web, guests open the demo Studio directly and signed-in owners start from
+an address. In the Android and iOS apps only, the Studio opens with a welcome,
+sign-in, and a quick guide; sign-in is required for a real property, and demo
+cities stay open to guests. See
+[`docs/design/2026-09-12-app-studio-onboarding.md`](docs/design/2026-09-12-app-studio-onboarding.md).
+
 ## Run locally
 
 Prerequisite: Node.js 22.12 or newer, matching CI and the Firebase Functions runtime.

@@ -5,6 +5,7 @@ import { TYPICAL_MARKET } from "@/lib/typical-market";
 
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
+  nativeApp: false,
   authState: {
     loading: false,
     user: null as null | { uid: string },
@@ -24,6 +25,16 @@ vi.mock("@/components/studio/SignedInStudioGate", () => ({
   },
 }));
 
+vi.mock("@/components/studio/AppStudioOnboarding", () => ({
+  default: function MockAppStudioOnboarding({ user }: { user: { uid: string } | null }) {
+    return <div>App Onboarding Mock {user ? "member" : "guest"}</div>;
+  },
+}));
+
+vi.mock("@/lib/commerce/purchase-channel", () => ({
+  isNativeAppShell: () => mocks.nativeApp,
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: mocks.replace,
@@ -40,6 +51,29 @@ describe("StudioPage", () => {
     mocks.authState.loading = false;
     mocks.authState.user = null;
     mocks.authState.profile = null;
+    mocks.nativeApp = false;
+  });
+
+  it("runs the app onboarding for guests and members only inside the native app", () => {
+    mocks.nativeApp = true;
+    const { unmount } = render(<StudioPage />);
+    expect(screen.getByText("App Onboarding Mock guest")).toBeInTheDocument();
+    expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
+    unmount();
+
+    mocks.authState.user = { uid: "user-1" };
+    render(<StudioPage />);
+    expect(screen.getByText("App Onboarding Mock member")).toBeInTheDocument();
+    expect(screen.queryByText("Signed-in Blank Slate Mock")).not.toBeInTheDocument();
+  });
+
+  it("still redirects builders inside the native app", () => {
+    mocks.nativeApp = true;
+    mocks.authState.user = { uid: "builder-1" };
+    mocks.authState.profile = { role: "builder" };
+    render(<StudioPage />);
+    expect(mocks.replace).toHaveBeenCalledWith("/builder");
+    expect(screen.queryByText(/App Onboarding Mock/)).not.toBeInTheDocument();
   });
 
   it("renders the exploratory studio for guests without redirecting", () => {

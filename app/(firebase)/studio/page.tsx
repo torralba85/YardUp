@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
+import AppStudioOnboarding from "@/components/studio/AppStudioOnboarding";
 import SignedInStudioGate from "@/components/studio/SignedInStudioGate";
 import { useAuth } from "@/lib/auth-context";
+import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
+
+// The native shell is fixed for the life of the page; there is nothing to observe.
+const subscribeToNothing = () => () => {};
 
 /**
  * Studio route (`/studio`). Waits for auth to resolve, redirects builders to
  * their dashboard, gives signed-in lot owners an empty address-first workspace,
- * and keeps the exploratory demo studio available to guests.
+ * and keeps the exploratory demo studio available to guests. Inside the native
+ * app only, {@link AppStudioOnboarding} runs first: sign-in is required for a
+ * real property, and demo cities stay open to guests.
  */
 export default function StudioPage() {
   const { user, loading, profile } = useAuth();
   const router = useRouter();
+  const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
 
   useEffect(() => {
     if (!loading && profile?.role === "builder") {
@@ -42,6 +50,8 @@ export default function StudioPage() {
       </div>
     );
   }
+
+  if (inNativeApp) return <AppStudioOnboarding user={user} />;
 
   return user ? <SignedInStudioGate user={user} /> : <FeasibilityStudio />;
 }
