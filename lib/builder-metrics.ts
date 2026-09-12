@@ -1,5 +1,5 @@
 import { LEAD_UNLOCK_PRICE_CENTS } from "./lead-unlock-pricing";
-import type { BuilderInboxItem } from "./marketplace-types";
+import type { BuilderInboxItem, BuilderLedgerEntry } from "./marketplace-types";
 
 /** Flat unlock price in dollars, derived from the shared cents constant. */
 const UNLOCK_PRICE = LEAD_UNLOCK_PRICE_CENTS / 100;
@@ -18,16 +18,25 @@ export interface BuilderMetrics {
   unlockedCount: number;
   /** Sum of build-band midpoints across NEW leads — the money-band figure (2A). */
   pipelineValue: number;
-  /** Estimated month spend — unlocked leads × unlock price. */
+  /** Month spend — summed from the builder's unlock/purchase ledger when available, or estimated as unlocked leads × $49 fallback. */
   spend: number;
 }
 
 /**
  * Derive the builder dashboard's money-band and tab-count figures from the
- * inbox. Pipeline value leads with NEW leads only (2A): it is the build value
- * still in play, not money already won.
+ * inbox and optional financial ledger. Pipeline value leads with NEW leads only (2A):
+ * it is the build value still in play, not money already won.
+ *
+ * When ledger entries are provided, spend is computed by summing the actual amounts paid
+ * recorded on the ledger (purchases, unlocks, and refunds). Credit-funded unlocks record $0
+ * on the unlock event because the spend occurred when the credit pack was purchased.
+ *
+ * If no ledger is provided, spend falls back to estimating unlockedCount × $49.
  */
-export function computeBuilderMetrics(items: BuilderInboxItem[]): BuilderMetrics {
+export function computeBuilderMetrics(
+  items: BuilderInboxItem[],
+  ledger?: BuilderLedgerEntry[],
+): BuilderMetrics {
   let newLeadCount = 0;
   let interestedCount = 0;
   let archivedCount = 0;
@@ -48,6 +57,23 @@ export function computeBuilderMetrics(items: BuilderInboxItem[]): BuilderMetrics
     if (item.unlocked) unlockedCount += 1;
   }
 
+  let spend: number;
+  if (ledger !== undefined) {
+    const ledgerSum = ledger.reduce((sum, entry) => {
+      const amt = typeof entry.amountPaid === "number" ? entry.amountPaid : 0;
+      return entry.type === "refund" && amt > 0 ? sum - amt : sum + amt;
+    }, 0);
+    if (ledger.length > 0) {
+      spend = Math.max(0, ledgerSum);
+    } else if (unlockedCount > 0) {
+      spend = unlockedCount * UNLOCK_PRICE;
+    } else {
+      spend = 0;
+    }
+  } else {
+    spend = unlockedCount * UNLOCK_PRICE;
+  }
+
   return {
     total: items.length,
     newLeadCount,
@@ -55,6 +81,6 @@ export function computeBuilderMetrics(items: BuilderInboxItem[]): BuilderMetrics
     archivedCount,
     unlockedCount,
     pipelineValue: Math.round(pipelineValue),
-    spend: unlockedCount * UNLOCK_PRICE,
+    spend: Math.round(spend * 100) / 100,
   };
 }

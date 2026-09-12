@@ -21,15 +21,10 @@ if (rawPriceCents != null && !validPrice) {
 
 /** Flat certificate price in cents. Falls back to 2900 ($29) when unset; an
  * explicitly set but invalid value is ignored with a warning rather than
- * throwing, so the default config still builds and runs. */
+ * throwing, so the default config still builds and runs.
+ *
+ * This is the amount **Stripe** bills. It is not what an App Store or Play
+ * purchase costs, so no UI may format it directly — a paywall reads its price
+ * from `useStorePrice` (`lib/commerce/store-price.ts`), which resolves the
+ * charged amount per commerce channel. */
 export const CERTIFICATE_PRICE_CENTS = validPrice ? parsedPriceCents : 2900;
-
-/**
- * The price as display dollars, e.g. "$29" (whole) or "$29.00" (with cents).
- * A non-whole-dollar price always shows cents regardless of `cents`.
- */
-export function formatCertificatePrice(opts?: { cents?: boolean }): string {
-  const dollars = CERTIFICATE_PRICE_CENTS / 100;
-  const withCents = opts?.cents || !Number.isInteger(dollars);
-  return `$${dollars.toFixed(withCents ? 2 : 0)}`;
-}

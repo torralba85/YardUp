@@ -1,7 +1,6 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
-import { formatCertificatePrice } from "@/lib/certificate-pricing";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -29,6 +28,7 @@ const description =
 export const metadata: Metadata = {
   title: "LotFoundry | A lot more possibility",
   description,
+  alternates: { canonical: "/" },
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },
@@ -74,10 +74,7 @@ export default function LandingPage() {
   );
   return (
     <div className={`${display.variable} ${body.variable}`}>
-      <LotMoreLanding
-        scenarios={scenarios}
-        certificatePrice={formatCertificatePrice()}
-      />
+      <LotMoreLanding scenarios={scenarios} />
     </div>
   );
 }

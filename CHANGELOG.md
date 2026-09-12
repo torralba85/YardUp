@@ -129,6 +129,17 @@ All notable changes to LotFoundry are documented here. Format follows
   icon per design-audit findings (FINDING-001, FINDING-002).
 
 ### Fixed
+- Applying an inspiration-gallery concept now keeps the design. Four of the six
+  concepts have areas outside the 400/600/800/1000 footprint option list, and the
+  apply handler routed them through `configForFootprint`, which snaps an unknown
+  area back to 600, then set width and length without correcting `footprint`. The
+  resulting config broke the exact `width * length === footprint` equality that
+  `isValidAduConfig` enforces, so the scenario URL effect hit its validity guard
+  and stopped writing. The studio still rendered and priced the concept, because
+  the feasibility math reads the dimensions, but a reload or a shared link
+  silently reverted to the previous design, and saving a scenario would have been
+  rejected by the same check. Concepts now derive `footprint` from their own
+  `width * length`.
 - Hashed `/_next/static/*` chunks are now served by Firebase Hosting instead
   of falling through the `**` rewrite to the `app` Cloud Function. The build
   wrote them only to `dist/.next/static`, which `firebase.json` excludes from

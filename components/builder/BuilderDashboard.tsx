@@ -6,11 +6,16 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchBuilderInbox,
+  fetchBuilderLedger,
   fetchBuilderProfile,
   saveBuilderProfile,
   updateBuilderResponse,
 } from "@/lib/marketplace-firestore";
-import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
+import type {
+  BuilderInboxItem,
+  BuilderLedgerEntry,
+  BuilderProfile,
+} from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -38,6 +43,7 @@ export default function BuilderDashboard({
   const { logout } = useAuth();
   const [profile, setProfile] = useState<BuilderProfile | null>(null);
   const [items, setItems] = useState<BuilderInboxItem[]>([]);
+  const [ledger, setLedger] = useState<BuilderLedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -47,10 +53,13 @@ export default function BuilderDashboard({
     async function load() {
       try {
         const loadedProfile = await fetchBuilderProfile(uid);
-        const loadedItems = loadedProfile ? await fetchBuilderInbox(uid) : [];
+        const [loadedItems, loadedLedger] = loadedProfile
+          ? await Promise.all([fetchBuilderInbox(uid), fetchBuilderLedger(uid)])
+          : [[], []];
         if (!cancelled) {
           setProfile(loadedProfile);
           setItems(loadedItems);
+          setLedger(loadedLedger);
           setLoadError(null);
         }
       } catch {
@@ -99,7 +108,12 @@ export default function BuilderDashboard({
   async function handleSaveProfile(input: Parameters<typeof saveBuilderProfile>[1]) {
     const saved = await saveBuilderProfile(uid, input);
     setProfile(saved);
-    setItems(await fetchBuilderInbox(uid));
+    const [loadedItems, loadedLedger] = await Promise.all([
+      fetchBuilderInbox(uid),
+      fetchBuilderLedger(uid),
+    ]);
+    setItems(loadedItems);
+    setLedger(loadedLedger);
   }
 
   async function handleRespond(
@@ -140,7 +154,12 @@ export default function BuilderDashboard({
               onSave={handleSaveProfile}
             />
           ) : (
-            <BuilderInbox profile={profile} items={items} onRespond={handleRespond} />
+            <BuilderInbox
+              profile={profile}
+              items={items}
+              ledger={ledger}
+              onRespond={handleRespond}
+            />
           )}
         </div>
       </main>

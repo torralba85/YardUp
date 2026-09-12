@@ -21,15 +21,10 @@ if (rawPriceCents != null && !validPrice) {
 
 /** Flat lead-unlock price in cents (18A: $39–49, single price object). Falls
  * back to 4900 when unset; an explicitly set but invalid value is ignored with a
- * warning rather than throwing, so the default config still builds and runs. */
+ * warning rather than throwing, so the default config still builds and runs.
+ *
+ * This is the amount **Stripe** bills. It is not what an App Store or Play
+ * purchase costs, so no UI may format it directly — a paywall reads its price
+ * from `useStorePrice` (`lib/commerce/store-price.ts`), which resolves the
+ * charged amount per commerce channel. */
 export const LEAD_UNLOCK_PRICE_CENTS = validPrice ? parsedPriceCents : 4900;
-
-/**
- * The price as display dollars, e.g. "$49" (whole) or "$49.00" (with cents).
- * A non-whole-dollar price always shows cents regardless of `cents`.
- */
-export function formatUnlockPrice(opts?: { cents?: boolean }): string {
-  const dollars = LEAD_UNLOCK_PRICE_CENTS / 100;
-  const withCents = opts?.cents || !Number.isInteger(dollars);
-  return `$${dollars.toFixed(withCents ? 2 : 0)}`;
-}

@@ -198,16 +198,23 @@ export function buildParcelOutline(parcel: ParcelOutlineInput): ParcelOutline {
 
 // --- Existing house footprint ---------------------------------------------
 
-const HOUSE_DEPTH_TO_WIDTH_RATIO = 1.5;
+// Target aspect ratio (depth / width) for the existing house proxy.
+// In residential architecture, street-facing homes are typically balanced or
+// slightly wider than deep (depth/width ~ 0.8–0.9). Setting this to 0.85 produces
+// natural street frontage and avoids modeling homes as elongated tunnels.
+const HOUSE_DEPTH_TO_WIDTH_RATIO = 0.85;
 const MIN_HOUSE_WIDTH_FT = 10;
-const MAX_HOUSE_WIDTH_FT = 32;
+// Maximum width for the existing house proxy in feet.
+// Raised from 32 ft to 55 ft so homes on standard suburban lots (50–75 ft width)
+// can span a realistic 36–50 ft frontage instead of forcing all area into depth.
+const MAX_HOUSE_WIDTH_FT = 55;
 
 /**
  * Derive an area-preserving rectangular proxy for the existing house from
- * its declared `existingHouseSqft`. Start with a balanced 1:1.5 rectangle,
- * constrained by the buildable lot width and the proxy's width range; depth is always
- * `areaSqft / width` with no upper clamp, so the modeled footprint area
- * always equals the declared area exactly (D1 — the previous renderer
+ * its declared `existingHouseSqft`. Start with a balanced 1:0.85 width-to-depth
+ * proportion, constrained by the buildable lot width and the proxy's width range;
+ * depth is always `areaSqft / width` with no upper clamp, so the modeled footprint
+ * area always equals the declared area exactly (D1 — the previous renderer
  * capped depth at 28 ft and silently understated area by up to ~70%).
  *
  * Returns the explicit unknown state when `existingHouseSqft` is missing,

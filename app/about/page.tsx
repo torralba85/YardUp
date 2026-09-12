@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "About | LotFoundry",
   description:
     "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

@@ -5,17 +5,15 @@ export const CREDIT_PACK_PRICES_CENTS = {
 
 export type CreditPackSize = keyof typeof CREDIT_PACK_PRICES_CENTS;
 
-export function formatCreditPackPrice(pack: CreditPackSize): string {
-  return formatUsdCents(CREDIT_PACK_PRICES_CENTS[pack]);
-}
-
-export function formatCreditPackUnitPrice(pack: CreditPackSize): string {
-  return formatUsdCents(CREDIT_PACK_PRICES_CENTS[pack] / pack);
-}
-
-function formatUsdCents(cents: number): string {
+/**
+ * Format a USD cent amount for display: `"$175"` whole, `"$174.99"` with cents.
+ * Pass `{ cents: true }` to always show cents. Shared with the channel-aware
+ * store price display so a Stripe quote reads identically everywhere.
+ */
+export function formatUsdCents(cents: number, opts?: { cents?: boolean }): string {
   const dollars = cents / 100;
-  return `$${dollars.toFixed(Number.isInteger(dollars) ? 0 : 2)}`;
+  const withCents = opts?.cents || !Number.isInteger(dollars);
+  return `$${dollars.toFixed(withCents ? 2 : 0)}`;
 }
 
 /** Keep Checkout creation and webhook fulfilment on the same supported packs. */

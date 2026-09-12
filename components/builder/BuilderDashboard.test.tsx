@@ -6,6 +6,7 @@ import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 
 const firestore = vi.hoisted(() => ({
   fetchBuilderInbox: vi.fn(),
+  fetchBuilderLedger: vi.fn(),
   fetchBuilderProfile: vi.fn(),
   saveBuilderProfile: vi.fn(),
   updateBuilderResponse: vi.fn(),
@@ -86,6 +87,7 @@ const item: BuilderInboxItem = {
 describe("BuilderDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    firestore.fetchBuilderLedger.mockResolvedValue([]);
   });
 
   it("shows the builder profile form when no profile exists", async () => {
@@ -234,5 +236,55 @@ describe("BuilderDashboard", () => {
     // Inspection pane shows the locked cover details
     expect(screen.getByText(/feasibility certificate locked/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /unlock lead/i })).toBeInTheDocument();
+  });
+
+  it("computes spend from the ledger rather than multiplying unlocked leads by $49", async () => {
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+    // Two unlocked leads
+    firestore.fetchBuilderInbox.mockResolvedValue([
+      { ...item, unlocked: true },
+      { ...item, request: { ...item.request, id: "request-2" }, unlocked: true },
+    ]);
+    // Ledger shows a 10-pack purchased at $300 and two credit-funded unlocks at $0
+    firestore.fetchBuilderLedger.mockResolvedValue([
+      {
+        id: "tx-pack-10",
+        builderId: "builder-1",
+        type: "purchase",
+        creditsChange: 10,
+        amountPaid: 300,
+        referenceId: "sess_10pack",
+        description: "10-Lead Pack",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+      {
+        id: "request-1_use",
+        builderId: "builder-1",
+        type: "unlock",
+        creditsChange: -1,
+        amountPaid: 0,
+        referenceId: "request-1",
+        description: "Unlocked Lead request-1",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+      {
+        id: "request-2_use",
+        builderId: "builder-1",
+        type: "unlock",
+        creditsChange: -1,
+        amountPaid: 0,
+        referenceId: "request-2",
+        description: "Unlocked Lead request-2",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+    ]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    // Spend should display $300 (actual ledger sum), with 2 unlocks label
+    const spendCell = (await screen.findByText("Spend this month")).closest("div")!;
+    expect(spendCell).toHaveTextContent("$300");
+    expect(spendCell).toHaveTextContent("2 unlocks");
+    expect(spendCell).not.toHaveTextContent("$98");
   });
 });

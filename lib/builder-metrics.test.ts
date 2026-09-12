@@ -73,13 +73,118 @@ describe("computeBuilderMetrics", () => {
     expect(metrics.pipelineValue).toBe(550000);
   });
 
-  it("computes spend from unlocked leads × $49", () => {
+  it("computes spend from unlocked leads × $49 when no ledger is provided", () => {
     const metrics = computeBuilderMetrics([
       makeItem("1", "new", true, 200000, 250000),
       makeItem("2", "interested", true, 200000, 250000),
       makeItem("3", "new", false, 200000, 250000),
     ]);
     expect(metrics.spend).toBe(98);
+  });
+
+  it("fixes the $190 overstatement by summing the unlock ledger for credit pack purchases", () => {
+    // 10 unlocked leads funded by a 10-pack credit purchase at $300
+    const items = Array.from({ length: 10 }, (_, i) =>
+      makeItem(`lead-${i}`, "interested", true, 200000, 250000),
+    );
+    const ledger = [
+      {
+        id: "tx-pack-10",
+        builderId: "b1",
+        type: "purchase" as const,
+        creditsChange: 10,
+        amountPaid: 300,
+        referenceId: "sess_10pack",
+        description: "10-Lead Pack",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+      ...items.map((item) => ({
+        id: `${item.request.id}_use`,
+        builderId: "b1",
+        type: "unlock" as const,
+        creditsChange: -1,
+        amountPaid: 0, // credit unlocks deliberately record zero amount
+        referenceId: item.request.id,
+        description: `Unlocked Lead ${item.request.id}`,
+        createdAt: "2026-09-11T00:00:00Z",
+      })),
+    ];
+
+    const metrics = computeBuilderMetrics(items, ledger);
+    // Unlocked count is 10, but spend reflects actual $300 paid rather than 10 × $49 ($490)
+    expect(metrics.unlockedCount).toBe(10);
+    expect(metrics.spend).toBe(300);
+  });
+
+  it("sums mixed ledger entries (direct unlocks and credit packs) accurately", () => {
+    const items = [
+      makeItem("1", "interested", true, 200000, 250000),
+      makeItem("2", "interested", true, 200000, 250000),
+    ];
+    const ledger = [
+      {
+        id: "tx-pack-5",
+        builderId: "b1",
+        type: "purchase" as const,
+        creditsChange: 5,
+        amountPaid: 175,
+        referenceId: "sess_5pack",
+        description: "5-Lead Pack",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+      {
+        id: "tx-direct-1",
+        builderId: "b1",
+        type: "unlock" as const,
+        creditsChange: 0,
+        amountPaid: 49,
+        referenceId: "lead-direct",
+        description: "Unlocked Lead direct",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+      {
+        id: "tx-credit-use",
+        builderId: "b1",
+        type: "unlock" as const,
+        creditsChange: -1,
+        amountPaid: 0,
+        referenceId: "1",
+        description: "Unlocked Lead 1",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+    ];
+
+    const metrics = computeBuilderMetrics(items, ledger);
+    expect(metrics.spend).toBe(224); // 175 + 49 = 224
+  });
+
+  it("subtracts refunds when present on the ledger", () => {
+    const items = [makeItem("1", "interested", true, 200000, 250000)];
+    const ledger = [
+      {
+        id: "tx-pack-5",
+        builderId: "b1",
+        type: "purchase" as const,
+        creditsChange: 5,
+        amountPaid: 175,
+        referenceId: "sess_5pack",
+        description: "5-Lead Pack",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+      {
+        id: "tx-refund",
+        builderId: "b1",
+        type: "refund" as const,
+        creditsChange: -5,
+        amountPaid: 175,
+        referenceId: "sess_5pack",
+        description: "Refund 5-Lead Pack",
+        createdAt: "2026-09-11T00:00:00Z",
+      },
+    ];
+
+    const metrics = computeBuilderMetrics(items, ledger);
+    expect(metrics.spend).toBe(0);
   });
 
   it("is all-zero for an empty inbox", () => {

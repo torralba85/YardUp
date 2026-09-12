@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { computeBuilderMetrics } from "@/lib/builder-metrics";
 import { startLeadUnlock } from "@/lib/lead-unlock-api";
-import { formatUnlockPrice } from "@/lib/lead-unlock-pricing";
+import { useStorePrice } from "@/lib/commerce/store-price";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
 import type {
   BuilderInboxItem,
+  BuilderLedgerEntry,
   BuilderProfile,
   UnlockedLeadContact,
 } from "@/lib/marketplace-types";
@@ -57,10 +58,12 @@ function inTab(item: BuilderInboxItem, key: TabKey): boolean {
 export default function BuilderInbox({
   profile,
   items,
+  ledger: initialLedger = [],
   onRespond,
 }: {
   profile: BuilderProfile;
   items: BuilderInboxItem[];
+  ledger?: BuilderLedgerEntry[];
   onRespond: (requestId: string, status: "interested" | "not-a-fit") => Promise<void>;
 }) {
   const { user } = useAuth();
@@ -73,6 +76,8 @@ export default function BuilderInbox({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const [credits, setCredits] = useState(profile.credits ?? 0);
+  const [sessionLedger, setSessionLedger] = useState<BuilderLedgerEntry[]>([]);
+  const ledger = useMemo(() => [...initialLedger, ...sessionLedger], [initialLedger, sessionLedger]);
   const [access, setAccess] = useState<Record<string, LeadAccess>>({});
   const [contacts, setContacts] = useState<Record<string, UnlockedLeadContact>>({});
   const [demoGrants, setDemoGrants] = useState<Record<string, boolean>>({});
@@ -80,6 +85,8 @@ export default function BuilderInbox({
   const [slipPending, setSlipPending] = useState(false);
   const [slipError, setSlipError] = useState<string | null>(null);
   const [announce, setAnnounce] = useState("");
+  // Store shells are charged Play's own localized amount, not the Stripe one.
+  const unlockPrice = useStorePrice("builder1");
 
   // Base access is derived inline at render (item.unlocked → unlocked); the
   // `access` map only holds transient overrides from the in-session unlock
@@ -104,7 +111,7 @@ export default function BuilderInbox({
     };
   }, [items]);
 
-  const metrics = computeBuilderMetrics(items);
+  const metrics = computeBuilderMetrics(items, ledger);
   const filtered = items.filter((item) => inTab(item, tab));
   const tabCounts: Record<TabKey, number> = {
     all: items.length,
@@ -150,6 +157,19 @@ export default function BuilderInbox({
         if (!res.ok) throw new Error(data.error || "Unlock failed");
 
         setCredits(data.newCredits);
+        setSessionLedger((current) => [
+          ...current,
+          {
+            id: `${profile.id}_${requestId}_use`,
+            builderId: profile.id,
+            type: "unlock",
+            creditsChange: -1,
+            amountPaid: 0,
+            referenceId: requestId,
+            description: `Unlocked Lead ${requestId}`,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
 
         setSlipId(null);
         setAccess((current) => ({ ...current, [requestId]: "confirming" }));
@@ -176,6 +196,22 @@ export default function BuilderInbox({
       setSlipId(null);
       setAccess((current) => ({ ...current, [requestId]: "confirming" }));
       setAnnounce(`Lead ${serial}: payment received, recording unlock.`);
+
+      if (outcome.demo) {
+        setSessionLedger((current) => [
+          ...current,
+          {
+            id: `demo_${requestId}_${Date.now()}`,
+            builderId: profile.id,
+            type: "unlock",
+            creditsChange: 0,
+            amountPaid: 49,
+            referenceId: requestId,
+            description: `Unlocked Lead ${requestId}`,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      }
 
       const contact = await fetchUnlockedContact(requestId);
       if (contact) {
@@ -520,7 +556,7 @@ export default function BuilderInbox({
                                   }}
                                 >
                                   Unlock lead
-                                  <span className="font-display text-sm font-semibold">{formatUnlockPrice()}</span>
+                                  <span className="font-display text-sm font-semibold">{unlockPrice.amountCompact}</span>
                                 </Button>
                               </div>
 
@@ -744,6 +780,8 @@ export default function BuilderInbox({
  * no unlock CTA — there is nothing real to unlock.
  */
 function ZeroEverEmptyState() {
+  // Sample card, but the price it names is the one the builder will be charged.
+  const unlockPrice = useStorePrice("builder1");
   return (
     <div className="mt-5">
       <div className="border border-lf-hairline bg-lf-card p-6">
@@ -786,7 +824,7 @@ function ZeroEverEmptyState() {
           </span>
         </p>
         <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 lf-kicker-dense text-lf-muted">
-          Owner contact unlocks for {formatUnlockPrice()} — once you have real leads
+          Owner contact unlocks for {unlockPrice.amountCompact} — once you have real leads
         </p>
       </article>
     </div>
@@ -843,87 +881,25 @@ function CreditShop() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [prices, setPrices] = useState<Record<5 | 10, {
-    total: string;
-    perLead: string;
-  }> | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPrices() {
-      const { detectPurchaseChannel } = await import(
-        "@/lib/commerce/purchase-channel"
-      );
-      const channel = detectPurchaseChannel();
-
-      if (channel === "web") {
-        const { formatCreditPackPrice, formatCreditPackUnitPrice } = await import(
-          "@/lib/credit-packs"
-        );
-        if (!cancelled) {
-          setPrices({
-            5: {
-              total: formatCreditPackPrice(5),
-              perLead: `${formatCreditPackUnitPrice(5)} / lead`,
-            },
-            10: {
-              total: formatCreditPackPrice(10),
-              perLead: `${formatCreditPackUnitPrice(10)} / lead`,
-            },
-          });
-        }
-        return;
-      }
-
-      if (channel === "app-store") {
-        if (!cancelled) {
-          setPrices({
-            5: { total: "App Store", perLead: "Price shown at checkout" },
-            10: { total: "App Store", perLead: "Price shown at checkout" },
-          });
-        }
-        return;
-      }
-
-      try {
-        const { STORE_PRODUCTS } = await import("@/lib/commerce/products");
-        const { formatCurrencyAmount, getGooglePlayProductPrices } = await import(
-          "@/lib/commerce/purchase-client"
-        );
-        const playPrices = await getGooglePlayProductPrices([
-          STORE_PRODUCTS.builder5.id,
-          STORE_PRODUCTS.builder10.id,
-        ]);
-        const five = playPrices[STORE_PRODUCTS.builder5.id];
-        const ten = playPrices[STORE_PRODUCTS.builder10.id];
-        if (!five || !ten) {
-          throw new Error("Google Play did not return both credit-pack prices.");
-        }
-        if (!cancelled) {
-          setPrices({
-            5: {
-              total: five.formatted,
-              perLead: `${formatCurrencyAmount(five.value / 5, five.currency)} / lead`,
-            },
-            10: {
-              total: ten.formatted,
-              perLead: `${formatCurrencyAmount(ten.value / 10, ten.currency)} / lead`,
-            },
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Google Play pricing is unavailable. Please try again.");
-        }
-      }
-    }
-
-    void loadPrices();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Each pack quotes its own channel's amount; on Play that is the localized,
+  // price-charmed total Play will charge, never the Stripe catalog figure.
+  const fivePack = useStorePrice("builder5");
+  const tenPack = useStorePrice("builder10");
+  const priceError = fivePack.error ?? tenPack.error;
+  // Buying is fine while the App Store defers its quote to its own sheet; it is
+  // not fine while a Play price is still loading or failed to load.
+  const priceBlocked =
+    fivePack.loading || tenPack.loading || priceError !== null;
+  const prices = {
+    5: {
+      total: fivePack.amountCompact,
+      perLead: fivePack.exact ? `${fivePack.unitAmount} / lead` : fivePack.unitAmount,
+    },
+    10: {
+      total: tenPack.amountCompact,
+      perLead: tenPack.exact ? `${tenPack.unitAmount} / lead` : tenPack.unitAmount,
+    },
+  } as const;
 
   async function buyPack(pack: number) {
     if (!user) return;
@@ -979,9 +955,9 @@ function CreditShop() {
       <p className="mt-1 text-sm text-lf-muted">
         Unlock leads instantly with credits.
       </p>
-      {error && (
+      {(error || priceError) && (
         <div role="alert" className="mt-3 border border-lf-brick/30 bg-lf-brick-soft p-2 text-xs text-lf-brick">
-          {error}
+          {error ?? priceError}
         </div>
       )}
       <div className="mt-4 space-y-3">
@@ -989,33 +965,33 @@ function CreditShop() {
         <button
           type="button"
           onClick={() => buyPack(5)}
-          disabled={loading !== null || prices === null}
+          disabled={loading !== null || priceBlocked}
           className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left motion-safe:transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
             <div className="text-xs text-lf-muted">
-              {prices ? prices[5].perLead : "Loading price"}
+              {prices[5].perLead}
             </div>
           </div>
           <div className="lf-money-md text-lf-money">
-            {loading === 5 ? "…" : prices?.[5].total ?? "—"}
+            {loading === 5 ? "…" : prices[5].total}
           </div>
         </button>
         <button
           type="button"
           onClick={() => buyPack(10)}
-          disabled={loading !== null || prices === null}
+          disabled={loading !== null || priceBlocked}
           className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left motion-safe:transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
             <div className="font-semibold text-lf-sand">10-Lead Pack</div>
             <div className="text-xs text-lf-sand/80">
-              {prices ? prices[10].perLead : "Loading price"}
+              {prices[10].perLead}
             </div>
           </div>
           <div className="lf-money-md text-lf-sand">
-            {loading === 10 ? "…" : prices?.[10].total ?? "—"}
+            {loading === 10 ? "…" : prices[10].total}
           </div>
         </button>
       </div>

@@ -34,7 +34,6 @@ const required = [
   "SECURITY.md",
   "CONTRIBUTING.md",
   "docs/README.md",
-  "docs/devpost-submission.md",
 ];
 
 for (const path of required) {

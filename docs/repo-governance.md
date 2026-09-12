@@ -176,10 +176,10 @@ required in `CONTRIBUTING.md`/`CLAUDE.md`:
 ## Source-available vs. open-source considerations
 
 `torralba85/YardUp` is maintained by a small collaborator team and is
-source-available for OpenAI Build Week evaluation under the LotFoundry
-Evaluation License. Public visibility does not make it open source or open
-external contribution rights. The comparison below records what would change if
-the owner later adopts an OSI-approved license and accepts community work:
+source-available under the LotFoundry Evaluation License. Public visibility
+does not make it open source or open external contribution rights. The comparison
+below records what would change if the owner later adopts an OSI-approved license
+and accepts community work:
 
 | Area | Source-available evaluation repo | If opened to OSS |
 |---|---|---|

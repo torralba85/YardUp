@@ -63,11 +63,10 @@ function Gate({ onAuthenticated, onDismiss }: LandingAuthGateProps) {
  * Sign-in gate for the marketing landing page, mounted only after a visitor
  * submits an address.
  *
- * The landing page sits outside the `(firebase)` route group precisely so it
- * never ships the ~479 KB Firebase client SDK (see `app/(firebase)/layout.tsx`).
- * This component carries its own {@link AuthProvider} and is loaded through
- * `next/dynamic` with `ssr: false`, so both the provider and the SDK stay out
- * of the landing bundle and out of the prerender until the visitor acts.
+ * The landing sits outside the `(firebase)` route group. This component owns
+ * its provider and uses `next/dynamic` with `ssr: false` to keep authentication
+ * out of prerender. The separate member navigation also resolves Firebase
+ * client-side so returning members see their actual session on the landing.
  *
  * @param props - The {@link LandingAuthGateProps}.
  */

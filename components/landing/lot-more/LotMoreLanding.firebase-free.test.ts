@@ -21,6 +21,7 @@ import { describe, expect, it } from "vitest";
 
 const LANDING_DIR = __dirname;
 const GATE_PATH = path.join(LANDING_DIR, "..", "LandingAuthGate.tsx");
+const MEMBER_NAV_PATH = path.join(LANDING_DIR, "..", "LandingMemberNav.tsx");
 
 function readLanding(): string {
   return readFileSync(path.join(LANDING_DIR, "LotMoreLanding.tsx"), "utf8");
@@ -51,13 +52,30 @@ describe("landing stays outside the Firebase route group", () => {
     expect(source).toMatch(/ssr:\s*false/);
   });
 
-  it("keeps the provider inside the gate, not the landing", () => {
-    const gate = readFileSync(GATE_PATH, "utf8");
-
-    // The gate is the only landing-side module allowed to mount AuthProvider,
-    // because it is never part of the prerendered tree. Match the JSX element
-    // rather than the bare word, so prose mentioning it stays allowed.
-    expect(gate).toMatch(/<AuthProvider>/);
+  it("keeps the provider inside the islands, not the landing", () => {
+    // The two islands are the only landing-side modules allowed to mount
+    // AuthProvider, because neither is part of the prerendered tree. Match the
+    // JSX element rather than the bare word, so prose mentioning it stays
+    // allowed.
+    expect(readFileSync(GATE_PATH, "utf8")).toMatch(/<AuthProvider>/);
+    expect(readFileSync(MEMBER_NAV_PATH, "utf8")).toMatch(/<AuthProvider>/);
     expect(readLanding()).not.toMatch(/<AuthProvider[\s>]/);
+  });
+
+  /**
+   * Prerender safety is not the whole boundary. An island that renders on every
+   * visit costs the same Firebase download the route group split avoids, just
+   * one tick later. The member navigation therefore has to stay behind the
+   * Firebase-free session hint, which resolves without loading any SDK.
+   */
+  it("mounts the member navigation only behind the session hint", () => {
+    const source = readLanding();
+
+    expect(source).toMatch(/dynamic\(\(\) => import\("\.\.\/LandingMemberNav"\)/);
+    expect(
+      source,
+      "LandingMemberNav must render behind hasMemberSessionHint, or every signed-out landing visit downloads the Firebase SDK.",
+    ).toMatch(/hasMemberSession \? \(\s*<LandingMemberNav \/>/);
+    expect(source).toMatch(/hasMemberSessionHint/);
   });
 });
