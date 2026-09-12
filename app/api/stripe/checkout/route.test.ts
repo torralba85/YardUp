@@ -13,9 +13,24 @@ const mocks = vi.hoisted(() => ({
   } as { exists: boolean; data: () => Record<string, unknown> },
   unlocked: false,
   stripe: null as null | {
-    checkout: { sessions: { create: ReturnType<typeof vi.fn> } };
+    checkout: {
+      sessions: {
+        create: ReturnType<typeof vi.fn>;
+        retrieve?: ReturnType<typeof vi.fn>;
+      };
+    };
   },
   grant: vi.fn(),
+  reservations: new Map<
+    string,
+    {
+      attemptId: string;
+      parameters: Record<string, string>;
+      sessionId?: string;
+      sessionUrl?: string;
+      expiresAtMs: number;
+    }
+  >(),
 }));
 
 vi.mock("@/lib/server/api-auth", () => ({
@@ -32,6 +47,83 @@ vi.mock("@/lib/server/lead-unlocks", () => ({
   grantLeadUnlock: (...args: unknown[]) => mocks.grant(...args),
   isLeadUnlocked: async () => mocks.unlocked,
 }));
+
+type FakeReservation = {
+  attemptId: string;
+  parameters: Record<string, string>;
+  sessionId?: string;
+  sessionUrl?: string;
+  expiresAtMs: number;
+};
+
+type FakeReservationInput = {
+  purchaseType: string;
+  accountId: string;
+  purchaseId: string;
+  attemptId: string;
+  parameters: Record<string, string>;
+};
+
+/**
+ * In-memory stand-in for the reservation store. It mirrors the real module's
+ * contract (one live reservation per entitlement, replacement only for the
+ * attempt that expired) so these route tests exercise resume behaviour without
+ * a Firestore transaction. The store itself is covered in
+ * `lib/server/active-checkout-sessions.test.ts`.
+ */
+vi.mock("@/lib/server/active-checkout-sessions", () => {
+  const keyOf = (input: FakeReservationInput) =>
+    `${input.purchaseType}:${input.accountId}:${input.purchaseId}`;
+
+  return {
+    reserveActiveCheckout: async (input: FakeReservationInput) => {
+      const key = keyOf(input);
+      const existing = mocks.reservations.get(key);
+      if (existing && existing.expiresAtMs > Date.now()) return existing;
+      const created: FakeReservation = {
+        attemptId: input.attemptId,
+        parameters: input.parameters,
+        expiresAtMs: Date.now() + 86_400_000,
+      };
+      mocks.reservations.set(key, created);
+      return created;
+    },
+    replaceExpiredActiveCheckout: async (
+      input: FakeReservationInput,
+      expiredAttemptId: string,
+    ) => {
+      const key = keyOf(input);
+      const existing = mocks.reservations.get(key);
+      if (existing && existing.attemptId !== expiredAttemptId) return existing;
+      const replacement: FakeReservation = {
+        attemptId: `${expiredAttemptId}-replaced`,
+        parameters: input.parameters,
+        expiresAtMs: Date.now() + 86_400_000,
+      };
+      mocks.reservations.set(key, replacement);
+      return replacement;
+    },
+    saveActiveCheckoutSession: async (
+      input: FakeReservationInput,
+      reservation: FakeReservation,
+      session: { id: string; url: string; expiresAtMs?: number },
+    ) => {
+      const key = keyOf(input);
+      const current = mocks.reservations.get(key);
+      if (!current || current.attemptId !== reservation.attemptId) {
+        return current ?? reservation;
+      }
+      const updated: FakeReservation = {
+        ...current,
+        sessionId: session.id,
+        sessionUrl: session.url,
+        expiresAtMs: session.expiresAtMs ?? current.expiresAtMs,
+      };
+      mocks.reservations.set(key, updated);
+      return updated;
+    },
+  };
+});
 
 vi.mock("@/lib/stripe", () => ({
   getStripe: async () => mocks.stripe,
@@ -61,6 +153,7 @@ beforeEach(() => {
     }),
   };
   mocks.grant.mockClear();
+  mocks.reservations.clear();
 });
 
 afterEach(() => {
@@ -148,20 +241,68 @@ describe("POST /api/stripe/checkout", () => {
     );
   });
 
-  it("reuses a key for one attempt and creates a new key for a fresh attempt", async () => {
-    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" });
-    mocks.stripe = { checkout: { sessions: { create } } };
+  it("resumes one Session across attempts instead of minting a second", async () => {
+    // The reservation, not the supplied attempt id, decides the Session. A
+    // second tab with its own attempt id must not become a second charge.
+    const create = vi
+      .fn()
+      .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/checkout/1" });
+    const retrieve = vi.fn().mockResolvedValue({ status: "open" });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
 
-    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
-    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
-    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-2" }));
-
-    expect(create.mock.calls[0][1].idempotencyKey).toBe(
-      create.mock.calls[1][1].idempotencyKey,
+    const first = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
     );
-    expect(create.mock.calls[2][1].idempotencyKey).not.toBe(
+    const sameTab = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+    const secondTab = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-2" }),
+    );
+
+    expect(create).toHaveBeenCalledTimes(1);
+    for (const res of [first, sameTab, secondTab]) {
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/1" });
+    }
+  });
+
+  it("mints a replacement once Stripe confirms the reserved Session expired", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "cs_1", url: "https://stripe.test/checkout/1" })
+      .mockResolvedValueOnce({ id: "cs_2", url: "https://stripe.test/checkout/2" });
+    const retrieve = vi.fn().mockResolvedValue({ status: "expired" });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ url: "https://stripe.test/checkout/2" });
+    expect(create).toHaveBeenCalledTimes(2);
+    // A replacement is a distinct attempt, so Stripe must not dedupe it away.
+    expect(create.mock.calls[1][1].idempotencyKey).not.toBe(
       create.mock.calls[0][1].idempotencyKey,
     );
+  });
+
+  it("409s while a completed Session is still being confirmed", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/checkout/1" });
+    const retrieve = vi.fn().mockResolvedValue({ status: "complete" });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(res.status).toBe(409);
+    expect(create).toHaveBeenCalledTimes(1);
   });
 
   it("supports clients loaded before checkoutAttemptId was introduced", async () => {
