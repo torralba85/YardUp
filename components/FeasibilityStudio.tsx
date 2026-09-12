@@ -120,17 +120,21 @@ interface ProjectBriefState {
  * {@link serializeScenarioParams}), runs {@link calculateFeasibility} on every
  * change, and wires up reports, saved scenarios, and the connect-with-builders
  * flow. Renders the desktop {@link StudioShell} spine or the mobile studio shell.
+ *
+ * @param demoChosen - The visitor already picked the demo lot in the URL before
+ *   the studio opened (the native app's onboarding), so the mobile journey
+ *   starts at the Earn reveal instead of asking them to find a lot again.
  */
-export default function FeasibilityStudio() {
+export default function FeasibilityStudio({ demoChosen = false }: { demoChosen?: boolean } = {}) {
   const initialPreset = parcelPresets[0];
   return (
     <ParcelProvider initialPreset={initialPreset}>
-      <FeasibilityStudioInner />
+      <FeasibilityStudioInner demoChosen={demoChosen} />
     </ParcelProvider>
   );
 }
 
-function FeasibilityStudioInner() {
+function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const { user, loading: authLoading } = useAuth();
   const { parcel: liveParcel, parcelMode, parcelError, parcelLoading, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
@@ -312,10 +316,10 @@ function FeasibilityStudioInner() {
   // Separate from the desktop StudioStep spine by design (issue #130). An
   // already-resolved parcel (signed-in handoff) starts at the Earn reveal.
   const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() =>
-    parcelMode !== "preset" ? "earn" : "find",
+    parcelMode !== "preset" || demoChosen ? "earn" : "find",
   );
   // A demo lot counts as the find decision only once the user commits to it.
-  const [demoCommitted, setDemoCommitted] = useState(false);
+  const [demoCommitted, setDemoCommitted] = useState(demoChosen);
   // Whether the find decision has been made — an address resolved (live or
   // estimated) or a demo lot explicitly committed to. Shared by the journey
   // rail's reachability derivation below and the restore guard just below so

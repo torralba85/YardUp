@@ -1,16 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { signInTestOwner } from "./fixtures/studio-auth";
-
-test.beforeEach(async ({ page }) => {
-  test.setTimeout(60_000);
-  await signInTestOwner(page);
-});
 
 test.describe("mobile studio journey", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 1024, "mobile-only suite");
 
   test("golden path: five reveals from find to act", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
 
     // Reveal 1 · Find — the journey replaces the old sheet composition.
     await expect(page.getByTestId("mobile-journey")).toBeVisible();
@@ -53,7 +47,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("progress targets stay labeled and at least 44px at narrow widths", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
     for (const width of [320, 390, 440, 768]) {
       await page.setViewportSize({ width, height: 844 });
       const rail = page.getByRole("navigation", { name: "Journey progress" });
@@ -71,7 +65,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
     await page.getByRole("button", { name: /reveal my backyard/i }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
 
@@ -89,7 +83,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("the rail travels back to completed reveals only", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
     await page.getByRole("button", { name: /reveal my backyard/i }).click();
     await expect(
       page.getByRole("heading", { name: /your backyard could earn/i }),
@@ -142,7 +136,7 @@ test.describe("desktop studio regression", () => {
   test.skip(({ viewport }) => !viewport || viewport.width < 1024, "desktop-only suite");
 
   test("desktop shows the guided spine and never the mobile journey", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
 
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Rules & Fit" })).toBeVisible();

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 /** Browser-only Firebase responses. No account is created and no real token is used. */
 export async function mockTestOwnerAuth(page: Page) {
@@ -24,13 +24,4 @@ export async function mockTestOwnerAuth(page: Page) {
     }
   });
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: { error: "Unavailable in browser fixture" } }));
-}
-
-export async function signInTestOwner(page: Page) {
-  await mockTestOwnerAuth(page);
-  await page.goto("/login?next=/studio");
-  await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
-  await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
-  await page.locator('button[type="submit"]').click();
-  await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible({ timeout: 25_000 });
 }

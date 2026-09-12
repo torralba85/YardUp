@@ -175,21 +175,4 @@ describe("SignedInStudioGate", () => {
     expect(mocks.geocodeAddress).not.toHaveBeenCalled();
     expect(mocks.fetchParcel).not.toHaveBeenCalled();
   });
-
-  it("opens a valid shared scenario after sign-in without changing its URL", async () => {
-    const url = "/studio?parcel=corner-lot&size=800&roof=gable";
-    window.history.replaceState(null, "", url);
-    render(<SignedInStudioGate user={user} />);
-    expect(await screen.findByText("Real Parcel Studio")).toBeInTheDocument();
-    expect(window.location.pathname + window.location.search).toBe(url);
-    expect(mocks.fetchParcel).not.toHaveBeenCalled();
-  });
-
-  it("keeps invalid shared parcels on the address entry", () => {
-    window.history.replaceState(null, "", "/studio?parcel=unknown&q=private-address");
-    render(<SignedInStudioGate user={user} />);
-    expect(screen.getByRole("heading", { name: "Start with your property." })).toBeInTheDocument();
-    expect(screen.queryByText("Real Parcel Studio")).not.toBeInTheDocument();
-    expect(mocks.geocodeAddress).not.toHaveBeenCalled();
-  });
 });

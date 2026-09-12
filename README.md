@@ -28,8 +28,8 @@ Home and feasibility studio on phone, and the studio on tablet.
 - Uses authenticated OpenAI Responses API workflows for a parcel-and-permit
   brief and style-matched ADU concepts.
 - Produces a shareable, printable Certificate of Feasibility.
-- Requires sign-in to enter the Studio and saves scenarios with Firebase Auth
-  and Firestore.
+- Saves scenarios with Firebase Auth and Firestore, while guest scenarios stay
+  local to the browser.
 - Supports homeowner-to-builder handoff and verified web/native purchase
   channels.
 - Resolves real lots without a paid parcel API wherever the public GIS registry
@@ -47,11 +47,13 @@ LotFoundry integrates OpenAI models to augment deterministic spatial calculation
 - **Style-matched ADU concepts:** Multimodal vision understanding analyzes architectural details (roof pitches, cladding materials, window styles, exterior palettes) from user-uploaded photos to guide image generation of matching ADU designs. Photo uploads require explicit opt-in consent.
 - **Deterministic source of truth:** Calculations for setbacks, square footage, site coverage, construction costs, rental yields, and financial returns remain strictly deterministic. AI models do not guess arithmetic or spatial measurements.
 
-
 ## Studio access
 
-The Studio introduces the app before requiring sign-in. Returning owners enter
-their workspace directly; shared scenario links open after authentication.
+On the web, guests open the demo Studio directly and signed-in owners start from
+an address. In the Android and iOS apps only, the Studio opens with a welcome,
+sign-in, and a quick guide; sign-in is required for a real property, and demo
+cities stay open to guests. See
+[`docs/design/2026-09-12-app-studio-onboarding.md`](docs/design/2026-09-12-app-studio-onboarding.md).
 
 ## Run locally
 

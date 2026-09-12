@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { signInTestOwner } from "./fixtures/studio-auth";
 
 test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
@@ -36,11 +35,20 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: /Create account/i })).toBeVisible();
   });
 
-  test("studio welcomes guests before required sign-in", async ({ page }) => {
+  test("studio is open to guests", async ({ page, viewport }) => {
     await page.goto("/studio");
-    await expect(page.getByTestId("studio-welcome")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Get started" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Studio steps" })).toHaveCount(0);
+
+    // Guests are no longer redirected — mobile gets the five-reveal journey,
+    // desktop gets the dashboard.
+    await expect(page).toHaveURL(/\/studio/);
+    if (viewport && viewport.width < 1024) {
+      await expect(
+        page.getByRole("heading", { name: /start with your address/i }),
+      ).toBeVisible();
+    } else {
+      await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Rules & Fit/i })).toBeVisible();
+    }
   });
 
   test("builder dashboard requires sign in and preserves the next route", async ({ page }) => {
@@ -50,26 +58,22 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 
-  test("signed-in owner can navigate to Permit Guide and view demo rules", async ({ page, viewport }) => {
+  test("guest can navigate to Permit Guide and view demo rules", async ({ page, viewport }) => {
     // Desktop-only: the mobile journey surfaces permit caveats as the Check
     // reveal's verify items instead of the full permit guide panel (#130).
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
-    test.setTimeout(60_000);
-    await signInTestOwner(page);
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
     await page.getByRole("button", { name: /Rules & Fit/i }).click();
     await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();
   });
 
-  test("signed-in owner can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
+  test("guest can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
     test.setTimeout(60_000);
     // Desktop-only: the mobile journey keeps Shape to broad size/style
     // choices; the gallery is not part of the default mobile path (#130).
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
-    test.setTimeout(60_000);
-    await signInTestOwner(page);
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
     // Navigating via sidebar navigation button
     await page.getByRole("button", { name: /Design/i }).click();
     await expect(page.getByRole("heading", { name: /A small home, considered/i })).toBeVisible({ timeout: 10000 });
@@ -91,9 +95,7 @@ test.describe("Public LotFoundry flows", () => {
   }) => {
     test.skip(!isMobile, "The five-reveal journey is the mobile layout only");
 
-    test.setTimeout(60_000);
-    await signInTestOwner(page);
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio");
     await page.getByRole("button", { name: /Seattle/i }).click();
     await page.getByRole("button", { name: /Reveal my backyard/i }).click();
     await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();

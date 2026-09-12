@@ -49,6 +49,19 @@ export function detectPurchaseChannel(
   return "web";
 }
 
+/**
+ * Whether the page is running inside a LotFoundry native shell (the Android
+ * TWA or the iOS WKWebView) rather than an open browser. Screen width is not a
+ * signal: a phone browser is still the web product.
+ */
+export function isNativeAppShell(
+  win: PurchaseChannelWindow | null | undefined = typeof window !== "undefined"
+    ? (window as unknown as PurchaseChannelWindow)
+    : undefined,
+): boolean {
+  return detectPurchaseChannel(win) !== "web";
+}
+
 /** Whether the channel must use store billing (not Stripe) for digital goods. */
 export function requiresStoreBilling(channel: PurchaseChannel): boolean {
   return channel === "app-store" || channel === "google-play";

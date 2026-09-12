@@ -1,15 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInTestOwner } from "./fixtures/studio-auth";
-
-test.beforeEach(async ({ page }) => {
-  test.setTimeout(60_000);
-  await signInTestOwner(page);
-});
 
 // T08 browser reproductions derived from Gemini's audit coverage outline.
 // The actual selectors and assertions were verified against the source by Codex.
 async function openShape(page: Page) {
-  await page.goto("/studio?parcel=oak-street");
+  await page.goto("/studio");
   await page.getByRole("button", { name: /reveal my backyard/i }).click();
   await page.getByRole("button", { name: /shape your adu/i }).click();
   await expect(page.getByRole("heading", { name: /pick a direction/i })).toBeVisible();

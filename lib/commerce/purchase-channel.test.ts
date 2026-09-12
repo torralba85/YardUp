@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   detectPurchaseChannel,
+  isNativeAppShell,
   requiresStoreBilling,
 } from "./purchase-channel";
 
@@ -34,6 +35,15 @@ describe("detectPurchaseChannel", () => {
 
   it("treats a missing window as web", () => {
     expect(detectPurchaseChannel(null)).toBe("web");
+  });
+});
+
+describe("isNativeAppShell", () => {
+  it("is true only inside the Android or iOS shell", () => {
+    expect(isNativeAppShell({ getDigitalGoodsService: () => undefined })).toBe(true);
+    expect(isNativeAppShell({ LotFoundryNative: { platform: "ios" } })).toBe(true);
+    expect(isNativeAppShell({})).toBe(false);
+    expect(isNativeAppShell(null)).toBe(false);
   });
 });
 
