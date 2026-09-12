@@ -1174,8 +1174,14 @@
   .footprintOverlay {
     transition: opacity 650ms ease;
   }
+  /* The LCP element is the hero h1, and it lives in .heroCopy. Fading it in
+     from opacity: 0 means Chrome records no contentful paint until the
+     animation has run, which is most of the 1.9s LCP render delay measured on
+     mobile. Animate transform only here so the heading paints on the first
+     frame and still settles into place. .heroVisual is not the LCP candidate,
+     so it keeps the full fade. */
   .heroCopy {
-    animation: settle-in 700ms both;
+    animation: rise-in 700ms both;
   }
   .heroVisual {
     animation: settle-in 900ms 100ms both;
@@ -1190,6 +1196,14 @@
     }
     to {
       opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes rise-in {
+    from {
+      transform: translateY(14px);
+    }
+    to {
       transform: translateY(0);
     }
   }

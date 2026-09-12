@@ -520,9 +520,13 @@ export function LotMoreLanding({
 
           <section className={styles.lifeSection} aria-labelledby="life-title">
             <div className={styles.lifeImage}>
+              {/* Pre-sized local WebP variants keep phones off the 1536w file,
+                  which the layout only ever paints into a ~363px-wide slot. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/landing/a-lot-more/backyard-life.webp"
+                srcSet="/landing/a-lot-more/backyard-life-mobile.webp 768w, /landing/a-lot-more/backyard-life.webp 1536w"
+                sizes="(max-width: 800px) 88vw, 48vw"
                 width={1536}
                 height={1024}
                 alt="Illustrative orange backyard home opening onto a timber deck and leafy garden"
