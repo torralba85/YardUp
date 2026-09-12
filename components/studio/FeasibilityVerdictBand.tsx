@@ -3,11 +3,9 @@
 /**
  * FeasibilityVerdictBand — the studio's income-led lead element.
  *
- * The espresso band leads with the monthly rent figure (first and largest —
- * income-led north star per DESIGN.md), followed by the feasibility verdict and
- * a readiness score. Mounts full-width above the parcel scene.
- *
- * Derived entirely from real engine output via `summarizeFeasibility`.
+ * The espresso band leads with the monthly rent figure, followed by the
+ * feasibility verdict and readiness score. California parcels also surface the
+ * sprint-plan statewide baseline screen as a disclosure below the lot facts.
  */
 
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
@@ -17,6 +15,7 @@ import {
   verdictTone,
   type VerdictLevel,
 } from "@/lib/feasibility-verdict";
+import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { useCountUp } from "./use-count-up";
 
@@ -44,30 +43,26 @@ export default function FeasibilityVerdictBand({
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
   const readiness = useCountUp(summary.readiness);
-
   const lotLine = `${parcel.lotArea.toLocaleString()} sf lot · ${parcel.lotWidth}′ × ${parcel.lotLength}′`;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-6 gap-y-3.5 border-b border-[#44443F] bg-[#161616] px-7 py-[18px] text-[#F5F5F0]">
-      <div className="min-w-0">
-        {eyebrow && (
-          <p className="lf-kicker-dense text-[#B7B7AE]">
-            {eyebrow}
-          </p>
-        )}
+      <div className="min-w-0 flex-1">
+        {eyebrow && <p className="lf-kicker-dense text-[#B7B7AE]">{eyebrow}</p>}
         <h2 className="mt-[3px] font-display text-[31px] font-semibold leading-[1.08] text-[#F5F5F0]">
           {parcel.address}
         </h2>
         <p className="mt-[5px] font-sans text-[11px] tabular-nums text-[#B7B7AE]">{lotLine}</p>
+        <FeasibilityBadge
+          parcel={parcel}
+          config={{ footprint: config.width * config.length, width: config.width, length: config.length }}
+          surface="dark"
+        />
       </div>
 
       <div className="flex flex-shrink-0 flex-wrap items-center gap-x-[22px] gap-y-3">
-        {/* Income leads the band: the money figure is typographic in chalk on dark,
-            never money-green (A LOT MORE rule §2.6). */}
         <div>
-          <p className="lf-kicker-dense text-[#B7B7AE]">
-            If built
-          </p>
+          <p className="lf-kicker-dense text-[#B7B7AE]">If built</p>
           <MoneyFigure
             value={result.monthlyRent}
             animate
@@ -81,9 +76,7 @@ export default function FeasibilityVerdictBand({
         <div className="hidden self-stretch border-l border-[#44443F] sm:block" />
 
         <div>
-          <p className="lf-kicker-dense text-[#B7B7AE]">
-            Feasibility verdict
-          </p>
+          <p className="lf-kicker-dense text-[#B7B7AE]">Feasibility verdict</p>
           <div className="mt-1 flex items-center gap-2.5">
             <Icon size={24} style={{ color: tone.onDark }} />
             <span
@@ -105,9 +98,7 @@ export default function FeasibilityVerdictBand({
         <div className="hidden self-stretch border-l border-[#44443F] sm:block" />
 
         <div className="hidden text-center sm:block">
-          <p className="lf-kicker-dense text-[#B7B7AE]">
-            Readiness
-          </p>
+          <p className="lf-kicker-dense text-[#B7B7AE]">Readiness</p>
           <div className="mt-0.5 lf-money-xl text-[#F5F5F0]">
             {readiness}
             <span className="font-sans text-sm text-[#B7B7AE]"> /100</span>

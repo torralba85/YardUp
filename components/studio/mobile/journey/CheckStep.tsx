@@ -15,6 +15,7 @@ import {
 } from "@/lib/feasibility-verdict";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { Button } from "@/components/ui/Button";
+import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
 
 const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
   "Likely Feasible": CheckCircle2,
@@ -22,37 +23,24 @@ const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
   Unlikely: XCircle,
 };
 
-/** Plain-language reading of each verdict, shown before any numbers. */
 const VERDICT_COPY: Record<VerdictLevel, string> = {
   "Likely Feasible": "An ADU looks buildable on this lot under the rules we can check.",
   "Needs Review": "An ADU may fit here, but a few items need review before you commit.",
   Unlikely: "This lot has significant constraints — an ADU is a stretch as configured.",
 };
 
-/** Props for {@link CheckStep}. */
 export interface CheckStepProps {
-  /** The active parcel. */
   parcel: Parcel;
-  /** The feasibility result to summarize. */
   result: FeasibilityResult;
-  /** The proposed footprint, checked against the setback envelope. */
   config: Pick<ADUConfig, "width" | "length">;
-  /** Open the advanced fine-tune drawer. */
   onFineTune: () => void;
-  /** The one primary action: complete the journey with the certificate. */
   onContinue: () => void;
 }
 
-/**
- * Reveal 4 · Check — a plain-language feasibility verdict first, then three
- * key metrics, then the small set of items that still need local
- * verification. Permit caveats come after the verdict, never before it.
- */
 export default function CheckStep({ parcel, result, config, onFineTune, onContinue }: CheckStepProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
-  // The open items: review/blocked constraints, verdict-relevant only.
   const openItems = summary.constraints.filter(
     (item) => item.status === "review" || item.status === "blocked",
   );
@@ -85,12 +73,16 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
       </div>
       <p className="lf-body-sm mt-2 text-lf-muted">{VERDICT_COPY[summary.verdict]}</p>
 
+      <FeasibilityBadge
+        parcel={parcel}
+        config={{ footprint: config.width * config.length, width: config.width, length: config.length }}
+        surface="light"
+      />
+
       <div className="mt-5 grid grid-cols-3 gap-px border border-lf-hairline bg-lf-hairline">
         {metrics.map((metric) => (
           <div key={metric.label} className="bg-lf-card px-2.5 py-3">
-            <p className="lf-dataprint text-lf-muted">
-              {metric.label}
-            </p>
+            <p className="lf-dataprint text-lf-muted">{metric.label}</p>
             <p className="mt-1 font-display text-lg font-semibold tabular-nums text-lf-espresso">
               {metric.value}
             </p>
@@ -100,9 +92,7 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
 
       {openItems.length > 0 && (
         <>
-          <p className="mt-6 lf-kicker-dense text-lf-muted">
-            Verify before permit
-          </p>
+          <p className="mt-6 lf-kicker-dense text-lf-muted">Verify before permit</p>
           <ul className="mt-2 flex flex-col gap-2">
             {openItems.map((item) => (
               <li
