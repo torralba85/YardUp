@@ -108,7 +108,10 @@ function jpegPagePdf(jpegDataUrl: string, width: number, height: number): Blob {
     xref.push(`${String(offsets[i]).padStart(10, "0")} 00000 n `);
   }
   const trailer = `${xref.join("\n")}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
-  return new Blob([concatBytes([header, ...objects, text(trailer)])], { type: "application/pdf" });
+  const pdfBytes = concatBytes([header, ...objects, text(trailer)]);
+  const pdfBuffer = new ArrayBuffer(pdfBytes.byteLength);
+  new Uint8Array(pdfBuffer).set(pdfBytes);
+  return new Blob([pdfBuffer], { type: "application/pdf" });
 }
 
 /** Generate the sprint-plan one-page preliminary site-plan and feasibility PDF. */
