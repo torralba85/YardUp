@@ -24,6 +24,7 @@ import type {
   OwnerContact,
   ServiceArea,
   BuilderDirectoryProfile,
+  BuilderLedgerEntry,
   UnlockedLeadContact,
 } from "./marketplace-types";
 import { auth } from "./firebase";
@@ -34,6 +35,7 @@ const RESPONSES = "builderResponses";
 const PRIVATE = "private";
 const CONTACT = "contact";
 const LEAD_UNLOCKS = "leadUnlocks";
+const LEDGER = "ledger";
 
 /**
  * Fetch a builder's profile by uid.
@@ -46,6 +48,32 @@ export async function fetchBuilderProfile(
 ): Promise<BuilderProfile | null> {
   const snap = await getDoc(doc(db, BUILDERS, uid));
   return snap.exists() ? firestoreToBuilderProfile(snap.id, snap.data()) : null;
+}
+
+/**
+ * Fetch a builder's financial and unlock ledger entries.
+ *
+ * @param builderId - The builder account's uid.
+ * @returns The builder's ledger entries.
+ */
+export async function fetchBuilderLedger(
+  builderId: string,
+): Promise<BuilderLedgerEntry[]> {
+  const snap = await getDocs(collection(db, BUILDERS, builderId, LEDGER));
+  return snap.docs.map((docSnap) => {
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      builderId,
+      type: (data.type as BuilderLedgerEntry["type"]) || "purchase",
+      creditsChange: typeof data.creditsChange === "number" ? data.creditsChange : 0,
+      amountPaid: typeof data.amountPaid === "number" ? data.amountPaid : 0,
+      referenceId:
+        (data.referenceId as string) || (data.stripeSessionId as string) || (data.orderId as string) || "",
+      description: (data.description as string) || "",
+      createdAt: timestampToIso(data.createdAt) || new Date().toISOString(),
+    };
+  });
 }
 
 /**

@@ -23,7 +23,7 @@ vi.mock("./firebase", () => ({ db: {} }));
 vi.mock("firebase/firestore", () => ({
   Timestamp: class {},
   serverTimestamp: () => "SERVER_TS",
-  collection: (_db: unknown, path: string) => ({ path }),
+  collection: (_db: unknown, ...segments: string[]) => ({ path: segments.join("/") }),
   doc: (...args: unknown[]) => {
     if (args.length === 1) {
       const ref = args[0] as { path: string };
@@ -58,7 +58,8 @@ vi.mock("firebase/firestore", () => ({
   updateDoc: vi.fn(),
 }));
 
-import { createConnectionRequest } from "./marketplace-firestore";
+import { getDocs } from "firebase/firestore";
+import { createConnectionRequest, fetchBuilderLedger } from "./marketplace-firestore";
 
 const contact: OwnerContact = {
   name: "Jane Owner",
@@ -182,3 +183,84 @@ describe("createConnectionRequest paywall split", () => {
     expect(preview.previewSerial).not.toContain(snapshot.parcelAddress);
   });
 });
+
+describe("fetchBuilderLedger", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("queries the builder ledger subcollection and maps entries correctly", async () => {
+    vi.mocked(getDocs).mockResolvedValueOnce({
+      docs: [
+        {
+          id: "entry-purchase",
+          data: () => ({
+            type: "purchase",
+            creditsChange: 10,
+            amountPaid: 300,
+            referenceId: "cs_pack_10",
+            description: "Purchased 10 Lead Credits",
+            createdAt: "2026-09-11T12:00:00Z",
+          }),
+        },
+        {
+          id: "entry-unlock",
+          data: () => ({
+            type: "unlock",
+            creditsChange: -1,
+            amountPaid: 0,
+            referenceId: "req-1",
+            description: "Unlocked Lead req-1",
+            createdAt: "2026-09-11T13:00:00Z",
+          }),
+        },
+      ],
+    } as unknown as Awaited<ReturnType<typeof getDocs>>);
+
+    const entries = await fetchBuilderLedger("builder-1");
+    expect(entries).toHaveLength(2);
+    expect(entries[0]).toEqual({
+      id: "entry-purchase",
+      builderId: "builder-1",
+      type: "purchase",
+      creditsChange: 10,
+      amountPaid: 300,
+      referenceId: "cs_pack_10",
+      description: "Purchased 10 Lead Credits",
+      createdAt: "2026-09-11T12:00:00Z",
+    });
+    expect(entries[1]).toEqual({
+      id: "entry-unlock",
+      builderId: "builder-1",
+      type: "unlock",
+      creditsChange: -1,
+      amountPaid: 0,
+      referenceId: "req-1",
+      description: "Unlocked Lead req-1",
+      createdAt: "2026-09-11T13:00:00Z",
+    });
+  });
+
+  it("falls back to default values when fields are missing or unexpected", async () => {
+    vi.mocked(getDocs).mockResolvedValueOnce({
+      docs: [
+        {
+          id: "entry-minimal",
+          data: () => ({}),
+        },
+      ],
+    } as unknown as Awaited<ReturnType<typeof getDocs>>);
+
+    const entries = await fetchBuilderLedger("builder-2");
+    expect(entries).toHaveLength(1);
+    expect(entries[0].id).toBe("entry-minimal");
+    expect(entries[0].builderId).toBe("builder-2");
+    expect(entries[0].type).toBe("purchase");
+    expect(entries[0].creditsChange).toBe(0);
+    expect(entries[0].amountPaid).toBe(0);
+    expect(entries[0].referenceId).toBe("");
+    expect(entries[0].description).toBe("");
+    expect(entries[0].createdAt).toBeDefined();
+  });
+});
+

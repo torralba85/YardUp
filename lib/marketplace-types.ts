@@ -68,7 +68,7 @@ export interface BuilderDirectoryProfile {
 export interface BuilderLedgerEntry {
   id: string;
   builderId: string;
-  type: "purchase" | "unlock" | "credit";
+  type: "purchase" | "unlock" | "credit" | "refund";
   creditsChange: number;
   amountPaid: number;
   referenceId: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { computeBuilderMetrics } from "@/lib/builder-metrics";
 import { startLeadUnlock } from "@/lib/lead-unlock-api";
@@ -8,6 +8,7 @@ import { useStorePrice } from "@/lib/commerce/store-price";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
 import type {
   BuilderInboxItem,
+  BuilderLedgerEntry,
   BuilderProfile,
   UnlockedLeadContact,
 } from "@/lib/marketplace-types";
@@ -57,10 +58,12 @@ function inTab(item: BuilderInboxItem, key: TabKey): boolean {
 export default function BuilderInbox({
   profile,
   items,
+  ledger: initialLedger = [],
   onRespond,
 }: {
   profile: BuilderProfile;
   items: BuilderInboxItem[];
+  ledger?: BuilderLedgerEntry[];
   onRespond: (requestId: string, status: "interested" | "not-a-fit") => Promise<void>;
 }) {
   const { user } = useAuth();
@@ -73,6 +76,8 @@ export default function BuilderInbox({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const [credits, setCredits] = useState(profile.credits ?? 0);
+  const [sessionLedger, setSessionLedger] = useState<BuilderLedgerEntry[]>([]);
+  const ledger = useMemo(() => [...initialLedger, ...sessionLedger], [initialLedger, sessionLedger]);
   const [access, setAccess] = useState<Record<string, LeadAccess>>({});
   const [contacts, setContacts] = useState<Record<string, UnlockedLeadContact>>({});
   const [demoGrants, setDemoGrants] = useState<Record<string, boolean>>({});
@@ -106,7 +111,7 @@ export default function BuilderInbox({
     };
   }, [items]);
 
-  const metrics = computeBuilderMetrics(items);
+  const metrics = computeBuilderMetrics(items, ledger);
   const filtered = items.filter((item) => inTab(item, tab));
   const tabCounts: Record<TabKey, number> = {
     all: items.length,
@@ -152,6 +157,19 @@ export default function BuilderInbox({
         if (!res.ok) throw new Error(data.error || "Unlock failed");
 
         setCredits(data.newCredits);
+        setSessionLedger((current) => [
+          ...current,
+          {
+            id: `${profile.id}_${requestId}_use`,
+            builderId: profile.id,
+            type: "unlock",
+            creditsChange: -1,
+            amountPaid: 0,
+            referenceId: requestId,
+            description: `Unlocked Lead ${requestId}`,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
 
         setSlipId(null);
         setAccess((current) => ({ ...current, [requestId]: "confirming" }));
@@ -178,6 +196,22 @@ export default function BuilderInbox({
       setSlipId(null);
       setAccess((current) => ({ ...current, [requestId]: "confirming" }));
       setAnnounce(`Lead ${serial}: payment received, recording unlock.`);
+
+      if (outcome.demo) {
+        setSessionLedger((current) => [
+          ...current,
+          {
+            id: `demo_${requestId}_${Date.now()}`,
+            builderId: profile.id,
+            type: "unlock",
+            creditsChange: 0,
+            amountPaid: 49,
+            referenceId: requestId,
+            description: `Unlocked Lead ${requestId}`,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      }
 
       const contact = await fetchUnlockedContact(requestId);
       if (contact) {
