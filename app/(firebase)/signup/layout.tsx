@@ -10,6 +10,7 @@ import type { Metadata } from "next";
  */
 export const metadata: Metadata = {
   title: "Create your account — LotFoundry",
+  alternates: { canonical: "/signup" },
   robots: { index: false, follow: true },
 };
 

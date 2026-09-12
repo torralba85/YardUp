@@ -6,6 +6,7 @@ import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell"
 export const metadata: Metadata = {
   title: "Privacy Policy | LotFoundry",
   description: "How LotFoundry collects, uses, and protects your information.",
+  alternates: { canonical: "/privacy" },
 };
 
 /** Privacy policy — matches Firebase, Regrid, Census/public GIS, USA Structures, Google, OpenAI, Stripe, marketplace. */

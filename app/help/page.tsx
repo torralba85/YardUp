@@ -5,6 +5,7 @@ import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell"
 export const metadata: Metadata = {
   title: "Help | LotFoundry",
   description: "Getting started with LotFoundry: studio, account, payments, AI photos, and deletion.",
+  alternates: { canonical: "/help" },
 };
 
 export default function HelpPage() {
