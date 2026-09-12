@@ -1,9 +1,8 @@
 # Contributing to LotFoundry
 
-This repository is source-available for OpenAI Build Week evaluation under the
-LotFoundry Evaluation License; it is not an open-source project. Contributions
-are currently accepted by invitation. These are the working conventions for
-collaborators with push access.
+This repository is source-available under the LotFoundry Evaluation License;
+it is not an open-source project. Contributions are currently accepted by
+invitation. These are the working conventions for collaborators with push access.
 
 ## Branch strategy: GitHub Flow
 

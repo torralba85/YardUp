@@ -62,13 +62,13 @@ environment files, sibling worktrees, or agent configuration.
 - [ ] Signed `.aab` is built outside Git and tested on the internal track
 - [ ] Purchase, restore, refund/revocation, account export, and deletion pass on a real device
 
-## Public repository and Devpost
+## Public repository and release checks
 
 - [ ] Repository description, homepage, topics, license, and README are current
-- [ ] Existing work and Build Week additions are clearly distinguished
-- [ ] Repository is public, or both judging accounts have private access
-- [ ] Public demo works without payment through the judging period
-- [ ] Public YouTube demo is under three minutes, includes audio, and shows Codex/GPT-5.6
-- [ ] Gallery assets, track, technologies, and required submission fields are complete
-- [ ] A representative Codex Session ID is copied from `/feedback`
-- [ ] Final Devpost submission is reviewed by the owner before pressing Submit
+- [ ] `npm run repo:public-check` passes with zero secret or tracking violations
+- [ ] No local `.env`, credentials, or temporary artifacts are tracked
+- [ ] `README.md` and documentation links are tested and point to active paths
+- [ ] License terms and copyright notices are verified and accurate
+- [ ] Core verification gate passes: `npm run check` (lint, test, tsc, build)
+- [ ] Production deployment smoke tests pass (`npm run smoke:firebase`)
+- [ ] App Store / Play Store release assets, metadata, and version bumps are confirmed
