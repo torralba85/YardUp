@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
 import {
@@ -28,6 +28,7 @@ const description =
 export const metadata: Metadata = {
   title: "LotFoundry | A lot more possibility",
   description,
+  alternates: { canonical: "/" },
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },

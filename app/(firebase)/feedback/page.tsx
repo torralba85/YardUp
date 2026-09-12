@@ -6,6 +6,7 @@ import { FeedbackForm } from "./FeedbackForm";
 export const metadata: Metadata = {
   title: "Send Feedback | LotFoundry",
   description: "Report a bug, flag a data issue, or tell us what to build next.",
+  alternates: { canonical: "/feedback" },
 };
 
 /** Public feedback page (`/feedback`). */
