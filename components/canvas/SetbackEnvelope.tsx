@@ -24,6 +24,17 @@ function polygonPath(points: readonly THREE.Vector2[]) {
 }
 
 /**
+ * Blocked red is a status colour, so the band is only filled when the ADU
+ * actually violates the setbacks. A resting tint washed every compliant lot's
+ * lawn and driveway toward rust.
+ */
+export function setbackEnvelopeStyle(violated: boolean) {
+  return violated
+    ? { fill: { color: "#A82D16", opacity: 0.22 }, line: { color: "#A82D16", lineWidth: 2.25 } }
+    : { fill: null, line: { color: "#65655F", lineWidth: 1.5 } };
+}
+
+/**
  * Draw the restricted setback band and its inner buildable boundary directly in
  * the R3F parcel scene. The geometry sits just above grade to avoid z-fighting.
  */
@@ -63,21 +74,25 @@ export function SetbackEnvelope({
 
   if (!geometry || innerLine.length === 0) return null;
 
+  const style = setbackEnvelopeStyle(violated);
+
   return (
     <group name="lotfoundry-setback-envelope">
-      <mesh geometry={geometry} rotation={[Math.PI / 2, 0, 0]} position={[0, elevation, 0]}>
-        <meshBasicMaterial
-          color="#A82D16"
-          transparent
-          opacity={violated ? 0.22 : 0.11}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {style.fill && (
+        <mesh geometry={geometry} rotation={[Math.PI / 2, 0, 0]} position={[0, elevation, 0]}>
+          <meshBasicMaterial
+            color={style.fill.color}
+            transparent
+            opacity={style.fill.opacity}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
       <Line
         points={innerLine}
-        color={violated ? "#A82D16" : "#65655F"}
-        lineWidth={violated ? 2.25 : 1.5}
+        color={style.line.color}
+        lineWidth={style.line.lineWidth}
         dashed
         dashSize={2.4}
         gapSize={1.6}
