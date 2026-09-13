@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import StudioPage from "./page";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
@@ -27,7 +28,13 @@ vi.mock("@/components/studio/SignedInStudioGate", () => ({
 
 vi.mock("@/components/studio/AppStudioOnboarding", () => ({
   default: function MockAppStudioOnboarding({ user }: { user: { uid: string } | null }) {
-    return <div>App Onboarding Mock {user ? "member" : "guest"}</div>;
+    const [mountId] = useState(() => Math.random().toString(36));
+    return (
+      <div>
+        App Onboarding Mock {user ? "member" : "guest"}
+        <span data-testid="onboarding-mount">{mountId}</span>
+      </div>
+    );
   },
 }));
 
@@ -65,6 +72,19 @@ describe("StudioPage", () => {
     render(<StudioPage />);
     expect(screen.getByText("App Onboarding Mock member")).toBeInTheDocument();
     expect(screen.queryByText("Signed-in Blank Slate Mock")).not.toBeInTheDocument();
+  });
+
+  it("keeps the app onboarding mounted while a later auth event resolves", () => {
+    mocks.nativeApp = true;
+    const { rerender } = render(<StudioPage />);
+    const mountId = screen.getByTestId("onboarding-mount").textContent;
+
+    mocks.authState.loading = true;
+    rerender(<StudioPage />);
+    mocks.authState.loading = false;
+    rerender(<StudioPage />);
+
+    expect(screen.getByTestId("onboarding-mount").textContent).toBe(mountId);
   });
 
   it("still redirects builders inside the native app", () => {

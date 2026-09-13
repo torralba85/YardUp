@@ -12,12 +12,34 @@ import SignedInStudioGate from "./SignedInStudioGate";
 
 type Step = "welcome" | "sign-in" | "guide" | "studio";
 type Destination = { kind: "property" } | { kind: "demo"; parcelId: string };
+type OnboardingEntry = { step: Step; destination: Destination };
 
 const STEPS: readonly Step[] = ["welcome", "sign-in", "guide", "studio"];
 /** Set once the visitor has read the guide, so returning members open straight into the Studio. */
 export const APP_GUIDE_SEEN_KEY = "lf:app-guide-seen";
-/** `history.state` key; the step only, never an address. */
+/** `history.state` keys: the step and a demo preset id only, never an address. */
 const STEP_STATE_KEY = "lfAppOnboardingStep";
+const DEMO_STATE_KEY = "lfAppOnboardingDemo";
+
+function readEntry(state: unknown): OnboardingEntry | null {
+  const record = state as Record<string, unknown> | null;
+  const step = record?.[STEP_STATE_KEY];
+  if (!STEPS.includes(step as Step)) return null;
+  const demo = record?.[DEMO_STATE_KEY];
+  const isPreset = typeof demo === "string" && parcelPresets.some((preset) => preset.id === demo);
+  return { step: step as Step, destination: isPreset ? { kind: "demo", parcelId: demo } : { kind: "property" } };
+}
+
+/** Merge an entry into existing history state so the router's and journey's keys survive. */
+function withEntry(state: unknown, { step, destination }: OnboardingEntry) {
+  const { [DEMO_STATE_KEY]: _previousDemo, ...rest } = (state ?? {}) as Record<string, unknown>;
+  void _previousDemo;
+  return {
+    ...rest,
+    [STEP_STATE_KEY]: step,
+    ...(destination.kind === "demo" ? { [DEMO_STATE_KEY]: destination.parcelId } : {}),
+  };
+}
 
 const primaryButton =
   "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-[3px] bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-ink motion-safe:transition-colors motion-safe:duration-[180ms]";
@@ -51,9 +73,16 @@ function cityLabel(city: string) {
  * gesture steps back through onboarding instead of leaving the app.
  */
 export default function AppStudioOnboarding({ user }: { user: User | null }) {
-  const [initialStep] = useState<Step>(() => (user ? (readGuideSeen() ? "studio" : "guide") : "welcome"));
-  const [step, setStep] = useState<Step>(initialStep);
-  const [destination, setDestination] = useState<Destination>({ kind: "property" });
+  // A remount (an auth refresh, a reload, a restored tab) resumes from the
+  // current history entry instead of dropping the visitor back on Welcome.
+  const [initialEntry] = useState<OnboardingEntry>(
+    () =>
+      readEntry(window.history.state) ?? {
+        step: user ? (readGuideSeen() ? "studio" : "guide") : "welcome",
+        destination: { kind: "property" },
+      },
+  );
+  const [{ step, destination }, setEntry] = useState<OnboardingEntry>(initialEntry);
   const [authOpen, setAuthOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousView = useRef<Step | null>(null);
@@ -65,14 +94,14 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
   if (view === "studio" && destination.kind === "property" && !user) view = "sign-in";
 
   useEffect(() => {
-    window.history.replaceState({ ...window.history.state, [STEP_STATE_KEY]: initialStep }, "", window.location.href);
-  }, [initialStep]);
+    window.history.replaceState(withEntry(window.history.state, initialEntry), "", window.location.href);
+  }, [initialEntry]);
 
   useEffect(() => {
     function handlePopState(event: PopStateEvent) {
-      const restored = (event.state as Record<string, unknown> | null)?.[STEP_STATE_KEY];
       // Entries without the key belong to someone else (the Studio journey).
-      if (STEPS.includes(restored as Step)) setStep(restored as Step);
+      const restored = readEntry(event.state);
+      if (restored) setEntry(restored);
     }
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -88,21 +117,23 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
     previousView.current = view;
   }, [view]);
 
-  function go(next: Step, { replace = false, url = window.location.href } = {}) {
-    const state = { ...window.history.state, [STEP_STATE_KEY]: next };
+  function go(
+    next: Step,
+    { replace = false, url = window.location.href, to = destination }: { replace?: boolean; url?: string; to?: Destination } = {},
+  ) {
+    const entry = { step: next, destination: to };
+    const state = withEntry(window.history.state, entry);
     if (replace) window.history.replaceState(state, "", url);
     else window.history.pushState(state, "", url);
-    setStep(next);
+    setEntry(entry);
   }
 
   function exploreProperty() {
-    setDestination({ kind: "property" });
-    go(user ? "guide" : "sign-in");
+    go(user ? "guide" : "sign-in", { to: { kind: "property" } });
   }
 
   function chooseDemo(parcelId: string) {
-    setDestination({ kind: "demo", parcelId });
-    go("guide");
+    go("guide", { to: { kind: "demo", parcelId } });
   }
 
   function openStudio() {

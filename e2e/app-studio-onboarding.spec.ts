@@ -24,6 +24,10 @@ test.describe("native app Studio onboarding", () => {
     await expect(page.getByText("Start in Portland, OR")).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("app-guide.png"), fullPage: true });
 
+    // A remount must resume the chosen city, not drop back to Welcome.
+    await page.reload();
+    await expect(page.getByText("Start in Portland, OR")).toBeVisible({ timeout: 20_000 });
+
     await page.getByRole("button", { name: /Open the Studio/ }).click();
     await expect(page.getByTestId("mobile-journey")).toBeVisible({ timeout: 25_000 });
     await expect(page.getByRole("heading", { name: /your backyard could earn/i })).toBeVisible();
