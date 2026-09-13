@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { useBuilderInboxView } from "@/lib/use-builder-inbox-view";
 import { useAuth } from "@/lib/auth-context";
 import { computeBuilderMetrics } from "@/lib/builder-metrics";
 import { startLeadUnlock } from "@/lib/lead-unlock-api";
@@ -70,10 +71,7 @@ export default function BuilderInbox({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [tab, setTab] = useState<TabKey>("all");
-
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const { tab, setTab, viewMode, setViewMode, selectedItemId, setSelectedItemId, page, setPage } = useBuilderInboxView();
 
   const [credits, setCredits] = useState(profile.credits ?? 0);
   const [sessionLedger, setSessionLedger] = useState<BuilderLedgerEntry[]>([]);
@@ -113,6 +111,10 @@ export default function BuilderInbox({
 
   const metrics = computeBuilderMetrics(items, ledger);
   const filtered = items.filter((item) => inTab(item, tab));
+  const pageSize = 20;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const visibleItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const tabCounts: Record<TabKey, number> = {
     all: items.length,
     new: metrics.newLeadCount,
@@ -263,18 +265,16 @@ export default function BuilderInbox({
         <div className="mt-4 flex flex-col xl:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0 w-full">
             <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lf-hairline pb-4">
-              <div role="tablist" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
+              <div role="group" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
                 {TABS.map((t) => (
                   <Button
                     key={t.key}
                     type="button"
-                    role="tab"
-                    aria-selected={tab === t.key}
+                    aria-pressed={tab === t.key}
                     size="md"
                     variant={tab === t.key ? "selected" : "secondary"}
                     onClick={() => {
                       setTab(t.key);
-                      setSelectedItemId(null);
                     }}
                     className="px-3.5 lf-kicker-dense text-[10px] leading-[14px]"
                   >
@@ -308,6 +308,13 @@ export default function BuilderInbox({
               </div>
             </div>
 
+            {pageCount > 1 && (
+              <nav aria-label="Inbox pages" className="mt-4 flex items-center justify-between gap-3">
+                <Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Previous page</Button>
+                <span role="status" className="text-sm text-lf-muted">Page {currentPage} of {pageCount}</span>
+                <Button variant="secondary" size="sm" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>Next page</Button>
+              </nav>
+            )}
             {filtered.length === 0 ? (
               <div className="mt-4 border border-lf-hairline bg-lf-card p-6 text-sm text-lf-muted">
                 {tab === "archived"
@@ -316,7 +323,7 @@ export default function BuilderInbox({
               </div>
             ) : viewMode === "cards" ? (
               <div className="mt-4 grid gap-4">
-                {filtered.map((item) => (
+                {visibleItems.map((item) => (
                   <LeadCard
                     key={item.request.id}
                     item={item}
@@ -347,7 +354,7 @@ export default function BuilderInbox({
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((item) => {
+                    {visibleItems.map((item) => {
                       const itemAccess = access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked");
                       const itemContact = contacts[item.request.id] ?? null;
                       const hasAccess = itemAccess === "unlocked";

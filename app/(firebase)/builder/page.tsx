@@ -41,7 +41,7 @@ export default function BuilderPage() {
             <Skeleton className="h-9 w-9 rounded-full" />
           </div>
         </header>
-        <main className="p-4 lg:p-8" aria-busy="true">
+        <main id="main-content" tabIndex={-1} className="p-4 lg:p-8" aria-busy="true">
           <div
             role="status"
             aria-label="Loading the builder dashboard"

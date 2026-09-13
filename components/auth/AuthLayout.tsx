@@ -20,7 +20,7 @@ export function AuthLayout({
   subtitle?: string;
 }) {
   return (
-    <div className="lf-backdrop lf-grain flex min-h-[100dvh] items-center justify-center px-4 py-12">
+    <main id="main-content" tabIndex={-1} className="lf-backdrop lf-grain flex min-h-[100dvh] items-center justify-center px-4 py-12">
       <div className="lf-entrance w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
@@ -66,6 +66,6 @@ export function AuthLayout({
           <span>Estimates, not guarantees.</span>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

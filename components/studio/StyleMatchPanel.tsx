@@ -276,6 +276,9 @@ export default function StyleMatchPanel({
       </div>
 
       <div className="space-y-4 p-4">
+        <p role="status" aria-live="polite" className="sr-only">
+          {status === "preparing" ? "Preparing photo…" : status === "generating" ? "Generating your concept…" : status === "ready" ? "Photo ready for style match." : status === "preview" ? "Photo prepared. Ready to generate." : ""}
+        </p>
         {status === "idle" && (
           <div className="space-y-4">
             <div className="border border-lf-hairline bg-lf-card px-3 py-3">
@@ -298,12 +301,21 @@ export default function StyleMatchPanel({
             </label>
             <label
               htmlFor={inputId}
-              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lf-clay focus-within:ring-offset-2 ${
+              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lot-ink focus-within:ring-offset-2 ${
                 aiConsent
                   ? "cursor-pointer hover:bg-lf-sand"
                   : "cursor-not-allowed opacity-50"
               }`}
             >
+              <input
+                ref={inputRef}
+                id={inputId}
+                type="file"
+                accept={STYLE_MATCH_ACCEPT}
+                disabled={!aiConsent}
+                className="sr-only"
+                onChange={(event) => void handleFile(event.target.files?.[0])}
+              />
               <ImagePlus size={22} className="text-lf-clay-ink" aria-hidden="true" />
               <span className="mt-2 text-sm font-semibold text-lf-espresso">
                 Choose house photo
@@ -471,6 +483,7 @@ export default function StyleMatchPanel({
         {(status === "error" || status === "timeout") && (
           <div className="space-y-3">
             <div
+              role="alert"
               className={`border px-3 py-3 ${
                 status === "error"
                   ? "border-lf-brick bg-lf-brick-soft text-lf-brick"
@@ -511,15 +524,7 @@ export default function StyleMatchPanel({
           </div>
         )}
 
-        <input
-          ref={inputRef}
-          id={inputId}
-          type="file"
-          accept={STYLE_MATCH_ACCEPT}
-          disabled={!aiConsent}
-          className="sr-only"
-          onChange={(event) => void handleFile(event.target.files?.[0])}
-        />
+
       </div>
     </div>
   );

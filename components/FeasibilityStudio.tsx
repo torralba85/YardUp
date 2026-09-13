@@ -454,6 +454,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   }, [activeStep]);
 
   function resetScenario() {
+    if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return;
     resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
@@ -601,6 +602,8 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   async function handleDeleteScenario(id: string) {
     if (typeof window === "undefined") return;
     if (!user) return;
+    const name = savedScenarios.find((scenario) => scenario.id === id)?.name ?? "this concept";
+    if (!window.confirm(`Delete saved concept “${name}”? This cannot be undone.`)) return;
     try {
       await deleteSavedScenario(user.uid, id);
       setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
@@ -682,8 +685,8 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           role="status"
           className="flex h-full flex-col items-center justify-center gap-3 bg-lf-espresso p-8 text-center"
         >
-          <ImageOff size={28} className="text-lf-taupe" aria-hidden="true" />
-          <p className="lf-body max-w-[28ch] text-lf-taupe">
+          <ImageOff size={28} className="text-lot-stone-on-dark" aria-hidden="true" />
+          <p className="lf-body max-w-[28ch] text-lot-stone-on-dark">
             Aerial view requires a real address. Search your address from the Lot step to see satellite imagery.
           </p>
           <Button variant="secondary" onClick={()=>setViewMode("3d")}>Return to 3D model</Button>

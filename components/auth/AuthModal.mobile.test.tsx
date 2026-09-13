@@ -13,6 +13,15 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 describe("AuthModal mobile input sizing", () => {
+  it("locks background scrolling while open and restores it when dismissed", () => {
+    const previous = document.body.style.overflow;
+    const { rerender, unmount } = render(<AuthModal isOpen onClose={() => {}} />);
+    expect(document.body.style.overflow).toBe("hidden");
+    rerender(<AuthModal isOpen={false} onClose={() => {}} />);
+    expect(document.body.style.overflow).toBe(previous);
+    unmount();
+  });
+
   it("keeps auth inputs at 16px on mobile to prevent iOS auto-zoom", () => {
     render(<AuthModal isOpen onClose={() => {}} />);
 

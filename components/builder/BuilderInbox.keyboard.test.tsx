@@ -77,9 +77,31 @@ const item: BuilderInboxItem = {
 
 afterEach(() => {
   Reflect.deleteProperty(window, "getDigitalGoodsService");
+  window.history.replaceState(null, "", "/");
 });
 
 describe("BuilderInbox table view keyboard access", () => {
+  it("paginates large inboxes and restores URL view state", async () => {
+    const items = Array.from({ length: 45 }, (_, index) => ({
+      ...item, request: { ...item.request, id: `request-${index}`, preview: { ...item.request.preview, previewSerial: `LF-${index}` } },
+    }));
+    window.history.replaceState(null, "", "/builder?view=table&filter=new&page=2&keep=yes");
+    render(<BuilderInbox profile={profile} items={items} onRespond={vi.fn()} />);
+    expect(screen.getAllByRole("row")).toHaveLength(21);
+    expect(screen.getByText("LF-20")).toBeInTheDocument();
+    expect(screen.queryByText("LF-0")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getAllByRole("row")).toHaveLength(6);
+    expect(new URLSearchParams(window.location.search).get("page")).toBe("3");
+    expect(new URLSearchParams(window.location.search).get("keep")).toBe("yes");
+    await userEvent.click(screen.getByRole("button", { name: /^All/ }));
+    expect(screen.getByText("LF-0")).toBeInTheDocument();
+    expect(new URLSearchParams(window.location.search).has("page")).toBe(false);
+    window.history.replaceState(null, "", "/builder?view=table&filter=new&page=2");
+    fireEvent.popState(window);
+    expect(screen.getByText("LF-20")).toBeInTheDocument();
+  });
+
   it("renders credit-pack prices from the shared web catalog", async () => {
     render(<BuilderInbox profile={profile} items={[item]} onRespond={vi.fn()} />);
 

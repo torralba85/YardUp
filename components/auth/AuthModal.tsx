@@ -215,6 +215,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -305,7 +312,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   return (
     <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/75 p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-      <div ref={panelRef} className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-none bg-lf-card text-lf-espresso shadow-[12px_16px_0_#16161630] relative border border-lf-hairline">
+      <div ref={panelRef} className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-none bg-lf-card text-lf-espresso shadow-[12px_16px_0_#16161630] relative border border-lf-hairline">
         <button
           type="button"
           onClick={() => onClose("dismissed")}
