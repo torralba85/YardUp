@@ -13,6 +13,8 @@ import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
+import { hasExpectedPayment } from "@/lib/server/stripe-payment-guard";
+import { describeStripeError } from "@/lib/server/stripe-errors";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -126,6 +128,27 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ url: reservation.sessionUrl });
         }
         if (existing.status === "complete") {
+          // See the lead-unlock route: a webhook delivery that never arrives
+          // would otherwise strand a buyer who has already paid on this 409
+          // forever, because the reservation keeps returning the same Session.
+          if (
+            existing.payment_status === "paid" &&
+            existing.metadata?.uid === uid &&
+            existing.metadata?.certKey === certKey &&
+            hasExpectedPayment(
+              existing,
+              CERTIFICATE_PRICE_CENTS,
+              "stripe/checkout-certificate",
+            )
+          ) {
+            await grantCertificate({
+              uid,
+              certKey,
+              stripeSessionId: existing.id,
+              amount: CERTIFICATE_PRICE_CENTS,
+            });
+            return NextResponse.json({ status: "granted", reconciled: true });
+          }
           return NextResponse.json(
             { error: "Payment is being confirmed. Please refresh shortly." },
             { status: 409 },
@@ -212,7 +235,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error(
       "[stripe/checkout-certificate] Failed to create Checkout session:",
-      err,
+      describeStripeError(err),
     );
     return NextResponse.json(
       { error: "Could not start checkout. Please try again." },

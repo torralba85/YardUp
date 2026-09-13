@@ -23,6 +23,13 @@ export interface ReserveActiveCheckoutInput {
   parameters: Record<string, string>;
 }
 
+/** The fields that identify which entitlement a reservation belongs to. The
+ * attempt and presentation parameters do not take part in addressing it. */
+export type ActiveCheckoutKey = Pick<
+  ReserveActiveCheckoutInput,
+  "purchaseType" | "accountId" | "purchaseId"
+>;
+
 /**
  * Reserve one resumable Stripe Checkout session per entitlement. The document
  * id is hashed so internal account and parcel identifiers do not appear in
@@ -107,7 +114,33 @@ export async function saveActiveCheckoutSession(
   });
 }
 
-function getReservationRef(input: ReserveActiveCheckoutInput) {
+/**
+ * Drop a reservation whose Checkout Session can never be paid, after Stripe
+ * reports the delayed payment failed.
+ *
+ * `reserveActiveCheckout` deliberately keeps returning any reservation that
+ * holds a `sessionId`, because only Stripe may authorize replacing one. A
+ * failed async payment leaves that Session `complete` and unpaid forever, so
+ * without this release the buyer is handed the dead Session on every retry and
+ * can never start a new one.
+ */
+export async function releaseActiveCheckout(
+  key: ActiveCheckoutKey,
+  sessionId: string,
+): Promise<void> {
+  const ref = getReservationRef(key);
+
+  await getAdminDb().runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    const existing = readActiveCheckout(snap.data());
+    // Only the reservation still holding this exact Session may be released, so
+    // a late webhook cannot destroy a newer attempt the buyer has moved on to.
+    if (!existing || existing.sessionId !== sessionId) return;
+    transaction.delete(ref);
+  });
+}
+
+function getReservationRef(input: ActiveCheckoutKey) {
   const digest = createHash("sha256")
     .update(
       JSON.stringify([input.purchaseType, input.accountId, input.purchaseId]),

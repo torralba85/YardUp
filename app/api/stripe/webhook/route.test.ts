@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   },
   grant: vi.fn(),
   grantCertificate: vi.fn(),
+  release: vi.fn(),
   adminDb: {
     runTransaction: vi.fn(),
     collection: vi.fn(),
@@ -32,6 +33,10 @@ vi.mock("@/lib/server/lead-unlocks", () => ({
 
 vi.mock("@/lib/server/certificate-purchases", () => ({
   grantCertificate: (...args: unknown[]) => mocks.grantCertificate(...args),
+}));
+
+vi.mock("@/lib/server/active-checkout-sessions", () => ({
+  releaseActiveCheckout: (...args: unknown[]) => mocks.release(...args),
 }));
 
 vi.mock("@/lib/stripe", () => ({
@@ -91,6 +96,7 @@ beforeEach(() => {
   mocks.stripe = null;
   mocks.grant.mockClear();
   mocks.grantCertificate.mockClear();
+  mocks.release.mockClear();
   mocks.adminDb.runTransaction.mockClear();
   mocks.transaction.get.mockReset();
   mocks.transaction.update.mockClear();
@@ -137,6 +143,43 @@ describe("POST /api/stripe/webhook", () => {
       stripeSessionId: "sess_1",
       amount: 4900,
     });
+  });
+
+  it("releases the reservation when a delayed payment fails", async () => {
+    // The Session stays `complete` and unpaid forever, so leaving the
+    // reservation in place would hand the buyer the dead Session on every
+    // retry and they could never start a new checkout.
+    installEvent(
+      paidSession({ payment_status: "unpaid" }),
+      "checkout.session.async_payment_failed",
+    );
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.release).toHaveBeenCalledWith(
+      { purchaseType: "lead_unlock", accountId: "b1", purchaseId: "r1" },
+      "sess_1",
+    );
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("releases a certificate reservation when its delayed payment fails", async () => {
+    installEvent(
+      paidSession({
+        payment_status: "unpaid",
+        metadata: {
+          purchaseType: "certificate",
+          uid: "user-1",
+          certKey: "cert-1",
+        },
+      }),
+      "checkout.session.async_payment_failed",
+    );
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.release).toHaveBeenCalledWith(
+      { purchaseType: "certificate", accountId: "user-1", purchaseId: "cert-1" },
+      "sess_1",
+    );
   });
 
   it("fulfills a delayed payment after async payment succeeds", async () => {

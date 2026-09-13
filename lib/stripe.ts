@@ -22,6 +22,12 @@ export async function getStripe(): Promise<Stripe | null> {
   if (!key) return null;
   if (cached) return cached;
   const { default: StripeCtor } = await import("stripe");
+  // Pinned to the API version the `stripe` package pins. Both package.json and
+  // functions/package.json pin that package to an exact version rather than a
+  // caret range, because Firebase strips the bundled node_modules on upload and
+  // reinstalls the Functions runtime from functions/package.json: under a range
+  // the deployed SDK drifts away from the one CI typechecks against, silently
+  // and only in production. Bump the pin and this string together.
   cached = new StripeCtor(key, { apiVersion: "2026-07-29.dahlia" });
   return cached;
 }

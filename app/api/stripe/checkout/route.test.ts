@@ -301,6 +301,89 @@ describe("POST /api/stripe/checkout", () => {
     );
   });
 
+  it("reconciles a paid Session whose webhook never fulfilled it", async () => {
+    // The reservation keeps returning a completed Session, so without this the
+    // builder retries into the same 409 forever and never receives the lead
+    // they paid for. Nothing else in the system heals a missed webhook.
+    const create = vi
+      .fn()
+      .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/checkout/1" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "paid",
+      mode: "payment",
+      currency: "usd",
+      amount_total: 4900,
+      metadata: { builderId: "b1", requestId: "r1" },
+    });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: "granted", reconciled: true });
+    expect(mocks.grant).toHaveBeenCalledWith({
+      builderId: "b1",
+      requestId: "r1",
+      stripeSessionId: "cs_1",
+      amount: 4900,
+    });
+    // Reconciling must never mint a second payable Session.
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses to reconcile a paid Session that underpaid the catalog price", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/checkout/1" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "paid",
+      mode: "payment",
+      currency: "usd",
+      amount_total: 1,
+      metadata: { builderId: "b1", requestId: "r1" },
+    });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(res.status).toBe(409);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("refuses to reconcile a Session belonging to another entitlement", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/checkout/1" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "paid",
+      mode: "payment",
+      currency: "usd",
+      amount_total: 4900,
+      metadata: { builderId: "someone-else", requestId: "r1" },
+    });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const res = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(res.status).toBe(409);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
   it("409s while a completed Session is still being confirmed", async () => {
     const create = vi
       .fn()
