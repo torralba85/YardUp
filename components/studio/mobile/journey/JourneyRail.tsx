@@ -48,7 +48,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 disabled={!isDone && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : ""}`}
-                className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-[3px] font-sans text-[9px] font-semibold uppercase tracking-[0.08em] motion-safe:transition ${
+                className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-[3px] font-sans text-xs font-semibold motion-safe:transition ${
                   isCurrent
                     ? "text-[#C43708]"
                     : isDone

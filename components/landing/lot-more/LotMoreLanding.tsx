@@ -350,7 +350,7 @@ export function LotMoreLanding({
               {addressForm("hero")}
               <Link
                 className={styles.textLink}
-                href="/studio"
+                href="/studio?parcel=oak-street"
                 prefetch={false}
                 onClick={() => stashAddressQuery("")}
               >

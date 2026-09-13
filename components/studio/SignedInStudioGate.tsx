@@ -124,7 +124,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-5 py-9 sm:px-8 sm:py-16">
+      <main id="main-content" tabIndex={-1} className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-5 py-9 sm:px-8 sm:py-16">
         <section className="w-full lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-14">
           <div>
             <p className="lf-kicker text-lf-clay-ink">Your workspace</p>

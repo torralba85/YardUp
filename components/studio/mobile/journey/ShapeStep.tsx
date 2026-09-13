@@ -77,7 +77,7 @@ export default function ShapeStep({
             </h1>
           </div>
           <div className="text-right">
-            <p className="lf-dataprint text-lf-muted">
+            <p className="text-xs leading-4 text-lf-muted">
               Projected rent / mo
             </p>
             <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />

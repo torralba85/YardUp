@@ -19,6 +19,7 @@ When two documents disagree, the higher entry wins:
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
+| [`2026-09-12-ux-followup.md`](./2026-09-12-ux-followup.md) | Demo entry, keyboard navigation, hover contrast and mobile readability repairs. |
 | [`2026-09-10-mobile-audit.md`](./2026-09-10-mobile-audit.md) | Mobile navigation fixes, Android code-10 upload, device evidence, and release limits. |
 | [`2026-09-05-a-lot-more.md`](./2026-09-05-a-lot-more.md) | Implementation record for the landing redesign. |
 | [`a-lot-more-image-prompts.md`](./a-lot-more-image-prompts.md) | Asset provenance — the exact generation prompts. |
