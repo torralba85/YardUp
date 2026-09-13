@@ -540,7 +540,7 @@ export default function BuilderInbox({
 
                               <div className="space-y-3 rounded-none border border-dashed border-lf-taupe bg-lf-sand-2/30 p-4 text-center">
                                 <Lock size={24} className="mx-auto text-lf-taupe" />
-                                <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+                                <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-lf-espresso">
                                   Feasibility Certificate Locked
                                 </h4>
                                 <p className="mx-auto max-w-xs text-xs leading-relaxed text-lf-muted">
@@ -571,7 +571,7 @@ export default function BuilderInbox({
                           {/* 2. Confirming State Panel */}
                           {itemAccess === "confirming" && (
                             <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3 rounded-none">
-                              <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-amber-ink">
+                              <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-amber-ink">
                                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber-ink" />
                                 Recording lead unlock…
                               </div>
@@ -614,7 +614,7 @@ export default function BuilderInbox({
 
                               {/* Visual Certificate Section — single frame (no nested rounded cards). */}
                               <div className="space-y-3">
-                                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+                                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lf-espresso">
                                   Feasibility Certificate
                                 </div>
 
@@ -812,7 +812,7 @@ function ZeroEverEmptyState() {
           Ballard, WA
           <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lf-muted">98107</span>
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
           <span>6,200 sqft</span>
           <span>800 sf ADU</span>
           <span>Compliant</span>

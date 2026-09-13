@@ -1201,7 +1201,7 @@ export default function ParcelScene({
           })}
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-widest text-[#F5F5F0]">
+        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-[#F5F5F0]">
           N
         </div>
       </div>
@@ -1233,7 +1233,7 @@ export default function ParcelScene({
               <span className="lf-dataprint text-[#65655F]">Shadow preview</span>
               <output
                 htmlFor="shadow-preview-hour"
-                className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.14em]"
+                className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.08em]"
               >
                 {formatPreviewHour(sunHour)}
               </output>
@@ -1327,7 +1327,7 @@ function Parcel2DScene({
           <span className="px-1.5 py-0.5 font-sans text-xs text-[#65655F]">WebGL fallback</span>
         </div>
 
-        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-widest text-[#F5F5F0]">
+        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-[#F5F5F0]">
           N
         </div>
 

@@ -76,7 +76,7 @@ export default function AIProjectBriefPanel({
     <section aria-label="Property notes and timeline" aria-busy={loading} className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-sans text-[9.5px] font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+          <p className="font-sans text-[9.5px] font-bold uppercase tracking-[0.08em] text-lf-clay-ink">
             Property notes
           </p>
           <h3 className="mt-0.5 text-sm font-semibold text-lf-espresso">
@@ -191,7 +191,7 @@ export function ProjectBriefPreviewContent({
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-semibold text-lf-espresso">{preview.firstRisk.label}</span>
             <span
-              className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${RISK_TONE[preview.firstRisk.level]}`}
+              className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${RISK_TONE[preview.firstRisk.level]}`}
             >
               {preview.firstRisk.level}
             </span>
@@ -259,7 +259,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold text-lf-espresso">{risk.label}</span>
                   <span
-                    className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${RISK_TONE[risk.level]}`}
+                    className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${RISK_TONE[risk.level]}`}
                   >
                     {risk.level}
                   </span>
@@ -312,7 +312,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
                     </div>
                     <p className="mt-1 text-[11px] leading-4 text-lf-muted">{stage.description}</p>
                     <span
-                      className={`mt-1.5 inline-flex rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${tone.className}`}
+                      className={`mt-1.5 inline-flex rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${tone.className}`}
                     >
                       {tone.label}
                     </span>

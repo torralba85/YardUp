@@ -110,7 +110,7 @@ describe("SignedInStudioGate", () => {
     render(<SignedInStudioGate user={user} />);
 
     expect(screen.getByRole("heading", { name: "Start with your property." })).toBeInTheDocument();
-    expect(screen.getByText("No property loaded")).toBeInTheDocument();
+    expect(screen.getByText(/Concept illustration, not your property/)).toBeInTheDocument();
     expect(screen.queryByText("Real Parcel Studio")).not.toBeInTheDocument();
     expect(screen.queryByText(/Seattle|Austin|San Diego/i)).not.toBeInTheDocument();
   });

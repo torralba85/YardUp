@@ -118,6 +118,7 @@
 .brand {
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   font-family: var(--font-lot-display), sans-serif;
   font-size: 27px;
   font-weight: 600;

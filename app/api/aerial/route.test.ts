@@ -186,7 +186,12 @@ describe("GET /api/aerial", () => {
     expect(res.headers.get("Content-Type")).toContain("image/svg+xml");
     expect(res.headers.get("X-Aerial-Fallback")).toBe("true");
     expect(res.headers.get("X-Aerial-Fallback-Reason")).toBe("upstream");
-    expect(await res.text()).toContain("Aerial imagery unavailable");
+    const fallback = await res.text();
+    expect(fallback).toContain("Aerial imagery unavailable");
+    expect(fallback).toContain('#F5F5F0');
+    expect(fallback).not.toContain("linearGradient");
+    // The host HTML owns accessible copy and fonts, not raster-like SVG text.
+    expect(fallback).not.toContain("<text");
   });
 
   it("returns a non-cacheable fallback image when the Maps key is not configured and Esri fails", async () => {

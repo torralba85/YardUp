@@ -197,7 +197,7 @@ export function AccountMenu({
       >
         <div
           className={cn(
-            "flex items-center gap-2 px-2 pb-1 text-[11px] uppercase tracking-[0.14em]",
+            "flex items-center gap-2 px-2 pb-1 text-[11px] uppercase tracking-[0.08em]",
             isDark ? "text-lot-stone-on-dark" : "text-lf-muted",
           )}
         >

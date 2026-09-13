@@ -1,10 +1,47 @@
 import { expect, test } from "@playwright/test";
+import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 const chalk = "rgb(245, 245, 240)";
 const carbon = "rgb(22, 22, 22)";
 const orange = "rgb(255, 91, 36)";
 
 test.describe("Project-wide A LOT MORE contract", () => {
+  test("landing home target remains usable on narrow screens", async ({ page }) => {
+    await page.goto("/");
+    const home = page.getByRole("link", { name: "LotFoundry home", exact: true });
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect((await home.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  });
+
+  test("mobile dark header has visible keyboard focus", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile-chromium", "mobile header only");
+    await page.goto("/studio");
+    const reset = page.getByRole("button", { name: "Reset scenario", exact: true });
+    await expect(reset).toBeVisible();
+    await reset.focus();
+    await expect(reset).toHaveCSS("outline-color", chalk);
+    await expect(reset).toHaveCSS("outline-width", "2px");
+    await page.screenshot({ path: testInfo.outputPath("mobile-header-focus.png") });
+  });
+
+  test("owner entry presents a clearly illustrative preview without overflow", async ({ page }, testInfo) => {
+    await mockTestOwnerAuth(page);
+    await page.goto("/login?next=/studio");
+    await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
+    await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
+    await page.locator('button[type="submit"]').click();
+    await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Concept illustration, not your property/)).toBeVisible();
+    await expect(page.getByRole("img", { name: /Illustrative model/ })).toBeVisible();
+    const home = page.getByRole("link", { name: "LotFoundry home", exact: true });
+    expect((await home.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath("owner-entry.png"), fullPage: true });
+  });
+
   for (const route of ["/login", "/signup", "/forgot-password", "/terms", "/settings"]) {
     test(`${route} uses the shared ground and fonts`, async ({ page }, testInfo) => {
       await page.goto(route);

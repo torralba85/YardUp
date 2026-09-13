@@ -117,7 +117,7 @@ export default function UnlockSlip({
 
           <div className="mt-4 border border-lf-hairline bg-lf-sand-2 px-4 py-3.5">
             <p className="font-semibold">{preview.neighborhood}</p>
-            <p className="mt-1 flex flex-wrap gap-3.5 font-sans text-[10.5px] uppercase tracking-[0.14em] text-lf-muted">
+            <p className="mt-1 flex flex-wrap gap-3.5 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
               <span>{preview.lotSqft.toLocaleString()} sqft lot</span>
               <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
               {item.request.ownerVerified && <span>Owner-verified</span>}
@@ -141,7 +141,7 @@ export default function UnlockSlip({
           </ul>
 
           <div className="mt-4 font-sans text-[11.5px]">
-            <div className="mb-2 text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">This purchase</div>
+            <div className="mb-2 text-[9.5px] uppercase tracking-[0.08em] text-lf-muted">This purchase</div>
             <div className="flex justify-between border-b border-dashed border-lf-hairline py-1.5">
               <span className="text-lf-muted">LEAD UNLOCK · {preview.previewSerial}</span>
               <span className="text-lf-espresso">{hasCredits ? "1 Credit" : priceWithCents}</span>
@@ -167,7 +167,7 @@ export default function UnlockSlip({
             <span>{pending ? "Recording unlock…" : payLabel}</span>
             <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>
           </button>
-          <div className="mt-3 flex justify-center gap-3.5 font-sans text-[9.5px] uppercase tracking-[0.14em] text-lf-muted">
+          <div className="mt-3 flex justify-center gap-3.5 font-sans text-[9.5px] uppercase tracking-[0.08em] text-lf-muted">
             <span>Receipt emailed</span>
             <span>{secureNote}</span>
           </div>
