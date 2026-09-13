@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import AppStudioOnboarding from "@/components/studio/AppStudioOnboarding";
@@ -30,6 +30,16 @@ export default function StudioPage() {
     }
   }, [loading, profile, router]);
 
+  // AuthProvider re-enters `loading` on every auth event (sign-in, token
+  // refresh, sign-out), not just the first. Swapping in the arrival plate then
+  // would unmount the app onboarding mid-flow, so after the first resolution
+  // it stays mounted and only a builder profile takes it down.
+  const [authSettled, setAuthSettled] = useState(false);
+  if (!loading && !authSettled) setAuthSettled(true);
+  if (inNativeApp && authSettled && profile?.role !== "builder") {
+    return <AppStudioOnboarding user={user} />;
+  }
+
   // Dawn arrival plate: auth resolution is the first thing a landing visitor
   // sees after the ramp, so it must keep the money moment alive (DESIGN.md
   // seam rule: money-green figure within 3s, no spinner-on-white). Parchment
@@ -50,8 +60,6 @@ export default function StudioPage() {
       </div>
     );
   }
-
-  if (inNativeApp) return <AppStudioOnboarding user={user} />;
 
   return user ? <SignedInStudioGate user={user} /> : <FeasibilityStudio />;
 }

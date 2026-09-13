@@ -108,11 +108,30 @@ describe("AppStudioOnboarding", () => {
     expect(await screen.findByTestId("app-welcome")).toBeInTheDocument();
   });
 
+  it("restores the screen and demo city when it remounts mid-flow", async () => {
+    const clicker = userEvent.setup();
+    const first = render(<AppStudioOnboarding user={null} />);
+    await clicker.click(screen.getByRole("button", { name: /Portland, OR/ }));
+    first.unmount();
+
+    const second = render(<AppStudioOnboarding user={null} />);
+    expect(screen.getByText("Start in Portland, OR")).toBeInTheDocument();
+    await clicker.click(screen.getByRole("button", { name: /Open the Studio/ }));
+    second.unmount();
+
+    render(<AppStudioOnboarding user={null} />);
+    expect(screen.getByText("Demo Studio Mock chosen ?parcel=corner-lot")).toBeInTheDocument();
+    goBack();
+    expect(await screen.findByText("Start in Portland, OR")).toBeInTheDocument();
+  });
+
   it("sends returning members straight to the workspace once they have read the guide", () => {
     const { unmount } = render(<AppStudioOnboarding user={member} />);
     expect(screen.getByTestId("app-guide")).toBeInTheDocument();
     unmount();
 
+    // A later launch starts on a fresh history entry.
+    window.history.replaceState(null, "", "/studio");
     window.localStorage.setItem(APP_GUIDE_SEEN_KEY, "1");
     render(<AppStudioOnboarding user={member} />);
     expect(screen.getByText("Address Workspace Mock")).toBeInTheDocument();
