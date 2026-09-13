@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "@/lib/feedback";
+import { validateEmail } from "@/lib/account-settings";
 import { Button } from "@/components/ui/Button";
 
 const INPUT_CLASS =
-  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus:border-lf-clay focus:outline-none focus:ring-2 focus:ring-lf-clay/20";
+  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus-visible:border-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-ink";
 
 /**
  * The public feedback form: category, message, optional reply email, and a
@@ -17,6 +18,11 @@ const INPUT_CLASS =
  */
 export function FeedbackForm() {
   const { user } = useAuth();
+  return <FeedbackFields key={user?.uid ?? "guest"} />;
+}
+
+function FeedbackFields() {
+  const { user } = useAuth();
   const [category, setCategory] = useState<FeedbackCategory>("bug");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
@@ -25,8 +31,65 @@ export function FeedbackForm() {
   const [error, setError] = useState<string | null>(null);
   const [ticketId, setTicketId] = useState<string | null>(null);
 
+  const [invalidField, setInvalidField] = useState<"message" | "email" | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftAvailable, setDraftAvailable] = useState(false);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+  const draftKey = `lotfoundry.feedback-draft:${user?.uid ?? "guest"}`;
+
+  useEffect(() => {
+    // Hydrate tab-local drafts only after the server-matching first render.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    try {
+      const draft = sessionStorage.getItem(draftKey);
+      if (draft) setMessage(draft);
+      setDraftAvailable(true);
+    } catch { /* Storage can be disabled; retain the form in memory. */ }
+    setDraftReady(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    try {
+      if (ticketId || !message) sessionStorage.removeItem(draftKey);
+      else sessionStorage.setItem(draftKey, message);
+    } catch {
+      // If quota/access changes, arm the unsaved-navigation safeguard.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDraftAvailable(false);
+    }
+  }, [draftKey, draftReady, message, ticketId]);
+
+  useEffect(() => {
+    if (ticketId) successRef.current?.focus();
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (draftAvailable || !message || ticketId) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [draftAvailable, message, ticketId]);
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (pending) return;
+    if (message.trim().length < 10) {
+      setInvalidField("message");
+      setError("Enter at least 10 characters so we can understand your feedback.");
+      messageRef.current?.focus();
+      return;
+    }
+    if (email && validateEmail(email)) {
+      setInvalidField("email");
+      setError("Enter a valid reply email, or leave it empty.");
+      emailRef.current?.focus();
+      return;
+    }
+    setInvalidField(null);
     setPending(true);
     setError(null);
     try {
@@ -59,7 +122,7 @@ export function FeedbackForm() {
 
   if (ticketId) {
     return (
-      <div role="status" className="rounded-none border border-lf-hairline bg-lf-card p-5">
+      <div ref={successRef} tabIndex={-1} role="status" className="rounded-none border border-lf-hairline bg-lf-card p-5">
         <p className="lf-body text-lf-espresso">
           Thank you — your note is in. We read every submission.
         </p>
@@ -75,7 +138,7 @@ export function FeedbackForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="feedback-category" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
           Category
@@ -100,14 +163,22 @@ export function FeedbackForm() {
         </label>
         <textarea
           id="feedback-message"
+          name="message"
+          ref={messageRef}
+          aria-invalid={invalidField === "message"}
+          aria-describedby={invalidField === "message" ? "feedback-message-help feedback-message-error" : "feedback-message-help"}
           required
           minLength={10}
           rows={5}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => { setMessage(e.target.value); if (invalidField === "message") { setInvalidField(null); setError(null); } }}
           className={INPUT_CLASS}
-          placeholder="The more specific, the faster we can act on it."
+          placeholder="For example, the map does not load…"
         />
+        <p id="feedback-message-help" className="mt-1 text-xs text-lf-muted">
+          At least 10 characters.{draftAvailable ? " Your message draft stays in this tab until you send it." : ""}
+        </p>
+        {invalidField === "message" && <p id="feedback-message-error" role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
       </div>
 
       <div>
@@ -116,13 +187,19 @@ export function FeedbackForm() {
         </label>
         <input
           id="feedback-email"
+          name="email"
+          ref={emailRef}
+          spellCheck={false}
+          aria-invalid={invalidField === "email"}
+          aria-describedby={invalidField === "email" ? "feedback-email-error" : undefined}
           type="email"
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={INPUT_CLASS}
-          placeholder="you@example.com"
+          placeholder="you@example.com…"
         />
+        {invalidField === "email" && <p id="feedback-email-error" role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
       </div>
 
       {/* Honeypot: humans never see or fill this; bots that do get a generic
@@ -139,11 +216,11 @@ export function FeedbackForm() {
         />
       </div>
 
-      <Button type="submit" loading={pending} disabled={message.trim().length < 10}>
+      <Button type="submit" loading={pending}>
         Send feedback
       </Button>
 
-      {error && (
+      {error && !invalidField && (
         <p role="alert" className="flex items-center gap-1.5 text-xs text-lf-brick">
           <TriangleAlert size={12} aria-hidden /> {error}
         </p>

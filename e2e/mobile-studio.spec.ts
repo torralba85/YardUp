@@ -72,12 +72,14 @@ test.describe("mobile studio journey", () => {
     await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
     const drawer = page.getByTestId("fine-tune-drawer");
     await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole("button", { name: /close fine-tune panel/i })).toBeFocused();
     await expect(
       drawer.getByRole("heading", { name: /feasibility studio/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: /close fine-tune panel/i }).click();
     await expect(drawer).not.toBeVisible();
+    await expect(page.getByRole("button", { name: /fine-tune dimensions/i })).toBeFocused();
     // Closing the drawer lands back on the Shape reveal's default path.
     await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();
   });

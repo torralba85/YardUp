@@ -166,9 +166,9 @@ export function Slider({ label, valueText, id, className, ...props }: SliderProp
           "h-11 w-full cursor-pointer appearance-none bg-transparent",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay-ink",
           "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-lf-hairline",
-          "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lf-card [&::-webkit-slider-thumb]:bg-lf-clay",
+          "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lot-ink [&::-webkit-slider-thumb]:bg-lf-clay",
           "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-lf-hairline",
-          "[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-lf-card [&::-moz-range-thumb]:bg-lf-clay",
+          "[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-lot-ink [&::-moz-range-thumb]:bg-lf-clay",
         )}
         {...props}
       />

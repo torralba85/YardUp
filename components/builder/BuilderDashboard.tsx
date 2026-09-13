@@ -85,7 +85,7 @@ export default function BuilderDashboard({
           displayName={displayName || email}
           onSignOut={() => void logout()}
         />
-        <main className="p-4 lg:p-8" aria-busy="true">
+        <main id="main-content" tabIndex={-1} className="p-4 lg:p-8" aria-busy="true">
           <div
             role="status"
             aria-label="Loading the builder dashboard"
@@ -137,7 +137,7 @@ export default function BuilderDashboard({
         displayName={displayName || email}
         onSignOut={() => void logout()}
       />
-      <main className="p-4 lg:p-8">
+      <main id="main-content" tabIndex={-1} className="p-4 lg:p-8">
         <div className="mx-auto max-w-6xl">
           <h1 className="lf-section-heading">Builder dashboard</h1>
         <p className="lf-body-sm mt-2 text-lf-muted">

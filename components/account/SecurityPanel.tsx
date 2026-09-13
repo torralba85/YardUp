@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { AccountCapabilities } from "@/lib/account-settings";
 import { validateEmail, validatePassword } from "@/lib/account-settings";
@@ -27,6 +27,32 @@ export function SecurityPanel({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [invalidField, setInvalidField] = useState<string | null>(null);
+  const fields = useRef<Record<string, HTMLInputElement | null>>({});
+
+  function invalidate(id: string, message: string) {
+    setInvalidField(id);
+    setError(message);
+    setStatus(null);
+    fields.current[id]?.focus();
+  }
+
+  function field(id: string, label: string, type: string, value: string, onChange: (value: string) => void, autoComplete: string) {
+    const invalid = invalidField === id;
+    return (
+      <div>
+        <label htmlFor={id} className="mb-1.5 block text-sm font-medium">{label}</label>
+        <input id={id} name={id} type={type} value={value} autoComplete={autoComplete}
+          ref={(element) => { fields.current[id] = element; }}
+          spellCheck={false}
+          onChange={(event) => { onChange(event.target.value); if (invalid) { setInvalidField(null); setError(null); } }}
+          aria-invalid={invalid}
+          aria-describedby={invalid ? `${id}-error` : undefined}
+          className="min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-ink" />
+        {invalid && error && <p id={`${id}-error`} role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
+      </div>
+    );
+  }
 
   if (!capabilities.canChangeEmail && !capabilities.canChangePassword) {
     return (
@@ -45,13 +71,14 @@ export function SecurityPanel({
     if (!onChangeEmail) return;
     const emailError = validateEmail(email);
     if (emailError) {
-      setError(emailError);
+      invalidate("security-email", emailError);
       return;
     }
     if (!emailPassword) {
-      setError("Enter your current password to change email.");
+      invalidate("security-email-password", "Enter your current password to change email.");
       return;
     }
+    setInvalidField(null);
     setPending(true);
     setError(null);
     setStatus(null);
@@ -69,15 +96,16 @@ export function SecurityPanel({
   async function handlePassword(e: React.FormEvent) {
     e.preventDefault();
     if (!onChangePassword) return;
+    if (!passwordPassword) {
+      invalidate("security-current-password", "Enter your current password.");
+      return;
+    }
     const pwError = validatePassword(nextPassword);
     if (pwError) {
-      setError(pwError);
+      invalidate("security-new-password", pwError);
       return;
     }
-    if (!passwordPassword) {
-      setError("Enter your current password.");
-      return;
-    }
+    setInvalidField(null);
     setPending(true);
     setError(null);
     setStatus(null);
@@ -99,54 +127,26 @@ export function SecurityPanel({
         Managed by <strong className="text-lf-espresso">{capabilities.managedBy}</strong>.
       </p>
       {capabilities.canChangeEmail && onChangeEmail ? (
-        <form onSubmit={handleEmail} className="space-y-3">
+        <form noValidate onSubmit={handleEmail} className="space-y-3">
           <h3 className="text-sm font-semibold text-lf-espresso">Change email</h3>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="New email"
-            autoComplete="email"
-            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
-          />
-          <input
-            type="password"
-            value={emailPassword}
-            onChange={(e) => setEmailPassword(e.target.value)}
-            placeholder="Current password"
-            autoComplete="current-password"
-            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
-          />
+          {field("security-email", "New email", "email", email, setEmail, "email")}
+          {field("security-email-password", "Current password", "password", emailPassword, setEmailPassword, "current-password")}
           <Button type="submit" variant="secondary" loading={pending}>
             Update email
           </Button>
         </form>
       ) : null}
       {capabilities.canChangePassword && onChangePassword ? (
-        <form onSubmit={handlePassword} className="space-y-3">
+        <form noValidate onSubmit={handlePassword} className="space-y-3">
           <h3 className="text-sm font-semibold text-lf-espresso">Change password</h3>
-          <input
-            type="password"
-            value={passwordPassword}
-            onChange={(e) => setPasswordPassword(e.target.value)}
-            placeholder="Current password"
-            autoComplete="current-password"
-            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
-          />
-          <input
-            type="password"
-            value={nextPassword}
-            onChange={(e) => setNextPassword(e.target.value)}
-            placeholder="New password"
-            autoComplete="new-password"
-            className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm"
-          />
+          {field("security-current-password", "Current password", "password", passwordPassword, setPasswordPassword, "current-password")}
+          {field("security-new-password", "New password", "password", nextPassword, setNextPassword, "new-password")}
           <Button type="submit" variant="secondary" loading={pending}>
             Update password
           </Button>
         </form>
       ) : null}
-      {error ? (
+      {error && !invalidField ? (
         <p role="alert" className="text-sm text-lf-brick">
           {error}
         </p>

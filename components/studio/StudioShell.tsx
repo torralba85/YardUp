@@ -170,7 +170,7 @@ export default function StudioShell({
                           <button
                             type="button"
                             onClick={() => onLoadScenario?.(scenario.id)}
-                            className="min-w-0 flex-1 truncate text-left text-[#F5F5F0] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
+                            className="min-h-11 min-w-0 flex-1 truncate text-left text-[#F5F5F0] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
                           >
                             {scenario.name}
                           </button>
@@ -227,7 +227,7 @@ export default function StudioShell({
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
       {/* Mobile fallback header */}
-      <main className="flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-[#F5F5F0] text-[#161616] lg:h-dvh lg:overflow-y-auto">
+      <main id="main-content" tabIndex={-1} className="flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-[#F5F5F0] text-[#161616] lg:h-dvh lg:overflow-y-auto">
         <header className="flex items-center justify-between border-b border-[#DADAD3] bg-[#F5F5F0] px-4 py-3 lg:hidden">
           <Link
             href="/"

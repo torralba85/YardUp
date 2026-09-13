@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -25,6 +25,12 @@ export default function ForgotPasswordPage() {
     }
   }, [user, router]);
 
+  const emailRef = useRef<HTMLInputElement>(null);
+  const confirmationRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (sent) confirmationRef.current?.focus();
+  }, [sent]);
+
   if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +45,7 @@ export default function ForgotPasswordPage() {
           ? (err as { code: string }).code
           : "";
         setError(getResetErrorMessage(code));
+        emailRef.current?.focus();
       }
     });
   };
@@ -46,7 +53,7 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <AuthLayout title="Check your email" subtitle="Password reset instructions sent.">
-        <div className="flex flex-col items-center gap-4 py-4 text-center">
+        <div ref={confirmationRef} tabIndex={-1} role="status" aria-label="Password reset instructions sent" className="flex flex-col items-center gap-4 py-4 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lf-clay-soft text-lf-clay-ink">
             <CheckCircle className="h-6 w-6" />
           </div>
@@ -72,7 +79,7 @@ export default function ForgotPasswordPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-none border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div id="reset-email-error" role="alert" className="lf-body-sm rounded-none border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
             {error}
           </div>
         )}
@@ -86,6 +93,11 @@ export default function ForgotPasswordPage() {
           </label>
           <input
             id="email"
+            name="email"
+            ref={emailRef}
+            spellCheck={false}
+            aria-invalid={!!error}
+            aria-describedby={error ? "reset-email-error" : undefined}
             type="email"
             required
             autoComplete="email"

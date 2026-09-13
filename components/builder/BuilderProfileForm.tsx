@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui/Button";
+import { validateEmail } from "@/lib/account-settings";
 import { normalizeServiceArea } from "@/lib/marketplace";
 import type { BuilderProfile } from "@/lib/marketplace-types";
 
@@ -33,9 +35,23 @@ export default function BuilderProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const [invalidField, setInvalidField] = useState<string | null>(null);
+  const fields = useRef<Record<string, HTMLInputElement | null>>({});
+  function invalidate(id: string, message: string) {
+    setInvalidField(id);
+    setError(message);
+    fields.current[id]?.focus();
+  }
+  function fieldError(id: string) {
+    return invalidField === id && error
+      ? <span id={`${id}-error`} role="alert" className="mt-1 block text-sm text-lf-brick">{error}</span>
+      : null;
+  }
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+    setInvalidField(null);
 
     const serviceAreas = serviceAreaText
       .split(",")
@@ -50,15 +66,15 @@ export default function BuilderProfileForm({
       .filter((area) => area.city && area.state.length === 2);
 
     if (!companyName.trim()) {
-      setError("Company name is required.");
+      invalidate("builder-company-name", "Enter your company name.");
       return;
     }
-    if (!contactEmail.trim()) {
-      setError("Contact email is required.");
+    if (validateEmail(contactEmail)) {
+      invalidate("builder-contact-email", "Enter a valid contact email.");
       return;
     }
     if (serviceAreas.length === 0) {
-      setError("Add at least one service area like Seattle WA.");
+      invalidate("builder-service-areas", "Add at least one service area like Seattle WA.");
       return;
     }
 
@@ -80,6 +96,7 @@ export default function BuilderProfileForm({
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit}
       className="mt-6 grid gap-4 rounded-none border border-lf-hairline bg-lf-card p-4 md:grid-cols-2"
     >
@@ -90,15 +107,20 @@ export default function BuilderProfileForm({
         </p>
         <p className="lf-caption mt-1 text-lf-muted">* Required</p>
       </div>
-      {error && (
+      {error && !invalidField && (
         <div role="alert" className="md:col-span-2 text-sm text-lf-brick">
           {error}
         </div>
       )}
       <label htmlFor="builder-company-name" className="lf-body-sm font-medium text-lf-espresso">
-        Company name <span aria-hidden="true">*</span>
+        <span id="builder-company-name-label">Company name</span> <span aria-hidden="true">*</span>
         <input
           id="builder-company-name"
+          name="builder-company-name"
+          ref={(element) => { fields.current["builder-company-name"] = element; }}
+          aria-labelledby="builder-company-name-label"
+          aria-invalid={invalidField === "builder-company-name"}
+          aria-describedby={invalidField === "builder-company-name" ? "builder-company-name-error" : undefined}
           type="text"
           autoComplete="organization"
           className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
@@ -106,11 +128,17 @@ export default function BuilderProfileForm({
           onChange={(event) => setCompanyName(event.target.value)}
           aria-required="true"
         />
+        {fieldError("builder-company-name")}
       </label>
       <label htmlFor="builder-contact-email" className="lf-body-sm font-medium text-lf-espresso">
-        Contact email <span aria-hidden="true">*</span>
+        <span id="builder-contact-email-label">Contact email</span> <span aria-hidden="true">*</span>
         <input
           id="builder-contact-email"
+          name="builder-contact-email"
+          ref={(element) => { fields.current["builder-contact-email"] = element; }}
+          aria-labelledby="builder-contact-email-label"
+          aria-invalid={invalidField === "builder-contact-email"}
+          aria-describedby={invalidField === "builder-contact-email" ? "builder-contact-email-error" : undefined}
           type="email"
           autoComplete="email"
           className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
@@ -118,6 +146,7 @@ export default function BuilderProfileForm({
           onChange={(event) => setContactEmail(event.target.value)}
           aria-required="true"
         />
+        {fieldError("builder-contact-email")}
       </label>
       <label htmlFor="builder-phone" className="lf-body-sm font-medium text-lf-espresso">
         Phone (optional)
@@ -144,19 +173,25 @@ export default function BuilderProfileForm({
         htmlFor="builder-service-areas"
         className="lf-body-sm font-medium text-lf-espresso md:col-span-2"
       >
-        Service areas
+        <span id="builder-service-areas-label">Service areas</span>
         <input
           id="builder-service-areas"
+          name="builder-service-areas"
+          ref={(element) => { fields.current["builder-service-areas"] = element; }}
+          aria-labelledby="builder-service-areas-label"
+          aria-invalid={invalidField === "builder-service-areas"}
+          aria-describedby={invalidField === "builder-service-areas" ? "builder-service-areas-error" : undefined}
           type="text"
           className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
           placeholder="Seattle WA, Portland OR"
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}
         />
+        {fieldError("builder-service-areas")}
       </label>
       <label
         htmlFor="builder-active"
-        className="flex items-center gap-2 text-sm text-lf-muted md:col-span-2"
+        className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-lf-muted md:col-span-2"
       >
         <input
           id="builder-active"
@@ -167,13 +202,13 @@ export default function BuilderProfileForm({
         />
         Active for new matched requests
       </label>
-      <button
+      <Button
         type="submit"
-        disabled={isPending}
+        loading={isPending}
         className="min-h-11 rounded-[3px] bg-lf-clay px-4 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
       >
-        {isPending ? "Saving..." : "Save builder profile"}
-      </button>
+        {isPending ? "Saving…" : "Save builder profile"}
+      </Button>
     </form>
   );
 }

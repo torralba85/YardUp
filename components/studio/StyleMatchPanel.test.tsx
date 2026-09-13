@@ -154,7 +154,10 @@ describe("StyleMatchPanel", () => {
       expect(await screen.findByAltText(/Prepared house photo preview/i)).toBeInTheDocument();
 
       // Replacing the photo revokes the first preview URL before minting the second.
-      fireEvent.change(input, {
+      fireEvent.click(screen.getByRole("button", { name: "Choose another photo" }));
+      consentToAi();
+      const replacementInput = screen.getByLabelText(/Choose house photo/i);
+      fireEvent.change(replacementInput, {
         target: { files: [new File(["second"], "second.heic", { type: "image/heic" })] },
       });
       await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(2));

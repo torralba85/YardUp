@@ -6,6 +6,14 @@ import { AuthProvider } from "@/lib/auth-context";
 import { clearInitialParcel } from "@/lib/parcel-handoff";
 import { JOURNEY_STEP_STATE_KEY } from "@/lib/use-journey-history";
 import type { ReactNode } from "react";
+import { defaultAduConfig, defaultFinancialAssumptions } from "@/lib/feasibility";
+
+const savedMocks = vi.hoisted(() => ({ fetch: vi.fn(), remove: vi.fn() }));
+vi.mock("@/lib/scenarios-firestore", () => ({
+  fetchSavedScenarios: savedMocks.fetch,
+  deleteSavedScenario: savedMocks.remove,
+  saveSavedScenario: vi.fn(),
+}));
 
 /** The matchMedia stub the mobile-journey tests use to force the mobile layout. */
 function stubMobileMatchMedia() {
@@ -125,6 +133,8 @@ function stepButton(label: RegExp) {
 
 describe("FeasibilityStudio (guided spine)", () => {
   beforeEach(() => {
+    savedMocks.fetch.mockResolvedValue([]);
+    savedMocks.remove.mockReset().mockResolvedValue(undefined);
     window.history.replaceState(null, "", "/");
     window.localStorage.clear();
     clearInitialParcel();
@@ -146,6 +156,25 @@ describe("FeasibilityStudio (guided spine)", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("preserves saved concepts on cancel and deletes only after confirmation", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    savedMocks.fetch.mockResolvedValueOnce([{
+      id: "saved-1", name: "Garden home", createdAt: "2026-09-13T00:00:00Z",
+      parcelId: "oak-street", config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+    }]);
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    fireEvent.click(await screen.findByRole("button", { name: /Saved Concepts/ }));
+    const remove = screen.getByRole("button", { name: "Delete saved concept Garden home" });
+    fireEvent.click(remove);
+    expect(savedMocks.remove).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Garden home" })).toBeInTheDocument();
+    confirm.mockReturnValue(true);
+    fireEvent.click(remove);
+    await waitFor(() => expect(savedMocks.remove).toHaveBeenCalledWith("owner-1", "saved-1"));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Garden home" })).not.toBeInTheDocument());
   });
 
   it("presents a single spine navigation with the Rules & Fit step active", () => {
@@ -509,6 +538,10 @@ describe("FeasibilityStudio (guided spine)", () => {
     // Start over: resetScenario() sends journeyStep back to "find" and the
     // hook's reset() only stamps the *current* (top) history entry — the
     // "check" entry pushed earlier is still sitting in the stack underneath.
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    fireEvent.click(screen.getByRole("button", { name: "Reset scenario" }));
+    expect(screen.getByRole("heading", { name: /Your feasibility study is ready/i })).toBeInTheDocument();
+    confirm.mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: "Reset scenario" }));
     expect(
       await screen.findByRole("heading", { name: "Start with your address." }),
