@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   },
   grant: vi.fn(),
   grantCertificate: vi.fn(),
-  release: vi.fn(),
+  rotate: vi.fn(),
   adminDb: {
     runTransaction: vi.fn(),
     collection: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("@/lib/server/certificate-purchases", () => ({
 }));
 
 vi.mock("@/lib/server/active-checkout-sessions", () => ({
-  releaseActiveCheckout: (...args: unknown[]) => mocks.release(...args),
+  rotateFailedActiveCheckout: (...args: unknown[]) => mocks.rotate(...args),
 }));
 
 vi.mock("@/lib/stripe", () => ({
@@ -96,7 +96,7 @@ beforeEach(() => {
   mocks.stripe = null;
   mocks.grant.mockClear();
   mocks.grantCertificate.mockClear();
-  mocks.release.mockClear();
+  mocks.rotate.mockClear();
   mocks.adminDb.runTransaction.mockClear();
   mocks.transaction.get.mockReset();
   mocks.transaction.update.mockClear();
@@ -145,24 +145,25 @@ describe("POST /api/stripe/webhook", () => {
     });
   });
 
-  it("releases the reservation when a delayed payment fails", async () => {
-    // The Session stays `complete` and unpaid forever, so leaving the
-    // reservation in place would hand the buyer the dead Session on every
-    // retry and they could never start a new checkout.
+  it("rotates the reservation when a delayed payment fails", async () => {
+    // The Session stays `complete` and unpaid forever. Deleting the
+    // reservation would not be enough: the buyer's persisted attempt id would
+    // rebuild the same idempotency key and Stripe would replay the dead
+    // Session, so the attempt itself has to rotate.
     installEvent(
       paidSession({ payment_status: "unpaid" }),
       "checkout.session.async_payment_failed",
     );
 
     expect((await POST(webhookRequest())).status).toBe(200);
-    expect(mocks.release).toHaveBeenCalledWith(
+    expect(mocks.rotate).toHaveBeenCalledWith(
       { purchaseType: "lead_unlock", accountId: "b1", purchaseId: "r1" },
       "sess_1",
     );
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
-  it("releases a certificate reservation when its delayed payment fails", async () => {
+  it("rotates a certificate reservation when its delayed payment fails", async () => {
     installEvent(
       paidSession({
         payment_status: "unpaid",
@@ -176,7 +177,7 @@ describe("POST /api/stripe/webhook", () => {
     );
 
     expect((await POST(webhookRequest())).status).toBe(200);
-    expect(mocks.release).toHaveBeenCalledWith(
+    expect(mocks.rotate).toHaveBeenCalledWith(
       { purchaseType: "certificate", accountId: "user-1", purchaseId: "cert-1" },
       "sess_1",
     );

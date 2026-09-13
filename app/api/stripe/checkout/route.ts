@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ status: "granted", reconciled: true });
           }
           // Genuinely still pending (a delayed payment method): the webhook
-          // will fulfil it, or release the reservation if it fails.
+          // will fulfil it, or rotate the reservation if it fails.
           return NextResponse.json(
             { error: "Payment is being confirmed. Please refresh shortly." },
             { status: 409 },
@@ -253,6 +253,10 @@ export async function POST(request: NextRequest) {
     console.error(
       "[stripe/checkout] Failed to create Checkout session:",
       describeStripeError(err),
+      // The summary leads, but this try also covers the reservation reads and
+      // writes, Session retrieval, and the grant, so keep the original error
+      // for its stack and to identify which of those actually threw.
+      err,
     );
     return NextResponse.json(
       { error: "Could not start checkout. Please try again." },

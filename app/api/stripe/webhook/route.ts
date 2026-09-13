@@ -8,18 +8,18 @@ import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { hasExpectedPayment } from "@/lib/server/stripe-payment-guard";
-import { releaseActiveCheckout } from "@/lib/server/active-checkout-sessions";
+import { rotateFailedActiveCheckout } from "@/lib/server/active-checkout-sessions";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
 /**
- * Release the reservation a Checkout Session was minted from, so a delayed
+ * Rotate the reservation a Checkout Session was minted from, so a delayed
  * payment that failed does not leave the buyer holding a `complete` Session
  * that can never be paid. Credit packs reserve nothing, so they need no
- * release.
+ * rotation.
  */
-async function releaseReservationForSession(
+async function rotateReservationForFailedSession(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
   const metadata = session.metadata ?? {};
@@ -27,7 +27,7 @@ async function releaseReservationForSession(
   if (metadata.purchaseType === "lead_unlock") {
     const { builderId, requestId } = metadata;
     if (builderId && requestId) {
-      await releaseActiveCheckout(
+      await rotateFailedActiveCheckout(
         {
           purchaseType: "lead_unlock",
           accountId: builderId,
@@ -42,7 +42,7 @@ async function releaseReservationForSession(
   if (metadata.purchaseType === "certificate") {
     const { uid, certKey } = metadata;
     if (uid && certKey) {
-      await releaseActiveCheckout(
+      await rotateFailedActiveCheckout(
         { purchaseType: "certificate", accountId: uid, purchaseId: certKey },
         session.id,
       );
@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
   }
 
   // A delayed payment that failed can never become paid, but the reservation
-  // still holds its Session. Release it so the buyer can start a fresh checkout
+  // still holds its Session. Rotate it so the buyer can start a fresh checkout
   // instead of being handed the dead one on every retry.
   if (event.type === "checkout.session.async_payment_failed") {
-    await releaseReservationForSession(
+    await rotateReservationForFailedSession(
       event.data.object as Stripe.Checkout.Session,
     );
     return NextResponse.json({ received: true });

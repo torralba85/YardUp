@@ -148,6 +148,8 @@ export async function POST(request: NextRequest) {
     console.error(
       "[stripe/checkout-credits] Failed to create Checkout session:",
       describeStripeError(err),
+      // The summary leads; the original error still carries the stack.
+      err,
     );
     return NextResponse.json(
       { error: "Could not start checkout. Please try again." },
