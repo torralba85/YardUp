@@ -37,12 +37,13 @@ export function formatPreviewHour(hour: number): string {
 }
 
 /**
- * Named lighting presets. Golden Hour stays the default presentation register;
- * Neutral Inspection exists so the four exterior finishes can be compared under
- * even, uncoloured light (D7). Both are illustrative studio lighting — neither
- * is a geographic sun study, and neither should be labelled as one.
+ * Named lighting presets. Shadow Preview is the default: the key light follows
+ * the time slider so owners can see how shadows fall. Gallery Daylight holds a
+ * fixed light with a fill so the four exterior finishes can be compared under
+ * even light (D7). Both use neutral light and are illustrative studio lighting —
+ * neither is a geographic sun study, and neither should be labelled as one.
  */
-export type LightingPresetId = "neutral" | "golden-hour";
+export type LightingPresetId = "neutral" | "shadow-preview";
 
 export interface LightingPreset {
   id: LightingPresetId;
@@ -72,17 +73,19 @@ export const LIGHTING_PRESETS: Record<LightingPresetId, LightingPreset> = {
     fillColor: "#DADAD3",
     fillIntensity: 0.35,
   },
-  "golden-hour": {
-    id: "golden-hour",
-    name: "Golden Hour",
-    description: "Warm, illustrative late afternoon preset emphasizing depth and architectural plane definition.",
+  // The scene drives this preset's sun position and intensity from the time
+  // slider and draws no fill light; the values below are its resting defaults.
+  "shadow-preview": {
+    id: "shadow-preview",
+    name: "Shadow Preview",
+    description: "Gallery daylight with a key light that follows the preview time, for reading shadows across the lot.",
     sunPosition: [55, 22, 28],
-    sunColor: "#ffd59e",
+    sunColor: "#ffffff",
     sunIntensity: 1.35,
-    ambientColor: "#fed7aa",
+    ambientColor: "#F5F5F0",
     ambientIntensity: 0.45,
     fillPosition: [-40, 25, -20],
-    fillColor: "#93c5fd",
+    fillColor: "#DADAD3",
     fillIntensity: 0.25,
   },
 };

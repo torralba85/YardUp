@@ -39,6 +39,17 @@ describe("A LOT MORE shared design contract", () => {
     }
   });
 
+  it("keeps the 3D scene off the retired Golden Hour palette", () => {
+    for (const file of ["components/ParcelScene.tsx", "components/studio/InstancedFence.tsx", "lib/scene-lighting.ts"]) {
+      const source = readFileSync(resolve(root, file), "utf8");
+      // Weathered-wood fence, cool inspection fog, dusk sun tint and the old warm preset.
+      for (const retired of ["#8a7e6e", "#e8ecef", "#ffaa66", "#ffd59e", "#fed7aa", "#93c5fd"]) {
+        expect(source.toLowerCase(), `${file} ${retired}`).not.toContain(retired);
+      }
+      expect(source, file).not.toMatch(/golden.?hour/i);
+    }
+  });
+
   it("keeps exported certificates on the shared typography and neutral ledger", () => {
     const report = readFileSync(resolve(root, "lib/report.ts"), "utf8");
     expect(report).toContain('"Space Grotesk", Arial, sans-serif');
