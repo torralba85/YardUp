@@ -47,7 +47,7 @@ export default function BuilderPage() {
             aria-label="Loading the builder dashboard"
             className="mx-auto max-w-6xl"
           >
-            <p className="lf-kicker text-lf-clay">Builder workspace</p>
+            <p className="lf-kicker text-lot-orange-ink">Builder workspace</p>
             <Skeleton className="mt-3 h-9 w-64 max-w-full" />
             <Skeleton className="mt-3 h-4 w-[28rem] max-w-full" />
             <div className="mt-8 border-y border-lf-hairline bg-lf-card">

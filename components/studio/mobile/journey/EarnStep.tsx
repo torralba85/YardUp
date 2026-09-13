@@ -67,7 +67,7 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
       {/* Confidence teaser: where the number comes from, in one line. */}
       <div
         data-testid="earn-confidence"
-        className={`mt-6 flex items-start gap-1.5 rounded-none border px-3 py-2.5 font-sans text-[10px] uppercase tracking-[0.14em] ${
+        className={`mt-6 flex items-start gap-1.5 rounded-none border px-3 py-2.5 font-sans text-[10px] uppercase tracking-[0.08em] ${
           unverified
             ? "border-lf-amber-ink/35 bg-lf-amber-soft text-lf-amber-ink"
             : "border-lf-hairline bg-lf-card text-lf-muted"

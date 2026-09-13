@@ -106,7 +106,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="inline-flex min-h-11 items-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-ink"
           >
             <BrandLockup className="h-8 w-auto" />
           </Link>
@@ -124,13 +124,13 @@ export default function SignedInStudioGate({ user }: { user: User }) {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-4 py-12 lg:px-8">
-        <section className="w-full rounded-none border border-lf-hairline bg-lf-card p-6 shadow-none sm:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] lg:gap-12">
+      <main className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-5 py-9 sm:px-8 sm:py-16">
+        <section className="w-full lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-14">
           <div>
             <p className="lf-kicker text-lf-clay-ink">Your workspace</p>
             <h1 className="lf-section-heading mt-3">Start with your property.</h1>
-            <p className="lf-body mt-3 max-w-[58ch] text-lf-muted">
-              Your account starts empty. Search an address to load its parcel, zoning, and local market data.
+            <p className="lf-body mt-4 max-w-[42ch] text-lf-muted">
+              See your lot in a new light. Find your property to explore its space, local rules, and estimated costs.
             </p>
             <div className="mt-7 max-w-xl">
               <AddressSearch
@@ -157,13 +157,20 @@ export default function SignedInStudioGate({ user }: { user: User }) {
             </div>
           </div>
 
-          <div className="mt-10 flex min-h-52 items-center justify-center rounded-none border border-dashed border-lf-hairline bg-lf-sand-2 p-8 text-center lg:mt-0">
-            <div>
-              <Search size={28} className="mx-auto text-lf-clay-ink" aria-hidden="true" />
-              <p className="mt-4 font-semibold">No property loaded</p>
-              <p className="mt-2 text-sm text-lf-muted">Your analysis will appear here after you choose an address.</p>
-            </div>
-          </div>
+          <figure className="mt-9 min-w-0 border-t border-lot-line pt-5 lg:mt-0 lg:border-t-0 lg:pt-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/landing/a-lot-more/parcel-after-mobile.webp"
+              width={768}
+              height={512}
+              alt="Illustrative model of a home with a small orange backyard home"
+              className="aspect-[3/2] w-full object-contain"
+            />
+            <figcaption className="mt-3 border-t border-lot-line pt-4">
+              <p className="lf-kicker text-lot-stone">A little more possibility</p>
+              <p className="mt-2 text-xs leading-5 text-lot-stone">Concept illustration, not your property. Your analysis starts with an address.</p>
+            </figcaption>
+          </figure>
         </section>
       </main>
     </div>

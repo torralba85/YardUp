@@ -29,23 +29,12 @@ interface AerialImage {
 function aerialFallbackResponse(reason: "unconfigured" | "upstream") {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" role="img" aria-label="Aerial imagery unavailable">
   <defs>
-    <linearGradient id="ground" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#2f4a38"/>
-      <stop offset="0.58" stop-color="#4d5a3f"/>
-      <stop offset="1" stop-color="#8b6f47"/>
-    </linearGradient>
     <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
-      <path d="M64 0H0v64" fill="none" stroke="#efe3c733" stroke-width="1"/>
+      <path d="M64 0H0v64" fill="none" stroke="#DADAD3" stroke-width="1"/>
     </pattern>
   </defs>
-  <rect width="800" height="540" fill="url(#ground)"/>
+  <rect width="800" height="540" fill="#F5F5F0"/>
   <rect width="800" height="540" fill="url(#grid)"/>
-  <path d="M0 390c96-38 158-46 255-21 83 22 153 15 245-24 104-43 191-39 300 9v186H0z" fill="#1f322866"/>
-  <path d="M56 114 245 58l218 40 292-66" fill="none" stroke="#efe3c744" stroke-width="18" stroke-linecap="round"/>
-  <path d="M78 352 272 270l172 34 280-94" fill="none" stroke="#efe3c744" stroke-width="14" stroke-linecap="round"/>
-  <rect x="252" y="214" width="296" height="112" rx="8" fill="#120f0bcc"/>
-  <text x="400" y="258" text-anchor="middle" fill="#f5efe2" font-family="Arial, sans-serif" font-size="22" font-weight="700">Aerial imagery unavailable</text>
-  <text x="400" y="290" text-anchor="middle" fill="#d9c9a5" font-family="Arial, sans-serif" font-size="15">Showing parcel overlay without satellite base.</text>
 </svg>`;
 
   return new NextResponse(svg, {

@@ -30,6 +30,15 @@ describe("A LOT MORE shared design contract", () => {
     }
   });
 
+  it("keeps route and component readouts on the same tracking and accessible orange ink", () => {
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      const source = readFileSync(file, "utf8");
+      expect(source, file).not.toContain("tracking-[0.14em]");
+      // Signal orange is a fill, never small type on a light route surface.
+      expect(source, file).not.toMatch(/(?<![\w:-])text-lf-clay(?:\s|\")/);
+    }
+  });
+
   it("keeps exported certificates on the shared typography and neutral ledger", () => {
     const report = readFileSync(resolve(root, "lib/report.ts"), "utf8");
     expect(report).toContain('"Space Grotesk", Arial, sans-serif');

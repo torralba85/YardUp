@@ -77,7 +77,7 @@ export function SceneStatus({
 
       <details className="px-3">
         <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-xs font-semibold">
-          <span className="font-sans text-[11px] uppercase tracking-[0.14em] text-[#65655F]">Modeled site fit</span>
+          <span className="font-sans text-[11px] uppercase tracking-[0.08em] text-[#65655F]">Modeled site fit</span>
           <span className={status.tone === "clear" ? "text-[#176B4C]" : "text-[#8A5300]"}>{status.title}</span>
         </summary>
         <div className="space-y-1 pb-3 text-xs leading-5 text-[#65655F]">

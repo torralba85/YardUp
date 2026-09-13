@@ -65,7 +65,7 @@ export function FeedbackForm() {
         </p>
         <p className="lf-body-sm mt-3 text-lf-muted">
           Ticket ID{" "}
-          <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+          <span className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-lf-espresso">
             {ticketId}
           </span>
           {email ? " — we'll reply to the email you provided if follow-up is needed." : ""}

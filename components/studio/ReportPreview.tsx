@@ -247,7 +247,7 @@ export default function ReportPreview({
                 <div className="mx-auto mt-2 h-px w-10 bg-lf-hairline" />
                 <div className="lf-caption mt-2 truncate text-lf-muted">{parcelName}</div>
                 {/* Decorative facsimile thumbnail only — not primary body copy. */}
-                <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.14em] text-lf-brick">
+                <div className="mt-2 inline-block -rotate-3 border border-lf-brick px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.08em] text-lf-brick">
                   Concept
                 </div>
               </div>
@@ -463,7 +463,7 @@ function CertificateBriefSection({
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-lf-espresso">{risk.label}</span>
                       <span
-                        className={`rounded-none border px-2 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${REPORT_RISK_TONE[risk.level]}`}
+                        className={`rounded-none border px-2 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${REPORT_RISK_TONE[risk.level]}`}
                       >
                         {risk.level}
                       </span>
@@ -520,7 +520,7 @@ function CertificateBriefSection({
                     </div>
                     <p className="mt-1 text-[11px] leading-4 text-lf-muted">{stage.description}</p>
                     <span
-                      className={`mt-1.5 block font-sans text-[9px] font-semibold uppercase tracking-[0.14em] ${tone.className}`}
+                      className={`mt-1.5 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${tone.className}`}
                     >
                       {tone.label}
                     </span>

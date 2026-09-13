@@ -331,10 +331,11 @@ export default function AerialView({
       {/* Fallback notice */}
       {aerialError && (
         <div
-          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lot-line bg-lot-chalk px-3 py-3 text-xs leading-5 text-lot-ink shadow-[4px_4px_0_#16161618]"
           role="note"
         >
-          Aerial imagery unavailable - showing the parcel overlay without a satellite base.
+          <span className="flex items-center gap-2 font-semibold"><TriangleAlert size={16} className="shrink-0 text-status-review" aria-hidden="true" />Aerial imagery unavailable</span>
+          <span className="mt-1 block text-lot-stone">The parcel overlay is shown on a drafting grid. Satellite detail is unavailable.</span>
         </div>
       )}
 

@@ -71,7 +71,7 @@ export default function FieldBookIndex({
                 }`}
               />
               <span
-                className={`w-6 shrink-0 font-sans text-[11px] font-semibold tracking-widest ${
+                className={`w-6 shrink-0 font-sans text-[11px] font-semibold tracking-[0.08em] ${
                   isActive ? "text-lf-sand" : "text-lot-stone-on-dark"
                 }`}
               >

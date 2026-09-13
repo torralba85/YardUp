@@ -67,7 +67,7 @@ export function SetbackEnvelope({
     <group name="lotfoundry-setback-envelope">
       <mesh geometry={geometry} rotation={[Math.PI / 2, 0, 0]} position={[0, elevation, 0]}>
         <meshBasicMaterial
-          color={violated ? "#EF4444" : "#A82D16"}
+          color="#A82D16"
           transparent
           opacity={violated ? 0.22 : 0.11}
           depthWrite={false}
@@ -76,7 +76,7 @@ export function SetbackEnvelope({
       </mesh>
       <Line
         points={innerLine}
-        color={violated ? "#EF4444" : "#65655F"}
+        color={violated ? "#A82D16" : "#65655F"}
         lineWidth={violated ? 2.25 : 1.5}
         dashed
         dashSize={2.4}

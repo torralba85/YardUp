@@ -217,7 +217,7 @@ export default function BeforeAfterBoard({
         {/* Metadata Bar */}
         <div className="bg-lf-sand-2 border border-lf-hairline p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5">
-            <div className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-lf-clay-ink">
+            <div className="font-sans text-xs font-bold uppercase tracking-[0.08em] text-lf-clay-ink">
               {`STYLE MATCH ${styleName} · ${matchPercentage}%`.toUpperCase()}
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
@@ -233,10 +233,10 @@ export default function BeforeAfterBoard({
           </div>
           {lotSizeInfo && (
             <div className="flex flex-col items-start md:items-end justify-center font-sans text-xs text-lf-muted">
-              <span className="text-[10px] uppercase tracking-[0.14em] text-lf-muted/70">
+              <span className="text-[10px] uppercase tracking-[0.08em] text-lf-muted/70">
                 Lot info
               </span>
-              <span className="font-semibold text-lf-espresso uppercase mt-0.5 tracking-[0.14em]">
+              <span className="font-semibold text-lf-espresso uppercase mt-0.5 tracking-[0.08em]">
                 {lotSizeInfo.toUpperCase()}
               </span>
             </div>

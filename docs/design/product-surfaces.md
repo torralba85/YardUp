@@ -43,6 +43,11 @@ hosted checks before reporting the design live. Record PR, commit, and checks in
 
 ## External and historical boundaries
 
+The standalone root crash boundary (`app/global-error.tsx`) deliberately uses a system sans-serif
+fallback. It must remain usable when the root layout, its generated font CSS, or asset loading fails.
+This is the sole UI typography exception: retain the approved palette, 3px controls, visible focus,
+and 44px targets without importing the failed layout or requiring another font download.
+
 Provider-managed email/checkout templates, native-store assets, previously downloaded reports,
 and archived videos are not rewritten by a web deployment. There is no repository-owned transactional
 email renderer in this release. Apply this design authority when those surfaces are next configured;

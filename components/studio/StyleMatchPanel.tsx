@@ -531,7 +531,7 @@ function PhotoFact({ label, value }: { label: string; value: string }) {
       <dt className="lf-kicker-dense text-lf-muted">
         {label}
       </dt>
-      <dd className="mt-0.5 font-sans font-semibold uppercase tracking-[0.14em] text-lf-espresso">
+      <dd className="mt-0.5 font-sans font-semibold uppercase tracking-[0.08em] text-lf-espresso">
         {value}
       </dd>
     </div>

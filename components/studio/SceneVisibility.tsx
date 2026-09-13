@@ -148,7 +148,7 @@ export function SceneVisibility() {
       )}
 
       {aduOutline.length > 0 && (
-        <Line points={aduOutline} color="#EF4444" lineWidth={3} />
+        <Line points={aduOutline} color="#A82D16" lineWidth={3} />
       )}
 
       {house?.pose && house.footprint.width && house.footprint.depth && (
