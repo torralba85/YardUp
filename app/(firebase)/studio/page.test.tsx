@@ -7,6 +7,8 @@ import { TYPICAL_MARKET } from "@/lib/typical-market";
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   nativeApp: false,
+  pendingAddress: null as string | null,
+  pendingParcel: null as object | null,
   authState: {
     loading: false,
     user: null as null | { uid: string },
@@ -15,8 +17,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/FeasibilityStudio", () => ({
-  default: function MockFeasibilityStudio() {
-    return <div>Feasibility Studio Mock</div>;
+  default: function MockFeasibilityStudio({ demoChosen }: { demoChosen?: boolean }) {
+    return <div>Feasibility Studio Mock{demoChosen && <span>Demo selected</span>}</div>;
   },
 }));
 
@@ -42,6 +44,9 @@ vi.mock("@/lib/commerce/purchase-channel", () => ({
   isNativeAppShell: () => mocks.nativeApp,
 }));
 
+vi.mock("@/lib/address-handoff", () => ({ peekAddressQuery: () => mocks.pendingAddress }));
+vi.mock("@/lib/parcel-handoff", () => ({ peekInitialParcel: () => mocks.pendingParcel }));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: mocks.replace,
@@ -59,6 +64,9 @@ describe("StudioPage", () => {
     mocks.authState.user = null;
     mocks.authState.profile = null;
     mocks.nativeApp = false;
+    mocks.pendingAddress = null;
+    mocks.pendingParcel = null;
+    window.history.replaceState(null, "", "/studio");
   });
 
   it("runs the app onboarding for guests and members only inside the native app", () => {
@@ -123,6 +131,63 @@ describe("StudioPage", () => {
     render(<StudioPage />);
 
     expect(screen.getByText("Signed-in Blank Slate Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
+  });
+
+  it("opens the selected example for signed-in owners", () => {
+    window.history.replaceState(null, "", "/studio?parcel=oak-street");
+    mocks.authState.user = { uid: "user-1" };
+    render(<StudioPage />);
+    expect(screen.getByText("Feasibility Studio Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Signed-in Blank Slate Mock")).not.toBeInTheDocument();
+  });
+
+  // demoChosen skips the mobile Find reveal; the URL restore must decide that,
+  // so a default-scenario link still begins at Find.
+  it.each([null, { uid: "user-1" }])("does not force the demo choice from a sample URL (user %o)", (user) => {
+    window.history.replaceState(null, "", "/studio?parcel=oak-street&size=600&roof=flat");
+    mocks.authState.user = user;
+    render(<StudioPage />);
+    expect(screen.getByText("Feasibility Studio Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Demo selected")).not.toBeInTheDocument();
+  });
+
+  it.each(["parcel=unknown", "size=600", "v=unsupported&parcel=oak-street"])(
+    "keeps owner property entry for invalid or incomplete sample params: %s", (query) => {
+      window.history.replaceState(null, "", `/studio?${query}`);
+      mocks.authState.user = { uid: "user-1" };
+      render(<StudioPage />);
+      expect(screen.getByText("Signed-in Blank Slate Mock")).toBeInTheDocument();
+    },
+  );
+
+  it.each(["address", "parcel"])("preserves a real %s handoff ahead of a sample URL", (kind) => {
+    window.history.replaceState(null, "", "/studio?parcel=oak-street");
+    mocks.authState.user = { uid: "user-1" };
+    if (kind === "address") mocks.pendingAddress = "123 Main St";
+    else mocks.pendingParcel = { address: "123 Main St" };
+    const { rerender } = render(<StudioPage />);
+    expect(screen.getByText("Signed-in Blank Slate Mock")).toBeInTheDocument();
+    mocks.pendingAddress = null;
+    mocks.pendingParcel = null;
+    rerender(<StudioPage />);
+    expect(screen.getByText("Signed-in Blank Slate Mock")).toBeInTheDocument();
+  });
+
+  it("keeps builder redirection ahead of an explicit example", () => {
+    window.history.replaceState(null, "", "/studio?parcel=oak-street");
+    mocks.authState.user = { uid: "builder-1" };
+    mocks.authState.profile = { role: "builder" };
+    render(<StudioPage />);
+    expect(mocks.replace).toHaveBeenCalledWith("/builder");
+    expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
+  });
+
+  it("keeps native onboarding ahead of web example routing", () => {
+    mocks.nativeApp = true;
+    window.history.replaceState(null, "", "/studio?parcel=oak-street");
+    render(<StudioPage />);
+    expect(screen.getByText("App Onboarding Mock guest")).toBeInTheDocument();
     expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
   });
 });

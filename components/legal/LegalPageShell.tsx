@@ -30,7 +30,7 @@ export function LegalPageShell({
             href="/studio"
             // Legal/support pages are Firebase-free; don't prefetch the group.
             prefetch={false}
-            className="inline-flex min-h-11 items-center rounded-[3px] px-4 text-sm font-semibold text-lf-clay-ink motion-safe:transition hover:text-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="inline-flex min-h-11 items-center rounded-[3px] px-4 text-sm font-semibold text-lf-clay-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
           >
             Open studio
           </Link>
