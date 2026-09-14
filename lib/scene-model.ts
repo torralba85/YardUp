@@ -263,6 +263,8 @@ export interface ExistingHouseSceneModel {
 
 const EXISTING_HOUSE_WALL_HEIGHT_FT = 9;
 const EXISTING_HOUSE_RIDGE_RISE_FT = 5;
+/** Gable eave overhang the renderer draws beyond the existing house's walls, shared with placement's roof-edge gap. */
+export const EXISTING_HOUSE_ROOF_OVERHANG_FT = 0.8;
 
 /**
  * Center the existing house on the width axis with its front wall on the

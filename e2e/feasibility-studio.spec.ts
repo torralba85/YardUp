@@ -76,6 +76,7 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/studio");
     // Navigating via sidebar navigation button
     await page.getByRole("button", { name: /Design/i }).click();
+    await page.getByText("Browse designs").click();
     await expect(page.getByRole("heading", { name: /A small home, considered/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole("heading", { name: "Courtyard Studio" })).toBeVisible();
 
@@ -84,9 +85,37 @@ test.describe("Public LotFoundry flows", () => {
     await applyButton.click();
 
     // The applied template updates the active ADU config in the studio.
-    await expect(page.getByRole("heading", { name: "Feasibility Studio", level: 2 }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Design your ADU", level: 2 }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Cedar/i })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("button", { name: /Shed/i })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("Design keeps setup and secondary tools out of the initial workspace", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Desktop Design; mobile uses the existing journey");
+    await page.goto("/studio?parcel=oak-street");
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+    await expect(page.getByRole("heading", { name: "Design your ADU", exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "ADU footprint size" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Search property address" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Reset", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Courtyard Studio" })).not.toBeVisible();
+    await expect(page.getByRole("region", { name: "Feasibility metrics" })).not.toBeVisible();
+    await page.getByRole("button", { name: "Numbers & readiness" }).click();
+    await expect(page.getByRole("region", { name: "Feasibility metrics" })).toBeVisible();
+    await expect(page.getByText("Curated demo estimate", { exact: true }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Numbers & readiness" }).click();
+    await page.getByText("Tools", { exact: true }).click();
+    await page.getByRole("button", { name: "Plan utilities" }).click();
+    await expect(page.getByText(/Click the primary house in the 3D model/)).toBeVisible();
+    await page.getByText("Tools", { exact: true }).click();
+    await page.getByText("Tools", { exact: true }).click();
+    await expect(page.getByRole("button", { name: "Plan utilities" })).toHaveAttribute("aria-pressed", "false");
+    await page.getByText("Move or rotate ADU", { exact: true }).click();
+    await page.getByRole("spinbutton", { name: "X position (ft)" }).fill("100");
+    await page.getByRole("spinbutton", { name: "X position (ft)" }).press("Tab");
+    await page.getByText("Tools", { exact: true }).click();
+    await expect(page.getByText("Setback conflict.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Interactive ADU placement model" })).toBeVisible();
   });
 
   test("back navigation steps through the journey instead of leaving the study", async ({

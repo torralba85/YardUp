@@ -186,8 +186,8 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     expect(stepButton(/Rules & Fit/)).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
-    expect(screen.getByText("Feasibility verdict")).toBeInTheDocument();
-    expect(screen.getByText("Readiness")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Numbers & readiness" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText("Readiness: 82/100")).not.toBeVisible();
   });
 
   it("renders the searched live parcel's dimensions in the 3D scene", async () => {
@@ -244,6 +244,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // The demo preset renders first (oak-street, 40 ft wide).
     expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "40");
 
+    await user.click(stepButton(/Your Lot/));
     const search = screen.getByRole("search");
     await user.type(
       within(search).getByLabelText("Search property address"),
@@ -387,19 +388,21 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     await user.click(stepButton(/Design/));
 
-    expect(screen.getByRole("combobox", { name: "Sample Property" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Create my ADU report/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Build Cost Range")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Sample Property" })).not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "ADU footprint size" })).toBeVisible();
+    expect(screen.getByText("Build Cost Range")).not.toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Numbers & readiness" }));
+    expect(screen.getByText("Build Cost Range")).toBeVisible();
   });
 
   it("flags review needed when selecting a 1,000 sf concept on the compact preset", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(stepButton(/Design/));
+    await user.click(stepButton(/Your Lot/));
+    await user.click(screen.getByText("Try a sample property"));
     await user.selectOptions(screen.getByLabelText("Sample Property"), "compact-lot");
+    await user.click(stepButton(/Design/));
 
     const sizeGroup = screen.getByRole("group", { name: /ADU footprint size/i });
     await user.click(within(sizeGroup).getByRole("button", { name: "1,000 sf" }));
@@ -447,7 +450,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     await user.click(stepButton(/Design/));
-    expect(screen.getByRole("combobox", { name: "Sample Property" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Design your ADU" })).toBeInTheDocument();
 
     await user.click(stepButton(/Certificate/));
     expect(

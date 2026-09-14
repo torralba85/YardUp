@@ -27,7 +27,7 @@ import { exportOrthographicView } from "@/utils/canvas/exportOrthographicView";
  * means they share the Studio's coordinate system and never need a second 3D
  * renderer.
  */
-export function SceneVisibility() {
+export function SceneVisibility({ utilityMode = false }: { utilityMode?: boolean }) {
   const { gl, scene, setFrameloop, invalidate, get } = useThree();
   const { parcel, config, pose, placement, utilityAnchor } = useStudioEnhancements();
 
@@ -151,7 +151,7 @@ export function SceneVisibility() {
         <Line points={aduOutline} color="#A82D16" lineWidth={3} />
       )}
 
-      {house?.pose && house.footprint.width && house.footprint.depth && (
+      {utilityMode && house?.pose && house.footprint.width && house.footprint.depth && (
         <mesh
           name="lf-export-hide-utility-picker"
           position={[house.pose.x, 4.5, house.pose.z]}

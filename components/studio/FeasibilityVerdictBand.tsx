@@ -1,23 +1,11 @@
 "use client";
 
-/**
- * FeasibilityVerdictBand — the studio's income-led lead element.
- *
- * The espresso band leads with the monthly rent figure, followed by the
- * feasibility verdict and readiness score. California parcels also surface the
- * sprint-plan statewide baseline screen as a disclosure below the lot facts.
- */
-
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { useId, useState } from "react";
+import { AlertTriangle, CheckCircle2, ChevronDown, XCircle } from "lucide-react";
 import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
-import {
-  summarizeFeasibility,
-  verdictTone,
-  type VerdictLevel,
-} from "@/lib/feasibility-verdict";
+import { summarizeFeasibility, verdictTone, type VerdictLevel } from "@/lib/feasibility-verdict";
 import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
-import { MoneyFigure } from "@/components/ui/MoneyFigure";
-import { useCountUp } from "./use-count-up";
+import MetricsSummary from "./MetricsSummary";
 
 const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
   "Likely Feasible": CheckCircle2,
@@ -29,88 +17,48 @@ export interface FeasibilityVerdictBandProps {
   parcel: Parcel;
   result: FeasibilityResult;
   config: Pick<ADUConfig, "width" | "length">;
-  /** APN / zone eyebrow line, e.g. "APN 061-244-018 · R-1". */
   eyebrow?: string;
 }
 
-export default function FeasibilityVerdictBand({
-  parcel,
-  result,
-  config,
-  eyebrow,
-}: FeasibilityVerdictBandProps) {
+/** Compact project context. Detailed figures are available without leaving the design. */
+export default function FeasibilityVerdictBand({ parcel, result, config, eyebrow }: FeasibilityVerdictBandProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
-  const readiness = useCountUp(summary.readiness);
-  const lotLine = `${parcel.lotArea.toLocaleString()} sf lot · ${parcel.lotWidth}′ × ${parcel.lotLength}′`;
+  const [numbersOpen, setNumbersOpen] = useState(false);
+  const numbersId = useId();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-6 gap-y-3.5 border-b border-[#44443F] bg-[#161616] px-7 py-[18px] text-[#F5F5F0]">
-      <div className="min-w-0 flex-1">
-        {eyebrow && <p className="lf-kicker-dense text-[#B7B7AE]">{eyebrow}</p>}
-        <h2 className="mt-[3px] font-display text-[31px] font-semibold leading-[1.08] text-[#F5F5F0]">
-          {parcel.address}
-        </h2>
-        <p className="mt-[5px] font-sans text-[11px] tabular-nums text-[#B7B7AE]">{lotLine}</p>
-        <FeasibilityBadge
-          parcel={parcel}
-          config={{ footprint: config.width * config.length, width: config.width, length: config.length }}
-          surface="dark"
-        />
+    <header className="shrink-0 border-b border-[#DADAD3] bg-[#F5F5F0] text-[#161616]">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-3">
+        <div className="min-w-0">
+          <h2 className="font-display text-xl font-semibold tracking-tight">{parcel.address}</h2>
+          <p className="mt-1 text-xs text-[#65655F]">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot</p>
+        </div>
+        <div aria-live="polite" className="text-sm">
+          <div className="flex items-center gap-2 font-semibold" style={{ color: tone.color }}>
+            <Icon size={18} aria-hidden="true" />
+            {summary.verdict}
+          </div>
+          <p className="mt-1 text-xs text-[#65655F]">{summary.reviewNote}</p>
+        </div>
+        <button type="button" aria-expanded={numbersOpen} aria-controls={numbersId}
+          onClick={() => setNumbersOpen(!numbersOpen)}
+          className="flex min-h-11 items-center gap-3 rounded-[3px] px-3 text-sm font-semibold hover:bg-[#161616]/5">
+          Numbers &amp; readiness
+          <ChevronDown size={16} aria-hidden="true" className={numbersOpen ? "rotate-180" : ""} />
+        </button>
       </div>
-
-      <div className="flex flex-shrink-0 flex-wrap items-center gap-x-[22px] gap-y-3">
-        <div>
-          <p className="lf-kicker-dense text-[#B7B7AE]">If built</p>
-          <MoneyFigure
-            value={result.monthlyRent}
-            animate
-            size="band"
-            tone="onDark"
-            className="mt-1 text-[#F5F5F0]"
-          />
-          <p className="mt-1 font-sans text-[10px] tabular-nums text-[#B7B7AE]">{result.rentBasis}</p>
-        </div>
-
-        <div className="hidden self-stretch border-l border-[#44443F] sm:block" />
-
-        <div>
-          <p className="lf-kicker-dense text-[#B7B7AE]">Feasibility verdict</p>
-          <div className="mt-1 flex items-center gap-2.5">
-            <Icon size={24} style={{ color: tone.onDark }} />
-            <span
-              className="whitespace-nowrap font-display text-[31px] font-semibold leading-none tracking-[-0.01em]"
-              style={{ color: tone.onDark }}
-            >
-              {summary.verdict}
-            </span>
+      <div id={numbersId} hidden={!numbersOpen} className="border-t border-[#DADAD3]">
+        <div className="max-h-[45vh] overflow-y-auto pt-4">
+          <div className="px-6 pb-4 text-sm">
+            <p className="font-semibold">Readiness: {summary.readiness}/100</p>
+            <p className="mt-1 text-xs text-[#65655F]">Early planning estimates, not permit approval or guaranteed income.</p>
+            <FeasibilityBadge parcel={parcel} config={{ footprint: config.width * config.length, ...config }} surface="light" />
           </div>
-          <div
-            className="mt-[7px] flex items-center gap-1.5 font-sans text-[11px] tabular-nums"
-            style={{ color: summary.openCount > 0 ? tone.onDark : "#B7B7AE" }}
-          >
-            {summary.openCount > 0 ? <AlertTriangle size={13} /> : null}
-            {summary.reviewNote}
-          </div>
-        </div>
-
-        <div className="hidden self-stretch border-l border-[#44443F] sm:block" />
-
-        <div className="hidden text-center sm:block">
-          <p className="lf-kicker-dense text-[#B7B7AE]">Readiness</p>
-          <div className="mt-0.5 lf-money-xl text-[#F5F5F0]">
-            {readiness}
-            <span className="font-sans text-sm text-[#B7B7AE]"> /100</span>
-          </div>
-          <div className="mt-2 h-1 w-[110px] overflow-hidden rounded-full bg-[#212121]">
-            <div
-              className="h-full w-full origin-left rounded-full motion-safe:transition-transform duration-500"
-              style={{ transform: `scaleX(${summary.readiness / 100})`, backgroundColor: tone.onDark }}
-            />
-          </div>
+          <MetricsSummary result={result} />
         </div>
       </div>
-    </div>
+    </header>
   );
 }
