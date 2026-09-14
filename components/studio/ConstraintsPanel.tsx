@@ -36,6 +36,8 @@ import {
 } from "@/lib/feasibility-verdict";
 import type { AIProjectBriefResponse } from "@/lib/ai-types";
 import AIProjectBriefPanel from "./AIProjectBriefPanel";
+import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
+import { useParcel } from "@/lib/parcel-context";
 
 const STATUS_ICON: Record<ConstraintStatus, typeof CheckCircle2> = {
   clear: CheckCircle2,
@@ -67,6 +69,8 @@ export interface ConstraintsPanelProps {
   projectBriefLoading: boolean;
   projectBriefError: string | null;
   onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBriefResponse>;
+  /** Bumped by an outside "Change address" action to focus the search field. */
+  addressFocusSignal?: number;
 }
 
 export default function ConstraintsPanel({
@@ -80,14 +84,47 @@ export default function ConstraintsPanel({
   projectBriefLoading,
   projectBriefError,
   onGenerateProjectBrief,
+  addressFocusSignal,
 }: ConstraintsPanelProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
+  const { parcelLoading, parcelError, searchParcel, searchByAddress } = useParcel();
+
+  function handleAddressSelect(found: AddressSearchResult) {
+    searchParcel(found.lat, found.lng, found.formattedAddress);
+  }
+
+  function handleAddressText(query: string) {
+    searchByAddress(query);
+  }
+
   return (
     <aside
       aria-label="Property constraints"
       className="flex w-full shrink-0 flex-col border-t border-[#DADAD3] bg-[#F5F5F0] text-[#161616] lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
     >
+      <div className="border-b border-[#DADAD3] px-[22px] pb-3.5 pt-[18px]">
+        <p className="pb-2 lf-kicker text-[#65655F]">
+          Your property
+        </p>
+        <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} autoFocusSignal={addressFocusSignal} />
+        {parcelLoading && (
+          <div className="mt-2 flex items-center gap-2 rounded-none border border-[#DADAD3] bg-[#EBEBE6] px-3 py-2 text-xs text-[#65655F]">
+            <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-[#DADAD3] border-t-[#FF5B24]" />
+            Looking up property data…
+          </div>
+        )}
+        {parcelError && (
+          <div
+            role="alert"
+            className="mt-2 flex items-start gap-2 rounded-none border border-[#A82D16]/30 bg-[#A82D16]/10 p-3 text-xs text-[#A82D16]"
+          >
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            {parcelError}
+          </div>
+        )}
+      </div>
+
       <div className="border-b border-[#DADAD3] px-[22px] pb-3.5 pt-[18px]">
         <p className="lf-kicker text-[#65655F]">
           Property constraints

@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, XCircle } from "lucide-react"
 import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
 import { summarizeFeasibility, verdictTone, type VerdictLevel } from "@/lib/feasibility-verdict";
 import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
+import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import MetricsSummary from "./MetricsSummary";
 
 const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
@@ -34,6 +35,10 @@ export default function FeasibilityVerdictBand({ parcel, result, config, eyebrow
         <div className="min-w-0">
           <h2 className="font-display text-xl font-semibold tracking-tight">{parcel.address}</h2>
           <p className="mt-1 text-xs text-[#65655F]">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot</p>
+        </div>
+        <div>
+          <p className="lf-kicker-dense text-[#65655F]">If built</p>
+          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5 text-base font-semibold" />
         </div>
         <div aria-live="polite" className="text-sm">
           <div className="flex items-center gap-2 font-semibold" style={{ color: tone.color }}>

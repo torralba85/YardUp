@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -942,6 +942,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
                 projectBriefLoading={projectBriefLoading}
                 projectBriefError={projectBriefError}
                 onGenerateProjectBrief={handleGenerateProjectBrief}
+                addressFocusSignal={addressFocusSignal}
               />
             </div>
             <PermitGuidePanel address={parcelName} />
