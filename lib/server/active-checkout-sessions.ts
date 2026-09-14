@@ -23,6 +23,13 @@ export interface ReserveActiveCheckoutInput {
   parameters: Record<string, string>;
 }
 
+/** The fields that identify which entitlement a reservation belongs to. The
+ * attempt and presentation parameters do not take part in addressing it. */
+export type ActiveCheckoutKey = Pick<
+  ReserveActiveCheckoutInput,
+  "purchaseType" | "accountId" | "purchaseId"
+>;
+
 /**
  * Reserve one resumable Stripe Checkout session per entitlement. The document
  * id is hashed so internal account and parcel identifiers do not appear in
@@ -107,7 +114,51 @@ export async function saveActiveCheckoutSession(
   });
 }
 
-function getReservationRef(input: ReserveActiveCheckoutInput) {
+/**
+ * Free a reservation whose Checkout Session can never be paid, after Stripe
+ * reports the delayed payment failed.
+ *
+ * `reserveActiveCheckout` deliberately keeps returning any reservation that
+ * holds a `sessionId`, because only Stripe may authorize replacing one. A
+ * failed async payment leaves that Session `complete` and unpaid forever, so
+ * without this the buyer is handed the dead Session on every retry and can
+ * never start a new one.
+ *
+ * This rotates the attempt rather than deleting the reservation. Deleting is
+ * not enough: the buyer's `checkoutAttemptId` persists in their browser for 24
+ * hours, so the next request would rebuild the same Stripe idempotency key and
+ * Stripe would replay this dead Session instead of opening a payable one. A
+ * server-generated attempt id is what actually frees them, exactly as the
+ * expired-Session path does. The reserved presentation parameters carry over so
+ * the replacement Session is built the same way.
+ */
+export async function rotateFailedActiveCheckout(
+  key: ActiveCheckoutKey,
+  sessionId: string,
+): Promise<void> {
+  const ref = getReservationRef(key);
+  const now = Date.now();
+
+  await getAdminDb().runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    const existing = readActiveCheckout(snap.data());
+    // Only the reservation still holding this exact Session may be rotated, so
+    // a late webhook cannot disturb a newer attempt the buyer has moved on to.
+    if (!existing || existing.sessionId !== sessionId) return;
+
+    // A full set() drops the dead sessionId/sessionUrl with the old attempt.
+    transaction.set(
+      ref,
+      reservationDocument(key, {
+        attemptId: randomUUID(),
+        parameters: existing.parameters,
+        expiresAtMs: now + DEFAULT_SESSION_TTL_MS,
+      }),
+    );
+  });
+}
+
+function getReservationRef(input: ActiveCheckoutKey) {
   const digest = createHash("sha256")
     .update(
       JSON.stringify([input.purchaseType, input.accountId, input.purchaseId]),
@@ -129,7 +180,7 @@ function newReservation(
 }
 
 function reservationDocument(
-  input: ReserveActiveCheckoutInput,
+  input: ActiveCheckoutKey,
   reservation: ActiveCheckoutSession,
 ) {
   return {

@@ -10,6 +10,8 @@ import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
+import { hasExpectedPayment } from "@/lib/server/stripe-payment-guard";
+import { describeStripeError } from "@/lib/server/stripe-errors";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -143,6 +145,32 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ url: reservation.sessionUrl });
         }
         if (existing.status === "complete") {
+          // The webhook is the normal fulfilment path. When a delivery never
+          // arrives, the reservation keeps handing back this completed Session,
+          // so without reconciling here a builder who has already paid retries
+          // into the same 409 forever and never receives the lead. Stripe's own
+          // record of the Session is the authority, checked against the catalog
+          // price exactly as the webhook checks it.
+          if (
+            existing.payment_status === "paid" &&
+            existing.metadata?.builderId === builderId &&
+            existing.metadata?.requestId === requestId &&
+            hasExpectedPayment(
+              existing,
+              LEAD_UNLOCK_PRICE_CENTS,
+              "stripe/checkout",
+            )
+          ) {
+            await grantLeadUnlock({
+              builderId,
+              requestId,
+              stripeSessionId: existing.id,
+              amount: LEAD_UNLOCK_PRICE_CENTS,
+            });
+            return NextResponse.json({ status: "granted", reconciled: true });
+          }
+          // Genuinely still pending (a delayed payment method): the webhook
+          // will fulfil it, or rotate the reservation if it fails.
           return NextResponse.json(
             { error: "Payment is being confirmed. Please refresh shortly." },
             { status: 409 },
@@ -222,7 +250,14 @@ export async function POST(request: NextRequest) {
       { status: 409 },
     );
   } catch (err) {
-    console.error("[stripe/checkout] Failed to create Checkout session:", err);
+    console.error(
+      "[stripe/checkout] Failed to create Checkout session:",
+      describeStripeError(err),
+      // The summary leads, but this try also covers the reservation reads and
+      // writes, Session retrieval, and the grant, so keep the original error
+      // for its stack and to identify which of those actually threw.
+      err,
+    );
     return NextResponse.json(
       { error: "Could not start checkout. Please try again." },
       { status: 502 },

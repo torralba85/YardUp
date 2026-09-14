@@ -7,26 +7,47 @@ import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { hasExpectedPayment } from "@/lib/server/stripe-payment-guard";
+import { rotateFailedActiveCheckout } from "@/lib/server/active-checkout-sessions";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
-function hasExpectedPayment(
+/**
+ * Rotate the reservation a Checkout Session was minted from, so a delayed
+ * payment that failed does not leave the buyer holding a `complete` Session
+ * that can never be paid. Credit packs reserve nothing, so they need no
+ * rotation.
+ */
+async function rotateReservationForFailedSession(
   session: Stripe.Checkout.Session,
-  expectedAmountCents: number,
-): boolean {
-  const valid =
-    session.mode === "payment" &&
-    session.currency?.toLowerCase() === "usd" &&
-    session.amount_total === expectedAmountCents;
+): Promise<void> {
+  const metadata = session.metadata ?? {};
 
-  if (!valid) {
-    console.error(
-      `[stripe/webhook] Refusing fulfilment for session ${session.id}: expected payment of ${expectedAmountCents} usd, received mode=${session.mode ?? "missing"}, amount=${session.amount_total ?? "missing"}, currency=${session.currency ?? "missing"}.`,
-    );
+  if (metadata.purchaseType === "lead_unlock") {
+    const { builderId, requestId } = metadata;
+    if (builderId && requestId) {
+      await rotateFailedActiveCheckout(
+        {
+          purchaseType: "lead_unlock",
+          accountId: builderId,
+          purchaseId: requestId,
+        },
+        session.id,
+      );
+    }
+    return;
   }
 
-  return valid;
+  if (metadata.purchaseType === "certificate") {
+    const { uid, certKey } = metadata;
+    if (uid && certKey) {
+      await rotateFailedActiveCheckout(
+        { purchaseType: "certificate", accountId: uid, purchaseId: certKey },
+        session.id,
+      );
+    }
+  }
 }
 
 /**
@@ -55,6 +76,16 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(rawBody, signature, secret);
   } catch {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  // A delayed payment that failed can never become paid, but the reservation
+  // still holds its Session. Rotate it so the buyer can start a fresh checkout
+  // instead of being handed the dead one on every retry.
+  if (event.type === "checkout.session.async_payment_failed") {
+    await rotateReservationForFailedSession(
+      event.data.object as Stripe.Checkout.Session,
+    );
+    return NextResponse.json({ received: true });
   }
 
   if (

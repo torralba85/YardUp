@@ -6,6 +6,7 @@ import { getAdminDb } from "@/lib/server/firebase-admin";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
+import { describeStripeError } from "@/lib/server/stripe-errors";
 
 export const runtime = "nodejs";
 
@@ -146,6 +147,8 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error(
       "[stripe/checkout-credits] Failed to create Checkout session:",
+      describeStripeError(err),
+      // The summary leads; the original error still carries the stack.
       err,
     );
     return NextResponse.json(

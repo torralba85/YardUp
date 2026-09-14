@@ -35,6 +35,7 @@ vi.mock("./firebase-admin", () => ({ getAdminDb: () => mocks.db }));
 import {
   replaceExpiredActiveCheckout,
   reserveActiveCheckout,
+  rotateFailedActiveCheckout,
   saveActiveCheckoutSession,
 } from "./active-checkout-sessions";
 
@@ -51,6 +52,42 @@ beforeEach(() => {
 });
 
 describe("active checkout sessions", () => {
+  it("rotates the attempt when a failed Session is cleared", async () => {
+    // Clearing the Session alone would not free the buyer: their
+    // checkoutAttemptId persists in the browser for 24 hours, so the next
+    // request would rebuild the same Stripe idempotency key and Stripe would
+    // replay the dead Session. Only a new attempt id mints a payable one.
+    const reservation = await reserveActiveCheckout(input);
+    await saveActiveCheckoutSession(input, reservation, {
+      id: "cs_async_failed",
+      url: "https://stripe.test/checkout/dead",
+    });
+
+    await rotateFailedActiveCheckout(input, "cs_async_failed");
+    const next = await reserveActiveCheckout(input);
+
+    expect(next.attemptId).not.toBe(input.attemptId);
+    expect(next.sessionId).toBeUndefined();
+    expect(next.sessionUrl).toBeUndefined();
+    // The presentation parameters must survive so the replacement Session is
+    // built the same way the original was.
+    expect(next.parameters).toEqual(input.parameters);
+  });
+
+  it("leaves a newer attempt alone when a late failure event arrives", async () => {
+    const reservation = await reserveActiveCheckout(input);
+    await saveActiveCheckoutSession(input, reservation, {
+      id: "cs_current",
+      url: "https://stripe.test/checkout/current",
+    });
+
+    await rotateFailedActiveCheckout(input, "cs_some_older_session");
+
+    const next = await reserveActiveCheckout(input);
+    expect(next.attemptId).toBe(input.attemptId);
+    expect(next.sessionId).toBe("cs_current");
+  });
+
   it("retains a saved session past local expiry for Stripe status verification", async () => {
     const reservation = await reserveActiveCheckout(input);
     await saveActiveCheckoutSession(input, reservation, {
