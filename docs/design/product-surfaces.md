@@ -31,6 +31,12 @@ side effect of styling.
 - Status colors carry explicit labels/icons. Money is carbon on chalk or chalk on carbon.
 - Controls have 3px corners; read-only panels/cards/badges are square. Circular indices, indicators,
   and slider thumbs remain circular. Motion respects reduced-motion preferences.
+- The interactive 3D scene has its own palette, the `SCENE` tokens in `ParcelScene.tsx`. Status tones
+  follow §2.5: the placement ring is eligible, review or blocked, matching `ParcelPlan`. Lighting is
+  neutral only (`lib/scene-lighting.ts`: Gallery Daylight and Shadow Preview), with no warm or dusk tints.
+- **Approved exception (2026-09-13):** the 3D ADU renders in the owner's chosen exterior finish, not
+  signal orange, so the four finishes can be compared. Orange marks it as the proposal through the
+  hover/drag outline. Concept artwork (§8) still shows the ADU in orange.
 
 ## Release verification
 

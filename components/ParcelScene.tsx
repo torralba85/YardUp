@@ -79,6 +79,7 @@ const SCENE = {
   ink: "#161616", // --color-lot-ink: plat boundary, corner ticks, label text
   eligible: "#176B4C", // --color-status-eligible: compliance ring/footprint
   review: "#8A5300", // --color-status-review: over-limit boundary/ring
+  blocked: "#A82D16", // --color-status-blocked: placement ring when the ADU cannot fit
   setback: "#65655F", // --color-lot-stone: dashed drafting setback lines
   labelChip: "rgba(245,245,240,0.95)", // --color-lot-chalk: LabelSprite chip fill
   hoverGlow: "#FF5B24", // --color-lot-orange: interactive affordance glow on the ADU
@@ -95,13 +96,16 @@ const SCENE = {
   treeTrunk: "#42372d", // bark dark umber
   fence: "#6e675f", // architectural slatted fence
   driveway: "#8c887f", // honed gravel driveway
-  sun: "#ffffff", // clean gallery daylight key light
-  ambient: "#F5F5F0", // gallery-diffuse ambient fill
-  fog: "#F5F5F0", // clean daylight gallery fog
+  fog: "#F5F5F0", // clean daylight gallery fog (light colours live in lib/scene-lighting.ts)
 };
 
 const SCENE_BACKDROP =
   "#F5F5F0";
+
+/** Footprint tint and ring colour per placement tone, matching `ParcelPlan`. */
+export function placementToneColor(tone: "clear" | "review" | "blocked"): string {
+  return tone === "clear" ? SCENE.eligible : tone === "blocked" ? SCENE.blocked : SCENE.review;
+}
 
 /**
  * Canvas graph-paper tile: 5 ft minor lines inside a 25 ft major cell, inked
@@ -636,7 +640,7 @@ function ProposedAdu({
   const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
   const drag = useSceneDrag({ pose, controls, onPreview, onCommit, constrain });
   const [hovered, setHovered] = useState(false);
-  const statusColor = placementTone === "clear" ? SCENE.eligible : SCENE.review;
+  const statusColor = placementToneColor(placementTone);
 
   useEffect(() => {
     if (!hovered && !drag.active) return;
@@ -767,7 +771,7 @@ export default function ParcelScene({
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
   const [frameCommand, setFrameCommand] = useState(0);
   const [sunHour, setSunHour] = useState<number>(14);
-  const [lighting, setLighting] = useState<LightingPresetId>("golden-hour");
+  const [lighting, setLighting] = useState<LightingPresetId>("shadow-preview");
   const [quality, setQuality] = useState<SceneQuality>("balanced");
   const restoreTimer = useRef<number | null>(null);
 
@@ -1017,7 +1021,7 @@ export default function ParcelScene({
   }
 
   const preset = LIGHTING_PRESETS[lighting];
-  const goldenHour = lighting === "golden-hour";
+  const shadowPreview = lighting === "shadow-preview";
   const budget = SCENE_QUALITY[quality];
 
   return (
@@ -1069,33 +1073,31 @@ export default function ParcelScene({
               reducedMotion={reducedMotion}
             />
 
-            {/* Golden Hour stays the default presentation register; Neutral
-                Inspection exists so the four finishes can be compared under
-                even light (D7). Both are illustrative — neither is a solar
-                study. */}
+            {/* Shadow Preview is the default: the key light follows the time
+                slider. Gallery Daylight holds a fixed light so the four finishes
+                can be compared under even light (D7). Both stay neutral and
+                illustrative — neither is a solar study. */}
             <fog
               attach="fog"
               args={[
-                goldenHour ? SCENE.fog : "#e8ecef",
-                goldenHour ? 170 : 320,
-                goldenHour ? 430 : 900,
+                SCENE.fog,
+                shadowPreview ? 170 : 320,
+                shadowPreview ? 430 : 900,
               ]}
             />
             <ambientLight
-              intensity={goldenHour ? 1.15 : preset.ambientIntensity * 1.8}
-              color={goldenHour ? SCENE.ambient : preset.ambientColor}
+              intensity={shadowPreview ? 1.15 : preset.ambientIntensity * 1.8}
+              color={preset.ambientColor}
             />
             <directionalLight
               castShadow
-              position={goldenHour ? getIllustrativeSunPosition(sunHour) : preset.sunPosition}
+              position={shadowPreview ? getIllustrativeSunPosition(sunHour) : preset.sunPosition}
               intensity={
-                goldenHour
+                shadowPreview
                   ? Math.max(3.6 * (1 - Math.abs(sunHour - 13) / 10), 1.2)
                   : preset.sunIntensity * 2.2
               }
-              color={
-                goldenHour ? (sunHour < 9 || sunHour > 17 ? "#ffaa66" : SCENE.sun) : preset.sunColor
-              }
+              color={preset.sunColor}
               shadow-mapSize-width={budget.shadowResolution}
               shadow-mapSize-height={budget.shadowResolution}
               shadow-camera-left={-90}
@@ -1103,7 +1105,7 @@ export default function ParcelScene({
               shadow-camera-top={90}
               shadow-camera-bottom={-90}
             />
-            {!goldenHour && (
+            {!shadowPreview && (
               <directionalLight
                 position={preset.fillPosition}
                 intensity={preset.fillIntensity * 2}
@@ -1153,12 +1155,14 @@ export default function ParcelScene({
             <InstancedFence
               start={[-parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
               end={[-parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+              color={SCENE.fence}
               postSpacing={6}
               postHeight={4}
             />
             <InstancedFence
               start={[parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
               end={[parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+              color={SCENE.fence}
               postSpacing={6}
               postHeight={4}
             />
@@ -1245,7 +1249,7 @@ export default function ParcelScene({
               max="19"
               step="0.5"
               value={sunHour}
-              disabled={!goldenHour}
+              disabled={!shadowPreview}
               onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
               aria-label="Preview time"
               className="h-8 w-28 cursor-pointer accent-[#FF5B24] disabled:cursor-not-allowed disabled:opacity-50"
@@ -1283,7 +1287,7 @@ export default function ParcelScene({
           </div>
           <p className="text-xs leading-4 text-[#65655F]">
             Both presets are illustrative studio lighting, not a location- or
-            date-based solar study. The shadow preview applies to Golden Hour
+            date-based solar study. The preview time applies to Shadow Preview
             only. Quality tiers set pixel ratio and shadow resolution; they are
             budget settings, not measured frame rates.
           </p>

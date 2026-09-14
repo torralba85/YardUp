@@ -3,8 +3,8 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { InstancedMesh, DynamicDrawUsage } from "three";
 import { computeFenceTransforms } from "@/lib/fence-transforms";
 
-export function InstancedFence({start,end,postSpacing=8,postHeight=3}: {
-  start:[number,number,number];end:[number,number,number];postSpacing?:number;postHeight?:number;
+export function InstancedFence({start,end,color,postSpacing=8,postHeight=3}: {
+  start:[number,number,number];end:[number,number,number];color:string;postSpacing?:number;postHeight?:number;
 }) {
   const mesh=useRef<InstancedMesh>(null);
   const [sx,sy,sz]=start,[ex,ey,ez]=end;
@@ -18,6 +18,6 @@ export function InstancedFence({start,end,postSpacing=8,postHeight=3}: {
   if(!count) return null;
   return <instancedMesh ref={mesh} args={[undefined,undefined,count]} castShadow receiveShadow>
     <boxGeometry args={[1,1,1]} />
-    <meshStandardMaterial color="#8a7e6e" roughness={.88} />
+    <meshStandardMaterial color={color} roughness={.88} />
   </instancedMesh>;
 }

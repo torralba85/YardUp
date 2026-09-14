@@ -2,7 +2,7 @@ import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
-import ParcelScene from "./ParcelScene";
+import ParcelScene, { placementToneColor } from "./ParcelScene";
 
 vi.mock("@react-three/fiber", () => ({
   Canvas: () => <div data-testid="parcel-canvas" />,
@@ -124,5 +124,29 @@ describe("ParcelScene controls", () => {
     const status = screen.getByRole("status", { name: "Modeled site fit status" });
     expect(status).toHaveTextContent("120 sf of modeled coverage remains");
     expect(status).not.toHaveTextContent("Fits at this placement");
+  });
+
+  it("offers Shadow Preview, not the retired Golden Hour, as the default lighting", () => {
+    render(
+      <ParcelScene
+        parcel={parcelPresets[0]}
+        config={defaultAduConfig}
+        isCompliant
+        remainingCapacity={20}
+      />,
+    );
+
+    const presets = screen.getByRole("group", { name: "Lighting preset" });
+    expect(presets).toHaveTextContent("Gallery Daylight");
+    expect(screen.getByRole("button", { name: "Shadow Preview" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: "Golden Hour" })).not.toBeInTheDocument();
+  });
+});
+
+describe("placementToneColor", () => {
+  it("draws each placement tone in its own status colour, matching the 2D plan", () => {
+    expect(placementToneColor("clear")).toBe("#176B4C");
+    expect(placementToneColor("review")).toBe("#8A5300");
+    expect(placementToneColor("blocked")).toBe("#A82D16");
   });
 });

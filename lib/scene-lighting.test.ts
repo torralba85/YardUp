@@ -23,9 +23,18 @@ describe("scene-lighting", () => {
     expect(formatPreviewHour(23)).toBe("7 PM");
   });
 
-  it("exports neutral inspection and golden hour presets", () => {
-    expect(getLightingPreset("neutral").id).toBe("neutral");
-    expect(getLightingPreset("golden-hour").sunColor).toBe("#ffd59e");
-    expect(LIGHTING_PRESETS["golden-hour"]).toBeDefined();
+  it("exports the gallery daylight and shadow preview presets, not the retired golden hour", () => {
+    expect(getLightingPreset("neutral").name).toBe("Gallery Daylight");
+    expect(getLightingPreset("shadow-preview").name).toBe("Shadow Preview");
+    expect(Object.keys(LIGHTING_PRESETS)).toEqual(["neutral", "shadow-preview"]);
+  });
+
+  it("lights every preset with neutral A LOT MORE colours only", () => {
+    const neutrals = ["#FFFFFF", "#F5F5F0", "#DADAD3"];
+    for (const preset of Object.values(LIGHTING_PRESETS)) {
+      for (const color of [preset.sunColor, preset.ambientColor, preset.fillColor]) {
+        expect(neutrals, `${preset.id} ${color}`).toContain(color.toUpperCase());
+      }
+    }
   });
 });
