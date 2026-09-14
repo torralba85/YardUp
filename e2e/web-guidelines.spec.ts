@@ -30,6 +30,7 @@ test("desktop upload keyboard focus is visible and reset can be cancelled", asyn
   await mockTestOwnerAuth(page);
   await page.goto("/studio?parcel=oak-street");
   await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+  await page.locator("summary").filter({ hasText: "Browse designs" }).click();
   await page.locator("summary").filter({ hasText: "Match your own home" }).click();
   await page.getByRole("checkbox", { name: /agree to send this photo to OpenAI/ }).check();
   const upload = page.getByLabel(/Choose house photo/);

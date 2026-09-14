@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -50,7 +50,6 @@ import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
-import MetricsSummary from "./studio/MetricsSummary";
 import ReportPreview from "./studio/ReportPreview";
 import CertificatePanel from "./studio/CertificatePanel";
 import BuildersPanel from "./studio/BuildersPanel";
@@ -878,10 +877,8 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   // at those actions in later phases, not as navigation locks.
   const steps = deriveStepStates(activeStep, { hasParcel: true });
   const currentStepMeta = STUDIO_STEPS.find((s) => s.id === activeStep)!;
-  // The income band leads steps 2–5; the "Your Lot" step leads with the search
-  // itself. Metrics support only the two working steps, not every screen.
+  // Project context follows the lot step; detailed figures open on demand.
   const showsVerdictBand = activeStep !== "lot";
-  const showsMetrics = activeStep === "feasibility" || activeStep === "design";
 
   return (
     <StudioShell
@@ -913,6 +910,11 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
 
         {activeStep === "lot" ? (
           <LotStep
+            parcelId={parcelId}
+            onPresetChange={(id) => {
+              setParcelId(id);
+              resetToPreset(parcelPresets.find((preset) => preset.id === id) ?? parcelPresets[0]);
+            }}
             sceneNode={sceneNode}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
@@ -950,6 +952,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             <div className="lf-studio-pane flex flex-col lg:flex-row">
               <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={setViewMode} />
               <FeasibilityInspector
+                designOnly
                 parcelId={parcelId}
                 config={config}
                 assumptions={assumptions}
@@ -964,15 +967,21 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
                 saveNotice={saveNotice}
               />
             </div>
-            <InspirationGalleryPanel
-              parcel={activeParcel}
-              config={config}
-              generatedConcepts={generatedConcepts}
-              onGenerationComplete={handleGenerationComplete}
-              onViewComparison={handleViewComparison}
-              styleMatchKey={styleMatchKey}
-              onApply={(item) => setConfig(configForInspirationItem(item, config))}
-            />
+            <details className="group border-t border-lf-hairline bg-lf-card">
+              <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">
+                Browse designs
+                <span aria-hidden="true" className="group-open:rotate-45">+</span>
+              </summary>
+              <InspirationGalleryPanel
+                parcel={activeParcel}
+                config={config}
+                generatedConcepts={generatedConcepts}
+                onGenerationComplete={handleGenerationComplete}
+                onViewComparison={handleViewComparison}
+                styleMatchKey={styleMatchKey}
+                onApply={(item) => setConfig(configForInspirationItem(item, config))}
+              />
+            </details>
           </>
         ) : activeStep === "certificate" ? (
           <CertificatePanel
@@ -988,8 +997,6 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         ) : (
           <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
         )}
-
-        {showsMetrics && <MetricsSummary result={result} />}
       </section>
 
       {reportOpen && (
@@ -1073,7 +1080,7 @@ function SceneSection({
   return (
     <section
       aria-label="Parcel massing scene"
-      className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-hidden border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
+      className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-y-auto border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
     >
       <SceneViewport
         sceneNode={sceneNode}
@@ -1128,6 +1135,8 @@ function SceneViewToggle({
 
 /** Props for {@link LotStep}. */
 interface LotStepProps {
+  parcelId: string;
+  onPresetChange: (id: string) => void;
   sceneNode: React.ReactNode;
   viewMode: SceneViewMode;
   onViewModeChange: (mode: SceneViewMode) => void;
@@ -1147,6 +1156,8 @@ interface LotStepProps {
  * one-tap path onward to Feasibility & Rules.
  */
 function LotStep({
+  parcelId,
+  onPresetChange,
   sceneNode,
   viewMode,
   onViewModeChange,
@@ -1185,17 +1196,25 @@ function LotStep({
             </div>
           )}
         </div>
-        {hasParcel && (
+        <details className="mt-4 max-w-xl border-y border-lf-hairline">
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">Try a sample property</summary>
+          <label className="block pb-4 text-sm text-lf-muted">
+            Sample Property
+            <select value={parcelId} onChange={(event) => onPresetChange(event.target.value)}
+              className="mt-2 block min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3 text-lf-espresso">
+              {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({preset.lotArea.toLocaleString()} sf)</option>)}
+            </select>
+          </label>
+        </details>
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <div>
+            {hasParcel && <div>
               <p className="lf-kicker-dense text-lf-muted">If built</p>
               <MoneyFigure value={monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
-            </div>
+            </div>}
             <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
-              See what it could earn
+              Continue to Rules &amp; Fit
             </Button>
           </div>
-        )}
       </div>
       <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={onViewModeChange} />
     </div>

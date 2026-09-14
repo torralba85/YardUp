@@ -59,6 +59,8 @@ function clamp(value: number, min: number, max: number) {
 
 /** Props for {@link FeasibilityInspector}. */
 export interface FeasibilityInspectorProps {
+  /** Desktop Design already has a project journey; show only design controls. */
+  designOnly?: boolean;
   initialStep?: 1 | 2 | 3;
   /** Id of the active parcel preset. */
   parcelId: string;
@@ -95,6 +97,7 @@ export interface FeasibilityInspectorProps {
  * @param props - The {@link FeasibilityInspectorProps}.
  */
 export default function FeasibilityInspector({
+  designOnly = false,
   initialStep = 1,
   parcelId,
   config,
@@ -180,29 +183,29 @@ export default function FeasibilityInspector({
               id="feasibility-heading"
               className="text-2xl font-semibold tracking-tight text-lf-espresso"
             >
-              Feasibility Studio
+              {designOnly ? "Design your ADU" : "Feasibility Studio"}
             </h2>
             <p className="mt-1 text-sm text-lf-muted">
-              Confirm the lot, shape the ADU, then test the income case.
+              {designOnly ? "Choose a size, roof, and finish." : "Confirm the lot, shape the ADU, then test the income case."}
             </p>
           </div>
-          <button
+          {!designOnly && <button
             type="button"
             onClick={handleReset}
             className="flex h-11 items-center gap-2 rounded-[3px] px-4 text-sm font-medium text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
-          </button>
+          </button>}
         </div>
 
-        <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />
+        {!designOnly && <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />}
 
         {/* Accordion steps */}
         <div className="flex-1 divide-y divide-lf-hairline">
 
           {/* Step 1 — Your Property */}
-          <AccordionStep
+          {!designOnly && <AccordionStep
             step={1}
             title="Your Property"
             isOpen={openStep === 1}
@@ -318,11 +321,12 @@ export default function FeasibilityInspector({
                 Next: Design your ADU
               </Button>
             </div>
-          </AccordionStep>
+          </AccordionStep>}
 
           {/* Step 2 — Design Your ADU */}
           <AccordionStep
             step={2}
+            plain={designOnly}
             title="Design Your ADU"
             isOpen={openStep === 2}
             isComplete={completedSteps.has(2) && openStep !== 2}
@@ -362,8 +366,12 @@ export default function FeasibilityInspector({
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <LabelRow label="Fine-tune dimensions" />
+              <details open={!designOnly} className="group/dimensions border-y border-lf-hairline">
+                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">
+                  Fine-tune dimensions
+                  <ChevronDown size={16} aria-hidden="true" className="group-open/dimensions:rotate-180" />
+                </summary>
+                <div className="space-y-4 pb-4">
                 <div className="grid grid-cols-3 gap-2">
                   <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
                   <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
@@ -389,7 +397,8 @@ export default function FeasibilityInspector({
                     onConfigChange({ ...config, length: value, footprint: config.width * value })
                   }
                 />
-              </div>
+                </div>
+              </details>
 
               <div className="space-y-3">
                 <LabelRow label="Roof Style" />
@@ -453,7 +462,7 @@ export default function FeasibilityInspector({
                 {config.includeOpenings ? "Remove Entry & Windows" : "Add Entry & Windows"}
               </Button>
 
-              <Button
+              {!designOnly && <Button
                 type="button"
                 variant="secondary"
                 size="md"
@@ -462,12 +471,12 @@ export default function FeasibilityInspector({
                 rightIcon={<ChevronDown size={15} className="-rotate-90" />}
               >
                 Next: Run the numbers
-              </Button>
+              </Button>}
             </div>
           </AccordionStep>
 
           {/* Step 3 — Run the Numbers */}
-          <AccordionStep
+          {!designOnly && <AccordionStep
             step={3}
             title="Run the Numbers"
             isOpen={openStep === 3}
@@ -515,21 +524,27 @@ export default function FeasibilityInspector({
                 </div>
               )}
             </div>
-          </AccordionStep>
+          </AccordionStep>}
 
         </div>
 
         {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
         <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
-          <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2">
+          {designOnly && result.warnings.length > 0 && (
+            <div role="alert" className="flex items-start gap-2 text-sm text-lf-amber-ink">
+              <TriangleAlert size={17} aria-hidden="true" className="mt-0.5 shrink-0" />
+              <p><strong>Review needed.</strong> {result.warnings[0]}</p>
+            </div>
+          )}
+          {!designOnly && <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2">
             <div className="lf-kicker-dense font-bold leading-4 text-lf-muted">
               Next best action
             </div>
             <p className="mt-1 text-xs leading-5 text-lf-espresso">
               {nextActionByStep[openStep]}
             </p>
-          </div>
-          <Button
+          </div>}
+          {!designOnly && <Button
             type="button"
             variant="commit"
             size="lg"
@@ -538,11 +553,11 @@ export default function FeasibilityInspector({
             leftIcon={<Sparkles size={16} />}
           >
             Create my ADU report
-          </Button>
+          </Button>}
           {onSaveScenario && (
             <Button
               type="button"
-              variant="secondary"
+              variant={designOnly ? "commit" : "secondary"}
               size="md"
               fullWidth
               onClick={onSaveScenario}
@@ -609,6 +624,7 @@ function JourneyProgress({
 }
 
 function AccordionStep({
+  plain = false,
   step,
   title,
   isOpen,
@@ -616,6 +632,7 @@ function AccordionStep({
   onToggle,
   children,
 }: {
+  plain?: boolean;
   step: number;
   title: string;
   isOpen: boolean;
@@ -624,6 +641,7 @@ function AccordionStep({
   children: React.ReactNode;
 }) {
   const reduceMotion = usePrefersReducedMotion();
+  if (plain) return <div className="px-6 py-5">{children}</div>;
   return (
     <div>
       <button

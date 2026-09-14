@@ -14,6 +14,7 @@ import {
   buildAduSceneModel,
   buildExistingHouseSceneModel,
   buildParcelOutline,
+  EXISTING_HOUSE_ROOF_OVERHANG_FT,
   SLAB_DATUM_FT,
   type LocalBounds,
   type Pose2D,
@@ -29,6 +30,7 @@ import { ParcelPlan } from "@/components/studio/ParcelPlan";
 import { PlacementEditor } from "@/components/studio/PlacementEditor";
 import { SceneCameraController, SceneCameras } from "@/components/studio/SceneCameraController";
 import { SceneStatus } from "@/components/studio/SceneStatus";
+import { SceneTools } from "@/components/studio/SceneTools";
 import { SceneVisibility } from "@/components/studio/SceneVisibility";
 
 /** Minimal error boundary that falls back to a render function. */
@@ -424,7 +426,7 @@ function GableRoof({
   wallHeight: number;
   ridgeHeight: number;
 }) {
-  const overhang = 0.8;
+  const overhang = EXISTING_HOUSE_ROOF_OVERHANG_FT;
   const eaveW = width / 2 + overhang;
   const eaveZ = depth / 2 + overhang;
   const ridgeY = wallHeight + ridgeHeight;
@@ -773,6 +775,7 @@ export default function ParcelScene({
   const [sunHour, setSunHour] = useState<number>(14);
   const [lighting, setLighting] = useState<LightingPresetId>("shadow-preview");
   const [quality, setQuality] = useState<SceneQuality>("balanced");
+  const [utilityMode, setUtilityMode] = useState(false);
   const restoreTimer = useRef<number | null>(null);
 
   // --- Pose ---------------------------------------------------------------
@@ -1027,7 +1030,7 @@ export default function ParcelScene({
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#F5F5F0]">
       <div
-        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#161616] lg:min-h-[360px]"
+        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#161616]"
         style={{ backgroundColor: SCENE_BACKDROP }}
         tabIndex={0}
         role="group"
@@ -1057,7 +1060,7 @@ export default function ParcelScene({
             )}
             {/* Stops drawing entirely while the scene is scrolled out of view
                 or the tab is hidden (D5). */}
-            <SceneVisibility />
+            <SceneVisibility utilityMode={utilityMode} />
             <SceneCameras mode={viewMode} />
             <OrbitControls
               enableDamping
@@ -1220,7 +1223,8 @@ export default function ParcelScene({
         isProxy={parcelOutline.isProxy}
       />
 
-      <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
+      <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}>
+        <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
 
       <details className="shrink-0 border-t border-[#DADAD3] bg-[#F5F5F0] px-3">
         <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#161616]">
@@ -1296,6 +1300,7 @@ export default function ParcelScene({
           </p>
         </div>
       </details>
+      </SceneTools>
     </div>
   );
 }

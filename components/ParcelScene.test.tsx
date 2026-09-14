@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
+import { getDefaultAduPose } from "@/lib/site-fit";
 import ParcelScene, { placementToneColor } from "./ParcelScene";
 
 vi.mock("@react-three/fiber", () => ({
@@ -106,7 +107,9 @@ describe("ParcelScene controls", () => {
     expect(onPoseCommit).not.toHaveBeenCalled();
     fireEvent.keyUp(scene, { key: "ArrowLeft" });
     expect(onPoseCommit).toHaveBeenCalledTimes(1);
-    expect(onPoseCommit.mock.calls[0][0]).toMatchObject({ rotationDeg: 0 });
+    const start = getDefaultAduPose(parcelPresets[0], defaultAduConfig);
+    expect(onPoseCommit.mock.calls[0][0]).toMatchObject({ rotationDeg: start.rotationDeg, z: start.z });
+    expect(onPoseCommit.mock.calls[0][0].x).toBeLessThan(start.x);
   });
 
   it("reports placement and coverage as two separate outcomes", () => {

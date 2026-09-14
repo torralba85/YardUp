@@ -88,10 +88,6 @@ export default function ConstraintsPanel({
 }: ConstraintsPanelProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
-  // Address entry lives here too. Previously the only search was inside the
-  // Massing tab's inspector, so a user on the default Feasibility view had no
-  // way to make the studio about their own lot. Self-wire to parcel context
-  // exactly as FeasibilityInspector does.
   const { parcelLoading, parcelError, searchParcel, searchByAddress } = useParcel();
 
   function handleAddressSelect(found: AddressSearchResult) {
@@ -175,6 +171,7 @@ export default function ConstraintsPanel({
               label: RENT_SCENARIO_LABELS[scenario],
             }))}
           />
+          <p className="mt-2 text-xs text-[#65655F]">{result.rentBasis} · Estimates, not guarantees.</p>
         </div>
 
         <div className="mt-[18px] border-t border-[#DADAD3] pt-[18px]">
