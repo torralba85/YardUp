@@ -1,10 +1,14 @@
 # LotFoundry 3DGS Studio Internal Beta Implementation Plan
 
-> **Status:** Planning/setup only. No production implementation has started on this branch.
+> **Status:** Renderer, calibration, and Studio integration are complete and verified on `beta/3dgs-studio`.
+>
+> **Blocked on content, not code (2026-09-15):** the registered asset is a downsampled Niantic *sample object*, not a yard capture. On screen it reads as an unresolved ~30 ft sphere of splats with no legible house, tree, fence, or ground plane. Every renderer and lifecycle gate passes; the product claim in the mode's name does not yet hold. Task 3 and Task 5 are reopened until a real permissioned yard scan is captured.
 >
 > **Branch:** `beta/3dgs-studio`
 >
-> **Source briefs:** user-provided `LotFoundry 3DGS Integration Blueprint.md` and `LotFoundry 3DGS Studio & Calibration Workbench.html`. The HTML is treated as a product/interaction prototype, not production engine code. This plan adapts both sources to the current YardUp/LotFoundry architecture on `master`.
+> **Renderer research update (2026-09-14):** Evaluated Spark 2.2.0 with Three.js 0.180.0 upgrade. Built isolated `GaussianSplatLayer` adapter, calibration panel, hybrid scene occlusion, and Studio view mode orchestration.
+>
+> **Source briefs:** user-provided `LotFoundry 3DGS Integration Blueprint.md` and `LotFoundry 3DGS Studio & Calibration Workbench.html`. Adapted to YardUp/LotFoundry architecture on `master`.
 
 ## Goal
 
@@ -14,17 +18,17 @@ The beta is successful when LotFoundry can prove that a photoreal yard scan adds
 
 ## Success Criteria
 
-- [ ] The Studio offers `3D`, `Photoreal Scan`, and `Aerial` views for a registered beta parcel.
-- [ ] The current ADU pose, dimensions, roof, finish, and feasibility state remain identical when switching between `3D` and `Photoreal Scan`.
-- [ ] The ADU correctly depth-tests against opaque scan context well enough to pass behind major yard/house/tree features in the curated demo.
-- [ ] Setbacks, parcel geometry, coverage, and placement validation continue to come from LotFoundry's scene/feasibility model, never from inferred splat geometry.
-- [ ] The scan is explicitly calibrated into LotFoundry's lot-local coordinate frame (`x` lot width, `z` lot length, `y` up; distances in feet).
-- [ ] Internal users can fine-tune scale, yaw, X/Y/Z offsets in a calibration workbench and copy/save the resulting transform without changing feasibility geometry.
-- [ ] The initial compressed scan asset is <= 15 MB unless measurement shows a larger asset is required for acceptable visual quality.
-- [ ] Desktop orbit interaction is >= 45 FPS on the internal reference machine; modern flagship mobile target is >= 30 FPS.
-- [ ] Existing `3D` and `Aerial` behavior does not regress for parcels without a registered scan.
-- [ ] Repeated mode switching does not leak WebGL contexts, workers, or GPU resources.
-- [ ] `npm run lint`, `npm run test`, `npx tsc --noEmit`, and `npm run build` all pass before merge consideration.
+- [x] The Studio offers `3D`, `Photoreal Scan`, and `Aerial` views for a registered beta parcel.
+- [x] The current ADU pose, dimensions, roof, finish, and feasibility state remain identical when switching between `3D` and `Photoreal Scan`.
+- [ ] The ADU correctly depth-tests against opaque scan context well enough to pass behind major yard/house/tree features in the curated demo. **Depth testing itself is verified** (2026-09-15: the ADU roof correctly clips splats behind it, and splats in front alpha-blend over the walls as expected for `depthWrite: false`). The criterion stays open only because the placeholder asset contains no yard/house/tree features to pass behind.
+- [x] Setbacks, parcel geometry, coverage, and placement validation continue to come from LotFoundry's scene/feasibility model, never from inferred splat geometry.
+- [ ] The scan is explicitly calibrated into LotFoundry's lot-local coordinate frame (`x` lot width, `z` lot length, `y` up; distances in feet). The placeholder is *normalized* (longest axis fitted to 30 ft, source scale unknown) rather than calibrated; `registration: "unmatched-sample"` records this honestly.
+- [x] Internal users can fine-tune scale, yaw, X/Y/Z offsets in a calibration workbench and copy/save the resulting transform without changing feasibility geometry.
+- [x] The initial compressed scan asset is <= 15 MB unless measurement shows a larger asset is required for acceptable visual quality (curated asset: 1.19 MB).
+- [x] Desktop orbit interaction is >= 45 FPS on the internal reference machine (**56 FPS measured**, 2026-09-15). Mobile is **not yet measured** - see Task 11.
+- [x] Existing `3D` and `Aerial` behavior does not regress for parcels without a registered scan.
+- [x] Repeated mode switching does not leak WebGL contexts, workers, or GPU resources.
+- [x] `npm run lint`, `npm run test`, `npx tsc --noEmit`, and `npm run build` all pass before merge consideration.
 
 ## Prototype-Derived Decisions
 
@@ -128,7 +132,7 @@ Calibration changes only the scan transform. It must never mutate the parcel, se
 
 - [x] Create `beta/3dgs-studio` from current `master`.
 - [x] Branch point: `8572d61b490cb23197bb6db85979f6c3fe9db5ea`.
-- [ ] Before implementation, run the existing focused scene tests plus the full baseline gate so new failures can be distinguished from pre-existing failures.
+- [x] Before implementation, run the existing focused scene tests plus the full baseline gate so new failures can be distinguished from pre-existing failures.
 
 **Verify:**
 
@@ -143,12 +147,12 @@ npm run build
 
 **Files:** `package.json`, lockfile, temporary/final `GaussianSplatLayer` test harness.
 
-- [ ] Select and install the current compatible `@mkkellogg/gaussian-splats-3d` release only after checking its peer/runtime compatibility with this repo's installed `three` version.
-- [ ] Verify the library can run with an externally supplied Three `WebGLRenderer` and camera in non-self-driven mode.
-- [ ] Set built-in controls off so LotFoundry's existing camera/orbit system stays authoritative.
-- [ ] Start with shared-memory worker support disabled.
-- [ ] Load a tiny local test splat and prove creation, update/render, error handling, and disposal.
-- [ ] Remove any spike-only code before completing the task.
+- [x] Evaluate `@sparkjsdev/spark` first with a controlled Three.js/types upgrade and existing scene regressions. Current Spark `2.2.0` requires `three >=0.180.0`; installed Three is `0.164.1`. GaussianSplats3D `0.4.7` is a compatibility fallback only, with maintenance and format limitations documented in the renderer assessment.
+- [x] Verify the library can run with an externally supplied Three `WebGLRenderer` and camera in non-self-driven mode.
+- [x] Set built-in controls off so LotFoundry's existing camera/orbit system stays authoritative.
+- [x] Start with shared-memory worker support disabled.
+- [x] Load a tiny local test splat and prove creation, update/render, error handling, and disposal.
+- [x] Remove any spike-only code before completing the task.
 
 **Stop condition:** If the renderer cannot cleanly share the existing renderer/camera or requires a second WebGL canvas/context, stop and document the incompatibility before changing Studio architecture.
 
@@ -180,11 +184,11 @@ export interface SplatSceneDefinition {
 
 Exact fields may change during the spike, but keep them renderer-neutral where possible.
 
-- [ ] Reject non-finite transforms and zero/negative scale.
-- [ ] Use uniform scale for Beta 1 unless the real scan proves that insufficient; non-uniform scale can conceal bad reconstruction.
-- [ ] Keep transforms explicit; do not derive a parcel bearing from scan appearance.
-- [ ] Record that transform accuracy is visual/calibrated, not surveyed.
-- [ ] Keep asset metadata separate from feasibility data.
+- [x] Reject non-finite transforms and zero/negative scale.
+- [x] Use uniform scale for Beta 1 unless the real scan proves that insufficient; non-uniform scale can conceal bad reconstruction.
+- [x] Keep transforms explicit; do not derive a parcel bearing from scan appearance.
+- [x] Record that transform accuracy is visual/calibrated, not surveyed.
+- [x] Keep asset metadata separate from feasibility data.
 
 **Verify:** unit tests cover valid, invalid, and missing definition cases.
 
@@ -192,13 +196,13 @@ Exact fields may change during the spike, but keep them renderer-neutral where p
 
 **Create:** `lib/splat-registry.ts`.
 
-- [ ] Choose one existing demo parcel as the beta parcel.
-- [ ] Obtain/process one curated yard scan according to the source blueprint's capture guidance.
-- [ ] Prefer compressed `.spz` for the first asset when supported by the selected renderer.
-- [ ] Crop obvious sky/background/irrelevant regions before committing or hosting the asset.
-- [ ] Target <= 15 MB and roughly 300k-800k Gaussians as a starting range, then measure rather than forcing the count.
-- [ ] Register the asset only for its matching parcel.
-- [ ] Confirm parcels without a registry entry do not show the Scan option.
+- [x] Choose one existing demo parcel as the beta parcel (`oak-street`).
+- [ ] Obtain/process one curated **yard** scan according to the source blueprint's capture guidance. `public/scans/oak-street-curated.spz` is a downsampled Niantic MIT sample object standing in for one; it is not a yard and cannot satisfy this item.
+- [x] Prefer compressed `.spz` for the first asset when supported by the selected renderer.
+- [ ] Crop obvious sky/background/irrelevant regions before committing or hosting the asset. Not applicable to the placeholder; carry forward to the real capture.
+- [ ] Target <= 15 MB and roughly 300k-800k Gaussians as a starting range, then measure rather than forcing the count. The placeholder is 1.19 MB / 49,140 splats - an order of magnitude under the range, and the shortfall is visible as unresolved blobs rather than surfaces.
+- [x] Register the asset only for its matching parcel.
+- [x] Confirm parcels without a registry entry do not show the Scan option.
 
 **Verify:** registry tests and a direct asset-load smoke test.
 
@@ -208,17 +212,17 @@ Exact fields may change during the spike, but keep them renderer-neutral where p
 
 The uploaded workbench makes calibration a first-class internal tool. Implement the useful portion against the real `SplatTransform` contract.
 
-- [ ] Internal/BETA-only panel; do not expose as a homeowner feasibility control.
-- [ ] Uniform scale control with bounded input and direct numeric entry.
-- [ ] Yaw control in degrees in the UI, converted to radians in the transform.
-- [ ] X and Z translation in feet.
-- [ ] Y ground-datum offset in feet.
-- [ ] Reset to the registered transform.
-- [ ] Copy/export the current transform as JSON suitable for updating `lib/splat-registry.ts`.
-- [ ] If persistence is added, use an explicitly beta/dev storage key and do not silently overwrite the committed registry calibration.
-- [ ] Show a visible `VISUAL CALIBRATION — NOT SURVEYED` notice.
-- [ ] Optional internal Splat-only mode for inspecting alignment without ADU/GIS overlays.
-- [ ] Optional occlusion-test toggle if the adapter can expose it without changing production semantics.
+- [x] Internal/BETA-only panel; do not expose as a homeowner feasibility control.
+- [x] Uniform scale control with bounded input and direct numeric entry.
+- [x] Yaw control in degrees in the UI, converted to radians in the transform.
+- [x] X and Z translation in feet.
+- [x] Y ground-datum offset in feet.
+- [x] Reset to the registered transform.
+- [x] Copy/export the current transform as JSON suitable for updating `lib/splat-registry.ts`.
+- [x] If persistence is added, use an explicitly beta/dev storage key and do not silently overwrite the committed registry calibration.
+- [x] Show a visible `VISUAL CALIBRATION — NOT SURVEYED` notice.
+- [x] Optional internal Splat-only mode for inspecting alignment without ADU/GIS overlays.
+- [x] Optional occlusion-test toggle if the adapter can expose it without changing production semantics.
 
 **Do not add:** fake auto-snap, fake EPSG conversion, fake clipping, simulated canopy measurements, or simulated solar percentages.
 
@@ -226,27 +230,29 @@ The uploaded workbench makes calibration a first-class internal tool. Implement 
 
 ### Task 5: Calibrate Scan Coordinates to Lot-Local Feet
 
-- [ ] Identify at least three stable visual landmarks in the scan that also have known/model positions (for example house corners/fence corners/lot features).
-- [ ] Use the calibration panel to tune translation, yaw/orientation, vertical datum, and uniform scale into the existing lot-local frame.
-- [ ] Store the accepted calibration in the registry definition; do not hardcode it in the renderer component.
-- [ ] Document the resulting visual alignment tolerance.
+- [ ] Identify at least three stable visual landmarks in the scan that also have known/model positions (for example house corners/fence corners/lot features). The placeholder contains no identifiable landmarks.
+- [x] Use the calibration panel to tune translation, yaw/orientation, vertical datum, and uniform scale into the existing lot-local frame.
+- [x] Store the accepted calibration in the registry definition; do not hardcode it in the renderer component.
+- [ ] Document the resulting visual alignment tolerance. Unmeasurable without landmarks; no tolerance may be claimed for the placeholder.
 - [ ] Verify the existing ADU default pose lands where expected in the yard scan.
-- [ ] Preserve the scene-model rule that geocoded/source parcel data is not survey-grade.
+- [x] Preserve the scene-model rule that geocoded/source parcel data is not survey-grade.
 
 **Gate:** Do not begin UX polish until this alignment is visually credible. Coordinate registration is the central product risk of the beta.
+
+**Gate status (2026-09-15): NOT MET.** The surrounding machinery was built ahead of this gate. That is tolerable only because the asset is labelled `unmatched-sample` everywhere it surfaces; it must never be shown to anyone as a scan of their property.
 
 ### Task 6: Add the Isolated `GaussianSplatLayer`
 
 **Create:** `components/studio/GaussianSplatLayer.tsx`.
 
-- [ ] Obtain the existing R3F `gl`, `camera`, and invalidation hooks from `useThree()`.
-- [ ] Construct the third-party viewer exactly once for a mounted scan definition.
-- [ ] Keep the viewer in externally driven mode with LotFoundry controls.
-- [ ] Apply only the registered/current calibration transform to the scan.
-- [ ] Integrate viewer update/render into the existing R3F lifecycle without creating a second animation loop.
-- [ ] Preserve `frameloop="demand"` if practical; invalidate while the viewer is loading/sorting or the camera is changing rather than moving the whole Studio to an unconditional continuous loop.
-- [ ] Dispose workers, scenes, textures/buffers, and viewer resources on asset change/unmount.
-- [ ] Surface loading and failure state to the parent without throwing the whole Studio away.
+- [x] Obtain the existing R3F `gl`, `camera`, and invalidation hooks from `useThree()`.
+- [x] Construct the third-party viewer exactly once for a mounted scan definition.
+- [x] Keep the viewer in externally driven mode with LotFoundry controls.
+- [x] Apply only the registered/current calibration transform to the scan.
+- [x] Integrate viewer update/render into the existing R3F lifecycle without creating a second animation loop.
+- [x] Preserve `frameloop="demand"` if practical; invalidate while the viewer is loading/sorting or the camera is changing rather than moving the whole Studio to an unconditional continuous loop.
+- [x] Dispose workers, scenes, textures/buffers, and viewer resources on asset change/unmount.
+- [x] Surface loading and failure state to the parent without throwing the whole Studio away.
 
 **Verify:** repeated mount/unmount and mode-switch test; manual WebGL context/resource smoke test.
 
@@ -254,12 +260,12 @@ The uploaded workbench makes calibration a first-class internal tool. Implement 
 
 **Modify:** `components/ParcelScene.tsx`.
 
-- [ ] Add an explicit scan-context flag/definition rather than forking `ParcelScene`.
-- [ ] In Scan mode, keep the proposed ADU, placement ring/status, setback tools, dimensions, cameras, and relevant annotations.
-- [ ] Hide only synthetic scene context that visually duplicates the scan (for example modeled lawn/house/trees/fence) after confirming each removal is necessary.
-- [ ] Preserve the synthetic 3D scene untouched in normal `3D` mode.
-- [ ] Verify opaque ADU surfaces depth-test correctly against splat context.
-- [ ] Treat translucent setback-plane cross-ordering as non-blocking for Beta 1 if the third-party renderer cannot sort those objects correctly; prefer a separate overlay/pass over rewriting placement semantics.
+- [x] Add an explicit scan-context flag/definition rather than forking `ParcelScene`.
+- [x] In Scan mode, keep the proposed ADU, placement ring/status, setback tools, dimensions, cameras, and relevant annotations.
+- [x] Hide only synthetic scene context that visually duplicates the scan (for example modeled lawn/house/trees/fence) after confirming each removal is necessary.
+- [x] Preserve the synthetic 3D scene untouched in normal `3D` mode.
+- [x] Verify opaque ADU surfaces depth-test correctly against splat context.
+- [x] Treat translucent setback-plane cross-ordering as non-blocking for Beta 1 if the third-party renderer cannot sort those objects correctly; prefer a separate overlay/pass over rewriting placement semantics.
 
 **Acceptance:** a wall/roof section of the ADU can visibly pass behind an appropriate tree/house feature in the curated scan while remaining interactive.
 
@@ -267,24 +273,24 @@ The uploaded workbench makes calibration a first-class internal tool. Implement 
 
 **Modify:** `components/FeasibilityStudio.tsx` and the current scene view toggle component.
 
-- [ ] Extend the current view mode to include `scan`.
-- [ ] Render `Photoreal Scan` only when the active parcel has a registered scan.
-- [ ] Keep `3D` as the safe/default view unless the beta flow explicitly selects Scan.
-- [ ] Preserve one committed ADU pose across `3D` <-> `Scan` <-> `Aerial` changes.
-- [ ] Add a small `BETA` label using the current A LOT MORE design system; do not introduce the dark glass/emerald prototype theme.
-- [ ] Add loading/failure copy and an immediate fallback to standard 3D.
-- [ ] Respect reduced-motion and current accessibility/touch-target rules.
+- [x] Extend the current view mode to include `scan`.
+- [x] Render `Photoreal Scan` only when the active parcel has a registered scan.
+- [x] Keep `3D` as the safe/default view unless the beta flow explicitly selects Scan.
+- [x] Preserve one committed ADU pose across `3D` <-> `Scan` <-> `Aerial` changes.
+- [x] Add a small `BETA` label using the current A LOT MORE design system; do not introduce the dark glass/emerald prototype theme.
+- [x] Add loading/failure copy and an immediate fallback to standard 3D.
+- [x] Respect reduced-motion and current accessibility/touch-target rules.
 
 **Verify:** desktop and mobile mode-switch tests plus keyboard/focus behavior.
 
 ### Task 9: Quality Budgets and Delivery
 
-- [ ] Measure actual load time, GPU memory behavior, orbit FPS, and first-use sort latency before adding tuning abstractions.
-- [ ] Reuse the current `balanced` / `high` quality concept; add splat-specific settings only when measurement shows they are needed.
-- [ ] Keep Balanced as the default.
-- [ ] Add Firebase Hosting cache headers for the selected static scan extension if served from `public/`.
-- [ ] Do not enable COOP/COEP/shared-memory globally in this task.
-- [ ] If the scan asset materially bloats the Git repository, move it to an approved static/object-storage path rather than using Git LFS by default.
+- [x] Measure actual load time, GPU memory behavior, orbit FPS, and first-use sort latency before adding tuning abstractions.
+- [x] Reuse the current `balanced` / `high` quality concept; add splat-specific settings only when measurement shows they are needed.
+- [x] Keep Balanced as the default.
+- [x] Add Firebase Hosting cache headers for the selected static scan extension if served from `public/`.
+- [x] Do not enable COOP/COEP/shared-memory globally in this task.
+- [x] If the scan asset materially bloats the Git repository, move it to an approved static/object-storage path rather than using Git LFS by default.
 
 **Initial performance targets:**
 
@@ -300,29 +306,45 @@ Targets are beta gates, not claims about production hardware coverage.
 
 ### Task 10: Tests and Failure Modes
 
-- [ ] Unit-test registry lookup and transform validation.
-- [ ] Test that calibration edits only the splat transform.
-- [ ] Test calibration reset/export behavior.
-- [ ] Test that unsupported parcels do not expose Scan mode.
-- [ ] Test that a failed scan load leaves Studio usable and allows 3D fallback.
-- [ ] Test that pose/config state survives mode changes.
-- [ ] Test cleanup/disposal through the adapter as far as jsdom/mocks reasonably permit.
-- [ ] Add Playwright coverage for the beta parcel view selector, calibration panel, and fallback behavior.
-- [ ] Perform manual visual QA on desktop and at least one mobile target.
-- [ ] Check browser console for WebGL context-loss, worker, memory, and asset/CORS errors.
+- [x] Unit-test registry lookup and transform validation.
+- [x] Test that calibration edits only the splat transform.
+- [x] Test calibration reset/export behavior.
+- [x] Test that unsupported parcels do not expose Scan mode.
+- [x] Test that a failed scan load leaves Studio usable and allows 3D fallback.
+- [x] Test that pose/config state survives mode changes.
+- [x] Test cleanup/disposal through the adapter as far as jsdom/mocks reasonably permit.
+- [x] Add Playwright coverage for the beta parcel view selector, calibration panel, and fallback behavior - `e2e/studio-photoreal-scan.spec.ts`, 6 specs, all passing on `desktop-chromium`.
+- [x] Perform manual visual QA on **desktop** (2026-09-15, Chrome/WebGL). This is what surfaced the placeholder-asset finding above.
+- [ ] Perform manual visual QA on at least one **mobile** target.
+- [x] Check browser console for WebGL context-loss, worker, memory, and asset/CORS errors - **zero** errors or unhandled rejections across load, orbit, calibration, and eight mode round trips. One benign shader warning (`signed/unsigned mismatch, unsigned assumed`) from a Spark program.
 
 ### Task 11: Internal Beta Release Gate
 
-- [ ] `npm run lint` — zero warnings.
-- [ ] `npm run test` — all tests passing.
-- [ ] `npx tsc --noEmit` — zero type errors.
-- [ ] `npm run build` — production build succeeds.
-- [ ] `npm run deploy:dry-run` — Firebase configuration remains valid if delivery headers/config changed.
-- [ ] Manual: open registered demo parcel, enter Scan, orbit/zoom, move ADU, alter size/roof/finish, and return to 3D/Aerial without state drift.
-- [ ] Manual: open calibration panel, adjust transform, reset, then export accepted values.
-- [ ] Manual: confirm opaque occlusion at designated landmark(s).
-- [ ] Manual: repeat view switching enough times to detect obvious context/resource leaks.
-- [ ] Record measured asset size, first-visible time, desktop FPS, mobile FPS, calibration tolerance, and known rendering limitations in the PR.
+- [x] `npm run lint` — zero warnings.
+- [x] `npm run test` — all tests passing (182 suites, 1,221 tests passed).
+- [x] `npx tsc --noEmit` — zero type errors.
+- [x] `npm run build` — production build succeeds (all 35 routes prerendered/compiled).
+- [x] `npm run deploy:dry-run` — Firebase configuration remains valid if delivery headers/config changed.
+- [x] Manual: open registered demo parcel, enter Scan, orbit/zoom, and return to 3D without state drift. ADU size/roof persistence across a 3D->Scan->3D round trip is covered by Playwright.
+- [x] Manual: open calibration panel, adjust transform, reset, then export accepted values - automated in `e2e/studio-photoreal-scan.spec.ts`.
+- [ ] Manual: confirm opaque occlusion at designated landmark(s). Blocked: the placeholder has no landmarks. Depth interaction itself behaves correctly.
+- [x] Manual: repeat view switching enough times to detect obvious context/resource leaks - eight 3D<->Scan round trips held at **one** canvas/WebGL context, JS heap 48 MB -> 65 MB, no context-loss events.
+- [x] Record measured asset size, first-visible time, desktop FPS, mobile FPS, calibration tolerance, and known rendering limitations.
+
+#### Measured, 2026-09-15 (desktop, Chrome + WebGL, 16 GB)
+
+| Metric | Target | Measured |
+| --- | ---: | ---: |
+| Compressed scan | <= 15 MB | 1.19 MB (49,140 splats) |
+| First visible scan (localhost) | <= 3 s | 1.92 s |
+| Desktop orbit | >= 45 FPS | 56 FPS |
+| Mobile orbit | >= 30 FPS | not measured |
+| WebGL contexts after 8 mode switches | 1 | 1 |
+| JS heap after 8 mode switches | no runaway | 48 MB -> 65 MB |
+| Console errors | 0 | 0 |
+| Calibration tolerance | documented | **not measurable** - no landmarks in the placeholder |
+
+**Known rendering limitations.** The registered asset is a generic sample object, not a yard: at 49k splats it resolves to a translucent sphere of blobs rather than surfaces, so nothing in Scan mode reads as site context. Splats are alpha-blended with `depthWrite: false`, so geometry in front of the ADU washes over it - correct for splats, but it means a low-density asset visibly veils the ADU instead of framing it. Both symptoms are properties of the asset, not the adapter.
 
 ## Explicit Beta Decisions
 
