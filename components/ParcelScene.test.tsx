@@ -144,6 +144,35 @@ describe("ParcelScene controls", () => {
     expect(screen.getByRole("button", { name: "Shadow Preview" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("button", { name: "Golden Hour" })).not.toBeInTheDocument();
   });
+
+  it("mounts in photoreal scan mode with registered splat scene without errors", () => {
+    const mockScan = {
+      id: "oak-street-curated",
+      parcelId: "oak-street",
+      assetUrl: "/scans/oak-street-curated.spz",
+      format: "spz" as const,
+      approximateBytes: 100000,
+      captureLabel: "Oak Street Scan",
+      transform: {
+        positionFt: [0, 0, 10] as [number, number, number],
+        yawRad: 0,
+        uniformScale: 1,
+      },
+    };
+
+    render(
+      <ParcelScene
+        parcel={parcelPresets[0]}
+        config={defaultAduConfig}
+        isCompliant
+        remainingCapacity={20}
+        scanMode
+        splatScene={mockScan}
+      />,
+    );
+
+    expect(screen.getByTestId("parcel-canvas")).toBeInTheDocument();
+  });
 });
 
 describe("placementToneColor", () => {

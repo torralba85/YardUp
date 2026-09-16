@@ -32,6 +32,8 @@ import { SceneCameraController, SceneCameras } from "@/components/studio/SceneCa
 import { SceneStatus } from "@/components/studio/SceneStatus";
 import { SceneTools } from "@/components/studio/SceneTools";
 import { SceneVisibility } from "@/components/studio/SceneVisibility";
+import GaussianSplatLayer, { type SplatLayerStatus } from "@/components/studio/GaussianSplatLayer";
+import type { SplatSceneDefinition, SplatTransform } from "@/lib/splat-scene";
 
 /** Minimal error boundary that falls back to a render function. */
 class ErrorBoundary extends Component<
@@ -66,6 +68,11 @@ interface ParcelSceneProps {
   pose?: Pose2D;
   onPoseCommit?: (pose: Pose2D) => void;
   measurement?: StudioMeasurementAdapterProps;
+  scanMode?: boolean;
+  splatScene?: SplatSceneDefinition | null;
+  scanTransform?: SplatTransform;
+  splatOnly?: boolean;
+  onScanStatus?: (status: SplatLayerStatus) => void;
 }
 
 /** Camera framing modes, shared with `lib/scene-camera-fit.ts`. */
@@ -768,7 +775,18 @@ export default function ParcelScene({
   pose,
   onPoseCommit,
   measurement,
+  scanMode = false,
+  splatScene = null,
+  scanTransform,
+  splatOnly = false,
+  onScanStatus,
 }: ParcelSceneProps) {
+  const scanSource = useMemo(() => splatScene ? {
+    url: splatScene.assetUrl,
+    fileName: `${splatScene.id}.${splatScene.format}`,
+    normalizeForInspection: splatScene.registration === "unmatched-sample",
+  } : null, [splatScene]);
+  const ignoreScanStatus = useCallback(() => {}, []);
   const [webglAvailable, setWebglAvailable] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
   const [frameCommand, setFrameCommand] = useState(0);
@@ -1117,64 +1135,75 @@ export default function ParcelScene({
             )}
 
             {/* Lot lawn and surrounding context, both carrying the surveyor
-                graph-paper grid (5 ft minors, 25 ft majors). */}
-            <SurveyGround
-              width={parcel.lotWidth}
-              length={parcel.lotLength}
-              base={SCENE.ground}
-              minorAlpha={0.05}
-              majorAlpha={0.1}
-            />
-            <SurveyGround
-              width={parcel.lotWidth + 26}
-              length={parcel.lotLength + 26}
-              base={SCENE.groundPaper}
-              minorAlpha={0.07}
-              majorAlpha={0.13}
-              y={-0.08}
-            />
+                graph-paper grid (5 ft minors, 25 ft majors). Suppressed in scan mode
+                to reveal the photoreal capture without visual conflict. */}
+            {!scanMode && (
+              <>
+                <SurveyGround
+                  width={parcel.lotWidth}
+                  length={parcel.lotLength}
+                  base={SCENE.ground}
+                  minorAlpha={0.05}
+                  majorAlpha={0.1}
+                />
+                <SurveyGround
+                  width={parcel.lotWidth + 26}
+                  length={parcel.lotLength + 26}
+                  base={SCENE.groundPaper}
+                  minorAlpha={0.07}
+                  majorAlpha={0.13}
+                  y={-0.08}
+                />
+                <ExistingHouse parcel={parcel} />
+                <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
+                <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
+                <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />
+                <Tree position={[parcel.lotWidth / 2 - 5, 0, -parcel.lotLength / 2 + 8]} height={9} radius={3.5} />
+                <InstancedFence
+                  start={[-parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
+                  end={[-parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+                  color={SCENE.fence}
+                  postSpacing={6}
+                  postHeight={4}
+                />
+                <InstancedFence
+                  start={[parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
+                  end={[parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
+                  color={SCENE.fence}
+                  postSpacing={6}
+                  postHeight={4}
+                />
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[parcel.lotWidth / 2 - 3, 0.02, 0]} receiveShadow>
+                  <planeGeometry args={[5, parcel.lotLength * 0.6]} />
+                  <meshStandardMaterial color={SCENE.driveway} roughness={0.95} />
+                </mesh>
+              </>
+            )}
 
-            <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
-            <SetbackLines parcel={parcel} />
-            {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
-            <ExistingHouse parcel={parcel} />
-            <ProposedAdu
-              config={config}
-              pose={activePose}
-              placementTone={placementTone}
-              onPreview={previewPose}
-              onCommit={commitPose}
-              constrain={constrain}
-            />
+            {/* Photoreal 3DGS Scan layer: visual context only; depth-tests against opaque ADU. */}
+            {scanMode && splatScene && scanSource && (
+              <GaussianSplatLayer
+                source={scanSource}
+                transform={scanTransform ?? splatScene.transform}
+                onStatus={onScanStatus ?? ignoreScanStatus}
+              />
+            )}
 
-            {/* Landscape elements */}
-            <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
-            <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
-            <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />
-            <Tree position={[parcel.lotWidth / 2 - 5, 0, -parcel.lotLength / 2 + 8]} height={9} radius={3.5} />
-
-            {/* Side fences: one instanced draw per line instead of a mesh per
-                post — the Seattle lot alone produced 42 post meshes (D5). */}
-            <InstancedFence
-              start={[-parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
-              end={[-parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
-              color={SCENE.fence}
-              postSpacing={6}
-              postHeight={4}
-            />
-            <InstancedFence
-              start={[parcel.lotWidth / 2, 0, parcel.lotLength / 2]}
-              end={[parcel.lotWidth / 2, 0, -parcel.lotLength / 2]}
-              color={SCENE.fence}
-              postSpacing={6}
-              postHeight={4}
-            />
-
-            {/* Driveway strip along one side */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[parcel.lotWidth / 2 - 3, 0.02, 0]} receiveShadow>
-              <planeGeometry args={[5, parcel.lotLength * 0.6]} />
-              <meshStandardMaterial color={SCENE.driveway} roughness={0.95} />
-            </mesh>
+            {!(scanMode && splatOnly) && (
+              <>
+                <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
+                <SetbackLines parcel={parcel} />
+                {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
+                <ProposedAdu
+                  config={config}
+                  pose={activePose}
+                  placementTone={placementTone}
+                  onPreview={previewPose}
+                  onCommit={commitPose}
+                  constrain={constrain}
+                />
+              </>
+            )}
           </Canvas>
         </ErrorBoundary>
 

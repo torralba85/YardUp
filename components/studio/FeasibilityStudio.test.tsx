@@ -62,13 +62,20 @@ vi.mock("next/dynamic", () => ({
     // tracks the active parcel (preset, estimated, or live).
     const MockParcelScene = (props: {
       parcel?: { lotWidth: number; lotLength: number };
+      scanMode?: boolean;
+      splatOnly?: boolean;
+      pose?: unknown;
+      onScanStatus?: (status: { state: "error"; message: string }) => void;
     }) => (
       <div
         data-testid="parcel-scene"
         data-lot-width={props.parcel?.lotWidth}
         data-lot-length={props.parcel?.lotLength}
+        data-pose={JSON.stringify(props.pose)}
+        data-splat-only={props.splatOnly}
       >
         parcel scene placeholder
+        {props.scanMode && <button onClick={() => props.onScanStatus?.({ state: "error", message: "Decode failed" })}>Fail scan load</button>}
       </div>
     );
     MockParcelScene.displayName = "MockParcelScene";
@@ -273,16 +280,77 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(viewControl).not.toHaveClass("absolute");
     expect(viewControl).toHaveClass("pointer-events-auto", "shrink-0", "border-b");
     expect(viewport.firstElementChild).toBe(viewControl);
+    const scanButton = within(viewControl).getByRole("button", { name: /scan/i });
+    const neighborhoodButton = within(viewControl).getByRole("button", { name: "Neighborhood" });
     expect(modelButton).toHaveAttribute("aria-pressed", "true");
+    expect(scanButton).toHaveAttribute("aria-pressed", "false");
+    expect(neighborhoodButton).toHaveAttribute("aria-pressed", "false");
+    expect(aerialButton).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(scanButton);
+
+    expect(modelButton).toHaveAttribute("aria-pressed", "false");
+    expect(scanButton).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /calibrate scan/i })).toBeInTheDocument();
+
+    await user.click(neighborhoodButton);
+
+    expect(modelButton).toHaveAttribute("aria-pressed", "false");
+    expect(scanButton).toHaveAttribute("aria-pressed", "false");
+    expect(neighborhoodButton).toHaveAttribute("aria-pressed", "true");
     expect(aerialButton).toHaveAttribute("aria-pressed", "false");
 
     await user.click(aerialButton);
 
     expect(modelButton).toHaveAttribute("aria-pressed", "false");
+    expect(scanButton).toHaveAttribute("aria-pressed", "false");
+    expect(neighborhoodButton).toHaveAttribute("aria-pressed", "false");
     expect(aerialButton).toHaveAttribute("aria-pressed", "true");
     expect(
       within(viewport).getByText(/Aerial view requires a real address/i),
     ).toBeInTheDocument();
+  });
+
+  it("does not render the scan view button for parcels without a registered scan", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Your Lot/));
+    await user.click(screen.getByText(/Try a sample property/i));
+    const sampleSelect = screen.getByLabelText("Sample Property");
+    await user.selectOptions(sampleSelect, "corner-lot");
+
+    const viewport = screen.getByTestId("scene-viewport");
+    const viewControl = within(viewport).getByRole("group", { name: "Parcel view" });
+    expect(within(viewControl).queryByRole("button", { name: /scan/i })).not.toBeInTheDocument();
+  });
+
+  it("recovers from a scan failure without losing the ADU pose or hiding the model", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    const pose = screen.getByTestId("parcel-scene").getAttribute("data-pose");
+    await user.click(screen.getByRole("button", { name: /^Scan/ }));
+    expect(screen.getByText(/not a capture of this property/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
+    await user.click(screen.getByRole("button", { name: "Splat-Only Inspection" }));
+    await user.click(screen.getByRole("button", { name: "Close calibration panel" }));
+    await user.click(screen.getByRole("button", { name: "Fail scan load" }));
+    expect(screen.getByText(/Scan unavailable/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Return to 3D model" }));
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", pose);
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-splat-only", "false");
+  });
+
+  it("moves view selection by keyboard and restores focus after calibration", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    screen.getByRole("button", { name: "3D model" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: /^Scan/ })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
+    expect(screen.getByRole("button", { name: "Close calibration panel" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Calibrate Scan" })).toHaveFocus());
   });
 
   it("marks certificate and builders as the revenue steps", () => {
