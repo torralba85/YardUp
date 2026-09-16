@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 import { GET } from "./route";
 import { extractRegridLocation } from "@/lib/server/parcel-location";
 import type { LiveParcelData } from "@/lib/parcel-types";
@@ -13,12 +14,24 @@ import type { LiveParcelData } from "@/lib/parcel-types";
  * `parcels.features[].properties.fields`.
  */
 
-function makeRequest(lat: number, lng: number, address?: string): NextRequest {
+function parcelUrl(lat: number, lng: number, address?: string): URL {
   const url = new URL("http://localhost/api/parcel");
   url.searchParams.set("lat", String(lat));
   url.searchParams.set("lng", String(lng));
   if (address) url.searchParams.set("address", address);
-  return new NextRequest(url);
+  return url;
+}
+
+/** A signed-in caller: carries a bearer token, so paid Regrid is eligible. */
+function makeRequest(lat: number, lng: number, address?: string): NextRequest {
+  return new NextRequest(parcelUrl(lat, lng, address), {
+    headers: { authorization: "Bearer test-token" },
+  });
+}
+
+/** An anonymous caller: no token, so the route must stay on the free chain. */
+function makeGuestRequest(lat: number, lng: number, address?: string): NextRequest {
+  return new NextRequest(parcelUrl(lat, lng, address));
 }
 
 /** A Regrid feature with the fields the route requests. */
@@ -164,6 +177,9 @@ function stubProviders(providers: {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  // Guests and members use separate limiter namespaces; clearing keeps a long
+  // describe block from tripping either one.
+  resetRateLimitBuckets();
   vi.stubEnv("REGRID_API_KEY", "test-token");
   // Default every test to a fully offline provider chain; tests that care
   // about a provider override it explicitly.
@@ -749,5 +765,49 @@ describe("extractRegridLocation", () => {
 
   it("returns empty strings when fields are missing", () => {
     expect(extractRegridLocation({})).toEqual({ state: "", zip: "", county: undefined });
+  });
+});
+
+describe("GET /api/parcel — anonymous callers", () => {
+  it("never calls paid Regrid without a bearer token", async () => {
+    // The free first lookup must not be able to bill, so a configured Regrid
+    // key has to be unreachable on the anonymous path.
+    vi.stubEnv("REGRID_API_KEY", "paid-key");
+    const fetchMock = vi.fn().mockResolvedValue(regridResponse({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeGuestRequest(47.65, -122.31));
+
+    expect(res.status).toBe(200);
+    const calledHosts = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(calledHosts.some((url) => url.includes("regrid.com"))).toBe(false);
+  });
+
+  it("still answers an anonymous lookup from the free chain", async () => {
+    vi.stubEnv("REGRID_API_KEY", "paid-key");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(regridResponse({})));
+
+    const res = await GET(makeGuestRequest(47.65, -122.31, "123 Oak St, Seattle, WA"));
+    const data = (await res.json()) as LiveParcelData;
+
+    // A guest gets a real answer, not a refusal: the whole point is that they
+    // see their own lot before being asked for an account.
+    expect(res.status).toBe(200);
+    expect(data.source).not.toBe("regrid");
+    expect(data.lotArea).toBeGreaterThan(0);
+  });
+
+  it("holds anonymous callers to the tighter guest rate limit", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(regridResponse({})));
+
+    // The guest window allows 10/min; the 11th must be refused.
+    for (let i = 0; i < 10; i += 1) {
+      const ok = await GET(makeGuestRequest(47.65, -122.31));
+      expect(ok.status).toBe(200);
+    }
+    const limited = await GET(makeGuestRequest(47.65, -122.31));
+
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBeTruthy();
   });
 });

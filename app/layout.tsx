@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 
@@ -19,7 +20,14 @@ const manrope = Manrope({
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
 
-/** Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no fabricated ratings. */
+/**
+ * Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no
+ * fabricated ratings.
+ *
+ * `operatingSystem` and `installUrl` name the shipped Android build as well as
+ * the web app. Describing a published app as web-only hides it from the app
+ * results that Google builds from this markup.
+ */
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -28,7 +36,8 @@ const jsonLd = {
     "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
   url: appUrl,
   applicationCategory: "BusinessApplication",
-  operatingSystem: "Web",
+  operatingSystem: ["Web", "Android"],
+  installUrl: GOOGLE_PLAY_URL,
   publisher: {
     "@type": "Organization",
     name: "LotFoundry",

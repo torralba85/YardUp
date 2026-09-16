@@ -145,7 +145,9 @@ describe("AddressSearch", () => {
 
   it("suppresses all suggestion sources for signed-out visitors", async () => {
     // Guests must never spend metered suggestion quota (browser Places or
-    // /api/suggest); they see a sign-in note and no dropdown instead.
+    // /api/suggest), so they get no dropdown. They are still pointed at the
+    // free-text Search button rather than an account wall: the parcel context
+    // resolves that path on the keyless chain under the guest allowance.
     const user = userEvent.setup();
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -158,7 +160,26 @@ describe("AddressSearch", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
-    expect(screen.getByRole("note")).toHaveTextContent(/sign in to search a real address/i);
+    expect(screen.getByRole("note")).toHaveTextContent(/type a full address/i);
+    expect(screen.queryByText(/sign in/i)).not.toBeInTheDocument();
+  });
+
+  it("forwards a signed-out visitor's free-text address to the consumer", async () => {
+    // The guest's whole path is the Search button. If this stopped forwarding,
+    // the free first lookup would silently do nothing.
+    const user = userEvent.setup();
+    const onSubmitText = vi.fn();
+    vi.stubGlobal("fetch", vi.fn());
+
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={onSubmitText} />);
+
+    await user.type(
+      screen.getByLabelText("Search property address"),
+      "456 Pine St, Austin, TX",
+    );
+    await user.click(screen.getByRole("button", { name: /search/i }));
+
+    expect(onSubmitText).toHaveBeenCalledWith("456 Pine St, Austin, TX");
   });
 
   it("falls back to server suggestions when the Places library fails to load", async () => {

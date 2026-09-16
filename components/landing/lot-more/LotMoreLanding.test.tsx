@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LotMoreLanding } from "./LotMoreLanding";
+import { GUEST_LOOKUP_LIMIT, consumeGuestLookup } from "@/lib/guest-lookup";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -87,7 +88,33 @@ describe("landing address handoff", () => {
     expect(screen.getAllByRole("link", { name: "Register as a builder" })).toHaveLength(3);
   });
 
-  it("waits for confirmed authentication before storing and routing the trimmed address", () => {
+  /** Spend the anonymous allowance, as a return visit that already looked once would. */
+  function spendGuestAllowance() {
+    for (let i = 0; i < GUEST_LOOKUP_LIMIT; i += 1) consumeGuestLookup();
+  }
+
+  // The account ask is the most expensive step in this funnel. A first-time
+  // visitor must reach their own lot without meeting it.
+  it("routes a first-time visitor straight to the studio with the trimmed address", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.change(
+      screen.getAllByLabelText("Property address", { exact: true })[0],
+      { target: { value: "  456 Pine St, Denver, CO  " } },
+    );
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Explore my lot" })[0],
+    );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(stash).toHaveBeenCalledExactlyOnceWith("456 Pine St, Denver, CO");
+    expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Bringing your lot into focus",
+    );
+  });
+
+  it("waits for confirmed authentication once the free lookup is spent", () => {
+    spendGuestAllowance();
     render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[0],
@@ -106,7 +133,25 @@ describe("landing address handoff", () => {
     );
   });
 
+  // A returning member still goes through the gate, which resolves their
+  // existing session rather than prompting.
+  it("routes a browser that has signed in before through the auth gate", () => {
+    window.localStorage.setItem("lf:member-session", "1");
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.change(
+      screen.getAllByLabelText("Property address", { exact: true })[0],
+      { target: { value: "456 Pine St, Denver, CO" } },
+    );
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Explore my lot" })[0],
+    );
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("dismisses authentication without discarding the address or starting a lookup", () => {
+    spendGuestAllowance();
     render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[1],
@@ -122,6 +167,17 @@ describe("landing address handoff", () => {
     ).toHaveValue("456 Pine St, Denver, CO");
     expect(stash).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it("links the Play listing from the footer", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    // Without this link the Android app is unreachable from the web.
+    expect(
+      screen.getByRole("link", { name: "Android app on Google Play" }),
+    ).toHaveAttribute(
+      "href",
+      "https://play.google.com/store/apps/details?id=com.lotfoundry.app",
+    );
   });
 
   it("navigates segmented controls using keyboard arrow keys", () => {

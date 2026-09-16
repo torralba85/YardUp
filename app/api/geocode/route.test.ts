@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 import { GET } from "./route";
 
 /**
@@ -9,11 +10,22 @@ import { GET } from "./route";
  * not the live provider schemas.
  */
 
-function makeRequest(q: string | null): NextRequest {
-  const url = q === null
+function geocodeUrl(q: string | null): string {
+  return q === null
     ? "http://localhost/api/geocode"
     : `http://localhost/api/geocode?q=${encodeURIComponent(q)}`;
-  return new NextRequest(url);
+}
+
+/** A signed-in caller: carries a bearer token, so paid providers are eligible. */
+function makeRequest(q: string | null): NextRequest {
+  return new NextRequest(geocodeUrl(q), {
+    headers: { authorization: "Bearer test-token" },
+  });
+}
+
+/** An anonymous caller: no token, so the route must stay on keyless providers. */
+function makeGuestRequest(q: string | null): NextRequest {
+  return new NextRequest(geocodeUrl(q));
 }
 
 function googleResponse(results: unknown[]) {
@@ -34,6 +46,9 @@ function nominatimResponse(results: unknown[]) {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  // Guests and members use separate limiter namespaces; clearing keeps a
+  // long describe block from tripping either one.
+  resetRateLimitBuckets();
 });
 
 afterEach(() => {
@@ -162,5 +177,234 @@ describe("GET /api/geocode", () => {
     );
     const res = await GET(makeRequest("anywhere"));
     expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/geocode — anonymous callers", () => {
+  it("never calls paid Google Geocoding without a bearer token", async () => {
+    // The whole point of the free first lookup is that it cannot bill: a
+    // configured Google key must not be reachable on the anonymous path.
+    vi.stubEnv("GOOGLE_GEOCODING_KEY", "g-key");
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "maps-key");
+    const fetchMock = vi.fn().mockResolvedValue(
+      nominatimResponse([
+        { lat: "47.661", lon: "-122.313", display_name: "123 Oak St, Seattle, Washington" },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeGuestRequest("123 Oak St, Seattle, WA"));
+
+    expect(res.status).toBe(200);
+    const calledHosts = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(calledHosts.some((url) => url.includes("maps.googleapis.com"))).toBe(false);
+    expect(calledHosts.some((url) => url.includes("nominatim"))).toBe(true);
+  });
+
+  it("holds anonymous callers to the tighter guest rate limit", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          { lat: "47.661", lon: "-122.313", display_name: "123 Oak St, Seattle, Washington" },
+        ]),
+      ),
+    );
+
+    // The guest window allows 10/min; the 11th must be refused.
+    for (let i = 0; i < 10; i += 1) {
+      const ok = await GET(makeGuestRequest("123 Oak St, Seattle, WA"));
+      expect(ok.status).toBe(200);
+    }
+    const limited = await GET(makeGuestRequest("123 Oak St, Seattle, WA"));
+
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBeTruthy();
+  });
+});
+
+describe("GET /api/geocode — state matching", () => {
+  it("keeps a hit whose state matches the end of the query, not a directional", async () => {
+    // Regression: "NE" in a street directional used to be read as Nebraska,
+    // which threw away every correct Washington result. Seattle, Portland,
+    // Washington DC and Miami all number streets this way.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "47.6920824",
+            lon: "-122.3129897",
+            display_name:
+              "1421, Northeast 88th Street, Maple Leaf, Seattle, King County, Washington, 98115, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("1421 NE 88th St, Seattle, WA"));
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.lat).toBeCloseTo(47.6920824);
+  });
+
+  it("still rejects a hit in a different state from the one asked for", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "39.7",
+            lon: "-89.6",
+            display_name: "123, Main Street, Springfield, Illinois, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("123 Main St, Springfield, MA"));
+
+    expect(res.status).toBe(404);
+  });
+
+  it("reads a trailing state correctly when a directional ends the street", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "38.89",
+            lon: "-77.0",
+            display_name:
+              "1234, Maryland Avenue Northeast, Washington, District of Columbia, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("1234 Maryland Ave NE, Washington, DC"));
+
+    expect(res.status).toBe(200);
+  });
+
+  it("matches an address genuinely in Nebraska", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "40.81",
+            lon: "-96.7",
+            display_name: "123, North Street, Lincoln, Lancaster County, Nebraska, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("123 N St, Lincoln, NE"));
+
+    expect(res.status).toBe(200);
+  });
+});
+
+describe("GET /api/geocode — Nominatim address labelling", () => {
+  it("returns a conventional US label instead of the raw OSM path", async () => {
+    // This string is shown to the visitor as their own address, next to the
+    // rent and payback figures they are being asked to trust.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "47.6920824",
+            lon: "-122.3129897",
+            display_name:
+              "1421, Northeast 88th Street, Maple Leaf, Seattle, King County, Washington, 98115, United States",
+            address: {
+              house_number: "1421",
+              road: "Northeast 88th Street",
+              suburb: "Maple Leaf",
+              city: "Seattle",
+              state: "Washington",
+              postcode: "98115",
+            },
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("1421 NE 88th St, Seattle, WA"));
+    const data = await res.json();
+
+    expect(data.formattedAddress).toBe(
+      "1421 Northeast 88th Street, Seattle, WA 98115",
+    );
+  });
+
+  it("requests structured address details from Nominatim", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      nominatimResponse([
+        {
+          lat: "47.6",
+          lon: "-122.3",
+          display_name: "123, Main Street, Seattle, Washington, United States",
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await GET(makeRequest("123 Main St, Seattle, WA"));
+
+    expect(String(fetchMock.mock.calls[0][0])).toContain("addressdetails=1");
+  });
+
+  it("keeps the raw label when the structured fields are too sparse", async () => {
+    const displayName = "Some Place, Seattle, King County, Washington, United States";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "47.6",
+            lon: "-122.3",
+            display_name: displayName,
+            address: { city: "Seattle", state: "Washington" },
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("Some Place, Seattle, WA"));
+    const data = await res.json();
+
+    expect(data.formattedAddress).toBe(displayName);
+  });
+
+  it("falls back to a town or village when there is no city", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "44.0",
+            lon: "-72.7",
+            display_name: "5, Elm Street, Stowe, Lamoille County, Vermont, 05672, United States",
+            address: {
+              house_number: "5",
+              road: "Elm Street",
+              town: "Stowe",
+              state: "Vermont",
+              postcode: "05672",
+            },
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeRequest("5 Elm St, Stowe, VT"));
+    const data = await res.json();
+
+    expect(data.formattedAddress).toBe("5 Elm Street, Stowe, VT 05672");
   });
 });

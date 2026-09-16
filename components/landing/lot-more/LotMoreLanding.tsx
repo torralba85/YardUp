@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { stashAddressQuery } from "@/lib/address-handoff";
+import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { canGuestLookup } from "@/lib/guest-lookup";
 import {
   hasMemberSessionHint,
   subscribeMemberSession,
@@ -197,6 +199,17 @@ export function LotMoreLanding({
       'button[type="submit"]',
     );
     pendingAddress.current = query.trim();
+    // A visitor with a free lookup left goes straight to the studio. Asking a
+    // stranger to create an account before they have seen anything is the
+    // single most expensive step in this funnel, and it also pulls the Firebase
+    // client bundle onto the critical path. The account ask comes after they
+    // have seen their own lot, not before.
+    if (!hasMemberSession && canGuestLookup()) {
+      stashAddressQuery(pendingAddress.current);
+      setEntering(true);
+      router.push("/studio");
+      return;
+    }
     setAuthOpen(true);
   }
 
@@ -241,7 +254,7 @@ export function LotMoreLanding({
           </p>
         )}
         <p id={`${id}-note`} className={styles.formNote}>
-          Free to explore. Sign in to check a real address.
+          Free to explore. No account needed for your first address.
         </p>
       </form>
     );
@@ -937,7 +950,7 @@ export function LotMoreLanding({
                 ],
                 [
                   "Can I check my address?",
-                  "Sign in to search a real property. Available parcel and market detail varies by location; the studio identifies assumptions and missing information. You can also explore Seattle, Portland, and Austin demo lots without signing in.",
+                  "Yes. Your first address lookup needs no account — enter it above and the studio opens on your own lot. Create a free account to look up more. Available parcel and market detail varies by location, and the studio identifies its assumptions and anything missing. Seattle, Portland, and Austin demo lots are always open.",
                 ],
                 [
                   "How are the estimates calculated?",
@@ -1003,6 +1016,11 @@ export function LotMoreLanding({
               </Link>
               <Link href="/about">About us</Link>
               <Link href="/help">Get in touch</Link>
+              {/* The only path from the web to the Play listing. Without it the
+                  Android app is unreachable from the site and from search. */}
+              <a href={GOOGLE_PLAY_URL} rel="noopener">
+                Android app on Google Play
+              </a>
             </nav>
             <a
               href="#start"

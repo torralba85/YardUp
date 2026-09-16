@@ -15,6 +15,7 @@ import {
   inferStateFromCountySource,
   stripStatewideLabel,
 } from "@/lib/server/parcel-location";
+import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 
@@ -32,7 +33,9 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  *
  * Resolves parcel data through the configured provider preference: paid
  * Regrid record → free public county/statewide GIS parcel → the nearest
- * preset's typical dimensions. Returns a LiveParcelData object.
+ * preset's typical dimensions. Returns a LiveParcelData object. Requests
+ * without a bearer token start at the free county/statewide GIS step, so an
+ * anonymous lookup costs nothing but still returns real parcel geometry.
  *
  * The free US Census geocoder resolves state/ZIP/county alongside the chain
  * for every path, so financials key off the address's own geography even when
@@ -41,11 +44,17 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  const limited = checkRateLimit(request, {
-    limit: 60,
-    namespace: "parcel",
-    windowMs: 60_000,
-  });
+  // Anonymous visitors get the free provider chain and a tighter window. The
+  // landing funnel lets a guest look up one real address before signing in,
+  // and that lookup must not be able to spend metered Regrid quota.
+  const guest = isGuestRequest(request);
+
+  const limited = checkRateLimit(
+    request,
+    guest
+      ? { limit: 10, namespace: "parcel-guest", windowMs: 60_000 }
+      : { limit: 60, namespace: "parcel", windowMs: 60_000 },
+  );
   if (limited) return limited;
 
   const coordinates = parseCoordinateParams(searchParams);
@@ -62,7 +71,10 @@ export async function GET(request: NextRequest) {
     address: requestedAddress,
   });
 
-  const regridKey = process.env.REGRID_API_KEY;
+  // Guests are held to the keyless chain by construction rather than by a
+  // branch further down, so no future edit can reintroduce a paid call on the
+  // anonymous path.
+  const regridKey = guest ? undefined : process.env.REGRID_API_KEY;
   if (!regridKey) {
     // Keyless demo: no Regrid configured. Free county/statewide GIS still
     // gives real geometry for a covered address before presets are used.

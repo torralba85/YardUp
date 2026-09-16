@@ -74,10 +74,11 @@ function looksLikeBrowserKey(value: string | undefined): value is string {
  * falls back to debounced server predictions from `/api/suggest`, submitted as
  * free text via {@link onSubmitText}. Both sources render into the same dropdown.
  *
- * Signed-out visitors get neither source: every suggestion/resolve path spends
- * metered Google quota, so guests see a sign-in note and no dropdown. Free-text
- * submits still forward to {@link onSubmitText} so the consumer can gate them
- * (parcel context answers with its own sign-in message).
+ * Signed-out visitors get no dropdown: every suggestion source spends metered
+ * Google quota. They can still type a full address and press Search — that
+ * free-text path forwards to {@link onSubmitText}, and the parcel context
+ * resolves it on the keyless provider chain under the guest allowance, then
+ * asks for an account once that allowance is spent.
  *
  * Migrated off the deprecated `google.maps.places.Autocomplete` widget, which
  * Google no longer offers to new Cloud projects.
@@ -113,7 +114,8 @@ export default function AddressSearch({
 
   // Both sources feed the same dropdown. Google when a key is loaded and
   // working; otherwise the server fallback (needs a free-text handler). Either
-  // way suggestions cost metered API quota, so guests get neither source.
+  // way suggestions cost metered API quota, so guests get neither source — the
+  // free-text Search button is their path, and it costs nothing.
   const signedIn = Boolean(user);
   const googleEnabled = hasPlacesKey && placesReady && !googleFailed && !disabled && signedIn;
   const serverEnabled =
@@ -428,11 +430,7 @@ export default function AddressSearch({
         </span>
       )}
 
-      {!signedIn ? (
-        <p className="mt-1.5 text-xs text-lf-muted" role="note">
-          Sign in to search a real address.
-        </p>
-      ) : !loading && !hasPlacesKey ? (
+      {!signedIn || (!loading && !hasPlacesKey) ? (
         <p className="mt-1.5 text-xs text-lf-muted" role="note">
           Type a full address (street, city, state) and press Search.
         </p>
