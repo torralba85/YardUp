@@ -12,6 +12,14 @@
   "lang": "en",
   "dir": "ltr",
   "categories": ["business", "finance", "productivity", "utilities"],
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.lotfoundry.app",
+      "url": "https://play.google.com/store/apps/details?id=com.lotfoundry.app"
+    }
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",

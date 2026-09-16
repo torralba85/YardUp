@@ -32,6 +32,7 @@ vi.mock("./parcel-api", async () => {
 });
 
 import { ParcelProvider, useParcel } from "./parcel-context";
+import { GUEST_LOOKUP_LIMIT, resetGuestLookups } from "./guest-lookup";
 import { parcelPresets } from "./feasibility";
 import { buildEstimatedParcel } from "./estimated-parcel";
 
@@ -43,10 +44,43 @@ function signIn() {
   mocks.authState.user = { getIdToken: async () => "token" };
 }
 
+/** Minimal live parcel used wherever a resolved lookup is needed. */
+const liveParcelFixture: LiveParcelData = {
+  address: "100 Main St",
+  city: "Los Angeles, CA 90012",
+  lotArea: 5000,
+  lotWidth: 40,
+  lotLength: 125,
+  existingHouseSqft: 1200,
+  maxLotCoveragePercent: 40,
+  setbacks: { front: 20, rear: 20, side: 5 },
+  zoning: "R-1 (estimated)",
+  boundaryGeoJson: null,
+  lat: 34.05,
+  lng: -118.25,
+  source: "fallback",
+  state: "CA",
+  zip: "90012",
+};
+
+/** Arrange a lookup that resolves, for exercising the guest allowance. */
+function mockResolvedLookup(formattedAddress = "100 Main St, Los Angeles, CA 90012, USA") {
+  mocks.geocodeAddress.mockResolvedValue({
+    lat: 34.05,
+    lng: -118.25,
+    formattedAddress,
+  });
+  mocks.fetchParcel.mockResolvedValue(liveParcelFixture);
+  return formattedAddress;
+}
+
 beforeEach(() => {
   mocks.authState.user = null;
   mocks.geocodeAddress.mockReset();
   mocks.fetchParcel.mockReset();
+  // The guest allowance persists in localStorage, so it has to be cleared
+  // between cases or the first spent lookup leaks into every later test.
+  resetGuestLookups();
 });
 
 describe("ParcelProvider estimated mode", () => {
@@ -84,17 +118,92 @@ describe("ParcelProvider estimated mode", () => {
     expect(result.current.parcelMode).toBe("preset");
   });
 
-  it("blocks guest free-text address lookups before any API call", async () => {
+  it("lets a guest resolve a real address with no ID token", async () => {
+    const formattedAddress = mockResolvedLookup();
     const { result } = renderHook(() => useParcel(), { wrapper });
 
     await act(async () => {
       await result.current.searchByAddress("100 Main Los Angeles");
     });
 
+    // No token is forwarded, which is what puts the API routes on the free
+    // provider chain for this lookup.
+    expect(mocks.geocodeAddress).toHaveBeenCalledWith("100 Main Los Angeles", undefined);
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(
+      34.05,
+      -118.25,
+      undefined,
+      formattedAddress,
+    );
+    expect(result.current.parcelMode).toBe("live");
+    expect(result.current.parcelError).toBeNull();
+  });
+
+  it("asks a spent guest for an account before calling any API", async () => {
+    mockResolvedLookup();
+    const { result } = renderHook(() => useParcel(), { wrapper });
+
+    for (let i = 0; i < GUEST_LOOKUP_LIMIT; i += 1) {
+      await act(async () => {
+        await result.current.searchByAddress("100 Main Los Angeles");
+      });
+    }
+    mocks.geocodeAddress.mockClear();
+    mocks.fetchParcel.mockClear();
+
+    await act(async () => {
+      await result.current.searchByAddress("200 Oak Los Angeles");
+    });
+
     expect(mocks.geocodeAddress).not.toHaveBeenCalled();
     expect(mocks.fetchParcel).not.toHaveBeenCalled();
-    expect(result.current.parcelError).toBe("Sign in to search a real address.");
-    expect(result.current.parcelMode).toBe("preset");
+    expect(result.current.parcelError).toBe(
+      "That was your free lookup. Create a free account to search another address.",
+    );
+    // The lot they already resolved stays on screen — the ask must not wipe it.
+    expect(result.current.parcelMode).toBe("live");
+  });
+
+  it("does not spend the guest allowance on a lookup that fails", async () => {
+    mocks.geocodeAddress.mockRejectedValueOnce(new Error("network down"));
+    const { result } = renderHook(() => useParcel(), { wrapper });
+
+    await act(async () => {
+      await result.current.searchByAddress("100 Main Los Angeles");
+    });
+    expect(result.current.parcelError).not.toBeNull();
+
+    // The retry must still reach the API rather than hitting the account ask.
+    mockResolvedLookup();
+    await act(async () => {
+      await result.current.searchByAddress("100 Main Los Angeles");
+    });
+
+    expect(result.current.parcelMode).toBe("live");
+    expect(result.current.parcelError).toBeNull();
+  });
+
+  it("clears the guest allowance once a visitor signs in", async () => {
+    mockResolvedLookup();
+    const { result, rerender } = renderHook(() => useParcel(), { wrapper });
+
+    await act(async () => {
+      await result.current.searchByAddress("100 Main Los Angeles");
+    });
+
+    signIn();
+    rerender();
+
+    // Signing out later must not leave them permanently spent.
+    mocks.authState.user = null;
+    rerender();
+    mocks.geocodeAddress.mockClear();
+
+    await act(async () => {
+      await result.current.searchByAddress("200 Oak Los Angeles");
+    });
+
+    expect(mocks.geocodeAddress).toHaveBeenCalled();
   });
 
   it("uses the geocoder formatted address for parcel lookup", async () => {

@@ -55,7 +55,11 @@ test.describe("address suggestions", () => {
     const search = page.getByLabel("Search property address");
     await search.fill("1600 Pennsylvania Ave");
 
-    await expect(page.getByText("Sign in to search a real address.").first()).toBeVisible();
+    // Guests get no dropdown (it would spend metered quota), but they are
+    // pointed at the free-text Search button rather than an account wall.
+    await expect(
+      page.getByText("Type a full address (street, city, state) and press Search.").first(),
+    ).toBeVisible();
     // Wait out the 300ms suggestion debounce before asserting nothing fired.
     await page.waitForTimeout(800);
     expect(suggestRequests).toHaveLength(0);

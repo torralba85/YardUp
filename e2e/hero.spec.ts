@@ -4,10 +4,9 @@ test.describe("A lot more landing", () => {
   test("keeps address entry private and preserves it between the two forms", async ({
     page,
   }) => {
-    const paidRequests: string[] = [];
+    const suggestRequests: string[] = [];
     page.on("request", (request) => {
-      if (/\/api\/(suggest|parcel|geocode)/.test(request.url()))
-        paidRequests.push(request.url());
+      if (/\/api\/suggest/.test(request.url())) suggestRequests.push(request.url());
     });
     await page.goto("/");
     const hero = page.getByRole("region", {
@@ -28,12 +27,38 @@ test.describe("A lot more landing", () => {
       "456 Pine St, Denver, CO",
     );
     await hero.getByRole("button", { name: "Explore my lot" }).click();
+
+    // A first-time visitor reaches the studio without an account prompt; the
+    // address rides session storage, never the URL, so it stays out of
+    // history, the Referer header, and analytics.
+    await page.waitForURL(/\/studio/, { timeout: 15000 });
+    expect(page.url()).not.toMatch(/456|Pine|Denver|[?&]q=/i);
+    // The landing itself must never spend metered suggestion quota.
+    expect(suggestRequests).toEqual([]);
+  });
+
+  test("asks a visitor who already used their free lookup to sign in", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    // Spend the anonymous allowance, as a return visit would have.
+    await page.evaluate(() => window.localStorage.setItem("lf:guest-lookups", "1"));
+    await page.reload();
+
+    const hero = page.getByRole("region", {
+      name: "Explore your lot",
+      exact: true,
+    });
+    await hero
+      .getByLabel("Property address", { exact: true })
+      .fill("456 Pine St, Denver, CO");
+    await hero.getByRole("button", { name: "Explore my lot" }).click();
+
     const dialog = page
       .getByRole("dialog")
       .filter({ hasText: /sign in|sign up|create account/i });
     await expect(dialog).toBeVisible({ timeout: 15000 });
     expect(page.url()).not.toMatch(/456|Pine|Denver|[?&]q=/i);
-    expect(paidRequests).toEqual([]);
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
     await expect(

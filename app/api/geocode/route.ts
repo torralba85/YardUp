@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -78,15 +79,22 @@ export interface GeocodeResult {
  * Resolves a free-text US address to coordinates so the studio can look up a
  * parcel without the client-side Google Places widget. Prefers Google
  * Geocoding when the server-side Maps key is configured; otherwise (and as a
- * fallback if Google returns nothing) uses keyless Nominatim. Returns 404 when
- * no provider can resolve it.
+ * fallback if Google returns nothing) uses keyless Nominatim. Requests without
+ * a bearer token skip Google entirely and resolve through Nominatim, so an
+ * anonymous lookup costs nothing. Returns 404 when no provider can resolve it.
  */
 export async function GET(request: NextRequest) {
-  const limited = checkRateLimit(request, {
-    limit: 30,
-    namespace: "geocode",
-    windowMs: 60_000,
-  });
+  // Anonymous visitors resolve through keyless Nominatim only. The landing
+  // funnel lets a guest look up one real address before signing in, and that
+  // lookup must not be able to spend metered Google Geocoding quota.
+  const guest = isGuestRequest(request);
+
+  const limited = checkRateLimit(
+    request,
+    guest
+      ? { limit: 10, namespace: "geocode-guest", windowMs: 60_000 }
+      : { limit: 30, namespace: "geocode", windowMs: 60_000 },
+  );
   if (limited) return limited;
 
   const { searchParams } = new URL(request.url);
@@ -99,8 +107,11 @@ export async function GET(request: NextRequest) {
   }
   const query = q.slice(0, MAX_QUERY_LEN);
 
-  const googleKey =
-    process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_API_KEY;
+  // Held to the keyless provider by construction rather than by a branch at
+  // the call site, so no future edit can reintroduce a paid call for guests.
+  const googleKey = guest
+    ? undefined
+    : process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_API_KEY;
   let result: GeocodeResult | null = null;
 
   if (googleKey) {
@@ -167,12 +178,19 @@ async function geocodeWithNominatim(
     url.searchParams.set("format", "jsonv2");
     url.searchParams.set("limit", "1");
     url.searchParams.set("countrycodes", "us");
-    url.searchParams.set("addressdetails", "0");
+    // Structured components, so the label shown to the visitor can be built
+    // from real fields instead of parsed out of `display_name`.
+    url.searchParams.set("addressdetails", "1");
 
     // Nominatim's usage policy requires an identifying User-Agent.
     const json = (await fetchJson(url.toString(), {
       headers: { "User-Agent": "LotFoundry/1.0 (ADU feasibility demo)" },
-    })) as Array<{ lat?: string; lon?: string; display_name?: string }>;
+    })) as Array<{
+      lat?: string;
+      lon?: string;
+      display_name?: string;
+      address?: NominatimAddress;
+    }>;
     const first = Array.isArray(json) ? json[0] : null;
     const lat = Number.parseFloat(first?.lat ?? "");
     const lng = Number.parseFloat(first?.lon ?? "");
@@ -187,7 +205,10 @@ async function geocodeWithNominatim(
     return {
       lat,
       lng,
-      formattedAddress: first.display_name ?? query,
+      formattedAddress: formatNominatimAddress(
+        first.address,
+        first.display_name ?? query,
+      ),
     };
   } catch (err) {
     console.error("[/api/geocode] Nominatim geocode failed:", err);
@@ -195,6 +216,67 @@ async function geocodeWithNominatim(
   }
 }
 
+/** The subset of Nominatim's `addressdetails` response this route reads. */
+interface NominatimAddress {
+  house_number?: string;
+  road?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  hamlet?: string;
+  suburb?: string;
+  state?: string;
+  postcode?: string;
+}
+
+const STATE_CODES_BY_NAME = new Map(
+  Object.entries(US_STATE_NAMES).map(([code, name]) => [name.toLowerCase(), code]),
+);
+
+/**
+ * Build a conventional US address label from Nominatim's structured fields.
+ *
+ * `display_name` is a nine-segment OSM path — "1421, Northeast 88th Street,
+ * Maple Leaf, Seattle, King County, Washington, 98115, United States" — and it
+ * is shown to the visitor as *their address* on the screen carrying the rent
+ * and payback figures. A label that reads like database output there undercuts
+ * numbers the visitor is being asked to trust.
+ *
+ * Falls back to the raw label whenever the structured fields are too sparse to
+ * beat it, so a thin result degrades to today's behaviour rather than to a
+ * fragment.
+ */
+function formatNominatimAddress(
+  address: NominatimAddress | undefined,
+  fallback: string,
+): string {
+  if (!address) return fallback;
+
+  const street = [address.house_number, address.road].filter(Boolean).join(" ");
+  const city =
+    address.city ?? address.town ?? address.village ?? address.hamlet ?? address.suburb ?? "";
+  const state = address.state
+    ? (STATE_CODES_BY_NAME.get(address.state.toLowerCase()) ?? address.state)
+    : "";
+  const stateZip = [state, address.postcode].filter(Boolean).join(" ");
+
+  const parts = [street, city, stateZip].filter(Boolean);
+  // A street plus at least one locality component; anything less is no clearer
+  // than the raw label and loses information.
+  return street && parts.length >= 2 ? parts.join(", ") : fallback;
+}
+
+/**
+ * Whether a Nominatim hit is in the state the query asked for, used to reject
+ * a same-named street in the wrong state.
+ *
+ * Takes the *last* state-looking token in the query, not the first. A US
+ * address puts its state at the end, while the start often carries a
+ * directional that collides with a state code — "1421 NE 88th St, Seattle, WA"
+ * reads as Nebraska on a first-match scan, and every correct Washington result
+ * gets thrown away. Seattle, Portland, Washington DC and Miami all number their
+ * streets this way, so first-match loses a large share of real addresses.
+ */
 function matchesRequestedState(query: string, displayName?: string): boolean {
   const statePattern = /(?:^|[\s,])([A-Z]{2})(?=[\s,]|$)/gi;
   let stateCode: string | undefined;
@@ -203,7 +285,6 @@ function matchesRequestedState(query: string, displayName?: string): boolean {
     const candidate = match[1].toUpperCase();
     if (US_STATE_NAMES[candidate]) {
       stateCode = candidate;
-      break;
     }
   }
   if (!stateCode) return true;
