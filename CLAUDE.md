@@ -164,6 +164,8 @@ Firebase App Check uses the registered reCAPTCHA Enterprise provider in producti
 
 Without parcel API keys, the app must still resolve real lots wherever the free tier reaches: `/api/parcel` chains Regrid (paid, optional) to the public county/statewide GIS services in `lib/server/county-parcels.ts`, resolves state/ZIP/county from the keyless US Census geocoder (`lib/server/census-geocode.ts`), and fills known parcel polygons from the public USA Structures footprint layer (`lib/server/building-footprints.ts`). It degrades to the Seattle, Portland, and Austin presets only where no parcel provider has coverage. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
 
+Anonymous visitors get one real address lookup before the account ask (`lib/guest-lookup.ts`). That allowance is a funnel affordance, not a cost control: the ceiling is server-side, where `lib/server/guest-request.ts` treats a request carrying no bearer token as a guest and `/api/geocode` and `/api/parcel` then hold it to the keyless chain (Nominatim, county/statewide GIS) under their own `geocode-guest` / `parcel-guest` limiter namespaces. A guest lookup therefore cannot spend metered Google or Regrid quota however often it is repeated. Autocomplete stays signed-in only, because every suggestion source is metered; free-text Search is the guest path.
+
 ## Critical Gotchas
 
 - R3F text: avoid Drei/Troika `Text` when possible; use the canvas-based `LabelSprite` pattern because font loading can fail silently in dev.
