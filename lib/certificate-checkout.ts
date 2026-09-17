@@ -41,6 +41,22 @@ export interface StartCertificateCheckoutInput {
   parcelName: string;
   /** The signed-in user's Firebase ID token, sent as a bearer credential. */
   idToken?: string;
+  /** Current URL search params to preserve across the Stripe redirect. */
+  returnSearch?: string;
+  /** Street address of the property. */
+  address?: string;
+  /** City of the property. */
+  city?: string;
+  /** State of the property. */
+  state?: string;
+  /** Postal code of the property. */
+  zip?: string;
+  /** Latitude coordinate. */
+  lat?: number;
+  /** Longitude coordinate. */
+  lng?: number;
+  /** Full structured live parcel data when available. */
+  parcelData?: Record<string, unknown>;
 }
 
 /**
@@ -87,6 +103,14 @@ export async function startCertificateCheckout(
         certKey: input.certKey,
         parcelName: input.parcelName,
         checkoutAttemptId: getCheckoutAttemptId("certificate", input.certKey),
+        returnSearch: input.returnSearch,
+        address: input.address,
+        city: input.city,
+        state: input.state,
+        zip: input.zip,
+        lat: input.lat,
+        lng: input.lng,
+        parcelData: input.parcelData,
       }),
     });
   } catch {

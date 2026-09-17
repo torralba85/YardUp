@@ -21,6 +21,22 @@ export interface GrantCertificateInput {
   amount: number;
   /** Whether this is a demo (non-paid) grant. */
   demo?: boolean;
+  /** Display name of the lot. */
+  parcelName?: string;
+  /** Street address of the property. */
+  address?: string;
+  /** City of the property. */
+  city?: string;
+  /** State of the property. */
+  state?: string;
+  /** Postal code. */
+  zip?: string;
+  /** Latitude coordinate. */
+  lat?: number;
+  /** Longitude coordinate. */
+  lng?: number;
+  /** Structured live parcel data when available. */
+  parcelData?: Record<string, unknown>;
 }
 
 /**
@@ -38,7 +54,7 @@ export async function grantCertificate(
     .doc(purchaseId(input.uid, input.certKey));
 
   try {
-    await ref.create({
+    const docData: Record<string, unknown> = {
       uid: input.uid,
       certKey: input.certKey,
       stripeSessionId: input.stripeSessionId,
@@ -46,7 +62,17 @@ export async function grantCertificate(
       status: "granted",
       demo: input.demo ?? false,
       createdAt: FieldValue.serverTimestamp(),
-    });
+    };
+    if (input.parcelName) docData.parcelName = input.parcelName;
+    if (input.address) docData.address = input.address;
+    if (input.city) docData.city = input.city;
+    if (input.state) docData.state = input.state;
+    if (input.zip) docData.zip = input.zip;
+    if (typeof input.lat === "number") docData.lat = input.lat;
+    if (typeof input.lng === "number") docData.lng = input.lng;
+    if (input.parcelData) docData.parcelData = input.parcelData;
+
+    await ref.create(docData);
     return true;
   } catch (err) {
     if (isAlreadyExists(err)) return false;

@@ -13,6 +13,7 @@ import { metadata as privacyMetadata } from "./privacy/page";
 import { metadata as termsMetadata } from "./terms/page";
 import { metadata as loginMetadata } from "./(firebase)/login/page";
 import { metadata as signupMetadata } from "./(firebase)/signup/layout";
+import { metadata as certificatesMetadata } from "./(firebase)/certificates/page";
 
 describe("canonical metadata", () => {
   const routes = [
@@ -25,6 +26,7 @@ describe("canonical metadata", () => {
     { name: "/terms", metadata: termsMetadata, expectedCanonical: "/terms" },
     { name: "/login", metadata: loginMetadata, expectedCanonical: "/login" },
     { name: "/signup", metadata: signupMetadata, expectedCanonical: "/signup" },
+    { name: "/certificates", metadata: certificatesMetadata, expectedCanonical: "/certificates" },
   ];
 
   for (const { name, metadata, expectedCanonical } of routes) {

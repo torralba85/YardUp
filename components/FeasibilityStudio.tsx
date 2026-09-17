@@ -46,6 +46,10 @@ import {
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
+import { certificateKey } from "@/lib/certificate-key";
+import type { LiveParcelData } from "@/lib/parcel-types";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
@@ -147,7 +151,13 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const [reportOpen, setReportOpen] = useState(false);
   // Guided spine: one active step drives the whole desktop studio (replaces the
   // old activeNav + studioTab two-navigation matrix).
-  const [activeStep, setActiveStep] = useState<StudioStep>("feasibility");
+  const [activeStep, setActiveStep] = useState<StudioStep>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      if (p.has("cert") || p.get("step") === "certificate") return "certificate";
+    }
+    return "feasibility";
+  });
   // Focus target for the active step body — moved to on step change so keyboard
   // and screen-reader users land on the new content, not back at the rail.
   const stepBodyRef = useRef<HTMLDivElement | null>(null);
@@ -314,9 +324,13 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   // ── Mobile five-reveal journey (find → earn → shape → check → act) ──────
   // Separate from the desktop StudioStep spine by design (issue #130). An
   // already-resolved parcel (signed-in handoff) starts at the Earn reveal.
-  const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() =>
-    parcelMode !== "preset" || demoChosen ? "earn" : "find",
-  );
+  const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      if (p.has("cert") || p.get("step") === "certificate") return "act";
+    }
+    return parcelMode !== "preset" || demoChosen ? "earn" : "find";
+  });
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(demoChosen);
   // Whether the find decision has been made — an address resolved (live or
@@ -405,7 +419,25 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
       setDemoCommitted(true);
       setJourneyStep((step) => (step === "find" ? "earn" : step));
     }
+
+    const certParam = params.get("cert");
+    const stepParam = params.get("step");
+    if (certParam || stepParam === "certificate") {
+      setActiveStep("certificate");
+      setDemoCommitted(true);
+      setJourneyStep("act");
+      if (certParam) {
+        const matchingPreset = parcelPresets.find(
+          (p) => certificateKey(p) === certParam || p.id === certParam,
+        );
+        if (matchingPreset) {
+          setParcelId(matchingPreset.id);
+          resetToPreset(matchingPreset);
+        }
+      }
+    }
     setHydratedFromUrl(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -419,6 +451,37 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     setPendingAddressQuery(null);
   }, [authLoading, pendingAddressQuery, searchByAddress]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Recover parcel state for a purchased certificate if arriving cold with ?cert=...
+  // and no parcel has been handed off via sessionStorage.
+  useEffect(() => {
+    if (authLoading || !user || typeof window === "undefined") return;
+    const certParam = new URLSearchParams(window.location.search).get("cert");
+    if (!certParam || parcelMode !== "preset") return;
+    const isPreset = parcelPresets.some(
+      (p) => certificateKey(p) === certParam || p.id === certParam,
+    );
+    if (isPreset) return;
+
+    let cancelled = false;
+    getDoc(doc(db, "certificatePurchases", `${user.uid}_${certParam}`))
+      .then((snap) => {
+        if (cancelled || !snap.exists()) return;
+        const data = snap.data();
+        if (data.parcelData) {
+          restoreLiveParcel(data.parcelData as LiveParcelData);
+        } else if (typeof data.address === "string" && data.address) {
+          void searchByAddress(data.address);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to recover parcel for certificate:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, parcelMode, restoreLiveParcel, searchByAddress]);
 
   useEffect(() => {
     if (!hydratedFromUrl || typeof window === "undefined") return;

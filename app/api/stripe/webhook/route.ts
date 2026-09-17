@@ -107,14 +107,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const uid = session.metadata?.uid;
-    const certKey = session.metadata?.certKey;
+    const metadata = session.metadata ?? {};
+    const uid = metadata.uid;
+    const certKey = metadata.certKey;
     if (uid && certKey) {
       await grantCertificate({
         uid,
         certKey,
         stripeSessionId: session.id,
         amount: CERTIFICATE_PRICE_CENTS,
+        parcelName: metadata.parcelName,
+        address: metadata.address,
+        city: metadata.city,
+        state: metadata.state,
+        zip: metadata.zip,
+        lat: metadata.lat ? Number(metadata.lat) : undefined,
+        lng: metadata.lng ? Number(metadata.lng) : undefined,
       });
     } else {
       console.error(

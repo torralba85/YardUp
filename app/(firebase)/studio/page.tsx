@@ -34,8 +34,12 @@ export default function StudioPage() {
     // editing; those updates must not remount an active workspace. A pending
     // real-property handoff takes precedence over an old sample URL.
     if (initialDemoEntry.current === null) {
-      const scenario = parseScenarioParams(new URLSearchParams(window.location.search));
-      initialDemoEntry.current = Boolean(scenario.parcelId && !peekAddressQuery() && !peekInitialParcel());
+      const search = new URLSearchParams(window.location.search);
+      const isCert = search.has("cert");
+      const scenario = parseScenarioParams(search);
+      initialDemoEntry.current = Boolean(
+        isCert || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel()),
+      );
     }
     setDemoEntry(initialDemoEntry.current);
   }, []);

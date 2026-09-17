@@ -136,6 +136,23 @@ export function SettingsClient() {
         ) : null}
 
         <Bezel>
+          <section className="space-y-3 p-6">
+            <h2 className="lf-card-heading">Certificates of Feasibility</h2>
+            <p className="lf-body-sm text-lf-muted">
+              View, download, or open previously unlocked feasibility certificates for your properties.
+            </p>
+            <div>
+              <Link
+                href="/certificates"
+                className="inline-flex min-h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+              >
+                View your certificates
+              </Link>
+            </div>
+          </section>
+        </Bezel>
+
+        <Bezel>
           <section className="space-y-4 p-6">
             <h2 className="lf-card-heading">Your data</h2>
             <p className="lf-body-sm text-lf-muted">
