@@ -26,14 +26,14 @@ export const viewport: Viewport = {
 const description =
   "Discover what your backyard could become. Explore space for an ADU, estimated build costs, and rental potential with LotFoundry.";
 export const metadata: Metadata = {
-  title: "LotFoundry | A lot more possibility",
+  title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
   description,
   alternates: { canonical: "/" },
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },
   openGraph: {
-    title: "LotFoundry. A lot more.",
+    title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
     url: "https://lotfoundry.net",
     images: [
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LotFoundry. A lot more.",
+    title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
     images: ["/landing/a-lot-more/parcel-after.webp"],
   },

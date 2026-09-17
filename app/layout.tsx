@@ -123,6 +123,11 @@ export default function RootLayout({
         {children}
         <ServiceWorkerRegistration />
         <Analytics />
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "8880d5dd54be4476a38b6372c04d060b"}'
+        />
       </body>
     </html>
   );
