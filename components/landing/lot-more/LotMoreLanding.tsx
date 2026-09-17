@@ -370,6 +370,13 @@ export function LotMoreLanding({
                 Just looking? Try an example
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
+              <a
+                className={`${styles.textLink} ${styles.appStoreLink}`}
+                href={GOOGLE_PLAY_URL}
+              >
+                Get the Android app on Google Play
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </a>
             </div>
             <figure className={styles.heroVisual}>
               <div className={styles.artHeader}>
@@ -1016,8 +1023,6 @@ export function LotMoreLanding({
               </Link>
               <Link href="/about">About us</Link>
               <Link href="/help">Get in touch</Link>
-              {/* The only path from the web to the Play listing. Without it the
-                  Android app is unreachable from the site and from search. */}
               <a href={GOOGLE_PLAY_URL} rel="noopener">
                 Android app on Google Play
               </a>
