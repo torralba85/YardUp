@@ -97,4 +97,34 @@ describe("ReportPreview", () => {
     expect(screen.getByText(/5–9/)).toBeInTheDocument();
     expect(screen.getByText("Confirm utilities.")).toBeInTheDocument();
   });
+
+  it("renders the error alert and triggers retry when onRetryProjectBrief is provided", () => {
+    const parcel = parcelPresets[0];
+    const result = calculateFeasibility(
+      parcel,
+      defaultAduConfig,
+      defaultFinancialAssumptions,
+    );
+    const handleRetry = vi.fn();
+
+    render(
+      <ReportPreview
+        parcelName={`${parcel.address}, ${parcel.city}`}
+        result={result}
+        projectBriefError="AI returned an unreadable brief. Please try again."
+        onRetryProjectBrief={handleRetry}
+        onClose={vi.fn()}
+        onDownload={vi.fn()}
+      />,
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(/AI returned an unreadable brief\. Please try again\./);
+    expect(alert).toHaveTextContent(/The parcel facts and financial ledger remain available/);
+
+    const retryButton = screen.getByRole("button", { name: /try again/i });
+    expect(retryButton).toBeInTheDocument();
+    retryButton.click();
+    expect(handleRetry).toHaveBeenCalledTimes(1);
+  });
 });

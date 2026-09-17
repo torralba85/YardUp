@@ -11,6 +11,7 @@ import {
   FileText,
   Hammer,
   Printer,
+  RotateCcw,
   Ruler,
   Share2,
   Sparkles,
@@ -34,6 +35,8 @@ export interface ReportPreviewProps {
   projectBrief?: AIProjectBrief | null;
   projectBriefLoading?: boolean;
   projectBriefError?: string | null;
+  /** Optional handler to retry generating the project brief on failure. */
+  onRetryProjectBrief?: () => void;
   /** Called to dismiss the preview. */
   onClose: () => void;
   /** Called to download the report (e.g. text/HTML certificate). */
@@ -63,6 +66,7 @@ export default function ReportPreview({
   projectBrief,
   projectBriefLoading = false,
   projectBriefError = null,
+  onRetryProjectBrief,
   onClose,
   onDownload,
   onExportCsv,
@@ -315,6 +319,7 @@ export default function ReportPreview({
                 brief={projectBrief ?? null}
                 loading={projectBriefLoading}
                 error={projectBriefError}
+                onRetry={onRetryProjectBrief}
               />
             </div>
           </div>
@@ -355,10 +360,12 @@ function CertificateBriefSection({
   brief,
   loading,
   error,
+  onRetry,
 }: {
   brief: AIProjectBrief | null;
   loading: boolean;
   error: string | null;
+  onRetry?: () => void;
 }) {
   if (!brief) {
     return (
@@ -381,10 +388,27 @@ function CertificateBriefSection({
         ) : error ? (
           <div
             role="alert"
-            className="mt-3 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
+            className="mt-3 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
           >
-            <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-            {error} The parcel facts and financial ledger remain available in this certificate.
+            <div className="flex items-start gap-2">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span>
+                {error} The parcel facts and financial ledger remain available in this certificate.
+              </span>
+            </div>
+            {onRetry && (
+              <div className="mt-2.5 pl-5">
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1.5 border border-lf-brick/50 bg-transparent px-2.5 py-1 text-xs font-medium text-lf-brick transition hover:bg-lf-brick/10 disabled:opacity-50"
+                >
+                  <RotateCcw size={12} className={loading ? "animate-spin" : ""} aria-hidden="true" />
+                  <span>Try again</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <p className="mt-2 text-xs leading-5 text-lf-muted">

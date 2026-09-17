@@ -64,7 +64,7 @@ export interface AIProjectBrief {
 }
 
 export interface AIProjectBriefInput {
-  parcel: Parcel & { zoning?: string; source?: string };
+  parcel: Parcel & { zoning?: string; source?: string; state?: string; zip?: string };
   config: Pick<ADUConfig, "footprint" | "width" | "length" | "height" | "roof" | "finish">;
   result: Pick<FeasibilityResult, "aduSqft" | "allowedFootprint" | "remainingCapacity" | "coveragePercent" | "maxCoveragePercent" | "zoningStatus" | "costLow" | "costHigh" | "monthlyRent" | "annualNoi" | "paybackYears" | "warnings">;
 }
