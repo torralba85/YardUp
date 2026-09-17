@@ -50,7 +50,9 @@ export default function PrivacyPage() {
           <strong>Apple App Store / Google Play Billing</strong> in store apps. Optional AI
           style-match concepts use <strong>OpenAI</strong> when you consent to send a photo.
           Usage measurement uses <strong>Google Analytics 4</strong>, and only after you accept
-          analytics cookies (see section 7).
+          analytics cookies (see section 7). We also use{" "}
+          <strong>Cloudflare Web Analytics</strong> to count page views and referrers; it is
+          cookieless and runs on every visit (see section 7).
         </p>
       </LegalSection>
 
@@ -102,8 +104,15 @@ export default function PrivacyPage() {
           address, email, saved scenarios, or feasibility results.
         </p>
         <p>
-          You can change your mind at any time. Turning analytics off stops collection and
-          deletes the analytics cookies already in your browser.
+          We also use Cloudflare Web Analytics to count page views and referrers. It runs on
+          every visit and is not covered by the control below, because it stores nothing on
+          your device: no cookies, no local storage, and no device fingerprinting. It cannot
+          follow you across other sites, and it does not receive your address, email, saved
+          scenarios, or feasibility results.
+        </p>
+        <p>
+          You can change your mind at any time. Turning Google Analytics off stops that
+          collection and deletes the analytics cookies already in your browser.
         </p>
         <CookiePreferences />
       </LegalSection>
