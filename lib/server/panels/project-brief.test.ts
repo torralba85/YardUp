@@ -112,6 +112,30 @@ describe("projectBriefDef", () => {
 
     expect(out.tracks[0].type).toBe("ministerial");
   });
+
+  it("uses parcel.state to form jurisdiction when state is available", async () => {
+    const input = validInput();
+    const sanJoseInput = {
+      ...input,
+      parcel: {
+        ...input.parcel,
+        address: "141 N Almaden Blvd",
+        city: "San Jose",
+        state: "CA",
+        zip: "95110",
+      },
+    };
+    const ctx = projectBriefDef.buildContext(sanJoseInput);
+    expect(ctx.jurisdiction).toBe("San Jose, CA");
+
+    const lookup = projectBriefDef.tools.find((tool) => tool.name === "lookup_permit_tracks")!;
+    const out = (await lookup.execute({}, ctx)) as {
+      tracks: Array<{ id: string; type: string }>;
+    };
+
+    expect(out.tracks[0].id).toBe("ca-state-adu-ministerial");
+    expect(out.tracks[0].type).toBe("ministerial");
+  });
 });
 
 describe("redactBriefToPreview", () => {

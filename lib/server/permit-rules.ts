@@ -100,10 +100,42 @@ const STAGES_BY_TRACK: Record<string, PermitStageBenchmark[]> = {
   ],
 };
 
-/** Parse a two-letter state code out of a `"City, ST 00000"` string. */
-function parseStateCode(jurisdiction: string): string | null {
-  const match = jurisdiction.match(/,\s*([A-Za-z]{2})\b/);
-  return match ? match[1].toUpperCase() : null;
+/** Known US 50 state + DC two-letter postal abbreviations. */
+const US_STATE_CODES = new Set([
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+  "DC",
+]);
+
+/** Parse a two-letter state code out of a `"City, ST 00000"` or full address string. */
+export function parseStateCode(jurisdiction: string): string | null {
+  const commaRegex = /,\s*([A-Za-z]{2})\b/g;
+  const commaMatches: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = commaRegex.exec(jurisdiction)) !== null) {
+    commaMatches.push(m[1].toUpperCase());
+  }
+  for (let i = commaMatches.length - 1; i >= 0; i--) {
+    if (US_STATE_CODES.has(commaMatches[i])) {
+      return commaMatches[i];
+    }
+  }
+
+  const wordRegex = /\b([A-Za-z]{2})\b/g;
+  const wordMatches: string[] = [];
+  while ((m = wordRegex.exec(jurisdiction)) !== null) {
+    wordMatches.push(m[1].toUpperCase());
+  }
+  for (let i = wordMatches.length - 1; i >= 0; i--) {
+    if (US_STATE_CODES.has(wordMatches[i])) {
+      return wordMatches[i];
+    }
+  }
+
+  return null;
 }
 
 /**

@@ -63,6 +63,8 @@ describe("AI project brief input", () => {
       ...preset,
       zoning: "R-1",
       source: "regrid",
+      state: "WA",
+      zip: "98115",
       boundaryGeoJson: {
         type: "Polygon" as const,
         coordinates: [
@@ -95,6 +97,8 @@ describe("AI project brief input", () => {
     expect(input.parcel).not.toHaveProperty("expectedRent");
     expect(input.parcel.zoning).toBe("R-1");
     expect(input.parcel.source).toBe("regrid");
+    expect(input.parcel.state).toBe("WA");
+    expect(input.parcel.zip).toBe("98115");
     expect(input.parcel.setbacks).toEqual(preset.setbacks);
   });
 });

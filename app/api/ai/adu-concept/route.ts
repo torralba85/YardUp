@@ -9,6 +9,7 @@ import {
   extractResponseText,
   OpenAIProviderError,
 } from "@/lib/server/openai";
+import { cleanJsonText } from "@/lib/server/ai-pipeline";
 
 export const runtime = "nodejs";
 
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     const styleResponse = await createOpenAIResponse({
       model: TEXT_MODEL,
-      max_output_tokens: 900,
+      max_output_tokens: 2048,
       input: [
         {
           role: "system",
@@ -263,7 +264,8 @@ function matchesDeclaredImageType(bytes: Buffer, type: string): boolean {
 }
 
 function parseStyleAnalysis(raw: string): StyleAnalysis {
-  const value = JSON.parse(raw) as unknown;
+  const cleaned = cleanJsonText(raw);
+  const value = JSON.parse(cleaned) as unknown;
   if (!isRecord(value) || !isRecord(value.recommendedConfig)) {
     throw new OpenAIProviderError("OpenAI returned an invalid style analysis.");
   }

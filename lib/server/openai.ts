@@ -27,6 +27,8 @@ export interface OpenAIFunctionCall {
 }
 
 export interface OpenAIResponseShape {
+  status?: string;
+  incomplete_details?: { reason?: string };
   output_text?: string;
   output?: Array<OpenAIOutputItem | null | undefined>;
   error?: { message?: string };
