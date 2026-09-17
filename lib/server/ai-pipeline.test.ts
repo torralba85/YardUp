@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { NextRequest } from "next/server";
 import {
+  cleanJsonText,
   createAIPanelRoute,
   executeTool,
   runAgentic,
@@ -309,5 +310,63 @@ describe("executeTool", () => {
   it("returns an { error } payload for an unknown tool name", async () => {
     const out = await executeTool(tools, { call_id: "c3", name: "missing", arguments: "{}" }, {});
     expect(JSON.parse(out).error).toMatch(/unknown tool/i);
+  });
+});
+
+describe("cleanJsonText", () => {
+  it("leaves clean JSON string untouched", () => {
+    expect(cleanJsonText('{"a": 1}')).toBe('{"a": 1}');
+  });
+
+  it("strips markdown json fences", () => {
+    const fenced = '```json\n{"a": 1}\n```';
+    expect(cleanJsonText(fenced)).toBe('{"a": 1}');
+  });
+
+  it("strips generic markdown fences", () => {
+    const fenced = '```\n{"a": 1}\n```';
+    expect(cleanJsonText(fenced)).toBe('{"a": 1}');
+  });
+
+  it("extracts balanced JSON when conversational text surrounds it", () => {
+    const conversational = 'Here is your brief:\n{"a": 1}\nHope this helps!';
+    expect(cleanJsonText(conversational)).toBe('{"a": 1}');
+  });
+});
+
+describe("runAgentic edge cases", () => {
+  it("successfully parses fenced JSON in the model final answer", async () => {
+    const fencedFinal = {
+      output: [
+        {
+          type: "message",
+          content: [{ type: "output_text", text: '```json\n{"answer": "clean"}\n```' }],
+        },
+      ],
+    };
+    const result = await runAgentic(testDef, { q: "x" }, { q: "x" }, {
+      createResponse: async () => fencedFinal as never,
+      executeTool: async () => "{}",
+    });
+    expect(result).toEqual({ answer: "clean" });
+  });
+
+  it("throws OpenAIProviderError when response status is incomplete", async () => {
+    const incompleteRes = {
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      output: [
+        {
+          type: "message",
+          content: [{ type: "output_text", text: '{"answer": "trunc' }],
+        },
+      ],
+    };
+    await expect(
+      runAgentic(testDef, { q: "x" }, { q: "x" }, {
+        createResponse: async () => incompleteRes as never,
+        executeTool: async () => "{}",
+      }),
+    ).rejects.toThrow(/OpenAI output was incomplete/i);
   });
 });

@@ -2,7 +2,7 @@ import type { AIProjectBriefInput } from "./ai-types";
 import type { ADUConfig, FeasibilityResult, Parcel } from "./feasibility";
 
 export interface AIProjectBriefSource {
-  parcel: Parcel & { zoning?: string; source?: string };
+  parcel: Parcel & { zoning?: string; source?: string; state?: string; zip?: string };
   result: FeasibilityResult;
   config: ADUConfig;
 }
@@ -28,6 +28,8 @@ export function buildAIProjectBriefInput({
       setbacks: parcel.setbacks,
       zoning: parcel.zoning,
       source: parcel.source,
+      ...(parcel.state ? { state: parcel.state } : {}),
+      ...(parcel.zip ? { zip: parcel.zip } : {}),
     },
     config: {
       footprint: config.footprint,

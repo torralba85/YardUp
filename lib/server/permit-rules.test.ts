@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { getStageBenchmarks, lookupPermitTracks } from "./permit-rules";
+import { getStageBenchmarks, lookupPermitTracks, parseStateCode } from "./permit-rules";
+
+describe("parseStateCode", () => {
+  it("resolves state from full addresses with street, city, state, zip, and country", () => {
+    expect(parseStateCode("141 N Almaden Blvd, San Jose, CA 95110, USA")).toBe("CA");
+    expect(parseStateCode("San Jose, CA 95110")).toBe("CA");
+    expect(parseStateCode("San Jose, CA")).toBe("CA");
+    expect(parseStateCode("San Jose, 141 N Almaden Blvd, San Jose, CA 95110")).toBe("CA");
+    expect(parseStateCode("1600 Pennsylvania Ave NW, Washington, DC 20500")).toBe("DC");
+    expect(parseStateCode("Seattle, WA 98115")).toBe("WA");
+    expect(parseStateCode("Austin, TX 78701")).toBe("TX");
+    expect(parseStateCode("Portland, OR 97201")).toBe("OR");
+  });
+
+  it("returns null for strings without valid US state codes", () => {
+    expect(parseStateCode("Unknownville")).toBeNull();
+    expect(parseStateCode("141 N Almaden Blvd")).toBeNull();
+  });
+});
 
 describe("lookupPermitTracks", () => {
   it("returns a ministerial track for California jurisdictions", () => {
@@ -8,6 +26,13 @@ describe("lookupPermitTracks", () => {
     const ministerial = tracks.find((t) => t.type === "ministerial");
     expect(ministerial).toBeDefined();
     expect(ministerial?.basis).toMatch(/66310|66317|ministerial/i);
+  });
+
+  it("resolves California ministerial track from full address with street numbers", () => {
+    const tracks = lookupPermitTracks("141 N Almaden Blvd, San Jose, CA 95110, USA");
+    expect(tracks.length).toBeGreaterThan(0);
+    expect(tracks[0].id).toBe("ca-state-adu-ministerial");
+    expect(tracks[0].type).toBe("ministerial");
   });
 
   it("reads the state code from a demo-preset city string", () => {

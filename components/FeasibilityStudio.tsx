@@ -500,46 +500,59 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     setReportAutoFocus(true);
   }
 
-  function handleGenerateProjectBrief(idToken: string): Promise<AIProjectBriefResponse> {
-    const existingRequest = projectBriefRequestRef.current;
-    if (existingRequest?.key === projectBriefKey) return existingRequest.promise;
+  const handleGenerateProjectBrief = useCallback(
+    (idToken: string): Promise<AIProjectBriefResponse> => {
+      const existingRequest = projectBriefRequestRef.current;
+      if (existingRequest?.key === projectBriefKey) return existingRequest.promise;
 
-    const requestKey = projectBriefKey;
-    const requestInput = projectBriefInput;
-    const existingData = projectBriefState?.key === requestKey ? projectBriefState.data : null;
-    setProjectBriefState({ key: requestKey, data: existingData, loading: true, error: null });
+      const requestKey = projectBriefKey;
+      const requestInput = projectBriefInput;
+      const existingData = projectBriefState?.key === requestKey ? projectBriefState.data : null;
+      setProjectBriefState({ key: requestKey, data: existingData, loading: true, error: null });
 
-    const requestId = Symbol("project-brief-request");
-    const promise = requestProjectBrief(requestInput, idToken)
-      .then((data) => {
-        setProjectBriefState((current) =>
-          current?.key === requestKey
-            ? { key: requestKey, data, loading: false, error: null }
-            : current,
-        );
-        return data;
-      })
-      .catch((err: unknown) => {
-        const message =
-          err instanceof AIRequestError
-            ? err.userMessage
-            : "Property notes are unavailable right now. Please try again.";
-        setProjectBriefState((current) =>
-          current?.key === requestKey
-            ? { key: requestKey, data: existingData, loading: false, error: message }
-            : current,
-        );
-        throw err;
-      })
-      .finally(() => {
-        if (projectBriefRequestRef.current?.id === requestId) {
-          projectBriefRequestRef.current = null;
-        }
-      });
+      const requestId = Symbol("project-brief-request");
+      const promise = requestProjectBrief(requestInput, idToken)
+        .then((data) => {
+          setProjectBriefState((current) =>
+            current?.key === requestKey
+              ? { key: requestKey, data, loading: false, error: null }
+              : current,
+          );
+          return data;
+        })
+        .catch((err: unknown) => {
+          const message =
+            err instanceof AIRequestError
+              ? err.userMessage
+              : "Property notes are unavailable right now. Please try again.";
+          setProjectBriefState((current) =>
+            current?.key === requestKey
+              ? { key: requestKey, data: existingData, loading: false, error: message }
+              : current,
+          );
+          throw err;
+        })
+        .finally(() => {
+          if (projectBriefRequestRef.current?.id === requestId) {
+            projectBriefRequestRef.current = null;
+          }
+        });
 
-    projectBriefRequestRef.current = { key: requestKey, id: requestId, promise };
-    return promise;
-  }
+      projectBriefRequestRef.current = { key: requestKey, id: requestId, promise };
+      return promise;
+    },
+    [projectBriefInput, projectBriefKey, projectBriefState],
+  );
+
+  const handleRetryProjectBrief = useCallback(async () => {
+    if (!user) return;
+    try {
+      const idToken = await user.getIdToken();
+      await handleGenerateProjectBrief(idToken);
+    } catch {
+      // Error state is captured inside handleGenerateProjectBrief
+    }
+  }, [handleGenerateProjectBrief, user]);
 
   async function handleSaveScenario() {
     if (typeof window === "undefined") return;
@@ -849,6 +862,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             projectBrief={projectBrief}
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
+            onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
             onClose={() => setReportOpen(false)}
             onDownload={downloadReport}
             onExportCsv={exportCsv}
@@ -1006,6 +1020,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           projectBrief={projectBrief}
           projectBriefLoading={projectBriefLoading}
           projectBriefError={projectBriefError}
+          onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
           onExportCsv={exportCsv}

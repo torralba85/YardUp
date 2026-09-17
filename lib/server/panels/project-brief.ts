@@ -154,7 +154,7 @@ export const projectBriefDef: AIPanelDefinition<
   id: "project-brief",
   namespace: "ai-project-brief",
   rateLimit: { limit: 8, windowMs: 60_000 },
-  maxOutputTokens: 1800,
+  maxOutputTokens: 4096,
   requiredToolSequence: ["lookup_permit_tracks", "get_stage_benchmarks"],
   systemPrompt: SYSTEM_PROMPT,
   outputSchema: OUTPUT_SCHEMA,
@@ -175,11 +175,18 @@ export const projectBriefDef: AIPanelDefinition<
     return { ok: true, value: input as AIProjectBriefInput };
   },
   buildContext: (input) => {
+    const state = input.parcel.state?.trim();
     const city = input.parcel.city.trim();
     const address = input.parcel.address.trim();
-    return {
-      jurisdiction: city.includes(",") || !address ? city : `${city}, ${address}`,
-    };
+    let jurisdiction = "";
+    if (state && !city.includes(",")) {
+      jurisdiction = `${city}, ${state}`;
+    } else if (city.includes(",") || !address) {
+      jurisdiction = city;
+    } else {
+      jurisdiction = `${city}, ${address}`;
+    }
+    return { jurisdiction };
   },
   tools: [
     {

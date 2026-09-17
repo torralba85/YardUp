@@ -15,7 +15,7 @@ import {
 } from "@/lib/server/openai";
 
 const DEFAULT_TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-sol";
-const DEFAULT_MAX_OUTPUT_TOKENS = 1000;
+const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
 const DEFAULT_MAX_TOOL_ROUNDS = 4;
 const DEFAULT_DEADLINE_MS = 75_000;
 
@@ -100,10 +100,43 @@ function defaultDeps<Ctx>(): AIPipelineDeps<Ctx> {
   };
 }
 
+/**
+ * Strips markdown code fences (e.g. ```json ... ```) or surrounding prose,
+ * returning the inner JSON candidate string.
+ */
+export function cleanJsonText(raw: string): string {
+  let text = raw.trim();
+  if (text.startsWith("```")) {
+    text = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+  }
+  try {
+    JSON.parse(text);
+    return text;
+  } catch {
+    const firstBrace = text.indexOf("{");
+    const lastBrace = text.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const candidate = text.slice(firstBrace, lastBrace + 1);
+      try {
+        JSON.parse(candidate);
+        return candidate;
+      } catch {
+        // Fall back to original trimmed text
+      }
+    }
+  }
+  return text;
+}
+
 function parseFinal<Output>(res: OpenAIResponseShape): Output {
+  if (res.status === "incomplete") {
+    const reason = res.incomplete_details?.reason || "output truncated";
+    throw new OpenAIProviderError(`OpenAI output was incomplete (${reason}).`);
+  }
   const text = extractResponseText(res);
   if (!text) throw new OpenAIProviderError("OpenAI returned no final output.");
-  return JSON.parse(text) as Output;
+  const cleaned = cleanJsonText(text);
+  return JSON.parse(cleaned) as Output;
 }
 
 function outputItemsForHistory(
