@@ -366,6 +366,18 @@
   margin-top: 8px;
   font-weight: 500;
 }
+.heroCopy > .appStoreLink {
+  display: flex;
+  width: 190px;
+  max-width: 100%;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.appStoreLink img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 .heroVisual {
   align-self: stretch;
   display: flex;

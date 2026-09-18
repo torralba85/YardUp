@@ -370,6 +370,20 @@ export function LotMoreLanding({
                 Just looking? Try an example
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
+              <a
+                className={`${styles.textLink} ${styles.appStoreLink}`}
+                href={GOOGLE_PLAY_URL}
+              >
+                {/* Official badge from Google's Partner Marketing Hub:
+                    partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/landing/google-play-badge.svg"
+                  alt="Get it on Google Play"
+                  width={238.96}
+                  height={70.87}
+                />
+              </a>
             </div>
             <figure className={styles.heroVisual}>
               <div className={styles.artHeader}>
@@ -1016,8 +1030,6 @@ export function LotMoreLanding({
               </Link>
               <Link href="/about">About us</Link>
               <Link href="/help">Get in touch</Link>
-              {/* The only path from the web to the Play listing. Without it the
-                  Android app is unreachable from the site and from search. */}
               <a href={GOOGLE_PLAY_URL} rel="noopener">
                 Android app on Google Play
               </a>
