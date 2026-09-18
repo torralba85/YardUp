@@ -374,8 +374,15 @@ export function LotMoreLanding({
                 className={`${styles.textLink} ${styles.appStoreLink}`}
                 href={GOOGLE_PLAY_URL}
               >
-                Get the Android app on Google Play
-                <ArrowUpRight size={17} aria-hidden="true" />
+                {/* Official badge from Google's Partner Marketing Hub:
+                    partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/landing/google-play-badge.svg"
+                  alt="Get it on Google Play"
+                  width={238.96}
+                  height={70.87}
+                />
               </a>
             </div>
             <figure className={styles.heroVisual}>

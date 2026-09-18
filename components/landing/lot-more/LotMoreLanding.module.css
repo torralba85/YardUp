@@ -368,14 +368,15 @@
 }
 .heroCopy > .appStoreLink {
   display: flex;
-  width: fit-content;
+  width: 190px;
   max-width: 100%;
-  gap: 8px;
-  margin-top: 0;
-  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 12px;
 }
-.appStoreLink > svg {
-  flex-shrink: 0;
+.appStoreLink img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .heroVisual {
   align-self: stretch;
