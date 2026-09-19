@@ -39,4 +39,19 @@ for (const [density, size] of Object.entries({ mdpi: 48, hdpi: 72, xhdpi: 96, xx
   await writeFile(new URL(`native/android/app/src/main/res/drawable-${density}/ic_notification_icon.png`, root),
     await sharp(Buffer.from(notification)).resize(size / 2, size / 2).png().toBuffer());
 }
+
+// Transparent background versions
+const markContentClean = mark
+  .replace(/^<svg[^>]*>/, "")
+  .replace(/<\/svg>\s*$/, "")
+  .replace(/<rect width="48" height="48"[^>]*\/>/, "")
+  .trim();
+const artworkTransparent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><svg x="96" y="96" width="320" height="320" viewBox="0 0 48 48">${markContentClean}</svg></svg>`;
+const artworkTrimmed = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">${markContentClean}</svg>`;
+
+await writeFile(new URL("public/icon-512-transparent.png", root), await sharp(Buffer.from(artworkTransparent)).resize(512, 512).png({ compressionLevel: 9 }).toBuffer());
+await writeFile(new URL("public/logo-transparent.png", root), await sharp(Buffer.from(artworkTrimmed)).resize(512, 512).png({ compressionLevel: 9 }).toBuffer());
+await writeFile(new URL("public/icon-transparent.svg", root), artworkTransparent + "\n");
+await writeFile(new URL("public/logo-transparent.svg", root), artworkTrimmed + "\n");
+
 console.log(`Rendered app icons from ${fileURLToPath(new URL("public/landing/a-lot-more/mark.svg", root))}`);
