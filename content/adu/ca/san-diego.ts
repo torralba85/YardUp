@@ -1,0 +1,239 @@
+/**
+ * San Diego ADU jurisdiction content.
+ *
+ * Ported from san-diego-page-copy.md and verified against San Diego
+ * Municipal Code Chapter 14, Article 1, Division 3 (SDMC § 141.0302) and
+ * Development Services Information Bulletins 400 and 501.
+ *
+ * @module adu/ca/san-diego
+ */
+import type { JurisdictionContent } from "@/lib/adu/types";
+
+export const sanDiego: JurisdictionContent = {
+  state: "ca",
+  stateName: "California",
+  city: "San Diego",
+  slug: "san-diego",
+  county: "San Diego County",
+  asOf: "2026-09-18",
+  metaTitle: "ADU Cost & Rules in San Diego (2026) | LotFoundry",
+  metaDescription:
+    "What you can actually build in San Diego: size caps, the zero-setback rule, permit costs, and what an ADU rents for. Run the numbers on your own lot, free.",
+  h1: "ADU Cost and Rules in San Diego, California",
+  coastalCallout:
+    "The 2025 and 2026 amendments took effect outside the Coastal Zone only. If your property is inside it, you are still under the prior ordinance until the California Coastal Commission certifies the changes. Most ADU guides for San Diego miss this. Check whether your parcel is in the Coastal Zone before you rely on anything below.",
+  setbackDiagram: {
+    shortLabel: "Under 16 ft tall",
+    shortRule: "0 ft side and rear — build to the line",
+    tallLabel: "16 ft or taller",
+    tallRule: "4 ft side and rear",
+  },
+  introAnswer: [
+    "Enter your San Diego address and see what fits on your lot — buildable area, setbacks, a placed ADU in 3D, and what it costs against what it rents for.",
+    "San Diego is one of the more permissive ADU jurisdictions in California, with detached and attached ADUs from 150 to 1,200 sq ft, junior ADUs up to 500 sq ft, and a zero side-and-rear setback rule for units under 16 feet tall outside fire hazard zones.",
+  ],
+  metaSizeNote: "150 to 1,200 sq ft",
+  metaSetbackNote: "the zero-setback rule",
+  metaParkingNote: "generally no parking required",
+  glance: [
+    {
+      label: "Max size — detached",
+      value: "150 to 1,200 sq ft",
+      note: "State guarantees 850 sq ft (1BR) / 1,000 sq ft (2+BR); San Diego permits up to 1,200 sq ft detached under SDMC § 141.0302",
+    },
+    {
+      label: "Max size — attached",
+      value: "Up to 50% of primary dwelling living area (min. 850–1,000 sq ft guaranteed)",
+      note: "Max two stories in single-dwelling zones",
+    },
+    {
+      label: "Max size — JADU",
+      value: "150 to 500 sq ft",
+      note: "Must be contained entirely within existing or proposed single-family residence",
+    },
+    {
+      label: "Max height — detached",
+      value: "Per base zone (capped at 2 stories in single-dwelling zones)",
+      note: "16 ft height threshold dictates setbacks; base zone limits apply",
+    },
+    {
+      label: "Rear and side setbacks",
+      value: "0 ft under 16 ft tall; 4 ft at 16 ft or taller",
+      note: "4 ft minimum applies in Very High Fire Hazard Severity Zones at any height",
+    },
+    {
+      label: "Front setback",
+      value: "Per base zone (ADUs cannot be located in a front yard)",
+    },
+    {
+      label: "Parking required",
+      value: "Generally none",
+      note: "1 space for Beach Impact Overlay outside TPA, or Bonus Program outside TPA",
+    },
+    {
+      label: "Owner-occupancy",
+      value: "Never required for standard ADUs",
+      note: "JADU occupancy only where sanitation is shared with main home",
+      confidence: "unverified",
+    },
+    {
+      label: "Lot-size minimum",
+      value: "None (prohibited by state law)",
+    },
+    {
+      label: "Approval type & timeline",
+      value: "Ministerial; 3–5 months typical (5–7 months in Coastal Zone)",
+      note: "State 60-day decision clock runs once deemed complete; IB-400 checklist governs",
+      confidence: "secondary",
+    },
+  ],
+  cityDiffers: [
+    {
+      heading: "What you can build in San Diego",
+      paragraphs: [
+        "San Diego is one of the more permissive ADU jurisdictions in California, and the city has amended its rules three times since 2024. Here is where things stand.",
+        "A detached or attached ADU runs from 150 to 1,200 square feet. A junior ADU — a JADU, which has to sit entirely inside your existing house — runs from 150 to 500 square feet.",
+        "On a single-family property you can combine one JADU, one converted ADU (a garage conversion, typically) and one detached or attached ADU. That is three additional units on a standard lot, which is why San Diego permitted roughly 2,285 ADUs inside city limits in 2024 — about a quarter of all housing the city produced that year.",
+        "In single-dwelling zones, detached ADUs are capped at two stories. There is no single citywide height number beyond that; your ADU conforms to whatever your base zone allows, which varies parcel to parcel. The Studio above resolves it for your specific address.",
+      ],
+    },
+    {
+      heading: "Setbacks: the rule that decides your lot",
+      paragraphs: [
+        "This is the single most valuable thing to understand about building in San Diego, and it hinges entirely on one number: sixteen feet.",
+        "Keep your ADU under 16 feet tall and you need no side or rear setback at all. You can build to the property line. Outside a Very High Fire Hazard Severity Zone, that is the rule.",
+        "Go to 16 feet or taller next to a residential zone and you owe a 4-foot setback on the sides and rear. Same 4 feet applies anywhere in a Very High Fire Hazard Severity Zone, at any height.",
+        "Front setbacks follow your base zone, and an ADU cannot go in a front yard.",
+        "The practical consequence: on a narrow lot, a single-story ADU under 16 feet may yield more usable square footage than a taller two-story design, because the short one can hug the line and the tall one gives up four feet on three sides. That tradeoff is worth modeling before you talk to a designer — the Studio does it live.",
+      ],
+    },
+    {
+      heading: "Parking",
+      paragraphs: [
+        "Generally none required. Two exceptions worth knowing:",
+        "A garage-conversion ADU in the Beach Impact Overlay Zone, outside a Transit Priority Area, needs one space.",
+        "An Affordable or Bonus Program ADU outside a Transit Priority Area needs one space.",
+      ],
+    },
+    {
+      heading: "The ADU Home Density Bonus Program",
+      paragraphs: [
+        "San Diego's bonus program lets you add a non-deed-restricted ADU for each qualifying affordable ADU you build, in designated Sustainable Development Areas. Outside those areas the cap is one bonus ADU.",
+        "The August 2025 amendments narrowed this significantly: the program no longer applies in RS-1-1 through RS-1-10 or RS-11 zones unless your parcel sits in a high or highest resource area. If you were counting on the bonus program, confirm your zone first — a lot of 2024-era advice about it is now wrong.",
+        "There is also a Community Enhancement Fee on affordable ADUs under 750 square feet, with waivers available in certain resource areas.",
+      ],
+    },
+  ],
+  fees: {
+    heading: "What it costs",
+    paragraphs: [
+      "Build costs and permit costs below are estimates, not the City's fee schedule. San Diego publishes actual construction permit fees in Information Bulletin 501 — check it for your project.",
+      "Permit costs are commonly reported around $26–28 per square foot, with a reduced rate near $13 per square foot for units under 500 square feet — which is one reason small units pencil out better than their size suggests. Plan check typically lands in the $1,500–$2,500 range.",
+    ],
+    bullets: [
+      "Permit fees: commonly reported around $26–28 per square foot (reduced near $13/sq ft under 500 sq ft)",
+      "Plan check fees: typically $1,500–$2,500 depending on project complexity",
+      "Development impact fees: none under 750 sq ft; proportional above",
+      "School fees: exempt under 500 sq ft",
+      "Official fee schedule: Information Bulletin 501 (Fee Schedule for Construction Permits - Structures)",
+    ],
+  },
+  processIntro:
+    "Roughly 3 to 5 months for a standard permit, or 5 to 7 months inside the Coastal Zone (design and construction sit on top of that). Most San Diego ADUs follow the ministerial permit pathway outlined in Information Bulletin 400:",
+  processSteps: [
+    {
+      title: "Confirm your overlays",
+      detail:
+        "Check your parcel against the Coastal Overlay Zone, Very High Fire Hazard Severity Zone, and Transit Priority Area maps before anything else. These determine setbacks, parking, and review timelines.",
+    },
+    {
+      title: "Pick a plan path",
+      detail:
+        "Choose between custom architectural drawings and city preapproved standard plans. Standard plans shorten plan check review into a streamlined verification.",
+    },
+    {
+      title: "Prepare the submittal",
+      detail:
+        "Assemble architectural site plans, structural calculations, Title 24 energy calculations, and soils/geotechnical reports per Information Bulletin 400.",
+    },
+    {
+      title: "Submit to Development Services",
+      detail:
+        "File through the city's online permit portal. Complete submittals are reviewed ministerially without a public hearing.",
+    },
+    {
+      title: "Permit, build, inspect",
+      detail:
+        "Pull building permits, begin construction, and schedule required building, trade, and final inspections.",
+    },
+  ],
+  permitPortal: {
+    label: "City of San Diego ADU Information Bulletin 400",
+    url: "https://www.sandiego.gov/development-services/forms-publications/information-bulletins/400",
+  },
+  faqs: [
+    {
+      question: "Can I build an ADU to my property line in San Diego?",
+      answer:
+        "Yes, if it stays under 16 feet tall and you are not in a Very High Fire Hazard Severity Zone. Side and rear setbacks drop to zero. At 16 feet or taller next to a residential zone, you owe 4 feet.",
+    },
+    {
+      question: "How many ADUs can I put on a single-family lot in San Diego?",
+      answer:
+        "You can combine one JADU, one converted ADU such as a garage conversion, and one detached or attached ADU. The maximum is further limited by your lot area, so confirm against your parcel.",
+    },
+    {
+      question: "How big can a San Diego ADU be?",
+      answer:
+        "150 to 1,200 square feet for an ADU. A JADU is 150 to 500 square feet and must sit entirely within the existing house.",
+    },
+    {
+      question: "Do I need to add parking for an ADU in San Diego?",
+      answer:
+        "Usually not. Exceptions are a garage conversion in the Beach Impact Overlay Zone outside a Transit Priority Area, and Bonus Program ADUs outside a Transit Priority Area.",
+    },
+    {
+      question: "Can my ADU be two stories?",
+      answer:
+        "In single-dwelling zones, detached ADUs are capped at two stories. Overall height still has to conform to your base zone.",
+    },
+    {
+      question: "Does the Coastal Zone change anything?",
+      answer:
+        "Considerably. The 2025 and 2026 amendments apply outside the Coastal Zone only. Inside it, the prior ordinance governs until the Coastal Commission certifies the changes, and permit timelines run longer — 5 to 7 months rather than 3 to 5.",
+    },
+    {
+      question: "What does an ADU cost to build in San Diego?",
+      answer:
+        "Typical build costs range from roughly $157K–$197K for a 400 sq ft unit to $390K–$500K for a 1,200 sq ft unit under LotFoundry's cost engine. Permit costs add roughly $26–28 per square foot, less for units under 500 square feet, plus $1,500–$2,500 for plan check.",
+    },
+    {
+      question: "Is an ADU worth it in San Diego?",
+      answer:
+        "It depends almost entirely on your lot and your build size, which is what the Studio is for. The inputs that decide it are buildable area after setbacks, build cost at your chosen size, and achievable rent for that size in your neighborhood.",
+    },
+  ],
+  neighbors: ["chula-vista", "escondido"],
+  sources: [
+    {
+      label: "City of San Diego Development Services — ADU / JADU Program",
+      url: "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    },
+    {
+      label: "City of San Diego Development Services — Regulatory Updates",
+      url: "https://www.sandiego.gov/development-services/regulatory-updates",
+    },
+    {
+      label: "California Department of Housing and Community Development — ADU",
+      url: "https://www.hcd.ca.gov/building-standards/adu",
+    },
+    {
+      label: "San Diego Municipal Code § 141.0302 (ADU Regulations)",
+      url: "https://docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art01Division03.pdf",
+    },
+    {
+      label: "San Diego Information Bulletin 501 (Fee Schedule for Construction Permits)",
+      url: "https://www.sandiego.gov/development-services/forms-publications/information-bulletins/501",
+    },
+  ],
+};

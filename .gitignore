@@ -45,6 +45,7 @@ terminals/
 Thumbs.db
 desktop.ini
 *.swp
+Microsoft/
 
 # Generated media and release binaries
 brand/_plate_render.png

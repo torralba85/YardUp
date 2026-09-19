@@ -1,0 +1,26 @@
+import { describe, expect, it } from "vitest";
+import { ADU_CITIES } from "@/lib/adu/content";
+
+/**
+ * Re-verification gate for the ADU program: California ADU law has changed
+ * every year since 2024, so every jurisdiction page carries an as-of date
+ * and a 90-day review cadence. This test fails the build when a city's
+ * figures go stale, forcing a re-verification pass instead of silently
+ * serving last year's rules.
+ */
+const REVIEW_CADENCE_DAYS = 90;
+
+describe("adu re-verification cadence", () => {
+  it("keeps every city's as-of date within the 90-day review cadence", () => {
+    const now = Date.now();
+    for (const city of ADU_CITIES) {
+      const ageDays =
+        (now - new Date(`${city.asOf}T00:00:00Z`).getTime()) /
+        (1000 * 60 * 60 * 24);
+      expect(
+        ageDays,
+        `${city.slug} last verified ${city.asOf} — re-verify against the municipal code`,
+      ).toBeLessThanOrEqual(REVIEW_CADENCE_DAYS);
+    }
+  });
+});

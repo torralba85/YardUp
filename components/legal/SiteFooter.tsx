@@ -6,6 +6,7 @@ import Link from "next/link";
 // down the ~479 KB Firebase client SDK nobody on the page needs.
 const FOOTER_LINKS = [
   { href: "/about", label: "About" },
+  { href: "/adu/ca", label: "ADU rules" },
   { href: "/help", label: "Help" },
   { href: "/feedback", label: "Feedback", firebase: true },
   { href: "/terms", label: "Terms & Conditions" },
@@ -14,7 +15,8 @@ const FOOTER_LINKS = [
 ] as const;
 
 /**
- * Shared public footer: About, Help, Feedback, Terms, Privacy, Delete account.
+ * Shared public footer: About, ADU rules, Help, Feedback, Terms, Privacy,
+ * Delete account.
  * Used on legal/support surfaces and any public shell that needs consistent nav.
  *
  * These are product surfaces, so they keep the warm studio palette documented
