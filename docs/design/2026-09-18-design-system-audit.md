@@ -28,14 +28,21 @@ confirmed defects and guards each one. It does not migrate tokens.
 - No Tailwind default palette or pure white on product surfaces.
 - No arbitrary `z-[n]`. Overlays use the layering scale.
 
-## Open decisions (the doc and shipped code disagree)
+## Decisions (Andrew, 2026-09-18)
 
-1. **Segmented semantics.** §6 says `aria-pressed`, while `ui/Field` `Segmented` uses `radiogroup`, which is
-   correct for a single choice. Recommend updating §6.
-2. **Display heading weight.** Landing ships 500/600, while product `lf-*-heading` utilities ship 700.
-3. **Focus ring.** §7 specifies a carbon outline at 5px offset. Components use `ring-2 ring-offset-2`, and 29
-   use deep-orange `lf-clay-ink` rings, including the shared `Segmented` and `Slider`.
-4. **Button height.** §6 specifies a 48px primary. `ui/Button` `md` is 44px.
+The audit found four places where the doc and shipped code disagreed. All four are now decided and recorded
+in the design-system decisions log.
+
+1. **Segmented semantics: radio group.** §6 now makes single-choice controls `radiogroup` via `ui/Field`
+   `Segmented`. The hand-rolled `aria-pressed` single-choice groups (landing pickers, Studio roof/finish)
+   are migration debt, not yet converted.
+2. **Display heading weight: the spec's 500 (hero 600).** Comparing 700, 600 and 500 on real pages showed 500
+   reads closest to the landing and stops long titles wrapping. The four heading utilities and ten
+   hand-set section and card headings changed.
+3. **Focus ring: deep orange `#C43708` on chalk.** 63 carbon indicators and the global outline moved to deep
+   orange. Carbon stays on orange grounds (the landing closing section) and chalk on carbon. The ring
+   *recipe* (outline at 5px vs `ring-2 ring-offset-2`) is documented as shipped.
+4. **Button: the spec.** `ui/Button` `md` is now 48px, `12px 19px`, 700. Leading icons keep an 8px gap.
 
 ## Next
 
