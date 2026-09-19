@@ -162,7 +162,7 @@ export function ProjectBriefPreviewContent({
     <div className="overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card">
       <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
         <div className="flex items-center justify-between gap-2">
-          <h4 className="font-display text-xl font-bold leading-tight text-lf-espresso">
+          <h4 className="font-display text-xl font-medium leading-tight text-lf-espresso">
             {preview.headline}
           </h4>
           <span className="shrink-0 rounded-none border border-[#DADAD3] px-1.5 py-0.5 lf-dataprint text-lf-muted">
@@ -241,7 +241,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
   return (
     <div className="overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card">
       <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
-        <h4 className="font-display text-xl font-bold leading-tight text-lf-espresso">
+        <h4 className="font-display text-xl font-medium leading-tight text-lf-espresso">
           {brief.headline}
         </h4>
         <p className="mt-1.5 text-xs leading-5 text-lf-muted">{brief.summary}</p>

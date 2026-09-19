@@ -46,7 +46,7 @@ export function AduStudioCta({
       aria-label={`Check your ${city} lot in the Studio`}
       className="rounded-none bg-lf-espresso px-6 py-8 text-lf-sand sm:px-10"
     >
-      <h2 className="font-display text-2xl font-bold tracking-tight">
+      <h2 className="font-display text-2xl font-medium tracking-tight">
         These are the rules. Here is what they mean for your lot.
       </h2>
       <p className="mt-2 max-w-prose text-sm leading-relaxed text-lf-unit-on-dark">

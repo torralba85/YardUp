@@ -152,6 +152,10 @@ Fraunces on any A LOT MORE surface.
 | Kicker / eyebrow | body | `11–12px` UPPERCASE | — | `0.075–0.08em` | 600 |
 | Micro-print | body | `10–11px` | — | — | 400–600 |
 
+Product surfaces use the same weights through shared utilities: `lf-display-hero` 600, and
+`lf-section-heading`, `lf-card-heading` and `lf-panel-heading` 500. Hand-set display headings follow suit:
+600 only for hero-scale journey titles, 500 for section and card titles, never bold.
+
 **Rules**
 
 - Display type gets **negative tracking that tightens as it grows** (`-0.035em` → `-0.075em`). Large
@@ -365,3 +369,4 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 | 2026-09-05 | Design system audit & refinement pass: radius drift snapped, kicker tracking unified, closing CTA hover bug fixed, 9px floor enforced, ARIA arrow navigation added, mobile-ux-design-system skill synchronized | Corrected `.inputRow` 4px and `.sceneControls button` 2px drift to canonical `3px`; unified all eyebrows/kickers to `0.08em`; fixed closing button orange hover on orange ground; raised mobile paper text to 9px floor; added keyboard arrow navigation for all segmented controls; updated `mobile-ux-design-system` skill to full A LOT MORE authority. |
 | 2026-09-06 | User approved project-wide finalization, merge, and live deployment | Auth/consent, account, builder, Studio/3D, and report/certificate now use one shared palette and typography. No legacy route scope remains. |
 | 2026-09-18 | Single-choice controls are radio groups, not `aria-pressed` toggles (Andrew) | `aria-pressed` announces each option as an independent toggle; a radio group announces one choice among several. `ui/Field` `Segmented` already ships it. |
+| 2026-09-18 | Product display headings drop from 700 to the spec's 500 (hero 600) (Andrew) | Compared 700/600/500 on login, the CA guide and Studio: 500 matches the landing's exhibition voice and stops long titles wrapping (the CA guide title fits one line at 1280px). |

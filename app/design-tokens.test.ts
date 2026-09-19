@@ -102,6 +102,21 @@ describe("A LOT MORE shared design contract", () => {
     }
   });
 
+  it("sets display headings at the spec weights, never bold", () => {
+    const weights: Array<[string, string]> = [
+      ["lf-display-hero", "600"],
+      ["lf-section-heading", "500"],
+      ["lf-card-heading", "500"],
+      ["lf-panel-heading", "500"],
+    ];
+    for (const [cls, weight] of weights) {
+      expect(css.match(new RegExp(`\\.${cls} \\{[^}]*?font-weight: (\\d+)`))?.[1], cls).toBe(weight);
+    }
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/<h[1-4]\b[^>]*\bfont-display\b[^>]*\bfont-bold\b|<h[1-4]\b[^>]*\bfont-bold\b[^>]*\bfont-display\b/);
+    }
+  });
+
   it("keeps exported certificates on the shared typography and neutral ledger", () => {
     const report = readFileSync(resolve(root, "lib/report.ts"), "utf8");
     expect(report).toContain('"Space Grotesk", Arial, sans-serif');

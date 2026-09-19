@@ -265,7 +265,7 @@ export default function StyleMatchPanel({
             <p className="lf-kicker text-lf-clay-ink">
               Your house / your ADU
             </p>
-            <h3 className="mt-1 font-display text-xl font-semibold leading-tight text-lf-espresso">
+            <h3 className="mt-1 font-display text-xl font-medium leading-tight text-lf-espresso">
               Style-match photo
             </h3>
           </div>

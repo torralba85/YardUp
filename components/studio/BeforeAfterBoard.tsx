@@ -158,7 +158,7 @@ export default function BeforeAfterBoard({
         {/* Header */}
         <header className="border-b-4 border-double border-lf-espresso pb-4 mb-6 pr-8">
           <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
-            <h2 id="board-title" className="font-display text-2xl md:text-3xl font-semibold">
+            <h2 id="board-title" className="font-display text-2xl md:text-3xl font-medium">
               Your house → your ADU
             </h2>
             <div className="lf-kicker-dense font-semibold text-lf-muted md:text-xs">
