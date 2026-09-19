@@ -1,13 +1,8 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LotFoundry mark">
   <title>LotFoundry mark</title>
-  <rect width="1024" height="1024" rx="224" fill="#F2E5D5"/>
-  <g transform="translate(-93.92592592592592 70.2962962962963) scale(2.962962962962963)">
-    <rect x="110" y="62" width="38" height="174" fill="#261307"/>
-    <rect x="110" y="202" width="116" height="34" fill="#261307"/>
-    <rect x="199" y="62" width="100" height="33" fill="#261307"/>
-    <rect x="199" y="62" width="27" height="118" fill="#261307"/>
-    <rect x="199" y="118" width="100" height="33" fill="#261307"/>
-    <rect x="171" y="62" width="26" height="118" fill="#BFA58E"/>
-    <rect x="249" y="174" width="50" height="62" fill="#BFA58E"/>
-  </g>
+  <rect width="512" height="512" fill="#F5F5F0"/>
+  <svg x="96" y="96" width="320" height="320" viewBox="0 0 48 48">
+    <path d="M27 9H9v30h30V21M24 24 39 9M28 9h11v11" fill="none" stroke="#161616" stroke-width="4"/>
+    <circle cx="39" cy="9" r="3" fill="#FF5B24"/>
+  </svg>
 </svg>

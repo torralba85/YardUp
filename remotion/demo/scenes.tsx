@@ -92,8 +92,7 @@ export const BrandScene: React.FC = () => {
 
           {/*
             Official inverse mark (lotfoundry-mark-dark.svg) —
-            monogram is centered in the mahogany tile (unlike icon-512 which
-            parks the glyph upper-left for app-icon crop).
+            A LOT MORE mark centered on carbon tile.
           */}
           <div
             style={{

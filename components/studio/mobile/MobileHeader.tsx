@@ -6,6 +6,7 @@ import { RotateCcw, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { AccountMenu } from "@/components/account/AccountMenu";
+import { ParcelMark } from "@/components/ui/BrandLockup";
 
 /** Props for {@link MobileHeader}. */
 export interface MobileHeaderProps {
@@ -41,8 +42,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
         aria-label="LotFoundry home"
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/landing/a-lot-more/mark.svg" alt="LotFoundry" className="h-7 w-7 rounded-none" />
+        <ParcelMark className="h-7 w-7 text-lot-chalk" />
       </Link>
       <span className="min-w-0 flex-1 truncate rounded-none border border-lot-line-dark bg-lot-surface-dark px-2.5 py-1.5 text-xs text-lot-chalk">
         {address}

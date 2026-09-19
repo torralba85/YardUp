@@ -1,6 +1,6 @@
 "use client";
 
-import { BrandLockup } from "@/components/ui/BrandLockup";
+import { BrandLockup, ParcelMark } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { ChevronDown, MapPin, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -108,13 +108,9 @@ export default function StudioShell({
           <div className="mt-auto space-y-4 pt-6">
             <div className="rounded-none border border-[#44443F] bg-[#212121] p-3">
               <div className="flex gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/landing/a-lot-more/mark.svg"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-14 w-14 shrink-0 rounded-none border border-[#44443F] bg-[#161616] p-1.5"
-                />
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-none border border-[#44443F] bg-[#161616] p-2 text-[#F5F5F0]">
+                  <ParcelMark className="h-full w-full" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-[#F5F5F0]">{parcelAddress}</div>
                   <div className="mt-1 truncate text-xs text-[#B7B7AE]">{parcelCity}</div>
