@@ -42,8 +42,8 @@ function withEntry(state: unknown, { step, destination }: OnboardingEntry) {
 }
 
 const primaryButton =
-  "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-[3px] bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-ink motion-safe:transition-colors motion-safe:duration-[180ms]";
-const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-ink";
+  "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-[3px] bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink motion-safe:transition-colors motion-safe:duration-[180ms]";
+const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink";
 
 function readGuideSeen(): boolean {
   try {

@@ -17,7 +17,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <head>
-        <style>{`a:focus-visible,button:focus-visible{outline:2px solid #161616;outline-offset:5px}button:hover{background:#EE4B17!important}a:hover{background:#EBEBE6!important}`}</style>
+        <style>{`a:focus-visible,button:focus-visible{outline:2px solid #C43708;outline-offset:5px}button:hover{background:#EE4B17!important}a:hover{background:#EBEBE6!important}`}</style>
       </head>
       <body
         style={{

@@ -123,7 +123,7 @@ export default function InspirationGalleryPanel({
         ))}
       </div>
       <details className="group mt-8 border-t border-lot-line">
-        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-5 py-4 text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-ink [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-5 py-4 text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink [&::-webkit-details-marker]:hidden">
           <span className="flex flex-wrap items-baseline gap-x-7 gap-y-1">
             <span className="font-display text-lg font-medium tracking-tight">Match your own home</span>
             <span className="text-sm text-lot-stone">Explore a concept inspired by your existing exterior.</span>

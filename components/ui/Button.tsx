@@ -38,7 +38,9 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
   // Compact variants reduce type and padding, never the 44px touch target.
   xs: "min-h-11 gap-1.5 px-3 text-xs",
   sm: "min-h-11 gap-1.5 px-3.5 text-sm",
-  md: "h-11 gap-2 px-5 text-sm",
+  // The design-system §6 button: min-height 48px, padding 12px 19px, 14px.
+  // Leading icons keep an 8px gap; §6's 18px gap separates a trailing arrow.
+  md: "min-h-12 gap-2 px-[19px] py-3 text-sm",
   lg: "h-12 gap-2 px-6 text-base",
 };
 
@@ -46,7 +48,7 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Visual intent; defaults to `"primary"`. */
   variant?: ButtonVariant;
-  /** Height/padding step; defaults to `"md"` (44px comfortable target). */
+  /** Height/padding step; defaults to `"md"` (the 48px §6 button). */
   size?: ButtonSize;
   /** Icon before the label. Suppressed while loading. */
   leftIcon?: React.ReactNode;
@@ -89,8 +91,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         className={cn(
-          "inline-flex select-none items-center justify-center rounded-[3px] font-semibold motion-safe:transition",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2",
+          "inline-flex select-none items-center justify-center rounded-[3px] font-bold motion-safe:transition",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
           "motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
           VARIANT_CLASS[variant],
           SIZE_CLASS[size],

@@ -8,7 +8,7 @@ import { validateEmail } from "@/lib/account-settings";
 import { Button } from "@/components/ui/Button";
 
 const INPUT_CLASS =
-  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus-visible:border-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-ink";
+  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus-visible:border-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
 
 /**
  * The public feedback form: category, message, optional reply email, and a

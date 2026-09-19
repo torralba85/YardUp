@@ -33,13 +33,22 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "Go" })).toHaveAttribute("type", "submit");
   });
 
-  it("uses the 3px control radius and keeps a 44px comfortable target", () => {
+  it("uses the 3px control radius and the spec's 48px default metrics", () => {
     // A LOT MORE retired the pill-radius system; every control is 3px
-    // (docs/design/design-system.md 4.4).
+    // (docs/design/design-system.md 4.4). The default size is the §6 button:
+    // min-height 48px, padding 12px 19px, 14px/700.
     render(<Button>Continue</Button>);
     const button = screen.getByRole("button", { name: "Continue" });
-    expect(button).toHaveClass("rounded-[3px]", "h-11");
-    expect(button).not.toHaveClass("rounded-full");
+    expect(button).toHaveClass("rounded-[3px]", "min-h-12", "px-[19px]", "py-3", "text-sm", "font-bold");
+    expect(button).not.toHaveClass("rounded-full", "h-11");
+  });
+
+  it("never lets a compact size drop below the 44px touch target", () => {
+    for (const size of ["xs", "sm"] as const) {
+      const { unmount } = render(<Button size={size}>Compact</Button>);
+      expect(screen.getByRole("button", { name: "Compact" })).toHaveClass("min-h-11");
+      unmount();
+    }
   });
 
   it("applies the commit (carbon) variant for money actions", () => {
@@ -85,7 +94,7 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
       "text-lf-espresso",
       "hover:bg-lf-hairline/30",
-      "focus-visible:ring-lf-espresso",
+      "focus-visible:ring-lot-orange-ink",
     );
   });
 

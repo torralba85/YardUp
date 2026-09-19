@@ -91,7 +91,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
 
       <div className="grid gap-8 px-6 py-5 lg:grid-cols-3 lg:gap-10 xl:grid-cols-[minmax(0,3fr)_minmax(0,6fr)_minmax(0,3fr)]">
         <div>
-          <h3 className="font-display text-xl font-semibold leading-snug text-lf-espresso">{guide.title}</h3>
+          <h3 className="font-display text-xl font-medium leading-snug text-lf-espresso">{guide.title}</h3>
           <p className="lf-body-sm mt-2 text-lf-muted">{guide.summary}</p>
         </div>
 
@@ -110,7 +110,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                   type="checkbox"
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-[#161616]"
+                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-lot-orange-ink"
                 />
                 <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
                   {step}

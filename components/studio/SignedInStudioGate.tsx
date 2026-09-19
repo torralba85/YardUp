@@ -106,7 +106,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="inline-flex min-h-11 items-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-ink"
+            className="inline-flex min-h-11 items-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
           >
             <BrandLockup className="h-8 w-auto" />
           </Link>

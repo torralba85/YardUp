@@ -129,7 +129,7 @@ export default function ConstraintsPanel({
         <p className="lf-kicker text-[#65655F]">
           Property constraints
         </p>
-        <h2 className="mt-1 font-display text-2xl font-bold leading-[1.15] text-[#161616]">
+        <h2 className="mt-1 font-display text-2xl font-medium leading-[1.15] text-[#161616]">
           What this lot allows
         </h2>
       </div>

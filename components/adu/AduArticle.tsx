@@ -282,7 +282,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           <li>
             <Link
               href="/adu/ca"
-              className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso"
+              className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               California ADU rules hub
             </Link>
@@ -291,7 +291,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             <li key={neighbor.slug}>
               <Link
                 href={`/adu/${neighbor.state}/${neighbor.slug}`}
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 ADU rules in {neighbor.city}
               </Link>

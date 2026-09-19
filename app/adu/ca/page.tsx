@@ -100,7 +100,7 @@ export default function AduCaliforniaHubPage() {
             >
               <Link
                 href={`/adu/${city.state}/${city.slug}`}
-                className="font-display text-xl font-bold text-lf-espresso underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso"
+                className="font-display text-xl font-bold text-lf-espresso underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 ADU Rules in {city.city} (2026)
               </Link>

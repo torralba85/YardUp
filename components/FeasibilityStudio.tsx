@@ -1045,7 +1045,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
               />
             </div>
             <details className="group border-t border-lf-hairline bg-lf-card">
-              <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">
+              <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                 Browse designs
                 <span aria-hidden="true" className="group-open:rotate-45">+</span>
               </summary>
@@ -1275,7 +1275,7 @@ function LotStep({
           )}
         </div>
         <details className="mt-4 max-w-xl border-y border-lf-hairline">
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">Try a sample property</summary>
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
           <label className="block pb-4 text-sm text-lf-muted">
             Sample Property
             <select value={parcelId} onChange={(event) => onPresetChange(event.target.value)}

@@ -15,6 +15,7 @@ import {
 import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import { Button } from "@/components/ui/Button";
+import { Slider } from "@/components/ui/Field";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import type {
   ADUConfig,
@@ -192,7 +193,7 @@ export default function FeasibilityInspector({
           {!designOnly && <button
             type="button"
             onClick={handleReset}
-            className="flex h-11 items-center gap-2 rounded-[3px] px-4 text-sm font-medium text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2"
+            className="flex h-11 items-center gap-2 rounded-[3px] px-4 text-sm font-medium text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
@@ -220,7 +221,7 @@ export default function FeasibilityInspector({
                     <button
                       type="button"
                       onClick={handleResetToPreset}
-                      className="relative flex min-h-11 items-center gap-1 text-xs font-medium text-lf-clay-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
+                      className="relative flex min-h-11 items-center gap-1 text-xs font-medium text-lf-clay-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
                     >
                       <RefreshCcw size={12} />
                       Demo mode
@@ -264,7 +265,7 @@ export default function FeasibilityInspector({
                     id="parcel-preset"
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
-                    className="h-11 w-full rounded-[3px] border border-[#DADAD3] bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none motion-safe:transition focus:border-lf-clay focus:ring-2 focus:ring-lf-clay/15"
+                    className="h-11 w-full rounded-[3px] border border-[#DADAD3] bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none motion-safe:transition focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                   >
                     {parcelPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
@@ -367,7 +368,7 @@ export default function FeasibilityInspector({
               </div>
 
               <details open={!designOnly} className="group/dimensions border-y border-lf-hairline">
-                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">
+                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Fine-tune dimensions
                   <ChevronDown size={16} aria-hidden="true" className="group-open/dimensions:rotate-180" />
                 </summary>
@@ -377,7 +378,7 @@ export default function FeasibilityInspector({
                   <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
                   <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
                 </div>
-                <Slider
+                <DimensionSlider
                   label="Width"
                   value={config.width}
                   min={16}
@@ -387,7 +388,7 @@ export default function FeasibilityInspector({
                     onConfigChange({ ...config, width: value, footprint: value * config.length })
                   }
                 />
-                <Slider
+                <DimensionSlider
                   label="Length"
                   value={config.length}
                   min={20}
@@ -409,10 +410,10 @@ export default function FeasibilityInspector({
                       type="button"
                       onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
                       aria-pressed={config.roof === key}
-                      className={`flex h-16 flex-col items-center justify-center gap-1 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2 ${
+                      className={`flex h-16 flex-col items-center justify-center gap-1 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                         config.roof === key
                           ? "border-[#161616] bg-[#161616] text-[#F5F5F0] shadow-none"
-                          : "border-[#DADAD3] bg-white text-[#65655F] hover:border-[#B7B7AE] hover:bg-[#F5F5F0]"
+                          : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
                       }`}
                     >
                       <Building2 size={22} />
@@ -433,14 +434,14 @@ export default function FeasibilityInspector({
                         onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
                       }
                       aria-pressed={config.finish === key}
-                      className={`rounded-[3px] border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2 ${
+                      className={`rounded-[3px] border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                         config.finish === key
                           ? "border-[#161616] bg-[#161616]/5 text-[#161616] ring-1 ring-[#161616]"
-                          : "border-[#DADAD3] bg-white text-[#65655F] hover:border-[#B7B7AE] hover:bg-[#F5F5F0]"
+                          : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
                       }`}
                     >
                       <span
-                        className="mb-2 block h-8 rounded-none border border-black/10"
+                        className="mb-2 block h-8 rounded-none border border-lot-ink/10"
                         style={{ background: finishColors[key as ADUConfig["finish"]] }}
                       />
                       {label}
@@ -743,7 +744,8 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Slider({
+/** The shared `Slider`, bound to a clamped numeric dimension with a unit readout. */
+function DimensionSlider({
   label,
   value,
   min,
@@ -758,24 +760,15 @@ function Slider({
   suffix: string;
   onChange: (value: number) => void;
 }) {
-  const inputId = `slider-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
-    <label className="block" htmlFor={inputId}>
-      <span className="mb-1 flex items-center justify-between text-xs font-medium text-lf-muted">
-        {label}
-        <span className="font-sans text-lf-espresso">
-          {value} {suffix}
-        </span>
-      </span>
-      <input
-        id={inputId}
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
-        className="h-11 w-full accent-[#FF5B24] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2"
-      />
-    </label>
+    <Slider
+      id={`slider-${label.toLowerCase().replace(/\s+/g, "-")}`}
+      label={label}
+      valueText={`${value} ${suffix}`}
+      min={min}
+      max={max}
+      value={value}
+      onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
+    />
   );
 }

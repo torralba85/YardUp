@@ -19,6 +19,7 @@ When two documents disagree, the higher entry wins:
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
+| [`2026-09-18-design-system-audit.md`](./2026-09-18-design-system-audit.md) | Audit score, repaired token/focus/status defects, new guards, and the four doc/code decisions (radio groups, 500 headings, deep-orange focus, 48px buttons). |
 | [`2026-09-13-studio-simplicity.md`](./2026-09-13-studio-simplicity.md) | Compact Studio hierarchy, direct Design controls, and on-demand tools and inspiration. |
 | [`2026-09-12-ux-followup.md`](./2026-09-12-ux-followup.md) | Demo entry, keyboard navigation, hover contrast and mobile readability repairs. |
 | [`2026-09-13-web-guidelines.md`](./2026-09-13-web-guidelines.md) | Form accessibility, destructive-action safeguards, keyboard focus and inbox pagination repairs. |

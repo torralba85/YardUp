@@ -435,7 +435,7 @@ function CertificateBriefSection({
               AI-assisted · Recorded in this certificate
             </p>
           </div>
-          <h3 className="mt-1 font-display text-[25px] font-bold leading-tight text-lf-espresso">
+          <h3 className="mt-1 font-display text-[25px] font-medium leading-tight text-lf-espresso">
             Parcel &amp; Permit Brief
           </h3>
         </div>

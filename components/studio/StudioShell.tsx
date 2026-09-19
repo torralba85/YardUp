@@ -170,7 +170,7 @@ export default function StudioShell({
                           <button
                             type="button"
                             onClick={() => onLoadScenario?.(scenario.id)}
-                            className="min-h-11 min-w-0 flex-1 truncate text-left text-[#F5F5F0] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
+                            className="min-h-11 min-w-0 flex-1 truncate text-left text-[#F5F5F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
                           >
                             {scenario.name}
                           </button>
@@ -232,7 +232,7 @@ export default function StudioShell({
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616]"
+            className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             <BrandLockup className="h-7 w-auto" />
           </Link>

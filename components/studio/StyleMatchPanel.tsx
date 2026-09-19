@@ -265,7 +265,7 @@ export default function StyleMatchPanel({
             <p className="lf-kicker text-lf-clay-ink">
               Your house / your ADU
             </p>
-            <h3 className="mt-1 font-display text-xl font-semibold leading-tight text-lf-espresso">
+            <h3 className="mt-1 font-display text-xl font-medium leading-tight text-lf-espresso">
               Style-match photo
             </h3>
           </div>
@@ -301,7 +301,7 @@ export default function StyleMatchPanel({
             </label>
             <label
               htmlFor={inputId}
-              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lot-ink focus-within:ring-offset-2 ${
+              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lot-orange-ink focus-within:ring-offset-2 ${
                 aiConsent
                   ? "cursor-pointer hover:bg-lf-sand"
                   : "cursor-not-allowed opacity-50"
@@ -403,21 +403,21 @@ export default function StyleMatchPanel({
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>

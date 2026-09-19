@@ -33,7 +33,7 @@ export default function FeasibilityVerdictBand({ parcel, result, config, eyebrow
     <header className="shrink-0 border-b border-[#DADAD3] bg-[#F5F5F0] text-[#161616]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-3">
         <div className="min-w-0">
-          <h2 className="font-display text-xl font-semibold tracking-tight">{parcel.address}</h2>
+          <h2 className="font-display text-xl font-medium tracking-tight">{parcel.address}</h2>
           <p className="mt-1 text-xs text-[#65655F]">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot</p>
         </div>
         <div>

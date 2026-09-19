@@ -7,16 +7,16 @@ function source(path: string) {
 }
 
 describe("auth focus color roles", () => {
-  it("uses carbon focus and selected roles on chalk auth surfaces", () => {
+  it("uses deep-orange focus and carbon selected roles on chalk auth surfaces", () => {
     // These live in the `(firebase)` route group; the parentheses are part of
     // the on-disk path even though the URLs are unchanged.
     const forgotPassword = source("app/(firebase)/forgot-password/page.tsx");
     const signup = source("app/(firebase)/signup/page.tsx");
 
-    expect(forgotPassword).toContain("focus:border-lf-espresso");
-    expect(forgotPassword).toContain("focus:ring-lf-espresso");
-    expect(signup.match(/focus:border-lf-espresso/g)).toHaveLength(3);
-    expect(signup.match(/focus:ring-lf-espresso/g)).toHaveLength(3);
+    expect(forgotPassword).toContain("focus:border-lot-orange-ink");
+    expect(forgotPassword).toContain("focus:ring-lot-orange-ink");
+    expect(signup.match(/focus:border-lot-orange-ink/g)).toHaveLength(3);
+    expect(signup.match(/focus:ring-lot-orange-ink/g)).toHaveLength(3);
     expect(signup).toContain("border-lf-espresso bg-lf-espresso");
     expect(signup).toContain("aria-pressed={selected}");
   });
