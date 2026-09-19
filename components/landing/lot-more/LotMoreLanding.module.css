@@ -89,14 +89,18 @@
    chalk page for every control with `color: var(--chalk)` (.darkButton, the
    sticky CTA, pressed segmented controls) — a 1.00:1 contrast ratio, i.e. an
    invisible keyboard focus indicator. Pin the ring to the ground instead:
-   carbon on chalk (16.55:1) and on orange (5.84:1); chalk inside the carbon
-   numbers section (16.55:1). See docs/design/design-system.md. */
+   deep orange on chalk (4.93:1), carbon on the orange closing section
+   (5.84:1), chalk inside the carbon numbers section (16.55:1).
+   See docs/design/design-system.md §7. */
 .page :is(button, a, input, summary):focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--orange-ink);
   outline-offset: 5px;
 }
 .numbersSection :is(button, a, input, summary):focus-visible {
   outline-color: var(--chalk);
+}
+.closing :is(button, a, input, summary):focus-visible {
+  outline-color: var(--ink);
 }
 .page section {
   scroll-margin-top: 32px;
@@ -167,7 +171,7 @@
   white-space: nowrap;
 }
 .memberNav summary:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--orange-ink);
   outline-offset: 4px;
 }
 .memberPanel {
@@ -329,6 +333,9 @@
   opacity: 1;
 }
 .inputRow:focus-within {
+  box-shadow: 0 0 0 2px var(--orange-ink);
+}
+.closing .inputRow:focus-within {
   box-shadow: 0 0 0 2px var(--ink);
 }
 .inputRow input:focus-visible {

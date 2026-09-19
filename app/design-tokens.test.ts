@@ -69,11 +69,14 @@ describe("A LOT MORE shared design contract", () => {
     }
   });
 
-  it("pins light-surface focus indicators to ink, never signal orange", () => {
+  it("draws light-surface focus indicators in deep orange ink", () => {
+    expect(css).toContain("--color-lf-focus-ring: #C43708;");
     for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
       const source = readFileSync(file, "utf8");
       // Signal orange is 2.83:1 on chalk, below the 3:1 boundary floor.
       expect(source, file).not.toMatch(/focus(?:-visible|-within)?:(?:ring|border|outline)-(?:lf-clay|lot-orange)(?![\w-])/);
+      // Carbon is reserved for rings on orange grounds; chalk surfaces use deep orange (§7).
+      expect(source, file).not.toMatch(/focus(?:-visible|-within)?:(?:ring|border|outline)-(?:lf-espresso|lf-mahogany|lot-ink|\[#161616\])(?![\w-])/);
     }
   });
 

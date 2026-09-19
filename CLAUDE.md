@@ -114,8 +114,8 @@ Project-specific design rules:
 - **Orange is never text on chalk** - it is 2.83:1 and fails AA. Orange is a fill colour. Use `#C43708`
   when you need orange type on chalk.
 - **Never set a focus ring to `currentColor`** - the ring is drawn outside the control, on the parent
-  ground, so `currentColor` goes invisible on light-labelled controls. Pin it: carbon on chalk and on
-  orange, chalk on carbon.
+  ground, so `currentColor` goes invisible on light-labelled controls. Pin it: deep orange `#C43708` on
+  chalk, carbon on orange grounds, chalk on carbon.
 - Touch targets are `min-height: 44px`. All motion sits inside `prefers-reduced-motion: no-preference`.
 - Do not "snap" the landing's spacing to a 4/8px grid - the odd values are optically tuned, and that
   cleanup is a regression.

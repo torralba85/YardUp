@@ -29,7 +29,7 @@ export function SceneTools({ children, utilityMode, onUtilityModeChange }: {
   return (
     <details className="group/tools shrink-0 border-t border-[#DADAD3] bg-[#F5F5F0] text-[#161616]"
       onToggle={(event) => { if (!event.currentTarget.open) onUtilityModeChange(false); }}>
-      <summary className="flex min-h-11 cursor-pointer items-center justify-between px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#161616]">
+      <summary className="flex min-h-11 cursor-pointer items-center justify-between px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
         Tools
         <ChevronDown size={16} aria-hidden="true" className="group-open/tools:rotate-180" />
       </summary>

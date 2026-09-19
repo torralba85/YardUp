@@ -269,10 +269,13 @@ composed still states — it never leaves a control unusable or a state unreadab
 
 Non-negotiable. These are shipped and tested; treat a regression as a bug, not a style choice.
 
-- **Focus ring:** `2px solid` at `outline-offset: 5px`, pinned to the *ground* — carbon on chalk and on
-  orange, chalk inside the carbon numbers section. **Never `currentColor`**: the ring sits outside the
-  control, so `currentColor` painted chalk-on-chalk (1.00:1) for every light-labelled control. Fixed
-  2026-09-05.
+- **Focus ring:** `2px`, pinned to the *ground* — **deep orange `#C43708` on chalk** (4.93:1), carbon on
+  orange grounds such as the landing closing section (5.84:1; deep orange there is only ~1.9:1), chalk on
+  carbon. Links and landing controls use a `2px solid` outline at `outline-offset: 5px` (the global
+  `--color-lf-focus-ring`); components use `ring-2` with `ring-offset-2`, and fields use a 2px ring plus
+  border. **Never `currentColor`**: the ring sits outside the control, so `currentColor` painted
+  chalk-on-chalk (1.00:1) for every light-labelled control. Fixed 2026-09-05. The destructive button keeps
+  its blocked-red ring.
 - **Touch targets:** `min-height: 44px` on every link, nav item, button, summary and tab.
 - **Live regions:** `aria-live="polite"` on the art caption, intention copy, metrics
   (`aria-atomic="true"`) and report panel — state changes are announced, not just drawn.
@@ -369,4 +372,5 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 | 2026-09-05 | Design system audit & refinement pass: radius drift snapped, kicker tracking unified, closing CTA hover bug fixed, 9px floor enforced, ARIA arrow navigation added, mobile-ux-design-system skill synchronized | Corrected `.inputRow` 4px and `.sceneControls button` 2px drift to canonical `3px`; unified all eyebrows/kickers to `0.08em`; fixed closing button orange hover on orange ground; raised mobile paper text to 9px floor; added keyboard arrow navigation for all segmented controls; updated `mobile-ux-design-system` skill to full A LOT MORE authority. |
 | 2026-09-06 | User approved project-wide finalization, merge, and live deployment | Auth/consent, account, builder, Studio/3D, and report/certificate now use one shared palette and typography. No legacy route scope remains. |
 | 2026-09-18 | Single-choice controls are radio groups, not `aria-pressed` toggles (Andrew) | `aria-pressed` announces each option as an independent toggle; a radio group announces one choice among several. `ui/Field` `Segmented` already ships it. |
+| 2026-09-18 | Focus rings on chalk are deep orange `#C43708`, not carbon (Andrew) | Ties focus to the signal colour while clearing 3:1 (4.93:1); 29 controls already shipped it. Carbon stays on orange grounds, chalk on carbon. |
 | 2026-09-18 | Product display headings drop from 700 to the spec's 500 (hero 600) (Andrew) | Compared 700/600/500 on login, the CA guide and Studio: 500 matches the landing's exhibition voice and stops long titles wrapping (the CA guide title fits one line at 1280px). |

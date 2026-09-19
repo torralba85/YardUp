@@ -363,7 +363,7 @@ export default function AddressSearch({
           "h-11 w-full rounded-[3px] border pl-9 pr-26 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-muted",
           "outline-none motion-safe:transition",
-          "focus:border-lot-ink focus:ring-2 focus:ring-lot-ink",
+          "focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink",
           isDisabled
             ? "cursor-not-allowed border-lf-hairline opacity-60"
             : "border-lf-hairline hover:border-lf-taupe/70",

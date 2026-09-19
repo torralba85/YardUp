@@ -114,7 +114,7 @@ export default function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-espresso"
+            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>
@@ -141,7 +141,7 @@ export default function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-espresso"
+            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="Password"
           />
         </div>

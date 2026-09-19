@@ -15,8 +15,8 @@ test("property entry supports skip navigation and a visible field focus", async 
   await page.keyboard.press("Tab");
   const field = page.getByRole("combobox", { name: "Search property address" });
   await expect(field).toBeFocused();
-  await expect(field).toHaveCSS("border-color", "rgb(22, 22, 22)");
-  await expect(field).toHaveCSS("box-shadow", /rgb\(22, 22, 22\).*2px/);
+  await expect(field).toHaveCSS("border-color", "rgb(196, 55, 8)");
+  await expect(field).toHaveCSS("box-shadow", /rgb\(196, 55, 8\).*2px/);
 
   await page.getByRole("link", { name: "LotFoundry home", exact: true }).click();
   await page.getByRole("link", { name: "Just looking? Try an example" }).click();

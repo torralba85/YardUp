@@ -85,7 +85,7 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
       "text-lf-espresso",
       "hover:bg-lf-hairline/30",
-      "focus-visible:ring-lf-espresso",
+      "focus-visible:ring-lot-orange-ink",
     );
   });
 

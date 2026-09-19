@@ -98,7 +98,7 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
-                className={`min-h-14 rounded-[3px] border-2 bg-lf-card px-4 py-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-offset-2 ${
+                className={`min-h-14 rounded-[3px] border-2 bg-lf-card px-4 py-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                   selected ? "border-[#161616] bg-[#161616]/5" : "border-[#DADAD3]"
                 }`}
               >

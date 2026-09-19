@@ -1030,7 +1030,7 @@ export default function ParcelScene({
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#F5F5F0]">
       <div
-        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#161616]"
+        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink"
         style={{ backgroundColor: SCENE_BACKDROP }}
         tabIndex={0}
         role="group"

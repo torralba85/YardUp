@@ -232,7 +232,7 @@ export default function StudioShell({
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616]"
+            className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             <BrandLockup className="h-7 w-auto" />
           </Link>

@@ -110,7 +110,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                   type="checkbox"
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-[#161616]"
+                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-lot-orange-ink"
                 />
                 <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
                   {step}

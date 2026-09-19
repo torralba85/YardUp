@@ -172,7 +172,7 @@ export function StepProgress({ steps, onSelect, className, ...aria }: StepNavPro
             onClick={() => !locked && onSelect(step.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[3px] px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#161616] focus-visible:ring-inset",
+              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[3px] px-1 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset",
               locked && "cursor-not-allowed opacity-55",
             )}
           >

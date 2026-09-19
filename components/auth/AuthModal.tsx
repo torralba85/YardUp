@@ -316,7 +316,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <button
           type="button"
           onClick={() => onClose("dismissed")}
-          className="absolute right-4 top-4 rounded-[3px] flex h-11 w-11 items-center justify-center text-lf-taupe hover:bg-lf-sand-2 hover:text-lf-espresso motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+          className="absolute right-4 top-4 rounded-[3px] flex h-11 w-11 items-center justify-center text-lf-taupe hover:bg-lf-sand-2 hover:text-lf-espresso motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
         >
           <X size={20} />
           <span className="sr-only">Close</span>
@@ -347,7 +347,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   onChange={(event) =>
                     setRole(event.target.value as "user" | "builder")
                   }
-                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 px-3 text-base sm:text-sm text-lf-espresso motion-safe:transition-colors focus:outline-none focus:border-lf-espresso focus:ring-2 focus:ring-lf-espresso"
+                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 px-3 text-base sm:text-sm text-lf-espresso motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                 >
                   <option value="user">Homeowner</option>
                   <option value="builder">Builder</option>
@@ -374,7 +374,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     required
-                    className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lf-espresso placeholder:text-lf-muted motion-safe:transition-colors focus:outline-none focus:border-lf-espresso focus:ring-2 focus:ring-lf-espresso"
+                    className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lf-espresso placeholder:text-lf-muted motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                     placeholder="Alma Reyes"
                   />
                 </div>
@@ -400,7 +400,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lf-espresso placeholder:text-lf-muted motion-safe:transition-colors focus:outline-none focus:border-lf-espresso focus:ring-2 focus:ring-lf-espresso"
+                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lf-espresso placeholder:text-lf-muted motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                   placeholder="name@example.com"
                 />
               </div>
@@ -425,7 +425,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lf-espresso placeholder:text-lf-muted motion-safe:transition-colors focus:outline-none focus:border-lf-espresso focus:ring-2 focus:ring-lf-espresso"
+                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lf-espresso placeholder:text-lf-muted motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                   placeholder="••••••••"
                 />
               </div>
@@ -441,7 +441,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 min-h-11 w-full rounded-[3px] bg-lf-clay px-4 py-2.5 text-sm font-semibold text-lf-espresso motion-safe:transition hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 min-h-11 w-full rounded-[3px] bg-lf-clay px-4 py-2.5 text-sm font-semibold text-lf-espresso motion-safe:transition hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
             </button>
@@ -453,20 +453,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 type="checkbox"
                 checked={legalAccepted}
                 onChange={(event) => setLegalAccepted(event.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 accent-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+                className="mt-0.5 h-5 w-5 shrink-0 accent-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
               />
               <span>
                 I confirm I am 18 or older, agree to the{" "}
                 <a
                   href="/terms"
-                  className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+                  className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
                 >
                   Terms &amp; Conditions
                 </a>
                 , and acknowledge the{" "}
                 <a
                   href="/privacy"
-                  className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+                  className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
                 >
                   Privacy Policy
                 </a>
@@ -488,7 +488,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading || !legalAccepted}
-              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
                 <path
@@ -514,7 +514,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               type="button"
               onClick={handleAppleSignIn}
               disabled={loading || !legalAccepted}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
@@ -528,7 +528,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="min-h-11 rounded-[3px] text-sm text-lf-taupe motion-safe:transition-colors hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-espresso focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+            className="min-h-11 rounded-[3px] text-sm text-lf-taupe motion-safe:transition-colors hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
           >
             {isSignUp
               ? "Already have an account? Sign In"
