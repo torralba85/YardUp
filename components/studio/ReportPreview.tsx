@@ -402,7 +402,7 @@ function CertificateBriefSection({
                   type="button"
                   onClick={onRetry}
                   disabled={loading}
-                  className="inline-flex items-center gap-1.5 border border-lf-brick/50 bg-transparent px-2.5 py-1 text-xs font-medium text-lf-brick transition hover:bg-lf-brick/10 disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-[3px] border border-lf-brick/50 bg-transparent px-3 py-2 text-xs font-medium text-lf-brick hover:bg-lf-brick/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-brick motion-safe:transition-colors disabled:opacity-50"
                 >
                   <RotateCcw size={12} className={loading ? "animate-spin" : ""} aria-hidden="true" />
                   <span>Try again</span>

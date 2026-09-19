@@ -4,7 +4,7 @@ test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle(/LotFoundry \| A lot more possibility/);
+    await expect(page).toHaveTitle("ADU Feasibility Check: Rent, Cost & Payback | LotFoundry");
     await expect(
       page.getByRole("heading", { name: /A LOT MORE/i }),
     ).toBeVisible();
