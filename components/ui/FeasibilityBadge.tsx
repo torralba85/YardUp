@@ -28,11 +28,11 @@ export function FeasibilityBadge({
   const Icon = qualified ? CheckCircle2 : AlertTriangle;
 
   return (
-    <details className={`mt-3 border-t ${border} pt-2`}>
+    <details className={`group mt-3 border-t ${border} pt-2`}>
       <summary className={`flex min-h-11 cursor-pointer list-none items-center gap-2 text-xs font-semibold ${foreground}`}>
         <Icon className={`h-4 w-4 shrink-0 ${statusColor}`} aria-hidden="true" />
         <span className={statusColor}>{evaluation.title}</span>
-        <ChevronRight className="ml-auto h-4 w-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden="true" />
+        <ChevronRight className="ml-auto h-4 w-4 shrink-0 motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-90" aria-hidden="true" />
       </summary>
       <div className={`space-y-2 pb-2 text-xs leading-5 ${muted}`}>
         <p>{evaluation.summary}</p>

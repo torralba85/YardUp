@@ -474,7 +474,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     >
       {children}
       {logoutError && (
-        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[100] border border-lot-carbon bg-lot-chalk p-4 text-lot-carbon">
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-(--z-index-toast) border border-lot-ink bg-lot-chalk p-4 text-lot-ink">
           {logoutError}
         </div>
       )}

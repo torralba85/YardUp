@@ -403,21 +403,21 @@ export default function StyleMatchPanel({
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-ink focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-ink focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-ink focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>

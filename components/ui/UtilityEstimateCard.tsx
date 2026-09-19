@@ -41,7 +41,9 @@ export function UtilityEstimateCard({
           <p className="font-display text-xl font-semibold tabular-nums">
             {dollars(low)}-{dollars(high)}
           </p>
-          <p className="mt-1 text-[11px] text-[#65655F]">at $65-$120 / linear ft</p>
+          <p className="mt-1 text-[11px] text-[#65655F]">
+            at {dollars(lowRate)}-{dollars(highRate)} / linear ft
+          </p>
         </div>
       </div>
       <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-4 text-[#65655F]">

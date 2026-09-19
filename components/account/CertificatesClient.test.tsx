@@ -83,6 +83,14 @@ describe("CertificatesClient", () => {
     expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
   });
 
+  it("announces a load failure as an alert with a retry", () => {
+    certState.error = "Could not load your certificates.";
+    render(<CertificatesClient />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not load your certificates.");
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(certState.refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("shows empty state when no certificates exist", () => {
     render(<CertificatesClient />);
     expect(screen.getByRole("heading", { name: /no certificates unlocked yet/i })).toBeInTheDocument();

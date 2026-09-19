@@ -3,10 +3,11 @@
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Award, ArrowRight, ShieldCheck } from "lucide-react";
+import { Award, ArrowRight, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 import { Bezel } from "@/components/ui/Bezel";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import {
@@ -63,7 +64,7 @@ export function CertificatesClient() {
         </header>
 
         <div className="mx-auto max-w-md px-4 py-20 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[3px] border border-lf-hairline bg-white">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[3px] border border-lf-hairline bg-lf-card">
             <Award className="h-6 w-6 text-lf-clay-ink" />
           </div>
           <h1 className="lf-section-heading mt-6">Certificates of Feasibility</h1>
@@ -126,13 +127,17 @@ export function CertificatesClient() {
         </div>
 
         {certsLoading ? (
-          <div className="space-y-4 py-12" aria-busy="true">
-            <div className="h-32 animate-pulse rounded-[3px] border border-lf-hairline bg-white/50" />
-            <div className="h-32 animate-pulse rounded-[3px] border border-lf-hairline bg-white/50" />
+          <div className="space-y-4 py-12" role="status" aria-busy="true">
+            <span className="sr-only">Loading certificates…</span>
+            <Skeleton className="h-32 border border-lf-hairline" />
+            <Skeleton className="h-32 border border-lf-hairline" />
           </div>
         ) : error ? (
-          <div className="my-8 rounded-[3px] border border-red-200 bg-red-50 p-6 text-center">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="my-8 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-6 text-center">
+            <p role="alert" className="flex items-center justify-center gap-2 text-sm text-lf-brick">
+              <TriangleAlert size={16} className="shrink-0" aria-hidden="true" />
+              {error}
+            </p>
             <Button
               variant="secondary"
               size="sm"
@@ -143,7 +148,7 @@ export function CertificatesClient() {
             </Button>
           </div>
         ) : certificates.length === 0 ? (
-          <div className="my-10 rounded-[3px] border border-dashed border-lf-hairline bg-white p-12 text-center">
+          <div className="my-10 rounded-none border border-dashed border-lf-hairline bg-lf-card p-12 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[3px] border border-lf-hairline bg-lf-sand">
               <ShieldCheck className="h-7 w-7 text-lf-muted" />
             </div>
@@ -191,7 +196,7 @@ export function CertificatesClient() {
                             {formatDate(cert.createdAt)}
                           </span>
                           {cert.demo && (
-                            <span className="rounded bg-lf-sand px-1.5 py-0.5 text-[11px] font-medium text-lf-muted">
+                            <span className="rounded-none bg-lf-sand-2 px-1.5 py-0.5 text-[11px] font-medium text-lf-muted">
                               Demo
                             </span>
                           )}
@@ -207,7 +212,7 @@ export function CertificatesClient() {
                         </div>
 
                         <div className="flex items-center gap-3 pt-1 text-xs text-lf-muted">
-                          <span className="font-mono">ID: #{cert.certKey}</span>
+                          <span className="tabular-nums">ID: #{cert.certKey}</span>
                           <span>·</span>
                           <span>Amount: {formatPrice(cert.amount)}</span>
                         </div>

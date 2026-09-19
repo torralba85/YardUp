@@ -12,6 +12,16 @@ function componentFiles(dir: string): string[] {
   });
 }
 
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return sourceFiles(path);
+    return /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path) && !path.endsWith(".d.ts") ? [path] : [];
+  });
+}
+
+const productSources = () => ["app", "components", "lib"].flatMap((dir) => sourceFiles(resolve(root, dir)));
+
 describe("A LOT MORE shared design contract", () => {
   it("keeps the approved palette global and font aliases acyclic", () => {
     for (const value of ["#F5F5F0", "#161616", "#FF5B24", "#C43708", "#B7B7AE"]) expect(css).toContain(value);
@@ -47,6 +57,48 @@ describe("A LOT MORE shared design contract", () => {
         expect(source.toLowerCase(), `${file} ${retired}`).not.toContain(retired);
       }
       expect(source, file).not.toMatch(/golden.?hour/i);
+    }
+  });
+
+  it("keeps every product source off the retired Golden Hour hexes", () => {
+    // Scene lighting and fence values, plus the old forest/amber status pair.
+    const retired = ["#8a7e6e", "#e8ecef", "#ffaa66", "#ffd59e", "#fed7aa", "#93c5fd", "#2f4a38", "#c8922a"];
+    for (const file of productSources()) {
+      const source = readFileSync(file, "utf8").toLowerCase();
+      for (const hex of retired) expect(source, `${file} ${hex}`).not.toContain(hex);
+    }
+  });
+
+  it("pins light-surface focus indicators to ink, never signal orange", () => {
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      const source = readFileSync(file, "utf8");
+      // Signal orange is 2.83:1 on chalk, below the 3:1 boundary floor.
+      expect(source, file).not.toMatch(/focus(?:-visible|-within)?:(?:ring|border|outline)-(?:lf-clay|lot-orange)(?![\w-])/);
+    }
+  });
+
+  it("references only colour tokens that globals.css defines", () => {
+    const defined = new Set(Array.from(css.matchAll(/--color-((?:lot|lf|status)-[a-z0-9-]+):/g), (match) => match[1]));
+    const utility =
+      /(?<![\w-])(?:bg|text|border(?:-[trblxy])?|ring(?:-offset)?|outline|fill|stroke|divide|accent|decoration|from|via|to|placeholder|caret)-((?:lot|lf|status)-[a-z0-9-]+)/g;
+    for (const file of productSources()) {
+      for (const [, token] of Array.from(readFileSync(file, "utf8").matchAll(utility))) {
+        expect(defined.has(token), `${file} ${token}`).toBe(true);
+      }
+    }
+  });
+
+  it("keeps product surfaces off Tailwind's default palette and pure white", () => {
+    const defaults =
+      /(?<![\w-])(?:bg|text|border|ring|fill|stroke|divide)-(?:white|black|gray|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-\d{2,3})?(?![\w-])/;
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(defaults);
+    }
+  });
+
+  it("keeps overlays on the shared layering scale", () => {
+    for (const file of productSources()) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/(?<![\w-])z-\[\d+\]/);
     }
   });
 

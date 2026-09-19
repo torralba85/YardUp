@@ -43,3 +43,15 @@ it("opens desktop Design at usable controls without repeating the property journ
   await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
   expect(screen.getByLabelText("Width (ft)")).toBeVisible();
 });
+
+it("announces fine-tune slider values with their units", async () => {
+  const user = userEvent.setup();
+  render(<FeasibilityInspector designOnly parcelId={parcelPresets[0].id}
+    config={defaultAduConfig} assumptions={defaultFinancialAssumptions}
+    result={calculateFeasibility(parcelPresets[0], defaultAduConfig, defaultFinancialAssumptions)}
+    onParcelChange={vi.fn()} onConfigChange={vi.fn()} onAssumptionsChange={vi.fn()}
+    onReset={vi.fn()} onGenerateReport={vi.fn()} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  expect(screen.getByRole("slider", { name: "Width" })).toHaveAttribute("aria-valuetext", `${defaultAduConfig.width} ft`);
+  expect(screen.getByRole("slider", { name: "Length" })).toHaveAttribute("aria-valuetext", `${defaultAduConfig.length} ft`);
+});

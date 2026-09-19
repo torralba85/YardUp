@@ -17,6 +17,8 @@ import { useAuth } from "@/lib/auth-context";
 const IMG_W = 800;
 const IMG_H = 540;
 const ZOOM = 19;
+const STATUS_TONES_ON_DARK = { eligible: "#5FBF93", review: "#E0A33C" };
+const STATUS_TONES_ON_CHALK = { eligible: "#176B4C", review: "#8A5300" };
 
 /** Props for {@link AerialView}. */
 export interface AerialViewProps {
@@ -160,11 +162,14 @@ export default function AerialView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng, parcel.lotLength]);
 
-  // SVG overlay colors — these match --lf-forest (#2F4A38) and --lf-amber (#C8922A)
-  // but must be hardcoded hex for SVG attributes (CSS variables don't work in SVG stroke/fill).
-  // Non-compliant here means "review needed", which is amber semantics — brick
-  // is reserved for genuine blockers (DESIGN.md).
-  const statusColor = isCompliant ? "#2F4A38" : "#C8922A";
+  // Status tones from design-system §2.5, kept as hex because the ADU fill
+  // appends an alpha suffix. Satellite imagery is a dark ground, so it takes the
+  // on-carbon pair, as does the carbon placeholder shown while loading or when no
+  // image arrives. Only the loaded drafting-grid fallback is chalk.
+  // Non-compliant here means "review needed", never blocked.
+  const onChalkGrid = aerialSrc !== null && aerialError;
+  const tones = onChalkGrid ? STATUS_TONES_ON_CHALK : STATUS_TONES_ON_DARK;
+  const statusColor = isCompliant ? tones.eligible : tones.review;
 
   return (
     <div
@@ -342,7 +347,7 @@ export default function AerialView({
       {/* Imagery attribution (required for the keyless Esri fallback base) */}
       {attribution && (
         <div
-          className="pointer-events-none absolute bottom-1 right-2 text-[10px] leading-tight text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]"
+          className="pointer-events-none absolute bottom-1 right-2 text-[10px] leading-tight text-lot-chalk/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]"
           role="note"
         >
           {attribution}
