@@ -23,11 +23,10 @@ export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
         className="h-auto w-full"
       >
         <title id="setback-diagram-title">
-          {content.city} side and rear setbacks by ADU height
+          {`${content.city} side and rear setbacks by ADU height`}
         </title>
         <desc id="setback-diagram-desc">
-          {diagram.shortLabel}: {diagram.shortRule}. {diagram.tallLabel}:{" "}
-          {diagram.tallRule}.
+          {`${diagram.shortLabel}: ${diagram.shortRule}. ${diagram.tallLabel}: ${diagram.tallRule}.`}
         </desc>
 
         {/* Short ADU: hugs the side and rear lines. */}

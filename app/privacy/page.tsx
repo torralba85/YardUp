@@ -81,7 +81,7 @@ export default function PrivacyPage() {
         <ul className="list-disc pl-6 space-y-2">
           <li>
             <strong>Cloud Infrastructure:</strong> Hosted on <em>Google Cloud Platform / Firebase</em>{" "}
-            (Hosting, Cloud Functions, Firebase Authentication, and Cloud Firestore).
+            (Firebase Hosting, Cloud Functions, Firebase Authentication, and Cloud Firestore).
           </li>
           <li>
             <strong>Geocoding &amp; Spatial Data:</strong> Property searches use <em>Google Maps Platform</em>,{" "}
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
             purchases use <em>Google Play Billing</em> or <em>Apple In-App Purchase</em>.
           </li>
           <li>
-            <strong>Artificial Intelligence (OpenAI):</strong> We use <em>OpenAI API</em> to process
+            <strong>Artificial Intelligence (OpenAI):</strong> We use <em>OpenAI</em> API to process
             both: (1) optional user-uploaded photos to generate architectural style-match imagery, and
             (2) parcel metrics, zoning constraints, and feasibility parameters to synthesize the
             narrative AI Project Brief and risk breakdown included with Certificates. OpenAI’s commercial
