@@ -291,4 +291,51 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(res.status).toBe(503);
     expect(mocks.grant).not.toHaveBeenCalled();
   });
+
+  it("carries state and zip through to fulfilment metadata", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(
+      postRequest({
+        certKey: "parcel-1",
+        parcelName: "123 Main Street",
+        checkoutAttemptId: "attempt-1",
+        address: "123 Main St",
+        city: "San Jose",
+        state: "CA",
+        zip: "95110",
+      }),
+    );
+
+    expect(create.mock.calls[0][0].metadata).toMatchObject({
+      purchaseType: "certificate",
+      uid: "user-1",
+      certKey: "parcel-1",
+      address: "123 Main St",
+      city: "San Jose",
+      state: "CA",
+      zip: "95110",
+    });
+  });
+
+  it("strips cert overrides from the client return query in redirect URLs", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(
+      postRequest({
+        certKey: "parcel-1",
+        checkoutAttemptId: "attempt-1",
+        returnSearch: "?parcelId=abc&cert=evil",
+      }),
+    );
+
+    const args = create.mock.calls[0][0];
+    expect(args.success_url).toContain("?cert=parcel-1");
+    expect(args.success_url).toContain("parcelId=abc");
+    expect(args.success_url).not.toContain("evil");
+    expect(args.cancel_url).toContain("parcelId=abc");
+    expect(args.cancel_url).not.toContain("cert=");
+  });
 });

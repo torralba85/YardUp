@@ -4,6 +4,29 @@ import { purchaseId } from "../certificate-purchases-id";
 
 const CERTIFICATE_PURCHASES = "certificatePurchases";
 
+/** Firestore caps a document at 1MB; keep parcel snapshots well under it so
+ * an oversized payload can never fail a grant after payment succeeded. */
+const MAX_PARCEL_DATA_JSON_LEN = 200_000;
+
+/** Parcel snapshots ride along opportunistically — drop (never fail on)
+ * payloads too large or unserializable to store safely. Recovery falls back
+ * to the saved address. */
+function isStorableParcelData(parcelData: Record<string, unknown>): boolean {
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(parcelData);
+  } catch {
+    return false;
+  }
+  if (serialized.length > MAX_PARCEL_DATA_JSON_LEN) {
+    console.warn(
+      `[certificate-purchases] Dropping oversized parcelData (${serialized.length} chars, cap ${MAX_PARCEL_DATA_JSON_LEN}).`,
+    );
+    return false;
+  }
+  return true;
+}
+
 // The deterministic grant id `{uid}_{certKey}` is the idempotency key — a
 // replayed Stripe webhook targets the same doc and no-ops. Defined in a
 // client-safe module so the client access hook derives the same id.
@@ -68,9 +91,11 @@ export async function grantCertificate(
     if (input.city) docData.city = input.city;
     if (input.state) docData.state = input.state;
     if (input.zip) docData.zip = input.zip;
-    if (typeof input.lat === "number") docData.lat = input.lat;
-    if (typeof input.lng === "number") docData.lng = input.lng;
-    if (input.parcelData) docData.parcelData = input.parcelData;
+    if (Number.isFinite(input.lat)) docData.lat = input.lat;
+    if (Number.isFinite(input.lng)) docData.lng = input.lng;
+    if (input.parcelData && isStorableParcelData(input.parcelData)) {
+      docData.parcelData = input.parcelData;
+    }
 
     await ref.create(docData);
     return true;

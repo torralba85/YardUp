@@ -45,6 +45,14 @@ describe("purchased-certificates helpers", () => {
       const live = formatCertKeyFallback("ca-san-jose-141-n-almaden-blvd-95110");
       expect(live.title).toBe("San Jose 141 N Almaden Blvd 95110");
     });
+
+    it("does not match a preset on a bare substring without hyphen boundaries", () => {
+      // Contains "oak-street" only as part of "oak-streetview" — must not
+      // resolve to the "1234 Oak Street" preset.
+      const near = formatCertKeyFallback("12-oak-streetview-portland-or");
+      expect(near.title).not.toBe("1234 Oak Street");
+      expect(near.title).toBe("12 Oak Streetview Portland Or");
+    });
   });
 
   describe("fetchUserPurchasedCertificates", () => {

@@ -177,7 +177,9 @@ export function CertificatesClient() {
                 const subtitle =
                   cert.city && cert.state
                     ? `${cert.city}, ${cert.state}${cert.zip ? ` ${cert.zip}` : ""}`
-                    : cert.city || fallback.subtitle;
+                    : cert.city
+                      ? `${cert.city}${cert.zip ? ` ${cert.zip}` : ""}`
+                      : fallback.subtitle;
 
                 return (
                   <Bezel key={cert.id}>

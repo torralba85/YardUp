@@ -23,6 +23,22 @@ export const runtime = "nodejs";
  * anything longer is a malformed/abusive request. */
 const MAX_CERT_KEY_LEN = 200;
 
+/** Cap on the client-supplied return query echoed into Stripe redirect URLs. */
+const MAX_RETURN_SEARCH_LEN = 500;
+
+/**
+ * Rebuild a client-supplied return query through URLSearchParams so only
+ * well-formed pairs survive. `cert` is always stamped by the server and can
+ * never be overridden; anything malformed is dropped and the result is
+ * re-encoded before it lands in a Stripe redirect URL.
+ */
+function sanitizeReturnQuery(raw: string | undefined): string {
+  if (!raw) return "";
+  const params = new URLSearchParams(raw.replace(/^\?/, ""));
+  params.delete("cert");
+  return params.toString();
+}
+
 /**
  * POST /api/stripe/checkout-certificate  { certKey, parcelName, checkoutAttemptId? }
  *
@@ -41,7 +57,9 @@ export async function POST(request: NextRequest) {
   const parcelName =
     typeof body?.parcelName === "string" ? body.parcelName.trim() : "";
   const returnSearch =
-    typeof body?.returnSearch === "string" ? body.returnSearch.trim() : "";
+    typeof body?.returnSearch === "string"
+      ? body.returnSearch.trim().slice(0, MAX_RETURN_SEARCH_LEN)
+      : "";
   const address = typeof body?.address === "string" ? body.address.trim() : "";
   const city = typeof body?.city === "string" ? body.city.trim() : "";
   const state = typeof body?.state === "string" ? body.state.trim() : "";
@@ -137,6 +155,8 @@ export async function POST(request: NextRequest) {
       returnSearch: returnSearch ?? "",
       address: address ?? "",
       city: city ?? "",
+      state: state ?? "",
+      zip: zip ?? "",
       ...(lat !== undefined ? { lat: String(lat) } : {}),
       ...(lng !== undefined ? { lng: String(lng) } : {}),
     },
@@ -178,6 +198,8 @@ export async function POST(request: NextRequest) {
               parcelName: reservation.parameters.parcelName || undefined,
               address: reservation.parameters.address || undefined,
               city: reservation.parameters.city || undefined,
+              state: reservation.parameters.state || undefined,
+              zip: reservation.parameters.zip || undefined,
               lat: reservation.parameters.lat ? Number(reservation.parameters.lat) : undefined,
               lng: reservation.parameters.lng ? Number(reservation.parameters.lng) : undefined,
             });
@@ -206,12 +228,12 @@ export async function POST(request: NextRequest) {
       const reservedReturnSearch = reservation.parameters.returnSearch;
       const reservedAddress = reservation.parameters.address;
       const reservedCity = reservation.parameters.city;
+      const reservedState = reservation.parameters.state;
+      const reservedZip = reservation.parameters.zip;
       const reservedLat = reservation.parameters.lat;
       const reservedLng = reservation.parameters.lng;
 
-      const returnQuery = reservedReturnSearch
-        ? reservedReturnSearch.replace(/^\?/, "")
-        : "";
+      const returnQuery = sanitizeReturnQuery(reservedReturnSearch);
 
       const session = await stripe.checkout.sessions.create(
         {
@@ -240,6 +262,8 @@ export async function POST(request: NextRequest) {
             certKey,
             ...(reservedAddress ? { address: reservedAddress.slice(0, 100) } : {}),
             ...(reservedCity ? { city: reservedCity.slice(0, 50) } : {}),
+            ...(reservedState ? { state: reservedState.slice(0, 50) } : {}),
+            ...(reservedZip ? { zip: reservedZip.slice(0, 20) } : {}),
             ...(reservedLat ? { lat: reservedLat } : {}),
             ...(reservedLng ? { lng: reservedLng } : {}),
           },

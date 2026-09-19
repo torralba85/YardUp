@@ -48,6 +48,21 @@ function parseDate(raw: unknown): Date | null {
 }
 
 /**
+ * Match a slug needle only on hyphen boundaries so a preset id can never
+ * match as a bare substring of an unrelated key (e.g. "oak" inside
+ * "oakland-ave", or "oak-street" inside "oak-streetview-lot").
+ */
+function matchesSlugSegment(haystack: string, needle: string): boolean {
+  if (!needle) return false;
+  return (
+    haystack === needle ||
+    haystack.startsWith(`${needle}-`) ||
+    haystack.endsWith(`-${needle}`) ||
+    haystack.includes(`-${needle}-`)
+  );
+}
+
+/**
  * Humanize a certificate key slug if no explicit address was saved on the grant.
  */
 export function formatCertKeyFallback(certKey: string): { title: string; subtitle?: string } {
@@ -56,8 +71,11 @@ export function formatCertKeyFallback(certKey: string): { title: string; subtitl
     (p) =>
       certificateKey(p) === certKey ||
       p.id === certKey ||
-      certKey.includes(p.id) ||
-      certKey.includes(p.address.toLowerCase().replace(/[^a-z0-9]+/g, "-")),
+      matchesSlugSegment(certKey, p.id) ||
+      matchesSlugSegment(
+        certKey,
+        p.address.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      ),
   );
   if (preset) {
     return {
