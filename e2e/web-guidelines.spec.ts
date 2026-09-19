@@ -18,7 +18,7 @@ test("feedback explains validation and restores the draft after reload", async (
   await page.getByRole("button", { name: "Send feedback" }).click();
   await expect(message).toBeFocused();
   await expect(message).toHaveAttribute("aria-invalid", "true");
-  await expect(message).toHaveCSS("box-shadow", /rgb\(22, 22, 22\).*2px/);
+  await expect(message).toHaveCSS("box-shadow", /rgb\(196, 55, 8\).*2px/);
   await expect(page.locator("#feedback-message-error")).toContainText("10 characters");
   await message.fill("Please make the map legend clearer.");
   await page.reload();
@@ -36,7 +36,7 @@ test("desktop upload keyboard focus is visible and reset can be cancelled", asyn
   const upload = page.getByLabel(/Choose house photo/);
   await upload.focus();
   // The 2px ring sits outside a 2px offset, producing a 4px shadow spread.
-  await expect(upload.locator("..")).toHaveCSS("box-shadow", /rgb\(22, 22, 22\) 0px 0px 0px 4px/);
+  await expect(upload.locator("..")).toHaveCSS("box-shadow", /rgb\(196, 55, 8\) 0px 0px 0px 4px/);
   page.once("dialog", (dialog) => dialog.dismiss());
   await page.getByRole("button", { name: "Reset Project" }).click();
   await expect(upload).toBeVisible();
