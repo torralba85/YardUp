@@ -1,0 +1,35 @@
+import { ADU_CITIES, cityUrl, hubUrl } from "@/lib/adu/content";
+
+/** XML-escape a sitemap value. */
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Render the segmented ADU sitemap body: the California hub plus one URL
+ * per jurisdiction page, with `lastmod` wired to each page's as-of date.
+ * Kept out of `route.ts` because route modules may only export HTTP
+ * handlers and route config.
+ */
+export function buildAduSitemapXml(): string {
+  const urls = [
+    { loc: hubUrl(), lastmod: "2026-09-17", changefreq: "monthly", priority: "0.8" },
+    ...ADU_CITIES.map((city) => ({
+      loc: cityUrl(city),
+      lastmod: city.asOf,
+      changefreq: "monthly",
+      priority: "0.7",
+    })),
+  ];
+  const entries = urls
+    .map(
+      (entry) =>
+        `  <url>\n    <loc>${escapeXml(entry.loc)}</loc>\n    <lastmod>${entry.lastmod}</lastmod>\n    <changefreq>${entry.changefreq}</changefreq>\n    <priority>${entry.priority}</priority>\n  </url>`,
+    )
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>`;
+}

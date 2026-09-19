@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  Award,
   FileText,
   HelpCircle,
   LogOut,
@@ -29,6 +30,7 @@ export interface AccountMenuProps {
 
 const MENU_LINKS = [
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/certificates", label: "Certificates", icon: Award },
   { href: "/help", label: "Get help", icon: HelpCircle },
   { href: "/feedback", label: "Send feedback", icon: MessageSquare },
   { href: "/terms", label: "Terms & Conditions", icon: FileText },

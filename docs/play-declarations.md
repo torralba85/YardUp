@@ -108,6 +108,11 @@ Notes for the form:
   `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
   generation — declare Photos as collected. The photo is not stored on our
   servers (processed and discarded), matching `app/privacy/page.tsx`.
+- The AI Project Brief feature forwards parcel dimensions, zoning constraints,
+  and feasibility metrics to OpenAI via `/api/ai/project-brief` to synthesize
+  the planning narrative for Certificates of Feasibility. OpenAI acts as a
+  service provider processing on our behalf under commercial API terms (no
+  model training on API inputs), matching `app/privacy/page.tsx`.
 - No crash/analytics SDK ships in the app bundle, so **Crash logs** and
   **Diagnostics** under App info and performance stay undeclared.
 - **App activity -> App interactions** must be declared: Collected, Not shared,

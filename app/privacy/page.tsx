@@ -9,148 +9,250 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-/** Privacy policy — matches Firebase, Regrid, Census/public GIS, USA Structures, Google, OpenAI, Stripe, marketplace. */
+/**
+ * Privacy Policy — canonical `/privacy` disclosure matching deployed
+ * infrastructure (Firebase, Regrid, Census, USA Structures, OpenAI, Stripe, GA4).
+ */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: September 10, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: September 17, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
-          We collect information you provide when you create an account (name, email, password
-          or Sign in with Apple/Google), the role you select (homeowner or builder), parcel
-          addresses and ADU configurations you save, builder company details and service areas,
-          marketplace connection requests you submit, payment transaction metadata from Stripe
-          or the app stores, and feedback you send. We also collect standard server logs (IP
-          address, user agent, pages visited) to operate and secure the service.
+          We collect personal information you provide directly and data generated through your use
+          of LotFoundry:
         </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            <strong>Account Identifiers:</strong> Name, email address, encrypted credentials, or
+            third-party authentication tokens (Sign in with Google / Apple), and role designation
+            (homeowner or builder).
+          </li>
+          <li>
+            <strong>Property &amp; Feasibility Inputs:</strong> Searched property addresses, geographical
+            coordinates (latitude/longitude), custom parcel dimensions, setback adjustments, and ADU
+            configurations you design or save.
+          </li>
+          <li>
+            <strong>Builder Profile Information:</strong> Business name, contractor license details,
+            phone numbers, service regions, and trade specializations.
+          </li>
+          <li>
+            <strong>Marketplace Connection Data:</strong> Direct contact requests submitted by
+            homeowners to connect with matched builders.
+          </li>
+          <li>
+            <strong>User Photos &amp; Visual Content:</strong> Optional photographs of your parcel or
+            existing structures uploaded for AI architectural style matching.
+          </li>
+          <li>
+            <strong>Billing &amp; Transaction Records:</strong> Transaction IDs, purchase timestamps,
+            certificate identifiers, and credit balances provided by Stripe, Google Play Billing, or
+            Apple App Store (we never store raw payment card numbers on our servers).
+          </li>
+          <li>
+            <strong>Technical Telemetry &amp; Security Logs:</strong> IP address (truncated for analytics),
+            user agent, device characteristics, request timestamps, and tamper-evident legal consent
+            receipts (recording accepted terms and privacy policy versions).
+          </li>
+        </ul>
       </LegalSection>
 
       <LegalSection title="2. How We Use Your Information">
         <p>
-          We use this information to provide LotFoundry, authenticate you, save feasibility
-          studies, process purchases and lead unlocks, match consented leads to builders, send
-          transactional messages, improve reliability, prevent fraud, and respond to support
-          requests. We do not sell personal information for cross-context behavioral advertising. Builders pay LotFoundry to unlock contact and property details only after a homeowner affirmatively submits a connection request.
+          We process personal information to: (a) provide the 3D Feasibility Studio and calculate zoning
+          and financial estimates; (b) authenticate your identity and safeguard your account; (c)
+          generate and deliver Certificates of Feasibility and AI Project Briefs; (d) facilitate
+          homeowner-directed lead unlocks for builders; (e) process payments and prevent fraud; (f)
+          respond to support inquiries; and (g) comply with legal and regulatory obligations.
+        </p>
+        <p>
+          <strong>We do not sell personal information for monetary or valuable consideration, nor do we
+          share personal information for cross-context behavioral advertising.</strong> Homeowner
+          contact information is disclosed to a builder only upon the homeowner’s affirmative,
+          intentional direction.
         </p>
       </LegalSection>
 
-      <LegalSection title="3. Infrastructure &amp; Third-Party Services">
+      <LegalSection title="3. Third-Party Subprocessors &amp; Infrastructure">
         <p>
-          LotFoundry is hosted on <strong>Firebase Hosting</strong> with{" "}
-          <strong>Cloud Functions</strong>, <strong>Firebase Authentication</strong>, and{" "}
-          <strong>Cloud Firestore</strong>. Parcel and map features use{" "}
-          <strong>Google Maps / Places / Geocoding</strong> and <strong>Regrid</strong> parcel
-          data. When you search for a property, the searched address or its coordinates may also
-          be sent to the <strong>US Census Bureau geocoder</strong> to resolve location details.
-          If public parcel geometry or building-footprint data is needed, coordinates or parcel
-          geometry may also be sent to the public <strong>county and state parcel (GIS) services</strong>
-          that publish lot lines for that area and to the federal <strong>USA Structures</strong>
-          service used to estimate existing building footprints. These calls may occur even when
-          Regrid returns a parcel record when location fields or building-footprint data are
-          incomplete. Payments use <strong>Stripe</strong> on the open web and{" "}
-          <strong>Apple App Store / Google Play Billing</strong> in store apps. Optional AI
-          style-match concepts use <strong>OpenAI</strong> when you consent to send a photo.
-          Usage measurement uses <strong>Google Analytics 4</strong>, and only after you accept
-          analytics cookies (see section 7).
+          To operate the Service, we share data with trusted third-party service providers bound by
+          contractual confidentiality and data protection standards:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            <strong>Cloud Infrastructure:</strong> Hosted on <em>Google Cloud Platform / Firebase</em>{" "}
+            (Hosting, Cloud Functions, Firebase Authentication, and Cloud Firestore).
+          </li>
+          <li>
+            <strong>Geocoding &amp; Spatial Data:</strong> Property searches use <em>Google Maps Platform</em>,{" "}
+            <em>Regrid</em> (Loveland Technologies parcel boundaries), the <em>US Census Bureau Geocoder</em>,{" "}
+            <em>USA Structures</em> (federal building footprints), and municipal GIS open data portals.
+          </li>
+          <li>
+            <strong>Payment Gateways:</strong> Digital web purchases use <em>Stripe</em>. Mobile
+            purchases use <em>Google Play Billing</em> or <em>Apple In-App Purchase</em>.
+          </li>
+          <li>
+            <strong>Artificial Intelligence (OpenAI):</strong> We use <em>OpenAI API</em> to process
+            both: (1) optional user-uploaded photos to generate architectural style-match imagery, and
+            (2) parcel metrics, zoning constraints, and feasibility parameters to synthesize the
+            narrative AI Project Brief and risk breakdown included with Certificates. OpenAI’s commercial
+            API terms guarantee that user inputs are not used to train AI models.
+          </li>
+          <li>
+            <strong>Usage Analytics:</strong> <em>Google Analytics 4</em> is used to measure aggregate
+            product usage, strictly subject to your affirmative consent (see Section 7).
+          </li>
+          <li>
+            <strong>Aggregate Traffic Measurement:</strong> <em>Cloudflare Web Analytics</em> counts
+            page views and referrers. It is cookieless, stores nothing on your device, does not
+            fingerprint visitors, and performs no cross-site tracking (see Section 7).
+          </li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection title="4. AI Processing &amp; Photo Handling">
+        <p>
+          When you use the AI Style-Match feature, your photo is processed locally in your browser to
+          downscale the image and strip all embedded EXIF, GPS location, and camera metadata prior to
+          transmission. The prepared image is sent directly via encrypted API to OpenAI to produce a
+          concept visualization. LotFoundry does not store raw photos on our database servers.
+        </p>
+        <p>
+          When generating a Certificate of Feasibility, project feasibility parameters (lot size,
+          calculated setbacks, jurisdiction, and target ADU dimensions) are transmitted to OpenAI to
+          generate the Project Brief. Generating AI briefs or photos is never required to browse the
+          studio.
         </p>
       </LegalSection>
 
-      <LegalSection title="4. AI Photo Processing">
+      <LegalSection title="5. Marketplace Sharing: Consumer-Directed Disclosure">
         <p>
-          When you use style-match, you explicitly agree to send a prepared photo (downscaled,
-          re-encoded, with EXIF/GPS stripped on device) to OpenAI to generate a concept image.
-          LotFoundry does not store the original photo on our servers. Generation is optional;
-          declining does not block the rest of the studio.
+          Homeowner contact details (name, email, phone, and property address) are held in confidence
+          and are never displayed publicly. Builders see only an anonymized, redacted preview (general
+          neighborhood, lot size, and project scope) until a homeowner affirmatively submits a
+          connection request.
+        </p>
+        <p>
+          When a homeowner submits a connection request and a builder unlocks the lead, the homeowner’s
+          contact information is disclosed solely at the consumer’s express direction, constituting an
+          exempt consumer-directed disclosure under applicable state privacy laws (including California
+          Civil Code § 1798.140(ad)(1)). Builders act as independent data controllers upon unlocking a
+          lead.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Marketplace Sharing">
+      <LegalSection title="6. Data Retention &amp; Account Deletion">
         <p>
-          Homeowner contact and lot details are shared with matched builders only after you
-          submit a connect request. Builders see a redacted preview until they unlock a lead.
-          Unlock and purchase ledgers may retain non-PII accounting records after account
-          deletion.
-        </p>
-      </LegalSection>
-
-      <LegalSection title="6. Retention &amp; Deletion">
-        <p>
-          You may export or delete your account from{" "}
+          We retain personal information for as long as your account remains active. You may delete your
+          account at any time within your{" "}
           <Link href="/settings" className="font-medium text-lf-clay-ink underline">
-            Settings
+            Account Settings
           </Link>{" "}
-          or the public{" "}
+          or via our public{" "}
           <Link href="/delete-account" className="font-medium text-lf-clay-ink underline">
-            Delete account
+            Delete Account
           </Link>{" "}
-          page (usable without reinstalling a mobile app). Deletion removes account-associated contact information and user-generated content from active product records. We may retain purchase, credit, lead-unlock, fraud, tax, accounting, and dispute records for as long as reasonably necessary for those purposes. Retained records may contain transaction or internal account identifiers but not active profile contact details. We delete or de-identify them when they are no longer needed.
+          portal (accessible without installing our mobile application).
+        </p>
+        <p>
+          Upon deletion, your active profile, saved scenario studies, and contact records are permanently
+          removed from active product databases. We retain transactional, accounting, tax, dispute, and
+          fraud records for up to seven (7) years as required by applicable commercial and financial
+          regulations, in de-identified or pseudonymized format.
         </p>
       </LegalSection>
 
       <LegalSection title="7. Cookies &amp; Local Storage">
         <p>
-          We use session cookies / Firebase Auth state to keep you signed in, and local/session
-          storage for studio handoff and preferences. We do not use third-party advertising
-          cookies.
+          We use strictly necessary session cookies and Firebase Authentication state to maintain your
+          login session and persist local studio preferences. We do not use third-party advertising
+          cookies or behavioral retargeting trackers.
         </p>
         <p>
-          With your consent, we also use Google Analytics 4 to measure which pages and features
-          are used. It sets first-party cookies (<code>_ga</code> and <code>_ga_*</code>) holding
-          a random identifier, and reports page paths, referrer, approximate location derived
-          from a truncated IP address, and device/browser type. Analytics is off until you
-          accept: we load nothing from Google and set no analytics cookie unless you opt in, and
-          advertising and personalization signals are disabled. We do not send Google your
-          address, email, saved scenarios, or feasibility results.
+          <strong>Google Analytics 4 (Consent Gated):</strong> We use Google Analytics 4 only if you
+          affirmatively opt in. GA4 sets first-party cookies (<code>_ga</code> and <code>_ga_*</code>)
+          to collect pseudonymous interaction metrics, device models, and approximate geographic regions
+          derived from truncated IP addresses. Advertising personalization features are permanently
+          disabled. If you decline or take no action, Google Analytics remains completely disabled, no
+          Google scripts are loaded, and no <code>_ga</code> cookies are set.
         </p>
         <p>
-          You can change your mind at any time. Turning analytics off stops collection and
-          deletes the analytics cookies already in your browser.
+          <strong>Cloudflare Web Analytics (Not Consent Gated):</strong> Separately, we use Cloudflare
+          Web Analytics to count page views and referrers. It is not covered by the control below
+          because it never stores anything on your device: no cookies, no local storage, and no device
+          fingerprinting. It cannot follow you to other sites, and it collects none of the interaction
+          detail GA4 does. Consent gates exist to protect access to your device&rsquo;s storage, and
+          this measurement never touches it.
         </p>
+        <p>You can modify your Google Analytics consent settings at any time below:</p>
         <CookiePreferences />
       </LegalSection>
 
-      <LegalSection title="8. Children">
+      <LegalSection title="8. Minor Protection &amp; Age-Assurance Governance">
         <p>
-          LotFoundry is intended only for people age 18 or older. We do not knowingly allow children to create accounts or submit personal information.
+          The Service is strictly designed and intended for adults aged 18 and older. We do not
+          knowingly collect, maintain, or profile personal information from minors under the age of 18,
+          and the Service is rated 18+ in mobile application stores.
+        </p>
+        <p>
+          In accordance with the <strong>Texas App Store Accountability Act (HB 18)</strong>,{" "}
+          <strong>California AB 1043</strong>, and the <strong>Amended COPPA Rule (2026)</strong>, we
+          respect platform age signals, prohibit targeted marketing to minors, and do not knowingly
+          collect data from children under 13. If we discover that personal data from a child under 13
+          has been inadvertently collected, it will be deleted immediately.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Privacy Choices &amp; State Rights">
+      <LegalSection title="9. State Privacy Rights &amp; Appeals">
         <p>
-          Depending on where you live and whether applicable legal thresholds are met, you may
-          request access to, correction of, deletion of, or a portable copy of your information;
-          object to or opt out of certain disclosures; or appeal a denied request. Email{" "}
-          <a href="mailto:privacy@lotfoundry.com" className="font-medium text-lf-clay-ink underline">
-            privacy@lotfoundry.com
+          Depending on your state of residence (including California, Virginia, Colorado, Connecticut,
+          Texas, Utah, and Oregon), you may have the following statutory rights:
+        </p>
+        <ul className="list-disc pl-6 space-y-1">
+          <li>The right to know and access personal information we hold about you.</li>
+          <li>The right to request deletion of your personal information.</li>
+          <li>The right to correct inaccurate personal data.</li>
+          <li>The right to receive a portable copy of your data.</li>
+          <li>The right to opt out of automated profiling or targeted advertising (which we do not conduct).</li>
+          <li>The right to freedom from discrimination for exercising your privacy rights.</li>
+        </ul>
+        <p>
+          <strong>Submitting Requests &amp; Appeals:</strong> To exercise any privacy right, email{" "}
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            privacy@lotfoundry.net
           </a>
-          . We may verify your identity before completing a request and will not discriminate
-          against you for exercising an applicable privacy right.
+          . We will verify your identity and respond within forty-five (45) days. If your request is
+          denied, you have the right to appeal our decision by emailing{" "}
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            privacy@lotfoundry.net
+          </a>{" "}
+          with the subject line <em>“Privacy Appeal”</em>.
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Changes">
+      <LegalSection title="10. Policy Updates">
         <p>
-          We may update this policy by revising the “Last updated” date. Material changes may also
-          be communicated by email when appropriate.
+          We may update this Privacy Policy periodically to reflect changes in our legal obligations or
+          system architecture. We will post revised versions with an updated “Last updated” date. For
+          material changes, we will provide additional notice on our website or via email.
         </p>
       </LegalSection>
 
-      <LegalSection title="11. Contact">
+      <LegalSection title="11. Contact Information">
         <p>
-          Privacy questions:{" "}
-          <a
-            href="mailto:privacy@lotfoundry.com"
-            className="font-medium text-lf-clay-ink underline"
-          >
-            privacy@lotfoundry.com
+          For privacy inquiries or data requests, contact our Privacy Team at:{" "}
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            privacy@lotfoundry.net
           </a>
-          . Support:{" "}
-          <a
-            href="mailto:support@lotfoundry.com"
-            className="font-medium text-lf-clay-ink underline"
-          >
-            support@lotfoundry.com
+          . For general support:{" "}
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+            support@lotfoundry.net
           </a>
           .
+        </p>
+        <p className="lf-caption text-lf-muted mt-2">
+          LotFoundry LLC · Legal &amp; Privacy Compliance
         </p>
       </LegalSection>
     </LegalPageShell>

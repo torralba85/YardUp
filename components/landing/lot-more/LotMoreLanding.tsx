@@ -1029,6 +1029,7 @@ export function LotMoreLanding({
                 Register as a builder
               </Link>
               <Link href="/about">About us</Link>
+              <Link href="/adu/ca">ADU rules by city</Link>
               <Link href="/help">Get in touch</Link>
               <a href={GOOGLE_PLAY_URL} rel="noopener">
                 Android app on Google Play

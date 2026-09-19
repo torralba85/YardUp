@@ -58,6 +58,17 @@ async function rotateReservationForFailedSession(
  * purchases whose currency and amount exactly match LotFoundry's server-side
  * catalog. Deterministic grant/ledger ids make Stripe retries safe.
  */
+/**
+ * Parse a Stripe metadata coordinate. Metadata values are strings and must
+ * never become NaN in Firestore (where NaN poisons ordering) — unparseable
+ * values are dropped so the grant still succeeds without them.
+ */
+function toFiniteNumber(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export async function POST(request: NextRequest) {
   const stripe = await getStripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -107,14 +118,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const uid = session.metadata?.uid;
-    const certKey = session.metadata?.certKey;
+    const metadata = session.metadata ?? {};
+    const uid = metadata.uid;
+    const certKey = metadata.certKey;
     if (uid && certKey) {
       await grantCertificate({
         uid,
         certKey,
         stripeSessionId: session.id,
         amount: CERTIFICATE_PRICE_CENTS,
+        parcelName: metadata.parcelName,
+        address: metadata.address,
+        city: metadata.city,
+        state: metadata.state,
+        zip: metadata.zip,
+        lat: toFiniteNumber(metadata.lat),
+        lng: toFiniteNumber(metadata.lng),
       });
     } else {
       console.error(

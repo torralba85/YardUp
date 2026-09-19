@@ -11,6 +11,12 @@ const PUBLIC_PATHS = [
   "/login",
   "/signup",
   "/studio",
+  "/adu/ca",
+  "/adu/ca/san-diego",
+  "/adu/ca/chula-vista",
+  "/adu/ca/oceanside",
+  "/adu/ca/escondido",
+  "/adu/ca/carlsbad",
 ] as const;
 
 for (const path of PUBLIC_PATHS) {
@@ -56,6 +62,13 @@ test("robots and sitemap are reachable", async ({ request }) => {
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
   expect(xml).toContain("/about");
+
+  // Segmented ADU sitemap: hub plus one URL per jurisdiction page.
+  const aduSitemap = await request.get("/sitemap-adu.xml");
+  expect(aduSitemap.status()).toBe(200);
+  const aduXml = await aduSitemap.text();
+  expect(aduXml).toContain("/adu/ca/san-diego");
+  expect(aduXml).toContain("/adu/ca");
 
   // `79c6545` de-indexed the account-utility pages: they have nothing to rank
   // for and carry a page-level noindex, so listing them in the sitemap would

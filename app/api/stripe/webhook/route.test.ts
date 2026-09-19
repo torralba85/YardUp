@@ -341,6 +341,30 @@ describe("POST /api/stripe/webhook", () => {
     });
   });
 
+  it("drops unparseable coordinates instead of granting NaN", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_cert",
+        amount_total: 2900,
+        metadata: {
+          purchaseType: "certificate",
+          uid: "user_1",
+          certKey: "1234-oak-street-seattle",
+          lat: "not-a-number",
+          lng: "1e999",
+        },
+      }),
+    );
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.grantCertificate).toHaveBeenCalledWith({
+      uid: "user_1",
+      certKey: "1234-oak-street-seattle",
+      stripeSessionId: "sess_cert",
+      amount: 2900,
+    });
+  });
+
   it("rejects a certificate purchase with a mismatched amount", async () => {
     installEvent(
       paidSession({

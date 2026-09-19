@@ -23,6 +23,22 @@ export const runtime = "nodejs";
  * anything longer is a malformed/abusive request. */
 const MAX_CERT_KEY_LEN = 200;
 
+/** Cap on the client-supplied return query echoed into Stripe redirect URLs. */
+const MAX_RETURN_SEARCH_LEN = 500;
+
+/**
+ * Rebuild a client-supplied return query through URLSearchParams so only
+ * well-formed pairs survive. `cert` is always stamped by the server and can
+ * never be overridden; anything malformed is dropped and the result is
+ * re-encoded before it lands in a Stripe redirect URL.
+ */
+function sanitizeReturnQuery(raw: string | undefined): string {
+  if (!raw) return "";
+  const params = new URLSearchParams(raw.replace(/^\?/, ""));
+  params.delete("cert");
+  return params.toString();
+}
+
 /**
  * POST /api/stripe/checkout-certificate  { certKey, parcelName, checkoutAttemptId? }
  *
@@ -40,6 +56,21 @@ export async function POST(request: NextRequest) {
   const certKey = typeof body?.certKey === "string" ? body.certKey.trim() : "";
   const parcelName =
     typeof body?.parcelName === "string" ? body.parcelName.trim() : "";
+  const returnSearch =
+    typeof body?.returnSearch === "string"
+      ? body.returnSearch.trim().slice(0, MAX_RETURN_SEARCH_LEN)
+      : "";
+  const address = typeof body?.address === "string" ? body.address.trim() : "";
+  const city = typeof body?.city === "string" ? body.city.trim() : "";
+  const state = typeof body?.state === "string" ? body.state.trim() : "";
+  const zip = typeof body?.zip === "string" ? body.zip.trim() : "";
+  const lat = typeof body?.lat === "number" ? body.lat : undefined;
+  const lng = typeof body?.lng === "number" ? body.lng : undefined;
+  const parcelData =
+    body?.parcelData && typeof body.parcelData === "object"
+      ? (body.parcelData as Record<string, unknown>)
+      : undefined;
+
   // Clients loaded before checkoutAttemptId was introduced omit it. Keep their
   // entitlement-scoped idempotency key stable across network retries, while
   // rejecting malformed supplied values.
@@ -81,6 +112,14 @@ export async function POST(request: NextRequest) {
       stripeSessionId: `demo_${certKey}`,
       amount: CERTIFICATE_PRICE_CENTS,
       demo: true,
+      parcelName: parcelName || undefined,
+      address: address || undefined,
+      city: city || undefined,
+      state: state || undefined,
+      zip: zip || undefined,
+      lat,
+      lng,
+      parcelData,
     });
     return NextResponse.json({ status: "granted", demo: true });
   }
@@ -110,7 +149,17 @@ export async function POST(request: NextRequest) {
     accountId: uid,
     purchaseId: certKey,
     attemptId: checkoutAttemptId,
-    parameters: { origin, parcelName: parcelName ?? "" },
+    parameters: {
+      origin,
+      parcelName: parcelName ?? "",
+      returnSearch: returnSearch ?? "",
+      address: address ?? "",
+      city: city ?? "",
+      state: state ?? "",
+      zip: zip ?? "",
+      ...(lat !== undefined ? { lat: String(lat) } : {}),
+      ...(lng !== undefined ? { lng: String(lng) } : {}),
+    },
   };
 
   try {
@@ -146,6 +195,13 @@ export async function POST(request: NextRequest) {
               certKey,
               stripeSessionId: existing.id,
               amount: CERTIFICATE_PRICE_CENTS,
+              parcelName: reservation.parameters.parcelName || undefined,
+              address: reservation.parameters.address || undefined,
+              city: reservation.parameters.city || undefined,
+              state: reservation.parameters.state || undefined,
+              zip: reservation.parameters.zip || undefined,
+              lat: reservation.parameters.lat ? Number(reservation.parameters.lat) : undefined,
+              lng: reservation.parameters.lng ? Number(reservation.parameters.lng) : undefined,
             });
             return NextResponse.json({ status: "granted", reconciled: true });
           }
@@ -169,6 +225,16 @@ export async function POST(request: NextRequest) {
 
       const reservedOrigin = reservation.parameters.origin;
       const reservedParcelName = reservation.parameters.parcelName;
+      const reservedReturnSearch = reservation.parameters.returnSearch;
+      const reservedAddress = reservation.parameters.address;
+      const reservedCity = reservation.parameters.city;
+      const reservedState = reservation.parameters.state;
+      const reservedZip = reservation.parameters.zip;
+      const reservedLat = reservation.parameters.lat;
+      const reservedLng = reservation.parameters.lng;
+
+      const returnQuery = sanitizeReturnQuery(reservedReturnSearch);
+
       const session = await stripe.checkout.sessions.create(
         {
           mode: "payment",
@@ -190,11 +256,21 @@ export async function POST(request: NextRequest) {
             },
           ],
           // The webhook reads these back to write the grant.
-          metadata: { purchaseType: "certificate", uid, certKey },
+          metadata: {
+            purchaseType: "certificate",
+            uid,
+            certKey,
+            ...(reservedAddress ? { address: reservedAddress.slice(0, 100) } : {}),
+            ...(reservedCity ? { city: reservedCity.slice(0, 50) } : {}),
+            ...(reservedState ? { state: reservedState.slice(0, 50) } : {}),
+            ...(reservedZip ? { zip: reservedZip.slice(0, 20) } : {}),
+            ...(reservedLat ? { lat: reservedLat } : {}),
+            ...(reservedLng ? { lng: reservedLng } : {}),
+          },
           // Stamp which certificate was bought so the return only unlocks the
           // panel whose key matches (the studio may rehydrate a different parcel).
-          success_url: `${reservedOrigin}/studio?cert=${encodeURIComponent(certKey)}`,
-          cancel_url: `${reservedOrigin}/studio`,
+          success_url: `${reservedOrigin}/studio?cert=${encodeURIComponent(certKey)}${returnQuery ? `&${returnQuery}` : ""}`,
+          cancel_url: `${reservedOrigin}/studio${returnQuery ? `?${returnQuery}` : ""}`,
         },
         {
           idempotencyKey: createStripeIdempotencyKey(

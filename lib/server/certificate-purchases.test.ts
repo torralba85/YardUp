@@ -90,3 +90,52 @@ describe("hasCertificate", () => {
     expect(await hasCertificate("u1", "k")).toBe(true);
   });
 });
+
+describe("grantCertificate storage guards", () => {
+  it("stores finite coordinates and small parcel snapshots", async () => {
+    const created = await grantCertificate({
+      uid: "u1",
+      certKey: "k",
+      stripeSessionId: "sess_1",
+      amount: 2900,
+      lat: 37.33,
+      lng: -121.89,
+      parcelData: { address: "123 Main St" },
+    });
+
+    expect(created).toBe(true);
+    expect(store.created[0].data).toMatchObject({
+      lat: 37.33,
+      lng: -121.89,
+      parcelData: { address: "123 Main St" },
+    });
+  });
+
+  it("drops non-finite coordinates but still writes the grant", async () => {
+    const created = await grantCertificate({
+      uid: "u1",
+      certKey: "k",
+      stripeSessionId: "sess_1",
+      amount: 2900,
+      lat: NaN,
+      lng: Infinity,
+    });
+
+    expect(created).toBe(true);
+    expect(store.created[0].data).not.toHaveProperty("lat");
+    expect(store.created[0].data).not.toHaveProperty("lng");
+  });
+
+  it("drops oversized parcel snapshots but still writes the grant", async () => {
+    const created = await grantCertificate({
+      uid: "u1",
+      certKey: "k",
+      stripeSessionId: "sess_1",
+      amount: 2900,
+      parcelData: { blob: "x".repeat(300_000) },
+    });
+
+    expect(created).toBe(true);
+    expect(store.created[0].data).not.toHaveProperty("parcelData");
+  });
+});

@@ -15,6 +15,8 @@ import {
   CertificateCheckoutError,
   startCertificateCheckout,
 } from "@/lib/certificate-checkout";
+import { stashInitialParcel } from "@/lib/parcel-handoff";
+import type { LiveParcelData } from "@/lib/parcel-types";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 
 /** What the complete certificate includes — the paid deliverable's contents. */
@@ -182,7 +184,23 @@ export default function CertificatePanel({
     setError(null);
     try {
       const idToken = await user.getIdToken();
-      const outcome = await startCertificateCheckout({ certKey, parcelName, idToken });
+      const isLive = "source" in parcel && Boolean(parcel.source);
+      if (isLive) {
+        stashInitialParcel(parcel as unknown as LiveParcelData);
+      }
+      const outcome = await startCertificateCheckout({
+        certKey,
+        parcelName,
+        idToken,
+        returnSearch: typeof window !== "undefined" ? window.location.search : undefined,
+        address: "address" in parcel && typeof parcel.address === "string" ? parcel.address : undefined,
+        city: "city" in parcel && typeof parcel.city === "string" ? parcel.city : undefined,
+        state: "state" in parcel && typeof parcel.state === "string" ? parcel.state : undefined,
+        zip: "zip" in parcel && typeof parcel.zip === "string" ? parcel.zip : undefined,
+        lat: "lat" in parcel && typeof parcel.lat === "number" ? parcel.lat : undefined,
+        lng: "lng" in parcel && typeof parcel.lng === "number" ? parcel.lng : undefined,
+        parcelData: isLive ? (parcel as unknown as Record<string, unknown>) : undefined,
+      });
       if (outcome.kind === "redirect") {
         window.location.assign(outcome.url);
         return; // navigating away
