@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CesiumNeighborhoodView from "./CesiumNeighborhoodView";
@@ -28,7 +28,9 @@ let mockSampleHeightSupported = true;
 let mockGlobe: { show: boolean };
 
 const mockCesium = {
-  Viewer: vi.fn(function () {
+  Viewer: vi.fn(function (_container: Element, _options?: Record<string, unknown>) {
+    void _container;
+    void _options;
     mockGlobe = { show: true };
     return {
       destroy: mockDestroy,
@@ -115,6 +117,8 @@ function renderView(props: Partial<React.ComponentProps<typeof CesiumNeighborhoo
 describe("CesiumNeighborhoodView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCameraFlyTo.mockImplementation((options) => options.complete?.());
+    mockCameraFlyToBoundingSphere.mockImplementation((_sphere, options) => options?.complete?.());
     mockSampleHeight = vi.fn(() => MOCK_GROUND_HEIGHT_M);
     mockSampleHeightSupported = true;
     setGeoidModuleForTesting({ meanSeaLevel: () => MOCK_UNDULATION_M });
@@ -124,6 +128,7 @@ describe("CesiumNeighborhoodView", () => {
     cleanup();
     vi.unstubAllEnvs();
     resetGeoidForTesting();
+    vi.useRealTimers();
   });
 
   it("initializes Cesium viewer and adds parcel entities", async () => {
@@ -207,10 +212,10 @@ describe("CesiumNeighborhoodView", () => {
         );
       });
 
-      expect(mockCesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledWith({
+      expect(mockCesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledWith(expect.objectContaining({
         key: "test-map-tiles-key",
         onlyUsingWithGoogleGeocoder: true,
-      });
+      }), expect.any(Object));
       expect(mockPrimitivesAdd).toHaveBeenCalledWith(
         expect.objectContaining({ id: "google-tileset" }),
       );
@@ -349,6 +354,290 @@ describe("CesiumNeighborhoodView", () => {
       } finally {
         mockCesium.HeightReference = savedHeightReference;
       }
+    });
+  });
+
+  describe("Task 1: viewer lifecycle vs geometry effect separation", () => {
+    it("constructs Cesium.Viewer once and tileset factory once across N consecutive config edits", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY", "test-map-tiles-key");
+      const { rerender } = renderView({ config: { ...defaultAduConfig, width: 20 } });
+
+      await waitFor(() => {
+        expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+      });
+      const initialViewerCalls = mockCesium.Viewer.mock.calls.length;
+      const initialOsmCalls = mockCesium.createOsmBuildingsAsync.mock.calls.length;
+      const initialSamples = mockSampleHeight!.mock.calls.length;
+      const initialFlyCalls = mockCameraFlyTo.mock.calls.length;
+
+      // 3 consecutive config updates
+      rerender(
+        <CesiumNeighborhoodView
+          parcel={sampleParcel}
+          config={{ ...defaultAduConfig, width: 24 }}
+          pose={samplePose}
+          isCompliant={true}
+        />,
+      );
+      rerender(
+        <CesiumNeighborhoodView
+          parcel={sampleParcel}
+          config={{ ...defaultAduConfig, width: 28 }}
+          pose={samplePose}
+          isCompliant={true}
+        />,
+      );
+      rerender(
+        <CesiumNeighborhoodView
+          parcel={sampleParcel}
+          config={{ ...defaultAduConfig, width: 32 }}
+          pose={samplePose}
+          isCompliant={true}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(mockEntitiesRemove).toHaveBeenCalled();
+      });
+
+      // Viewer must NOT be destroyed or reconstructed
+      expect(mockDestroy).not.toHaveBeenCalled();
+      expect(mockCesium.Viewer).toHaveBeenCalledTimes(initialViewerCalls);
+      expect(mockCesium.createOsmBuildingsAsync).toHaveBeenCalledTimes(initialOsmCalls);
+      expect(mockCesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledOnce();
+      expect(mockSampleHeight).toHaveBeenCalledTimes(initialSamples);
+      expect(mockCameraFlyTo).toHaveBeenCalledTimes(initialFlyCalls);
+
+      // Verify the ADU entity was re-added with the latest config
+      const addedAduCalls = mockEntitiesAdd.mock.calls
+        .map((call) => call[0])
+        .filter((opts) => opts.name === "Proposed ADU Footprint");
+      expect(addedAduCalls.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it("re-places geometry without rebuilding viewer on pose change", async () => {
+      const { rerender } = renderView({ pose: samplePose });
+
+      await waitFor(() => {
+        expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+      });
+
+      rerender(
+        <CesiumNeighborhoodView
+          parcel={sampleParcel}
+          config={defaultAduConfig}
+          pose={{ x: 10, z: -10, rotationDeg: 45 }}
+          isCompliant={true}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(mockEntitiesRemove).toHaveBeenCalled();
+      });
+
+      expect(mockDestroy).not.toHaveBeenCalled();
+      expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+    });
+
+    it("rebuilds the Cesium viewer when the parcel changes", async () => {
+      const { rerender } = renderView({ parcel: sampleParcel });
+
+      await waitFor(() => {
+        expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+      });
+
+      const differentParcel: LiveParcelData = {
+        ...sampleParcel,
+        address: "123 Main St",
+        lat: 47.65,
+        lng: -122.3,
+      };
+
+      rerender(
+        <CesiumNeighborhoodView
+          parcel={differentParcel}
+          config={defaultAduConfig}
+          pose={samplePose}
+          isCompliant={true}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(mockDestroy).toHaveBeenCalledOnce();
+      });
+      expect(mockCesium.Viewer).toHaveBeenCalledTimes(2);
+    });
+
+    it("preserves viewer when a new parcel object reference has the same identity", async () => {
+      const { rerender } = renderView({ parcel: sampleParcel });
+
+      await waitFor(() => {
+        expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+      });
+
+      // Same data, new object reference
+      const identicalParcel: LiveParcelData = { ...sampleParcel };
+
+      rerender(
+        <CesiumNeighborhoodView
+          parcel={identicalParcel}
+          config={defaultAduConfig}
+          pose={samplePose}
+          isCompliant={true}
+        />,
+      );
+
+      expect(mockDestroy).not.toHaveBeenCalled();
+      expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("Task 5: cold coarse sample recovery post-flight", () => {
+    it("recovers when coarse sample is cold and post-flight measurement resolves", async () => {
+      vi.useFakeTimers();
+      vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY", "test-map-tiles-key");
+      let samples = 0;
+      mockSampleHeight = vi.fn(() => ++samples <= 6 ? undefined : MOCK_GROUND_HEIGHT_M);
+      mockCameraFlyToBoundingSphere.mockImplementation(() => {});
+      renderView();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6000); });
+      expect(mockSampleHeight).toHaveBeenCalledTimes(6);
+      expect(screen.getByTestId("cesium-ground-elevation")).toHaveTextContent(/Ground height unavailable/);
+      await act(async () => {
+        mockCameraFlyToBoundingSphere.mock.calls[0][1].complete();
+      });
+      expect(screen.getByTestId("cesium-ground-elevation")).toHaveTextContent("Ground 258 ft above sea level");
+
+      // Post-flight must have removed the draped entity and replaced it with clamped/measured geometry
+      expect(mockEntitiesRemove).toHaveBeenCalled();
+
+      // Camera flight should have upgraded to measured ground height + 280m
+      const destinations = mockCameraFlyTo.mock.calls.map(
+        (call) => (call[0]?.destination as { alt?: number })?.alt,
+      );
+      expect(destinations).toContain(MOCK_GROUND_HEIGHT_M + 280);
+    });
+
+    it("remains cold if post-flight measurement also fails to resolve", async () => {
+      vi.useFakeTimers();
+      vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY", "test-map-tiles-key");
+      mockSampleHeight = vi.fn().mockReturnValue(undefined);
+      renderView();
+      await act(async () => { await vi.advanceTimersByTimeAsync(12000); });
+      expect(mockSampleHeight).toHaveBeenCalledTimes(12);
+      expect(screen.getByTestId("cesium-ground-elevation")).toHaveTextContent(
+        /Ground height unavailable — placement is draped, framing is approximate/i,
+      );
+    });
+  });
+
+  describe("Task 3 & 8: attribution container and accessibility", () => {
+    it("passes explicit creditContainer to Cesium.Viewer and renders credit element legibly", async () => {
+      renderView();
+
+      await waitFor(() => {
+        expect(mockCesium.Viewer).toHaveBeenCalled();
+      });
+
+      const viewerOptions = mockCesium.Viewer.mock.calls[0][1] as Record<string, unknown>;
+      expect(viewerOptions.creditContainer).toBeInstanceOf(HTMLElement);
+
+      const creditEl = screen.getByTestId("cesium-credit-container");
+      expect(creditEl).toBeInTheDocument();
+      expect(creditEl).toHaveAttribute("aria-label", "Map data credits");
+      // Must not be hidden
+      expect(creditEl.className).not.toContain("hidden");
+      expect(creditEl.className).not.toContain("display: none");
+    });
+
+    it("provides narrow aria-live on the asynchronous ground elevation readout", async () => {
+      renderView();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("cesium-ground-elevation")).toBeInTheDocument();
+      });
+
+      const elevationEl = screen.getByTestId("cesium-ground-elevation");
+      expect(elevationEl).toHaveAttribute("aria-live", "polite");
+    });
+  });
+
+  describe("Task 9: compliance verdict reflects isCompliant honestly", () => {
+    it("displays eligible status and color when isCompliant is true", async () => {
+      renderView({ isCompliant: true });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("cesium-compliance-verdict")).toBeInTheDocument();
+      });
+
+      const verdict = screen.getByTestId("cesium-compliance-verdict");
+      expect(verdict).toHaveTextContent(/Eligible/i);
+      expect(verdict).not.toHaveTextContent(/Review needed/i);
+      expect(verdict).not.toHaveTextContent(/Blocked/i);
+
+      // Check 3D ADU entity label & color
+      const adu = mockEntitiesAdd.mock.calls
+        .map((call) => call[0])
+        .find((options) => options.name === "Proposed ADU Footprint");
+      expect(adu).toBeDefined();
+      expect((adu as { label: { text: string } }).label.text).toContain("Eligible");
+      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#176B4C");
+    });
+
+    it("displays review needed status without inferring blocked when isCompliant is false", async () => {
+      renderView({ isCompliant: false });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("cesium-compliance-verdict")).toBeInTheDocument();
+      });
+
+      const verdict = screen.getByTestId("cesium-compliance-verdict");
+      expect(verdict).toHaveTextContent(/Review needed/i);
+      // Must NOT claim "Blocked" or use blocked color
+      expect(verdict).not.toHaveTextContent(/Blocked/i);
+
+      // Check 3D ADU entity label & color (#8A5300 review-needed token)
+      const adu = mockEntitiesAdd.mock.calls
+        .map((call) => call[0])
+        .find((options) => options.name === "Proposed ADU Footprint");
+      expect(adu).toBeDefined();
+      expect((adu as { label: { text: string } }).label.text).toContain("Review needed");
+      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#8A5300");
+      expect(mockCesium.Color.fromCssColorString).not.toHaveBeenCalledWith("#A82D16");
+    });
+  });
+
+  describe("async cancellation and unmount safety", () => {
+    it("holds geometry edits until the coarse sample finishes and uses the latest height", async () => {
+      vi.useFakeTimers();
+      mockSampleHeight = vi.fn().mockReturnValueOnce(undefined).mockReturnValue(MOCK_GROUND_HEIGHT_M);
+      const { rerender } = renderView();
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      rerender(<CesiumNeighborhoodView parcel={sampleParcel} config={{ ...defaultAduConfig, height: 19 }} pose={samplePose} isCompliant />);
+      expect(mockEntitiesAdd).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+      const adus = mockEntitiesAdd.mock.calls.map(([options]) => options).filter((options) => options.name === "Proposed ADU Footprint");
+      expect(adus).toHaveLength(1);
+      expect((adus[0].polygon as { extrudedHeight: number }).extrudedHeight).toBeCloseTo(19 * 0.3048);
+    });
+
+    it("destroys a tileset that resolves after unmount without creating a viewer", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY", "test-map-tiles-key");
+      let resolveTileset!: (value: { id: string; boundingSphere: { center: string }; destroy: () => void }) => void;
+      mockCesium.createGooglePhotorealistic3DTileset.mockReturnValueOnce(new Promise((resolve) => { resolveTileset = resolve; }));
+      const { unmount } = renderView();
+      await waitFor(() => expect(mockCesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledOnce());
+      unmount();
+      const destroy = vi.fn();
+      await act(async () => { resolveTileset({ id: "late", boundingSphere: { center: "center" }, destroy }); });
+      expect(destroy).toHaveBeenCalledOnce();
+      expect(mockCesium.Viewer).not.toHaveBeenCalled();
+    });
+
+    it("aborts safely without errors when unmounted during Cesium initialization", async () => {
+      const { unmount } = renderView();
+      // Immediate unmount while loadCesium / loadPhotorealTileset are pending
+      expect(() => unmount()).not.toThrow();
     });
   });
 });

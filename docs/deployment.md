@@ -103,6 +103,23 @@ redeploy, not just a secret update.
 Restrict the browser Places key by HTTP referrer. Keep server-side Maps keys
 server-safe rather than referrer-locked.
 
+The Neighborhood 3D photoreal basemap uses two browser-visible keys with the same
+treatment: `NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY` (Map Tiles API only, referrer-locked,
+separate from the Places key) and `NEXT_PUBLIC_CESIUM_ION_TOKEN` (local development
+only; the ion Community plan is non-commercial). With neither configured the view
+renders map imagery, which is an expected state. Full credential, billing, CSP, and
+Google-attribution notes live in [cesium-photoreal-deployment.md](./cesium-photoreal-deployment.md).
+
+## Content-Security-Policy (planned)
+
+The app has no CSP today. Before adding one, read
+[cesium-photoreal-deployment.md](./cesium-photoreal-deployment.md): the CesiumJS globe
+needs `script-src`/`style-src` for `https://cesium.com`, `connect-src` for the Google
+tile hosts plus `*.cesium.com` and the ion asset CDN, `worker-src blob:`, and
+`img-src data: blob:`. Adding a CSP without these breaks the globe in a way that
+looks like a Cesium bug. Test any CSP in staging with both photoreal routes
+configured.
+
 ## CI/CD
 
 `.github/workflows/ci.yml` runs:

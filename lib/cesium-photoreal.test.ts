@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   GOOGLE_PHOTOREAL_ION_ASSET_ID,
   PHOTOREAL_CACHE_BYTES,
+  PHOTOREAL_CACHE_OVERFLOW_BYTES,
   createGoogleDirectTileset,
   createGoogleIonTileset,
   describePhotorealRoute,
@@ -10,6 +11,10 @@ import {
   selectPhotorealStartupRoute,
   type PhotorealCesiumModule,
 } from "./cesium-photoreal";
+import {
+  setPhotorealErrorReporter,
+  type PhotorealErrorReport,
+} from "./cesium-photoreal-diagnostics";
 
 function makeCesium(overrides: Partial<PhotorealCesiumModule> = {}): PhotorealCesiumModule {
   return {
@@ -56,10 +61,18 @@ describe("createGoogleDirectTileset", () => {
   it("passes the key and the Google-geocoder assertion to the helper", async () => {
     const Cesium = makeCesium();
     await createGoogleDirectTileset(Cesium, " gk ");
-    expect(Cesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledWith({
-      key: "gk",
-      onlyUsingWithGoogleGeocoder: true,
-    });
+    expect(Cesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledWith(
+      {
+        key: "gk",
+        onlyUsingWithGoogleGeocoder: true,
+      },
+      {
+        cacheBytes: PHOTOREAL_CACHE_BYTES,
+        maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
+        enableCollision: true,
+        showCreditsOnScreen: true,
+      },
+    );
   });
 
   it("rejects an empty key rather than requesting tiles anonymously", async () => {
@@ -83,7 +96,7 @@ describe("createGoogleIonTileset", () => {
     const fromUrl = Cesium.Cesium3DTileset?.fromUrl as ReturnType<typeof vi.fn>;
     expect(fromUrl).toHaveBeenCalledWith(
       { id: "ion-resource" },
-      expect.objectContaining({ cacheBytes: PHOTOREAL_CACHE_BYTES, enableCollision: true }),
+      expect.objectContaining({ cacheBytes: PHOTOREAL_CACHE_BYTES, enableCollision: true, showCreditsOnScreen: true }),
     );
   });
 
@@ -143,7 +156,7 @@ describe("loadPhotorealTileset", () => {
 
     expect(result.route).toBe("osm");
     expect(result.tileset).toBeNull();
-    expect(result.errors.map((e) => e.message)).toEqual(["direct down", "ion down"]);
+    expect(result.errors.map((e) => e.message)).toEqual(["direct down", "[redacted] down"]);
   });
 
   it("returns osm immediately with no credentials and requests nothing", async () => {
@@ -153,5 +166,107 @@ describe("loadPhotorealTileset", () => {
     expect(result).toEqual({ tileset: null, route: "osm", errors: [] });
     expect(Cesium.createGooglePhotorealistic3DTileset).not.toHaveBeenCalled();
     expect(Cesium.IonResource?.fromAssetId).not.toHaveBeenCalled();
+  });
+});
+
+const REPORT_KEY = "AIzaFakeReportingKey1234567890abcdef";
+const REPORT_TOKEN = "eyJyZXBvcnRpbmctZmFrZS10b2tlbi0xMjM0NTY3ODkw";
+
+describe("loadPhotorealTileset reporting", () => {
+  afterEach(() => {
+    setPhotorealErrorReporter(null);
+  });
+
+  it("reports exactly one sanitized error when the direct route fails and ion succeeds", async () => {
+    const seen: PhotorealErrorReport[] = [];
+    setPhotorealErrorReporter((report) => {
+      seen.push(report);
+    });
+    const Cesium = makeCesium({
+      createGooglePhotorealistic3DTileset: vi.fn(async () => {
+        throw new Error(`403 denied for key ${REPORT_KEY}`);
+      }),
+    });
+
+    const result = await loadPhotorealTileset(Cesium, {
+      googleMapTilesKey: REPORT_KEY,
+      cesiumIonToken: REPORT_TOKEN,
+    });
+
+    expect(result.route).toBe("google-ion");
+    expect(result.tileset).toEqual({ id: "ion-tileset" });
+    expect(seen).toHaveLength(1);
+    expect(seen[0].route).toBe("google-direct");
+    expect(result.errors[0].message).not.toContain(REPORT_KEY);
+    expect(result.errors[0].stack).not.toContain(REPORT_KEY);
+    expect(JSON.stringify(seen)).not.toContain(REPORT_KEY);
+    expect(JSON.stringify(seen)).not.toContain(REPORT_TOKEN);
+  });
+
+  it("reports each failed configured route, with no credential substrings, and still lands on osm", async () => {
+    const seen: PhotorealErrorReport[] = [];
+    setPhotorealErrorReporter((report) => {
+      seen.push(report);
+    });
+    const Cesium = makeCesium({
+      createGooglePhotorealistic3DTileset: vi.fn(async () => {
+        throw new Error(`root.json?key=${encodeURIComponent(REPORT_KEY)} -> 403`);
+      }),
+      IonResource: {
+        fromAssetId: vi.fn(async () => {
+          throw new Error(`ion refused token ${REPORT_TOKEN}`);
+        }),
+      },
+    });
+
+    const result = await loadPhotorealTileset(Cesium, {
+      googleMapTilesKey: REPORT_KEY,
+      cesiumIonToken: REPORT_TOKEN,
+    });
+
+    expect(result.route).toBe("osm");
+    expect(result.tileset).toBeNull();
+    expect(result.errors).toHaveLength(2);
+    expect(seen.map((report) => report.route)).toEqual(["google-direct", "google-ion"]);
+    expect(JSON.stringify(seen)).not.toContain(REPORT_KEY);
+    expect(JSON.stringify(seen)).not.toContain(REPORT_TOKEN);
+    expect(JSON.stringify(seen)).not.toContain(encodeURIComponent(REPORT_KEY));
+  });
+
+  it("reports nothing when no credential is configured", async () => {
+    const seen: PhotorealErrorReport[] = [];
+    setPhotorealErrorReporter((report) => {
+      seen.push(report);
+    });
+
+    const result = await loadPhotorealTileset(makeCesium(), {});
+
+    expect(result).toEqual({ tileset: null, route: "osm", errors: [] });
+    expect(seen).toEqual([]);
+  });
+
+  it("never throws when the reporter itself fails", async () => {
+    setPhotorealErrorReporter(() => {
+      throw new Error("telemetry down");
+    });
+    const Cesium = makeCesium({
+      createGooglePhotorealistic3DTileset: vi.fn(async () => {
+        throw new Error("direct down");
+      }),
+      IonResource: {
+        fromAssetId: vi.fn(async () => {
+          throw new Error("ion down");
+        }),
+      },
+    });
+
+    const result = await loadPhotorealTileset(Cesium, {
+      googleMapTilesKey: REPORT_KEY,
+      cesiumIonToken: REPORT_TOKEN,
+    });
+
+    expect(result.route).toBe("osm");
+    expect(result.tileset).toBeNull();
+    expect(result.errors).toHaveLength(2);
   });
 });

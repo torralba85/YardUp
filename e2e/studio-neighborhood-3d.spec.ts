@@ -64,6 +64,37 @@ test.describe("Studio Neighborhood 3D", () => {
     );
   });
 
+  test("keeps renderer attribution visible and separate from the HUD at narrow widths", async ({ page }) => {
+    await page.goto("/studio");
+    await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
+    const canvas = page.getByTestId("cesium-container");
+    const credits = page.locator(".cesium-credit-logoContainer");
+    await expect(credits).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 30_000 });
+
+    // Mobile uses a separate journey; reach its Shape reveal after resizing.
+    // This verifies the existing path, not real-device performance readiness.
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      if (width < 1024) {
+        await page.getByRole("button", { name: /reveal my backyard/i }).click();
+        await page.getByRole("button", { name: /shape your adu/i }).click();
+      }
+      await expect(credits).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 30_000 });
+      await credits.scrollIntoViewIfNeeded();
+      const bounds = await credits.boundingBox();
+      const hud = await page.getByTestId("cesium-basemap-route").boundingBox();
+      expect(bounds).not.toBeNull();
+      expect(hud).not.toBeNull();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900);
+      expect(bounds!.y).toBeGreaterThan(hud!.y + hud!.height);
+      await expect(canvas).toBeVisible();
+    }
+  });
+
   test("returns to the 3D model and leaves the Studio usable", async ({ page }) => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));

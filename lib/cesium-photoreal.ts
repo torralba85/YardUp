@@ -17,7 +17,7 @@
  *
  * The ladder degrades rather than throwing: a failed direct attempt falls
  * through to ion, and both failing lands on `osm` with the errors preserved for
- * the caller to surface. A neighborhood view that renders flat imagery is
+ * the caller and reported through sanitized telemetry. A neighborhood view that renders flat imagery is
  * usable; one that throws is not.
  *
  * Credentials are passed TO each tileset source and never assigned to
@@ -29,6 +29,8 @@
  */
 
 /** Cesium ion asset id for Google Photorealistic 3D Tiles. */
+import { buildPhotorealErrorReport, reportPhotorealError } from "./cesium-photoreal-diagnostics";
+
 export const GOOGLE_PHOTOREAL_ION_ASSET_ID = 2275207;
 
 /**
@@ -57,7 +59,10 @@ export interface PhotorealTilesetResult {
 
 /** Minimal structural view of the Cesium globals this module touches. */
 export interface PhotorealCesiumModule {
-  createGooglePhotorealistic3DTileset?: (options: Record<string, unknown>) => Promise<unknown>;
+  createGooglePhotorealistic3DTileset?: (
+    options: Record<string, unknown>,
+    tilesetOptions?: Record<string, unknown>,
+  ) => Promise<unknown>;
   Cesium3DTileset?: {
     fromUrl: (url: unknown, options?: Record<string, unknown>) => Promise<unknown>;
   };
@@ -133,10 +138,24 @@ export async function createGoogleDirectTileset(
   if (typeof Cesium.createGooglePhotorealistic3DTileset !== "function") {
     throw new Error("This CesiumJS build has no createGooglePhotorealistic3DTileset helper");
   }
-  return Cesium.createGooglePhotorealistic3DTileset({
-    key: googleKey,
-    onlyUsingWithGoogleGeocoder: true,
-  });
+  // Tileset budgets are passed explicitly rather than inherited from the
+  // helper's defaults. Verified against the CesiumJS 1.144 source
+  // (Source/Scene/createGooglePhotorealistic3DTileset.js): the helper applies
+  // cacheBytes ?? 1536 MiB, maximumCacheOverflowBytes ?? 1024 MiB, and
+  // enableCollision ?? true — the same values used here and on the ion route.
+  // Explicit values keep the two routes identical even if upstream defaults change.
+  return Cesium.createGooglePhotorealistic3DTileset(
+    {
+      key: googleKey,
+      onlyUsingWithGoogleGeocoder: true,
+    },
+    {
+      cacheBytes: PHOTOREAL_CACHE_BYTES,
+      maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
+      enableCollision: true,
+      showCreditsOnScreen: true,
+    },
+  );
 }
 
 /**
@@ -164,6 +183,7 @@ export async function createGoogleIonTileset(
     cacheBytes: PHOTOREAL_CACHE_BYTES,
     maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
     enableCollision: true,
+    showCreditsOnScreen: true,
   });
 }
 
@@ -193,7 +213,17 @@ export async function loadPhotorealTileset(
           : await createGoogleIonTileset(Cesium, ionToken);
       return { tileset, route, errors };
     } catch (error) {
-      errors.push(error instanceof Error ? error : new Error(String(error)));
+      let safeMessage = "Tileset request failed";
+      try {
+        safeMessage = buildPhotorealErrorReport(route, error, [googleKey, ionToken]).message || safeMessage;
+      } catch {
+        // Even unusual thrown objects must preserve the renderable fallback.
+      }
+      errors.push(new Error(safeMessage));
+      // Report inside the ladder so the viewer component stays untouched: one
+      // sanitized report per failed configured route. Never throws, even if
+      // telemetry itself fails.
+      reportPhotorealError(route, error, [googleKey, ionToken]);
     }
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Globe, RefreshCw } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Globe, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
@@ -24,6 +24,7 @@ import {
   type GroundSnapStatus,
 } from "@/lib/cesium-ground-snap";
 import { ensureGeoidReady, formatGroundElevation, geoidHeightMeters } from "@/lib/geoid";
+import styles from "./CesiumNeighborhoodView.module.css";
 
 export interface CesiumNeighborhoodViewProps {
   parcel: Parcel | LiveParcelData;
@@ -32,7 +33,6 @@ export interface CesiumNeighborhoodViewProps {
   isCompliant: boolean;
   onReturnToModel?: () => void;
 }
-
 const FEET_TO_METERS = 0.3048;
 
 /**
@@ -105,13 +105,166 @@ interface GroundReadout {
   corrected: boolean;
 }
 
+interface SceneGeometryOptions {
+  parcel: Parcel | LiveParcelData;
+  config: ADUConfig;
+  pose: Pose2D;
+  isCompliant: boolean;
+  lat: number;
+  lng: number;
+}
+
+/**
+ * Adds the parcel pin, boundary, and proposed ADU, and returns the entities so
+ * they can be excluded from a later height sample or replaced on refinement.
+ *
+ * Heights come from Cesium's own ground clamping where the build supports it,
+ * because that keeps re-clamping as tiles refine — better than any single
+ * measurement. The measured height is the fallback, and draping flat is the
+ * last resort: an extruded box at an invented height is the burial bug.
+ *
+ * Compliance verdict is reflected directly on the footprint with A LOT MORE status
+ * colors (eligible #176B4C, review #8A5300 on chalk) paired with a label and icon.
+ * False is treated honestly as review needed rather than inferring legal blocked.
+ */
+function placeSceneGeometry(
+  Cesium: CesiumModule,
+  activeViewer: CesiumViewerInstance,
+  groundHeightMeters: number | null,
+  options: SceneGeometryOptions,
+): unknown[] {
+  const { parcel, config, pose, isCompliant, lat, lng } = options;
+  const added: unknown[] = [];
+  const clampToGround = Cesium.HeightReference?.RELATIVE_TO_GROUND;
+  const canClamp = typeof clampToGround === "number";
+  const baseHeight = canClamp ? 0 : (groundHeightMeters ?? 0);
+  const heightRef = canClamp ? { heightReference: clampToGround } : {};
+
+  // 1. Parcel Site pin & label
+  added.push(
+    activeViewer.entities.add({
+      name: "Parcel Site",
+      position: Cesium.Cartesian3.fromDegrees(lng, lat, baseHeight),
+      point: {
+        pixelSize: 12,
+        color: Cesium.Color.fromCssColorString("#FF5B24"),
+        outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+        outlineWidth: 3,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        ...heightRef,
+      },
+      label: {
+        text: parcel.address || "Proposed ADU Site",
+        font: "600 13px Manrope, sans-serif",
+        fillColor: Cesium.Color.fromCssColorString("#161616"),
+        outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+        outlineWidth: 3,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        pixelOffset: new Cesium.Cartesian2(0, -14),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        ...heightRef,
+      },
+    }),
+  );
+
+  // 2. Add Parcel Boundary Polygon if GeoJSON is available. Left without an
+  // explicit height so Cesium drapes it on whatever surface is rendering.
+  const boundaryGeoJson = "boundaryGeoJson" in parcel ? parcel.boundaryGeoJson : null;
+  if (boundaryGeoJson?.coordinates?.[0]?.length) {
+    const flatCoords = boundaryGeoJson.coordinates[0].flatMap(([coordLng, coordLat]) => [coordLng, coordLat]);
+    added.push(
+      activeViewer.entities.add({
+        name: "Parcel Boundary",
+        polygon: {
+          hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+          material: Cesium.Color.fromCssColorString("#2D6A4F").withAlpha(0.25),
+          outline: true,
+          outlineColor: Cesium.Color.fromCssColorString("#2D6A4F"),
+          outlineWidth: 2,
+        },
+      }),
+    );
+  }
+
+  // 3. Project Proposed ADU Footprint to geodetic coordinates
+  try {
+    const aduModel = buildAduSceneModel(config, pose);
+    const anchor = { lat, lng };
+    const corners = aduModel.footprintCorners;
+    if (corners && corners.length === 4) {
+      const geodeticCorners = corners.map((corner) => projectLocalToGeodetic(anchor, 0, corner));
+      if (geodeticCorners.every((c): c is { lat: number; lng: number } => c !== null)) {
+        const flatAduCoords = geodeticCorners.flatMap((c) => [c.lng, c.lat]);
+        const aduHeightM = (config.height || 14) * FEET_TO_METERS;
+        const canExtrude = canClamp || groundHeightMeters !== null;
+
+        // A LOT MORE status tokens:
+        // Eligible / verified: #176B4C
+        // Review needed: #8A5300 (do not infer legal blocked #A82D16 for boolean false)
+        const statusColor = isCompliant ? "#176B4C" : "#8A5300";
+        const statusLabel = isCompliant ? "Eligible" : "Review needed";
+
+        const centerLng = geodeticCorners.reduce((sum, c) => sum + c.lng, 0) / 4;
+        const centerLat = geodeticCorners.reduce((sum, c) => sum + c.lat, 0) / 4;
+
+        added.push(
+          activeViewer.entities.add({
+            name: "Proposed ADU Footprint",
+            position: Cesium.Cartesian3.fromDegrees(centerLng, centerLat, baseHeight + aduHeightM),
+            label: {
+              text: `Proposed ADU (${statusLabel})`,
+              font: "600 12px Manrope, sans-serif",
+              fillColor: Cesium.Color.fromCssColorString("#161616"),
+              outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+              outlineWidth: 3,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0, -10),
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              ...heightRef,
+            },
+            polygon: {
+              hierarchy: Cesium.Cartesian3.fromDegreesArray(flatAduCoords),
+              material: Cesium.Color.fromCssColorString(statusColor).withAlpha(0.75),
+              outline: true,
+              outlineColor: Cesium.Color.fromCssColorString(statusColor),
+              // With no clamping support and no measurement, the ground height
+              // is unknown: drape the footprint instead of burying a box.
+              ...(canExtrude
+                ? {
+                    height: baseHeight,
+                    extrudedHeight: baseHeight + aduHeightM,
+                    ...(canClamp
+                      ? {
+                          heightReference: clampToGround,
+                          extrudedHeightReference: clampToGround,
+                        }
+                      : {}),
+                  }
+                : {}),
+            },
+          }),
+        );
+      }
+    }
+  } catch {
+    // Keep base parcel site visible if local projection fails
+  }
+
+  return added;
+}
+
 export default function CesiumNeighborhoodView({
   parcel,
   config,
   pose,
+  isCompliant,
   onReturnToModel,
 }: CesiumNeighborhoodViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const creditContainerRef = useRef<HTMLDivElement>(null);
+
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -137,15 +290,69 @@ export default function CesiumNeighborhoodView({
     return { lat: 47.6917, lng: -122.3488, isGeocoded: false };
   }, [parcel]);
 
+  // Derive a stable parcel identity key so new object references with the same
+  // address and coordinates do not trigger a full viewer recreation.
+  const parcelKey = useMemo(() => {
+    const parcelId = "id" in parcel && parcel.id ? String(parcel.id) : "";
+    const address = parcel.address || "";
+    const city = parcel.city || "";
+    return `${parcelId}|${address}|${city}|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+  }, [parcel, lat, lng]);
+
+  // Keep latest mutable props in refs so async init, refinement, and post-flight
+  // recovery always access the freshest config and pose without stale closures.
+  const latestPropsRef = useRef<SceneGeometryOptions>({
+    parcel,
+    config,
+    pose,
+    isCompliant,
+    lat,
+    lng,
+  });
+  useEffect(() => {
+    latestPropsRef.current = { parcel, config, pose, isCompliant, lat, lng };
+  }, [parcel, config, pose, isCompliant, lat, lng]);
+
+  const viewerRef = useRef<CesiumViewerInstance | null>(null);
+  const cesiumModuleRef = useRef<CesiumModule | null>(null);
+  const placedEntitiesRef = useRef<unknown[]>([]);
+  const measuredGroundRef = useRef<number | null>(null);
+  const geometryReadyRef = useRef(false);
+
+  // ---------------------------------------------------------------------------
+  // 1. Viewer Lifecycle Effect (Task 1)
+  // Rebuilt ONLY when geographic coordinates, stable parcel identity, or credentials change.
+  // Geometry edits (config, pose, isCompliant) NEVER trigger this effect.
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
     let viewer: CesiumViewerInstance | null = null;
+    let finishFlight: (() => void) | undefined;
     const isCancelled = () => cancelled;
+
+    // The most recent measurement, so a late geoid load re-publishes the best one.
+    let latestGround: { status: GroundSnapStatus; heightMeters: number | null } | null = null;
+
+    function publishGroundReadout(snapStatus: GroundSnapStatus, heightMeters: number | null) {
+      latestGround = { status: snapStatus, heightMeters };
+      republishGroundReadout();
+    }
+
+    function republishGroundReadout() {
+      if (cancelled || !latestGround) return;
+      const { status: snapStatus, heightMeters } = latestGround;
+      const undulation = heightMeters === null ? null : geoidHeightMeters(lat, lng);
+      const { feet, corrected } = formatGroundElevation(heightMeters, undulation);
+      setGround({ status: snapStatus, feet, corrected });
+    }
 
     async function initCesium() {
       setStatus("loading");
       setErrorMessage(null);
       setGround(null);
+      measuredGroundRef.current = null;
+      placedEntitiesRef.current = [];
+      geometryReadyRef.current = false;
 
       try {
         const rawCesium = await loadCesium();
@@ -157,11 +364,16 @@ export default function CesiumNeighborhoodView({
         // Two surfaces at the same place z-fight, and the photogrammetry already
         // carries its own ground.
         const photoreal = await loadPhotorealTileset(Cesium, credentials);
-        if (cancelled) return;
+        if (cancelled) {
+          const abandoned = photoreal.tileset as { destroy?: () => void; isDestroyed?: () => boolean } | null;
+          if (abandoned?.destroy && !abandoned.isDestroyed?.()) abandoned.destroy();
+          return;
+        }
         setRoute(photoreal.route);
         const hasPhotoreal = photoreal.tileset !== null;
 
-        // Initialize Cesium Viewer with clean minimalist chrome per A LOT MORE guidelines
+        // Initialize Cesium Viewer with clean minimalist chrome per A LOT MORE guidelines.
+        // Pass explicit creditContainer outside canvas to meet Google Map Tiles API attribution rules.
         viewer = new Cesium.Viewer(containerRef.current, {
           animation: false,
           timeline: false,
@@ -173,6 +385,7 @@ export default function CesiumNeighborhoodView({
           fullscreenButton: false,
           infoBox: false,
           selectionIndicator: false,
+          creditContainer: creditContainerRef.current ?? undefined,
           globe: hasPhotoreal ? false : undefined,
           baseLayer: hasPhotoreal
             ? false
@@ -183,6 +396,9 @@ export default function CesiumNeighborhoodView({
                 }),
               ),
         });
+
+        viewerRef.current = viewer;
+        cesiumModuleRef.current = Cesium;
 
         if (hasPhotoreal) {
           viewer.scene.primitives.add(photoreal.tileset);
@@ -197,6 +413,9 @@ export default function CesiumNeighborhoodView({
               const osmBuildings = await Cesium.createOsmBuildingsAsync();
               if (!cancelled && viewer && !viewer.isDestroyed()) {
                 viewer.scene.primitives.add(osmBuildings);
+              } else {
+                const abandoned = osmBuildings as { destroy?: () => void; isDestroyed?: () => boolean };
+                if (abandoned.destroy && !abandoned.isDestroyed?.()) abandoned.destroy();
               }
             }
           } catch {
@@ -222,7 +441,12 @@ export default function CesiumNeighborhoodView({
         const coarse = await sampleGroundHeight(lat, lng, { scene: viewer.scene, Cesium }, { isCancelled });
         if (cancelled || !viewer || viewer.isDestroyed()) return;
 
-        const placed = placeSceneGeometry(Cesium, viewer, coarse.heightMeters);
+        measuredGroundRef.current = coarse.heightMeters;
+
+        // Place initial scene geometry with latest props
+        const placed = placeSceneGeometry(Cesium, viewer, coarse.heightMeters, latestPropsRef.current);
+        placedEntitiesRef.current = placed;
+        geometryReadyRef.current = true;
 
         publishGroundReadout(coarse.status, coarse.heightMeters);
         // Geoid correction is only needed for the readout, and its grid is a lazy
@@ -235,8 +459,11 @@ export default function CesiumNeighborhoodView({
         // Settle into the oblique neighborhood view. With no measurement there is
         // no honest absolute height to fly to, so let Cesium frame the tiles it
         // actually loaded rather than guessing an altitude.
+        const flight = new Promise<void>((resolve) => { finishFlight = resolve; });
+        const flightCallbacks = { complete: finishFlight, cancel: finishFlight };
         if (coarse.heightMeters !== null) {
           viewer.camera.flyTo({
+            ...flightCallbacks,
             destination: Cesium.Cartesian3.fromDegrees(
               lng,
               lat - NEIGHBORHOOD_VIEW_LAT_OFFSET_DEG,
@@ -253,11 +480,14 @@ export default function CesiumNeighborhoodView({
           const boundingSphere = (photoreal.tileset as { boundingSphere?: unknown } | null)
             ?.boundingSphere;
           if (boundingSphere) {
-            viewer.camera.flyToBoundingSphere(boundingSphere, { duration: 1.5 });
+            viewer.camera.flyToBoundingSphere(boundingSphere, { duration: 1.5, ...flightCallbacks });
+          } else {
+            finishFlight?.();
           }
         } else {
           // Flat imagery: ground IS the ellipsoid, so an absolute height is correct.
           viewer.camera.flyTo({
+            ...flightCallbacks,
             destination: Cesium.Cartesian3.fromDegrees(
               lng,
               lat - NEIGHBORHOOD_VIEW_LAT_OFFSET_DEG,
@@ -275,24 +505,75 @@ export default function CesiumNeighborhoodView({
         if (!cancelled) {
           setStatus("ready");
         }
+        await flight;
+        finishFlight = undefined;
+        if (cancelled || viewer.isDestroyed()) return;
 
-        // A coarse sample reads whatever LOD was loaded from 3.5 km up. Once the
-        // close view has streamed, re-measure: fresh evidence outranks the earlier
-        // reading, and geometry is rebuilt only if the disagreement is visible.
-        if (hasPhotoreal && coarse.status === "measured") {
+        // Task 5: Cold Coarse Sample Recovery
+        // If the coarse sample was cold, attempt a post-flight sample once close-range
+        // tiles have had time to stream. If it resolves, upgrade geometry, camera framing,
+        // and the readout honestly.
+        if (hasPhotoreal && coarse.status === "cold") {
+          const postFlight = await sampleGroundHeight(
+            lat,
+            lng,
+            { scene: viewer.scene, Cesium },
+            { isCancelled, objectsToExclude: placedEntitiesRef.current },
+          );
+          if (cancelled || !viewer || viewer.isDestroyed()) return;
+
+          if (postFlight.status === "measured" && postFlight.heightMeters !== null) {
+            measuredGroundRef.current = postFlight.heightMeters;
+            for (const entity of placedEntitiesRef.current) {
+              viewer.entities.remove(entity);
+            }
+            placedEntitiesRef.current.splice(0, placedEntitiesRef.current.length, ...placeSceneGeometry(
+              Cesium,
+              viewer,
+              postFlight.heightMeters,
+              latestPropsRef.current,
+            ));
+            publishGroundReadout(postFlight.status, postFlight.heightMeters);
+            void ensureGeoidReady().then(republishGroundReadout);
+
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(
+                lng,
+                lat - NEIGHBORHOOD_VIEW_LAT_OFFSET_DEG,
+                postFlight.heightMeters + NEIGHBORHOOD_VIEW_HEIGHT_M,
+              ),
+              orientation: {
+                heading: Cesium.Math.toRadians(0),
+                pitch: Cesium.Math.toRadians(-35),
+                roll: 0,
+              },
+              duration: 1.5,
+            });
+          }
+        } else if (hasPhotoreal && coarse.status === "measured") {
+          // A coarse sample reads whatever LOD was loaded from 3.5 km up. Once the
+          // close view has streamed, re-measure: fresh evidence outranks the earlier
+          // reading, and geometry is rebuilt only if the disagreement is visible.
           const refined = await sampleGroundHeight(
             lat,
             lng,
             { scene: viewer.scene, Cesium },
-            { isCancelled, objectsToExclude: placed },
+            { isCancelled, objectsToExclude: placedEntitiesRef.current },
           );
           if (cancelled || !viewer || viewer.isDestroyed()) return;
           if (refined.status === "measured" && shouldRefineGround(coarse.heightMeters, refined.heightMeters)) {
-            for (const entity of placed) {
+            measuredGroundRef.current = refined.heightMeters;
+            for (const entity of placedEntitiesRef.current) {
               viewer.entities.remove(entity);
             }
-            placeSceneGeometry(Cesium, viewer, refined.heightMeters);
+            placedEntitiesRef.current.splice(0, placedEntitiesRef.current.length, ...placeSceneGeometry(
+              Cesium,
+              viewer,
+              refined.heightMeters,
+              latestPropsRef.current,
+            ));
             publishGroundReadout(refined.status, refined.heightMeters);
+            void ensureGeoidReady().then(republishGroundReadout);
           }
         }
       } catch (err) {
@@ -303,142 +584,44 @@ export default function CesiumNeighborhoodView({
       }
     }
 
-    /** The most recent measurement, so a late geoid load re-publishes the best one. */
-    let latestGround: { status: GroundSnapStatus; heightMeters: number | null } | null = null;
-
-    function publishGroundReadout(snapStatus: GroundSnapStatus, heightMeters: number | null) {
-      latestGround = { status: snapStatus, heightMeters };
-      republishGroundReadout();
-    }
-
-    function republishGroundReadout() {
-      if (cancelled || !latestGround) return;
-      const { status: snapStatus, heightMeters } = latestGround;
-      const undulation = heightMeters === null ? null : geoidHeightMeters(lat, lng);
-      const { feet, corrected } = formatGroundElevation(heightMeters, undulation);
-      setGround({ status: snapStatus, feet, corrected });
-    }
-
-    /**
-     * Adds the parcel pin, boundary, and proposed ADU, and returns the entities so
-     * they can be excluded from a later height sample or replaced on refinement.
-     *
-     * Heights come from Cesium's own ground clamping where the build supports it,
-     * because that keeps re-clamping as tiles refine — better than any single
-     * measurement. The measured height is the fallback, and draping flat is the
-     * last resort: an extruded box at an invented height is the burial bug.
-     */
-    function placeSceneGeometry(
-      Cesium: CesiumModule,
-      activeViewer: CesiumViewerInstance,
-      groundHeightMeters: number | null,
-    ): unknown[] {
-      const added: unknown[] = [];
-      const clampToGround = Cesium.HeightReference?.RELATIVE_TO_GROUND;
-      const canClamp = typeof clampToGround === "number";
-      const baseHeight = canClamp ? 0 : (groundHeightMeters ?? 0);
-      const heightRef = canClamp ? { heightReference: clampToGround } : {};
-
-      added.push(
-        activeViewer.entities.add({
-          name: "Parcel Site",
-          position: Cesium.Cartesian3.fromDegrees(lng, lat, baseHeight),
-          point: {
-            pixelSize: 12,
-            color: Cesium.Color.fromCssColorString("#FF5B24"),
-            outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
-            outlineWidth: 3,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            ...heightRef,
-          },
-          label: {
-            text: parcel.address || "Proposed ADU Site",
-            font: "600 13px Manrope, sans-serif",
-            fillColor: Cesium.Color.fromCssColorString("#161616"),
-            outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
-            outlineWidth: 3,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset: new Cesium.Cartesian2(0, -14),
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            ...heightRef,
-          },
-        }),
-      );
-
-      // Add Parcel Boundary Polygon if GeoJSON is available. Left without an
-      // explicit height so Cesium drapes it on whatever surface is rendering.
-      const boundaryGeoJson = "boundaryGeoJson" in parcel ? parcel.boundaryGeoJson : null;
-      if (boundaryGeoJson?.coordinates?.[0]?.length) {
-        const flatCoords = boundaryGeoJson.coordinates[0].flatMap(([coordLng, coordLat]) => [coordLng, coordLat]);
-        added.push(
-          activeViewer.entities.add({
-            name: "Parcel Boundary",
-            polygon: {
-              hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-              material: Cesium.Color.fromCssColorString("#2D6A4F").withAlpha(0.25),
-              outline: true,
-              outlineColor: Cesium.Color.fromCssColorString("#2D6A4F"),
-              outlineWidth: 2,
-            },
-          }),
-        );
-      }
-
-      // Project Proposed ADU Footprint to geodetic coordinates
-      try {
-        const aduModel = buildAduSceneModel(config, pose);
-        const anchor = { lat, lng };
-        const corners = aduModel.footprintCorners;
-        if (corners && corners.length === 4) {
-          const geodeticCorners = corners.map((corner) => projectLocalToGeodetic(anchor, 0, corner));
-          if (geodeticCorners.every((c): c is { lat: number; lng: number } => c !== null)) {
-            const flatAduCoords = geodeticCorners.flatMap((c) => [c.lng, c.lat]);
-            const aduHeightM = (config.height || 14) * FEET_TO_METERS;
-            const canExtrude = canClamp || groundHeightMeters !== null;
-            added.push(
-              activeViewer.entities.add({
-                name: "Proposed ADU Footprint",
-                polygon: {
-                  hierarchy: Cesium.Cartesian3.fromDegreesArray(flatAduCoords),
-                  material: Cesium.Color.fromCssColorString("#FF5B24").withAlpha(0.75),
-                  outline: true,
-                  outlineColor: Cesium.Color.fromCssColorString("#C43708"),
-                  // With no clamping support and no measurement, the ground height
-                  // is unknown: drape the footprint instead of burying a box.
-                  ...(canExtrude
-                    ? {
-                        height: baseHeight,
-                        extrudedHeight: baseHeight + aduHeightM,
-                        ...(canClamp
-                          ? {
-                              heightReference: clampToGround,
-                              extrudedHeightReference: clampToGround,
-                            }
-                          : {}),
-                      }
-                    : {}),
-                },
-              }),
-            );
-          }
-        }
-      } catch {
-        // Keep base parcel site visible if local projection fails
-      }
-
-      return added;
-    }
-
     void initCesium();
 
     return () => {
       cancelled = true;
+      finishFlight?.();
+      geometryReadyRef.current = false;
+      viewerRef.current = null;
+      cesiumModuleRef.current = null;
+      placedEntitiesRef.current = [];
+      measuredGroundRef.current = null;
       if (viewer && !viewer.isDestroyed()) {
         viewer.destroy();
       }
     };
-  }, [lat, lng, parcel, config, pose, credentials]);
+  }, [lat, lng, parcelKey, credentials]);
+
+  // ---------------------------------------------------------------------------
+  // 2. Geometry Effect (Task 1)
+  // Rebuilds ONLY parcel pin, boundary, and ADU footprint when config, pose, or
+  // compliance changes. Does NOT rerun tileset factory, sampling, or camera flight.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const activeViewer = viewerRef.current;
+    const Cesium = cesiumModuleRef.current;
+    if (!geometryReadyRef.current || !activeViewer || activeViewer.isDestroyed() || !Cesium) return;
+
+    for (const entity of placedEntitiesRef.current) {
+      activeViewer.entities.remove(entity);
+    }
+    placedEntitiesRef.current = [];
+
+    placedEntitiesRef.current.splice(0, placedEntitiesRef.current.length, ...placeSceneGeometry(
+      Cesium,
+      activeViewer,
+      measuredGroundRef.current,
+      latestPropsRef.current,
+    ));
+  }, [parcel, config, pose, isCompliant]);
 
   const groundLine = useMemo(() => {
     if (!ground) return null;
@@ -473,14 +656,34 @@ export default function CesiumNeighborhoodView({
         <p className="font-mono text-[11px] text-lf-muted">
           {lat.toFixed(5)}°N, {Math.abs(lng).toFixed(5)}°W {!isGeocoded ? "(City Default)" : ""}
         </p>
-        <p className="font-mono text-[11px] text-lf-muted" data-testid="cesium-basemap-route">
+        <p className="font-mono text-[11px] text-lf-muted" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
           {describePhotorealRoute(route)}
         </p>
-        {groundLine && (
-          <p className="font-mono text-[11px] text-lf-muted" data-testid="cesium-ground-elevation">
+          <p
+            className="font-mono text-[11px] text-lf-muted"
+            data-testid="cesium-ground-elevation"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {groundLine}
           </p>
-        )}
+        {/* Compliance verdict: label + icon, honest status colors */}
+        <div
+          className="flex items-center gap-1.5 pt-0.5 text-xs font-medium"
+          data-testid="cesium-compliance-verdict"
+        >
+          {isCompliant ? (
+            <>
+              <CheckCircle2 size={14} className="text-status-eligible shrink-0" aria-hidden="true" />
+              <span className="text-status-eligible">Eligible</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle size={14} className="text-status-review shrink-0" aria-hidden="true" />
+              <span className="text-status-review">Review needed</span>
+            </>
+          )}
+        </div>
         {photorealNotice && (
           <p className="text-[11px] text-lf-muted" data-testid="cesium-photoreal-notice">
             {photorealNotice}
@@ -500,6 +703,14 @@ export default function CesiumNeighborhoodView({
           </div>
         )}
       </div>
+
+      {/* Explicit visible credit container outside canvas with legible chalk/carbon styling per Task 3 */}
+      <div
+        ref={creditContainerRef}
+        data-testid="cesium-credit-container"
+        aria-label="Map data credits"
+        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lf-hairline bg-lf-paper px-3 py-2 text-xs leading-normal text-lf-ink`}
+      />
 
       {/* Loading overlay */}
       {status === "loading" && (
