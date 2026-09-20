@@ -134,4 +134,13 @@ describe("GoogleAnalytics", () => {
 
     await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/builder?lead=r1"));
   });
+
+  it("configures the Ads account alongside GA4 for conversion measurement", async () => {
+    grantConsent();
+
+    render(<GoogleAnalytics />);
+
+    const init = await screen.findByTestId("lf-gtag-init");
+    expect(init.textContent).toContain("gtag('config', 'AW-18350405574')");
+  });
 });

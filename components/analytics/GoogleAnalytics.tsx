@@ -4,6 +4,7 @@ import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { getMeasurementId, isAnalyticsConfigured, pageview } from "@/lib/analytics/gtag";
+import { GOOGLE_ADS_ID } from "@/lib/analytics/adsConversion";
 import { useConsent } from "@/lib/analytics/use-consent";
 
 /**
@@ -26,7 +27,7 @@ function PageViewTracker() {
 }
 
 /**
- * Loads Google Analytics 4 — but only with a measurement ID configured *and*
+ * Loads Google Analytics 4 plus the Google Ads account (purchase-conversion measurement) — but only with a measurement ID configured *and*
  * consent granted.
  *
  * Consent is opt-in (see `components/analytics/CookieConsentBanner.tsx`), so
@@ -67,6 +68,7 @@ export function GoogleAnalytics() {
             send_page_view: false,
             anonymize_ip: true
           });
+          gtag('config', '${GOOGLE_ADS_ID}');
         `}
       </Script>
       <Suspense fallback={null}>

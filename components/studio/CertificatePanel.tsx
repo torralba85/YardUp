@@ -7,7 +7,10 @@ import type { AIProjectBrief, AIProjectBriefResponse } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { trackPurchase } from "@/lib/analytics/adsConversion";
 import { certificateKey } from "@/lib/certificate-key";
+import { purchaseId } from "@/lib/certificate-purchases-id";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { useCertificateAccess } from "@/lib/certificate-access";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
@@ -78,6 +81,7 @@ export default function CertificatePanel({
   const openedOnUnlock = useRef(false);
   const sawSettledUnpurchased = useRef(false);
   const returnedFromCheckout = useRef(false);
+  const adsConversionFiredFor = useRef<string | null>(null);
 
   // A parcel switch is a new purchase context — never carry unlock history
   // from one certificate key to another.
@@ -85,6 +89,7 @@ export default function CertificatePanel({
     openedOnUnlock.current = false;
     sawSettledUnpurchased.current = false;
     returnedFromCheckout.current = false;
+    adsConversionFiredFor.current = null;
   }, [certKey]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
@@ -170,6 +175,22 @@ export default function CertificatePanel({
       openedOnUnlock.current = false;
     }
   }, [loading, prepareAndOpenCertificate, purchased, user]);
+
+  // Report the Google Ads purchase conversion exactly once per Stripe
+  // checkout return. `transaction_id` is the deterministic grant id, so the
+  // same purchase can never double-count across a refresh; the ref covers
+  // the in-session case. Demo, store-shell, and already-purchased grants
+  // never carry the `?cert=` return marker, so they never report a conversion.
+  useEffect(() => {
+    if (!purchased || !user) return;
+    if (!returnedFromCheckout.current) return;
+    if (adsConversionFiredFor.current === certKey) return;
+    adsConversionFiredFor.current = certKey;
+    trackPurchase({
+      value: CERTIFICATE_PRICE_CENTS / 100,
+      transactionId: purchaseId(user.uid, certKey),
+    });
+  }, [purchased, user, certKey]);
 
   async function handleCta() {
     if (purchased) {
