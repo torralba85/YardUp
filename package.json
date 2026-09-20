@@ -42,6 +42,7 @@
     "@remotion/player": "^4.0.484",
     "@sparkjsdev/spark": "2.2.0",
     "clsx": "^2.1.1",
+    "egm96-universal": "^1.1.1",
     "firebase": "^12.14.0",
     "firebase-admin": "^13.10.0",
     "heic2any": "^0.0.4",
