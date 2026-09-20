@@ -1,0 +1,29 @@
+.credits :global(.cesium-widget-credits) {
+  position: static;
+  color: var(--color-lot-ink);
+  font: inherit;
+  text-shadow: none;
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+
+.credits :global(.cesium-credit-logoContainer) {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.credits a {
+  color: var(--color-lot-ink);
+  text-decoration: underline;
+}
+
+.credits a:hover {
+  color: var(--color-lot-orange-ink);
+}
+
+.credits a:focus-visible {
+  outline: 2px solid var(--color-lot-orange-ink);
+  outline-offset: 3px;
+}

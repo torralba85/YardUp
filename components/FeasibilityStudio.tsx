@@ -90,8 +90,17 @@ import { MoneyFigure } from "./ui/MoneyFigure";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { ArrowRight, ImageOff, Search } from "lucide-react";
 
-/** The two scene render modes users can switch between via {@link SceneViewToggle}. */
-type SceneViewMode = "3d" | "aerial";
+import { getSplatSceneForParcel } from "@/lib/splat-registry";
+import SplatCalibrationPanel from "./studio/SplatCalibrationPanel";
+import type { SplatTransform } from "@/lib/splat-scene";
+import type { SplatLayerStatus } from "./studio/GaussianSplatLayer";
+
+/** The scene render modes users can switch between via {@link SceneViewToggle}. */
+type SceneViewMode = "3d" | "scan" | "aerial" | "neighborhood";
+
+const CesiumNeighborhoodView = dynamic(() => import("./studio/CesiumNeighborhoodView"), {
+  ssr: false,
+});
 
 const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
@@ -280,6 +289,32 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const [viewMode, setViewMode] = useState<SceneViewMode>(() =>
     aerialAvailable ? "aerial" : "3d",
   );
+  const parcelPresetId = parcelMode === "preset" && "id" in activeParcel ? activeParcel.id : undefined;
+  const splatScene = useMemo(() => getSplatSceneForParcel(parcelPresetId), [parcelPresetId]);
+  const [userCalibration, setUserCalibration] = useState<{ id: string; transform: SplatTransform } | null>(null);
+  const [splatOnly, setSplatOnly] = useState(false);
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [scanStatus, setScanStatus] = useState<SplatLayerStatus>({ state: "loading" });
+  const calibrationTrigger = useRef<HTMLButtonElement>(null);
+  const onScanStatus = useCallback((status: SplatLayerStatus) => setScanStatus(status), []);
+  function changeViewMode(mode: SceneViewMode) {
+    if (mode === viewMode) return;
+    setShowCalibration(false);
+    setSplatOnly(false);
+    if (mode === "scan") setScanStatus({ state: "loading" });
+    setViewMode(mode);
+  }
+  function closeCalibration() {
+    setShowCalibration(false);
+    requestAnimationFrame(() => calibrationTrigger.current?.focus());
+  }
+
+  const effectiveViewMode: SceneViewMode = viewMode === "scan" && !splatScene ? "3d" : viewMode;
+  const activeSplatTransform = splatScene
+    ? userCalibration?.id === splatScene.id
+      ? userCalibration.transform
+      : splatScene.transform
+    : undefined;
   const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
     () => {
@@ -746,7 +781,15 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   }
 
   const sceneNode =
-    viewMode === "aerial" ? (
+    effectiveViewMode === "neighborhood" ? (
+      <CesiumNeighborhoodView
+        parcel={activeParcel}
+        config={config}
+        pose={pose}
+        isCompliant={isCompliant}
+        onReturnToModel={() => setViewMode("3d")}
+      />
+    ) : effectiveViewMode === "aerial" ? (
       aerialAvailable ? (
         <AerialView
           parcel={activeParcel as import("@/lib/parcel-types").LiveParcelData}
@@ -769,14 +812,62 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         </div>
       )
     ) : (
-      <ParcelScene
-        parcel={sceneParcel}
-        config={config}
-        isCompliant={isCompliant}
-        remainingCapacity={result.remainingCapacity}
-        pose={pose}
-        onPoseCommit={commitPose}
-      />
+      <div className="relative flex h-full w-full min-h-0 flex-col">
+        {effectiveViewMode === "scan" && splatScene && (
+          <div className="shrink-0 border-b border-lf-hairline bg-lf-sand px-3 py-2 text-xs text-lf-espresso">
+            <p>{splatScene.captureLabel}. Visual context only; placement uses the estimated model.</p>
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3">
+              <p role="status" aria-live="polite">
+                {scanStatus.state === "loading" ? "Loading sample scan…" : scanStatus.state === "error"
+                  ? "Scan unavailable. Return to the 3D model to continue."
+                  : "Sample scan loaded. Alignment and source scale are unverified."}
+              </p>
+              <Button size="xs" variant="secondary" onClick={() => changeViewMode("3d")}>Return to 3D model</Button>
+            </div>
+          </div>
+        )}
+        <div className="relative min-h-0 flex-1">
+        <ParcelScene
+          parcel={sceneParcel}
+          config={config}
+          isCompliant={isCompliant}
+          remainingCapacity={result.remainingCapacity}
+          pose={pose}
+          onPoseCommit={commitPose}
+          scanMode={effectiveViewMode === "scan"}
+          splatScene={splatScene}
+          scanTransform={activeSplatTransform}
+          splatOnly={splatOnly}
+          onScanStatus={onScanStatus}
+        />
+        {effectiveViewMode === "scan" && splatScene && activeSplatTransform && (
+          <div className={`absolute right-0 top-0 z-(--z-index-scene) max-h-full max-w-full ${showCalibration ? "w-full overflow-y-auto overscroll-contain sm:w-80 md:w-96" : "p-3"}`}>
+            {showCalibration ? (
+              <SplatCalibrationPanel
+                scene={splatScene}
+                transform={activeSplatTransform}
+                onChangeTransform={(next) => setUserCalibration({ id: splatScene.id, transform: next })}
+                onResetTransform={() => setUserCalibration(null)}
+                splatOnly={splatOnly}
+                onToggleSplatOnly={setSplatOnly}
+                onClose={closeCalibration}
+              />
+            ) : (
+              <Button
+                type="button"
+                size="xs"
+                variant="secondary"
+                ref={calibrationTrigger}
+                aria-expanded={false}
+                onClick={() => setShowCalibration(true)}
+              >
+                Calibrate Scan
+              </Button>
+            )}
+          </div>
+        )}
+        </div>
+      </div>
     );
 
   if (!isDesktop) {
@@ -821,7 +912,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             <SceneViewport
               sceneNode={sceneNode}
               viewMode={viewMode}
-              onViewModeChange={setViewMode}
+              onViewModeChange={changeViewMode}
             />
           }
           onFineTune={() => setFineTuneOpen(true)}
@@ -993,8 +1084,9 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
               resetToPreset(parcelPresets.find((preset) => preset.id === id) ?? parcelPresets[0]);
             }}
             sceneNode={sceneNode}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
+            viewMode={effectiveViewMode}
+            onViewModeChange={changeViewMode}
+            hasScan={Boolean(splatScene)}
             hasParcel={parcelResolved}
             monthlyRent={result.monthlyRent}
             addressFocusSignal={addressFocusSignal}
@@ -1007,7 +1099,12 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         ) : activeStep === "feasibility" ? (
           <>
             <div className="lf-studio-pane flex flex-col lg:flex-row">
-              <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={setViewMode} />
+              <SceneSection
+                sceneNode={sceneNode}
+                viewMode={effectiveViewMode}
+                onViewModeChange={changeViewMode}
+                hasScan={Boolean(splatScene)}
+              />
               <ConstraintsPanel
                 parcel={activeParcel}
                 result={result}
@@ -1027,7 +1124,12 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         ) : activeStep === "design" ? (
           <>
             <div className="lf-studio-pane flex flex-col lg:flex-row">
-              <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={setViewMode} />
+              <SceneSection
+                sceneNode={sceneNode}
+                viewMode={effectiveViewMode}
+                onViewModeChange={changeViewMode}
+                hasScan={Boolean(splatScene)}
+              />
               <FeasibilityInspector
                 designOnly
                 parcelId={parcelId}
@@ -1132,14 +1234,16 @@ function SceneViewport({
   sceneNode,
   viewMode,
   onViewModeChange,
+  hasScan = false,
 }: {
   sceneNode: React.ReactNode;
   viewMode: SceneViewMode;
   onViewModeChange: (mode: SceneViewMode) => void;
+  hasScan?: boolean;
 }) {
   return (
     <div data-testid="scene-viewport" className="relative flex h-full min-h-0 flex-1 flex-col">
-      <SceneViewToggle mode={viewMode} onChange={onViewModeChange} />
+      <SceneViewToggle mode={viewMode} onChange={onViewModeChange} hasScan={hasScan} />
       <div className="min-h-0 flex-1">{sceneNode}</div>
     </div>
   );
@@ -1150,10 +1254,12 @@ function SceneSection({
   sceneNode,
   viewMode,
   onViewModeChange,
+  hasScan = false,
 }: {
   sceneNode: React.ReactNode;
   viewMode: SceneViewMode;
   onViewModeChange: (mode: SceneViewMode) => void;
+  hasScan?: boolean;
 }) {
   return (
     <section
@@ -1164,6 +1270,7 @@ function SceneSection({
         sceneNode={sceneNode}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
+        hasScan={hasScan}
       />
     </section>
   );
@@ -1173,15 +1280,29 @@ function SceneSection({
 function SceneViewToggle({
   mode,
   onChange,
+  hasScan = false,
 }: {
   mode: SceneViewMode;
   onChange: (mode: SceneViewMode) => void;
+  hasScan?: boolean;
 }) {
   return (
     <div
       role="group"
       aria-label="Parcel view"
-      className="pointer-events-auto flex shrink-0 items-center gap-1 border-b border-lf-hairline bg-lf-card px-2 py-1"
+      onKeyDown={(event) => {
+        const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
+        if (!keys.includes(event.key)) return;
+        const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
+        const index = buttons.indexOf(event.target as HTMLButtonElement);
+        if (index < 0) return;
+        event.preventDefault();
+        const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1
+          : (index + (event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length;
+        buttons[next].focus();
+        buttons[next].click();
+      }}
+      className="pointer-events-auto flex flex-wrap shrink-0 items-center gap-1 border-b border-lf-hairline bg-lf-card px-2 py-1"
     >
       <Button
         type="button"
@@ -1194,6 +1315,35 @@ function SceneViewToggle({
         }`}
       >
         3D model
+      </Button>
+      {hasScan && (
+        <Button
+          type="button"
+          size="xs"
+          variant={mode === "scan" ? "selected" : "ghost"}
+          aria-pressed={mode === "scan"}
+          onClick={() => onChange("scan")}
+          className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
+            mode === "scan" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+          }`}
+        >
+          Scan{" "}
+          <span className="ml-1 rounded-[2px] bg-lf-commit px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lf-sand">
+            Beta
+          </span>
+        </Button>
+      )}
+      <Button
+        type="button"
+        size="xs"
+        variant={mode === "neighborhood" ? "selected" : "ghost"}
+        aria-pressed={mode === "neighborhood"}
+        onClick={() => onChange("neighborhood")}
+        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
+          mode === "neighborhood" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+        }`}
+      >
+        Neighborhood
       </Button>
       <Button
         type="button"
@@ -1218,6 +1368,7 @@ interface LotStepProps {
   sceneNode: React.ReactNode;
   viewMode: SceneViewMode;
   onViewModeChange: (mode: SceneViewMode) => void;
+  hasScan?: boolean;
   hasParcel: boolean;
   monthlyRent: number;
   addressFocusSignal: number;
@@ -1239,6 +1390,7 @@ function LotStep({
   sceneNode,
   viewMode,
   onViewModeChange,
+  hasScan = false,
   hasParcel,
   monthlyRent,
   addressFocusSignal,
@@ -1294,7 +1446,7 @@ function LotStep({
             </Button>
           </div>
       </div>
-      <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={onViewModeChange} />
+      <SceneSection sceneNode={sceneNode} viewMode={viewMode} onViewModeChange={onViewModeChange} hasScan={hasScan} />
     </div>
   );
 }
