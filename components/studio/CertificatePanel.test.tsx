@@ -8,11 +8,13 @@ import {
 } from "@/lib/feasibility";
 import type { AIProjectBrief } from "@/lib/ai-types";
 import { certificateKey } from "@/lib/certificate-key";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
 
 const mocks = vi.hoisted(() => ({
   getIdToken: vi.fn(),
   refresh: vi.fn(),
+  trackPurchase: vi.fn(),
   access: {
     purchased: true,
     loading: false,
@@ -28,6 +30,10 @@ vi.mock("@/lib/auth-context", () => ({
 
 vi.mock("@/lib/certificate-access", () => ({
   useCertificateAccess: () => ({ ...mocks.access, refresh: mocks.refresh }),
+}));
+
+vi.mock("@/lib/analytics/adsConversion", () => ({
+  trackPurchase: mocks.trackPurchase,
 }));
 
 vi.mock("@/components/auth/AuthModal", () => ({
@@ -96,6 +102,7 @@ describe("CertificatePanel", () => {
   beforeEach(() => {
     mocks.getIdToken.mockReset().mockResolvedValue("test-token");
     mocks.refresh.mockReset();
+    mocks.trackPurchase.mockReset();
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
@@ -255,5 +262,47 @@ describe("CertificatePanel", () => {
     rerender(<CertificatePanel {...props} />);
 
     await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
+  });
+
+  it("reports the Ads conversion once when returning from Stripe checkout", async () => {
+    window.history.replaceState(null, "", `/?cert=${certificateKey(parcel)}`);
+    const props = createProps({ projectBrief: brief });
+
+    render(<CertificatePanel {...props} />);
+
+    await waitFor(() =>
+      expect(mocks.trackPurchase).toHaveBeenCalledWith({
+        value: CERTIFICATE_PRICE_CENTS / 100,
+        transactionId: `owner-1_${certificateKey(parcel)}`,
+      }),
+    );
+    expect(mocks.trackPurchase).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not report a conversion for a grant read passively on a fresh visit", async () => {
+    const props = createProps({ projectBrief: brief });
+
+    render(<CertificatePanel {...props} />);
+
+    expect(await screen.findByText(/certificate unlocked/i)).toBeInTheDocument();
+    expect(mocks.trackPurchase).not.toHaveBeenCalled();
+  });
+
+  it("reports the conversion only once across a loading refresh flicker", async () => {
+    window.history.replaceState(null, "", `/?cert=${certificateKey(parcel)}`);
+    const props = createProps({ projectBrief: brief });
+    const { rerender } = render(<CertificatePanel {...props} />);
+
+    await waitFor(() => expect(mocks.trackPurchase).toHaveBeenCalledTimes(1));
+
+    mocks.access.purchased = false;
+    mocks.access.loading = true;
+    rerender(<CertificatePanel {...props} />);
+
+    mocks.access.purchased = true;
+    mocks.access.loading = false;
+    rerender(<CertificatePanel {...props} />);
+
+    await waitFor(() => expect(mocks.trackPurchase).toHaveBeenCalledTimes(1));
   });
 });
