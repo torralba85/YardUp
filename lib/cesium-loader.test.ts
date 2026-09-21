@@ -59,4 +59,21 @@ describe("cesium-loader", () => {
     script.dispatchEvent(new Event("error"));
     await expect(loadPromise).rejects.toThrow(/Failed to load CesiumJS/);
   });
+
+  it.each(["error", "load"])("retries after a %s event without a Cesium global", async (event) => {
+    const first = loadCesium();
+    const failedScript = document.getElementById("cesium-script")!;
+    failedScript.dispatchEvent(new Event(event));
+    await expect(first).rejects.toThrow(/Failed to/);
+
+    const retry = loadCesium();
+    expect(loadCesium()).toBe(retry);
+    const replacement = document.getElementById("cesium-script")!;
+    expect(replacement).not.toBe(failedScript);
+    expect(document.querySelectorAll("#cesium-script")).toHaveLength(1);
+    expect(document.querySelectorAll("#cesium-widgets-css")).toHaveLength(1);
+    testWindow.Cesium = { version: "1.144" };
+    replacement.dispatchEvent(new Event("load"));
+    await expect(retry).resolves.toBe(testWindow.Cesium);
+  });
 });

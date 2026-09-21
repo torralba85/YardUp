@@ -48,6 +48,26 @@ test.describe("Studio Neighborhood 3D", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("preserves blocked placement and recovers from a failed Cesium download", async ({ page }) => {
+    let scriptRequests = 0;
+    await page.route("**/Build/Cesium/Cesium.js", async (route) => {
+      scriptRequests++;
+      if (scriptRequests === 1) await route.abort();
+      else await route.continue();
+    });
+    await page.goto("/studio?v=2&hc=wall&parcel=oak-street&w=20&l=30&h=12&x=0&z=0&rotation=0&size=600&roof=shed&finish=cedar&openings=1");
+    const views = parcelViews(page);
+    await views.getByRole("button", { name: "Neighborhood" }).click();
+    await expect(page.getByText("3D Globe currently unavailable")).toBeVisible();
+    await expect(page.getByTestId("cesium-compliance-verdict")).toHaveText("Doesn't fit at this placement");
+    await views.getByRole("button", { name: "3D model" }).click();
+    await views.getByRole("button", { name: "Neighborhood" }).click();
+    await expect(page.locator(".cesium-widget canvas")).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId("cesium-ground-elevation")).toContainText(/Ground/, { timeout: 60_000 });
+    await expect(page.getByTestId("cesium-compliance-verdict")).toHaveText("Doesn't fit at this placement");
+    expect(scriptRequests).toBe(2);
+  });
+
   test("reports a ground elevation or says it is unavailable, never a bare number", async ({
     page,
   }) => {
@@ -65,12 +85,17 @@ test.describe("Studio Neighborhood 3D", () => {
   });
 
   test("keeps renderer attribution visible and separate from the HUD at narrow widths", async ({ page }) => {
+    // Two renderer mounts share this test; each external CDN load can take 60s.
+    test.setTimeout(150_000);
     await page.goto("/studio");
     await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
     const canvas = page.getByTestId("cesium-container");
     const credits = page.locator(".cesium-credit-logoContainer");
     await expect(credits).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 30_000 });
+
+    const consent = page.getByRole("region", { name: "Cookie consent" });
+    if (await consent.isVisible()) await consent.getByRole("button", { name: "Decline" }).click();
 
     // Mobile uses a separate journey; reach its Shape reveal after resizing.
     // This verifies the existing path, not real-device performance readiness.

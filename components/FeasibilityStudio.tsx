@@ -786,7 +786,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         parcel={activeParcel}
         config={config}
         pose={pose}
-        isCompliant={isCompliant}
+        placement={result.placement}
         onReturnToModel={() => setViewMode("3d")}
       />
     ) : effectiveViewMode === "aerial" ? (

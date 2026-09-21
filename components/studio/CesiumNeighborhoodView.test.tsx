@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CesiumNeighborhoodView from "./CesiumNeighborhoodView";
 import type { LiveParcelData } from "@/lib/parcel-types";
-import { defaultAduConfig } from "@/lib/feasibility";
+import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets } from "@/lib/feasibility";
+import { getScenePlacement } from "@/lib/site-fit";
 import type { Pose2D } from "@/lib/scene-model";
 import { setGeoidModuleForTesting, resetGeoidForTesting } from "@/lib/geoid";
 
@@ -100,6 +101,8 @@ const sampleParcel: LiveParcelData = {
   zip: "98101",
 };
 
+const samplePlacement = getScenePlacement(sampleParcel, defaultAduConfig, { x: 0, z: -20, rotationDeg: 0 });
+
 const samplePose: Pose2D = { x: 0, z: -20, rotationDeg: 0 };
 
 function renderView(props: Partial<React.ComponentProps<typeof CesiumNeighborhoodView>> = {}) {
@@ -108,7 +111,7 @@ function renderView(props: Partial<React.ComponentProps<typeof CesiumNeighborhoo
       parcel={sampleParcel}
       config={defaultAduConfig}
       pose={samplePose}
-      isCompliant={true}
+      placement={samplePlacement}
       {...props}
     />,
   );
@@ -376,7 +379,7 @@ describe("CesiumNeighborhoodView", () => {
           parcel={sampleParcel}
           config={{ ...defaultAduConfig, width: 24 }}
           pose={samplePose}
-          isCompliant={true}
+          placement={samplePlacement}
         />,
       );
       rerender(
@@ -384,7 +387,7 @@ describe("CesiumNeighborhoodView", () => {
           parcel={sampleParcel}
           config={{ ...defaultAduConfig, width: 28 }}
           pose={samplePose}
-          isCompliant={true}
+          placement={samplePlacement}
         />,
       );
       rerender(
@@ -392,7 +395,7 @@ describe("CesiumNeighborhoodView", () => {
           parcel={sampleParcel}
           config={{ ...defaultAduConfig, width: 32 }}
           pose={samplePose}
-          isCompliant={true}
+          placement={samplePlacement}
         />,
       );
 
@@ -427,7 +430,7 @@ describe("CesiumNeighborhoodView", () => {
           parcel={sampleParcel}
           config={defaultAduConfig}
           pose={{ x: 10, z: -10, rotationDeg: 45 }}
-          isCompliant={true}
+          placement={samplePlacement}
         />,
       );
 
@@ -458,7 +461,7 @@ describe("CesiumNeighborhoodView", () => {
           parcel={differentParcel}
           config={defaultAduConfig}
           pose={samplePose}
-          isCompliant={true}
+          placement={samplePlacement}
         />,
       );
 
@@ -483,7 +486,7 @@ describe("CesiumNeighborhoodView", () => {
           parcel={identicalParcel}
           config={defaultAduConfig}
           pose={samplePose}
-          isCompliant={true}
+          placement={samplePlacement}
         />,
       );
 
@@ -562,48 +565,45 @@ describe("CesiumNeighborhoodView", () => {
     });
   });
 
-  describe("Task 9: compliance verdict reflects isCompliant honestly", () => {
-    it("displays eligible status and color when isCompliant is true", async () => {
-      renderView({ isCompliant: true });
-
-      await waitFor(() => {
-        expect(screen.getByTestId("cesium-compliance-verdict")).toBeInTheDocument();
-      });
-
-      const verdict = screen.getByTestId("cesium-compliance-verdict");
-      expect(verdict).toHaveTextContent(/Eligible/i);
-      expect(verdict).not.toHaveTextContent(/Review needed/i);
-      expect(verdict).not.toHaveTextContent(/Blocked/i);
-
-      // Check 3D ADU entity label & color
-      const adu = mockEntitiesAdd.mock.calls
-        .map((call) => call[0])
-        .find((options) => options.name === "Proposed ADU Footprint");
-      expect(adu).toBeDefined();
-      expect((adu as { label: { text: string } }).label.text).toContain("Eligible");
-      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#176B4C");
+  describe("canonical placement verdict", () => {
+    it("shows blocked placement even when parcel zoning is compliant", async () => {
+      const parcel = parcelPresets[0];
+      const pose = { x: 0, z: 0, rotationDeg: 0 };
+      const placement = getScenePlacement(parcel, defaultAduConfig, pose);
+      expect(calculateFeasibility(parcel, defaultAduConfig, defaultFinancialAssumptions).zoningStatus).toBe("Compliant");
+      expect(placement.status).toBe("blocked");
+      renderView({ parcel, pose, placement });
+      await waitFor(() => expect(mockEntitiesAdd).toHaveBeenCalled());
+      expect(screen.getByTestId("cesium-compliance-verdict")).toHaveTextContent("Doesn't fit at this placement");
+      expect(screen.getByTestId("cesium-compliance-verdict")).not.toHaveTextContent("Eligible");
+      const adu = mockEntitiesAdd.mock.calls.map(([options]) => options).find((options) => options.name === "Proposed ADU Footprint");
+      expect((adu as { label: { text: string } }).label.text).toContain("Doesn't fit at this placement");
+      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#A82D16");
+    });
+    it.each([
+      ["fits", "Fits at this placement", "#176B4C"],
+      ["review", "Placement needs a closer look", "#8A5300"],
+      ["invalid", "Can't evaluate this placement", "#A82D16"],
+    ] as const)("shows canonical %s status in both the HUD and ADU label", async (status, title, color) => {
+      renderView({ placement: { ...samplePlacement, status } });
+      await waitFor(() => expect(mockEntitiesAdd).toHaveBeenCalled());
+      expect(screen.getByTestId("cesium-compliance-verdict")).toHaveTextContent(title);
+      const adu = mockEntitiesAdd.mock.calls.map(([options]) => options).find((options) => options.name === "Proposed ADU Footprint");
+      expect((adu as { label: { text: string } }).label.text).toContain(title);
+      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith(color);
     });
 
-    it("displays review needed status without inferring blocked when isCompliant is false", async () => {
-      renderView({ isCompliant: false });
-
-      await waitFor(() => {
-        expect(screen.getByTestId("cesium-compliance-verdict")).toBeInTheDocument();
-      });
-
-      const verdict = screen.getByTestId("cesium-compliance-verdict");
-      expect(verdict).toHaveTextContent(/Review needed/i);
-      // Must NOT claim "Blocked" or use blocked color
-      expect(verdict).not.toHaveTextContent(/Blocked/i);
-
-      // Check 3D ADU entity label & color (#8A5300 review-needed token)
-      const adu = mockEntitiesAdd.mock.calls
-        .map((call) => call[0])
-        .find((options) => options.name === "Proposed ADU Footprint");
-      expect(adu).toBeDefined();
-      expect((adu as { label: { text: string } }).label.text).toContain("Review needed");
-      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#8A5300");
-      expect(mockCesium.Color.fromCssColorString).not.toHaveBeenCalledWith("#A82D16");
+    it("updates placement feedback without starting another tileset session", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY", "test-map-tiles-key");
+      const { rerender } = renderView({ placement: { ...samplePlacement, status: "fits" } });
+      await waitFor(() => expect(mockEntitiesAdd).toHaveBeenCalled());
+      mockEntitiesAdd.mockClear();
+      rerender(<CesiumNeighborhoodView parcel={sampleParcel} config={defaultAduConfig} pose={samplePose} placement={{ ...samplePlacement, status: "blocked" }} />);
+      expect(screen.getByTestId("cesium-compliance-verdict")).toHaveTextContent("Doesn't fit at this placement");
+      const adu = mockEntitiesAdd.mock.calls.map(([options]) => options).find((options) => options.name === "Proposed ADU Footprint");
+      expect((adu as { label: { text: string } }).label.text).toContain("Doesn't fit at this placement");
+      expect(mockCesium.Viewer).toHaveBeenCalledOnce();
+      expect(mockCesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledOnce();
     });
   });
 
@@ -613,7 +613,7 @@ describe("CesiumNeighborhoodView", () => {
       mockSampleHeight = vi.fn().mockReturnValueOnce(undefined).mockReturnValue(MOCK_GROUND_HEIGHT_M);
       const { rerender } = renderView();
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
-      rerender(<CesiumNeighborhoodView parcel={sampleParcel} config={{ ...defaultAduConfig, height: 19 }} pose={samplePose} isCompliant />);
+      rerender(<CesiumNeighborhoodView parcel={sampleParcel} config={{ ...defaultAduConfig, height: 19 }} pose={samplePose} placement={samplePlacement} />);
       expect(mockEntitiesAdd).not.toHaveBeenCalled();
       await act(async () => { await vi.advanceTimersByTimeAsync(250); });
       const adus = mockEntitiesAdd.mock.calls.map(([options]) => options).filter((options) => options.name === "Proposed ADU Footprint");

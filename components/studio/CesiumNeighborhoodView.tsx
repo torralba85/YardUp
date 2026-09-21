@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, AlertTriangle, CheckCircle2, Globe, RefreshCw } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, XCircle, Globe, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import { buildAduSceneModel, projectLocalToGeodetic, type Pose2D } from "@/lib/scene-model";
+import { describePlacement, type PlacementResult } from "@/lib/placement-validation";
 import { loadCesium } from "@/lib/cesium-loader";
 import {
   describePhotorealRoute,
@@ -30,10 +31,15 @@ export interface CesiumNeighborhoodViewProps {
   parcel: Parcel | LiveParcelData;
   config: ADUConfig;
   pose: Pose2D;
-  isCompliant: boolean;
+  placement: PlacementResult;
   onReturnToModel?: () => void;
 }
 const FEET_TO_METERS = 0.3048;
+const PLACEMENT_STYLE = {
+  clear: { color: "#176B4C", className: "text-status-eligible", Icon: CheckCircle2 },
+  review: { color: "#8A5300", className: "text-status-review", Icon: AlertTriangle },
+  blocked: { color: "#A82D16", className: "text-status-blocked", Icon: XCircle },
+} as const;
 
 /**
  * Provisional camera altitude, in metres above the WGS84 ellipsoid, used only to
@@ -109,7 +115,7 @@ interface SceneGeometryOptions {
   parcel: Parcel | LiveParcelData;
   config: ADUConfig;
   pose: Pose2D;
-  isCompliant: boolean;
+  placement: PlacementResult;
   lat: number;
   lng: number;
 }
@@ -123,9 +129,8 @@ interface SceneGeometryOptions {
  * measurement. The measured height is the fallback, and draping flat is the
  * last resort: an extruded box at an invented height is the burial bug.
  *
- * Compliance verdict is reflected directly on the footprint with A LOT MORE status
- * colors (eligible #176B4C, review #8A5300 on chalk) paired with a label and icon.
- * False is treated honestly as review needed rather than inferring legal blocked.
+ * Canonical placement feedback supplies the footprint and HUD status.
+ * A zoning result alone cannot establish that the proposed position fits.
  */
 function placeSceneGeometry(
   Cesium: CesiumModule,
@@ -133,7 +138,7 @@ function placeSceneGeometry(
   groundHeightMeters: number | null,
   options: SceneGeometryOptions,
 ): unknown[] {
-  const { parcel, config, pose, isCompliant, lat, lng } = options;
+  const { parcel, config, pose, placement, lat, lng } = options;
   const added: unknown[] = [];
   const clampToGround = Cesium.HeightReference?.RELATIVE_TO_GROUND;
   const canClamp = typeof clampToGround === "number";
@@ -199,11 +204,9 @@ function placeSceneGeometry(
         const aduHeightM = (config.height || 14) * FEET_TO_METERS;
         const canExtrude = canClamp || groundHeightMeters !== null;
 
-        // A LOT MORE status tokens:
-        // Eligible / verified: #176B4C
-        // Review needed: #8A5300 (do not infer legal blocked #A82D16 for boolean false)
-        const statusColor = isCompliant ? "#176B4C" : "#8A5300";
-        const statusLabel = isCompliant ? "Eligible" : "Review needed";
+        const feedback = describePlacement(placement);
+        const statusColor = PLACEMENT_STYLE[feedback.tone].color;
+        const statusLabel = feedback.title;
 
         const centerLng = geodeticCorners.reduce((sum, c) => sum + c.lng, 0) / 4;
         const centerLat = geodeticCorners.reduce((sum, c) => sum + c.lat, 0) / 4;
@@ -259,9 +262,12 @@ export default function CesiumNeighborhoodView({
   parcel,
   config,
   pose,
-  isCompliant,
+  placement,
   onReturnToModel,
 }: CesiumNeighborhoodViewProps) {
+  const placementFeedback = describePlacement(placement);
+  const placementStyle = PLACEMENT_STYLE[placementFeedback.tone];
+  const PlacementIcon = placementStyle.Icon;
   const containerRef = useRef<HTMLDivElement>(null);
   const creditContainerRef = useRef<HTMLDivElement>(null);
 
@@ -305,13 +311,13 @@ export default function CesiumNeighborhoodView({
     parcel,
     config,
     pose,
-    isCompliant,
+    placement,
     lat,
     lng,
   });
   useEffect(() => {
-    latestPropsRef.current = { parcel, config, pose, isCompliant, lat, lng };
-  }, [parcel, config, pose, isCompliant, lat, lng]);
+    latestPropsRef.current = { parcel, config, pose, placement, lat, lng };
+  }, [parcel, config, pose, placement, lat, lng]);
 
   const viewerRef = useRef<CesiumViewerInstance | null>(null);
   const cesiumModuleRef = useRef<CesiumModule | null>(null);
@@ -322,7 +328,7 @@ export default function CesiumNeighborhoodView({
   // ---------------------------------------------------------------------------
   // 1. Viewer Lifecycle Effect (Task 1)
   // Rebuilt ONLY when geographic coordinates, stable parcel identity, or credentials change.
-  // Geometry edits (config, pose, isCompliant) NEVER trigger this effect.
+  // Geometry edits (config, pose, placement) NEVER trigger this effect.
   // ---------------------------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
@@ -621,7 +627,7 @@ export default function CesiumNeighborhoodView({
       measuredGroundRef.current,
       latestPropsRef.current,
     ));
-  }, [parcel, config, pose, isCompliant]);
+  }, [parcel, config, pose, placement]);
 
   const groundLine = useMemo(() => {
     if (!ground) return null;
@@ -667,22 +673,13 @@ export default function CesiumNeighborhoodView({
           >
             {groundLine}
           </p>
-        {/* Compliance verdict: label + icon, honest status colors */}
+        {/* Same placement verdict as the model, paired with a status icon. */}
         <div
           className="flex items-center gap-1.5 pt-0.5 text-xs font-medium"
           data-testid="cesium-compliance-verdict"
         >
-          {isCompliant ? (
-            <>
-              <CheckCircle2 size={14} className="text-status-eligible shrink-0" aria-hidden="true" />
-              <span className="text-status-eligible">Eligible</span>
-            </>
-          ) : (
-            <>
-              <AlertTriangle size={14} className="text-status-review shrink-0" aria-hidden="true" />
-              <span className="text-status-review">Review needed</span>
-            </>
-          )}
+          <PlacementIcon size={14} className={`${placementStyle.className} shrink-0`} aria-hidden="true" />
+          <span className={placementStyle.className}>{placementFeedback.title}</span>
         </div>
         {photorealNotice && (
           <p className="text-[11px] text-lf-muted" data-testid="cesium-photoreal-notice">

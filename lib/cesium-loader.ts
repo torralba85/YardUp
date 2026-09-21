@@ -54,18 +54,21 @@ export function loadCesium(): Promise<Record<string, unknown>> {
 
     const scriptId = "cesium-script";
     const existing = document.getElementById(scriptId);
+    const fail = (script: Element, message: string) => {
+      script.remove();
+      loadPromise = null;
+      reject(new Error(message));
+    };
     if (existing) {
       existing.addEventListener("load", () => {
         if (win.Cesium) {
           resolve(win.Cesium);
         } else {
-          loadPromise = null;
-          reject(new Error(`Failed to load CesiumJS ${CESIUM_VERSION}`));
+          fail(existing, `Failed to load CesiumJS ${CESIUM_VERSION}`);
         }
       });
       existing.addEventListener("error", () => {
-        loadPromise = null;
-        reject(new Error(`Failed to load CesiumJS ${CESIUM_VERSION}`));
+        fail(existing, `Failed to load CesiumJS ${CESIUM_VERSION}`);
       });
       return;
     }
@@ -78,13 +81,11 @@ export function loadCesium(): Promise<Record<string, unknown>> {
       if (win.Cesium) {
         resolve(win.Cesium);
       } else {
-        loadPromise = null;
-        reject(new Error(`Failed to initialize CesiumJS ${CESIUM_VERSION}`));
+        fail(script, `Failed to initialize CesiumJS ${CESIUM_VERSION}`);
       }
     };
     script.onerror = () => {
-      loadPromise = null;
-      reject(new Error(`Failed to load CesiumJS ${CESIUM_VERSION}`));
+      fail(script, `Failed to load CesiumJS ${CESIUM_VERSION}`);
     };
     document.head.appendChild(script);
   });
