@@ -641,22 +641,22 @@ export default function CesiumNeighborhoodView({
   }, [ground]);
 
   return (
-    <div className="relative h-full w-full min-h-[440px] overflow-hidden bg-lf-paper text-lf-ink">
+    <div className="relative h-full w-full min-h-[440px] overflow-hidden bg-lot-chalk text-lot-ink">
       {/* Cesium canvas target */}
       <div ref={containerRef} className="h-full w-full" data-testid="cesium-container" />
 
       {/* Floating HUD banner */}
-      <div className="pointer-events-none absolute top-3 left-3 z-10 flex max-w-sm flex-col gap-1 rounded-[3px] border border-lf-hairline bg-lf-paper/95 p-3 shadow-md backdrop-blur-sm">
+      <div className="pointer-events-none absolute top-3 left-3 z-10 flex max-w-sm flex-col gap-1 rounded-[3px] border border-lf-hairline bg-lot-chalk/95 p-3 shadow-md backdrop-blur-sm">
         <div className="flex items-center gap-2">
-          <Globe size={16} className="text-lot-signal shrink-0" aria-hidden="true" />
-          <span className="font-display text-sm font-semibold tracking-wide text-lf-ink">
+          <Globe size={16} className="text-lot-orange-ink shrink-0" aria-hidden="true" />
+          <span className="font-display text-sm font-semibold tracking-wide text-lot-ink">
             Neighborhood 3D
           </span>
           <span className="rounded bg-lf-muted/10 px-1.5 py-0.5 font-mono text-[10px] text-lf-muted uppercase">
             CesiumJS
           </span>
         </div>
-        <p className="truncate text-xs text-lf-ink font-medium">
+        <p className="truncate text-xs text-lot-ink font-medium">
           {parcel.address || "Proposed ADU Site"}
         </p>
         <p className="font-mono text-[11px] text-lf-muted">
@@ -706,7 +706,7 @@ export default function CesiumNeighborhoodView({
         ref={creditContainerRef}
         data-testid="cesium-credit-container"
         aria-label="Map data credits"
-        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lf-hairline bg-lf-paper px-3 py-2 text-xs leading-normal text-lf-ink`}
+        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lf-hairline bg-lot-chalk px-3 py-2 text-xs leading-normal text-lot-ink`}
       />
 
       {/* Loading overlay */}
@@ -714,10 +714,10 @@ export default function CesiumNeighborhoodView({
         <div
           role="status"
           aria-live="polite"
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lf-paper/85 backdrop-blur-xs"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk/85 backdrop-blur-xs"
         >
-          <RefreshCw size={24} className="animate-spin text-lot-signal" aria-hidden="true" />
-          <p className="text-sm font-medium text-lf-ink">Streaming 3D globe & neighborhood data…</p>
+          <RefreshCw size={24} className="animate-spin text-lot-orange-ink" aria-hidden="true" />
+          <p className="text-sm font-medium text-lot-ink">Streaming 3D globe & neighborhood data…</p>
         </div>
       )}
 
@@ -725,10 +725,10 @@ export default function CesiumNeighborhoodView({
       {status === "error" && (
         <div
           role="alert"
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lf-paper p-6 text-center"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk p-6 text-center"
         >
-          <AlertCircle size={28} className="text-lot-signal" aria-hidden="true" />
-          <h3 className="font-display text-base font-semibold text-lf-ink">
+          <AlertCircle size={28} className="text-lot-orange-ink" aria-hidden="true" />
+          <h3 className="font-display text-base font-semibold text-lot-ink">
             3D Globe currently unavailable
           </h3>
           <p className="max-w-xs text-xs text-lf-muted">

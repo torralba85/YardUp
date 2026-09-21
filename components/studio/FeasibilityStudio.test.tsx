@@ -173,7 +173,9 @@ describe("FeasibilityStudio (guided spine)", () => {
     }]);
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    fireEvent.click(await screen.findByRole("button", { name: /Saved Concepts/ }));
+    // Wait for the async auth/scenario state before scanning the large Studio DOM by role.
+    await screen.findByText("Saved Concepts");
+    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
     const remove = screen.getByRole("button", { name: "Delete saved concept Garden home" });
     fireEvent.click(remove);
     expect(savedMocks.remove).not.toHaveBeenCalled();

@@ -121,6 +121,8 @@ test.describe("Studio Neighborhood 3D", () => {
   });
 
   test("returns to the 3D model and leaves the Studio usable", async ({ page }) => {
+    // The return control is covered until the CDN-backed globe finishes loading.
+    test.setTimeout(60_000);
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 

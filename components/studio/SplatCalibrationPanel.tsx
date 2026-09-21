@@ -16,7 +16,7 @@ export interface SplatCalibrationPanelProps {
 }
 
 const inputControl =
-  "min-h-11 w-full rounded-[3px] border border-lf-muted bg-lf-sand px-3 text-base text-lf-espresso tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-espresso";
+  "min-h-11 w-full rounded-[3px] border border-lf-muted bg-lf-sand px-3 text-base text-lf-espresso tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
 
 export default function SplatCalibrationPanel({
   scene,
