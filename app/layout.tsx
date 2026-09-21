@@ -41,7 +41,19 @@ const jsonLd = {
   publisher: {
     "@type": "Organization",
     name: "LotFoundry",
+    legalName: "Veri-share",
     url: appUrl,
+    logo: `${appUrl}/icon-512-transparent.png`,
+    // `sameAs` is how Google resolves scattered profiles into one entity, so
+    // it only ever lists URLs that actually resolve. A 404 here is a negative
+    // signal, not a neutral one — add each social profile when it is claimed,
+    // never ahead of it.
+    sameAs: [GOOGLE_PLAY_URL],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      url: `${appUrl}/feedback`,
+    },
   },
 };
 
