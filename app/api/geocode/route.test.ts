@@ -480,3 +480,110 @@ describe("GET /api/geocode — Nominatim address labelling", () => {
     expect(data.formattedAddress).toBe("5 Elm Street, Stowe, VT 05672");
   });
 });
+
+describe("GET /api/geocode — TypeSafe candidate picker", () => {
+  const candidates = [
+    {
+      lat: "47.70",
+      lon: "-122.32",
+      display_name: "NE 88th Street, Shoreline, King County, Washington, 98155, United States",
+    },
+    {
+      lat: "47.692",
+      lon: "-122.313",
+      display_name:
+        "1421, Northeast 88th Street, Maple Leaf, Seattle, King County, Washington, 98115, United States",
+    },
+    {
+      lat: "40.8",
+      lon: "-96.7",
+      display_name: "1421, 88th Street, Lincoln, Lancaster County, Nebraska, United States",
+    },
+  ];
+
+  /** Routes Nominatim and TypeSafe calls to their own canned responses. */
+  function stubProviders(typesafe: () => Promise<unknown>) {
+    const fetchMock = vi.fn((url: string) =>
+      String(url).includes("api.typesafe.ai") ? typesafe() : Promise.resolve(nominatimResponse(candidates)),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  function typesafeChoice(choice: string, confidence: number) {
+    return () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          answers: { pick: { type: "choice", choice, confidence, probabilities: {} } },
+        }),
+      });
+  }
+
+  function enablePicker() {
+    vi.stubEnv("TYPESAFE_GEOCODE_PICKER", "true");
+    vi.stubEnv("TYPESAFE_API_KEY", "ts-key");
+  }
+
+  it("stays on the single best Nominatim guess and never calls TypeSafe while the flag is off", async () => {
+    vi.stubEnv("TYPESAFE_API_KEY", "ts-key");
+    const fetchMock = stubProviders(typesafeChoice("c1", 0.99));
+
+    const res = await GET(makeGuestRequest("1421 NE 88th St, Seattle, WA"));
+
+    expect(res.status).toBe(200);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("limit=1");
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("typesafe"))).toBe(false);
+  });
+
+  it("asks TypeSafe to choose among in-state candidates and uses its pick", async () => {
+    enablePicker();
+    const fetchMock = stubProviders(typesafeChoice("c1", 0.95));
+
+    const res = await GET(makeGuestRequest("1421 NE 88th St, Seattle, WA"));
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).lat).toBeCloseTo(47.692, 3);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("limit=5");
+
+    const typesafeCall = fetchMock.mock.calls.find((call) => String(call[0]).includes("typesafe")) as
+      | unknown[]
+      | undefined;
+    const init = typesafeCall?.[1] as { headers: Record<string, string>; body: string };
+    expect(init.headers.Authorization).toBe("Bearer ts-key");
+    const body = JSON.parse(init.body);
+    expect(body.state).toEqual({ query: "1421 NE 88th St, Seattle, WA" });
+    // The Nebraska hit fails the exact state rule, so it is never offered.
+    expect(Object.keys(body.questions.pick.criteria)).toEqual(["c0", "c1", "none"]);
+  });
+
+  it("404s when TypeSafe is confident none of the candidates is the typed address", async () => {
+    enablePicker();
+    stubProviders(typesafeChoice("none", 0.9));
+
+    const res = await GET(makeGuestRequest("1421 NE 88th St, Seattle, WA"));
+
+    expect(res.status).toBe(404);
+  });
+
+  it("keeps the provider's first candidate when TypeSafe is unsure", async () => {
+    enablePicker();
+    stubProviders(typesafeChoice("c1", 0.5));
+
+    const res = await GET(makeGuestRequest("1421 NE 88th St, Seattle, WA"));
+
+    expect((await res.json()).lat).toBeCloseTo(47.7, 3);
+  });
+
+  it("keeps the provider's first candidate when TypeSafe fails", async () => {
+    enablePicker();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    stubProviders(() => Promise.resolve({ ok: false, status: 529, json: async () => ({}) }));
+
+    const res = await GET(makeGuestRequest("1421 NE 88th St, Seattle, WA"));
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).lat).toBeCloseTo(47.7, 3);
+  });
+});

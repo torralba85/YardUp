@@ -1,4 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  isGeocodePickerEnabled,
+  pickGeocodeCandidate,
+} from "@/lib/server/geocode-candidate-picker";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
@@ -6,6 +10,7 @@ const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
 const TIMEOUT_MS = 5000;
 const MAX_QUERY_LEN = 200;
+const PICKER_CANDIDATE_LIMIT = 5;
 const US_STATE_NAMES: Record<string, string> = {
   AL: "Alabama",
   AK: "Alaska",
@@ -172,11 +177,14 @@ async function geocodeWithGoogle(
 async function geocodeWithNominatim(
   query: string,
 ): Promise<GeocodeResult | null> {
+  // With the TypeSafe picker on, fetch several candidates and let it choose;
+  // otherwise keep the provider's single best guess.
+  const pickerEnabled = isGeocodePickerEnabled();
   try {
     const url = new URL(NOMINATIM_API);
     url.searchParams.set("q", query);
     url.searchParams.set("format", "jsonv2");
-    url.searchParams.set("limit", "1");
+    url.searchParams.set("limit", pickerEnabled ? String(PICKER_CANDIDATE_LIMIT) : "1");
     url.searchParams.set("countrycodes", "us");
     // Structured components, so the label shown to the visitor can be built
     // from real fields instead of parsed out of `display_name`.
@@ -191,23 +199,36 @@ async function geocodeWithNominatim(
       display_name?: string;
       address?: NominatimAddress;
     }>;
-    const first = Array.isArray(json) ? json[0] : null;
-    const lat = Number.parseFloat(first?.lat ?? "");
-    const lng = Number.parseFloat(first?.lon ?? "");
-    if (
-      !first ||
-      Number.isNaN(lat) ||
-      Number.isNaN(lng) ||
-      !matchesRequestedState(query, first.display_name)
-    ) {
-      return null;
+    // Candidates with usable coordinates in the state the query names, in
+    // provider rank order. The state rule is exact and free, so it filters
+    // before any judgment is asked for.
+    const hits = (Array.isArray(json) ? json : []).flatMap((hit) => {
+      const lat = Number.parseFloat(hit?.lat ?? "");
+      const lng = Number.parseFloat(hit?.lon ?? "");
+      return Number.isNaN(lat) || Number.isNaN(lng) || !matchesRequestedState(query, hit.display_name)
+        ? []
+        : [{ ...hit, lat, lng }];
+    });
+    if (hits.length === 0) return null;
+
+    let chosen = hits[0];
+    if (pickerEnabled) {
+      const pick = await pickGeocodeCandidate(
+        query,
+        hits.map((hit) => hit.display_name ?? query),
+      );
+      // A confident "none" means the provider matched something else, e.g.
+      // the right street in the wrong city: no answer beats a wrong one.
+      if (pick === "none") return null;
+      if (typeof pick === "number" && hits[pick]) chosen = hits[pick];
     }
+
     return {
-      lat,
-      lng,
+      lat: chosen.lat,
+      lng: chosen.lng,
       formattedAddress: formatNominatimAddress(
-        first.address,
-        first.display_name ?? query,
+        chosen.address,
+        chosen.display_name ?? query,
       ),
     };
   } catch (err) {
