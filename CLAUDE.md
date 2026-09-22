@@ -138,6 +138,8 @@ REGRID_API_KEY=<server-side Regrid Parcel API key>
 OPENAI_API_KEY=<server-side OpenAI API key>
 OPENAI_TEXT_MODEL=<text model, defaults to gpt-5.6-sol>
 OPENAI_IMAGE_MODEL=<image-capable model, defaults to gpt-5.6-sol>
+TYPESAFE_API_KEY=<server-side TypeSafe key; only read when TYPESAFE_GEOCODE_PICKER is on>
+TYPESAFE_GEOCODE_PICKER=<"true" lets TypeSafe choose among Nominatim candidates in /api/geocode; off by default because it spends metered quota on guest lookups>
 STRIPE_SECRET_KEY=<server-side Stripe secret key>
 STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
 NEXT_PUBLIC_APP_URL=<canonical app URL for Stripe redirect callbacks>
@@ -166,7 +168,7 @@ Firebase App Check uses the registered reCAPTCHA Enterprise provider in producti
 
 Without parcel API keys, the app must still resolve real lots wherever the free tier reaches: `/api/parcel` chains Regrid (paid, optional) to the public county/statewide GIS services in `lib/server/county-parcels.ts`, resolves state/ZIP/county from the keyless US Census geocoder (`lib/server/census-geocode.ts`), and fills known parcel polygons from the public USA Structures footprint layer (`lib/server/building-footprints.ts`). It degrades to the Seattle, Portland, and Austin presets only where no parcel provider has coverage. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
 
-Anonymous visitors get one real address lookup before the account ask (`lib/guest-lookup.ts`). That allowance is a funnel affordance, not a cost control: the ceiling is server-side, where `lib/server/guest-request.ts` treats a request carrying no bearer token as a guest and `/api/geocode` and `/api/parcel` then hold it to the keyless chain (Nominatim, county/statewide GIS) under their own `geocode-guest` / `parcel-guest` limiter namespaces. A guest lookup therefore cannot spend metered Google or Regrid quota however often it is repeated. Autocomplete stays signed-in only, because every suggestion source is metered; free-text Search is the guest path.
+Anonymous visitors get one real address lookup before the account ask (`lib/guest-lookup.ts`). That allowance is a funnel affordance, not a cost control: the ceiling is server-side, where `lib/server/guest-request.ts` treats a request carrying no bearer token as a guest and `/api/geocode` and `/api/parcel` then hold it to the keyless chain (Nominatim, county/statewide GIS) under their own `geocode-guest` / `parcel-guest` limiter namespaces. A guest lookup therefore cannot spend metered Google or Regrid quota however often it is repeated. The one opt-in exception is `TYPESAFE_GEOCODE_PICKER`: when it is on, each Nominatim lookup, guest or not, also makes one metered TypeSafe call (`lib/server/geocode-candidate-picker.ts`). Autocomplete stays signed-in only, because every suggestion source is metered; free-text Search is the guest path.
 
 ## Critical Gotchas
 

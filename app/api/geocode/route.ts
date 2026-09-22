@@ -1,4 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  isGeocodePickerEnabled,
+  pickGeocodeCandidate,
+} from "@/lib/server/geocode-candidate-picker";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
@@ -6,6 +10,7 @@ const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
 const TIMEOUT_MS = 5000;
 const MAX_QUERY_LEN = 200;
+const PICKER_CANDIDATE_LIMIT = 5;
 const US_STATE_NAMES: Record<string, string> = {
   AL: "Alabama",
   AK: "Alaska",
@@ -172,11 +177,14 @@ async function geocodeWithGoogle(
 async function geocodeWithNominatim(
   query: string,
 ): Promise<GeocodeResult | null> {
+  // With the TypeSafe picker on, fetch several candidates and let it choose;
+  // otherwise keep the provider's single best guess.
+  const pickerEnabled = isGeocodePickerEnabled();
   try {
     const url = new URL(NOMINATIM_API);
     url.searchParams.set("q", query);
     url.searchParams.set("format", "jsonv2");
-    url.searchParams.set("limit", "1");
+    url.searchParams.set("limit", pickerEnabled ? String(PICKER_CANDIDATE_LIMIT) : "1");
     url.searchParams.set("countrycodes", "us");
     // Structured components, so the label shown to the visitor can be built
     // from real fields instead of parsed out of `display_name`.
@@ -191,23 +199,36 @@ async function geocodeWithNominatim(
       display_name?: string;
       address?: NominatimAddress;
     }>;
-    const first = Array.isArray(json) ? json[0] : null;
-    const lat = Number.parseFloat(first?.lat ?? "");
-    const lng = Number.parseFloat(first?.lon ?? "");
-    if (
-      !first ||
-      Number.isNaN(lat) ||
-      Number.isNaN(lng) ||
-      !matchesRequestedState(query, first.display_name)
-    ) {
-      return null;
+    // Candidates with usable coordinates in the state the query names, in
+    // provider rank order. The state rule is exact and free, so it filters
+    // before any judgment is asked for.
+    const hits = (Array.isArray(json) ? json : []).flatMap((hit) => {
+      const lat = Number.parseFloat(hit?.lat ?? "");
+      const lng = Number.parseFloat(hit?.lon ?? "");
+      return Number.isNaN(lat) || Number.isNaN(lng) || !matchesRequestedState(query, hit.display_name)
+        ? []
+        : [{ ...hit, lat, lng }];
+    });
+    if (hits.length === 0) return null;
+
+    let chosen = hits[0];
+    if (pickerEnabled) {
+      const pick = await pickGeocodeCandidate(
+        query,
+        hits.map((hit) => hit.display_name ?? query),
+      );
+      // A confident "none" means the provider matched something else, e.g.
+      // the right street in the wrong city: no answer beats a wrong one.
+      if (pick === "none") return null;
+      if (typeof pick === "number" && hits[pick]) chosen = hits[pick];
     }
+
     return {
-      lat,
-      lng,
+      lat: chosen.lat,
+      lng: chosen.lng,
       formattedAddress: formatNominatimAddress(
-        first.address,
-        first.display_name ?? query,
+        chosen.address,
+        chosen.display_name ?? query,
       ),
     };
   } catch (err) {
@@ -266,27 +287,50 @@ function formatNominatimAddress(
   return street && parts.length >= 2 ? parts.join(", ") : fallback;
 }
 
+/** Spelled-out state names, longest first so "West Virginia" wins over "Virginia". */
+const STATE_NAMES_LONGEST_FIRST = Array.from(STATE_CODES_BY_NAME).sort(
+  ([a], [b]) => b.length - a.length,
+);
+
+/**
+ * The state a free-text query names, read only from its end — where a US
+ * address carries it — or null when the end names none.
+ *
+ * Anywhere earlier, two-letter words collide with state codes: the "NE" in
+ * "1421 NE 88th St, Seattle" is a directional, "Fl 2" is a floor, "in" is a
+ * preposition. Scanning the whole query read those as Nebraska, Florida and
+ * Indiana whenever no state followed, and threw the correct result away.
+ */
+function requestedStateCode(query: string): string | null {
+  const components = query
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  // A trailing country or bare ZIP sits after the state; drop both.
+  while (
+    components.length > 0 &&
+    /^(?:usa?|united states(?: of america)?|\d{5}(?:-\d{4})?)$/i.test(components.at(-1) ?? "")
+  ) {
+    components.pop();
+  }
+  const last = (components.at(-1) ?? "").replace(/\s*\d{5}(?:-\d{4})?$/, "").trim();
+  if (!last) return null;
+
+  const lower = last.toLowerCase();
+  for (const [name, code] of STATE_NAMES_LONGEST_FIRST) {
+    if (lower === name || lower.endsWith(` ${name}`)) return code;
+  }
+  const tail = (last.split(/\s+/).at(-1) ?? "").toUpperCase();
+  return US_STATE_NAMES[tail] ? tail : null;
+}
+
 /**
  * Whether a Nominatim hit is in the state the query asked for, used to reject
- * a same-named street in the wrong state.
- *
- * Takes the *last* state-looking token in the query, not the first. A US
- * address puts its state at the end, while the start often carries a
- * directional that collides with a state code — "1421 NE 88th St, Seattle, WA"
- * reads as Nebraska on a first-match scan, and every correct Washington result
- * gets thrown away. Seattle, Portland, Washington DC and Miami all number their
- * streets this way, so first-match loses a large share of real addresses.
+ * a same-named street in the wrong state. A query that ends without naming a
+ * state (see {@link requestedStateCode}) accepts any state.
  */
 function matchesRequestedState(query: string, displayName?: string): boolean {
-  const statePattern = /(?:^|[\s,])([A-Z]{2})(?=[\s,]|$)/gi;
-  let stateCode: string | undefined;
-  let match: RegExpExecArray | null;
-  while ((match = statePattern.exec(query)) !== null) {
-    const candidate = match[1].toUpperCase();
-    if (US_STATE_NAMES[candidate]) {
-      stateCode = candidate;
-    }
-  }
+  const stateCode = requestedStateCode(query);
   if (!stateCode) return true;
 
   const stateName = US_STATE_NAMES[stateCode];

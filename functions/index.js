@@ -51,6 +51,21 @@ const nativeStoreSecrets = [
   ...(googlePlaySecretParams ? Object.values(googlePlaySecretParams) : []),
 ];
 
+// The TypeSafe geocode picker is opt-in: it spends metered quota, guest
+// lookups included. Its key is bound behind the same flag the route reads, so
+// a deploy never prompts for a secret that has not been created. Set it with:
+//   firebase functions:secrets:set TYPESAFE_API_KEY_SECRET
+const typeSafeApiKey =
+  process.env.TYPESAFE_GEOCODE_PICKER === "true"
+    ? defineSecret("TYPESAFE_API_KEY_SECRET")
+    : null;
+const apiSecrets = [
+  googleMapsApiKey,
+  googlePlacesServerKey,
+  regridApiKey,
+  ...(typeSafeApiKey ? [typeSafeApiKey] : []),
+];
+
 // scripts/prepare-firebase.js copies the Next.js standalone build into
 // functions/.next/standalone/. The compiled app (BUILD_ID, server/, manifests)
 // lives at functions/.next/standalone/.next/, so point Next's `dir` there.
@@ -115,11 +130,12 @@ exports.apiAi = onRequest(
 // provider credentials used by these routes; no Stripe, OpenAI, or native-store
 // secrets enter this process.
 exports.api = onRequest(
-  { ...fnOpts, secrets: [googleMapsApiKey, googlePlacesServerKey, regridApiKey] },
+  { ...fnOpts, secrets: apiSecrets },
   async (req, res) => {
     process.env.GOOGLE_MAPS_API_KEY = googleMapsApiKey.value();
     process.env.GOOGLE_PLACES_SERVER_KEY = googlePlacesServerKey.value();
     process.env.REGRID_API_KEY = regridApiKey.value();
+    if (typeSafeApiKey) process.env.TYPESAFE_API_KEY = typeSafeApiKey.value();
     const handle = await ready();
     return handle(requestForNext(req), res);
   },
