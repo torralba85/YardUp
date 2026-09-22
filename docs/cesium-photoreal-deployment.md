@@ -5,10 +5,15 @@ view (`components/studio/CesiumNeighborhoodView.tsx`, `lib/cesium-photoreal.ts`)
 Covers Tasks 10 (CSP) and 3 (Google attribution) of
 `docs/superpowers/plans/2026-09-19-cesium-photoreal-hardening.md`.
 
-> **Verification status (2026-09-20):** only the OSM rung has ever rendered.
-> No Google Map Tiles key or Cesium ion token has been provisioned, so the
-> photorealistic rungs, the CSP directives below, and the attribution display
-> are **not verified at runtime**. Nothing in this file claims otherwise.
+> **Verification status (2026-09-21):** the preferred direct Google route is
+> provisioned and verified locally. The dedicated key is website-restricted to
+> LotFoundry production origins plus localhost and API-restricted to Map Tiles.
+> A real root tileset request returned HTTP 200, and the Studio rendered Google
+> Photorealistic 3D with visible Google/Cesium/data credits and no browser errors.
+> The key is configured in ignored local env files and as the GitHub Actions
+> secret `NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY`; the CI deploy job writes it into the
+> production build. This is not proof of a production deployment. The optional
+> ion fallback and the planned CSP remain unverified at runtime.
 
 ## Credentials and billing
 
@@ -94,8 +99,8 @@ What it requires of the Neighborhood view in practice:
 
 ## Handoff seams
 
-- **Runtime verification:** Google logo and dynamic tile-credit visibility on
-  both credentialed routes at desktop and mobile widths remain open.
+- **Runtime verification:** direct-route desktop credits are verified locally.
+  Production and mobile-width verification, plus the optional ion route, remain
+  open.
 - **E2E owner:** CSP staging test with both routes, credit-visible spec on a
-  photoreal route, billing session-count check (Task 4, blocked on key
-  provisioning).
+  photoreal route, and production billing/session-count check (Task 4).

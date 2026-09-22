@@ -3,10 +3,11 @@ import { expect, test } from "@playwright/test";
 /**
  * Neighborhood 3D coverage for the photorealistic basemap ladder.
  *
- * No `NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY` or `NEXT_PUBLIC_CESIUM_ION_TOKEN` is set
- * in CI or local dev, so these specs exercise the bottom rung of the ladder: the
- * OpenStreetMap fallback. That is the rung that ships by default, and the one a
- * developer without a key will actually see, so it is the one worth guarding.
+ * The Playwright web server explicitly clears `NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY`
+ * and `NEXT_PUBLIC_CESIUM_ION_TOKEN`, so these specs exercise the bottom rung of
+ * the ladder even when a developer has a credential in an ignored local env file.
+ * The OpenStreetMap fallback remains worth guarding for unavailable/rejected
+ * credential recovery.
  *
  * The photorealistic rungs cannot be asserted here — they need a provisioned,
  * billable key, and headless WebGL could not judge photogrammetry anyway.

@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const port = process.env.PLAYWRIGHT_PORT ?? "3000";
 const baseURL = `http://localhost:${port}`;
+const webServerEnv = Object.fromEntries(
+  Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -35,6 +38,13 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI ? `npm run start -- -p ${port}` : `npm run dev -- -p ${port}`,
+    env: {
+      ...webServerEnv,
+      // Keep fallback coverage deterministic even when a developer has the
+      // billable Google or ion route configured in a local ignored env file.
+      NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY: "",
+      NEXT_PUBLIC_CESIUM_ION_TOKEN: "",
+    },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
