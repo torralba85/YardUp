@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 
@@ -38,6 +39,29 @@ const jsonLd = {
   applicationCategory: "BusinessApplication",
   operatingSystem: ["Web", "Android"],
   installUrl: GOOGLE_PLAY_URL,
+  // "What does it cost?" is one of the questions an assistant is actually
+  // asked about a tool like this, and prose on the page is the only place the
+  // answer currently lives. Both tiers are stated because listing only the
+  // paid one would read as a paid-only product. The certificate price is read
+  // from the same constant the checkout charges, so the markup cannot drift
+  // away from the real price.
+  offers: [
+    {
+      "@type": "Offer",
+      name: "Feasibility check",
+      description:
+        "Address lookup, parcel boundary, buildable area, and a placed ADU in 3D.",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    {
+      "@type": "Offer",
+      name: "Certificate of Feasibility",
+      description: "Downloadable feasibility certificate for one parcel.",
+      price: (CERTIFICATE_PRICE_CENTS / 100).toFixed(2),
+      priceCurrency: "USD",
+    },
+  ],
   publisher: {
     "@type": "Organization",
     name: "LotFoundry",

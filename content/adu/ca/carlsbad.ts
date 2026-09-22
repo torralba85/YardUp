@@ -18,6 +18,8 @@ export const carlsbad: JurisdictionContent = {
   slug: "carlsbad",
   county: "San Diego County",
   asOf: "2026-09-17",
+  metaDescription:
+    "Carlsbad ADU rules: 850–1,000 sq ft, 4 ft setbacks, no parking near Village or Poinsettia, and a soils report over 500 sq ft. See what fits your lot, free.",
   introAnswer: [
     "Yes — Carlsbad allows at least one detached ADU plus one junior ADU on virtually every single-family lot, with state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Carlsbad writes unusually specific local standards around its transit and coastline: the ADU bulletin names Carlsbad Village and Poinsettia stations for the parking waiver, sets an 18-foot height figure near those stations, and — distinctively — requires a soils report for any ADU over 500 square feet.",

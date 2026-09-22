@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { ADU_CITIES, hubUrl } from "@/lib/adu/content";
+import { ADU_CITIES, cityUrl, hubUrl } from "@/lib/adu/content";
 import {
   STATE_BASELINE_SOURCES,
   STATE_FLOOR_FACTS,
@@ -10,8 +10,10 @@ import {
 
 export const metadata: Metadata = {
   title: "California ADU Rules by City (2026) | LotFoundry",
+  // Kept under ~160 characters: past that Google truncates mid-sentence and
+  // the cut lands inside the city list rather than after a complete thought.
   description:
-    "ADU rules differ in every California city. Start from the state floor, then read the local setbacks, fees, and permit steps for San Diego County's five largest cities.",
+    "ADU rules change at the city line. Start from the California state floor, then read local setbacks, fees, and permit steps for five San Diego County cities.",
   alternates: { canonical: hubUrl() },
   openGraph: {
     title: "California ADU Rules by City (2026) | LotFoundry",
@@ -37,6 +39,49 @@ const CITY_BLURBS: Record<string, string> = {
 };
 
 /**
+ * Hub JSON-LD. The city pages each declare an `Article` and a `BreadcrumbList`,
+ * but nothing told a crawler that this page is the index over them — the five
+ * links were readable as prose only. `ItemList` states the set and its order,
+ * so "which California cities does this cover?" is answerable from the markup
+ * instead of inferred from anchor text. Built from `ADU_CITIES`, the same
+ * registry behind the ADU sitemap and `/llms.txt`, so a new jurisdiction joins
+ * all four surfaces at once.
+ */
+const itemListJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "California ADU rules by city",
+  description:
+    "City-by-city ADU guides for San Diego County, each with an as-of date.",
+  numberOfItems: ADU_CITIES.length,
+  itemListElement: ADU_CITIES.map((content, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name: `ADU rules in ${content.city}, ${content.stateName}`,
+    url: cityUrl(content),
+  })),
+};
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "LotFoundry",
+      item: "https://lotfoundry.net/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "California ADU rules",
+      item: hubUrl(),
+    },
+  ],
+};
+
+/**
  * California hub page (`/adu/ca`): the state-law floor plus the batch-one
  * city guides. Linked from the site footers; every city page links back.
  */
@@ -46,6 +91,15 @@ export default function AduCaliforniaHubPage() {
       title="ADU Rules in California (2026)"
       kicker="San Diego County · City-by-city guides"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       <div className="lf-body space-y-4 text-lg leading-relaxed">
         <p>
           California guarantees the right to build an ADU — but the rules you

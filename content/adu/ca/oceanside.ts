@@ -17,6 +17,8 @@ export const oceanside: JurisdictionContent = {
   slug: "oceanside",
   county: "San Diego County",
   asOf: "2026-09-17",
+  metaDescription:
+    "Oceanside charges no ADU impact fees and allows 850–1,000 sq ft at 4 ft setbacks, with extra coastal review near the beach. See what fits your lot, free.",
   introAnswer: [
     "Yes — Oceanside allows at least one detached ADU plus one junior ADU on virtually every single-family lot, with state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Oceanside is unusually explicit in writing about fees: the zoning ordinance states the city shall not impose impact fees on ADU development, and review runs on the state's 60-day ministerial clock for complete applications.",

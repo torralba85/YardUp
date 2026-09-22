@@ -17,6 +17,8 @@ export const chulaVista: JurisdictionContent = {
   slug: "chula-vista",
   county: "San Diego County",
   asOf: "2026-09-17",
+  metaDescription:
+    "Chula Vista ADU rules: 850–1,000 sq ft minimums, 4 ft side and rear setbacks, and preapproved plans that cut review to a flat fee. Check your lot, free.",
   introAnswer: [
     "Yes — Chula Vista allows at least one detached ADU plus one junior ADU on virtually every single-family lot, with the state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Chula Vista's standout feature is its homeowner toolkit: the city used a regional housing-acceleration grant to develop preapproved ADU standard plans, and council authorized a flat building-permit review fee for those standard plans — making Chula Vista one of the cheapest and most predictable permitting paths in the county.",
