@@ -306,6 +306,78 @@ describe("GET /api/geocode — state matching", () => {
 
     expect(res.status).toBe(200);
   });
+
+  // Regression: with no trailing state, the last two-letter word anywhere in
+  // the query was taken as the state, so a directional or floor number
+  // rejected the only (Nominatim) result and guests got a 404.
+  it.each([
+    [
+      "1421 NE 88th St, Seattle",
+      "1421, Northeast 88th Street, Maple Leaf, Seattle, King County, Washington, 98115, United States",
+    ],
+    [
+      "2345 NE Alberta St, Portland",
+      "2345, Northeast Alberta Street, Concordia, Portland, Multnomah County, Oregon, 97211, United States",
+    ],
+    [
+      "100 Pine St Fl 2, San Francisco",
+      "100, Pine Street, Financial District, San Francisco, California, 94111, United States",
+    ],
+    [
+      "500 Grand Ave Oakland in California",
+      "500, Grand Avenue, Adams Point, Oakland, Alameda County, California, 94610, United States",
+    ],
+  ])("keeps a guest hit for %j, which names no state code at its end", async (query, displayName) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([{ lat: "47.6", lon: "-122.3", display_name: displayName }]),
+      ),
+    );
+
+    const res = await GET(makeGuestRequest(query));
+
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects a hit outside a state the query spells out in full", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "45.52",
+            lon: "-122.67",
+            display_name:
+              "88, Main Street, Portland, Multnomah County, Oregon, 97204, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeGuestRequest("88 Main St, Portland, Maine"));
+
+    expect(res.status).toBe(404);
+  });
+
+  it("reads the state before a trailing ZIP and country", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([
+          {
+            lat: "39.7",
+            lon: "-89.6",
+            display_name: "123, Main Street, Springfield, Illinois, United States",
+          },
+        ]),
+      ),
+    );
+
+    const res = await GET(makeGuestRequest("123 Main St, Springfield, MA 01103, USA"));
+
+    expect(res.status).toBe(404);
+  });
 });
 
 describe("GET /api/geocode — Nominatim address labelling", () => {
