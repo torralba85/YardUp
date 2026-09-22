@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ParcelMark } from "@/components/ui/BrandLockup";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { canGuestLookup } from "@/lib/guest-lookup";
@@ -76,23 +77,6 @@ const intentions = [
     note: "A little room for life to change.",
   },
 ];
-
-function ParcelMark({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 40 40"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M24 6H6v28h28V16M21 19 34 6M24 6h10v10"
-        stroke="currentColor"
-        strokeWidth="3.5"
-      />
-    </svg>
-  );
-}
 
 function Eyebrow({
   number,
