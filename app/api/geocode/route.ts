@@ -3,6 +3,7 @@ import {
   isGeocodePickerEnabled,
   pickGeocodeCandidate,
 } from "@/lib/server/geocode-candidate-picker";
+import { stripUnitDesignators } from "@/lib/server/geocode-query";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
@@ -182,7 +183,9 @@ async function geocodeWithNominatim(
   const pickerEnabled = isGeocodePickerEnabled();
   try {
     const url = new URL(NOMINATIM_API);
-    url.searchParams.set("q", query);
+    // Nominatim matches buildings, not units; the typed query is still what
+    // the state rule and the picker judge against.
+    url.searchParams.set("q", stripUnitDesignators(query));
     url.searchParams.set("format", "jsonv2");
     url.searchParams.set("limit", pickerEnabled ? String(PICKER_CANDIDATE_LIMIT) : "1");
     url.searchParams.set("countrycodes", "us");

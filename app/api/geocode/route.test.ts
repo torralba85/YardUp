@@ -587,3 +587,25 @@ describe("GET /api/geocode — TypeSafe candidate picker", () => {
     expect((await res.json()).lat).toBeCloseTo(47.7, 3);
   });
 });
+
+describe("GET /api/geocode — secondary unit designators", () => {
+  it("sends Nominatim the building address without the unit, which it cannot match", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      nominatimResponse([
+        {
+          lat: "37.792",
+          lon: "-122.399",
+          display_name:
+            "100, Pine Street, Financial District, San Francisco, California, 94111, United States",
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeGuestRequest("100 Pine St Fl 2, San Francisco"));
+
+    expect(res.status).toBe(200);
+    const sent = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(sent.searchParams.get("q")).toBe("100 Pine St, San Francisco");
+  });
+});
