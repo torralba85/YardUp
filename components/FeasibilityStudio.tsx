@@ -832,6 +832,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           config={config}
           isCompliant={isCompliant}
           remainingCapacity={result.remainingCapacity}
+          flowLayout={!isDesktop}
           pose={pose}
           onPoseCommit={commitPose}
           scanMode={effectiveViewMode === "scan"}
@@ -911,8 +912,9 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           scene={
             <SceneViewport
               sceneNode={sceneNode}
-              viewMode={viewMode}
+              viewMode={effectiveViewMode}
               onViewModeChange={changeViewMode}
+              flowLayout
             />
           }
           onFineTune={() => setFineTuneOpen(true)}
@@ -1235,14 +1237,16 @@ function SceneViewport({
   viewMode,
   onViewModeChange,
   hasScan = false,
+  flowLayout = false,
 }: {
   sceneNode: React.ReactNode;
   viewMode: SceneViewMode;
   onViewModeChange: (mode: SceneViewMode) => void;
   hasScan?: boolean;
+  flowLayout?: boolean;
 }) {
   return (
-    <div data-testid="scene-viewport" className="relative flex h-full min-h-0 flex-1 flex-col">
+    <div data-testid="scene-viewport" className={`relative flex min-h-0 flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto" : "h-[58dvh] min-h-[500px]") : "h-full"}`}>
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} hasScan={hasScan} />
       <div className="min-h-0 flex-1">{sceneNode}</div>
     </div>

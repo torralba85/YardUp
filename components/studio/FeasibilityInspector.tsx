@@ -1,8 +1,9 @@
 "use client";
 
-import { Bookmark, BookmarkPlus, Building2, Check, ChevronDown, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { Bookmark, BookmarkPlus, Check, ChevronDown, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import { NumericField } from "./NumericField";
-import { useEffect, useState } from "react";
+import { FootprintDiagram, RoofProfile } from "./DesignDiagrams";
+import { useEffect, useId, useState } from "react";
 import {
   configForFootprint,
   finishColors,
@@ -116,6 +117,7 @@ export default function FeasibilityInspector({
   const { parcel, parcelMode, parcelLoading, parcelError, searchParcel, searchByAddress, resetToPreset } = useParcel();
   const [openStep, setOpenStep] = useState<1 | 2 | 3>(initialStep);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const footprintDescriptionId = useId();
 
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
   const displayParcel = parcelMode === "live" ? parcel : presetParcel;
@@ -182,12 +184,12 @@ export default function FeasibilityInspector({
           <div>
             <h2
               id="feasibility-heading"
-              className="text-2xl font-semibold tracking-tight text-lf-espresso"
+              className="font-display text-2xl font-medium tracking-tight text-lot-ink"
             >
               {designOnly ? "Design your ADU" : "Feasibility Studio"}
             </h2>
             <p className="mt-1 text-sm text-lf-muted">
-              {designOnly ? "Choose a size, roof, and finish." : "Confirm the lot, shape the ADU, then test the income case."}
+              {designOnly ? "Try a size. See how it sits on your lot." : "Confirm the lot, shape the ADU, then test the income case."}
             </p>
           </div>
           {!designOnly && <button
@@ -335,11 +337,12 @@ export default function FeasibilityInspector({
           >
             <div className="space-y-5">
               <div className="space-y-3">
-                <LabelRow label="ADU Size" value="Footprint" valueClass="font-sans text-lf-muted font-medium" />
+                <LabelRow label="Size and footprint" />
                 <div
                   role="group"
                   aria-label="ADU footprint size"
-                  className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4"
+                  className="grid gap-2"
+                  style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))" }}
                 >
                   {footprintOptions.map((option) => {
                     const isPressed =
@@ -347,20 +350,30 @@ export default function FeasibilityInspector({
                       config.width === option.width &&
                       config.length === option.length;
                     return (
-                      <Button
+                      <button
                         key={option.value}
                         type="button"
-                        size="md"
-                        variant={isPressed ? "selected" : "secondary"}
+                        aria-label={option.label}
+                        aria-describedby={`${footprintDescriptionId}-${option.value}`}
                         onClick={() => onConfigChange(configForFootprint(option.value, config))}
                         aria-pressed={isPressed}
+                        className={`relative flex min-h-28 flex-col items-start rounded-[3px] border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                          isPressed ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
+                        }`}
                       >
-                        {option.label}
-                      </Button>
+                        <span className="flex w-full items-center justify-between gap-1">
+                          <span className="whitespace-nowrap font-display text-xl font-medium tabular-nums">{option.label}</span>
+                          <FootprintDiagram width={option.width} length={option.length} />
+                        </span>
+                        <span id={`${footprintDescriptionId}-${option.value}`} className={`text-xs leading-5 ${isPressed ? "text-lot-stone-on-dark" : "text-lot-stone"}`}>
+                          {option.summary}<br />{option.width} × {option.length} ft
+                        </span>
+                        {isPressed && <Check size={13} aria-hidden="true" className="absolute right-2 bottom-3" />}
+                      </button>
                     );
                   })}
                 </div>
-                <p className="text-xs text-lf-muted">
+                <p className="text-xs leading-5 text-lot-stone">
                   {selectedOption
                     ? `Selected: ${selectedOption.label} (${selectedOption.summary})`
                     : `Custom size: ${config.footprint.toLocaleString()} sf (${config.width}' x ${config.length}')`}
@@ -373,7 +386,7 @@ export default function FeasibilityInspector({
                   <ChevronDown size={16} aria-hidden="true" className="group-open/dimensions:rotate-180" />
                 </summary>
                 <div className="space-y-4 pb-4">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 items-end gap-2">
                   <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
                   <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
                   <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
@@ -402,7 +415,7 @@ export default function FeasibilityInspector({
               </details>
 
               <div className="space-y-3">
-                <LabelRow label="Roof Style" />
+                <LabelRow label="Roof shape" />
                 <div role="group" aria-label="Roof style" className="grid grid-cols-3 gap-3">
                   {Object.entries(roofLabels).map(([key, label]) => (
                     <button
@@ -410,13 +423,13 @@ export default function FeasibilityInspector({
                       type="button"
                       onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
                       aria-pressed={config.roof === key}
-                      className={`flex h-16 flex-col items-center justify-center gap-1 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                      className={`flex h-20 flex-col items-center justify-center gap-1 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                         config.roof === key
                           ? "border-[#161616] bg-[#161616] text-[#F5F5F0] shadow-none"
                           : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
                       }`}
                     >
-                      <Building2 size={22} />
+                      <RoofProfile roof={key as ADUConfig["roof"]} />
                       {label}
                     </button>
                   ))}
@@ -424,7 +437,7 @@ export default function FeasibilityInspector({
               </div>
 
               <div className="space-y-3">
-                <LabelRow label="Exterior Finish" />
+                <LabelRow label="Exterior finish" />
                 <div role="group" aria-label="Exterior finish" className="grid grid-cols-2 gap-3">
                   {Object.entries(finishLabels).map(([key, label]) => (
                     <button

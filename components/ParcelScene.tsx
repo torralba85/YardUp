@@ -68,6 +68,8 @@ interface ParcelSceneProps {
   pose?: Pose2D;
   onPoseCommit?: (pose: Pose2D) => void;
   measurement?: StudioMeasurementAdapterProps;
+  /** Let feedback grow in the page flow beneath a phone-sized canvas. */
+  flowLayout?: boolean;
   scanMode?: boolean;
   splatScene?: SplatSceneDefinition | null;
   scanTransform?: SplatTransform;
@@ -775,6 +777,7 @@ export default function ParcelScene({
   pose,
   onPoseCommit,
   measurement,
+  flowLayout = false,
   scanMode = false,
   splatScene = null,
   scanTransform,
@@ -1037,6 +1040,7 @@ export default function ParcelScene({
         isCompliant={isCompliant}
         remainingCapacity={remainingCapacity}
         pose={activePose}
+        flowLayout={flowLayout}
       />
     );
   }
@@ -1046,9 +1050,9 @@ export default function ParcelScene({
   const budget = SCENE_QUALITY[quality];
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#F5F5F0]">
+    <div className={`flex min-h-0 flex-col bg-lot-chalk ${flowLayout ? "h-auto" : "h-full"}`}>
       <div
-        className="relative min-h-[220px] flex-1 overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink"
+        className={`relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[220px] flex-1"}`}
         style={{ backgroundColor: SCENE_BACKDROP }}
         tabIndex={0}
         role="group"
@@ -1349,15 +1353,16 @@ function Parcel2DScene({
   config,
   remainingCapacity,
   pose,
+  flowLayout = false,
 }: ParcelSceneProps) {
   const planPose = pose ?? getDefaultAduPose(parcel, config);
   const placement = getScenePlacement(parcel, config, planPose);
   const outline = buildParcelOutline(parcel);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#F5F5F0]">
+    <div className={`flex min-h-0 flex-col bg-lot-chalk ${flowLayout ? "h-auto" : "h-full"}`}>
       <div
-        className="relative min-h-[220px] flex-1 overflow-hidden p-4"
+        className={`relative overflow-hidden p-4 ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[220px] flex-1"}`}
         style={{ backgroundImage: SCENE_BACKDROP }}
       >
         <div className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-2 rounded-none border border-[#DADAD3] bg-[#F5F5F0] p-1.5 text-xs font-medium text-[#161616]">

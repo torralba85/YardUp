@@ -3,7 +3,8 @@
 import { useRef, type ReactNode } from "react";
 import { radioIndex } from "@/lib/radio-navigation";
 import { NumericField } from "../../NumericField";
-import { ArrowRight, SlidersHorizontal } from "lucide-react";
+import { FootprintDiagram } from "../../DesignDiagrams";
+import { ArrowRight, Check, SlidersHorizontal } from "lucide-react";
 import {
   configForFootprint,
   finishColors,
@@ -17,9 +18,9 @@ import { Button } from "@/components/ui/Button";
 
 /** Broad size directions — Studio / 1 Bed / 2 Bed, mapped to footprints. */
 const SIZE_OPTIONS = [
-  { footprint: 400, title: "Studio", blurb: "400 ft² · guest suite or rental" },
-  { footprint: 600, title: "1 Bedroom", blurb: "600 ft² · flexible living & income" },
-  { footprint: 1000, title: "2 Bedroom", blurb: "1,000 ft² · multi-gen family living" },
+  { footprint: 400, title: "Studio", blurb: "Guest suite or workspace" },
+  { footprint: 600, title: "1 Bedroom", blurb: "Room for everyday living" },
+  { footprint: 1000, title: "2 Bedroom", blurb: "A larger home for family" },
 ] as const;
 
 const FINISHES = Object.keys(finishLabels) as ExteriorFinish[];
@@ -62,27 +63,16 @@ export default function ShapeStep({
       className="flex min-h-full flex-col"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      {/* Taller scene band so massing, gesture hint, and view chrome all fit
-          without clipping on modern phones; still leaves room for controls. */}
-      <div className="relative h-[52dvh] min-h-[360px] max-h-[560px] shrink-0 overflow-hidden bg-lf-espresso">
+      {/* The model has its own height; feedback grows in the page flow. */}
+      <div className="relative shrink-0 bg-lot-chalk">
         {scene}
       </div>
 
       <div className="flex flex-1 flex-col px-5 pt-5">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="lf-kicker text-lf-clay-ink">Step 3 · Shape</p>
-            <h1 className="mt-1 font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
-              Pick a direction.
-            </h1>
-          </div>
-          <div className="text-right">
-            <p className="text-xs leading-4 text-lf-muted">
-              Projected rent / mo
-            </p>
-            <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
-          </div>
-        </div>
+        <h1 className="font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-medium leading-[1.1] tracking-tight text-balance text-lot-ink">
+          Pick a direction.
+        </h1>
+        <p className="mt-2 max-w-prose text-sm leading-6 text-lot-stone">Try a footprint and check its placement on the lot. Room counts are illustrative.</p>
 
         <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="ADU size">
           {SIZE_OPTIONS.map((option,index) => {
@@ -98,25 +88,30 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
-                className={`min-h-14 rounded-[3px] border-2 bg-lf-card px-4 py-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
-                  selected ? "border-[#161616] bg-[#161616]/5" : "border-[#DADAD3]"
+                className={`flex min-h-24 items-center gap-3 rounded-[3px] border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                  selected ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                 }`}
               >
-                <span className="block font-semibold text-lf-espresso">{option.title}</span>
-                <span className="text-sm text-lf-muted">{option.blurb}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 font-semibold">{option.title}{selected && <Check size={14} aria-hidden="true" />}</span>
+                  <span className={`mt-1 block text-xs leading-5 ${selected ? "text-lot-stone-on-dark" : "text-lot-stone"}`}>
+                    {option.footprint.toLocaleString()} ft², {preset.width} × {preset.length} ft<br />{option.blurb}
+                  </span>
+                </span>
+                <FootprintDiagram width={preset.width} length={preset.length} />
               </button>
             );
           })}
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Exact ADU dimensions">
+        <div className="mt-4 grid grid-cols-3 items-end gap-2" aria-label="Exact ADU dimensions">
           <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
           <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
           <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
         </div>
 
-        <p className="mt-5 lf-kicker-dense text-lf-muted">
-          Style
+        <p className="mt-5 text-sm font-semibold text-lot-ink">
+          Exterior finish
         </p>
         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Exterior style">
           {FINISHES.map((finish,index) => {
@@ -147,10 +142,15 @@ export default function ShapeStep({
           })}
         </div>
 
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-lot-line pt-4">
+          <p className="text-xs text-lot-stone">Projected rent / mo</p>
+          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" />
+        </div>
+
         <button
           type="button"
           onClick={onFineTune}
-          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-[#C43708] motion-safe:transition hover:bg-lf-taupe-soft"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-lot-orange-ink hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         >
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions
