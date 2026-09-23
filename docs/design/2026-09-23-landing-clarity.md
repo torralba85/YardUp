@@ -3,7 +3,9 @@
 Andrew approved all landing critique fixes on September 23, 2026. Implemented on
 `design/landing-clarity-20260923`, based on `6993d2d`, in the isolated worktree
 `C:/Users/Andrew/LotFoundry/.worktrees/landing-clarity-20260923`.
-This is a local implementation record; no commit, push, merge, or deployment is included.
+The original implementation was committed as `dc0d3b7`. Andrew subsequently
+authorized the combined web release; see `docs/releases/2026-09-23-web.md` for
+the final validation and deployment boundary.
 
 ## Resulting page
 
@@ -30,8 +32,10 @@ This is a local implementation record; no commit, push, merge, or deployment is 
 
 ## Studio preview provenance
 
-The preview is a screenshot of the actual local Oak Street demo scene at
-`6993d2d`: Seattle, the default 600 sq ft concept, cedar finish and shed roof.
+The preview is a screenshot of the actual local Oak Street demo scene: Seattle,
+the default 600 sq ft concept, cedar finish and shed roof. It was refreshed for
+the combined release from `dc0d3b7` plus the Studio changes from `70b4bd2`, so
+the image matches the newly visible modeled-fit feedback.
 The capture script opens Design on desktop and Shape on mobile and captures
 `scene-viewport`, including the real model, toolbar, and modeled-fit feedback.
 The model or result was not painted into the screenshot. All external requests
@@ -39,8 +43,8 @@ are blocked during capture; no account, real-address lookup, or AI call is used.
 
 | Asset | Dimensions | Bytes |
 |---|---|---|
-| `public/landing/studio-demo-desktop.webp` | 1200 × 1202 | 46,500 |
-| `public/landing/studio-demo-mobile.webp` | 780 × 878 | 24,650 |
+| `public/landing/studio-demo-desktop.webp` | 1200 × 1202 | 50,528 |
+| `public/landing/studio-demo-mobile.webp` | 780 × 1046 | 33,796 |
 
 The responsive picture reserves the image dimensions and loads lazily. Each
 visitor downloads the appropriate variant. Encoding changes only image size and

@@ -471,7 +471,7 @@ export function LotMoreLanding({
                     media="(max-width: 800px)"
                     srcSet="/landing/studio-demo-mobile.webp"
                     width={780}
-                    height={878}
+                    height={1046}
                   />
                   {/* Pre-sized local captures preserve the actual demo UI. */}
                   <img
