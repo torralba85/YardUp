@@ -95,13 +95,13 @@ describe("StudioPage", () => {
     expect(screen.getByTestId("onboarding-mount").textContent).toBe(mountId);
   });
 
-  it("still redirects builders inside the native app", () => {
+  it("opens homeowner onboarding for existing builders inside the native app", () => {
     mocks.nativeApp = true;
     mocks.authState.user = { uid: "builder-1" };
     mocks.authState.profile = { role: "builder" };
     render(<StudioPage />);
-    expect(mocks.replace).toHaveBeenCalledWith("/builder");
-    expect(screen.queryByText(/App Onboarding Mock/)).not.toBeInTheDocument();
+    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(screen.getByText("App Onboarding Mock member")).toBeInTheDocument();
   });
 
   it("renders the exploratory studio for guests without redirecting", () => {

@@ -6,6 +6,7 @@ import FeasibilityStudio from "@/components/FeasibilityStudio";
 import AppStudioOnboarding from "@/components/studio/AppStudioOnboarding";
 import SignedInStudioGate from "@/components/studio/SignedInStudioGate";
 import { useAuth } from "@/lib/auth-context";
+import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
 import { parseScenarioParams } from "@/lib/scenario-url";
@@ -25,6 +26,7 @@ const subscribeToNothing = () => () => {};
 export default function StudioPage() {
   const { user, loading, profile } = useAuth();
   const router = useRouter();
+  const buildersAllowed = useWebBuilderAccess();
   const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
   const [demoEntry, setDemoEntry] = useState<boolean | null>(null);
   const initialDemoEntry = useRef<boolean | null>(null);
@@ -45,18 +47,18 @@ export default function StudioPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && profile?.role === "builder") {
+    if (buildersAllowed && !loading && profile?.role === "builder") {
       router.replace("/builder");
     }
-  }, [loading, profile, router]);
+  }, [buildersAllowed, loading, profile, router]);
 
   // AuthProvider re-enters `loading` on every auth event (sign-in, token
   // refresh, sign-out), not just the first. Swapping in the arrival plate then
   // would unmount the app onboarding mid-flow, so after the first resolution
-  // it stays mounted and only a builder profile takes it down.
+  // it stays mounted. Builder accounts also use the homeowner Studio in the app.
   const [authSettled, setAuthSettled] = useState(false);
   if (!loading && !authSettled) setAuthSettled(true);
-  if (inNativeApp && authSettled && profile?.role !== "builder") {
+  if (inNativeApp && authSettled) {
     return <AppStudioOnboarding user={user} />;
   }
 
@@ -64,7 +66,7 @@ export default function StudioPage() {
   // sees after the ramp, so it must keep the money moment alive (DESIGN.md
   // seam rule: money-green figure within 3s, no spinner-on-white). Parchment
   // ground so the landing's 520ms dawn ramp lands on a continuous surface.
-  if (loading || profile?.role === "builder" || (user && demoEntry === null)) {
+  if (loading || (buildersAllowed && profile?.role === "builder") || (user && demoEntry === null)) {
     return (
       <div role="status" className="flex h-[100dvh] items-center justify-center bg-lf-sand">
         <div className="px-6 text-center">

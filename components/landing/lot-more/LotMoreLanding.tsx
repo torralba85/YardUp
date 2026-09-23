@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import dynamic from "next/dynamic";
+import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, MapPin, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -232,9 +233,11 @@ export function LotMoreLanding({
             <a href="#how-it-works">How it works</a>
             <a href="#report">What’s included</a>
             <a href="#questions">Good questions</a>
-            <Link href="/signup?role=builder" prefetch={false}>
-              Register as a builder
-            </Link>
+            <WebBuilderOnly>
+              <Link href="/signup?role=builder" prefetch={false}>
+                Register as a builder
+              </Link>
+            </WebBuilderOnly>
           </nav>
           <div className={styles.headerActions}>
             {hasMemberSession ? (
@@ -281,13 +284,15 @@ export function LotMoreLanding({
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </a>
               ))}
-              <Link
-                href="/signup?role=builder"
-                prefetch={false}
-                onClick={() => setMenuOpen(false)}
-              >
-                Register as a builder
-              </Link>
+              <WebBuilderOnly>
+                <Link
+                  href="/signup?role=builder"
+                  prefetch={false}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Register as a builder
+                </Link>
+              </WebBuilderOnly>
             </nav>
           )}
         </header>
@@ -950,9 +955,9 @@ export function LotMoreLanding({
               <Link href="/studio" prefetch={false}>
                 The studio
               </Link>
-              <Link href="/signup?role=builder" prefetch={false}>
+              <WebBuilderOnly><Link href="/signup?role=builder" prefetch={false}>
                 Register as a builder
-              </Link>
+              </Link></WebBuilderOnly>
               <Link href="/about">About us</Link>
               <Link href="/adu/ca">ADU rules by city</Link>
               <Link href="/help">Get in touch</Link>

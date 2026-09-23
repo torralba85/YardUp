@@ -60,7 +60,7 @@ describe("createPurchaseClient", () => {
       getIdToken: async () => "id-token",
     });
     expect(client.channel).toBe("app-store");
-    const receipt = await client.purchase(STORE_PRODUCTS.builder5.id);
+    const receipt = await client.purchase(STORE_PRODUCTS.certificate.id);
     expect(receipt.token).toBe("signed.jws.token");
     expect(fetchImpl).toHaveBeenCalled();
     const call = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
@@ -115,7 +115,7 @@ describe("createPurchaseClient", () => {
       },
     );
     const getDigitalGoodsService = vi.fn(async () => ({
-      getDetails: vi.fn(async () => [{ itemId: STORE_PRODUCTS.builder10.id }]),
+      getDetails: vi.fn(async () => [{ itemId: STORE_PRODUCTS.certificate.id }]),
       consume,
     }));
     const fetchImpl = vi.fn(async () => {
@@ -127,7 +127,7 @@ describe("createPurchaseClient", () => {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    const receipt = await client.purchase(STORE_PRODUCTS.builder10.id);
+    const receipt = await client.purchase(STORE_PRODUCTS.certificate.id);
     expect(receipt.token).toBe("play-token-1");
     expect(order).toEqual(["verify", "consume", "complete:success"]);
     expect(consume).toHaveBeenCalledWith("play-token-1");
@@ -148,7 +148,7 @@ describe("createPurchaseClient", () => {
       },
     );
     const getDigitalGoodsService = vi.fn(async () => ({
-      getDetails: vi.fn(async () => [{ itemId: STORE_PRODUCTS.builder1.id }]),
+      getDetails: vi.fn(async () => [{ itemId: STORE_PRODUCTS.certificate.id }]),
       consume,
     }));
     const fetchImpl = vi.fn(async () =>
@@ -159,7 +159,7 @@ describe("createPurchaseClient", () => {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    await expect(client.purchase(STORE_PRODUCTS.builder1.id)).rejects.toThrow(
+    await expect(client.purchase(STORE_PRODUCTS.certificate.id)).rejects.toThrow(
       "Invalid purchase",
     );
     expect(consume).not.toHaveBeenCalled();
@@ -169,9 +169,9 @@ describe("createPurchaseClient", () => {
   it("google-play listPurchases fallback consumes repeatable products", async () => {
     const consume = vi.fn(async () => undefined);
     const getDigitalGoodsService = vi.fn(async () => ({
-      getDetails: vi.fn(async () => [{ itemId: STORE_PRODUCTS.builder10.id }]),
+      getDetails: vi.fn(async () => [{ itemId: STORE_PRODUCTS.certificate.id }]),
       listPurchases: vi.fn(async () => [
-        { itemId: STORE_PRODUCTS.builder10.id, purchaseToken: "play-token-2" },
+        { itemId: STORE_PRODUCTS.certificate.id, purchaseToken: "play-token-2" },
       ]),
       consume,
     }));
@@ -183,7 +183,7 @@ describe("createPurchaseClient", () => {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    const receipt = await client.purchase(STORE_PRODUCTS.builder10.id);
+    const receipt = await client.purchase(STORE_PRODUCTS.certificate.id);
     expect(receipt.token).toBe("play-token-2");
     expect(consume).toHaveBeenCalledWith("play-token-2");
   });

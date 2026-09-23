@@ -40,6 +40,16 @@ describe("landing member navigation", () => {
     view.rerender(<MemberNav />);
     expect(screen.queryByText("Account")).not.toBeInTheDocument();
   });
+  it("hides the dashboard for an existing builder in the app", () => {
+    vi.stubGlobal("LotFoundryNative", { platform: "android" });
+    mocks.state = { user: { uid: "builder" }, profile: { role: "builder" }, loading: false };
+    render(<MemberNav />);
+    fireEvent.click(screen.getByText("Account"));
+    expect(screen.queryByRole("link", { name: "Builder dashboard" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Studio" })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
   it("closes the member disclosure with Escape and restores focus", () => {
     mocks.state.user = { uid: "member" };
     render(<MemberNav />);

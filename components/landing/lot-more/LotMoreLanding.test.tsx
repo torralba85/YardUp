@@ -53,6 +53,7 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 describe("landing address handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
     window.localStorage.clear();
     vi.stubGlobal(
       "IntersectionObserver",
@@ -85,6 +86,14 @@ describe("landing address handoff", () => {
     expect(
       screen.queryByRole("link", { name: "Sign in" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("hides builder registration in all navigation inside the Android app", () => {
+    vi.stubGlobal("LotFoundryNative", { platform: "android" });
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    expect(screen.queryByRole("link", { name: "Register as a builder" })).not.toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 
   it("exposes builder registration in desktop, footer, and mobile navigation", () => {
