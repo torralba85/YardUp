@@ -74,30 +74,28 @@ test.describe("A lot more landing", () => {
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    const controls = page.getByRole("group", {
+    const controls = page.getByRole("radiogroup", {
       name: "Property illustration view",
     });
-    await controls.getByRole("button", { name: /Today/ }).focus();
-    await page.keyboard.press("Enter");
+    await controls.getByRole("radio", { checked: true }).focus();
+    await page.keyboard.press("Home");
     await expect(
       page.getByRole("img", { name: /existing house and an empty yard/ }),
     ).toBeVisible();
     await expect(
-      controls.getByRole("button", { name: /Today/ }),
-    ).toHaveAttribute("aria-pressed", "true");
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Enter");
+      controls.getByRole("radio", { name: /Today/ }),
+    ).toBeChecked();
+    await page.keyboard.press("ArrowRight");
     await expect(
       page.getByRole("img", { name: /proposed footprint outlined/ }),
     ).toBeVisible();
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("ArrowRight");
     await expect(
       page.getByRole("img", { name: /orange backyard home/ }).first(),
     ).toBeVisible();
     await expect(
-      controls.getByRole("button", { name: /The possibility/ }),
-    ).toHaveAttribute("aria-pressed", "true");
+      controls.getByRole("radio", { name: /The possibility/ }),
+    ).toBeChecked();
     await expect(page.locator("canvas, video")).toHaveCount(0);
   });
 
@@ -108,7 +106,7 @@ test.describe("A lot more landing", () => {
     const numbers = page.locator("#numbers");
     await expect(numbers.getByText("$2,050", { exact: false })).toBeVisible();
     await expect(numbers.getByText("15.1", { exact: false })).toBeVisible();
-    await numbers.getByRole("button", { name: "market", exact: true }).click();
+    await numbers.getByRole("radio", { name: "market", exact: true }).click();
     await expect(numbers.getByText("$2,350", { exact: false })).toBeVisible();
     await expect(numbers.getByText("13.2", { exact: false })).toBeVisible();
     await expect(numbers.getByText(/SEATTLE DEMO/)).toBeVisible();
@@ -127,21 +125,21 @@ test.describe("A lot more landing", () => {
     page,
   }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "For income", exact: true }).click();
+    await page.getByRole("radio", { name: "For income", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "A backyard with earning potential." }),
+      page.getByText("Explore what a small home could earn, and what it might take to bring it to life."),
     ).toBeVisible();
     await page
-      .getByRole("button", { name: "The estimates", exact: true })
+      .getByRole("radio", { name: "The estimates", exact: true })
       .click();
     const report = page.getByRole("article", {
       name: "Sample feasibility report",
     });
     await expect(report.getByText("$2,050", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Next steps", exact: true }).click();
+    await page.getByRole("radio", { name: "Next steps", exact: true }).click();
     await expect(report.getByText(/Confirm property boundaries/)).toBeVisible();
     await expect(
-      page.getByText(/Complete certificate .* one-time/),
+      page.getByText("The complete certificate is an optional one-time purchase. Review it in the studio before checkout."),
     ).toBeVisible();
     await page
       .getByText("Does this mean I can build?", { exact: true })
@@ -181,7 +179,7 @@ test.describe("A lot more landing", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Open menu" }).click();
     const menu = page.getByRole("navigation", { name: "Mobile navigation" });
-    await menu.getByRole("link", { name: "The report", exact: true }).focus();
+    await menu.getByRole("link", { name: "What’s included", exact: true }).focus();
     await page.keyboard.press("Escape");
     await expect(menu).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
