@@ -10,7 +10,7 @@ test.describe("Public LotFoundry flows", () => {
     ).toBeVisible();
     // The property illustration anchors the new landing hero.
     await expect(
-      page.getByRole("group", { name: "Property illustration view" }),
+      page.getByRole("radiogroup", { name: "Property illustration view" }),
     ).toBeVisible();
     // Always-rendered closing CTA heading (mode-independent).
     await expect(
