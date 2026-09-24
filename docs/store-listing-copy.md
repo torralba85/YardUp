@@ -59,6 +59,11 @@ approved policy and implementation say so.
 
 ## C. Purchase wording
 
+**2026-09-19 product update:** builder signup, dashboards and new lead-credit purchases
+are web-only. Store apps retain certificate purchases. Historical builder product
+IDs and receipt verification are preserved. See [the homeowner Play listing draft](play-store-homeowner-listing.md)
+for proposed metadata, screenshot replacements and outstanding Console checks.
+
 LotFoundry uses the purchase channel available to the user:
 
 - Open web: Stripe Checkout.

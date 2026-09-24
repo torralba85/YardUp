@@ -1,6 +1,7 @@
 "use client";
 
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -18,6 +19,7 @@ import { SiteFooter } from "@/components/legal/SiteFooter";
  * legal, and danger zone. Guests see a sign-in prompt.
  */
 export function SettingsClient() {
+  const buildersAllowed = useWebBuilderAccess();
   const {
     user,
     profile,
@@ -77,10 +79,10 @@ export function SettingsClient() {
             <BrandLockup className="h-7 w-auto" />
           </Link>
           <Link
-            href={profile.role === "builder" ? "/builder" : "/studio"}
+            href={buildersAllowed && profile.role === "builder" ? "/builder" : "/studio"}
             className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
           >
-            Back to {profile.role === "builder" ? "dashboard" : "studio"}
+            Back to {buildersAllowed && profile.role === "builder" ? "dashboard" : "studio"}
           </Link>
         </div>
       </header>
@@ -90,7 +92,7 @@ export function SettingsClient() {
           <h1 className="lf-section-heading">Settings</h1>
           <p className="lf-body-sm mt-2 text-lf-muted">
             {displayName}
-            {profile.role === "builder" ? " · Builder" : " · Lot owner"}
+            {buildersAllowed && profile.role === "builder" ? " · Builder" : " · Lot owner"}
           </p>
         </div>
 
@@ -118,7 +120,7 @@ export function SettingsClient() {
           </section>
         </Bezel>
 
-        {profile.role === "builder" ? (
+        {buildersAllowed && profile.role === "builder" ? (
           <Bezel>
             <section className="space-y-3 p-6">
               <h2 className="lf-card-heading">Builder profile</h2>

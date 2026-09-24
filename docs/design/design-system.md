@@ -140,7 +140,7 @@ Fraunces on any A LOT MORE surface.
 
 | Role | Family | Size | Line | Tracking | Weight |
 |---|---|---|---|---|---|
-| Hero display | display | `clamp(90px, 10vw, 164px)` · ≤1150px `11vw` · ≤800px `clamp(90px,17vw,130px)` · ≤480px `24vw` | `0.84` | `-0.075em` | 600 |
+| Hero display | display | `clamp(90px, 10vw, 164px)` · ≤1150px `11vw` · ≤800px `clamp(90px,17vw,130px)` · ≤480px `21vw` | `0.84` | `-0.075em` | 600 |
 | Closing display | display | `clamp(62px, 8.5vw, 126px)` · ≤800px `10vw` · ≤480px `13vw` | `0.97` | `-0.065em` | 500 |
 | Section h2 | display | `clamp(38px, 4.5vw, 68px)` · ≤480px `38px` | `1.06` | `-0.055em` | 500 |
 | Sub-section h2 | display | `clamp(34px, 3.6vw, 54px)` – `clamp(35px, 3.8vw, 58px)` | `1.06` | `-0.055em` | 500 |
@@ -256,7 +256,7 @@ composed still states — it never leaves a control unusable or a state unreadab
 | **Primary button** | Orange fill, carbon label, `3px`, `min-height 48px`, `padding 12px 19px`, `14px/700`, `gap 18px` between label and trailing arrow (leading icons keep `8px`). Hover `#EE4B17`. This is `ui/Button`'s default `md` size; `xs`/`sm` are compact 44px variants, never smaller. |
 | **Secondary button** | Carbon fill, chalk label, same metrics. Hover `#33332F`. |
 | **Address input** | `.inputRow` wrapper owns the ring: `:focus-within` → `box-shadow: 0 0 0 2px var(--ink)`; the inner `input` sets `outline: none`. Input font `16px` at ≤480px to block iOS zoom. |
-| **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. Hand-rolled `aria-pressed` single-choice groups (landing scene/intention/scenario/report pickers, Studio roof and finish) are migration debt. |
+| **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. The landing scene/intention/scenario/report pickers use `Segmented`. Hand-rolled Studio roof and finish groups remain migration debt. |
 | **Tabs (report)** | Single choice, so the radio-group pattern above; `min-height 44px`; content region is `aria-live="polite"`. |
 | **Disclosure** | Native `<details>`/`<summary>`; `min-height 44px`; chevron rotates `45deg`. |
 | **Paper card** | `radius 0`, chalk ground, hard shadow `12px 16px 0 #E7E7DF`. |
@@ -362,6 +362,7 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 
 | Date | Decision | Rationale |
 |---|---|---|
+| 2026-09-23 | Landing explains the tool before address entry, shows actual Studio evidence immediately after the hero, and distinguishes free exploration from the paid certificate (Andrew) | All critique fixes approved. Preserve A LOT MORE identity; reduce the small-screen hero to `21vw`, put the Android badge after the illustration on mobile, condense repeated aspirations, and complete the four landing radio-group migrations. See [implementation record](./2026-09-23-landing-clarity.md). |
 | 2026-09-05 | A LOT MORE replaces Blue Hour / Golden Hour as the design system | Authorized zero-constraint landing redesign; shipped and validated on `/`. |
 | 2026-09-05 | `docs/design/` is the source of truth; `DESIGN.md` retired to a pointer | A 45KB doc teaching the old system was still the file every agent was told to read. |
 | 2026-09-05 | Money is typographic, not chromatic; green demoted to status-only | Matches shipped code; a plain large figure reads as measurement, a green one as a pitch. |

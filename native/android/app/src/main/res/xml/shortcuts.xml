@@ -3,8 +3,4 @@
         <intent android:action='android.intent.action.MAIN' android:targetPackage='com.lotfoundry.app' android:targetClass='com.lotfoundry.app.LauncherActivity' android:data='/studio' />
         <categories android:name='android.intent.category.LAUNCHER' />
     </shortcut>
-    <shortcut android:shortcutId='shortcut1' android:enabled='true' android:icon='@drawable/shortcut_1' android:shortcutShortLabel='@string/shortcut_short_name_1' android:shortcutLongLabel='@string/shortcut_name_1'>
-        <intent android:action='android.intent.action.MAIN' android:targetPackage='com.lotfoundry.app' android:targetClass='com.lotfoundry.app.LauncherActivity' android:data='/builder' />
-        <categories android:name='android.intent.category.LAUNCHER' />
-    </shortcut>
 </shortcuts>

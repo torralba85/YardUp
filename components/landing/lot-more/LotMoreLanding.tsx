@@ -8,16 +8,12 @@ import {
   type FormEvent,
 } from "react";
 import dynamic from "next/dynamic";
+import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import Link from "next/link";
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUpRight,
-  MapPin,
-  Plus,
-  X,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, MapPin, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Segmented } from "@/components/ui/Field";
+import { ParcelMark } from "@/components/ui/BrandLockup";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { canGuestLookup } from "@/lib/guest-lookup";
@@ -59,40 +55,17 @@ const money = (value: number) =>
 const intentions = [
   {
     label: "For family",
-    title: "Closer. With a door of their own.",
     copy: "Keep the people you love nearby, with a little more independence for everyone.",
-    note: "A place to be together. Space to be yourself.",
   },
   {
     label: "For income",
-    title: "A backyard with earning potential.",
     copy: "Explore what a small home could earn, and what it might take to bring it to life.",
-    note: "Explore the rent. Understand the investment.",
   },
   {
     label: "For what’s next",
-    title: "Space for your next chapter.",
     copy: "A home for grown children, future plans, or the life you haven’t quite imagined yet.",
-    note: "A little room for life to change.",
   },
 ];
-
-function ParcelMark({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 40 40"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M24 6H6v28h28V16M21 19 34 6M24 6h10v10"
-        stroke="currentColor"
-        strokeWidth="3.5"
-      />
-    </svg>
-  );
-}
 
 function Eyebrow({
   number,
@@ -107,27 +80,6 @@ function Eyebrow({
       {children}
     </p>
   );
-}
-
-function handleSegmentArrowKey(
-  event: React.KeyboardEvent<HTMLElement>,
-  currentIndex: number,
-  total: number,
-  onSelect: (index: number) => void,
-) {
-  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-    event.preventDefault();
-    const next = (currentIndex + 1) % total;
-    onSelect(next);
-    const buttons = event.currentTarget.querySelectorAll("button");
-    buttons[next]?.focus();
-  } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-    event.preventDefault();
-    const prev = (currentIndex - 1 + total) % total;
-    onSelect(prev);
-    const buttons = event.currentTarget.querySelectorAll("button");
-    buttons[prev]?.focus();
-  }
 }
 
 export function LotMoreLanding({
@@ -279,9 +231,13 @@ export function LotMoreLanding({
           </Link>
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <a href="#how-it-works">How it works</a>
-            <a href="#report">The report</a>
+            <a href="#report">What’s included</a>
             <a href="#questions">Good questions</a>
-            <Link href="/signup?role=builder" prefetch={false}>Register as a builder</Link>
+            <WebBuilderOnly>
+              <Link href="/signup?role=builder" prefetch={false}>
+                Register as a builder
+              </Link>
+            </WebBuilderOnly>
           </nav>
           <div className={styles.headerActions}>
             {hasMemberSession ? (
@@ -320,7 +276,7 @@ export function LotMoreLanding({
             >
               {[
                 ["#how-it-works", "How it works"],
-                ["#report", "The report"],
+                ["#report", "What’s included"],
                 ["#questions", "Good questions"],
               ].map(([href, text]) => (
                 <a key={href} href={href} onClick={() => setMenuOpen(false)}>
@@ -328,9 +284,15 @@ export function LotMoreLanding({
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </a>
               ))}
-              <Link href="/signup?role=builder" prefetch={false} onClick={() => setMenuOpen(false)}>
-                Register as a builder
-              </Link>
+              <WebBuilderOnly>
+                <Link
+                  href="/signup?role=builder"
+                  prefetch={false}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Register as a builder
+                </Link>
+              </WebBuilderOnly>
             </nav>
           )}
         </header>
@@ -352,13 +314,10 @@ export function LotMoreLanding({
                 <br />
                 MORE<span className={styles.orange}>.</span>
               </h1>
-              <p className={styles.heroLead}>
-                Discover what your
-                <br className={styles.desktopBreak} /> backyard could become.
-              </p>
+              <p className={styles.heroLead}>Explore a backyard home in 3D.</p>
               <p className={styles.heroDescription}>
-                Room for family. Potential for income. A place for what’s next.
-                Explore a backyard home on the land you already own.
+                See what could fit, compare estimated build costs, and explore
+                rental potential.
               </p>
               {addressForm("hero")}
               <Link
@@ -370,20 +329,6 @@ export function LotMoreLanding({
                 Just looking? Try an example
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
-              <a
-                className={`${styles.textLink} ${styles.appStoreLink}`}
-                href={GOOGLE_PLAY_URL}
-              >
-                {/* Official badge from Google's Partner Marketing Hub:
-                    partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/landing/google-play-badge.svg"
-                  alt="Get it on Google Play"
-                  width={238.96}
-                  height={70.87}
-                />
-              </a>
             </div>
             <figure className={styles.heroVisual}>
               <div className={styles.artHeader}>
@@ -450,26 +395,23 @@ export function LotMoreLanding({
                   N<ArrowUpRight size={24} strokeWidth={1.5} />
                 </div>
               </div>
-              <div
+              <Segmented
                 className={styles.sceneControls}
-                role="group"
                 aria-label="Property illustration view"
-                onKeyDown={(e) => handleSegmentArrowKey(e, scene, 3, setScene)}
-              >
-                {["Today", "The footprint", "The possibility"].map(
-                  (label, index) => (
-                    <button
-                      type="button"
-                      key={label}
-                      aria-pressed={scene === index}
-                      onClick={() => setScene(index)}
-                    >
-                      <span>0{index + 1}</span>
-                      {label}
-                    </button>
-                  ),
+                value={String(scene)}
+                onChange={(value) => setScene(Number(value))}
+                options={["Today", "The footprint", "The possibility"].map(
+                  (label, index) => ({
+                    value: String(index),
+                    label: (
+                      <>
+                        <span>0{index + 1}</span>
+                        {label}
+                      </>
+                    ),
+                  }),
                 )}
-              </div>
+              />
               <figcaption className={styles.artCaption}>
                 <span aria-live="polite">
                   {
@@ -483,129 +425,135 @@ export function LotMoreLanding({
                 <span>Concept imagery · not a surveyed property</span>
               </figcaption>
             </figure>
+            <div className={styles.appDownload}>
+              <span>Also on Android</span>
+              <a className={styles.appStoreLink} href={GOOGLE_PLAY_URL}>
+                {/* Official badge from Google's Partner Marketing Hub:
+                    partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/landing/google-play-badge.svg"
+                  alt="Get it on Google Play"
+                  width={238.96}
+                  height={70.87}
+                />
+              </a>
+            </div>
           </section>
-
-          <div className={styles.heroBottom}>
-            <span>More life per square foot.</span>
-            <a href="#how-it-works">
-              A little land. A new perspective.
-              <ArrowDown size={16} aria-hidden="true" />
-            </a>
-            <span>Built around your possibilities.</span>
-          </div>
 
           <section
             className={styles.howSection}
             id="how-it-works"
             aria-labelledby="how-title"
           >
-            <div className={styles.sectionHeading}>
-              <Eyebrow number="01">A NEW WAY TO SEE YOUR LOT</Eyebrow>
-              <h2 id="how-title">
-                You have the land.
-                <br />
-                Let’s find the possibility.
-              </h2>
+            <div className={styles.demoHeading}>
+              <div>
+                <Eyebrow number="01">INSIDE THE STUDIO</Eyebrow>
+                <h2 id="how-title">
+                  See the studio.
+                  <br />
+                  Try the same lot.
+                </h2>
+              </div>
               <p>
-                From the first “what if” to a clearer next step.
-                <br />A little perspective goes a long way.
+                Start with our Oak Street demo in Seattle. Explore a 600 sq ft
+                backyard home, then make the next move your own.
               </p>
             </div>
-            <div className={styles.steps}>
-              {[
-                [
-                  "01",
-                  "Start with your address.",
-                  "Bring your lot into focus. Explore property details and the space around your existing home.",
-                ],
-                [
-                  "02",
-                  "See what could fit.",
-                  "Explore a backyard home in the 3D studio, with setbacks, size, and placement in view.",
-                ],
-                [
-                  "03",
-                  "Make a more informed move.",
-                  "Compare estimated costs and rental potential. Take your questions and a shareable report to a professional.",
-                ],
-              ].map(([number, title, copy]) => (
-                <article key={number}>
-                  <span className={styles.stepNumber}>
-                    {number}
-                    <ArrowUpRight
-                      size={24}
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  </span>
-                  <h3>{title}</h3>
-                  <p>{copy}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className={styles.lifeSection} aria-labelledby="life-title">
-            <div className={styles.lifeImage}>
-              {/* Pre-sized local WebP variants keep phones off the 1536w file,
-                  which the layout only ever paints into a ~363px-wide slot. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/landing/a-lot-more/backyard-life.webp"
-                srcSet="/landing/a-lot-more/backyard-life-mobile.webp 768w, /landing/a-lot-more/backyard-life.webp 1536w"
-                sizes="(max-width: 800px) 88vw, 48vw"
-                width={1536}
-                height={1024}
-                alt="Illustrative orange backyard home opening onto a timber deck and leafy garden"
-                loading="lazy"
-              />
-              <span className={styles.imageCaption}>
-                A SMALL HOME. A WHOLE NEW CHAPTER.
-              </span>
-              <span className={styles.conceptBadge}>Concept image</span>
-            </div>
-            <div className={styles.lifeCopy}>
-              <Eyebrow number="02">MADE FOR REAL LIFE</Eyebrow>
-              <h2 id="life-title">
-                More room
-                <br />
-                for what matters.
-              </h2>
-              <div
-                className={styles.intentControls}
-                role="group"
-                aria-label="What would your backyard home be for?"
-                onKeyDown={(e) =>
-                  handleSegmentArrowKey(
-                    e,
-                    intention,
-                    intentions.length,
-                    setIntention,
-                  )
-                }
-              >
-                {intentions.map((item, index) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    aria-pressed={intention === index}
-                    onClick={() => setIntention(index)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+            <div className={styles.demoLayout}>
+              <figure className={styles.studioDemo}>
+                <div className={styles.demoLabel}>
+                  <span>Studio preview</span>
+                  <span>Seattle demo</span>
+                </div>
+                <picture>
+                  <source
+                    media="(max-width: 800px)"
+                    srcSet="/landing/studio-demo-mobile.webp"
+                    width={780}
+                    height={1046}
+                  />
+                  {/* Pre-sized local captures preserve the actual demo UI. */}
+                  <img
+                    src="/landing/studio-demo-desktop.webp"
+                    width={1200}
+                    height={1202}
+                    loading="lazy"
+                    alt="Oak Street demo in the LotFoundry 3D studio, showing an existing home and a proposed backyard home"
+                  />
+                </picture>
+                <figcaption>
+                  Modeled demo property. Local conditions and requirements still
+                  need confirmation.
+                </figcaption>
+              </figure>
+              <div className={styles.demoSteps}>
+                <ol>
+                  <li>
+                    <span>01</span>
+                    <div>
+                      <h3>Place a backyard home.</h3>
+                      <p>
+                        Explore size, roof, and placement alongside your
+                        existing home and modeled setbacks.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>02</span>
+                    <div>
+                      <h3>Compare the estimates.</h3>
+                      <p>
+                        See build costs, rental potential, and payback with the
+                        assumptions behind them.
+                      </p>
+                      <a href="#numbers" className={styles.textLink}>
+                        See the demo numbers{" "}
+                        <ArrowRight size={17} aria-hidden="true" />
+                      </a>
+                    </div>
+                  </li>
+                  <li>
+                    <span>03</span>
+                    <div>
+                      <h3>Plan your next questions.</h3>
+                      <p>
+                        Review what needs local confirmation and what the
+                        complete certificate includes.
+                      </p>
+                      <a href="#report" className={styles.textLink}>
+                        See what’s included{" "}
+                        <ArrowRight size={17} aria-hidden="true" />
+                      </a>
+                    </div>
+                  </li>
+                </ol>
+                <Link
+                  href="/studio?parcel=oak-street"
+                  prefetch={false}
+                  className={styles.darkButton}
+                  onClick={() => stashAddressQuery("")}
+                >
+                  Try the Oak Street demo{" "}
+                  <ArrowUpRight size={18} aria-hidden="true" />
+                </Link>
               </div>
-              <div className={styles.intentionCopy} aria-live="polite">
-                <h3>{intentions[intention].title}</h3>
-                <p>{intentions[intention].copy}</p>
+            </div>
+            <div className={styles.intentBand}>
+              <div>
+                <h3>What would you make room for?</h3>
+                <Segmented
+                  className={styles.intentControls}
+                  aria-label="What would your backyard home be for?"
+                  value={String(intention)}
+                  onChange={(value) => setIntention(Number(value))}
+                  options={intentions.map((item, index) => ({
+                    value: String(index),
+                    label: item.label,
+                  }))}
+                />
               </div>
-              <a className={styles.textLink} href="#start">
-                Find your possibility
-                <ArrowUpRight size={19} aria-hidden="true" />
-              </a>
-              <p className={styles.lifeFootnote}>
-                {intentions[intention].note}
-              </p>
+              <p aria-live="polite">{intentions[intention].copy}</p>
             </div>
           </section>
 
@@ -616,17 +564,17 @@ export function LotMoreLanding({
           >
             <div className={styles.numbersHeading}>
               <div>
-                <Eyebrow number="03">THE BIG PICTURE, IN NUMBERS</Eyebrow>
+                <Eyebrow number="02">THE DEMO ESTIMATES</Eyebrow>
                 <h2 id="numbers-title">
-                  Big possibility.
+                  Build costs.
                   <br />
-                  <span>Clearer numbers.</span>
+                  <span>Rental potential.</span>
                 </h2>
               </div>
               <p>
-                Let the idea take shape.
+                Change the demo’s rent assumption
                 <br />
-                Then see how the numbers add up.
+                to see how the estimate responds.
               </p>
             </div>
             <div className={styles.scenarioBar}>
@@ -634,30 +582,16 @@ export function LotMoreLanding({
                 <span className={styles.orangeDot} />
                 SEATTLE DEMO · 600 SQ FT · 1 BED CONCEPT
               </span>
-              <div
-                role="group"
+              <Segmented
                 aria-label="Demo rent assumption"
                 className={styles.scenarioControls}
-                onKeyDown={(e) =>
-                  handleSegmentArrowKey(
-                    e,
-                    scenarioIndex,
-                    scenarios.length,
-                    setScenarioIndex,
-                  )
-                }
-              >
-                {scenarios.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-pressed={scenarioIndex === index}
-                    onClick={() => setScenarioIndex(index)}
-                  >
-                    {item.id}
-                  </button>
-                ))}
-              </div>
+                value={String(scenarioIndex)}
+                onChange={(value) => setScenarioIndex(Number(value))}
+                options={scenarios.map((item, index) => ({
+                  value: String(index),
+                  label: item.id,
+                }))}
+              />
             </div>
             <div
               className={styles.metrics}
@@ -726,65 +660,61 @@ export function LotMoreLanding({
             aria-labelledby="report-title"
           >
             <div className={styles.reportCopy}>
-              <Eyebrow number="04">SOMETHING TO BUILD ON</Eyebrow>
+              <Eyebrow number="03">WHAT’S INCLUDED</Eyebrow>
               <h2 id="report-title">
-                From “what if”
+                Explore for free.
                 <br />
-                to what’s next.
+                Keep a clearer record.
               </h2>
               <p>
-                A clearer idea deserves more than a screenshot. Take your lot,
-                concept, estimates, and next questions into the conversation.
+                Start in the free studio. When you’re ready to share your plan,
+                the Certificate of Feasibility brings your layout, estimates,
+                and next questions together.
               </p>
-              <ul>
-                <li>
-                  Your lot and proposed layout
-                  <ArrowUpRight size={17} aria-hidden="true" />
-                </li>
-                <li>
-                  Costs, rent, and the assumptions behind them
-                  <ArrowUpRight size={17} aria-hidden="true" />
-                </li>
-                <li>
-                  A shared starting point for a professional
-                  <ArrowUpRight size={17} aria-hidden="true" />
-                </li>
-              </ul>
-              <Link
-                href="/studio"
-                prefetch={false}
-                className={styles.darkButton}
-              >
-                Create my report
-                <ArrowUpRight size={18} aria-hidden="true" />
-              </Link>
+              <dl className={styles.offerComparison}>
+                <div>
+                  <dt>
+                    <span>Explore in the studio</span>
+                    <strong>Free</strong>
+                  </dt>
+                  <dd>
+                    3D layout exploration and initial cost, rent, and payback
+                    estimates. Your first address needs no account.
+                  </dd>
+                </div>
+                <div>
+                  <dt>
+                    <span>Certificate of Feasibility</span>
+                    <strong>
+                      {certificatePrice ?? "Price at checkout"}
+                      {certificatePrice && <small> one-time</small>}
+                    </strong>
+                  </dt>
+                  <dd>
+                    A property-specific record with modeled site-fit flags,
+                    financial assumptions, and next steps. Includes print, CSV,
+                    and a shareable scenario link.
+                  </dd>
+                </div>
+              </dl>
+              <a href="#start" className={styles.darkButton}>
+                Start with my lot <ArrowUpRight size={18} aria-hidden="true" />
+              </a>
               <p className={styles.reportPrice}>
-                Explore free · Complete certificate
-                {certificatePrice ? ` ${certificatePrice}` : ""} one-time
+                The complete certificate is an optional one-time purchase.
+                Review it in the studio before checkout.
               </p>
             </div>
             <div className={styles.reportPreview}>
-              <div
+              <Segmented
                 className={styles.reportTabs}
-                role="group"
                 aria-label="Sample report pages"
-                onKeyDown={(e) =>
-                  handleSegmentArrowKey(e, reportTab, 3, setReportTab)
-                }
-              >
-                {["The overview", "The estimates", "Next steps"].map(
-                  (label, index) => (
-                    <button
-                      key={label}
-                      type="button"
-                      aria-pressed={reportTab === index}
-                      onClick={() => setReportTab(index)}
-                    >
-                      {label}
-                    </button>
-                  ),
+                value={String(reportTab)}
+                onChange={(value) => setReportTab(Number(value))}
+                options={["The overview", "The estimates", "Next steps"].map(
+                  (label, index) => ({ value: String(index), label }),
                 )}
-              </div>
+              />
               <article
                 className={styles.paper}
                 aria-label="Sample feasibility report"
@@ -933,7 +863,7 @@ export function LotMoreLanding({
                 </div>
               </article>
               <p className={styles.previewNote}>
-                Sample summary · Your complete certificate is created in the
+                Sample Certificate of Feasibility summary. Create yours in the
                 studio.
               </p>
             </div>
@@ -945,7 +875,7 @@ export function LotMoreLanding({
             aria-labelledby="faq-title"
           >
             <div>
-              <Eyebrow number="05">A LITTLE MORE CLARITY</Eyebrow>
+              <Eyebrow number="04">BEFORE YOU START</Eyebrow>
               <h2 id="faq-title">
                 Good questions.
                 <br />
@@ -1025,9 +955,9 @@ export function LotMoreLanding({
               <Link href="/studio" prefetch={false}>
                 The studio
               </Link>
-              <Link href="/signup?role=builder" prefetch={false}>
+              <WebBuilderOnly><Link href="/signup?role=builder" prefetch={false}>
                 Register as a builder
-              </Link>
+              </Link></WebBuilderOnly>
               <Link href="/about">About us</Link>
               <Link href="/adu/ca">ADU rules by city</Link>
               <Link href="/help">Get in touch</Link>

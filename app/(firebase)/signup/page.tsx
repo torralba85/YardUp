@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition, Suspense } from "react";
+import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
+import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
@@ -10,6 +12,7 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 function SignupForm() {
   const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
   const router = useRouter();
+  const buildersAllowed = useWebBuilderAccess();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
@@ -19,12 +22,14 @@ function SignupForm() {
   const [legalAccepted, setLegalAccepted] = useState(false);
   
   const initialRole = searchParams.get("role") === "builder" ? "builder" : "user";
-  const [role, setRole] = useState<"user" | "builder">(initialRole);
+  const [selectedRole, setRole] = useState<"user" | "builder">(initialRole);
+  const role = buildersAllowed ? selectedRole : "user";
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && profile) {
-      router.replace(profile.role === "builder" ? "/builder" : "/studio");
+      const allowBuilder = !isNativeAppShell();
+      router.replace(allowBuilder && profile.role === "builder" ? "/builder" : "/studio");
     }
   }, [profile, router, user]);
 
@@ -158,7 +163,7 @@ function SignupForm() {
           />
         </div>
 
-        <div>
+        {buildersAllowed && <div>
           <label className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
             I am a...
           </label>
@@ -176,7 +181,7 @@ function SignupForm() {
               onClick={() => setRole("builder")}
             />
           </div>
-        </div>
+        </div>}
 
         <label className="flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lf-muted">
           <input

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LotMoreLanding } from "./LotMoreLanding";
 import { GUEST_LOOKUP_LIMIT, consumeGuestLookup } from "@/lib/guest-lookup";
@@ -13,23 +13,23 @@ const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/address-handoff", () => ({ stashAddressQuery: stash }));
 vi.mock("next/dynamic", () => ({
-  default: (loader: () => unknown) => loader.toString().includes("LandingMemberNav")
-    ? () => <nav aria-label="Member navigation" />
-    :
-    function TestAuthGate({
-      onAuthenticated,
-      onDismiss,
-    }: {
-      onAuthenticated: () => void;
-      onDismiss: () => void;
-    }) {
-      return (
-        <div role="dialog">
-          <button onClick={onAuthenticated}>Complete sign in</button>
-          <button onClick={onDismiss}>Dismiss sign in</button>
-        </div>
-      );
-    },
+  default: (loader: () => unknown) =>
+    loader.toString().includes("LandingMemberNav")
+      ? () => <nav aria-label="Member navigation" />
+      : function TestAuthGate({
+          onAuthenticated,
+          onDismiss,
+        }: {
+          onAuthenticated: () => void;
+          onDismiss: () => void;
+        }) {
+          return (
+            <div role="dialog">
+              <button onClick={onAuthenticated}>Complete sign in</button>
+              <button onClick={onDismiss}>Dismiss sign in</button>
+            </div>
+          );
+        },
 }));
 
 const scenarios = (["conservative", "market", "optimistic"] as const).map(
@@ -53,6 +53,7 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 describe("landing address handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
     window.localStorage.clear();
     vi.stubGlobal(
       "IntersectionObserver",
@@ -68,24 +69,47 @@ describe("landing address handoff", () => {
   // the route group split exists to avoid.
   it("keeps the auth island off the header until a browser has signed in", () => {
     const guest = render(<LotMoreLanding scenarios={scenarios} />);
-    expect(screen.queryByRole("navigation", { name: "Member navigation" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    expect(
+      screen.queryByRole("navigation", { name: "Member navigation" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/login",
+    );
     guest.unmount();
 
     window.localStorage.setItem("lf:member-session", "1");
     render(<LotMoreLanding scenarios={scenarios} />);
-    expect(screen.getByRole("navigation", { name: "Member navigation" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "Member navigation" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Sign in" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides builder registration in all navigation inside the Android app", () => {
+    vi.stubGlobal("LotFoundryNative", { platform: "android" });
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    expect(screen.queryByRole("link", { name: "Register as a builder" })).not.toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 
   it("exposes builder registration in desktop, footer, and mobile navigation", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
-    expect(screen.getAllByRole("link", { name: "Register as a builder" })).toHaveLength(2);
+    expect(
+      screen.getAllByRole("link", { name: "Register as a builder" }),
+    ).toHaveLength(2);
     fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
-    for (const link of screen.getAllByRole("link", { name: "Register as a builder" })) {
+    for (const link of screen.getAllByRole("link", {
+      name: "Register as a builder",
+    })) {
       expect(link).toHaveAttribute("href", "/signup?role=builder");
     }
-    expect(screen.getAllByRole("link", { name: "Register as a builder" })).toHaveLength(3);
+    expect(
+      screen.getAllByRole("link", { name: "Register as a builder" }),
+    ).toHaveLength(3);
   });
 
   /** Spend the anonymous allowance, as a return visit that already looked once would. */
@@ -180,30 +204,65 @@ describe("landing address handoff", () => {
     );
   });
 
-  it("navigates segmented controls using keyboard arrow keys", () => {
+  it("gives every single-choice group a checked option and one keyboard tab stop", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
-    const sceneGroup = screen.getByRole("group", {
-      name: "Property illustration view",
+    for (const group of screen.getAllByRole("radiogroup")) {
+      const options = within(group).getAllByRole("radio");
+      const selected = within(group).getByRole("radio", { checked: true });
+      expect(options.filter((option) => option.tabIndex === 0)).toEqual([
+        selected,
+      ]);
+      fireEvent.keyDown(selected, { key: "End" });
+      expect(options.at(-1)).toHaveAttribute("aria-checked", "true");
+      expect(options.at(-1)).toHaveFocus();
+      fireEvent.keyDown(options.at(-1)!, { key: "ArrowRight" });
+      expect(options[0]).toHaveAttribute("aria-checked", "true");
+      expect(options[0]).toHaveFocus();
+      fireEvent.keyDown(options[0], { key: "ArrowLeft" });
+      expect(options.at(-1)).toHaveAttribute("aria-checked", "true");
+      fireEvent.keyDown(options.at(-1)!, { key: "Home" });
+      expect(options[0]).toHaveAttribute("aria-checked", "true");
+    }
+  });
+
+  it("updates report content and demo numbers from their selected radio", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.click(
+      within(
+        screen.getByRole("radiogroup", { name: "Sample report pages" }),
+      ).getByRole("radio", { name: "Next steps" }),
+    );
+    expect(
+      screen.getByText(/Confirm property boundaries, setbacks/),
+    ).toBeVisible();
+    fireEvent.click(
+      within(
+        screen.getByRole("radiogroup", { name: "Demo rent assumption" }),
+      ).getByRole("radio", { name: "optimistic" }),
+    );
+    expect(
+      screen.getByText(
+        new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        }).format(scenarios[2].rent),
+      ),
+    ).toBeVisible();
+  });
+
+  it("clears a typed address when the visitor chooses the explicit demo", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.change(
+      screen.getAllByLabelText("Property address", { exact: true })[0],
+      { target: { value: "456 Pine St, Denver, CO" } },
+    );
+    const example = screen.getByRole("link", {
+      name: "Try the Oak Street demo",
     });
-    const sceneButtons = sceneGroup.querySelectorAll("button");
-    expect(sceneButtons[2]).toHaveAttribute("aria-pressed", "true");
-
-    // ArrowRight cycles forward to 0 (wrap around)
-    fireEvent.keyDown(sceneGroup, { key: "ArrowRight" });
-    expect(sceneButtons[0]).toHaveAttribute("aria-pressed", "true");
-
-    // ArrowLeft cycles backward to 2
-    fireEvent.keyDown(sceneGroup, { key: "ArrowLeft" });
-    expect(sceneButtons[2]).toHaveAttribute("aria-pressed", "true");
-
-    // Report tabs keyboard navigation
-    const reportTabsGroup = screen.getByRole("group", {
-      name: "Sample report pages",
-    });
-    const reportButtons = reportTabsGroup.querySelectorAll("button");
-    expect(reportButtons[0]).toHaveAttribute("aria-pressed", "true");
-
-    fireEvent.keyDown(reportTabsGroup, { key: "ArrowRight" });
-    expect(reportButtons[1]).toHaveAttribute("aria-pressed", "true");
+    expect(example).toHaveAttribute("href", "/studio?parcel=oak-street");
+    fireEvent.click(example);
+    expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

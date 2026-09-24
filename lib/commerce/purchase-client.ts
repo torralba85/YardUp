@@ -231,6 +231,9 @@ function createAppStoreClient(
     channel: "app-store",
     async purchase(productId: string, context?: PurchaseContext): Promise<PurchaseReceipt> {
       assertKnownProduct(productId);
+      if (getStoreProduct(productId)!.leadCredits > 0) {
+        throw new PurchaseClientError("Builder purchases are unavailable in this app.");
+      }
       const handler = win?.webkit?.messageHandlers?.lotfoundryStore as
         | StoreKitBridge
         | undefined;
@@ -302,6 +305,9 @@ function createGooglePlayClient(
     channel: "google-play",
     async purchase(productId: string, context?: PurchaseContext): Promise<PurchaseReceipt> {
       assertKnownProduct(productId);
+      if (getStoreProduct(productId)!.leadCredits > 0) {
+        throw new PurchaseClientError("Builder purchases are unavailable in this app.");
+      }
       const getService = win?.getDigitalGoodsService;
       if (typeof getService !== "function") {
         throw new PurchaseClientError(
