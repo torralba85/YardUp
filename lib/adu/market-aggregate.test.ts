@@ -1,8 +1,70 @@
 import { describe, expect, it } from "vitest";
 import {
+  CALCULATOR_COUNTIES,
   CITY_MARKET_SIZES,
   cityMarketAggregate,
+  countyMarketAggregate,
+  countyProvenance,
+  estimateAdu,
 } from "./market-aggregate";
+
+describe("countyMarketAggregate", () => {
+  it("has an anchor for every calculator county", () => {
+    for (const county of CALCULATOR_COUNTIES) {
+      expect(countyMarketAggregate(county.slug), county.slug).toBeDefined();
+    }
+    expect(countyMarketAggregate("alameda")).toBeUndefined();
+  });
+
+  it("matches the San Diego city page figures exactly", () => {
+    expect(countyMarketAggregate("san-diego")?.rows).toEqual(
+      cityMarketAggregate("san-diego")?.rows,
+    );
+  });
+
+  it("computes Los Angeles and Santa Clara payback from their own HUD rents", () => {
+    // Build cost is on the national base, so only rent differs by county.
+    expect(
+      countyMarketAggregate("los-angeles")?.rows.map((row) => row.paybackYears),
+    ).toEqual([10.7, 13.3, 17.6, 20.5]);
+    expect(
+      countyMarketAggregate("santa-clara")?.rows.map((row) => row.paybackYears),
+    ).toEqual([8.3, 10.4, 13.7, 16]);
+  });
+
+  it("cites the county by name", () => {
+    expect(countyProvenance("santa-clara")?.area).toBe("Santa Clara County, CA");
+  });
+});
+
+describe("estimateAdu", () => {
+  it("reproduces the table row at the table's defaults", () => {
+    const row = countyMarketAggregate("los-angeles")?.rows.find((entry) => entry.size === 600);
+    expect(
+      estimateAdu({ county: "los-angeles", size: 600, finish: "cedar", rentScenario: "conservative" }),
+    ).toEqual(row);
+  });
+
+  it("applies the finish cost and the rent spread", () => {
+    const estimate = estimateAdu({
+      county: "los-angeles",
+      size: 600,
+      finish: "lap",
+      rentScenario: "market",
+    });
+    // 600 * $315 (lap) + $9,000 = $198,000 hard; * 1.18 = $233,640 mid.
+    expect(estimate?.costLow).toBe(215000);
+    expect(estimate?.costHigh).toBe(269000);
+    // 1-bed FMR $2,328 * 1.12.
+    expect(estimate?.monthlyRent).toBe(2607);
+  });
+
+  it("returns undefined for an unknown county", () => {
+    expect(
+      estimateAdu({ county: "nowhere", size: 600, finish: "cedar", rentScenario: "conservative" }),
+    ).toBeUndefined();
+  });
+});
 
 describe("cityMarketAggregate", () => {
   it("returns undefined for a city with no rent anchor", () => {

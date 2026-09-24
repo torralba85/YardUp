@@ -41,6 +41,11 @@ export function hubUrl(): string {
   return `${BASE_URL}/adu/ca`;
 }
 
+/** Absolute canonical URL for the California ADU cost calculator. */
+export function calculatorUrl(): string {
+  return `${BASE_URL}/adu-cost-calculator`;
+}
+
 /**
  * Static params for the `[state]/[city]` route (and its sibling special
  * files, e.g. `opengraph-image`). Single source so the page and its OG

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLlmsTxt } from "./build-text";
-import { ADU_CITIES, cityUrl, hubUrl } from "@/lib/adu/content";
+import { ADU_CITIES, calculatorUrl, cityUrl, hubUrl } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 
 describe("buildLlmsTxt", () => {
@@ -32,10 +32,11 @@ describe("buildLlmsTxt", () => {
     }
   });
 
-  it("carries the hub, the studio, the account-free demo, and the Play listing", () => {
+  it("carries the hub, the cost calculator, the studio, the account-free demo, and the Play listing", () => {
     const text = buildLlmsTxt();
 
     expect(text).toContain(hubUrl());
+    expect(text).toContain(calculatorUrl());
     expect(text).toContain("https://lotfoundry.net/studio");
     expect(text).toContain("https://lotfoundry.net/studio?parcel=oak-street");
     expect(text).toContain(GOOGLE_PLAY_URL);

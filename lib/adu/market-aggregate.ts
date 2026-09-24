@@ -2,6 +2,10 @@ import { calculateFinance } from "@/lib/finance";
 import {
   defaultAduConfig,
   defaultFinancialAssumptions,
+  type ADUConfig,
+  type ExteriorFinish,
+  type FinancialAssumptions,
+  type RentScenario,
 } from "@/lib/feasibility";
 import { bedroomClassForFootprint } from "@/lib/market/bedroom";
 import type {
@@ -60,19 +64,63 @@ interface CityMarketAnchor {
   sourceUrl: string;
 }
 
+/** Vintage and source shared by every HUD FMR county anchor below. */
+const HUD_FMR_AS_OF = "HUD FY2026 FMR (effective 2026-05-21; seed extract)";
+const HUD_FMR_URL = "https://www.huduser.gov/portal/datasets/fmr.html";
+
+/**
+ * California county anchors, keyed by county slug. Each mirrors the
+ * matching `CA/<County>` row of `lib/server/market/data/fmr.json`. The
+ * regional cost factors in `cost-multipliers.json` are unverified seeds, so
+ * every anchor stays on the national cost base (1.0) — the same rule the
+ * city pages follow.
+ */
+const COUNTY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = {
+  "los-angeles": {
+    area: "Los Angeles County, CA",
+    rentByBedroom: { studio: 1979, "1br": 2328, "2br": 2957 },
+    costMultiplier: 1,
+    asOf: HUD_FMR_AS_OF,
+    sourceUrl: HUD_FMR_URL,
+  },
+  "san-diego": {
+    area: "San Diego County, CA",
+    rentByBedroom: { studio: 2090, "1br": 2459, "2br": 3123 },
+    costMultiplier: 1,
+    asOf: HUD_FMR_AS_OF,
+    sourceUrl: HUD_FMR_URL,
+  },
+  "santa-clara": {
+    area: "Santa Clara County, CA",
+    rentByBedroom: { studio: 2535, "1br": 2982, "2br": 3787 },
+    costMultiplier: 1,
+    asOf: HUD_FMR_AS_OF,
+    sourceUrl: HUD_FMR_URL,
+  },
+};
+
 /**
  * Per-city anchors. Adding a second city to the program means adding one
  * entry here (plus its content module) — no route or component changes.
  */
 const CITY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = {
-  "san-diego": {
-    area: "San Diego County, CA",
-    rentByBedroom: { studio: 2090, "1br": 2459, "2br": 3123 },
-    costMultiplier: 1,
-    asOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
-    sourceUrl: "https://www.huduser.gov/portal/datasets/fmr.html",
-  },
+  "san-diego": COUNTY_MARKET_ANCHORS["san-diego"],
 };
+
+/** A California county the cost calculator quotes, in display order. */
+export interface CalculatorCounty {
+  /** County slug, e.g. "los-angeles". */
+  slug: string;
+  /** Display name, e.g. "Los Angeles County". */
+  name: string;
+}
+
+/** Counties with a verified HUD FMR anchor, offered by the cost calculator. */
+export const CALCULATOR_COUNTIES: CalculatorCounty[] = [
+  { slug: "los-angeles", name: "Los Angeles County" },
+  { slug: "san-diego", name: "San Diego County" },
+  { slug: "santa-clara", name: "Santa Clara County" },
+];
 
 /** Computed figures for one quoted unit size. */
 export interface CitySizeAggregate {
@@ -111,44 +159,101 @@ export interface CityMarketAggregate {
 export function cityMarketAggregate(slug: string): CityMarketAggregate | undefined {
   const anchor = CITY_MARKET_ANCHORS[slug];
   if (!anchor) return undefined;
+  return aggregateFromAnchor(slug, anchor);
+}
 
-  const rows: CitySizeAggregate[] = CITY_MARKET_SIZES.map((size) => {
-    const bedroom = bedroomClassForFootprint(size);
-    const anchorRent = anchor.rentByBedroom[bedroom];
-    // Same spreads calculateFeasibility applies to a live parcel's anchor.
-    const rentTable = {
-      conservative: anchorRent,
-      market: Math.round(anchorRent * 1.12),
-      optimistic: Math.round(anchorRent * 1.25),
-    };
-    const finance = calculateFinance(
-      size,
-      { ...defaultAduConfig, footprint: size },
-      defaultFinancialAssumptions,
-      rentTable,
-      { costMultiplier: anchor.costMultiplier },
-    );
-    return {
-      size,
-      bedroom,
-      monthlyRent: finance.monthlyRent,
-      costLow: finance.costLow,
-      costHigh: finance.costHigh,
-      annualNoi: finance.annualNoi,
-      paybackYears: finance.paybackYears,
-    };
+/**
+ * Compute the countywide aggregate for a calculator county slug.
+ *
+ * @param slug - County slug from {@link CALCULATOR_COUNTIES}, e.g. "los-angeles".
+ * @returns The aggregate, or `undefined` when the county has no rent anchor.
+ */
+export function countyMarketAggregate(slug: string): CityMarketAggregate | undefined {
+  const anchor = COUNTY_MARKET_ANCHORS[slug];
+  if (!anchor) return undefined;
+  return aggregateFromAnchor(slug, anchor);
+}
+
+/** Inputs the cost calculator lets a visitor change. */
+export interface AduEstimateInput {
+  /** County slug from {@link CALCULATOR_COUNTIES}. */
+  county: string;
+  /** Unit size in square feet. */
+  size: number;
+  /** Exterior finish, which sets the base cost per square foot. */
+  finish: ExteriorFinish;
+  /** Which rent spread to read from the county anchor. */
+  rentScenario: RentScenario;
+}
+
+/**
+ * Estimate one ADU for the cost calculator: the same anchor, spreads, and
+ * `calculateFinance` defaults as the city tables, with finish and rent
+ * scenario exposed as inputs.
+ *
+ * @returns The size row, or `undefined` for an unknown county.
+ */
+export function estimateAdu(input: AduEstimateInput): CitySizeAggregate | undefined {
+  const anchor = COUNTY_MARKET_ANCHORS[input.county];
+  if (!anchor) return undefined;
+  return sizeRow(input.size, anchor, {
+    config: { ...defaultAduConfig, footprint: input.size, finish: input.finish },
+    assumptions: { ...defaultFinancialAssumptions, rentScenario: input.rentScenario },
   });
+}
 
+/** Provenance line data for a calculator county's figures. */
+export function countyProvenance(slug: string): MarketProvenance | undefined {
+  const anchor = COUNTY_MARKET_ANCHORS[slug];
+  return anchor ? provenanceFor(anchor) : undefined;
+}
+
+function aggregateFromAnchor(slug: string, anchor: CityMarketAnchor): CityMarketAggregate {
   return {
     slug,
-    provenance: {
-      source: "hud-county",
-      area: anchor.area,
-      asOf: anchor.asOf,
-      sourceUrl: anchor.sourceUrl,
-      confidence: "medium",
-      verified: true,
-    },
-    rows,
+    provenance: provenanceFor(anchor),
+    rows: CITY_MARKET_SIZES.map((size) => sizeRow(size, anchor)),
+  };
+}
+
+function sizeRow(
+  size: number,
+  anchor: CityMarketAnchor,
+  overrides?: { config: ADUConfig; assumptions: FinancialAssumptions },
+): CitySizeAggregate {
+  const bedroom = bedroomClassForFootprint(size);
+  const anchorRent = anchor.rentByBedroom[bedroom];
+  // Same spreads calculateFeasibility applies to a live parcel's anchor.
+  const rentTable = {
+    conservative: anchorRent,
+    market: Math.round(anchorRent * 1.12),
+    optimistic: Math.round(anchorRent * 1.25),
+  };
+  const finance = calculateFinance(
+    size,
+    overrides?.config ?? { ...defaultAduConfig, footprint: size },
+    overrides?.assumptions ?? defaultFinancialAssumptions,
+    rentTable,
+    { costMultiplier: anchor.costMultiplier },
+  );
+  return {
+    size,
+    bedroom,
+    monthlyRent: finance.monthlyRent,
+    costLow: finance.costLow,
+    costHigh: finance.costHigh,
+    annualNoi: finance.annualNoi,
+    paybackYears: finance.paybackYears,
+  };
+}
+
+function provenanceFor(anchor: CityMarketAnchor): MarketProvenance {
+  return {
+    source: "hud-county",
+    area: anchor.area,
+    asOf: anchor.asOf,
+    sourceUrl: anchor.sourceUrl,
+    confidence: "medium",
+    verified: true,
   };
 }

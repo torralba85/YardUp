@@ -1,5 +1,6 @@
 import {
   ADU_CITIES,
+  calculatorUrl,
   cityUrl,
   hubUrl,
   STATE_BASELINE_AS_OF,
@@ -64,6 +65,7 @@ ${cities}
 ## Tools
 
 - [Feasibility studio](${baseUrl}/studio): place an ADU against your real setbacks in 3D and see cost, rent, and payback.
+- [California ADU cost calculator](${calculatorUrl()}): estimated build cost, monthly rent, and payback by unit size for Los Angeles, San Diego, and Santa Clara counties.
 - [Demo lot](${baseUrl}/studio?parcel=oak-street): explore a sample Seattle parcel with no address and no account.
 - [Android app](${GOOGLE_PLAY_URL})
 
