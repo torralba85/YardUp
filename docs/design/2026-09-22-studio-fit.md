@@ -72,13 +72,23 @@ the room counts remain illustrative concepts.
 - Production build passed with `npm run build -- --webpack`.
 - The default Turbopack build could not follow the isolated worktree's
   `node_modules` junction outside the checkout. The junction was preserved to
-  avoid changing dependencies used by the primary checkout; CI uses a clean
-  install and runs the standard build.
+  avoid changing dependencies used by the primary checkout. A detached clean
+  worktree passed `npm ci`, the standard Turbopack production build, and
+  `npm run build:firebase` with ignored production environment files. The
+  Firebase Hosting/Functions/Firestore dry run also passed.
+- `repo:public-check` passed. `test:rules` could not start because Java is not
+  installed. The complete clean-worktree Vitest run hung after a jsdom
+  navigation warning; the full unit suite did pass in the design worktree.
 - Browser review: desktop Design, a 1,000 sf blocked placement with a 380 sf
   coverage overage, mobile radio selection with arrow keys, and 320px/390px
   layouts without horizontal overflow.
 - Screenshot review caught a mobile nested scroll area; the flow layout above
   corrects it. The model remains prominent and the size controls stay readable.
+- Playwright E2E: the clean checkout run completed with 149 passed and 46
+  skipped. One narrow mobile rent-label assertion failed after the row moved;
+  restoring the established label and 12px type fixed the focused case (1/1
+  passed). The full E2E suite was not rerun after that correction. GitHub CI
+  did not start any jobs: Actions reported an account billing/spending limit.
 - Screenshots: `C:/Users/Andrew/LotFoundry/artifacts/studio-fit-20260922/`.
 - Local preview: `http://127.0.0.1:4533/studio?parcel=oak-street`.
 
