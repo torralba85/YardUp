@@ -15,6 +15,8 @@ import { metadata as loginMetadata } from "./(firebase)/login/page";
 import { metadata as signupMetadata } from "./(firebase)/signup/layout";
 import { metadata as certificatesMetadata } from "./(firebase)/certificates/page";
 import { metadata as aduCaMetadata } from "./adu/ca/page";
+import { chulaVista } from "@/content/adu/ca/chula-vista";
+import { buildCityMetadata } from "@/lib/adu/content";
 
 describe("canonical metadata", () => {
   const routes = [
@@ -36,4 +38,28 @@ describe("canonical metadata", () => {
       expect(metadata.alternates?.canonical).toBe(expectedCanonical);
     });
   }
+});
+
+
+describe("SEO audit metadata constraints", () => {
+  const descriptions = [
+    { name: "/feedback", metadata: feedbackMetadata },
+    { name: "/privacy", metadata: privacyMetadata },
+    { name: "/terms", metadata: termsMetadata },
+  ];
+
+  for (const { name, metadata } of descriptions) {
+    it(`keeps ${name} meta description between 70 and 160 characters`, () => {
+      expect(typeof metadata.description).toBe("string");
+      const description = metadata.description as string;
+      expect(description.length).toBeGreaterThanOrEqual(70);
+      expect(description.length).toBeLessThanOrEqual(160);
+    });
+  }
+
+  it("keeps the Chula Vista title at 60 characters or fewer", () => {
+    const title = buildCityMetadata(chulaVista).title;
+    expect(typeof title).toBe("string");
+    expect((title as string).length).toBeLessThanOrEqual(60);
+  });
 });

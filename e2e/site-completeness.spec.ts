@@ -90,3 +90,25 @@ test("unknown route shows branded 404 recovery", async ({ page }) => {
   await expect(page.getByRole("link", { name: /^home$/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /get help/i })).toBeVisible();
 });
+
+
+test("/studio exposes crawlable overview content and public links", async ({ page }) => {
+  await page.goto("/studio");
+
+  const overview = page.getByTestId("studio-overview");
+  await expect(
+    overview.getByRole("heading", { level: 1, name: "ADU Feasibility Studio" }),
+  ).toBeVisible();
+  await expect(overview.getByRole("link", { name: "California ADU rules" })).toHaveAttribute(
+    "href",
+    "/adu/ca",
+  );
+  await expect(overview.getByRole("link", { name: "About LotFoundry" })).toHaveAttribute(
+    "href",
+    "/about",
+  );
+  await expect(overview.getByRole("link", { name: "Help" })).toHaveAttribute("href", "/help");
+
+  const words = (await overview.innerText()).split(/\s+/).filter(Boolean);
+  expect(words.length).toBeGreaterThanOrEqual(150);
+});

@@ -4,7 +4,8 @@ import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell"
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | LotFoundry",
-  description: "Terms governing your use of LotFoundry (Terms of Service).",
+  description:
+    "Read the LotFoundry Terms & Conditions covering the feasibility studio, AI features, marketplace, payments, estimates, and acceptable use.",
   alternates: { canonical: "/terms" },
 };
 

@@ -25,6 +25,21 @@ export default function AboutPage() {
           feasibility snapshots matched to their service areas.
         </p>
       </LegalSection>
+      <LegalSection title="How the studio works">
+        <p>
+          Start with an address or sample lot. LotFoundry brings the first questions homeowners
+          usually ask into one place: what may fit, what it could cost, what it could rent for, and
+          how long the investment may take to pay back. The studio combines parcel context,
+          configurable ADU dimensions, local-rule signals, and financial assumptions so you can
+          compare a scenario before paying for detailed design work.
+        </p>
+        <p>
+          As you change the ADU size or assumptions, the feasibility and financial estimates update
+          with the scenario. You can review lot coverage and setback signals, compare the projected
+          rent and build-cost range, and save or share an early snapshot when you have a direction
+          worth discussing with a designer, contractor, lender, or city planner.
+        </p>
+      </LegalSection>
       <LegalSection title="Honest estimates">
         <p>
           Every rent, cost, and timeline figure is an estimate, not a guarantee and not professional
