@@ -30,26 +30,26 @@ export default function FeasibilityVerdictBand({ parcel, result, config, eyebrow
   const numbersId = useId();
 
   return (
-    <header className="shrink-0 border-b border-[#DADAD3] bg-[#F5F5F0] text-[#161616]">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-3">
+    <header className="shrink-0 border-b border-lot-line bg-lot-chalk text-lot-ink">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
         <div className="min-w-0">
           <h2 className="font-display text-xl font-medium tracking-tight">{parcel.address}</h2>
-          <p className="mt-1 text-xs text-[#65655F]">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot</p>
-        </div>
-        <div>
-          <p className="lf-kicker-dense text-[#65655F]">If built</p>
-          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5 text-base font-semibold" />
+          <p className="mt-1 text-xs text-lot-stone">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot</p>
         </div>
         <div aria-live="polite" className="text-sm">
           <div className="flex items-center gap-2 font-semibold" style={{ color: tone.color }}>
             <Icon size={18} aria-hidden="true" />
             {summary.verdict}
           </div>
-          <p className="mt-1 text-xs text-[#65655F]">{summary.reviewNote}</p>
+          <p className="mt-1 text-xs text-lot-stone">{summary.reviewNote}</p>
+        </div>
+        <div className="ml-auto">
+          <p className="text-xs text-lot-stone">Estimated rent</p>
+          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5 text-base font-semibold" />
         </div>
         <button type="button" aria-expanded={numbersOpen} aria-controls={numbersId}
           onClick={() => setNumbersOpen(!numbersOpen)}
-          className="flex min-h-11 items-center gap-3 rounded-[3px] px-3 text-sm font-semibold hover:bg-[#161616]/5">
+          className="flex min-h-11 items-center gap-3 rounded-[3px] px-3 text-sm font-semibold hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
           Numbers &amp; readiness
           <ChevronDown size={16} aria-hidden="true" className={numbersOpen ? "rotate-180" : ""} />
         </button>

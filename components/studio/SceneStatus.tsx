@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ChevronDown, TriangleAlert } from "lucide-react";
+import { CheckCircle2, ChevronDown, TriangleAlert, XCircle } from "lucide-react";
 import type { PlacementResult } from "@/lib/placement-validation";
 import { describePlacement } from "@/lib/placement-validation";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
@@ -28,6 +28,8 @@ export function SceneStatus({
   const status = describePlacement(placement);
   const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel);
   const needsReview = status.tone !== "clear" || coverage.tone !== "ok";
+  const StatusIcon = status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
+  const statusColor = status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
   const setbackConflict =
     placement.envelopeStatus === "overflow" || placement.envelopeStatus === "empty";
 
@@ -41,8 +43,8 @@ export function SceneStatus({
       role="status"
       aria-live="polite"
       aria-label="Modeled site fit status"
-      className={`shrink-0 border-t bg-[#F5F5F0] text-[#161616] ${
-        needsReview ? "border-[#E0A33C]/60" : "border-[#DADAD3]"
+      className={`shrink-0 border-t bg-lot-chalk text-lot-ink ${
+        needsReview ? "border-status-review/40" : "border-lot-line"
       }`}
     >
       {setbackConflict && (
@@ -57,10 +59,19 @@ export function SceneStatus({
         </div>
       )}
 
-      <details className="group/status px-3">
-        <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-xs font-semibold">
-          <span className="font-sans text-[11px] uppercase tracking-[0.08em] text-[#65655F]">Modeled site fit</span>
-          <span className={status.tone === "clear" ? "text-[#176B4C]" : "text-[#8A5300]"}>{status.title}</span>
+      <div className="flex items-start gap-2.5 px-4 pt-3">
+        <StatusIcon size={18} aria-hidden="true" className={`mt-0.5 shrink-0 ${statusColor}`} />
+        <div className="min-w-0">
+          <p className={`text-sm font-semibold ${statusColor}`}>{status.title}</p>
+          <p className="mt-1 max-w-prose text-xs leading-5 text-lot-stone">
+            {placement.reasons[0]?.message ?? status.detail}
+          </p>
+        </div>
+      </div>
+
+      <details className="group/status px-4">
+        <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[3px] text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
+          Modeled site fit details
           <ChevronDown size={14} aria-hidden="true" className="ml-auto shrink-0 group-open/status:rotate-180" />
         </summary>
         <div className="space-y-1 pb-3 text-xs leading-5 text-[#65655F]">
