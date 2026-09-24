@@ -70,6 +70,10 @@ test.describe("Studio photoreal scan (beta)", () => {
     await expect(
       page.getByText(/placement uses the estimated model/),
     ).toBeVisible();
+    // Calibration is internal; a public build must not expose it.
+    if (process.env.NEXT_PUBLIC_SCAN_CALIBRATION !== "true") {
+      await expect(page.getByRole("button", { name: "Calibrate Scan" })).toHaveCount(0);
+    }
 
     await page.getByRole("button", { name: "Return to 3D model" }).first().click();
     await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(
@@ -82,6 +86,10 @@ test.describe("Studio photoreal scan (beta)", () => {
     page,
     context,
   }) => {
+    test.skip(
+      process.env.NEXT_PUBLIC_SCAN_CALIBRATION !== "true",
+      "internal tool: build with NEXT_PUBLIC_SCAN_CALIBRATION=true",
+    );
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/studio");
     await parcelViews(page).getByRole("button", { name: /^Scan/ }).click();
@@ -136,7 +144,7 @@ test.describe("Studio photoreal scan (beta)", () => {
 
     await expect(page.getByText(/Scan unavailable/)).toBeVisible({ timeout: 30_000 });
     // The rest of the Studio must survive a dead asset.
-    await expect(page.getByRole("button", { name: "Calibrate Scan" })).toBeVisible();
+    await expect(views.getByRole("button", { name: "3D model" })).toBeVisible();
 
     await page.getByRole("button", { name: "Return to 3D model" }).first().click();
     await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(

@@ -293,6 +293,9 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const splatScene = useMemo(() => getSplatSceneForParcel(parcelPresetId), [parcelPresetId]);
   const [userCalibration, setUserCalibration] = useState<{ id: string; transform: SplatTransform } | null>(null);
   const [splatOnly, setSplatOnly] = useState(false);
+  // Scan calibration is an internal alignment tool, never shown to public
+  // visitors. Opt in per build with NEXT_PUBLIC_SCAN_CALIBRATION=true.
+  const scanCalibrationEnabled = process.env.NEXT_PUBLIC_SCAN_CALIBRATION === "true";
   const [showCalibration, setShowCalibration] = useState(false);
   const [scanStatus, setScanStatus] = useState<SplatLayerStatus>({ state: "loading" });
   const calibrationTrigger = useRef<HTMLButtonElement>(null);
@@ -841,7 +844,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           splatOnly={splatOnly}
           onScanStatus={onScanStatus}
         />
-        {effectiveViewMode === "scan" && splatScene && activeSplatTransform && (
+        {scanCalibrationEnabled && effectiveViewMode === "scan" && splatScene && activeSplatTransform && (
           <div className={`absolute right-0 top-0 z-(--z-index-scene) max-h-full max-w-full ${showCalibration ? "w-full overflow-y-auto overscroll-contain sm:w-80 md:w-96" : "p-3"}`}>
             {showCalibration ? (
               <SplatCalibrationPanel
