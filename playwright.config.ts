@@ -44,6 +44,9 @@ export default defineConfig({
       // billable Google or ion route configured in a local ignored env file.
       NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY: "",
       NEXT_PUBLIC_CESIUM_ION_TOKEN: "",
+      // The scan specs read this too, so the server must not pick up a
+      // different value from a local ignored env file.
+      NEXT_PUBLIC_SCAN_CALIBRATION: process.env.NEXT_PUBLIC_SCAN_CALIBRATION ?? "",
     },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
