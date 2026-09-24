@@ -5,7 +5,8 @@ import { FeedbackForm } from "./FeedbackForm";
 /** Page metadata for the feedback route. */
 export const metadata: Metadata = {
   title: "Send Feedback | LotFoundry",
-  description: "Report a bug, flag a data issue, or tell us what to build next.",
+  description:
+    "Report LotFoundry bugs, incorrect parcel or zoning data, billing problems, or product ideas, and learn what details help us investigate.",
   alternates: { canonical: "/feedback" },
 };
 
@@ -16,11 +17,26 @@ export default function FeedbackPage() {
       title="Send Feedback"
       kicker="Bugs, ideas, data issues, billing"
     >
-      <p className="lf-body text-lf-muted">
-        Found a bug, spotted wrong parcel data, or have an idea? Tell us below.
-        Billing problems get priority — include the address or lead involved if
-        you can.
-      </p>
+      <div className="lf-body space-y-4 text-lf-muted">
+        <p>
+          Found a bug, spotted incorrect parcel or zoning data, ran into a billing problem, or have
+          an idea that would make LotFoundry more useful? Send the details below. Clear reports help
+          us separate product defects from source-data limitations and make the next fix more useful
+          for everyone using the feasibility studio.
+        </p>
+        <p>
+          For property-data issues, include the address, what value looks wrong, and what you expected
+          to see. For studio bugs, tell us what you were trying to do and what happened instead. For
+          billing or account problems, include the email tied to your account and the relevant purchase
+          or lead, but never send passwords, payment-card numbers, API keys, or other secrets.
+        </p>
+        <p>
+          General product questions may be answered faster through Help. Privacy requests should use
+          the contact method listed in our Privacy Policy, and account deletion remains available from
+          the public Delete Account page. Feedback submitted here is used to investigate the issue or
+          evaluate the suggestion you send us.
+        </p>
+      </div>
       <FeedbackForm />
     </LegalPageShell>
   );
