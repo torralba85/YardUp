@@ -109,6 +109,6 @@ test("/studio exposes crawlable overview content and public links", async ({ pag
   );
   await expect(overview.getByRole("link", { name: "Help" })).toHaveAttribute("href", "/help");
 
-  const words = (await overview.innerText()).split(/\\s+/).filter(Boolean);
+  const words = (await overview.innerText()).split(/\s+/).filter(Boolean);
   expect(words.length).toBeGreaterThanOrEqual(150);
 });
