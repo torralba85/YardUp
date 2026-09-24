@@ -9,14 +9,14 @@ import {
 } from "@/content/adu/state-baseline";
 
 export const metadata: Metadata = {
-  title: "California ADU Rules by City (2026) | LotFoundry",
+  title: "California ADU Laws and Rules by City (2026) | LotFoundry",
   // Kept under ~160 characters: past that Google truncates mid-sentence and
   // the cut lands inside the city list rather than after a complete thought.
   description:
     "ADU rules change at the city line. Start from the California state floor, then read local setbacks, fees, and permit steps for five San Diego County cities.",
   alternates: { canonical: hubUrl() },
   openGraph: {
-    title: "California ADU Rules by City (2026) | LotFoundry",
+    title: "California ADU Laws and Rules by City (2026) | LotFoundry",
     description:
       "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County's five largest cities.",
     url: hubUrl(),
@@ -88,7 +88,7 @@ const breadcrumbJsonLd = {
 export default function AduCaliforniaHubPage() {
   return (
     <LegalPageShell
-      title="ADU Rules in California (2026)"
+      title="California ADU Laws and Rules (2026)"
       kicker="San Diego County · City-by-city guides"
     >
       <script
@@ -111,13 +111,21 @@ export default function AduCaliforniaHubPage() {
         </p>
         <p>
           Start from the state floor below, pick your city, then check what
-          the rules mean for your specific lot in the Studio.
+          the rules mean for your specific lot in the Studio. To see what an
+          ADU costs, rents for, and takes to pay back, use the{" "}
+          <Link
+            href="/adu-cost-calculator"
+            className="underline underline-offset-2 hover:text-lf-espresso"
+          >
+            California ADU cost calculator
+          </Link>
+          .
         </p>
       </div>
 
       <section aria-labelledby="adu-floor" className="mt-12">
         <h2 id="adu-floor" className="lf-card-heading text-lf-espresso">
-          The state floor every city builds on
+          California ADU laws: the state floor every city builds on
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lf-muted">
           {STATE_FLOOR_FACTS.map((fact) => (

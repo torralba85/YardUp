@@ -15,6 +15,7 @@ import { metadata as loginMetadata } from "./(firebase)/login/page";
 import { metadata as signupMetadata } from "./(firebase)/signup/layout";
 import { metadata as certificatesMetadata } from "./(firebase)/certificates/page";
 import { metadata as aduCaMetadata } from "./adu/ca/page";
+import { metadata as aduCostCalculatorMetadata } from "./adu-cost-calculator/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { buildCityMetadata } from "@/lib/adu/content";
 
@@ -31,6 +32,11 @@ describe("canonical metadata", () => {
     { name: "/signup", metadata: signupMetadata, expectedCanonical: "/signup" },
     { name: "/certificates", metadata: certificatesMetadata, expectedCanonical: "/certificates" },
     { name: "/adu/ca", metadata: aduCaMetadata, expectedCanonical: "https://lotfoundry.net/adu/ca" },
+    {
+      name: "/adu-cost-calculator",
+      metadata: aduCostCalculatorMetadata,
+      expectedCanonical: "https://lotfoundry.net/adu-cost-calculator",
+    },
   ];
 
   for (const { name, metadata, expectedCanonical } of routes) {
@@ -46,6 +52,7 @@ describe("SEO audit metadata constraints", () => {
     { name: "/feedback", metadata: feedbackMetadata },
     { name: "/privacy", metadata: privacyMetadata },
     { name: "/terms", metadata: termsMetadata },
+    { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
   ];
 
   for (const { name, metadata } of descriptions) {
@@ -54,6 +61,16 @@ describe("SEO audit metadata constraints", () => {
       const description = metadata.description as string;
       expect(description.length).toBeGreaterThanOrEqual(70);
       expect(description.length).toBeLessThanOrEqual(160);
+    });
+  }
+
+  for (const { name, metadata } of [
+    { name: "/adu/ca", metadata: aduCaMetadata },
+    { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
+  ]) {
+    it(`keeps the ${name} title at 60 characters or fewer`, () => {
+      expect(typeof metadata.title).toBe("string");
+      expect((metadata.title as string).length).toBeLessThanOrEqual(60);
     });
   }
 
