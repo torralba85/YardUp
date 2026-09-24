@@ -293,7 +293,9 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     expect(modelButton).toHaveAttribute("aria-pressed", "false");
     expect(scanButton).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /calibrate scan/i })).toBeInTheDocument();
+    // Calibration is an internal tool: public visitors (including the landing's
+    // "try an example" demo) must never see its trigger.
+    expect(screen.queryByRole("button", { name: /calibrate scan/i })).not.toBeInTheDocument();
 
     await user.click(neighborhoodButton);
 
@@ -327,32 +329,41 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(within(viewControl).queryByRole("button", { name: /scan/i })).not.toBeInTheDocument();
   });
 
-  it("recovers from a scan failure without losing the ADU pose or hiding the model", async () => {
-    const user = userEvent.setup();
-    render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    const pose = screen.getByTestId("parcel-scene").getAttribute("data-pose");
-    await user.click(screen.getByRole("button", { name: /^Scan/ }));
-    expect(screen.getByText(/not a capture of this property/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
-    await user.click(screen.getByRole("button", { name: "Splat-Only Inspection" }));
-    await user.click(screen.getByRole("button", { name: "Close calibration panel" }));
-    await user.click(screen.getByRole("button", { name: "Fail scan load" }));
-    expect(screen.getByText(/Scan unavailable/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Return to 3D model" }));
-    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", pose);
-    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-splat-only", "false");
-  });
+  describe("with internal scan calibration enabled", () => {
+    beforeEach(() => {
+      vi.stubEnv("NEXT_PUBLIC_SCAN_CALIBRATION", "true");
+    });
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
 
-  it("moves view selection by keyboard and restores focus after calibration", async () => {
-    const user = userEvent.setup();
-    render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    screen.getByRole("button", { name: "3D model" }).focus();
-    await user.keyboard("{ArrowRight}");
-    expect(screen.getByRole("button", { name: /^Scan/ })).toHaveFocus();
-    await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
-    expect(screen.getByRole("button", { name: "Close calibration panel" })).toHaveFocus();
-    await user.keyboard("{Escape}");
-    await waitFor(() => expect(screen.getByRole("button", { name: "Calibrate Scan" })).toHaveFocus());
+    it("recovers from a scan failure without losing the ADU pose or hiding the model", async () => {
+      const user = userEvent.setup();
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+      const pose = screen.getByTestId("parcel-scene").getAttribute("data-pose");
+      await user.click(screen.getByRole("button", { name: /^Scan/ }));
+      expect(screen.getByText(/not a capture of this property/)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
+      await user.click(screen.getByRole("button", { name: "Splat-Only Inspection" }));
+      await user.click(screen.getByRole("button", { name: "Close calibration panel" }));
+      await user.click(screen.getByRole("button", { name: "Fail scan load" }));
+      expect(screen.getByText(/Scan unavailable/)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Return to 3D model" }));
+      expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", pose);
+      expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-splat-only", "false");
+    });
+
+    it("moves view selection by keyboard and restores focus after calibration", async () => {
+      const user = userEvent.setup();
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+      screen.getByRole("button", { name: "3D model" }).focus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: /^Scan/ })).toHaveFocus();
+      await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
+      expect(screen.getByRole("button", { name: "Close calibration panel" })).toHaveFocus();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.getByRole("button", { name: "Calibrate Scan" })).toHaveFocus());
+    });
   });
 
   it("marks certificate and builders as the revenue steps", () => {
