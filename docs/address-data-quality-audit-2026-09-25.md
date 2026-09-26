@@ -23,6 +23,14 @@ The core reliability work across recommendations 1–6 is now implemented, with 
 
 Regulatory fallback numbers remain available so the feasibility calculator can run, but they are now marked `defaulted`; parcel confidence and downstream zoning/report surfaces treat them as assumed rather than verified. Remaining work is listed under **Open follow-ups**.
 
+## Production release — 2026-09-25
+
+- Runtime commit `c68fda4` was deployed to Firebase project `yardup-2026` with Firestore rules, Hosting, and all five configured Functions (`app`, `api`, `apiAi`, `apiStore`, and `apiStripe`). The commit remains local on `master`; it was not pushed to `origin/master` in this operation.
+- Cache-busted checks returned HTTP 200 for `/`, `/studio`, `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`, `/privacy`, and `/terms` on `lotfoundry.net`.
+- A production guest geocode for the public Seattle City Hall address returned Nominatim address precision, `partialMatch: false`, provider match type, and evidence metadata.
+- The corresponding production parcel lookup returned the King County GIS parcel (59,542 sq ft) with structured provider attempts, unavailable zoning, defaulted setbacks, observed HUD rent evidence, and separately derived construction-cost and operating-expense evidence.
+- Authenticated scenario save/load/delete smoke was not run because dedicated Firebase smoke-user and App Check credentials were not present on this machine. Firestore rules were instead validated by the 21-test emulator suite before deployment.
+
 ## Open follow-ups
 
 1. Reconcile normalized geocoder, Census, requested ZIP/state, and parcel situs components, and surface disagreements explicitly.
@@ -214,11 +222,14 @@ This makes it impossible for a default setback to inherit the credibility of a r
 - Full repository suite: 207 test files passed, 1 skipped; 1,506 tests passed, 21 skipped.
 - Firestore emulator rules: 21 tests passed with Temurin 21.
 - Static gates: ESLint passed with zero warnings, TypeScript passed, and the Next.js production build completed successfully.
+- Browser release gate: 163 Playwright tests passed and 47 configuration-specific tests skipped across desktop and mobile Chromium.
+- Firebase artifact preparation and production dry-run completed; Firestore rules compiled and Functions packaged successfully.
+- Production deploy completed for Firestore rules, Hosting, and all five configured Functions.
 - Live local flow: geocoding and parcel lookup succeeded for three public addresses in Seattle, Portland, and Austin.
 - Public provider metadata: 10 of 11 registered parcel services responded; Nevada returned HTTP 500.
 - Census current alias: benchmark ID 4 and vintage ID 4 at audit time.
 
-These checks establish current behavior; they do not certify zoning legality, assessor accuracy, permit eligibility, or paid Regrid production behavior.
+These checks establish current behavior; they do not certify zoning legality, assessor accuracy, permit eligibility, authenticated production scenario persistence, or paid Regrid production behavior.
 
 ## Official references
 
