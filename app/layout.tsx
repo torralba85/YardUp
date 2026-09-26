@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { SOCIAL_URLS } from "@/lib/social-links";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
@@ -72,7 +73,7 @@ const jsonLd = {
     // it only ever lists URLs that actually resolve. A 404 here is a negative
     // signal, not a neutral one — add each social profile when it is claimed,
     // never ahead of it.
-    sameAs: [GOOGLE_PLAY_URL],
+    sameAs: [GOOGLE_PLAY_URL, ...SOCIAL_URLS],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",

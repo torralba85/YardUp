@@ -6,6 +6,7 @@ import {
   STATE_BASELINE_AS_OF,
 } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { SOCIAL_LINKS } from "@/lib/social-links";
 import type { JurisdictionContent } from "@/lib/adu/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
@@ -68,6 +69,12 @@ ${cities}
 - [California ADU cost calculator](${calculatorUrl()}): estimated build cost, monthly rent, and payback by unit size for Los Angeles, San Diego, and Santa Clara counties.
 - [Demo lot](${baseUrl}/studio?parcel=oak-street): explore a sample Seattle parcel with no address and no account.
 - [Android app](${GOOGLE_PLAY_URL})
+
+## Profiles
+
+- [YouTube](${SOCIAL_LINKS.youtube})
+- [Instagram](${SOCIAL_LINKS.instagram})
+- [Facebook](${SOCIAL_LINKS.facebook})
 
 ## Reference
 

@@ -10,12 +10,22 @@ import {
 import dynamic from "next/dynamic";
 import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, MapPin, Plus, X } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Facebook,
+  Instagram,
+  MapPin,
+  Plus,
+  X,
+  Youtube,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/Field";
 import { ParcelMark } from "@/components/ui/BrandLockup";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { SOCIAL_LINKS } from "@/lib/social-links";
 import { canGuestLookup } from "@/lib/guest-lookup";
 import {
   hasMemberSessionHint,
@@ -947,9 +957,9 @@ export function LotMoreLanding({
         <footer className={styles.footer}>
           <div className={styles.footerTop}>
             <p>
-              Find the possibility
+              Early possibilities.
               <br />
-              in your lot.
+              Informed next steps.
             </p>
             <nav aria-label="Footer">
               <Link href="/studio" prefetch={false}>
@@ -961,8 +971,12 @@ export function LotMoreLanding({
               <Link href="/about">About us</Link>
               <Link href="/adu/ca">ADU rules by city</Link>
               <Link href="/help">Get in touch</Link>
-              <a href={GOOGLE_PLAY_URL} rel="noopener">
-                Android app on Google Play
+              <a
+                href={GOOGLE_PLAY_URL}
+                rel="noopener"
+                aria-label="Android app on Google Play"
+              >
+                Google Play
               </a>
             </nav>
             <a
@@ -978,8 +992,36 @@ export function LotMoreLanding({
           </div>
           <div className={styles.footerBottom}>
             <span>© {new Date().getFullYear()} LotFoundry</span>
-            <span>Early possibilities. Informed next steps.</span>
-            <div>
+            <div className={styles.socialRail} aria-label="Social media">
+              <a
+                href={SOCIAL_LINKS.youtube}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label="YouTube"
+                className={styles.socialIconLink}
+              >
+                <Youtube size={18} strokeWidth={1.5} aria-hidden="true" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.instagram}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label="Instagram"
+                className={styles.socialIconLink}
+              >
+                <Instagram size={18} strokeWidth={1.5} aria-hidden="true" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label="Facebook"
+                className={styles.socialIconLink}
+              >
+                <Facebook size={18} strokeWidth={1.5} aria-hidden="true" />
+              </a>
+            </div>
+            <div className={styles.footerLegal}>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>
             </div>

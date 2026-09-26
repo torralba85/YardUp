@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildLlmsTxt } from "./build-text";
 import { ADU_CITIES, calculatorUrl, cityUrl, hubUrl } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { SOCIAL_LINKS } from "@/lib/social-links";
 
 describe("buildLlmsTxt", () => {
   it("lists every shipped jurisdiction, so the file cannot go stale when a city ships", () => {
@@ -32,7 +33,7 @@ describe("buildLlmsTxt", () => {
     }
   });
 
-  it("carries the hub, the cost calculator, the studio, the account-free demo, and the Play listing", () => {
+  it("carries the hub, the cost calculator, the studio, the account-free demo, the Play listing, and social profiles", () => {
     const text = buildLlmsTxt();
 
     expect(text).toContain(hubUrl());
@@ -40,6 +41,9 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain("https://lotfoundry.net/studio");
     expect(text).toContain("https://lotfoundry.net/studio?parcel=oak-street");
     expect(text).toContain(GOOGLE_PLAY_URL);
+    expect(text).toContain(SOCIAL_LINKS.youtube);
+    expect(text).toContain(SOCIAL_LINKS.instagram);
+    expect(text).toContain(SOCIAL_LINKS.facebook);
   });
 
   it("states the planning-aid limitation, because this text is read verbatim by assistants", () => {

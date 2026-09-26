@@ -204,6 +204,22 @@ describe("landing address handoff", () => {
     );
   });
 
+  it("links social media profiles from the footer", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.getByRole("link", { name: "YouTube" })).toHaveAttribute(
+      "href",
+      "https://www.youtube.com/@lotfoundry",
+    );
+    expect(screen.getByRole("link", { name: "Instagram" })).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/lot_foundry",
+    );
+    expect(screen.getByRole("link", { name: "Facebook" })).toHaveAttribute(
+      "href",
+      "https://www.facebook.com/lotfoundry",
+    );
+  });
+
   it("gives every single-choice group a checked option and one keyboard tab stop", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     for (const group of screen.getAllByRole("radiogroup")) {
