@@ -50,6 +50,8 @@ test.describe("Studio Neighborhood 3D", () => {
   });
 
   test("preserves blocked placement and recovers from a failed Cesium download", async ({ page }) => {
+    // Two CDN-backed viewer loads (failed + recovered); each can take 60s.
+    test.setTimeout(150_000);
     let scriptRequests = 0;
     await page.route("**/Build/Cesium/Cesium.js", async (route) => {
       scriptRequests++;
@@ -75,6 +77,8 @@ test.describe("Studio Neighborhood 3D", () => {
     await page.goto("/studio");
     await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
 
+    // Mount plus ground-elevation lookup share one CDN-backed load.
+    test.setTimeout(120_000);
     const elevation = page.getByTestId("cesium-ground-elevation");
     await expect(elevation).toBeVisible({ timeout: 30_000 });
 
@@ -152,6 +156,8 @@ test.describe("Studio Neighborhood 3D", () => {
 
     // Each entry builds a Cesium viewer and each exit destroys it; a missed
     // teardown shows up here as a leaked WebGL context or a destroyed-viewer throw.
+    // Three viewer build/teardown round trips over the CDN.
+    test.setTimeout(180_000);
     for (let pass = 0; pass < 3; pass += 1) {
       await views.getByRole("button", { name: "Neighborhood" }).click();
       await expect(page.getByTestId("cesium-container")).toBeVisible();
