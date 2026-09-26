@@ -21,6 +21,7 @@ const manrope = Manrope({
 });
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
+const appRootUrl = `${appUrl.replace(/\/+$/, "")}/`;
 
 /**
  * Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no
@@ -36,7 +37,7 @@ const jsonLd = {
   name: "LotFoundry",
   description:
     "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
-  url: appUrl,
+  url: appRootUrl,
   applicationCategory: "BusinessApplication",
   operatingSystem: ["Web", "Android"],
   installUrl: GOOGLE_PLAY_URL,
@@ -67,7 +68,7 @@ const jsonLd = {
     "@type": "Organization",
     name: "LotFoundry",
     legalName: "Veri-share",
-    url: appUrl,
+    url: appRootUrl,
     logo: `${appUrl}/icon-512-transparent.png`,
     // `sameAs` is how Google resolves scattered profiles into one entity, so
     // it only ever lists URLs that actually resolve. A 404 here is a negative

@@ -25,17 +25,17 @@ export const viewport: Viewport = {
 };
 const description =
   "Discover what your backyard could become. Explore space for an ADU, estimated build costs, and rental potential with LotFoundry.";
+export const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
   description,
-  alternates: { canonical: "/" },
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },
   openGraph: {
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
-    url: "https://lotfoundry.net",
+    url: canonicalUrl,
     images: [
       {
         url: "/landing/a-lot-more/parcel-after.webp",
@@ -73,8 +73,13 @@ export default function LandingPage() {
     },
   );
   return (
-    <div className={`${display.variable} ${body.variable}`}>
-      <LotMoreLanding scenarios={scenarios} />
-    </div>
+    <>
+      <head>
+        <link rel="canonical" href={canonicalUrl} />
+      </head>
+      <div className={`${display.variable} ${body.variable}`}>
+        <LotMoreLanding scenarios={scenarios} />
+      </div>
+    </>
   );
 }
