@@ -116,6 +116,8 @@ describe("calculateFeasibility", () => {
     expect(result.monthlyRent).toBe(1500);
     expect(result.market.source).toBe("national");
     expect(result.market.verified).toBe(false);
+    expect(result.market.components?.constructionCost.status).toBe("derived");
+    expect(result.market.components?.operatingExpenses.status).toBe("derived");
     expect(result.warnings.join(" ")).toMatch(/verified local market data is unavailable/i);
   });
 

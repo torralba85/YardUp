@@ -115,7 +115,8 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     (value.state === undefined || typeof value.state === "string") &&
     (value.zip === undefined || typeof value.zip === "string") &&
     (value.county === undefined || typeof value.county === "string") &&
-    (value.marketData === undefined || isRecord(value.marketData))
+    (value.marketData === undefined || isRecord(value.marketData)) &&
+    (value.dataQuality === undefined || isRecord(value.dataQuality))
   );
 }
 
@@ -133,14 +134,112 @@ const MARKET_DATA_KEYS = [
   "geography",
   "comparableCount",
   "confidence",
+  "components",
 ] as const;
+
+const EVIDENCE_KEYS = [
+  "status",
+  "source",
+  "sourceAsOf",
+  "sourceUpdatedAt",
+  "retrievedAt",
+  "confidence",
+  "warnings",
+] as const;
+
+const PARCEL_EVIDENCE_FIELDS = [
+  "address",
+  "lotArea",
+  "lotDimensions",
+  "existingHouseSqft",
+  "maxLotCoveragePercent",
+  "setbacks",
+  "zoning",
+  "boundaryGeoJson",
+] as const;
+
+function pickSource(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) return undefined;
+  const source: Record<string, unknown> = {};
+  for (const key of ["provider", "dataset", "recordId", "sourceUrl"] as const) {
+    if (typeof value[key] === "string") source[key] = value[key];
+  }
+  return typeof source.provider === "string" && typeof source.dataset === "string"
+    ? source
+    : undefined;
+}
+
+function pickEvidence(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) return undefined;
+  const evidence: Record<string, unknown> = {};
+  for (const key of EVIDENCE_KEYS) {
+    if (key === "source") {
+      const source = pickSource(value.source);
+      if (source) evidence.source = source;
+    } else if (key === "warnings" && Array.isArray(value.warnings)) {
+      evidence.warnings = value.warnings.filter((warning): warning is string => typeof warning === "string");
+    } else if (typeof value[key] === "string") {
+      evidence[key] = value[key];
+    }
+  }
+  return evidence.source && typeof evidence.status === "string" &&
+      typeof evidence.retrievedAt === "string" && typeof evidence.confidence === "string"
+    ? evidence
+    : undefined;
+}
+
+function pickComponents(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) return undefined;
+  const components: Record<string, unknown> = {};
+  for (const key of ["rent", "constructionCost", "operatingExpenses"] as const) {
+    const evidence = pickEvidence(value[key]);
+    if (evidence) components[key] = evidence;
+  }
+  return Object.keys(components).length === 3 ? components : undefined;
+}
 
 function pickMarketData(value: Record<string, unknown>): Record<string, unknown> {
   const picked: Record<string, unknown> = {};
   for (const key of MARKET_DATA_KEYS) {
-    if (value[key] !== undefined) picked[key] = value[key];
+    if (key === "components") {
+      const components = pickComponents(value.components);
+      if (components) picked.components = components;
+    } else if (value[key] !== undefined) {
+      picked[key] = value[key];
+    }
   }
   return picked;
+}
+
+function pickDataQuality(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value) || !isRecord(value.fields)) return undefined;
+  const fields: Record<string, unknown> = {};
+  for (const key of PARCEL_EVIDENCE_FIELDS) {
+    const evidence = pickEvidence(value.fields[key]);
+    if (evidence) fields[key] = evidence;
+  }
+  if (Object.keys(fields).length !== PARCEL_EVIDENCE_FIELDS.length) return undefined;
+
+  const providerAttempts = Array.isArray(value.providerAttempts)
+    ? value.providerAttempts.flatMap((attempt) => {
+        if (!isRecord(attempt)) return [];
+        const picked: Record<string, unknown> = {};
+        for (const key of ["provider", "dataset", "sourceUrl", "outcome", "detail"] as const) {
+          if (typeof attempt[key] === "string") picked[key] = attempt[key];
+        }
+        return typeof picked.provider === "string" && typeof picked.dataset === "string" &&
+          typeof picked.outcome === "string" ? [picked] : [];
+      })
+    : [];
+
+  return {
+    version: 1,
+    fields,
+    providerAttempts,
+    warnings: Array.isArray(value.warnings)
+      ? value.warnings.filter((warning): warning is string => typeof warning === "string")
+      : [],
+  };
 }
 
 /**
@@ -185,6 +284,8 @@ export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
   };
   if (typeof value.county === "string") normalized.county = value.county;
   if (isRecord(value.marketData)) normalized.marketData = pickMarketData(value.marketData);
+  const dataQuality = pickDataQuality(value.dataQuality);
+  if (dataQuality) normalized.dataQuality = dataQuality;
   return isValidLiveParcelData(normalized) ? normalized : null;
 }
 

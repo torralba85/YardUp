@@ -65,6 +65,14 @@ export interface MarketData {
   comparableCount?: number;
   /** Confidence in the figures' accuracy/recency. */
   confidence: "high" | "medium" | "low";
+  /** Per-component lineage; optional only for scenarios saved before v1. */
+  components?: MarketComponentEvidence;
+}
+
+export interface MarketComponentEvidence {
+  rent: DataEvidence;
+  constructionCost: DataEvidence;
+  operatingExpenses: DataEvidence;
 }
 
 /**
@@ -91,6 +99,8 @@ export interface MarketProvenance {
    * and heuristics — surfaces should warn before anyone acts on those.
    */
   verified: boolean;
+  /** Preserves mixed-source evidence in UI and exported feasibility results. */
+  components?: MarketComponentEvidence;
 }
 
 /** A geographic point plus optional administrative identifiers for lookups. */
@@ -106,3 +116,4 @@ export interface MarketLocation {
   /** Two-letter state, e.g. "WA". */
   state?: string;
 }
+import type { DataEvidence } from "@/lib/data-evidence";

@@ -15,6 +15,21 @@ describe("resolveStaticMarket", () => {
     expect(md.area).toBe("Ballard, Seattle WA (ZIP 98107)");
     expect(md.costMultiplier).toBe(1.15);
     expect(md.confidence).toBe("high");
+    expect(md.components?.rent).toMatchObject({
+      status: "observed",
+      confidence: "high",
+      source: { provider: "HUD", dataset: "Fair Market Rents" },
+    });
+    expect(md.components?.constructionCost).toMatchObject({
+      status: "derived",
+      confidence: "medium",
+      source: { provider: "LotFoundry", dataset: "Regional construction cost factors" },
+    });
+    expect(md.components?.operatingExpenses).toMatchObject({
+      status: "derived",
+      source: { provider: "LotFoundry", dataset: "Regional operating-expense factors" },
+    });
+    expect(md.components?.constructionCost.sourceAsOf).toBe(costsAsOf());
   });
 
   it("falls back to county, then state, then national", () => {
@@ -58,3 +73,7 @@ describe("resolveStaticMarket", () => {
     expect(md.geography).toEqual({ state: "TX", county: "Travis", zip: "78704" });
   });
 });
+
+function costsAsOf() {
+  return "Regional construction cost factors (seed, 2026)";
+}

@@ -48,5 +48,33 @@ describe("resolveMarketData", () => {
     expect(md.operatingExpenseRatio).toBe(0.315);
     expect(md.comparableCount).toBe(14);
     expect(md.confidence).toBe("high");
+    expect(md.components?.rent).toMatchObject({
+      status: "observed",
+      confidence: "high",
+      source: { provider: "RentCast", dataset: "Long-Term Rent AVM" },
+    });
+    expect(md.components?.constructionCost.source.provider).toBe("LotFoundry");
+    expect(md.components?.operatingExpenses.source.provider).toBe("LotFoundry");
+  });
+
+  it("does not call a thin live estimate high-confidence", async () => {
+    vi.stubEnv("RENT_API_KEY", "test-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          rentByBedroom: { 0: 1900, 1: 2100, 2: 2500 },
+          comparableCount: 2,
+        }),
+      }),
+    );
+
+    const md = await resolveMarketData({ lat: 0, lng: 0, zip: "98107", state: "WA" });
+
+    expect(md.source).toBe("live");
+    expect(md.confidence).toBe("low");
+    expect(md.components?.rent.confidence).toBe("low");
+    expect(md.components?.rent.warnings.join(" ")).toContain("2 comparable");
   });
 });

@@ -56,5 +56,12 @@ export function marketProvenanceLine(market: MarketProvenance): string {
   if (market.asOf) parts.push(market.asOf);
   if (market.comparableCount) parts.push(`${market.comparableCount} comps`);
   parts.push(CONFIDENCE_LABEL[market.confidence]);
+  if (
+    market.components &&
+    (market.components.constructionCost.status !== "observed" ||
+      market.components.operatingExpenses.status !== "observed")
+  ) {
+    parts.push("Costs and expenses are planning assumptions");
+  }
   return parts.join(" · ");
 }

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   createSavedScenarioStore,
   isValidSavedScenario,
+  normalizeLiveParcel,
   STORAGE_KEY,
 } from "./saved-scenarios";
 import { defaultAduConfig, defaultFinancialAssumptions } from "./feasibility";
@@ -113,6 +114,53 @@ describe("createSavedScenarioStore", () => {
     });
 
     expect(store.load(saved.id)?.liveParcel?.source).toBe("county-gis");
+  });
+
+  it("preserves sanitized parcel and market evidence", () => {
+    const evidence = {
+      status: "observed" as const,
+      source: { provider: "HUD", dataset: "Fair Market Rents" },
+      retrievedAt: "2026-09-25T00:00:00.000Z",
+      confidence: "high" as const,
+      warnings: [],
+    };
+    const normalized = normalizeLiveParcel({
+      ...liveParcel,
+      dataQuality: {
+        version: 1,
+        fields: Object.fromEntries([
+          "address",
+          "lotArea",
+          "lotDimensions",
+          "existingHouseSqft",
+          "maxLotCoveragePercent",
+          "setbacks",
+          "zoning",
+          "boundaryGeoJson",
+        ].map((field) => [field, evidence])),
+        providerAttempts: [{ provider: "Regrid", dataset: "Parcel API v2", outcome: "matched" }],
+        warnings: ["Verify zoning locally."],
+        vendorDebug: "drop me",
+      },
+      marketData: {
+        rentByBedroom: { studio: 1800, "1br": 2000, "2br": 2400 },
+        costMultiplier: 1.1,
+        source: "hud-zip",
+        area: "ZIP 98107",
+        confidence: "high",
+        components: {
+          rent: evidence,
+          constructionCost: { ...evidence, status: "derived", confidence: "medium" },
+          operatingExpenses: { ...evidence, status: "derived", confidence: "medium" },
+          vendorDebug: "drop me",
+        },
+      },
+    });
+
+    expect(normalized?.dataQuality?.warnings).toEqual(["Verify zoning locally."]);
+    expect(normalized?.dataQuality).not.toHaveProperty("vendorDebug");
+    expect(normalized?.marketData?.components?.rent.source.provider).toBe("HUD");
+    expect(normalized?.marketData?.components).not.toHaveProperty("vendorDebug");
   });
 
   it("removes by id", () => {

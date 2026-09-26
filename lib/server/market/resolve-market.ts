@@ -14,16 +14,42 @@ export async function resolveMarketData(loc: MarketLocation): Promise<MarketData
   const base = resolveStaticMarket(loc);
   const live = await fetchLiveRent(loc);
   if (live) {
+    const retrievedAt = new Date().toISOString();
+    const comparableCount = live.comparableCount;
+    const confidence = comparableCount != null && comparableCount >= 10
+      ? "high"
+      : comparableCount != null && comparableCount >= 5
+        ? "medium"
+        : "low";
+    const warnings = confidence === "high"
+      ? []
+      : comparableCount == null
+        ? ["The live provider did not publish a comparable count."]
+        : [`Only ${comparableCount} comparable listings support this estimate.`];
     return {
       ...base,
       rentByBedroom: live.rentByBedroom,
       area: live.area ?? base.area,
       source: "live",
-      confidence: "high",
-      comparableCount: live.comparableCount,
-      sourceUrl: undefined,
-      asOf: undefined,
-      retrievedAt: new Date().toISOString(),
+      confidence,
+      comparableCount,
+      sourceUrl: "https://developers.rentcast.io/reference/rental-avm",
+      asOf: "Live rental estimate",
+      retrievedAt,
+      components: {
+        ...base.components!,
+        rent: {
+          status: "observed",
+          source: {
+            provider: "RentCast",
+            dataset: "Long-Term Rent AVM",
+            sourceUrl: "https://developers.rentcast.io/reference/rental-avm",
+          },
+          retrievedAt,
+          confidence,
+          warnings,
+        },
+      },
     };
   }
   return base;

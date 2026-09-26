@@ -8,6 +8,25 @@
  */
 
 import type { MarketData } from "@/lib/market/market-types";
+import type { DataEvidence, ProviderAttempt } from "@/lib/data-evidence";
+
+export type ParcelEvidenceField =
+  | "address"
+  | "lotArea"
+  | "lotDimensions"
+  | "existingHouseSqft"
+  | "maxLotCoveragePercent"
+  | "setbacks"
+  | "zoning"
+  | "boundaryGeoJson";
+
+/** Field-level lineage for a parcel response. Optional on legacy saves only. */
+export interface ParcelDataQuality {
+  version: 1;
+  fields: Record<ParcelEvidenceField, DataEvidence>;
+  providerAttempts: ProviderAttempt[];
+  warnings: string[];
+}
 
 export interface Parcel {
   address: string;
@@ -52,6 +71,8 @@ export interface LiveParcelData extends Parcel {
    * the engine marks financials unverified when it is absent.
    */
   marketData?: MarketData;
+  /** Present on new API responses; absent only on scenarios saved before v1. */
+  dataQuality?: ParcelDataQuality;
 }
 
 /** Minimal GeoJSON Polygon shape (avoids importing a full types package). */

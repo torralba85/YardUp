@@ -1,14 +1,27 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { LiveParcelData } from "@/lib/parcel-types";
+import type {
+  DataEvidence,
+  EvidenceStatus,
+  EvidenceSource,
+  ProviderAttempt,
+} from "@/lib/data-evidence";
 import { parcelPresets } from "@/lib/feasibility";
 import { extractZip, parseParcelCityState } from "@/lib/marketplace";
-import { estimateLotDimensions, orientedLotDimensions } from "@/lib/parcel-geometry";
+import {
+  estimateLotDimensions,
+  orientedLotDimensions,
+  polygonContainsPoint,
+} from "@/lib/parcel-geometry";
 import {
   type CensusLocation,
   fetchCensusLocation,
 } from "@/lib/server/census-geocode";
 import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
-import { fetchCountyParcel } from "@/lib/server/county-parcels";
+import {
+  type CountyParcelResult,
+  fetchCountyParcelWithDiagnostics,
+} from "@/lib/server/county-parcels";
 import { resolveMarketData } from "@/lib/server/market/resolve-market";
 import {
   extractRegridLocation,
@@ -113,6 +126,7 @@ export async function GET(request: NextRequest) {
         lng,
         requestedAddress,
         censusLocation,
+        [regridAttempt("provider-error", "Regrid rate-limited the lookup.")],
       );
     }
 
@@ -128,6 +142,7 @@ export async function GET(request: NextRequest) {
         lng,
         requestedAddress,
         censusLocation,
+        [regridAttempt("no-match", "Regrid returned no parcel at this point.")],
       );
     }
 
@@ -137,9 +152,36 @@ export async function GET(request: NextRequest) {
     const boundaryGeoJson =
       geometry?.type === "Polygon" ? geometry : null;
 
-    const lotAreaSqft = fields.ll_gisacre
-      ? Math.round(fields.ll_gisacre * 43560)
-      : 5000;
+    if (boundaryGeoJson && !polygonContainsPoint(boundaryGeoJson, lng, lat)) {
+      return await successWithoutRegrid(
+        lat,
+        lng,
+        requestedAddress,
+        censusLocation,
+        [regridAttempt(
+          "invalid-response",
+          "Regrid returned a parcel polygon that does not contain the requested point.",
+        )],
+      );
+    }
+
+    const gisAcres = positiveNumber(fields.ll_gisacre);
+    // A Regrid record without an observed parcel area is not usable for the
+    // feasibility engine. Continue to the public geometry chain rather than
+    // turning missing data into a precise-looking 5,000 sq ft parcel.
+    if (gisAcres === null) {
+      return await successWithoutRegrid(
+        lat,
+        lng,
+        requestedAddress,
+        censusLocation,
+        [regridAttempt(
+          "invalid-response",
+          "Regrid returned a parcel without a usable lot area.",
+        )],
+      );
+    }
+    const lotAreaSqft = Math.round(gisAcres * 43560);
 
     const regridFootprint = positiveNumber(fields.ll_bldg_footprint_sqft);
     const structuresPromise =
@@ -170,11 +212,53 @@ export async function GET(request: NextRequest) {
     ]);
     const loc = mergeLocations(extractRegridLocation(fields), census);
     const marketData = await resolveMarketData({ lat, lng, ...loc });
+    const structuresFootprint = positiveNumber(structures?.totalSqft);
+    const buildingAreaFallback = positiveNumber(fields.sqft);
     const existingHouseSqft =
-      regridFootprint ??
-      positiveNumber(structures?.totalSqft) ??
-      positiveNumber(fields.sqft) ??
-      0;
+      regridFootprint ?? structuresFootprint ?? buildingAreaFallback ?? 0;
+    const retrievedAt = new Date().toISOString();
+    const regridSource: EvidenceSource = {
+      provider: "Regrid",
+      dataset: "Parcel API v2",
+      recordId: stringValue(fields.ll_uuid),
+      sourceUrl: "https://support.regrid.com/docs/source-lineage",
+    };
+    const sourceAsOf = stringValue(fields.ll_last_refresh);
+    const sourceUpdatedAt = stringValue(fields.ll_updated_at);
+    const evidence = (
+      status: EvidenceStatus,
+      confidence: DataEvidence["confidence"],
+      warnings: string[] = [],
+      source = regridSource,
+    ): DataEvidence => ({
+      status,
+      source,
+      ...(sourceAsOf ? { sourceAsOf } : {}),
+      ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}),
+      retrievedAt,
+      confidence,
+      warnings,
+    });
+    const rawSetbacks = fields.zoning_setbacks as
+      | Record<string, number>
+      | null
+      | undefined;
+    const setbacksObserved = hasCompleteSetbacks(rawSetbacks);
+    const zoningObserved = typeof fields.zoning === "string" && fields.zoning.trim() !== "";
+    const addressObserved = Boolean(fields.saddress ?? fields.address);
+    const footprintEvidence = regridFootprint !== null
+      ? evidence("observed", "high")
+      : structuresFootprint !== null
+        ? evidence("observed", "medium", [
+            "Imagery-derived building footprints can lag recent construction.",
+          ], usaStructuresSource())
+        : buildingAreaFallback !== null
+          ? evidence("derived", "low", [
+              "Provider building area is being used as a ground-footprint proxy.",
+            ])
+          : evidence("unavailable", "unknown", [
+              "No existing-building footprint was found; zero means unknown, not vacant.",
+            ]);
 
     const parcelData: LiveParcelData = {
       address: formatAddress(fields, requestedAddress, lat, lng),
@@ -194,6 +278,49 @@ export async function GET(request: NextRequest) {
       zip: loc.zip,
       county: loc.county,
       marketData,
+      dataQuality: {
+        version: 1,
+        fields: {
+          address: addressObserved
+            ? evidence("observed", "high")
+            : evidence("derived", "medium", [
+                "The provider did not publish a situs address; the searched address or coordinates were used.",
+              ], userInputSource()),
+          lotArea: evidence("observed", "high"),
+          lotDimensions: evidence("derived", boundaryGeoJson ? "medium" : "low", [
+            boundaryGeoJson
+              ? "Lot dimensions are derived from the parcel polygon."
+              : "Lot dimensions are estimated from parcel area because no polygon was available.",
+          ]),
+          existingHouseSqft: footprintEvidence,
+          maxLotCoveragePercent: zoningObserved
+            ? evidence("derived", "low", [
+                "Maximum lot coverage is inferred from a broad zoning-code heuristic, not a jurisdiction rule.",
+              ])
+            : evidence("defaulted", "low", [
+                "Maximum lot coverage is a planning assumption because zoning rules were unavailable.",
+              ]),
+          setbacks: setbacksObserved
+            ? evidence("observed", "medium")
+            : evidence("defaulted", "low", [
+                "Setbacks are planning assumptions because address-specific rules were unavailable.",
+              ]),
+          zoning: zoningObserved
+            ? evidence("observed", "medium")
+            : evidence("unavailable", "unknown", [
+                "Address-specific zoning was unavailable.",
+              ]),
+          boundaryGeoJson: boundaryGeoJson
+            ? evidence("observed", "high")
+            : evidence("unavailable", "unknown", [
+                "The provider did not return a parcel boundary.",
+              ]),
+        },
+        providerAttempts: [regridAttempt("matched")],
+        warnings: [
+          "Setbacks and maximum lot coverage require confirmation with the local planning authority.",
+        ],
+      },
     };
 
     return NextResponse.json(parcelData, {
@@ -206,6 +333,12 @@ export async function GET(request: NextRequest) {
       lng,
       requestedAddress,
       censusLocation,
+      [regridAttempt(
+        err instanceof Error && err.name === "AbortError" ? "timeout" : "provider-error",
+        err instanceof Error && err.name === "AbortError"
+          ? "Regrid exceeded the lookup timeout."
+          : "Regrid could not complete the lookup.",
+      )],
     );
   }
 }
@@ -225,11 +358,14 @@ async function successWithoutRegrid(
   lng: number,
   requestedAddress: string | undefined,
   censusLocation: Promise<CensusLocation | null>,
+  priorAttempts: ProviderAttempt[] = [],
 ): Promise<NextResponse> {
-  const [countyParcel, census] = await Promise.all([
-    fetchCountyParcel(lat, lng),
+  const [countyLookup, census] = await Promise.all([
+    fetchCountyParcelWithDiagnostics(lat, lng),
     censusLocation,
   ]);
+  const countyParcel = countyLookup.parcel;
+  const providerAttempts = [...priorAttempts, ...countyLookup.attempts];
 
   // A GIS hit without a usable area cannot describe a lot, so it falls
   // through to the preset rather than yielding a zero-area parcel.
@@ -240,9 +376,16 @@ async function successWithoutRegrid(
       requestedAddress,
       countyParcel,
       census,
+      providerAttempts,
     );
   }
-  return await presetFallbackResponse(lat, lng, requestedAddress, census);
+  return await presetFallbackResponse(
+    lat,
+    lng,
+    requestedAddress,
+    census,
+    providerAttempts,
+  );
 }
 
 /** Build a LiveParcelData from a free county/statewide GIS parcel polygon. */
@@ -250,8 +393,9 @@ async function countyGisResponse(
   lat: number,
   lng: number,
   requestedAddress: string | undefined,
-  countyParcel: NonNullable<Awaited<ReturnType<typeof fetchCountyParcel>>>,
+  countyParcel: CountyParcelResult,
   census: CensusLocation | null,
+  providerAttempts: ProviderAttempt[],
 ): Promise<NextResponse> {
   const lotArea = countyParcel.lotAreaSqft as number;
   const { lotWidth, lotLength } =
@@ -279,6 +423,18 @@ async function countyGisResponse(
     resolveMarketData({ lat, lng, ...loc }),
     fetchBuildingFootprint(countyParcel.polygon),
   ]);
+  const retrievedAt = new Date().toISOString();
+  const matchedProvider = providerAttempts.findLast(
+    (attempt) => attempt.provider === "ArcGIS" && attempt.outcome === "matched",
+  );
+  const parcelSource = matchedProvider
+    ? {
+        provider: matchedProvider.provider,
+        dataset: matchedProvider.dataset,
+        sourceUrl: matchedProvider.sourceUrl,
+      }
+    : { provider: "ArcGIS", dataset: `${countyParcel.county} parcels` };
+  const structuresSqft = positiveNumber(structures?.totalSqft);
 
   const parcel: LiveParcelData = {
     address: location.address,
@@ -289,7 +445,7 @@ async function countyGisResponse(
     // County parcel layers describe land rather than structures. The free
     // USA Structures layer fills this only when it finds a positive footprint
     // whose published centroid lies inside the parcel; zero remains unknown.
-    existingHouseSqft: positiveNumber(structures?.totalSqft) ?? 0,
+    existingHouseSqft: structuresSqft ?? 0,
     maxLotCoveragePercent: deriveMaxCoverage(undefined),
     setbacks: DEFAULT_SETBACKS,
     zoning: "Unknown",
@@ -301,6 +457,75 @@ async function countyGisResponse(
     zip: loc.zip,
     county: loc.county,
     marketData,
+    dataQuality: {
+      version: 1,
+      fields: {
+        address: fieldEvidence({
+          status: "derived",
+          confidence: "medium",
+          source: userInputSource(),
+          retrievedAt,
+          warnings: [
+            "The display address comes from the searched address and Census geography, not the parcel layer.",
+          ],
+        }),
+        lotArea: fieldEvidence({
+          status: "observed",
+          confidence: "high",
+          source: parcelSource,
+          retrievedAt,
+        }),
+        lotDimensions: fieldEvidence({
+          status: "derived",
+          confidence: "medium",
+          source: parcelSource,
+          retrievedAt,
+          warnings: ["Lot dimensions are derived from the parcel polygon."],
+        }),
+        existingHouseSqft: fieldEvidence({
+          status: structuresSqft === null ? "unavailable" : "observed",
+          confidence: structuresSqft === null ? "unknown" : "medium",
+          source: usaStructuresSource(),
+          retrievedAt,
+          warnings: structuresSqft === null
+            ? ["No building footprint was found; zero means unknown, not vacant."]
+            : ["Imagery-derived building footprints can lag recent construction."],
+        }),
+        maxLotCoveragePercent: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: assumptionSource(),
+          retrievedAt,
+          warnings: [
+            "The 40% maximum lot coverage is a planning assumption, not an address-specific rule.",
+          ],
+        }),
+        setbacks: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: assumptionSource(),
+          retrievedAt,
+          warnings: ["Setbacks are planning assumptions, not address-specific rules."],
+        }),
+        zoning: fieldEvidence({
+          status: "unavailable",
+          confidence: "unknown",
+          source: parcelSource,
+          retrievedAt,
+          warnings: ["The public parcel layer did not provide zoning."],
+        }),
+        boundaryGeoJson: fieldEvidence({
+          status: "observed",
+          confidence: "high",
+          source: parcelSource,
+          retrievedAt,
+        }),
+      },
+      providerAttempts,
+      warnings: [
+        "Zoning, setbacks, and maximum lot coverage are unverified; confirm local planning rules.",
+      ],
+    },
   };
   return NextResponse.json(parcel, {
     headers: { "Cache-Control": "private, max-age=3600" },
@@ -312,6 +537,7 @@ async function presetFallbackResponse(
   lng: number,
   requestedAddress: string | undefined,
   census: CensusLocation | null,
+  providerAttempts: ProviderAttempt[],
 ): Promise<NextResponse> {
   const preset = nearestPreset(lat, lng);
   // The preset only lends typical *dimensions*, never its identity: a
@@ -330,6 +556,11 @@ async function presetFallbackResponse(
     census,
   );
   const marketData = await resolveMarketData({ lat, lng, ...loc });
+  const retrievedAt = new Date().toISOString();
+  const presetSource = {
+    provider: "LotFoundry",
+    dataset: `Demo parcel preset: ${preset.id}`,
+  };
   const fallback: LiveParcelData = {
     address: location.address,
     city: location.city,
@@ -348,6 +579,75 @@ async function presetFallbackResponse(
     zip: loc.zip,
     county: loc.county,
     marketData,
+    dataQuality: {
+      version: 1,
+      fields: {
+        address: fieldEvidence({
+          status: "derived",
+          confidence: "medium",
+          source: userInputSource(),
+          retrievedAt,
+          warnings: [
+            "The display address comes from the searched address and Census geography.",
+          ],
+        }),
+        lotArea: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: presetSource,
+          retrievedAt,
+          warnings: ["Lot area comes from a demo preset, not this property."],
+        }),
+        lotDimensions: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: presetSource,
+          retrievedAt,
+          warnings: ["Lot dimensions come from a demo preset, not this property."],
+        }),
+        existingHouseSqft: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: presetSource,
+          retrievedAt,
+          warnings: ["Existing-building area comes from a demo preset, not this property."],
+        }),
+        maxLotCoveragePercent: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: presetSource,
+          retrievedAt,
+          warnings: ["Maximum lot coverage is a demo planning assumption."],
+        }),
+        setbacks: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: presetSource,
+          retrievedAt,
+          warnings: ["Setbacks are demo planning assumptions."],
+        }),
+        zoning: fieldEvidence({
+          status: "defaulted",
+          confidence: "low",
+          source: presetSource,
+          retrievedAt,
+          warnings: [
+            "Zoning is an estimated demo category, not an address-specific designation.",
+          ],
+        }),
+        boundaryGeoJson: fieldEvidence({
+          status: "unavailable",
+          confidence: "unknown",
+          source: presetSource,
+          retrievedAt,
+          warnings: ["No parcel boundary provider matched this coordinate."],
+        }),
+      },
+      providerAttempts,
+      warnings: [
+        "No configured parcel provider returned usable property data; physical and regulatory values are demo assumptions.",
+      ],
+    },
   };
   return NextResponse.json(fallback, {
     headers: { "Cache-Control": "public, max-age=300" },
@@ -380,6 +680,63 @@ function positiveNumber(value: unknown): number | null {
         ? Number(value)
         : NaN;
   return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function hasCompleteSetbacks(
+  raw: Record<string, number> | null | undefined,
+): boolean {
+  if (!raw) return false;
+  return [
+    raw.front ?? raw.front_setback,
+    raw.rear ?? raw.rear_setback,
+    raw.side ?? raw.side_setback,
+  ].every((value) => typeof value === "number" && Number.isFinite(value));
+}
+
+function userInputSource() {
+  return {
+    provider: "LotFoundry",
+    dataset: "User-supplied address",
+  };
+}
+
+function usaStructuresSource() {
+  return {
+    provider: "FEMA / ORNL",
+    dataset: "USA Structures",
+    sourceUrl:
+      "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/USA_Structures_View/FeatureServer/0",
+  };
+}
+
+function assumptionSource() {
+  return {
+    provider: "LotFoundry",
+    dataset: "Generic feasibility assumptions",
+  };
+}
+
+function fieldEvidence(
+  input: Omit<DataEvidence, "warnings"> & { warnings?: string[] },
+): DataEvidence {
+  return { ...input, warnings: input.warnings ?? [] };
+}
+
+function regridAttempt(
+  outcome: ProviderAttempt["outcome"],
+  detail?: string,
+): ProviderAttempt {
+  return {
+    provider: "Regrid",
+    dataset: "Parcel API v2",
+    sourceUrl: "https://support.regrid.com/docs/source-lineage",
+    outcome,
+    ...(detail ? { detail } : {}),
+  };
 }
 
 function sanitizeAddress(value: string | null): string | undefined {

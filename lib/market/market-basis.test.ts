@@ -53,6 +53,30 @@ describe("marketProvenanceLine", () => {
     ).toBe("Live comps · ZIP 98107 · 14 comps · High confidence");
   });
 
+  it("discloses when costs and expenses are separate planning assumptions", () => {
+    const evidence = {
+      status: "derived" as const,
+      source: { provider: "LotFoundry", dataset: "Planning factors" },
+      retrievedAt: "2026-09-25T00:00:00.000Z",
+      confidence: "medium" as const,
+      warnings: [],
+    };
+    expect(
+      marketProvenanceLine({
+        source: "live",
+        area: "ZIP 98107",
+        comparableCount: 14,
+        confidence: "high",
+        verified: true,
+        components: {
+          rent: { ...evidence, status: "observed", source: { provider: "RentCast", dataset: "AVM" } },
+          constructionCost: evidence,
+          operatingExpenses: evidence,
+        },
+      }),
+    ).toContain("Costs and expenses are planning assumptions");
+  });
+
   it("labels non-market sources honestly", () => {
     expect(
       marketProvenanceLine({

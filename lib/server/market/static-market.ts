@@ -9,6 +9,7 @@ import type {
 import fmr from "./data/fmr.json";
 import costs from "./data/cost-multipliers.json";
 import opex from "./data/operating-expenses.json";
+import type { DataEvidence } from "@/lib/data-evidence";
 
 type RentRow = Record<BedroomClass, number>;
 
@@ -112,6 +113,22 @@ function geography(loc: MarketLocation): MarketGeography {
 export function resolveStaticMarket(loc: MarketLocation): MarketData {
   const { rent, area, source } = rentTier(loc);
   const expenses = operatingExpenses(loc);
+  const retrievedAt = new Date().toISOString();
+  const rentConfidence = CONFIDENCE[source];
+  const rentEvidence: DataEvidence = {
+    status: "observed",
+    source: {
+      provider: "HUD",
+      dataset: "Fair Market Rents",
+      sourceUrl: fmr.sourceUrl,
+    },
+    sourceAsOf: fmr.asOf,
+    retrievedAt,
+    confidence: rentConfidence,
+    warnings: source === "state" || source === "national"
+      ? ["No ZIP- or county-level HUD row resolved for this address."]
+      : [],
+  };
   return {
     rentByBedroom: rent,
     costMultiplier: costMultiplier(loc),
@@ -121,8 +138,33 @@ export function resolveStaticMarket(loc: MarketLocation): MarketData {
     area,
     asOf: fmr.asOf,
     sourceUrl: fmr.sourceUrl,
-    retrievedAt: new Date().toISOString(),
+    retrievedAt,
     geography: geography(loc),
-    confidence: CONFIDENCE[source],
+    confidence: rentConfidence,
+    components: {
+      rent: rentEvidence,
+      constructionCost: {
+        status: "derived",
+        source: {
+          provider: "LotFoundry",
+          dataset: "Regional construction cost factors",
+        },
+        sourceAsOf: costs.asOf,
+        retrievedAt,
+        confidence: source === "national" ? "low" : "medium",
+        warnings: ["Curated regional factor; verify against current local bids."],
+      },
+      operatingExpenses: {
+        status: "derived",
+        source: {
+          provider: "LotFoundry",
+          dataset: "Regional operating-expense factors",
+        },
+        sourceAsOf: opex.asOf,
+        retrievedAt,
+        confidence: loc.state?.trim() ? "medium" : "low",
+        warnings: ["Planning assumption; actual ownership expenses vary by project."],
+      },
+    },
   };
 }

@@ -8,6 +8,7 @@
  * against the live services (see the implementation plan, Task 5).
  */
 import type { GeoJsonPolygon } from "@/lib/parcel-types";
+import type { ProviderAttempt, ProviderOutcome } from "@/lib/data-evidence";
 import {
   polygonAreaSqft,
   polygonContainsPoint,
@@ -163,6 +164,11 @@ export interface CountyParcelResult {
   lotAreaSqft: number | null;
 }
 
+export interface CountyParcelLookup {
+  parcel: CountyParcelResult | null;
+  attempts: ProviderAttempt[];
+}
+
 /**
  * Look up the parcel polygon containing (lat, lng) from the registered GIS
  * services, trying every bbox match in registry order — county services
@@ -180,6 +186,14 @@ export async function fetchCountyParcel(
   lat: number,
   lng: number,
 ): Promise<CountyParcelResult | null> {
+  return (await fetchCountyParcelWithDiagnostics(lat, lng)).parcel;
+}
+
+/** Lookup variant that preserves why each configured provider did or did not answer. */
+export async function fetchCountyParcelWithDiagnostics(
+  lat: number,
+  lng: number,
+): Promise<CountyParcelLookup> {
   const candidates = COUNTY_GIS_SOURCES.filter(
     (s) =>
       lat >= s.bbox.minLat &&
@@ -187,9 +201,20 @@ export async function fetchCountyParcel(
       lng >= s.bbox.minLng &&
       lng <= s.bbox.maxLng,
   );
-  if (candidates.length === 0) return null;
+  if (candidates.length === 0) {
+    return {
+      parcel: null,
+      attempts: [{
+        provider: "ArcGIS",
+        dataset: "Configured public parcel registry",
+        outcome: "unsupported",
+        detail: "No configured public parcel source covers this coordinate.",
+      }],
+    };
+  }
 
   const deadline = Date.now() + TIMEOUT_MS;
+  const attempts: ProviderAttempt[] = [];
   for (let index = 0; index < candidates.length; index++) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
@@ -198,18 +223,24 @@ export async function fetchCountyParcel(
     // early hands its unused share to the ones behind it.
     const budget = Math.max(1, Math.floor(remaining / (candidates.length - index)));
     const result = await queryGisSource(candidates[index], lat, lng, budget);
-    if (result) return result;
+    attempts.push(result.attempt);
+    if (result.parcel) return { parcel: result.parcel, attempts };
   }
-  return null;
+  return { parcel: null, attempts };
 }
 
-/** Query one registered service. Never throws; null means "no parcel here". */
+interface SourceQueryResult {
+  parcel: CountyParcelResult | null;
+  attempt: ProviderAttempt;
+}
+
+/** Query one registered service while preserving no-match vs provider failure. */
 async function queryGisSource(
   source: CountyGisSource,
   lat: number,
   lng: number,
   timeoutMs: number,
-): Promise<CountyParcelResult | null> {
+): Promise<SourceQueryResult> {
   const params = new URLSearchParams({
     f: "geojson",
     geometry: `${lng},${lat}`,
@@ -230,7 +261,12 @@ async function queryGisSource(
       const res = await fetch(`${source.queryUrl}?${params.toString()}`, {
         signal: controller.signal,
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        return {
+          parcel: null,
+          attempt: providerAttempt(source, "provider-error", `HTTP ${res.status}`),
+        };
+      }
       // Keep the abort timer armed through the body read so a stalled stream
       // trips the same bound as stalled headers.
       json = await res.json();
@@ -240,7 +276,18 @@ async function queryGisSource(
 
     const features = Array.isArray(json?.features) ? json.features : [];
     const best = pickBestFeature(features, lat, lng);
-    if (!best) return null;
+    if (!best) {
+      return {
+        parcel: null,
+        attempt: providerAttempt(
+          source,
+          features.length === 0 ? "no-match" : "invalid-response",
+          features.length === 0
+            ? "The service returned no parcel at this point."
+            : "The service returned features without a usable polygon.",
+        ),
+      };
+    }
 
     // Try both field containers: a server can send an empty `properties`
     // object alongside populated Esri-style `attributes`.
@@ -259,10 +306,35 @@ async function queryGisSource(
       readCountyField(best.feature.attributes, source) ??
       source.county;
 
-    return { county, polygon: best.polygon, lotAreaSqft };
-  } catch {
-    return null;
+    return {
+      parcel: { county, polygon: best.polygon, lotAreaSqft },
+      attempt: providerAttempt(source, "matched"),
+    };
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === "AbortError";
+    return {
+      parcel: null,
+      attempt: providerAttempt(
+        source,
+        timedOut ? "timeout" : "provider-error",
+        timedOut ? "The provider exceeded its lookup budget." : "The provider request failed.",
+      ),
+    };
   }
+}
+
+function providerAttempt(
+  source: CountyGisSource,
+  outcome: ProviderOutcome,
+  detail?: string,
+): ProviderAttempt {
+  return {
+    provider: "ArcGIS",
+    dataset: `${source.county} parcels`,
+    sourceUrl: source.queryUrl.replace(/\/query$/i, ""),
+    outcome,
+    ...(detail ? { detail } : {}),
+  };
 }
 
 interface RawFeature {

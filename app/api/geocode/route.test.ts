@@ -69,7 +69,21 @@ describe("GET /api/geocode", () => {
       googleResponse([
         {
           formatted_address: "123 Oak St, Seattle, WA 98105, USA",
-          geometry: { location: { lat: 47.661, lng: -122.313 } },
+          place_id: "google-place-123",
+          types: ["street_address"],
+          partial_match: false,
+          address_components: [
+            { long_name: "123", short_name: "123", types: ["street_number"] },
+            { long_name: "Oak Street", short_name: "Oak St", types: ["route"] },
+            { long_name: "Seattle", short_name: "Seattle", types: ["locality"] },
+            { long_name: "Washington", short_name: "WA", types: ["administrative_area_level_1"] },
+            { long_name: "98105", short_name: "98105", types: ["postal_code"] },
+            { long_name: "United States", short_name: "US", types: ["country"] },
+          ],
+          geometry: {
+            location: { lat: 47.661, lng: -122.313 },
+            location_type: "ROOFTOP",
+          },
         },
       ]),
     );
@@ -78,12 +92,52 @@ describe("GET /api/geocode", () => {
     const res = await GET(makeRequest("123 Oak St, Seattle"));
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data).toEqual({
+    expect(data).toMatchObject({
       lat: 47.661,
       lng: -122.313,
       formattedAddress: "123 Oak St, Seattle, WA 98105, USA",
+      match: {
+        provider: "google",
+        providerId: "google-place-123",
+        matchType: "street_address",
+        precision: "rooftop",
+        partialMatch: false,
+        components: {
+          houseNumber: "123",
+          road: "Oak Street",
+          city: "Seattle",
+          state: "WA",
+          zip: "98105",
+          country: "US",
+        },
+      },
     });
+    expect(data.match.evidence.status).toBe("observed");
+    expect(data.match.evidence.source.provider).toBe("Google Maps");
     expect(fetchMock.mock.calls[0][0]).toContain("maps.googleapis.com");
+  });
+
+  it("rejects a partial Google match for a street address", async () => {
+    vi.stubEnv("GOOGLE_GEOCODING_KEY", "g-key");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        googleResponse([{
+          formatted_address: "Oak St, Seattle, WA, USA",
+          partial_match: true,
+          types: ["route"],
+          geometry: {
+            location: { lat: 47.661, lng: -122.313 },
+            location_type: "GEOMETRIC_CENTER",
+          },
+        }]),
+      )
+      .mockResolvedValueOnce(nominatimResponse([]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeRequest("123 Oak St, Seattle, WA"));
+
+    expect(res.status).toBe(404);
   });
 
   it("uses the documented GOOGLE_MAPS_API_KEY for Google Geocoding", async () => {
@@ -123,6 +177,31 @@ describe("GET /api/geocode", () => {
     expect(calledUrl).toContain("nominatim.openstreetmap.org");
     // Nominatim policy requires a User-Agent.
     expect((init?.headers as Record<string, string>)["User-Agent"]).toBeTruthy();
+  });
+
+  it("rejects a Nominatim street result without a house number for an address query", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        nominatimResponse([{
+          lat: "47.661",
+          lon: "-122.313",
+          osm_type: "way",
+          osm_id: 42,
+          type: "residential",
+          display_name: "Oak Street, Seattle, Washington, United States",
+          address: {
+            road: "Oak Street",
+            city: "Seattle",
+            state: "Washington",
+          },
+        }]),
+      ),
+    );
+
+    const res = await GET(makeRequest("123 Oak St, Seattle, WA"));
+
+    expect(res.status).toBe(404);
   });
 
   it("404s when the provider returns no match", async () => {
@@ -393,6 +472,9 @@ describe("GET /api/geocode — Nominatim address labelling", () => {
             lon: "-122.3129897",
             display_name:
               "1421, Northeast 88th Street, Maple Leaf, Seattle, King County, Washington, 98115, United States",
+            osm_type: "way",
+            osm_id: 987,
+            type: "house",
             address: {
               house_number: "1421",
               road: "Northeast 88th Street",
@@ -412,6 +494,20 @@ describe("GET /api/geocode — Nominatim address labelling", () => {
     expect(data.formattedAddress).toBe(
       "1421 Northeast 88th Street, Seattle, WA 98115",
     );
+    expect(data.match).toMatchObject({
+      provider: "nominatim",
+      providerId: "way/987",
+      matchType: "house",
+      precision: "address",
+      partialMatch: false,
+      components: {
+        houseNumber: "1421",
+        road: "Northeast 88th Street",
+        city: "Seattle",
+        state: "WA",
+        zip: "98115",
+      },
+    });
   });
 
   it("requests structured address details from Nominatim", async () => {

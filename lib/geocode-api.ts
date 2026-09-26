@@ -1,4 +1,29 @@
-/** A resolved geocode: coordinates plus the canonical formatted address. */
+import type { DataEvidence } from "@/lib/data-evidence";
+
+export interface GeocodeMatch {
+  provider: "google" | "nominatim";
+  providerId?: string;
+  matchType: string;
+  precision:
+    | "rooftop"
+    | "range-interpolated"
+    | "address"
+    | "street"
+    | "locality"
+    | "unknown";
+  partialMatch: boolean;
+  components: {
+    houseNumber?: string;
+    road?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
+  evidence: DataEvidence;
+}
+
+/** A resolved geocode: coordinates, canonical address, and match evidence. */
 export interface GeocodeResult {
   /** Latitude in decimal degrees. */
   lat: number;
@@ -6,6 +31,8 @@ export interface GeocodeResult {
   lng: number;
   /** The provider's normalized, human-readable address. */
   formattedAddress: string;
+  /** Provider match evidence; optional while older cached clients age out. */
+  match?: GeocodeMatch;
 }
 
 /**

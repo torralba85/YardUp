@@ -428,6 +428,7 @@ function provenanceFromMarketData(data: MarketData): MarketProvenance {
     comparableCount: data.comparableCount,
     confidence: data.confidence,
     verified,
+    components: data.components,
   };
 }
 

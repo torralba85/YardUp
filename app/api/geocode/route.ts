@@ -6,6 +6,7 @@ import {
 import { stripUnitDesignators } from "@/lib/server/geocode-query";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import type { DataEvidence } from "@/lib/data-evidence";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
@@ -77,6 +78,31 @@ export interface GeocodeResult {
   lng: number;
   /** The provider's normalized, human-readable address. */
   formattedAddress: string;
+  /** Provider match evidence used to decide whether this point is safe. */
+  match: GeocodeMatch;
+}
+
+export interface GeocodeMatch {
+  provider: "google" | "nominatim";
+  providerId?: string;
+  matchType: string;
+  precision:
+    | "rooftop"
+    | "range-interpolated"
+    | "address"
+    | "street"
+    | "locality"
+    | "unknown";
+  partialMatch: boolean;
+  components: {
+    houseNumber?: string;
+    road?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
+  evidence: DataEvidence;
 }
 
 /**
@@ -156,7 +182,14 @@ async function geocodeWithGoogle(
     const json = (await fetchJson(url.toString())) as {
       results?: Array<{
         formatted_address?: string;
-        geometry?: { location?: { lat?: number; lng?: number } };
+        place_id?: string;
+        partial_match?: boolean;
+        types?: string[];
+        address_components?: GoogleAddressComponent[];
+        geometry?: {
+          location?: { lat?: number; lng?: number };
+          location_type?: string;
+        };
       }>;
     };
     const first = json?.results?.[0];
@@ -164,10 +197,48 @@ async function geocodeWithGoogle(
     if (!first || typeof loc?.lat !== "number" || typeof loc?.lng !== "number") {
       return null;
     }
+    const components = googleComponents(first.address_components);
+    const addressQuery = looksLikeStreetAddress(query);
+    const publishedTypes = first.types ?? [];
+    const addressType = publishedTypes.some((type) =>
+      ["street_address", "premise", "subpremise"].includes(type),
+    );
+    if (
+      addressQuery &&
+      (first.partial_match === true ||
+        (publishedTypes.length > 0 && !addressType) ||
+        (first.address_components && !components.houseNumber))
+    ) {
+      return null;
+    }
+    const precision = googlePrecision(first.geometry?.location_type, publishedTypes);
+    const retrievedAt = new Date().toISOString();
     return {
       lat: loc.lat,
       lng: loc.lng,
       formattedAddress: first.formatted_address ?? query,
+      match: {
+        provider: "google",
+        ...(first.place_id ? { providerId: first.place_id } : {}),
+        matchType: publishedTypes[0] ?? "unknown",
+        precision,
+        partialMatch: first.partial_match === true,
+        components,
+        evidence: {
+          status: "observed",
+          source: {
+            provider: "Google Maps",
+            dataset: "Geocoding API",
+            ...(first.place_id ? { recordId: first.place_id } : {}),
+            sourceUrl: "https://developers.google.com/maps/documentation/geocoding",
+          },
+          retrievedAt,
+          confidence: precision === "rooftop" ? "high" : precision === "unknown" ? "low" : "medium",
+          warnings: precision === "unknown"
+            ? ["The provider did not publish address-match precision."]
+            : [],
+        },
+      },
     };
   } catch (err) {
     console.error("[/api/geocode] Google geocode failed:", err);
@@ -201,6 +272,10 @@ async function geocodeWithNominatim(
       lon?: string;
       display_name?: string;
       address?: NominatimAddress;
+      osm_type?: string;
+      osm_id?: number | string;
+      type?: string;
+      class?: string;
     }>;
     // Candidates with usable coordinates in the state the query names, in
     // provider rank order. The state rule is exact and free, so it filters
@@ -226,6 +301,27 @@ async function geocodeWithNominatim(
       if (typeof pick === "number" && hits[pick]) chosen = hits[pick];
     }
 
+    if (
+      looksLikeStreetAddress(query) &&
+      chosen.address &&
+      (!chosen.address.house_number || !chosen.address.road)
+    ) {
+      return null;
+    }
+
+    const components = nominatimComponents(chosen.address);
+    const providerId = chosen.osm_type && chosen.osm_id != null
+      ? `${chosen.osm_type}/${chosen.osm_id}`
+      : undefined;
+    const precision = chosen.address?.house_number && chosen.address?.road
+      ? "address"
+      : chosen.address?.road
+        ? "street"
+        : hasNominatimLocality(chosen.address)
+          ? "locality"
+          : "unknown";
+    const retrievedAt = new Date().toISOString();
+
     return {
       lat: chosen.lat,
       lng: chosen.lng,
@@ -233,6 +329,28 @@ async function geocodeWithNominatim(
         chosen.address,
         chosen.display_name ?? query,
       ),
+      match: {
+        provider: "nominatim",
+        ...(providerId ? { providerId } : {}),
+        matchType: chosen.type ?? chosen.class ?? "unknown",
+        precision,
+        partialMatch: false,
+        components,
+        evidence: {
+          status: "observed",
+          source: {
+            provider: "OpenStreetMap",
+            dataset: "Nominatim",
+            ...(providerId ? { recordId: providerId } : {}),
+            sourceUrl: "https://nominatim.org/release-docs/latest/api/Search/",
+          },
+          retrievedAt,
+          confidence: precision === "address" ? "medium" : "low",
+          warnings: precision === "address"
+            ? []
+            : ["The result is not confirmed at a house-number address precision."],
+        },
+      },
     };
   } catch (err) {
     console.error("[/api/geocode] Nominatim geocode failed:", err);
@@ -251,11 +369,100 @@ interface NominatimAddress {
   suburb?: string;
   state?: string;
   postcode?: string;
+  country?: string;
+  country_code?: string;
+}
+
+interface GoogleAddressComponent {
+  long_name?: string;
+  short_name?: string;
+  types?: string[];
 }
 
 const STATE_CODES_BY_NAME = new Map(
   Object.entries(US_STATE_NAMES).map(([code, name]) => [name.toLowerCase(), code]),
 );
+
+function looksLikeStreetAddress(query: string): boolean {
+  return /^\s*\d+[A-Za-z-]?\b/.test(stripUnitDesignators(query));
+}
+
+function googleComponents(
+  components: GoogleAddressComponent[] | undefined,
+): GeocodeMatch["components"] {
+  const value = (type: string, short = false): string | undefined => {
+    const component = components?.find((candidate) => candidate.types?.includes(type));
+    return short ? component?.short_name : component?.long_name;
+  };
+
+  return {
+    ...(value("street_number") ? { houseNumber: value("street_number") } : {}),
+    ...(value("route") ? { road: value("route") } : {}),
+    ...(value("locality") ?? value("postal_town") ?? value("sublocality")
+      ? { city: value("locality") ?? value("postal_town") ?? value("sublocality") }
+      : {}),
+    ...(value("administrative_area_level_1", true)
+      ? { state: value("administrative_area_level_1", true) }
+      : {}),
+    ...(value("postal_code") ? { zip: value("postal_code") } : {}),
+    ...(value("country", true) ? { country: value("country", true) } : {}),
+  };
+}
+
+function googlePrecision(
+  locationType: string | undefined,
+  types: string[],
+): GeocodeMatch["precision"] {
+  if (locationType === "ROOFTOP") return "rooftop";
+  if (locationType === "RANGE_INTERPOLATED") return "range-interpolated";
+  if (types.some((type) => ["street_address", "premise", "subpremise"].includes(type))) {
+    return "address";
+  }
+  if (types.includes("route")) return "street";
+  if (
+    types.some((type) =>
+      ["locality", "postal_town", "administrative_area_level_2"].includes(type),
+    )
+  ) {
+    return "locality";
+  }
+  return "unknown";
+}
+
+function nominatimComponents(
+  address: NominatimAddress | undefined,
+): GeocodeMatch["components"] {
+  if (!address) return {};
+
+  const city =
+    address.city ?? address.town ?? address.village ?? address.hamlet ?? address.suburb;
+  const state = address.state
+    ? (STATE_CODES_BY_NAME.get(address.state.toLowerCase()) ?? address.state)
+    : undefined;
+
+  return {
+    ...(address.house_number ? { houseNumber: address.house_number } : {}),
+    ...(address.road ? { road: address.road } : {}),
+    ...(city ? { city } : {}),
+    ...(state ? { state } : {}),
+    ...(address.postcode ? { zip: address.postcode } : {}),
+    ...(address.country_code
+      ? { country: address.country_code.toUpperCase() }
+      : address.country
+        ? { country: address.country }
+        : {}),
+  };
+}
+
+function hasNominatimLocality(address: NominatimAddress | undefined): boolean {
+  return Boolean(
+    address?.city ??
+      address?.town ??
+      address?.village ??
+      address?.hamlet ??
+      address?.suburb,
+  );
+}
 
 /**
  * Build a conventional US address label from Nominatim's structured fields.

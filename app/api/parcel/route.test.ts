@@ -243,6 +243,69 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.lng).toBe(-122.31);
   });
 
+  it("labels observed, derived, and defaulted parcel fields independently", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        regridResponse({
+          ll_gisacre: 0.25,
+          ll_bldg_footprint_sqft: 1500,
+          ll_uuid: "parcel-123",
+          ll_last_refresh: "2026-08-14",
+          zoning: "R-1",
+          saddress: "123 Oak St",
+          scity: "Seattle",
+          state2: "WA",
+          szip5: "98105",
+        }),
+      ),
+    );
+
+    const data = (await (await GET(makeRequest(47.65, -122.31))).json()) as LiveParcelData & {
+      dataQuality?: {
+        fields: Record<string, { status: string; source: { recordId?: string }; sourceAsOf?: string }>;
+      };
+    };
+
+    expect(data.dataQuality?.fields.lotArea.status).toBe("observed");
+    expect(data.dataQuality?.fields.lotArea.source.recordId).toBe("parcel-123");
+    expect(data.dataQuality?.fields.lotArea.sourceAsOf).toBe("2026-08-14");
+    expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("observed");
+    expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
+    expect(data.dataQuality?.fields.setbacks.status).toBe("defaulted");
+  });
+
+  it("does not turn a missing Regrid lot area into a 5,000 sq ft fact", async () => {
+    const countyPolygon = rotatedRectPolygon(47.65, -122.31, 50, 120, 0);
+    stubProviders({
+      regrid: regridResponse({ zoning: "R-1", saddress: "123 Oak St" }),
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(countyPolygon, { Shape__Area: 6000 }),
+    });
+
+    const data = (await (await GET(makeRequest(47.65, -122.31))).json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+  });
+
+  it("rejects a Regrid polygon that does not contain the requested point", async () => {
+    const wrongPolygon = rotatedRectPolygon(47.7, -122.4, 50, 120, 0);
+    const countyPolygon = rotatedRectPolygon(47.65, -122.31, 50, 120, 0);
+    stubProviders({
+      regrid: regridResponse({ ll_gisacre: 0.14, zoning: "R-1" }, wrongPolygon),
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(countyPolygon, { Shape__Area: 6000 }),
+    });
+
+    const data = (await (await GET(makeRequest(47.65, -122.31))).json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "invalid-response" }),
+    );
+  });
+
   it("prefers Regrid's situs fields over the mailing-address fields", async () => {
     // `saddress`/`scity` describe the property; `address`/`city` can carry the
     // owner's mailing address, which belongs to a different lot entirely.
@@ -599,6 +662,39 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
     expect(data.zoning).toBe("Unknown");
   });
 
+  it("marks county geometry as observed and regulatory assumptions as defaulted", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(KING_LOT, { Shape__Area: 6000 }),
+      structures: structuresResponse(1675),
+    });
+
+    const data = (await (await GET(makeRequest(47.65, -122.31))).json()) as LiveParcelData & {
+      dataQuality?: {
+        fields: Record<string, { status: string; source: { provider: string } }>;
+        providerAttempts: Array<{ outcome: string; provider: string }>;
+      };
+    };
+
+    expect(data.dataQuality?.fields.lotArea.status).toBe("observed");
+    expect(data.dataQuality?.fields.boundaryGeoJson.status).toBe("observed");
+    expect(data.dataQuality?.fields.existingHouseSqft.source.provider).toBe("FEMA / ORNL");
+    expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("defaulted");
+    expect(data.dataQuality?.fields.setbacks.status).toBe("defaulted");
+    expect(data.dataQuality?.fields.zoning.status).toBe("unavailable");
+    expect(data.dataQuality?.providerAttempts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ provider: "Regrid", outcome: "no-match" }),
+        expect.objectContaining({ provider: "ArcGIS", outcome: "matched" }),
+      ]),
+    );
+  });
+
   it("fills a county GIS parcel's existing footprint from USA Structures", async () => {
     stubProviders({
       regrid: {
@@ -687,6 +783,36 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
 
     expect(data.source).toBe("fallback");
     expect(data.zoning).toBe("R-1 (estimated)");
+  });
+
+  it("identifies preset dimensions and regulations as defaults", async () => {
+    stubProviders({
+      regrid: {
+        ok: true,
+        status: 200,
+        json: async () => ({ parcels: { type: "FeatureCollection", features: [] } }),
+      },
+      census: censusCoordinateResponse("CO", "Denver"),
+      countyGis: EMPTY_FEATURES,
+    });
+
+    const data = (await (await GET(
+      makeRequest(39.752, -104.999, "456 Pine St, Denver, CO 80202"),
+    )).json()) as LiveParcelData & {
+      dataQuality?: {
+        fields: Record<string, { status: string }>;
+        providerAttempts: Array<{ outcome: string }>;
+      };
+    };
+
+    expect(data.source).toBe("fallback");
+    expect(data.dataQuality?.fields.lotArea.status).toBe("defaulted");
+    expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("defaulted");
+    expect(data.dataQuality?.fields.zoning.status).toBe("defaulted");
+    expect(data.dataQuality?.fields.boundaryGeoJson.status).toBe("unavailable");
+    expect(data.dataQuality?.providerAttempts).toEqual(
+      expect.arrayContaining([expect.objectContaining({ outcome: "unsupported" })]),
+    );
   });
 
   it("falls through to the preset when the GIS parcel has no usable area", async () => {
