@@ -96,9 +96,20 @@ test("/studio exposes crawlable overview content and public links", async ({ pag
   await page.goto("/studio");
 
   const overview = page.getByTestId("studio-overview");
+  const overviewDisclosure = overview.locator("details");
   await expect(
     overview.getByRole("heading", { level: 1, name: "ADU Feasibility Studio" }),
   ).toBeVisible();
+  await expect(overviewDisclosure).not.toHaveAttribute("open", "");
+
+  const mainBox = await page.getByRole("main").boundingBox();
+  const overviewBox = await overview.boundingBox();
+  expect(mainBox).not.toBeNull();
+  expect(overviewBox).not.toBeNull();
+  expect(overviewBox!.x).toBeCloseTo(mainBox!.x, 0);
+
+  await overview.getByText("Planning guide & methodology").click();
+  await expect(overviewDisclosure).toHaveAttribute("open", "");
   await expect(overview.getByRole("link", { name: "California ADU rules" })).toHaveAttribute(
     "href",
     "/adu/ca",
@@ -109,6 +120,6 @@ test("/studio exposes crawlable overview content and public links", async ({ pag
   );
   await expect(overview.getByRole("link", { name: "Help" })).toHaveAttribute("href", "/help");
 
-  const words = (await overview.innerText()).split(/\s+/).filter(Boolean);
+  const words = (await overview.textContent() ?? "").split(/\s+/).filter(Boolean);
   expect(words.length).toBeGreaterThanOrEqual(150);
 });
