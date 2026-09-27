@@ -5,6 +5,16 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: Force full validation and deployment (master only)
+        type: boolean
+        default: false
+      validation_base:
+        description: Comparison SHA for non-master scope validation only
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -14,9 +24,39 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
-  verify:
+  scope:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+      deploy: ${{ steps.scope.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.2.0
+        with:
+          node-version: 22
+      - name: Validate public repository hygiene
+        run: node scripts/validate-public-repo.mjs
+      - name: Test CI scope and release safeguards
+        run: node --test scripts/ci/scope.checks.mjs
+      - name: Determine verification and deployment scope
+        id: scope
+        run: node scripts/ci/scope.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  quality:
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
         with:
@@ -27,8 +67,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Validate public repository hygiene
-        run: npm run repo:public-check
       - run: npm run lint
       - name: Run unit tests
         run: |
@@ -50,6 +88,22 @@ jobs:
         run: npm install -g firebase-tools@15.29.0
       - name: Test Firestore security rules
         run: npm run test:rules
+
+  browser:
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          lfs: true
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.2.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run build
       - name: Cache Playwright browsers
@@ -72,10 +126,30 @@ jobs:
           path: playwright-report
           retention-days: 7
 
-  deploy:
-    needs: verify
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+  verify:
+    needs: [scope, quality, browser]
+    if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Require every applicable check
+        run: node scripts/ci/scope.mjs verify
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+
+  deploy:
+    needs: [scope, verify]
+    if: >-
+      github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.scope.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     concurrency:
       group: firebase-production-${{ github.ref }}
       cancel-in-progress: false
@@ -123,7 +197,13 @@ jobs:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
       - name: Firebase deploy dry run
         run: firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run
+      - name: Record production deployment attempt
+        id: deployment
+        run: node scripts/ci/deployment.mjs start
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Deploy Firebase safely
+        id: firebase
         run: |
           set -o pipefail
           # Takes one target or a comma-separated batch such as
@@ -253,3 +333,10 @@ jobs:
           # fields, and Hosting must publish hashed assets before the SSR app
           # starts rendering URLs that reference them.
           deploy_target "functions:app,functions:api,functions:apiAi,functions:apiStripe" || exit $?
+      - name: Record production deployment outcome
+        if: always() && steps.deployment.outputs.id != ''
+        run: node scripts/ci/deployment.mjs finish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
+          DEPLOYMENT_OUTCOME: ${{ steps.firebase.outcome }}

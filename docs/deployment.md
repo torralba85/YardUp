@@ -127,13 +127,25 @@ configured.
 
 `.github/workflows/ci.yml` runs:
 
-1. `verify` on every pull request and push: lint, unit tests, typecheck, build,
-   and Playwright.
-2. `deploy` only after `verify` passes on `master`: `build:firebase`, deploy
-   dry-run, then Hosting, Functions, and Firestore rules deployment.
+1. `scope` on every PR, master push, and manual dispatch: repository hygiene,
+   CI safeguard tests, and conservative changed-file detection.
+2. `quality` (lint, unit tests, Firestore rules) and `browser` (typecheck, build,
+   desktop/mobile Playwright) run in parallel. Only recognized documentation-only
+   changes skip these jobs. Mixed, unknown, workflow, lockfile, rules, migration,
+   and shared-code changes keep full validation.
+3. `verify` is the stable aggregate check. It rejects failed/canceled jobs and
+   unexpected skips; docs-only changes still get a successful explicit check.
+4. `deploy` runs only on master after `verify`, when production inputs differ
+   from the latest recorded release or a redeploy is forced. That latest attempt
+   must be successful; missing or unsuccessful records force a full release.
+   It retains the production build with its public environment values, dry-run,
+   and existing apiStore → rules → Hosting → remaining Functions order.
 
 Pull-request deploys are intentionally skipped. A green historical run does not
 replace the `verify` run created by the commit under review.
+
+See [CI efficiency and validation](ci-efficiency.md) for scope rules, deployment
+record recovery, forced releases, and safe branch experiments.
 
 ## Release verification
 

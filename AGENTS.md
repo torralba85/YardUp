@@ -202,7 +202,7 @@ Anonymous visitors get one real address lookup before the account ask (`lib/gues
 - Use Conventional Commits such as `fix(landing): ...`, `feat(parcel): ...`, `style(studio): ...`, `chore(ci): ...`.
 - Keep commits focused to one logical change.
 - Pull requests should describe behavior, list verification commands, link issues when relevant, and include screenshots/recordings for landing, studio, or responsive UI changes.
-- CI (`.github/workflows/ci.yml`) runs lint, Vitest, `tsc --noEmit`, build, and Playwright; on `master` it then writes env from secrets and deploys Hosting + Functions + Firestore rules. `ai-maintainer.yml` records intake on newly opened issues; it does not run on a schedule or make autonomous code changes.
+- CI (`.github/workflows/ci.yml`) keeps a stable `verify` aggregate over parallel quality and browser jobs; recognized docs-only changes retain hygiene/scope checks. Master deploys compare production inputs only when the latest deployment attempt succeeded, conservatively recover missing/failed records, and support forced dispatch. See `docs/ci-efficiency.md`. `ai-maintainer.yml` records intake on newly opened issues; it does not run on a schedule or make autonomous code changes.
 - Do not merge with failing CI.
 
 ## Obsidian Second Brain
