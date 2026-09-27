@@ -78,6 +78,10 @@ For each experiment, record the full head SHA, event, scope decision, individual
 job conclusions, and run URL. A canceled older run is not evidence that the
 newest commit passed its required checks.
 
+The diagnostic dispatch checks the selected incremental diff, not the PR's
+complete change set. Its green result never substitutes for the latest PR
+`verify` result, which must still validate any earlier code/configuration edits.
+
 Record elapsed workflow time separately from the sum of job durations. Parallel
 jobs shorten feedback time but add checkout/install overhead. Keep the full
 desktop/mobile test counts and measure any proposed browser sharding separately.
