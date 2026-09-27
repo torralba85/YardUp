@@ -47,11 +47,19 @@ test("landing explains the tool before address entry and keeps the mobile app li
   // Capture initial entry independently of the resize and offscreen-paint checks.
   await page.goto("/");
   await page.evaluate(() => document.fonts.ready);
+  // Confirm hydration before screenshots hide the input caret. Otherwise the
+  // temporary screenshot style can be seen by React during hydration.
+  const today = page.getByRole("radio", { name: "Today" });
+  const possibility = page.getByRole("radio", { name: "The possibility" });
+  await today.click();
+  await expect(today).toHaveAttribute("aria-checked", "true");
+  await possibility.click();
+  await expect(possibility).toHaveAttribute("aria-checked", "true");
   await page.screenshot({
     path: testInfo.outputPath("landing-hero.png"),
     scale: "css",
   });
-  await page.locator("footer").scrollIntoViewIfNeeded();
+  await page.getByRole("contentinfo").scrollIntoViewIfNeeded();
   await expect(
     page.getByRole("heading", { name: /It starts with your address/i }),
   ).toBeVisible();
