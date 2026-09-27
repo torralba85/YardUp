@@ -74,6 +74,10 @@ to require the heavy jobs. Two quick PR updates should cancel the stale run and
 leave the newest complete PR fully checked. A new branch's first push alone is
 not evidence of correct path gating.
 
+For each experiment, record the full head SHA, event, scope decision, individual
+job conclusions, and run URL. A canceled older run is not evidence that the
+newest commit passed its required checks.
+
 Record elapsed workflow time separately from the sum of job durations. Parallel
 jobs shorten feedback time but add checkout/install overhead. Keep the full
 desktop/mobile test counts and measure any proposed browser sharding separately.
