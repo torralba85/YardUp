@@ -7,8 +7,11 @@
  * TypeSafe quota, including on the guest lookup path, so it stays off until
  * that spend is approved.
  */
-import { askTypeSafe, isTypeSafeConfigured } from "@/lib/server/typesafe";
-import type { TypeSafeChoiceAnswer } from "@/lib/server/typesafe";
+import {
+  askTypeSafe,
+  isTypeSafeConfigured,
+  type TypeSafeChoiceAnswer,
+} from "@/lib/server/typesafe";
 
 const TIMEOUT_MS = 1500;
 const NONE = "none";
