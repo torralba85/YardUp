@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
+import {
+  trackAuthPromptShown,
+  trackSignupFailed,
+  trackSignupStarted,
+  trackSignupSucceeded,
+  type AuthPromptSource,
+  type AuthSurface,
+} from "@/lib/analytics/events";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 
 /**
@@ -28,6 +36,11 @@ export interface AuthModalProps {
    *   `AuthProvider` above them outlives the modal.
    */
   onClose: (reason: AuthModalCloseReason) => void;
+  /** Which mode should be shown whenever the modal opens. */
+  initialMode?: "sign-in" | "sign-up";
+  /** Bounded analytics context; never pass free text or PII. */
+  analyticsSurface?: AuthSurface;
+  analyticsSource?: AuthPromptSource;
 }
 
 /** Keyboard-reachable controls, excluding disabled ones the browser won't focus. */
@@ -46,9 +59,15 @@ interface TriggerHost {
   index: number;
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export function AuthModal({
+  isOpen,
+  onClose,
+  initialMode = "sign-in",
+  analyticsSurface = "studio",
+  analyticsSource = "account_control",
+}: AuthModalProps) {
   const { signIn, signUp, signInWithGoogle, signInWithApple, user } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(initialMode === "sign-up");
   const [role, setRole] = useState<"user" | "builder">("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -130,6 +149,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
         triggerHostsRef.current = hosts;
       }
+      if (!wasOpenRef.current) {
+        const signUpMode = initialMode === "sign-up";
+        setIsSignUp(signUpMode);
+        trackAuthPromptShown({
+          surface: analyticsSurface,
+          source: analyticsSource,
+          mode: signUpMode ? "sign_up" : "sign_in",
+        });
+      }
       wasOpenRef.current = true;
       panelRef.current?.querySelector<HTMLElement>("input")?.focus();
     } else {
@@ -154,7 +182,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       }
       wasOpenRef.current = false;
     }
-  }, [isOpen, focusTriggerReplacement]);
+  }, [
+    isOpen,
+    focusTriggerReplacement,
+    initialMode,
+    analyticsSurface,
+    analyticsSource,
+  ]);
 
   // Email/password sign-in closes the modal before AuthProvider's
   // onAuthStateChanged render swaps the trigger for account UI, so the
@@ -234,6 +268,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         if (!legalAccepted) {
           throw new Error("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
         }
+        trackSignupStarted({
+          method: "password",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+        });
         await signUp(
           email,
           password,
@@ -241,6 +281,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           role,
           CURRENT_LEGAL_CONSENT,
         );
+        trackSignupSucceeded({
+          method: "password",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+        });
       } else {
         await signIn(email, password);
       }
@@ -248,6 +294,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       onClose("signed-in");
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
+      if (isSignUp) {
+        trackSignupFailed({
+          method: "password",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+          error_code: code,
+        });
+      }
       setError(
         code
           ? getAuthErrorMessage(code)
@@ -268,11 +323,36 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     setLoading(true);
     try {
+      if (isSignUp) {
+        trackSignupStarted({
+          method: "google",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+        });
+      }
       await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+      if (isSignUp) {
+        trackSignupSucceeded({
+          method: "google",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+        });
+      }
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
+      if (isSignUp) {
+        trackSignupFailed({
+          method: "google",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+          error_code: code,
+        });
+      }
       setError(
         code
           ? getAuthErrorMessage(code)
@@ -293,11 +373,36 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     setLoading(true);
     try {
+      if (isSignUp) {
+        trackSignupStarted({
+          method: "apple",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+        });
+      }
       await signInWithApple(role, CURRENT_LEGAL_CONSENT);
+      if (isSignUp) {
+        trackSignupSucceeded({
+          method: "apple",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+        });
+      }
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
+      if (isSignUp) {
+        trackSignupFailed({
+          method: "apple",
+          surface: analyticsSurface,
+          source: analyticsSource,
+          role,
+          error_code: code,
+        });
+      }
       setError(
         code
           ? getAuthErrorMessage(code)
