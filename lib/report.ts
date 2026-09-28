@@ -18,6 +18,14 @@ function coverageLabel(parcel: Parcel, result: FeasibilityResult): string {
   return `${result.coveragePercent.toFixed(1)}% of ${result.maxCoveragePercent}% ${regulationsEstimated ? "assumed max" : "max"}`;
 }
 
+export interface ReportStyleMatchConcept {
+  styleName: string;
+  matchPercentage: number;
+  traits: string[];
+  conceptUrl: string;
+  photoUrl?: string;
+}
+
 /** Inputs needed to render any of the feasibility report formats. */
 export interface ReportInput {
   /** The parcel the report describes. */
@@ -30,6 +38,8 @@ export interface ReportInput {
   recordedAt?: Date;
   /** Optional generated parcel interpretation and permit timeline. */
   projectBrief?: AIProjectBrief;
+  /** Optional style-matched concept generated from reference photo. */
+  styleMatchConcept?: ReportStyleMatchConcept | null;
 }
 
 const DISCLAIMER =
@@ -69,6 +79,7 @@ export function buildReportText({
   result,
   recordedAt,
   projectBrief,
+  styleMatchConcept,
 }: ReportInput): string {
   const briefRisks = Array.isArray(projectBrief?.risks) ? projectBrief.risks : [];
   const briefStages = Array.isArray(projectBrief?.stages) ? projectBrief.stages : [];
@@ -111,6 +122,14 @@ export function buildReportText({
     `Market source: ${marketProvenanceLine(result.market)}`,
     `Operating expense ratio: ${(result.operatingExpenseRatio * 100).toFixed(1)}%`,
     "",
+    ...(styleMatchConcept
+      ? [
+          "AI Style-Matched Concept",
+          `Style: ${styleMatchConcept.styleName} (${styleMatchConcept.matchPercentage}% match)`,
+          `Matched traits: ${styleMatchConcept.traits.join(", ")}`,
+          "",
+        ]
+      : []),
     ...(projectBrief
       ? [
           "Property & Permit Brief",
@@ -154,6 +173,7 @@ export function buildReportHtml({
   result,
   recordedAt,
   projectBrief,
+  styleMatchConcept,
 }: ReportInput): string {
   const rows: Array<[string, string]> = [
     ["Property", `${parcel.address}, ${parcel.city}`],
@@ -461,6 +481,8 @@ export function buildReportHtml({
           ${reviewNotes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
         </div>
 
+        ${styleMatchConcept ? buildStyleMatchConceptHtml(styleMatchConcept) : ""}
+
         ${projectBrief ? buildProjectBriefHtml(projectBrief) : ""}
 
         <h2>Recommended Next Steps</h2>
@@ -476,6 +498,57 @@ export function buildReportHtml({
   </main>
 </body>
 </html>`;
+}
+
+function buildStyleMatchConceptHtml(concept: ReportStyleMatchConcept): string {
+  const traits = Array.isArray(concept.traits) ? concept.traits : [];
+  return `<section class="concept-plate" aria-labelledby="concept-plate-heading" style="margin-top: 32px; padding: 24px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line);">
+    <div class="brief-heading">
+      <div>
+        <div class="brief-label">AI Style Match &middot; Architectural Concept Plate</div>
+        <h2 id="concept-plate-heading" style="margin: 6px 0 0; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 22px; font-weight: 600; color: var(--ink); text-transform: none; letter-spacing: -0.03em;">
+          ${escapeHtml(concept.styleName)} Concept
+        </h2>
+      </div>
+      <div class="brief-total">
+        <strong style="font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; line-height: 1; color: var(--ink);">${concept.matchPercentage}%</strong>
+        <span>style match</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: ${concept.photoUrl ? "1fr 1fr" : "1fr"}; gap: 16px; margin-top: 18px;">
+      ${
+        concept.photoUrl
+          ? `<div style="border: 1px solid var(--line); padding: 8px; background: var(--card);">
+        <div style="font-family: 'Manrope', Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Reference Home</div>
+        <img src="${escapeHtml(concept.photoUrl)}" alt="Reference Home" style="width: 100%; height: 220px; object-fit: cover; display: block;" />
+      </div>`
+          : ""
+      }
+      <div style="border: 1px solid var(--line); padding: 8px; background: var(--card);">
+        <div style="font-family: 'Manrope', Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Style-Matched ADU Concept</div>
+        <img src="${escapeHtml(concept.conceptUrl)}" alt="${escapeHtml(concept.styleName)} ADU Concept" style="width: 100%; height: 220px; object-fit: cover; display: block;" />
+      </div>
+    </div>
+
+    ${
+      traits.length > 0
+        ? `<div style="margin-top: 16px;">
+      <div class="brief-label" style="margin-bottom: 6px;">Matched Architectural Traits</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+        ${traits
+          .map(
+            (trait) =>
+              `<span class="data-chip tone-low" style="font-size: 10px; padding: 3px 8px;">${escapeHtml(trait)}</span>`,
+          )
+          .join("")}
+      </div>
+    </div>`
+        : ""
+    }
+
+    <p class="brief-disclaimer" style="margin-top: 14px;">Conceptual rendering for stylistic and architectural inspiration. Not engineering or construction blueprints.</p>
+  </section>`;
 }
 
 function buildProjectBriefHtml(brief: AIProjectBrief): string {
@@ -578,42 +651,66 @@ function reportStageClass(status: string): { className: string; label: string } 
  * @param input - The {@link ReportInput} (parcel, config, result).
  * @returns The report as CSV text.
  */
-export function buildReportCsv({ parcel, config, result, projectBrief }: ReportInput): string {
+export function buildReportCsv({
+  parcel,
+  config,
+  result,
+  projectBrief,
+  styleMatchConcept,
+}: ReportInput): string {
   const risks = Array.isArray(projectBrief?.risks) ? projectBrief.risks : [];
   const stages = Array.isArray(projectBrief?.stages) ? projectBrief.stages : [];
   const nextSteps = Array.isArray(projectBrief?.recommendedNextSteps)
     ? projectBrief.recommendedNextSteps
     : [];
-  const aiRows: Array<[string, string]> = projectBrief
-    ? [
-        ["AI Brief Headline", projectBrief.headline],
-        ["AI Parcel Summary", projectBrief.summary],
-        ["AI Best Fit", projectBrief.bestFit],
-        ...risks.map(
-          (risk): [string, string] => [
-            `AI Verify - ${risk.label} (${risk.level})`,
-            risk.explanation,
-          ],
-        ),
-        ["Typical Permit Track", projectBrief.permitTrack.name],
-        ["Permit Track Type", projectBrief.permitTrack.type],
-        ["Permit Track Basis", projectBrief.permitTrack.basis],
-        [
-          "Typical Approval Timeline (weeks)",
-          `${projectBrief.totalEstWeeksLow}-${projectBrief.totalEstWeeksHigh}`,
+  const aiRows: Array<[string, string]> = [];
+  if (styleMatchConcept) {
+    aiRows.push(
+      ["AI Style Match Name", styleMatchConcept.styleName],
+      ["AI Style Match Confidence (%)", String(styleMatchConcept.matchPercentage)],
+      ["AI Style Match Traits", styleMatchConcept.traits.join("; ")],
+    );
+    if (!styleMatchConcept.conceptUrl.startsWith("data:")) {
+      aiRows.push(["AI Style Match Concept URL", styleMatchConcept.conceptUrl]);
+    }
+    if (
+      styleMatchConcept.photoUrl &&
+      !styleMatchConcept.photoUrl.startsWith("data:") &&
+      !styleMatchConcept.photoUrl.startsWith("blob:")
+    ) {
+      aiRows.push(["AI Style Match Reference Photo URL", styleMatchConcept.photoUrl]);
+    }
+  }
+  if (projectBrief) {
+    aiRows.push(
+      ["AI Brief Headline", projectBrief.headline],
+      ["AI Parcel Summary", projectBrief.summary],
+      ["AI Best Fit", projectBrief.bestFit],
+      ...risks.map(
+        (risk): [string, string] => [
+          `AI Verify - ${risk.label} (${risk.level})`,
+          risk.explanation,
         ],
-        ...stages.map(
-          (stage, index): [string, string] => [
-            `Permit Stage ${index + 1} - ${stage.name}`,
-            `${stage.estWeeksLow}-${stage.estWeeksHigh} weeks (${stage.status}): ${stage.description}`,
-          ],
-        ),
-        ...nextSteps.map(
-          (step, index): [string, string] => [`AI Next Step ${index + 1}`, step],
-        ),
-        ["AI Brief Disclaimer", projectBrief.disclaimer],
-      ]
-    : [];
+      ),
+      ["Typical Permit Track", projectBrief.permitTrack.name],
+      ["Permit Track Type", projectBrief.permitTrack.type],
+      ["Permit Track Basis", projectBrief.permitTrack.basis],
+      [
+        "Typical Approval Timeline (weeks)",
+        `${projectBrief.totalEstWeeksLow}-${projectBrief.totalEstWeeksHigh}`,
+      ],
+      ...stages.map(
+        (stage, index): [string, string] => [
+          `Permit Stage ${index + 1} - ${stage.name}`,
+          `${stage.estWeeksLow}-${stage.estWeeksHigh} weeks (${stage.status}): ${stage.description}`,
+        ],
+      ),
+      ...nextSteps.map(
+        (step, index): [string, string] => [`AI Next Step ${index + 1}`, step],
+      ),
+      ["AI Brief Disclaimer", projectBrief.disclaimer],
+    );
+  }
   const rows: Array<[string, string]> = [
     ["Field", "Value"],
     ["Address", `${parcel.address}, ${parcel.city}`],

@@ -10,6 +10,8 @@ import {
   fetchSavedScenarios,
   saveSavedScenario,
 } from "./scenarios-firestore";
+import type { AIProjectBrief } from "./ai-types";
+import type { SavedScenarioStyleMatch } from "./saved-scenarios";
 
 const firestoreMocks = vi.hoisted(() => ({
   addDoc: vi.fn(),
@@ -359,5 +361,84 @@ describe("saved scenario Firestore helpers", () => {
     expect(firestoreMocks.deleteDoc).toHaveBeenCalledWith({
       path: "users/user-1/savedScenarios/scenario-1",
     });
+  });
+
+  const sampleProjectBrief: AIProjectBrief = {
+    headline: "Optimal detached 2-bedroom ADU pathway",
+    summary: "Clear ministerial path with low regulatory friction.",
+    bestFit: "Detached backyard cottage",
+    risks: [
+      {
+        label: "Utility trenching",
+        level: "medium",
+        explanation: "Main sewer line is 60ft away.",
+      },
+    ],
+    permitTrack: {
+      name: "California Standard Ministerial ADU",
+      type: "ministerial",
+      basis: "Gov Code 65852.2",
+    },
+    stages: [
+      {
+        name: "Planning & Zoning Review",
+        description: "Submit ministerial application.",
+        estWeeksLow: 2,
+        estWeeksHigh: 4,
+        status: "clear",
+      },
+    ],
+    totalEstWeeksLow: 6,
+    totalEstWeeksHigh: 12,
+    recommendedNextSteps: ["Commission site survey", "Pull permit forms"],
+    disclaimer: "Estimates only.",
+  };
+
+  const sampleStyleMatch: SavedScenarioStyleMatch = {
+    styleName: "Modern Craftsman",
+    matchPercentage: 92,
+    traits: ["Exposed rafters", "Gabled roof", "Earth tones"],
+    conceptUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    photoUrl: "https://images.example.com/craftsman-home.jpg",
+  };
+
+  it("persists projectBrief and styleMatchConcept in Firestore addDoc payload", async () => {
+    firestoreMocks.addDoc.mockResolvedValue({ id: "scenario-ai" });
+
+    await saveSavedScenario("user-1", {
+      name: "AI Enhanced Scenario",
+      parcelId: "oak-street",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+      projectBrief: sampleProjectBrief,
+      styleMatchConcept: sampleStyleMatch,
+    });
+
+    const [, payload] = firestoreMocks.addDoc.mock.calls[0];
+    expect(payload.projectBrief).toEqual(sampleProjectBrief);
+    expect(payload.styleMatchConcept).toEqual(sampleStyleMatch);
+  });
+
+  it("hydrates projectBrief and styleMatchConcept when reading from Firestore", async () => {
+    firestoreMocks.getDocs.mockResolvedValue({
+      docs: [
+        {
+          id: "scenario-with-ai",
+          data: () => ({
+            name: "AI Saved Scenario",
+            parcelId: "oak-street",
+            createdAt: "2026-06-08T12:00:00.000Z",
+            config: defaultAduConfig,
+            assumptions: defaultFinancialAssumptions,
+            projectBrief: sampleProjectBrief,
+            styleMatchConcept: sampleStyleMatch,
+          }),
+        },
+      ],
+    });
+
+    const [hydrated] = await fetchSavedScenarios("user-1");
+    expect(hydrated.projectBrief).toEqual(sampleProjectBrief);
+    expect(hydrated.styleMatchConcept).toEqual(sampleStyleMatch);
   });
 });

@@ -74,6 +74,8 @@ export async function POST(request: NextRequest) {
     limit: 10,
     namespace: "ai-adu-concept",
     windowMs: 60_000,
+    clientKey: auth.uid,
+    dailyLimit: 15,
   });
   if (limited) return limited;
 

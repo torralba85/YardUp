@@ -127,4 +127,43 @@ describe("ReportPreview", () => {
     retryButton.click();
     expect(handleRetry).toHaveBeenCalledTimes(1);
   });
+
+  it("renders the AI style-matched concept section with photo comparisons and traits", () => {
+    const parcel = parcelPresets[0];
+    const result = calculateFeasibility(
+      parcel,
+      defaultAduConfig,
+      defaultFinancialAssumptions,
+    );
+
+    render(
+      <ReportPreview
+        parcelName={`${parcel.address}, ${parcel.city}`}
+        result={result}
+        styleMatchConcept={{
+          styleName: "Mid-Century Modern",
+          matchPercentage: 91,
+          traits: ["Post-and-beam", "Clerestory windows", "Flat roof"],
+          conceptUrl: "https://example.com/concept.jpg",
+          photoUrl: "https://example.com/home.jpg",
+        }}
+        onClose={vi.fn()}
+        onDownload={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/AI Style Match/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Mid-Century Modern Concept" })).toBeInTheDocument();
+    expect(screen.getByText("91%")).toBeInTheDocument();
+    expect(screen.getByText("style match")).toBeInTheDocument();
+    expect(screen.getByText("Post-and-beam")).toBeInTheDocument();
+    expect(screen.getByText("Clerestory windows")).toBeInTheDocument();
+    expect(screen.getByText("Flat roof")).toBeInTheDocument();
+
+    const conceptImg = screen.getByAltText("Mid-Century Modern Concept");
+    expect(conceptImg).toHaveAttribute("src", "https://example.com/concept.jpg");
+
+    const homeImg = screen.getByAltText("Reference Home");
+    expect(homeImg).toHaveAttribute("src", "https://example.com/home.jpg");
+  });
 });

@@ -448,6 +448,8 @@ service cloud.firestore {
         "version",
         "heightConvention",
         "pose",
+        "projectBrief",
+        "styleMatchConcept",
         "createdAt",
         "updatedAt"
       ]) &&
@@ -460,6 +462,8 @@ service cloud.firestore {
       (!("liveParcel" in data) || isValidLiveParcel(data.liveParcel)) &&
       isValidAduConfig(data.config) &&
       isValidFinancialAssumptions(data.assumptions) &&
+      (!("projectBrief" in data) || data.projectBrief is map) &&
+      (!("styleMatchConcept" in data) || data.styleMatchConcept is map) &&
       // version/heightConvention/pose travel together, mirroring
       // isValidSavedScenario in lib/saved-scenarios.ts. Accepting `version: 2`
       // on its own would store a document migrateDesign refuses to hydrate, so

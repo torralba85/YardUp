@@ -36,6 +36,14 @@ export interface ReportPreviewProps {
   projectBrief?: AIProjectBrief | null;
   projectBriefLoading?: boolean;
   projectBriefError?: string | null;
+  /** Optional style-matched ADU concept. */
+  styleMatchConcept?: {
+    photoUrl?: string;
+    conceptUrl: string;
+    styleName: string;
+    matchPercentage: number;
+    traits: string[];
+  } | null;
   /** Optional handler to retry generating the project brief on failure. */
   onRetryProjectBrief?: () => void;
   /** Called to dismiss the preview. */
@@ -67,6 +75,7 @@ export default function ReportPreview({
   projectBrief,
   projectBriefLoading = false,
   projectBriefError = null,
+  styleMatchConcept,
   onRetryProjectBrief,
   onClose,
   onDownload,
@@ -340,6 +349,10 @@ export default function ReportPreview({
                 income outcome is guaranteed.
               </div>
 
+              {styleMatchConcept && (
+                <CertificateStyleMatchSection concept={styleMatchConcept} />
+              )}
+
               <CertificateBriefSection
                 brief={projectBrief ?? null}
                 loading={projectBriefLoading}
@@ -380,6 +393,91 @@ const REPORT_STAGE_TONE: Record<
   review: { label: "Review", className: "text-lf-amber-ink" },
   blocker: { label: "Blocker", className: "text-lf-brick" },
 };
+
+function CertificateStyleMatchSection({
+  concept,
+}: {
+  concept: NonNullable<ReportPreviewProps["styleMatchConcept"]>;
+}) {
+  return (
+    <div className="mt-6 border-t border-lf-hairline pt-5">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sparkles size={15} className="text-lf-clay-ink" aria-hidden="true" />
+            <p className="lf-dataprint text-lf-clay-ink">
+              AI Style Match &middot; Concept Plate
+            </p>
+          </div>
+          <h3 className="mt-1 font-display text-[25px] font-medium leading-tight text-lf-espresso">
+            {concept.styleName} Concept
+          </h3>
+        </div>
+        <div className="shrink-0 sm:text-right">
+          <span className="font-display text-[31px] font-bold leading-none text-lf-espresso">
+            {concept.matchPercentage}%
+          </span>
+          <span className="ml-1 lf-dataprint text-lf-muted">
+            style match
+          </span>
+        </div>
+      </div>
+
+      <div className={`mt-5 grid gap-4 ${concept.photoUrl ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+        {concept.photoUrl && (
+          <div className="border border-lf-hairline bg-lf-sand-2 p-2">
+            <span className="mb-2 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-lf-muted">
+              Reference Home Exterior
+            </span>
+            <div className="relative aspect-[3/2] w-full overflow-hidden bg-lf-sand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={concept.photoUrl}
+                alt="Reference Home"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+        <div className="border border-lf-hairline bg-lf-sand-2 p-2">
+          <span className="mb-2 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-lf-muted">
+            Style-Matched ADU Concept
+          </span>
+          <div className="relative aspect-[3/2] w-full overflow-hidden bg-lf-sand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={concept.conceptUrl}
+              alt={`${concept.styleName} Concept`}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+      </div>
+
+      {concept.traits.length > 0 && (
+        <div className="mt-4">
+          <p className="lf-dataprint text-lf-muted">
+            Matched architectural traits
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {concept.traits.map((trait) => (
+              <span
+                key={trait}
+                className="rounded-none border border-lf-hairline bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium tracking-[0.04em] text-lf-espresso"
+              >
+                {trait}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p className="mt-4 border-t border-lf-hairline pt-3 text-[11px] leading-5 text-lf-muted">
+        Conceptual rendering for stylistic and architectural inspiration. Not engineering or construction blueprints.
+      </p>
+    </div>
+  );
+}
 
 function CertificateBriefSection({
   brief,

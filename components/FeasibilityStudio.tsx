@@ -264,6 +264,29 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     setIsBoardOpen(true);
   };
 
+  const activeStyleMatchConcept = useMemo(() => {
+    if (activeConcept?.isStyleMatched) {
+      return {
+        styleName: activeConcept.style,
+        matchPercentage: activeConcept.matchPercentage ?? 85,
+        traits: activeConcept.traits ?? [],
+        conceptUrl: activeConcept.imagePath,
+        photoUrl: activeConcept.photoUrl,
+      };
+    }
+    const matched = generatedConcepts.find((c) => c.isStyleMatched);
+    if (matched) {
+      return {
+        styleName: matched.style,
+        matchPercentage: matched.matchPercentage ?? 85,
+        traits: matched.traits ?? [],
+        conceptUrl: matched.imagePath,
+        photoUrl: matched.photoUrl,
+      };
+    }
+    return null;
+  }, [activeConcept, generatedConcepts]);
+
   // Load saved scenarios only for authenticated users. Guests should never see
   // or persist prior address state.
   useEffect(() => {
@@ -741,6 +764,12 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     ) {
       entry.liveParcel = activeParcel;
     }
+    if (projectBrief) {
+      entry.projectBrief = projectBrief;
+    }
+    if (activeStyleMatchConcept) {
+      entry.styleMatchConcept = activeStyleMatchConcept;
+    }
 
     setSavingScenario(true);
     setSaveNotice(null);
@@ -774,8 +803,54 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     }
     setParcelId(scenario.parcelId);
     setConfig(scenario.config);
-    setPoseState({key:scenario.liveParcel ? `${scenario.liveParcel.address}|${scenario.liveParcel.city}` : scenario.parcelId,pose:scenario.pose ?? defaultPose(scenario.liveParcel ?? getParcelById(scenario.parcelId),scenario.config)});
+    setPoseState({
+      key: scenario.liveParcel
+        ? `${scenario.liveParcel.address}|${scenario.liveParcel.city}`
+        : scenario.parcelId,
+      pose:
+        scenario.pose ??
+        defaultPose(
+          scenario.liveParcel ?? getParcelById(scenario.parcelId),
+          scenario.config,
+        ),
+    });
     setAssumptions(scenario.assumptions);
+    if (scenario.projectBrief) {
+      setProjectBriefState({
+        key: scenario.liveParcel
+          ? `${scenario.liveParcel.address}|${scenario.liveParcel.city}`
+          : scenario.parcelId,
+        data: { tier: "full", brief: scenario.projectBrief },
+        loading: false,
+        error: null,
+      });
+    }
+    if (scenario.styleMatchConcept) {
+      const restoredConcept: InspirationItem = {
+        id: `style-match-${scenario.id}`,
+        title: `Matched ${scenario.styleMatchConcept.styleName} Concept`,
+        style: scenario.styleMatchConcept.styleName,
+        sqft: scenario.config.footprint,
+        width: scenario.config.width,
+        length: scenario.config.length,
+        roof: scenario.config.roof,
+        finish: scenario.config.finish,
+        tags: ["style-matched", scenario.styleMatchConcept.styleName.toLowerCase()],
+        summary: `A custom ADU concept style-matched to your home (${scenario.styleMatchConcept.matchPercentage}% match).`,
+        budgetBand: "$250k - $400k",
+        imagePath: scenario.styleMatchConcept.conceptUrl,
+        isStyleMatched: true,
+        photoUrl: scenario.styleMatchConcept.photoUrl,
+        matchPercentage: scenario.styleMatchConcept.matchPercentage,
+        traits: scenario.styleMatchConcept.traits,
+        isAttached: false,
+      };
+      setGeneratedConcepts((prev) => {
+        const filtered = prev.filter((c) => c.id !== restoredConcept.id);
+        return [restoredConcept, ...filtered];
+      });
+      setActiveConcept(restoredConcept);
+    }
   }
 
   async function handleDeleteScenario(id: string) {
@@ -843,6 +918,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
       config,
       result,
       projectBrief: projectBrief ?? undefined,
+      styleMatchConcept: activeStyleMatchConcept,
     });
     downloadBlob("lotfoundry-certificate-of-feasibility.html", html, "text/html");
   }
@@ -853,6 +929,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
       config,
       result,
       projectBrief: projectBrief ?? undefined,
+      styleMatchConcept: activeStyleMatchConcept,
     });
     downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
   }
@@ -1104,6 +1181,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             projectBrief={projectBrief}
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
+            styleMatchConcept={activeStyleMatchConcept}
             onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
             onClose={() => setReportOpen(false)}
             onDownload={downloadReport}
@@ -1277,6 +1355,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           projectBrief={projectBrief}
           projectBriefLoading={projectBriefLoading}
           projectBriefError={projectBriefError}
+          styleMatchConcept={activeStyleMatchConcept}
           onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}

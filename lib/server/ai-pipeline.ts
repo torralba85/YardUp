@@ -45,7 +45,7 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
   id: string;
   /** Rate-limit namespace, e.g. `"ai-project-brief"`. */
   namespace: string;
-  rateLimit: { limit: number; windowMs: number };
+  rateLimit: { limit: number; windowMs: number; dailyLimit?: number };
   systemPrompt: string;
   /** Strict json_schema the final structured answer must satisfy. */
   outputSchema: Record<string, unknown>;
@@ -267,6 +267,8 @@ export function createAIPanelRoute<Input, Output, Ctx>(
       limit: def.rateLimit.limit,
       namespace: def.namespace,
       windowMs: def.rateLimit.windowMs,
+      clientKey: auth.uid,
+      dailyLimit: def.rateLimit.dailyLimit,
     });
     if (limited) return limited;
 

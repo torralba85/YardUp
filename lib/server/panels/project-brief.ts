@@ -153,7 +153,7 @@ export const projectBriefDef: AIPanelDefinition<
 > = {
   id: "project-brief",
   namespace: "ai-project-brief",
-  rateLimit: { limit: 8, windowMs: 60_000 },
+  rateLimit: { limit: 8, windowMs: 60_000, dailyLimit: 30 },
   maxOutputTokens: 4096,
   requiredToolSequence: ["lookup_permit_tracks", "get_stage_benchmarks"],
   systemPrompt: SYSTEM_PROMPT,

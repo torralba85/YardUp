@@ -90,6 +90,22 @@ describe("buildReportText", () => {
     expect(text).toContain("Pre-application check: 1-2 weeks");
   });
 
+  it("records the AI style-matched concept when present", () => {
+    const text = buildReportText({
+      ...makeInput(),
+      styleMatchConcept: {
+        styleName: "Modern Farmhouse",
+        matchPercentage: 94,
+        traits: ["Board and batten", "Pitched metal roof"],
+        conceptUrl: "https://example.com/concept.jpg",
+        photoUrl: "https://example.com/home.jpg",
+      },
+    });
+    expect(text).toContain("AI Style-Matched Concept");
+    expect(text).toContain("Style: Modern Farmhouse (94% match)");
+    expect(text).toContain("Matched traits: Board and batten, Pitched metal roof");
+  });
+
   it("records every modeled warning instead of dropping later review items", () => {
     const input = makeInput();
     const result = {
@@ -170,6 +186,24 @@ describe("buildReportHtml", () => {
     expect(html).not.toContain('<script data-test="brief">');
     expect(html).toContain("&lt;script data-test=&quot;brief&quot;&gt;");
   });
+
+  it("adds the styled architectural concept plate to printable HTML", () => {
+    const html = buildReportHtml({
+      ...makeInput(),
+      styleMatchConcept: {
+        styleName: "Modern Farmhouse",
+        matchPercentage: 94,
+        traits: ["Board and batten", "Pitched metal roof"],
+        conceptUrl: "https://example.com/concept.jpg",
+        photoUrl: "https://example.com/home.jpg",
+      },
+    });
+    expect(html).toContain("AI Style Match &middot; Architectural Concept Plate");
+    expect(html).toContain("Modern Farmhouse");
+    expect(html).toContain("94%");
+    expect(html).toContain("style match");
+    expect(html).toContain("Board and batten");
+  });
 });
 
 function formatCurrencyForTest(value: number) {
@@ -210,5 +244,23 @@ describe("buildReportCsv", () => {
     expect(csv).toContain("Typical Approval Timeline (weeks),5-9");
     expect(csv).toContain("Permit Stage 1 - Pre-application check");
     expect(csv).toContain("AI Next Step 1,Confirm utilities.");
+  });
+
+  it("exports the AI style-matched concept fields to CSV", () => {
+    const csv = buildReportCsv({
+      ...makeInput(),
+      styleMatchConcept: {
+        styleName: "Modern Farmhouse",
+        matchPercentage: 94,
+        traits: ["Board and batten", "Pitched metal roof"],
+        conceptUrl: "https://example.com/concept.jpg",
+        photoUrl: "https://example.com/home.jpg",
+      },
+    });
+    expect(csv).toContain("AI Style Match Name,Modern Farmhouse");
+    expect(csv).toContain("AI Style Match Confidence (%),94");
+    expect(csv).toContain("AI Style Match Traits,Board and batten; Pitched metal roof");
+    expect(csv).toContain("AI Style Match Concept URL,https://example.com/concept.jpg");
+    expect(csv).toContain("AI Style Match Reference Photo URL,https://example.com/home.jpg");
   });
 });

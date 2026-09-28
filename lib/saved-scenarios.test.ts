@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   createSavedScenarioStore,
+  isValidProjectBrief,
   isValidSavedScenario,
+  isValidStyleMatchConcept,
   normalizeLiveParcel,
+  normalizeProjectBrief,
+  normalizeStyleMatchConcept,
   STORAGE_KEY,
+  type SavedScenarioStyleMatch,
 } from "./saved-scenarios";
 import { defaultAduConfig, defaultFinancialAssumptions } from "./feasibility";
 import type { LiveParcelData } from "./parcel-types";
+import type { AIProjectBrief } from "./ai-types";
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -199,4 +205,130 @@ describe("createSavedScenarioStore", () => {
       }),
     ).toBe(false);
   });
+
+  const sampleProjectBrief: AIProjectBrief = {
+    headline: "Optimal detached 2-bedroom ADU pathway",
+    summary: "Clear ministerial path with low regulatory friction.",
+    bestFit: "Detached backyard cottage",
+    risks: [
+      {
+        label: "Utility trenching",
+        level: "medium",
+        explanation: "Main sewer line is 60ft away.",
+      },
+    ],
+    permitTrack: {
+      name: "California Standard Ministerial ADU",
+      type: "ministerial",
+      basis: "Gov Code 65852.2",
+    },
+    stages: [
+      {
+        name: "Planning & Zoning Review",
+        description: "Submit ministerial application.",
+        estWeeksLow: 2,
+        estWeeksHigh: 4,
+        status: "clear",
+      },
+    ],
+    totalEstWeeksLow: 6,
+    totalEstWeeksHigh: 12,
+    recommendedNextSteps: ["Commission site survey", "Pull permit forms"],
+    disclaimer: "Estimates only.",
+  };
+
+  const sampleStyleMatch: SavedScenarioStyleMatch = {
+    styleName: "Modern Craftsman",
+    matchPercentage: 92,
+    traits: ["Exposed rafters", "Gabled roof", "Earth tones"],
+    conceptUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    photoUrl: "https://images.example.com/craftsman-home.jpg",
+  };
+
+  it("preserves AI project brief and style-matched concept snapshot", () => {
+    const store = createSavedScenarioStore(storage);
+    const saved = store.save({
+      name: "Craftsman with Brief",
+      parcelId: "oak-street",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+      projectBrief: sampleProjectBrief,
+      styleMatchConcept: sampleStyleMatch,
+    });
+
+    const loaded = store.load(saved.id);
+    expect(loaded?.projectBrief?.headline).toBe("Optimal detached 2-bedroom ADU pathway");
+    expect(loaded?.projectBrief?.permitTrack.type).toBe("ministerial");
+    expect(loaded?.styleMatchConcept?.styleName).toBe("Modern Craftsman");
+    expect(loaded?.styleMatchConcept?.matchPercentage).toBe(92);
+    expect(loaded?.styleMatchConcept?.traits).toEqual(["Exposed rafters", "Gabled roof", "Earth tones"]);
+  });
+
+  it("validates projectBrief and styleMatchConcept type guards", () => {
+    expect(isValidProjectBrief(sampleProjectBrief)).toBe(true);
+    expect(isValidProjectBrief({ headline: "missing fields" })).toBe(false);
+    expect(isValidProjectBrief(null)).toBe(false);
+
+    expect(isValidStyleMatchConcept(sampleStyleMatch)).toBe(true);
+    expect(isValidStyleMatchConcept({ styleName: "Craftsman" })).toBe(false);
+    expect(isValidStyleMatchConcept(null)).toBe(false);
+  });
+
+  it("rejects invalid projectBrief or styleMatchConcept in isValidSavedScenario", () => {
+    expect(
+      isValidSavedScenario({
+        id: "scenario-1",
+        name: "Broken brief",
+        createdAt: new Date().toISOString(),
+        parcelId: "oak-street",
+        config: defaultAduConfig,
+        assumptions: defaultFinancialAssumptions,
+        projectBrief: { headline: "only headline" } as unknown as AIProjectBrief,
+      }),
+    ).toBe(false);
+
+    expect(
+      isValidSavedScenario({
+        id: "scenario-2",
+        name: "Broken style match",
+        createdAt: new Date().toISOString(),
+        parcelId: "oak-street",
+        config: defaultAduConfig,
+        assumptions: defaultFinancialAssumptions,
+        styleMatchConcept: { styleName: "" } as unknown as SavedScenarioStyleMatch,
+      }),
+    ).toBe(false);
+  });
+
+  it("normalizes and sanitizes styleMatchConcept and projectBrief", () => {
+    const normalizedConcept = normalizeStyleMatchConcept({
+      styleName: "  Modern Box  ",
+      matchPercentage: 150, // should clamp to 100
+      traits: ["  Minimalist  ", 123, "Flat roof"],
+      conceptUrl: "data:image/png;base64,abc",
+      photoUrl: "https://example.com/photo.jpg",
+    });
+    expect(normalizedConcept?.matchPercentage).toBe(100);
+    expect(normalizedConcept?.traits).toEqual(["  Minimalist  ", "Flat roof"]);
+
+    // Drops conceptUrl exceeding 600,000 characters
+    const oversizedUrl = "data:image/png;base64," + "A".repeat(600_001);
+    expect(
+      normalizeStyleMatchConcept({
+        styleName: "Too Big",
+        matchPercentage: 80,
+        traits: [],
+        conceptUrl: oversizedUrl,
+      }),
+    ).toBeNull();
+
+    const normalizedBrief = normalizeProjectBrief({
+      ...sampleProjectBrief,
+      headline: "A".repeat(300), // should slice to 200
+      summary: "B".repeat(2500), // should slice to 2000
+    });
+    expect(normalizedBrief?.headline.length).toBe(200);
+    expect(normalizedBrief?.summary.length).toBe(2000);
+  });
 });
+

@@ -14,9 +14,19 @@ import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesi
 export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario-design";
 import type { Pose2D } from "./scene-model";
 import type { LiveParcelData } from "./parcel-types";
+import type { AIProjectBrief, AIRiskLevel } from "./ai-types";
 
 /** `localStorage` key under which the saved-scenario array is persisted. */
 export const STORAGE_KEY = "lotfoundry.savedScenarios.v1";
+
+/** A style-matched ADU concept persisted within a scenario. */
+export interface SavedScenarioStyleMatch {
+  styleName: string;
+  matchPercentage: number;
+  traits: string[];
+  conceptUrl: string;
+  photoUrl?: string;
+}
 
 /** A persisted feasibility scenario: the parcel, design, and assumptions. */
 export interface SavedScenario {
@@ -38,6 +48,10 @@ export interface SavedScenario {
   config: ADUConfig;
   /** The saved financial assumptions. */
   assumptions: FinancialAssumptions;
+  /** Optional generated parcel interpretation and permit timeline. */
+  projectBrief?: AIProjectBrief;
+  /** Optional style-matched concept generated from user reference photo. */
+  styleMatchConcept?: SavedScenarioStyleMatch;
 }
 
 /** A storage-backed CRUD interface over {@link SavedScenario} records. */
@@ -289,6 +303,131 @@ export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
   return isValidLiveParcelData(normalized) ? normalized : null;
 }
 
+export function isValidProjectBrief(value: unknown): value is AIProjectBrief {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.headline === "string" &&
+    typeof value.summary === "string" &&
+    typeof value.bestFit === "string" &&
+    Array.isArray(value.risks) &&
+    isRecord(value.permitTrack) &&
+    typeof value.permitTrack.name === "string" &&
+    (value.permitTrack.type === "ministerial" || value.permitTrack.type === "discretionary") &&
+    Array.isArray(value.stages) &&
+    isFiniteNumber(value.totalEstWeeksLow) &&
+    isFiniteNumber(value.totalEstWeeksHigh) &&
+    Array.isArray(value.recommendedNextSteps) &&
+    typeof value.disclaimer === "string"
+  );
+}
+
+export function isValidStyleMatchConcept(value: unknown): value is SavedScenarioStyleMatch {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.styleName === "string" &&
+    value.styleName.trim().length > 0 &&
+    typeof value.conceptUrl === "string" &&
+    value.conceptUrl.trim().length > 0 &&
+    isFiniteNumber(value.matchPercentage) &&
+    Array.isArray(value.traits) &&
+    (value.photoUrl === undefined || typeof value.photoUrl === "string")
+  );
+}
+
+export function normalizeProjectBrief(value: unknown): AIProjectBrief | null {
+  if (!isRecord(value)) return null;
+  if (
+    typeof value.headline !== "string" ||
+    typeof value.summary !== "string" ||
+    typeof value.bestFit !== "string" ||
+    typeof value.disclaimer !== "string" ||
+    !isRecord(value.permitTrack) ||
+    typeof value.permitTrack.name !== "string" ||
+    (value.permitTrack.type !== "ministerial" && value.permitTrack.type !== "discretionary") ||
+    !Array.isArray(value.stages) ||
+    !Array.isArray(value.recommendedNextSteps) ||
+    !isFiniteNumber(value.totalEstWeeksLow) ||
+    !isFiniteNumber(value.totalEstWeeksHigh)
+  ) {
+    return null;
+  }
+
+  const risks = Array.isArray(value.risks)
+    ? value.risks
+        .filter((r): r is Record<string, unknown> => isRecord(r))
+        .map((r) => ({
+          label: String(r.label || "").slice(0, 100),
+          level: (r.level === "low" || r.level === "medium" || r.level === "high" ? r.level : "medium") as AIRiskLevel,
+          explanation: String(r.explanation || "").slice(0, 500),
+        }))
+        .slice(0, 8)
+    : [];
+
+  const stages = value.stages
+    .filter((s): s is Record<string, unknown> => isRecord(s))
+    .map((s) => ({
+      name: String(s.name || "").slice(0, 100),
+      description: String(s.description || "").slice(0, 500),
+      estWeeksLow: isFiniteNumber(s.estWeeksLow) ? s.estWeeksLow : 1,
+      estWeeksHigh: isFiniteNumber(s.estWeeksHigh) ? s.estWeeksHigh : 2,
+      status: (s.status === "clear" || s.status === "review" || s.status === "blocker" ? s.status : "clear") as "clear" | "review" | "blocker",
+    }))
+    .slice(0, 10);
+
+  const recommendedNextSteps = value.recommendedNextSteps
+    .filter((step): step is string => typeof step === "string" && step.trim().length > 0)
+    .map((step) => step.slice(0, 300))
+    .slice(0, 10);
+
+  return {
+    headline: value.headline.slice(0, 200),
+    summary: value.summary.slice(0, 2000),
+    bestFit: value.bestFit.slice(0, 500),
+    risks,
+    permitTrack: {
+      name: value.permitTrack.name.slice(0, 150),
+      type: value.permitTrack.type,
+      basis: typeof value.permitTrack.basis === "string" ? value.permitTrack.basis.slice(0, 500) : "",
+    },
+    stages,
+    totalEstWeeksLow: value.totalEstWeeksLow,
+    totalEstWeeksHigh: value.totalEstWeeksHigh,
+    recommendedNextSteps,
+    disclaimer: value.disclaimer.slice(0, 500),
+  };
+}
+
+export function normalizeStyleMatchConcept(value: unknown): SavedScenarioStyleMatch | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.styleName !== "string" || !value.styleName.trim()) return null;
+  if (typeof value.conceptUrl !== "string" || !value.conceptUrl.trim()) return null;
+  if (value.conceptUrl.length > 600_000) return null;
+
+  const matchPercentage = isFiniteNumber(value.matchPercentage)
+    ? Math.max(0, Math.min(100, Math.round(value.matchPercentage)))
+    : 85;
+
+  const traits = Array.isArray(value.traits)
+    ? value.traits
+        .filter((t): t is string => typeof t === "string" && t.trim().length > 0)
+        .map((t) => t.slice(0, 100))
+        .slice(0, 10)
+    : [];
+
+  const photoUrl =
+    typeof value.photoUrl === "string" && value.photoUrl.trim() && value.photoUrl.length <= 4096
+      ? value.photoUrl
+      : undefined;
+
+  return {
+    styleName: value.styleName.trim().slice(0, 100),
+    matchPercentage,
+    traits,
+    conceptUrl: value.conceptUrl,
+    ...(photoUrl ? { photoUrl } : {}),
+  };
+}
+
 /**
  * Type guard verifying an unknown value is a complete {@link SavedScenario},
  * delegating to the field-level guards for its nested config, assumptions, and
@@ -317,7 +456,9 @@ export function isValidSavedScenario(value: unknown): value is SavedScenario {
     (value.version === undefined || (value.version === 2 && value.heightConvention === "wall" && isValidPose(value.pose))) &&
     (value.pose === undefined || isValidPose(value.pose)) &&
     isValidAduConfig(value.config) &&
-    isValidFinancialAssumptions(value.assumptions)
+    isValidFinancialAssumptions(value.assumptions) &&
+    (value.projectBrief === undefined || isValidProjectBrief(value.projectBrief)) &&
+    (value.styleMatchConcept === undefined || isValidStyleMatchConcept(value.styleMatchConcept))
   );
 }
 
@@ -329,9 +470,25 @@ export function migrateSavedScenario(value: unknown): SavedScenario | null {
     if (!normalized) return null;
     liveParcel = normalized;
   }
+  let projectBrief: AIProjectBrief | undefined;
+  if (value.projectBrief !== undefined) {
+    const normalizedBrief = normalizeProjectBrief(value.projectBrief);
+    if (normalizedBrief) projectBrief = normalizedBrief;
+  }
+  let styleMatchConcept: SavedScenarioStyleMatch | undefined;
+  if (value.styleMatchConcept !== undefined) {
+    const normalizedConcept = normalizeStyleMatchConcept(value.styleMatchConcept);
+    if (normalizedConcept) styleMatchConcept = normalizedConcept;
+  }
   const design = migrateDesign(value, liveParcel);
   if (!design) return null;
-  const migrated = { ...value, ...design, ...(liveParcel ? { liveParcel } : {}) };
+  const migrated = {
+    ...value,
+    ...design,
+    ...(liveParcel ? { liveParcel } : {}),
+    ...(projectBrief ? { projectBrief } : {}),
+    ...(styleMatchConcept ? { styleMatchConcept } : {}),
+  };
   return isValidSavedScenario(migrated) ? migrated : null;
 }
 

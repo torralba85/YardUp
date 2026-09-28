@@ -118,6 +118,8 @@ function firestoreToScenario(
     pose: data.pose,
     config: data.config,
     assumptions: data.assumptions,
+    ...(data.projectBrief !== undefined ? { projectBrief: data.projectBrief } : {}),
+    ...(data.styleMatchConcept !== undefined ? { styleMatchConcept: data.styleMatchConcept } : {}),
   };
 
   return migrateSavedScenario(scenario);
@@ -173,6 +175,8 @@ export async function saveSavedScenario(
     ...(normalized.liveParcel
       ? { liveParcel: encodeLiveParcelForFirestore(normalized.liveParcel) }
       : {}),
+    ...(normalized.projectBrief ? { projectBrief: normalized.projectBrief } : {}),
+    ...(normalized.styleMatchConcept ? { styleMatchConcept: normalized.styleMatchConcept } : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };

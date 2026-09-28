@@ -6,12 +6,14 @@ import {
   resolveRateLimitKey,
 } from "@/lib/server/rate-limit";
 
-interface RateLimitOptions {
+export interface RateLimitOptions {
   limit: number;
   namespace: string;
   windowMs: number;
-  /** Fixed bucket identity for a global ceiling; see {@link resolveRateLimitKey}. */
+  /** Fixed bucket identity for a global ceiling or per-user key; see {@link resolveRateLimitKey}. */
   clientKey?: string;
+  /** Optional daily ceiling per client (window: 24 hours). */
+  dailyLimit?: number;
 }
 
 const OPENAI_GLOBAL_LIMIT = 6;
@@ -47,16 +49,32 @@ export async function checkAIRateLimit(
   request: NextRequest,
   options: RateLimitOptions,
 ): Promise<NextResponse | null> {
-  if (process.env.NODE_ENV === "test" || process.env.AI_RATE_LIMIT_BACKEND === "memory") {
-    return checkRateLimit(request, options);
+  const check =
+    process.env.NODE_ENV === "test" || process.env.AI_RATE_LIMIT_BACKEND === "memory"
+      ? async (req: NextRequest, opt: RateLimitOptions) => checkRateLimit(req, opt)
+      : async (req: NextRequest, opt: RateLimitOptions) => {
+          try {
+            return await checkFirestoreRateLimit(req, opt);
+          } catch (err) {
+            console.warn("[ai-rate-limit] Falling back to in-memory rate limit:", err);
+            return checkRateLimit(req, opt);
+          }
+        };
+
+  const burstLimited = await check(request, options);
+  if (burstLimited) return burstLimited;
+
+  if (options.dailyLimit && options.clientKey) {
+    const dailyLimited = await check(request, {
+      limit: options.dailyLimit,
+      namespace: `${options.namespace}:daily`,
+      windowMs: 86_400_000,
+      clientKey: options.clientKey,
+    });
+    if (dailyLimited) return dailyLimited;
   }
 
-  try {
-    return await checkFirestoreRateLimit(request, options);
-  } catch (err) {
-    console.warn("[ai-rate-limit] Falling back to in-memory rate limit:", err);
-    return checkRateLimit(request, options);
-  }
+  return null;
 }
 
 /**
