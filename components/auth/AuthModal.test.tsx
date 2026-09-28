@@ -63,6 +63,24 @@ describe("AuthModal focus restore", () => {
     mocks.auth.user = null;
   });
 
+  it("opens directly in sign-up mode when requested", async () => {
+    render(
+      <AuthModal
+        isOpen
+        initialMode="sign-up"
+        analyticsSurface="studio"
+        analyticsSource="post_result"
+        onClose={() => {}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Create an account" })).toBeTruthy(),
+    );
+    expect(screen.getByRole("button", { name: "Sign Up" })).toBeEnabled();
+    expect(screen.getByLabelText("Name")).toBeTruthy();
+  });
+
   it("returns focus to the trigger when it is still mounted", () => {
     render(<Host />);
     const trigger = screen.getByRole("button", { name: "Sign In" });
