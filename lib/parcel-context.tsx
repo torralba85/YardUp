@@ -201,7 +201,10 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     if (!user || !pendingLookupRef.current) return;
     const pending = pendingLookupRef.current;
     pendingLookupRef.current = null;
+    // The auth transition is the event that unlocks the queued lookup.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAuthRequired(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setParcelError(null);
     if (pending.kind === "coords") {
       void searchParcel(pending.lat, pending.lng, pending.address);
