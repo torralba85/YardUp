@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -38,6 +39,10 @@ interface ParcelContextValue {
   parcelMode: ParcelMode;
   parcelLoading: boolean;
   parcelError: string | null;
+  /** True when a guest lookup is blocked until account creation/sign-in. */
+  authRequired: boolean;
+  /** Dismiss the account-required state without changing the active parcel. */
+  clearAuthRequired: () => void;
   /** Search an address by lat/lng — switches to live mode. */
   searchParcel: (lat: number, lng: number, address?: string) => Promise<void>;
   /** Geocode a free-text address, then look up its parcel and switch to live mode. */
@@ -97,6 +102,12 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   );
   const [parcelLoading, setParcelLoading] = useState(false);
   const [parcelError, setParcelError] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
+  const pendingLookupRef = useRef<
+    | { kind: "coords"; lat: number; lng: number; address?: string }
+    | { kind: "address"; query: string }
+    | null
+  >(null);
 
   useEffect(() => {
     if (initialLiveParcel) clearInitialParcel();
@@ -111,9 +122,12 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   const searchParcel = useCallback(
     async (lat: number, lng: number, address?: string) => {
       if (!user && !canGuestLookup()) {
+        pendingLookupRef.current = { kind: "coords", lat, lng, address };
+        setAuthRequired(true);
         setParcelError(GUEST_LIMIT_MESSAGE);
         return;
       }
+      setAuthRequired(false);
       setParcelLoading(true);
       setParcelError(null);
       const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
@@ -149,9 +163,12 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       // routes put a tokenless caller on the keyless provider chain, so this
       // costs no metered quota.
       if (!user && !canGuestLookup()) {
+        pendingLookupRef.current = { kind: "address", query: q };
+        setAuthRequired(true);
         setParcelError(GUEST_LIMIT_MESSAGE);
         return;
       }
+      setAuthRequired(false);
       setParcelLoading(true);
       setParcelError(null);
       const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
@@ -180,22 +197,46 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     [user],
   );
 
+  useEffect(() => {
+    if (!user || !pendingLookupRef.current) return;
+    const pending = pendingLookupRef.current;
+    pendingLookupRef.current = null;
+    setAuthRequired(false);
+    setParcelError(null);
+    if (pending.kind === "coords") {
+      void searchParcel(pending.lat, pending.lng, pending.address);
+    } else {
+      void searchByAddress(pending.query);
+    }
+  }, [user, searchParcel, searchByAddress]);
+
+  const clearAuthRequired = useCallback(() => {
+    pendingLookupRef.current = null;
+    setAuthRequired(false);
+  }, []);
+
   const restoreLiveParcel = useCallback((nextParcel: LiveParcelData) => {
     setParcel(nextParcel);
     setParcelMode("live");
     setParcelError(null);
+    setAuthRequired(false);
+    pendingLookupRef.current = null;
   }, []);
 
   const setEstimatedParcel = useCallback((estimated: EstimatedParcel) => {
     setParcel(estimated);
     setParcelMode("estimated");
     setParcelError(null);
+    setAuthRequired(false);
+    pendingLookupRef.current = null;
   }, []);
 
   const resetToPreset = useCallback((preset: ParcelPreset) => {
     setParcel(preset);
     setParcelMode("preset");
     setParcelError(null);
+    setAuthRequired(false);
+    pendingLookupRef.current = null;
   }, []);
 
   return (
@@ -205,6 +246,8 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         parcelMode,
         parcelLoading,
         parcelError,
+        authRequired,
+        clearAuthRequired,
         searchParcel,
         searchByAddress,
         restoreLiveParcel,
