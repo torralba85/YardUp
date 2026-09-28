@@ -151,6 +151,9 @@ export function AuthModal({
       }
       if (!wasOpenRef.current) {
         const signUpMode = initialMode === "sign-up";
+        // Open-edge synchronization is intentional: the modal stays mounted
+        // between prompts, but each caller can choose its initial auth mode.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSignUp(signUpMode);
         trackAuthPromptShown({
           surface: analyticsSurface,
