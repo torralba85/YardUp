@@ -34,6 +34,7 @@ import { getScenePlacement } from "@/lib/site-fit";
 import { buildAduHeightModel, type Pose2D } from "@/lib/scene-model";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
+import { AuthModal, type AuthModalCloseReason } from "@/components/auth/AuthModal";
 import { getMatchedBuilders } from "@/lib/marketplace";
 import {
   createConnectionRequest,
@@ -102,6 +103,7 @@ import {
   getAduSqftBucket,
   getBuilderMatchBucket,
   extractStateCode,
+  type AuthPromptSource,
 } from "@/lib/analytics/events";
 
 import { getSplatSceneForParcel } from "@/lib/splat-registry";
@@ -162,7 +164,18 @@ export default function FeasibilityStudio({ demoChosen = false }: { demoChosen?:
 
 function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const { user, loading: authLoading } = useAuth();
-  const { parcel: liveParcel, parcelMode, parcelError, parcelLoading, searchParcel, searchByAddress, resetToPreset, restoreLiveParcel } = useParcel();
+  const {
+    parcel: liveParcel,
+    parcelMode,
+    parcelError,
+    parcelLoading,
+    authRequired,
+    clearAuthRequired,
+    searchParcel,
+    searchByAddress,
+    resetToPreset,
+    restoreLiveParcel,
+  } = useParcel();
   const [parcelId, setParcelId] = useState(parcelPresets[0].id);
   const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
   const [poseState,setPoseState] = useState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
@@ -193,6 +206,11 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const [savingScenario, setSavingScenario] = useState(false);
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
+  const [authPrompt, setAuthPrompt] = useState<{
+    open: boolean;
+    source: AuthPromptSource;
+    resumeSave: boolean;
+  } | null>(null);
 
   const [generatedConcepts, setGeneratedConcepts] = useState<InspirationItem[]>([]);
   const [activeConcept, setActiveConcept] = useState<InspirationItem | null>(null);
@@ -739,12 +757,20 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     }
   }, [handleGenerateProjectBrief, user]);
 
-  async function handleSaveScenario() {
+  const openSignup = useCallback(
+    (source: AuthPromptSource, resumeSave = false) => {
+      setAuthPrompt({ open: true, source, resumeSave });
+    },
+    [],
+  );
+
+  async function handleSaveScenario(authenticatedUid?: string) {
     if (typeof window === "undefined") return;
     if (savingScenario) return;
-    if (!user) {
-      setSaveNotice("Sign in to save");
-      setTimeout(() => setSaveNotice(null), 2000);
+    const userId = authenticatedUid ?? user?.uid;
+    if (!userId) {
+      setSaveNotice("Create a free account to save");
+      openSignup("save_scenario", true);
       return;
     }
 
@@ -774,7 +800,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     setSavingScenario(true);
     setSaveNotice(null);
     try {
-      const created = await saveSavedScenario(user.uid, entry);
+      const created = await saveSavedScenario(userId, entry);
       setSavedScenarios((prev) => [created, ...prev]);
       setSaveNotice("Saved");
       const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
@@ -789,6 +815,30 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
       setTimeout(() => setSaveNotice(null), 2000);
     }
   }
+
+  const guestLimitPromptActive = authRequired && !user;
+  const visibleAuthPrompt =
+    authPrompt ??
+    (guestLimitPromptActive
+      ? { open: true, source: "guest_limit" as const, resumeSave: false }
+      : null);
+
+  function handleStudioAuthenticated(authenticatedUser: { uid: string }) {
+    if (visibleAuthPrompt?.resumeSave) {
+      void handleSaveScenario(authenticatedUser.uid);
+    }
+    setAuthPrompt(null);
+  }
+
+  const handleStudioAuthClose = useCallback(
+    (reason: AuthModalCloseReason) => {
+      if (reason === "dismissed" && guestLimitPromptActive) {
+        clearAuthRequired();
+      }
+      setAuthPrompt(null);
+    },
+    [clearAuthRequired, guestLimitPromptActive],
+  );
 
   function handleLoadScenario(id: string) {
     if (typeof window === "undefined") return;
@@ -1092,6 +1142,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           config={config}
           onFineTune={() => setFineTuneOpen(true)}
           onContinue={() => setJourneyStep("act")}
+          onCreateAccount={!user ? () => openSignup("post_result") : undefined}
         />
       );
     } else {
@@ -1198,6 +1249,14 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             autoFocus={reportAutoFocus}
           />
         )}
+        <AuthModal
+          isOpen={visibleAuthPrompt?.open === true}
+          initialMode="sign-up"
+          analyticsSurface="studio"
+          analyticsSource={visibleAuthPrompt?.source ?? "unknown"}
+          onAuthenticated={handleStudioAuthenticated}
+          onClose={handleStudioAuthClose}
+        />
       </>
     );
   }
@@ -1215,6 +1274,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   const showsVerdictBand = activeStep !== "lot";
 
   return (
+    <>
     <StudioShell
       steps={steps}
       onStepSelect={handleStepSelect}
@@ -1239,6 +1299,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             result={result}
             config={config}
             eyebrow={activeParcel.city}
+            onCreateAccount={!user ? () => openSignup("post_result") : undefined}
           />
         )}
 
@@ -1397,6 +1458,14 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         />
       )}
     </StudioShell>
+    <AuthModal
+      isOpen={authPrompt?.open === true}
+      initialMode="sign-up"
+      analyticsSurface="studio"
+      analyticsSource={authPrompt?.source ?? "unknown"}
+      onClose={handleStudioAuthClose}
+    />
+    </>
   );
 }
 

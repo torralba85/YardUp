@@ -73,6 +73,27 @@ export type ProjectValueBucket =
   | "unknown";
 export type MatchReasonCountBucket = "none" | "one" | "two_three" | "four_plus";
 export type UnlockMode = "paid" | "credit" | "demo" | "unknown";
+export type AuthMethod = "password" | "google" | "apple";
+export type AuthMode = "sign_in" | "sign_up";
+export type AuthSurface = "landing" | "studio" | "signup_page" | "builder" | "native";
+export type AuthPromptSource =
+  | "account_control"
+  | "save_scenario"
+  | "guest_limit"
+  | "post_result"
+  | "feature_gate"
+  | "direct_signup"
+  | "unknown";
+export type AuthErrorBucket =
+  | "email_in_use"
+  | "invalid_credentials"
+  | "weak_password"
+  | "popup_blocked"
+  | "popup_closed"
+  | "provider_disabled"
+  | "network"
+  | "profile_write"
+  | "unknown";
 
 // -----------------------------------------------------------------------------
 // Bucket & Mapping Helpers
@@ -236,6 +257,89 @@ export function trackStudioOpened(params: {
   };
   if (params.parcel_mode) p.parcel_mode = params.parcel_mode;
   trackEvent("studio_opened", p);
+}
+
+/**
+ * Reduce Firebase/auth failures to bounded categories. Never send raw error
+ * messages or user-entered values to analytics.
+ */
+export function getAuthErrorBucket(code: string | null | undefined): AuthErrorBucket {
+  const normalized = (code ?? "").toLowerCase();
+  if (normalized.includes("email-already-in-use")) return "email_in_use";
+  if (
+    normalized.includes("wrong-password") ||
+    normalized.includes("invalid-credential") ||
+    normalized.includes("user-not-found")
+  ) return "invalid_credentials";
+  if (normalized.includes("weak-password")) return "weak_password";
+  if (normalized.includes("popup-blocked")) return "popup_blocked";
+  if (normalized.includes("popup-closed")) return "popup_closed";
+  if (
+    normalized.includes("operation-not-allowed") ||
+    normalized.includes("provider-disabled")
+  ) return "provider_disabled";
+  if (normalized.includes("network-request-failed")) return "network";
+  if (normalized.includes("profile") || normalized.includes("firestore")) {
+    return "profile_write";
+  }
+  return "unknown";
+}
+
+export function trackAuthPromptShown(params: {
+  surface: AuthSurface;
+  source: AuthPromptSource;
+  mode: AuthMode;
+}): void {
+  trackEvent("auth_prompt_shown", {
+    app_surface: params.surface,
+    auth_source: params.source,
+    auth_mode: params.mode,
+  });
+}
+
+export function trackSignupStarted(params: {
+  method: AuthMethod;
+  surface: AuthSurface;
+  source: AuthPromptSource;
+  role: "user" | "builder";
+}): void {
+  trackEvent("signup_started", {
+    method: params.method,
+    app_surface: params.surface,
+    auth_source: params.source,
+    role: params.role,
+  });
+}
+
+/** GA4 recommended sign_up event emitted only after account creation succeeds. */
+export function trackSignupSucceeded(params: {
+  method: AuthMethod;
+  surface: AuthSurface;
+  source: AuthPromptSource;
+  role: "user" | "builder";
+}): void {
+  trackEvent("sign_up", {
+    method: params.method,
+    app_surface: params.surface,
+    auth_source: params.source,
+    role: params.role,
+  });
+}
+
+export function trackSignupFailed(params: {
+  method: AuthMethod;
+  surface: AuthSurface;
+  source: AuthPromptSource;
+  role: "user" | "builder";
+  error_code?: string | null;
+}): void {
+  trackEvent("signup_failed", {
+    method: params.method,
+    app_surface: params.surface,
+    auth_source: params.source,
+    role: params.role,
+    error_bucket: getAuthErrorBucket(params.error_code),
+  });
 }
 
 /** 2. address_search_submitted */

@@ -178,6 +178,37 @@ describe("ParcelProvider estimated mode", () => {
     expect(result.current.parcelMode).toBe("live");
   });
 
+  it("resumes the blocked address after the guest signs in", async () => {
+    mockResolvedLookup();
+    const { result, rerender } = renderHook(() => useParcel(), { wrapper });
+
+    await act(async () => {
+      await result.current.searchByAddress("100 Main Los Angeles");
+    });
+
+    mocks.geocodeAddress.mockClear();
+    mocks.fetchParcel.mockClear();
+    await act(async () => {
+      await result.current.searchByAddress("200 Oak Los Angeles");
+    });
+
+    expect(result.current.authRequired).toBe(true);
+    expect(mocks.geocodeAddress).not.toHaveBeenCalled();
+
+    signIn();
+    await act(async () => {
+      rerender();
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.authRequired).toBe(false);
+    expect(mocks.geocodeAddress).toHaveBeenCalledWith("200 Oak Los Angeles", "token");
+    expect(mocks.fetchParcel).toHaveBeenCalled();
+  });
+
   it("does not spend the guest allowance on a lookup that fails", async () => {
     mocks.geocodeAddress.mockRejectedValueOnce(new Error("network down"));
     const { result } = renderHook(() => useParcel(), { wrapper });
