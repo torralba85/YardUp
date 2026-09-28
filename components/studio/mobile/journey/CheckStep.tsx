@@ -35,9 +35,17 @@ export interface CheckStepProps {
   config: Pick<ADUConfig, "width" | "length">;
   onFineTune: () => void;
   onContinue: () => void;
+  onCreateAccount?: () => void;
 }
 
-export default function CheckStep({ parcel, result, config, onFineTune, onContinue }: CheckStepProps) {
+export default function CheckStep({
+  parcel,
+  result,
+  config,
+  onFineTune,
+  onContinue,
+  onCreateAccount,
+}: CheckStepProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
@@ -133,7 +141,18 @@ export default function CheckStep({ parcel, result, config, onFineTune, onContin
         Fine-tune the numbers
       </button>
 
-      <div className="mt-auto pt-6">
+      <div className="mt-auto space-y-2 pt-6">
+        {onCreateAccount && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            fullWidth
+            onClick={onCreateAccount}
+          >
+            Save this property — create free account
+          </Button>
+        )}
         <Button
           type="button"
           variant="commit"
