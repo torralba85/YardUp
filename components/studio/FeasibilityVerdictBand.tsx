@@ -19,10 +19,17 @@ export interface FeasibilityVerdictBandProps {
   result: FeasibilityResult;
   config: Pick<ADUConfig, "width" | "length">;
   eyebrow?: string;
+  onCreateAccount?: () => void;
 }
 
 /** Compact project context. Detailed figures are available without leaving the design. */
-export default function FeasibilityVerdictBand({ parcel, result, config, eyebrow }: FeasibilityVerdictBandProps) {
+export default function FeasibilityVerdictBand({
+  parcel,
+  result,
+  config,
+  eyebrow,
+  onCreateAccount,
+}: FeasibilityVerdictBandProps) {
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];
@@ -47,6 +54,15 @@ export default function FeasibilityVerdictBand({ parcel, result, config, eyebrow
           <p className="text-xs text-lot-stone">Estimated rent</p>
           <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5 text-base font-semibold" />
         </div>
+        {onCreateAccount && (
+          <button
+            type="button"
+            onClick={onCreateAccount}
+            className="min-h-11 rounded-[3px] bg-lot-orange-ink px-4 text-sm font-semibold text-lot-chalk motion-safe:transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+          >
+            Save this property
+          </button>
+        )}
         <button type="button" aria-expanded={numbersOpen} aria-controls={numbersId}
           onClick={() => setNumbersOpen(!numbersOpen)}
           className="flex min-h-11 items-center gap-3 rounded-[3px] px-3 text-sm font-semibold hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
