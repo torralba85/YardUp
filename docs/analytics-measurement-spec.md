@@ -1,6 +1,6 @@
 # LotFoundry Analytics Measurement Specification
 
-Status: implementation-ready
+Status: reviewed implementation plan; P0 privacy and reporting prerequisites are not yet implemented
 Date: 2026-09-27
 Target branch: master
 Product: LotFoundry
@@ -28,7 +28,7 @@ LotFoundry already has:
 - Existing product telemetry for ADU landing CTAs and Cesium photoreal failures.
 - Real parcel resolution, aerial imagery, feasibility calculations, saved scenarios, certificate purchase, builder matching, lead submission, builder unlocks, Stripe, Firebase Auth, and Firestore.
 
-The missing layer is a consistent product-event taxonomy and KPI contract.
+The missing layer is a consistent product-event taxonomy and KPI contract. Existing helpers also have gaps: page views currently include raw query parameters, withdrawal does not explicitly disable the retained gtag function, and the certificate conversion ID derives from account/property identity. This document specifies required corrections; it does not assert that current production behavior satisfies them.
 
 ## Measurement principles
 
@@ -36,7 +36,7 @@ The missing layer is a consistent product-event taxonomy and KPI contract.
 
 GA4 is the behavioral source for consented user journeys.
 
-Firestore and payment systems are the authoritative source for completed transactions and marketplace records.
+Processor/store financial records are authoritative for monetary amounts. Firestore grants are authoritative for entitlements and marketplace records, and must be reconciled to those financial records rather than summed as revenue.
 
 Parcel/API operational health should come from server-side operational telemetry or logs when available, not only client analytics.
 
@@ -58,6 +58,14 @@ Never send any of the following to GA4:
 - raw Firestore document IDs that encode account or property identity
 
 Use bounded categories and buckets instead.
+
+#### P0 prerequisites before expanding instrumentation
+
+- Sanitize URL context before the first consented page view and every later event. Phase 1 sends only the pathname: strip all query parameters and fragments, including the supported `/studio?q=<address>` handoff. Sanitize page_path, page_location, page_referrer, and any default Google tag/Ads URL context; do not let automatic collection restore raw URLs. Page titles must never contain property or account data.
+- Gate pageview, trackEvent, and Ads conversion helpers on current configured-and-granted consent. On withdrawal, explicitly disable collection, prevent queued/new product events from sending, clear analytics cookies, and ensure the retained window.gtag function cannot bypass that state. Regrant may enable only new events, not replay events from the denied period.
+- Use a stable, randomly generated opaque analytics_order_id persisted by the backend for a verified paid order, exposed as transaction_id only after consent. Never reuse purchaseId(uid, certKey), raw grant IDs, addresses, account IDs, or deterministic hashes of those values. If the safe ID is unavailable, do not emit a purchase event.
+- Preserve once-per-order deduplication when migrating Google Ads to the same safe identifier contract. Do not preserve the current identity-bearing ID merely to preserve implementation details.
+- These requirements need runtime changes and regression tests before rollout. Merging this specification does not implement them.
 
 ### 3. Prefer decision events over noisy interaction events
 
@@ -82,7 +90,7 @@ Do not reuse an event name with a different business meaning.
 
 ## Primary KPI framework
 
-### KPI 1 — Activated Feasibility Projects
+### KPI 1 — Activated Feasibility Sessions
 
 Definition:
 
@@ -90,7 +98,9 @@ Unique consented Studio sessions that record feasibility_result_viewed after a u
 
 Formula:
 
-Activated Feasibility Projects = count of unique sessions with feasibility_result_viewed
+Activated Feasibility Sessions = count of unique sessions with feasibility_result_viewed
+
+Use the same GA4 session unit throughout the activation, high-intent, and builder-match rates. In exported data, deduplicate by GA4's existing user_pseudo_id plus ga_session_id; do not send a custom user/property identifier. Multiple parcel reviews in one session still count as one activated session. These consented-session metrics are not counts of unique properties, projects, or all product users.
 
 Why it matters:
 
@@ -146,13 +156,19 @@ Supporting metrics:
 
 Definition:
 
-Successfully granted paid value across LotFoundry monetization surfaces.
+Successfully collected live sale value across LotFoundry monetization surfaces, after discounts, excluding taxes, before processor/store fees and before refunds.
 
 Authoritative sources:
 
-- certificate purchase grants
-- builder lead unlock grants
-- builder credit-pack purchase grants, when used
+- Stripe financial transaction records for web sales
+- App Store and Google Play financial records for native sales
+- Firestore certificate, unlock, and credit grants only for entitlement reconciliation and product classification
+
+Do not sum existing grant amount fields. Certificate/direct-unlock amounts are cents, while the credit ledger's amountPaid uses major currency units. Native entitlements do not provide a reliable sale-price record, and demo grants can carry nominal prices without a real payment.
+
+Normalize imported financial records to an internal sale ledger with: an opaque order key, processor/store transaction key, purchase_type, purchase_channel, currency, integer amount_minor, currency exponent, paid_at, live/test status, and refund/chargeback adjustments. Keep this ledger server-side; it is not a GA4 payload. Deduplicate source records by channel and transaction key. Exclude demo/test/failed payments. Count credit-pack sales once when paid; spending those credits on an unlock is not another sale.
+
+Report gross sales, refunds/chargebacks, and net-of-refunds sales separately. Reconcile reversals to the original order and record their effective dates; do not silently erase the original sale. Segment totals by currency; only combine currencies under a documented exchange-rate source and date policy. Until financial imports exist, label this KPI unavailable rather than substituting list prices or grant amounts.
 
 GA4 is not the source of truth for this KPI.
 
@@ -166,12 +182,12 @@ Required cuts:
 
 Recommended operating derivative:
 
-Revenue per Activated Feasibility Project =
+Revenue per Activated Feasibility Session =
 authoritative gross platform revenue
 divided by
-Activated Feasibility Projects
+Activated Feasibility Sessions
 
-Treat this as an operating ratio, not a GA4-only metric.
+Treat this as an operating ratio, not a GA4-only metric. Its numerator includes all verified sales while its denominator covers only consented sessions; disclose that mismatch and consent-rate changes.
 
 ## Marketplace KPI framework
 
@@ -179,15 +195,15 @@ These are secondary but important because LotFoundry has a two-sided builder mar
 
 ### Builder Match Rate
 
-Unique activated homeowner projects with at least one eligible local builder
+Unique activated homeowner sessions with at least one eligible local builder
 divided by
-activated homeowner projects that reach the Builders step
+activated homeowner sessions that reach the Builders step
 
 ### Homeowner Connection Rate
 
-builder_connection_submitted
+Unique activated homeowner sessions with at least one match and a successful builder_connection_submitted event
 divided by
-builder_matches_viewed sessions with at least one match
+unique activated homeowner sessions with builder_matches_viewed and at least one match
 
 ### Lead Unlock Rate
 
@@ -237,16 +253,37 @@ Recommended bounded parameters:
 - device_mode: desktop | mobile
 - auth_state: guest | signed_in
 - parcel_mode: estimated | live | preset
-- parcel_source: regrid | county_gis | state_gis | structures | fallback | estimated | preset | unknown
+- parcel_source: regrid | county_gis | fallback | estimated | preset | unknown
 - state_code: two-letter US state code when already known
 - feasibility_status: eligible | review_needed | blocked | unknown
 - lot_size_bucket: under_3000 | 3000_4999 | 5000_7499 | 7500_9999 | 10000_plus
 - adu_sqft_bucket: under_400 | 400_599 | 600_799 | 800_999 | 1000_plus
-- report_format: print | text | csv | share
+- report_format: print | html | csv | share
 - purchase_type: certificate | lead_unlock | credit_pack
 - purchase_channel: web_stripe | ios_storekit | android_play
 - builder_match_bucket: none | one | two_three | four_plus
 - result: success | fallback | error | canceled
+- entry_source: landing_cta | direct | saved_scenario | shared_link | unknown
+- search_mode: guest_text | places
+- roof_style: shed | gable | flat
+- finish: cedar | lap | stucco | board
+- triage_status: new | interested | not-a-fit (retain the code's spelling)
+- access_status: locked | unlocked; derive from BuilderInboxItem.unlocked
+- project_value_bucket: under_100000 | 100000_199999 | 200000_299999 | 300000_499999 | 500000_plus | unknown
+- match_reason_count_bucket: none | one | two_three | four_plus
+- unlock_mode: paid | credit | demo | unknown
+- latency_bucket: under_500ms | 500_1499ms | 1500_2999ms | 3000_9999ms | 10000ms_plus | unknown
+- has_ai_brief: true | false
+
+Source mapping: LiveParcelData.source regrid → regrid, county-gis → county_gis, fallback → fallback. Statewide GIS resolves as county-gis in the current API. USA Structures enriches footprint evidence and is not a parcel_source. Use estimated/preset only for explicit client modes; unavailable source maps to unknown, without guessing a provider.
+
+Billing mapping: detectPurchaseChannel() web → web_stripe, app-store → ios_storekit, google-play → android_play. Screen size does not identify billing channel.
+
+Bucket rules: numeric intervals use inclusive lower/exclusive upper bounds (for example 500 ≤ latency < 1500). Lot/ADU sizes are nonnegative square feet; match/reason counts are nonnegative integers. Omit lot/ADU buckets for missing, negative, or non-finite inputs. For project_value_bucket, use the existing lead preview buildBandLow in USD, not a private exact estimate; invalid/missing/non-USD amounts map to unknown. Latency is elapsed milliseconds measured from lookup start to settlement; invalid/missing values map to unknown.
+
+unlock_mode mapping: demo when explicitly confirmed by the grant; credit for a confirmed credit spend (including a store credit purchase followed by spend); paid for a confirmed direct paid unlock; unknown when reconciliation does not expose provenance. Do not infer payment from an unlocked entitlement. builder_lead_preview_viewed emits access_status=locked by definition.
+
+Monetary parameters: currency is the actual three-letter ISO currency code and value is a finite nonnegative amount in that currency's major units. Checkout values may use a confirmed current quote; purchase values require the verified sale amount. Omit unavailable checkout amounts and suppress monetary purchase events when the verified amount is unavailable. Never use the web list price for a localized store transaction.
 
 Avoid high-cardinality raw strings.
 
@@ -266,7 +303,7 @@ Parameters:
 - device_mode
 - auth_state
 - parcel_mode when known
-- entry_source when bounded, for example landing_cta | direct | saved_scenario | shared_link | unknown
+- entry_source from the common bounded domain
 
 Owner:
 components/FeasibilityStudio.tsx or the Studio route wrapper.
@@ -303,7 +340,7 @@ Parameters:
 - parcel_source
 - auth_state
 - state_code when known
-- latency_ms or a bounded latency bucket
+- latency_bucket from the common bounded domain (register it as an event-scoped custom dimension)
 
 Owner:
 lib/parcel-context.tsx is the preferred single instrumentation point.
@@ -314,7 +351,7 @@ Business meaning:
 The user reviewed a usable feasibility result.
 
 Fire:
-Once per Studio session for the first meaningful result review, and again only when a new parcel is loaded.
+Once for the first meaningful review of each resolved parcel context in a Studio session. Changing a slider or revisiting the step must not refire it. A new parcel can generate another event, but session KPIs still deduplicate by the GA4 session unit. Keep parcel deduplication local; never transmit the address or parcel key.
 
 Parameters:
 - parcel_mode
@@ -338,8 +375,8 @@ When leaving the Design step toward Certificate/Builders, not on each slider cha
 
 Parameters:
 - adu_sqft_bucket
-- roof_style as a bounded enum
-- finish as a bounded enum
+- roof_style from the common bounded domain
+- finish from the common bounded domain
 - feasibility_status
 
 Owner:
@@ -385,7 +422,7 @@ Fire:
 After the export/share action begins successfully.
 
 Parameters:
-- report_format: print | text | csv | share
+- report_format: print | html | csv | share
 - feasibility_status
 
 Owner:
@@ -433,15 +470,18 @@ GA4 standard event:
 Use the GA4 recommended purchase event in addition to the existing Google Ads conversion event.
 
 Parameters:
-- transaction_id
-- value
-- currency
-- item_category: certificate
+- transaction_id: the opaque analytics_order_id defined in the P0 prerequisites
+- value: verified sale value in major currency units
+- currency: actual sale currency
+- items: one item with item_id=certificate, item_name=Certificate of Feasibility, item_category=certificate, quantity=1, and price equal to the verified certificate sale value
 - purchase_channel
 
+item_category belongs inside items, not solely at event level. Follow [Google's ecommerce event format](https://developers.google.com/analytics/devguides/collection/ga4/ecommerce).
+
 Rules:
-- fire once
-- preserve existing Google Ads conversion dedupe behavior
+- fire once per verified live paid order, with a stable safe ID across refreshes
+- require current consent, a safe ID, and verified amount/currency; suppress demo/test grants and entitlement-only restores without a newly reconciled order
+- preserve the Google Ads once-per-order dedupe property while migrating away from identity-bearing IDs
 - do not use GA4 as authoritative revenue
 
 Owner:
@@ -511,7 +551,7 @@ Parameters:
 - value
 - currency
 - purchase_type: lead_unlock
-- purchase_channel: web_stripe
+- purchase_channel from the runtime billing mapping; never hard-code it
 
 Owner:
 builder unlock slip / lead unlock checkout boundary.
@@ -526,11 +566,11 @@ Once when access changes to unlocked.
 
 Parameters:
 - purchase_type: lead_unlock
-- unlock_mode: paid | credit | demo when useful
+- unlock_mode from the common bounded domain
 - triage_status
 
 Business reporting:
-Use Firestore unlock grants as authoritative counts and revenue.
+Use Firestore unlock grants for entitlement counts and timestamps. Monetary revenue comes from reconciled processor/store financial records; a credit spend or demo grant is not a new sale.
 
 Owner:
 builder lead access reconciliation boundary.
@@ -554,7 +594,7 @@ Do not delay Phase 1 to instrument these.
 
 ## Existing events to preserve
 
-Do not break or rename current event behavior without a separate migration:
+Preserve existing event names and intended deduplication, subject to the P0 privacy corrections. Do not preserve unsafe URL collection, post-withdrawal sending, or identity-bearing transaction IDs:
 
 - ADU landing CTA events generated by aduCtaEvent
 - Cesium photoreal diagnostic event
@@ -566,7 +606,7 @@ Where possible, document existing names in the analytics event map so future eng
 
 ### A. Keep the current GA4 helper
 
-Continue using lib/analytics/gtag.ts.
+Continue using lib/analytics/gtag.ts after implementing the P0 URL sanitization and current-consent guards. Reusing the module does not mean its present privacy behavior is already sufficient.
 
 Do not add PostHog, Amplitude, Segment, Mixpanel, or another analytics SDK in this pass.
 
@@ -615,6 +655,9 @@ Recommended event-scoped custom dimensions:
 - purchase_type
 - purchase_channel
 - builder_match_bucket
+- latency_bucket
+
+Parcel Health reports use the registered latency_bucket dimension for GA4 distributions; raw latency percentiles belong in operational telemetry. DebugView visibility alone is not a reporting definition. See [Google's custom definitions guidance](https://support.google.com/analytics/answer/14240153).
 
 Do not register raw transaction_id as a custom dimension.
 Do not register high-cardinality property or user identifiers.
@@ -648,7 +691,7 @@ Show:
 - lookups
 - success/fallback/error share
 - parcel source mix
-- latency
+- latency bucket distribution (operational telemetry may also report percentiles)
 - state-level performance
 - photoreal errors
 
@@ -664,7 +707,7 @@ Show:
 - lead-unlock revenue
 - credit-pack revenue
 - purchases by channel
-- revenue per activated feasibility project
+- revenue per activated feasibility session
 - certificate paywall → checkout conversion
 - builder preview → unlock conversion
 
@@ -689,7 +732,8 @@ Before trusting a KPI, verify:
 - expected events appear in GA4 DebugView or Realtime
 - event parameters use only documented bounded values
 - no street address, coordinate, email, phone, owner name, APN, or free text reaches GA4
-- purchase is deduped
+- purchase is deduped by a safe opaque order ID; demo/test grants are excluded
+- mixed currency/unit inputs and refunds/chargebacks reconcile correctly
 - parcel lookup events reconcile with API traffic directionally
 - Firestore purchase and unlock grants reconcile with Stripe/store transactions
 - connection-request counts reconcile with builder_connection_submitted directionally, allowing for consent opt-outs
@@ -716,12 +760,16 @@ Update tests at instrumentation call sites:
 
 ### Consent behavior
 
-Preserve the existing contract:
+Implement and verify the required contract; the current helper behavior does not yet meet all of it:
 
 - without measurement ID, no tag and no banner
 - before consent, product event calls are harmless no-ops
 - after consent, events can send
-- after withdrawal, analytics cookies are removed and no new events send
+- after withdrawal, analytics cookies are removed and no new events send, even when window.gtag remains defined
+- initial and navigated `/studio?q=<address>` URLs never reach page-view, Ads, or inherited event context
+- denied-period events are never replayed on regrant
+- purchase identifiers and item fields contain no account/property identity
+- locale-specific store prices are not replaced with the web list price
 
 ### E2E
 
@@ -739,6 +787,14 @@ Verify representative journeys:
 Do not require external GA network delivery to make product E2E pass. Mock or inspect the local gtag queue where appropriate.
 
 ## Implementation checklist
+
+### P0 — Existing-layer privacy prerequisites
+
+- [ ] sanitize initial/navigation URL context and inherited Google tag/Ads context
+- [ ] enforce current consent in pageview, trackEvent, and Ads conversion helpers
+- [ ] explicitly disable collection and queued events on withdrawal
+- [ ] persist safe opaque analytics order IDs and migrate conversion dedupe safely
+- [ ] add regression coverage for those behaviors before new event rollout
 
 ### P0 — Analytics contract
 
@@ -763,7 +819,7 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 - [ ] certificate_paywall_viewed
 - [ ] certificate_checkout_started
 - [ ] GA4 purchase event after confirmed certificate grant
-- [ ] preserve existing Google Ads conversion
+- [ ] preserve Google Ads dedupe while correcting privacy and order identifiers
 
 ### P0 — Marketplace
 
@@ -777,7 +833,7 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 
 - [ ] tests prove no address/coordinate/contact fields are sent
 - [ ] update analytics documentation with the no-PII contract
-- [ ] verify consent behavior remains unchanged
+- [ ] verify consent withdrawal and regrant satisfy the corrected contract
 - [ ] verify GA4 parameter cardinality is bounded
 
 ### P1 — Reporting setup
@@ -787,7 +843,7 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 - [ ] build Parcel Health view
 - [ ] build Monetization view
 - [ ] build Marketplace Liquidity view
-- [ ] reconcile revenue against first-party grants
+- [ ] implement normalized financial imports, currency/unit validation, reversal handling, and grant reconciliation
 
 ### P2 — Advanced analysis
 
@@ -804,5 +860,9 @@ This work is complete when:
 2. GA4 behavior metrics clearly distinguish product usage from authoritative payment and marketplace records.
 3. A developer can find every event name and parameter definition in one module and this document.
 4. Core events have tests for success/failure and duplicate firing.
-5. Revenue and lead-unlock reporting reconciles to first-party purchase/grant records.
+5. Revenue reconciles to processor/store financial records; grants reconcile entitlement counts without double-counting credit spend or demo value.
 6. LotFoundry can produce a weekly KPI readout covering activation, high intent, revenue, parcel health, and marketplace liquidity.
+
+## Review basis
+
+Contract corrections were checked against master d637229: lib/analytics/gtag.ts, components/analytics/GoogleAnalytics.tsx, lib/analytics/adsConversion.ts, components/studio/CertificatePanel.tsx, lib/parcel-types.ts, lib/feasibility.ts, lib/marketplace-types.ts, lib/commerce/purchase-channel.ts, lib/lead-unlock-api.ts, lib/server/certificate-purchases.ts, lib/server/lead-unlocks.ts, app/api/stripe/webhook/route.ts, and components/FeasibilityStudio.tsx. All implementation checklist items remain outstanding until their code and tests land.
