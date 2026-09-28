@@ -764,16 +764,11 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     [],
   );
 
-  useEffect(() => {
-    if (authRequired && !user) {
-      openSignup("guest_limit");
-    }
-  }, [authRequired, openSignup, user]);
-
-  async function handleSaveScenario() {
+  async function handleSaveScenario(authenticatedUid?: string) {
     if (typeof window === "undefined") return;
     if (savingScenario) return;
-    if (!user) {
+    const userId = authenticatedUid ?? user?.uid;
+    if (!userId) {
       setSaveNotice("Create a free account to save");
       openSignup("save_scenario", true);
       return;
@@ -805,7 +800,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     setSavingScenario(true);
     setSaveNotice(null);
     try {
-      const created = await saveSavedScenario(user.uid, entry);
+      const created = await saveSavedScenario(userId, entry);
       setSavedScenarios((prev) => [created, ...prev]);
       setSaveNotice("Saved");
       const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
@@ -821,29 +816,28 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     }
   }
 
-  useEffect(() => {
-    if (!user || !authPrompt || authPrompt.open) return;
-    const shouldResumeSave = authPrompt.resumeSave;
-    setAuthPrompt(null);
-    if (shouldResumeSave) {
-      void handleSaveScenario();
+  const guestLimitPromptActive = authRequired && !user;
+  const visibleAuthPrompt =
+    authPrompt ??
+    (guestLimitPromptActive
+      ? { open: true, source: "guest_limit" as const, resumeSave: false }
+      : null);
+
+  function handleStudioAuthenticated(authenticatedUser: { uid: string }) {
+    if (visibleAuthPrompt?.resumeSave) {
+      void handleSaveScenario(authenticatedUser.uid);
     }
-  // handleSaveScenario intentionally runs with the fresh authenticated render.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authPrompt]);
+    setAuthPrompt(null);
+  }
 
   const handleStudioAuthClose = useCallback(
     (reason: AuthModalCloseReason) => {
-      if (reason === "dismissed") {
-        if (authPrompt?.source === "guest_limit") clearAuthRequired();
-        setAuthPrompt(null);
-        return;
+      if (reason === "dismissed" && guestLimitPromptActive) {
+        clearAuthRequired();
       }
-      setAuthPrompt((current) =>
-        current ? { ...current, open: false } : current,
-      );
+      setAuthPrompt(null);
     },
-    [authPrompt?.source, clearAuthRequired],
+    [clearAuthRequired, guestLimitPromptActive],
   );
 
   function handleLoadScenario(id: string) {
@@ -1256,10 +1250,11 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
           />
         )}
         <AuthModal
-          isOpen={authPrompt?.open === true}
+          isOpen={visibleAuthPrompt?.open === true}
           initialMode="sign-up"
           analyticsSurface="studio"
-          analyticsSource={authPrompt?.source ?? "unknown"}
+          analyticsSource={visibleAuthPrompt?.source ?? "unknown"}
+          onAuthenticated={handleStudioAuthenticated}
           onClose={handleStudioAuthClose}
         />
       </>
