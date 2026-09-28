@@ -51,19 +51,26 @@ const nativeStoreSecrets = [
   ...(googlePlaySecretParams ? Object.values(googlePlaySecretParams) : []),
 ];
 
-// The TypeSafe geocode picker is opt-in: it spends metered quota, guest
-// lookups included. Its key is bound behind the same flag the route reads, so
+// TypeSafe uses are opt-in: both spend metered quota. The geocode picker
+// includes guest lookups; brief review runs only on the authenticated AI path.
+// Each function binds the key behind its own flag, so
 // a deploy never prompts for a secret that has not been created. Set it with:
 //   firebase functions:secrets:set TYPESAFE_API_KEY_SECRET
+const typeSafeGeocodeEnabled = process.env.TYPESAFE_GEOCODE_PICKER === "true";
+const typeSafeBriefReviewEnabled = process.env.TYPESAFE_BRIEF_REVIEW === "shadow";
 const typeSafeApiKey =
-  process.env.TYPESAFE_GEOCODE_PICKER === "true"
+  typeSafeGeocodeEnabled || typeSafeBriefReviewEnabled
     ? defineSecret("TYPESAFE_API_KEY_SECRET")
     : null;
 const apiSecrets = [
   googleMapsApiKey,
   googlePlacesServerKey,
   regridApiKey,
-  ...(typeSafeApiKey ? [typeSafeApiKey] : []),
+  ...(typeSafeGeocodeEnabled && typeSafeApiKey ? [typeSafeApiKey] : []),
+];
+const aiSecrets = [
+  openAiApiKey,
+  ...(typeSafeBriefReviewEnabled && typeSafeApiKey ? [typeSafeApiKey] : []),
 ];
 
 // scripts/prepare-firebase.js copies the Next.js standalone build into
@@ -118,9 +125,12 @@ exports.app = onRequest(fnOpts, async (req, res) => {
 });
 
 exports.apiAi = onRequest(
-  { ...aiFnOpts, secrets: [openAiApiKey] },
+  { ...aiFnOpts, secrets: aiSecrets },
   async (req, res) => {
     process.env.OPENAI_API_KEY = openAiApiKey.value();
+    if (typeSafeBriefReviewEnabled && typeSafeApiKey) {
+      process.env.TYPESAFE_API_KEY = typeSafeApiKey.value();
+    }
     const handle = await ready();
     return handle(requestForNext(req), res);
   },
@@ -135,7 +145,9 @@ exports.api = onRequest(
     process.env.GOOGLE_MAPS_API_KEY = googleMapsApiKey.value();
     process.env.GOOGLE_PLACES_SERVER_KEY = googlePlacesServerKey.value();
     process.env.REGRID_API_KEY = regridApiKey.value();
-    if (typeSafeApiKey) process.env.TYPESAFE_API_KEY = typeSafeApiKey.value();
+    if (typeSafeGeocodeEnabled && typeSafeApiKey) {
+      process.env.TYPESAFE_API_KEY = typeSafeApiKey.value();
+    }
     const handle = await ready();
     return handle(requestForNext(req), res);
   },

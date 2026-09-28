@@ -260,7 +260,7 @@ describe("createAIPanelRoute", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ tier: "preview", from: "ok" });
     // NODE_ENV=test resolves the stub local-dev uid; the hook still sees it.
-    expect(meta).toEqual([{ uid: "local-dev", input: { q: "hi" } }]);
+    expect(meta).toEqual([{ uid: "local-dev", input: { q: "hi" }, ctx: { q: "hi" } }]);
   });
 
   it("returns 400 when input validation fails", async () => {

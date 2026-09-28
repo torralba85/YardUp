@@ -13,6 +13,10 @@ import { projectBriefDef, redactBriefToPreview } from "./project-brief";
 const purchases = vi.hoisted(() => ({
   hasCertificate: vi.fn(),
 }));
+const grounding = vi.hoisted(() => ({ review: vi.fn() }));
+vi.mock("@/lib/server/project-brief-grounding", () => ({
+  reviewProjectBriefGrounding: grounding.review,
+}));
 
 // The finalize tier check must not touch Firestore in unit tests.
 vi.mock("@/lib/server/certificate-purchases", () => ({
@@ -94,6 +98,11 @@ describe("projectBriefDef", () => {
       stages: unknown[];
     };
     expect(stages.stages.length).toBeGreaterThan(0);
+    expect(ctx.permitEvidence).toEqual([
+      { tool: "lookup_permit_tracks", result: tracks },
+      { tool: "get_stage_benchmarks", result: stages },
+    ]);
+    expect(projectBriefDef.buildContext(validInput()).permitEvidence).toEqual([]);
   });
 
   it("recovers the state from a full address when live parcel city is city-only", async () => {
@@ -196,6 +205,39 @@ describe("redactBriefToPreview", () => {
 describe("projectBriefDef.finalize", () => {
   beforeEach(() => {
     purchases.hasCertificate.mockReset();
+    grounding.review.mockReset();
+  });
+
+  it("reviews using the request's actual tool evidence without changing the full response", async () => {
+    purchases.hasCertificate.mockResolvedValue(true);
+    const input = validInput();
+    const ctx = projectBriefDef.buildContext(input);
+    const result = await projectBriefDef.tools[0].execute({}, ctx);
+
+    const response = await projectBriefDef.finalize!(fullBrief, { uid: "buyer", input, ctx });
+
+    expect(grounding.review).toHaveBeenCalledWith(input, fullBrief, [
+      { tool: "lookup_permit_tracks", result },
+    ]);
+    expect(response).toEqual({ tier: "full", brief: fullBrief });
+  });
+
+  it("preserves the preview and redacts unexpected checker failures", async () => {
+    purchases.hasCertificate.mockResolvedValue(false);
+    grounding.review.mockRejectedValue(new Error("private narrative and credentials"));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const response = await projectBriefDef.finalize!(fullBrief, {
+        uid: "browser", input: validInput(),
+      });
+      expect(response).toEqual({ tier: "preview", preview: redactBriefToPreview(fullBrief) });
+      expect(warn).toHaveBeenCalledWith(JSON.stringify({
+        severity: "WARNING", event: "jev_project_brief_review", status: "internal-error",
+      }));
+      expect(JSON.stringify(warn.mock.calls)).not.toContain("private narrative");
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it("returns the full tier for a verified certificate purchaser", async () => {

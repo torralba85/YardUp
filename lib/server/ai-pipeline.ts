@@ -69,7 +69,7 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
    */
   finalize?: (
     output: Output,
-    meta: { uid: string; input: Input },
+    meta: { uid: string; input: Input; ctx?: Ctx },
   ) => Promise<unknown> | unknown;
 }
 
@@ -288,7 +288,7 @@ export function createAIPanelRoute<Input, Output, Ctx>(
       const ctx = def.buildContext(validated.value);
       const result = await runAgentic(def, validated.value, ctx, deps);
       const payload = def.finalize
-        ? await def.finalize(result, { uid: auth.uid, input: validated.value })
+        ? await def.finalize(result, { uid: auth.uid, input: validated.value, ctx })
         : result;
       return NextResponse.json(payload);
     } catch (err) {

@@ -49,7 +49,7 @@ describe("Firebase AI API routing", () => {
     expect(functionsSource).toContain(
       'defineSecret("OPENAI_API_KEY_SECRET")',
     );
-    expect(functionsSource).toContain("secrets: [openAiApiKey]");
+    expect(functionsSource).toContain("secrets: aiSecrets");
     expect(ciWorkflow).not.toContain(
       'OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"',
     );
