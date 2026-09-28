@@ -61,7 +61,7 @@ Use bounded categories and buckets instead.
 
 #### P0 prerequisites before expanding instrumentation
 
-- Sanitize URL context before the first consented page view and every later event. Phase 1 sends only the pathname: strip all query parameters and fragments, including the supported `/studio?q=<address>` handoff. Sanitize page_path, page_location, page_referrer, and any default Google tag/Ads URL context; do not let automatic collection restore raw URLs. Page titles must never contain property or account data.
+- Sanitize URL context before the first consented page view and every later event. Phase 1 sends only the pathname: strip all query parameters and fragments, including legacy or untrusted `/studio?q=<address>` URLs. Sanitize page_path, page_location, page_referrer, and any default Google tag/Ads URL context; do not let automatic collection restore raw URLs. Page titles must never contain property or account data.
 - Gate pageview, trackEvent, and Ads conversion helpers on current configured-and-granted consent. On withdrawal, explicitly disable collection, prevent queued/new product events from sending, clear analytics cookies, and ensure the retained window.gtag function cannot bypass that state. Regrant may enable only new events, not replay events from the denied period.
 - Use a stable, randomly generated opaque analytics_order_id persisted by the backend for a verified paid order, exposed as transaction_id only after consent. Never reuse purchaseId(uid, certKey), raw grant IDs, addresses, account IDs, or deterministic hashes of those values. If the safe ID is unavailable, do not emit a purchase event.
 - Preserve once-per-order deduplication when migrating Google Ads to the same safe identifier contract. Do not preserve the current identity-bearing ID merely to preserve implementation details.
@@ -180,14 +180,14 @@ Required cuts:
 - new versus returning purchaser where available from first-party data
 - builder versus homeowner revenue
 
-Recommended operating derivative:
+Optional behavioral derivative:
 
-Revenue per Activated Feasibility Session =
-authoritative gross platform revenue
+Consented Certificate Revenue per Activated Feasibility Session =
+sum of verified certificate purchase value emitted in activated GA4 sessions
 divided by
-Activated Feasibility Sessions
+those Activated Feasibility Sessions, including sessions with no purchase
 
-Treat this as an operating ratio, not a GA4-only metric. Its numerator includes all verified sales while its denominator covers only consented sessions; disclose that mismatch and consent-rate changes.
+Use the same reporting window and GA4 session unit on both sides, deduplicate by the safe transaction_id, and report each currency separately. Purchases in another session and nonconsented sales do not enter this numerator. This is a consented, same-session certificate conversion metric, not gross platform revenue; report KPI 3 separately. Keep this derivative unavailable until safe order IDs and verified sale amounts exist. Never divide all-channel first-party revenue by a consent-limited denominator.
 
 ## Marketplace KPI framework
 
@@ -207,11 +207,11 @@ unique activated homeowner sessions with builder_matches_viewed and at least one
 
 ### Lead Unlock Rate
 
-Unique leads unlocked by at least one builder
+Unique eligible matched leads with at least one confirmed non-demo builder unlock
 divided by
-eligible matched lead previews shown to builders
+unique leads with at least one stored eligible matched builder
 
-Use Firestore lead records and unlock grants as the authoritative source when calculating this rate for business reporting.
+Use Firestore connectionRequests.matchedBuilderIds and unlock grants. Select the same lead-creation cohort for numerator and denominator, count each lead once, and state the observation cutoff for unlocks. Include paid and credit unlocks; exclude demo/test records. This is a matched-lead unlock rate, not a preview-impression conversion rate. Firestore does not currently record rendered previews, so do not use impressions as its denominator.
 
 ### Lead Liquidity
 
@@ -229,7 +229,7 @@ These metrics determine whether product analysis can be trusted.
 - Parcel error rate
 - Parcel source mix
 - Parcel lookup latency distribution
-- Aerial/photoreal availability rate
+- Photoreal error-event count (diagnostic only; not an availability rate)
 - Zoning coverage rate
 - Boundary-geometry coverage rate
 
@@ -241,7 +241,7 @@ Recommended segmentation:
 - state code
 - device mode
 
-Do not segment by exact address or coordinates.
+Do not segment by exact address or coordinates. The existing photoreal_tileset_error event counts failed configured routes; several failures may belong to one view, and success or missing configuration emits no matching result. Do not infer attempts, unique failed views, or availability from it. A future availability KPI requires a separate attempt/result contract.
 
 ## Common event parameters
 
@@ -263,8 +263,8 @@ Recommended bounded parameters:
 - purchase_channel: web_stripe | ios_storekit | android_play
 - builder_match_bucket: none | one | two_three | four_plus
 - result: success | fallback | error | canceled
-- entry_source: landing_cta | direct | saved_scenario | shared_link | unknown
-- search_mode: guest_text | places
+- entry_source: landing_cta | shared_link | unknown
+- search_mode: free_text | places
 - roof_style: shed | gable | flat
 - finish: cedar | lap | stucco | board
 - triage_status: new | interested | not-a-fit (retain the code's spelling)
@@ -276,6 +276,12 @@ Recommended bounded parameters:
 - has_ai_brief: true | false
 
 Source mapping: LiveParcelData.source regrid → regrid, county-gis → county_gis, fallback → fallback. Statewide GIS resolves as county-gis in the current API. USA Structures enriches footprint evidence and is not a parcel_source. Use estimated/preset only for explicit client modes; unavailable source maps to unknown, without guessing a provider.
+
+Feasibility mapping: use summarizeFeasibility(parcel, result, config, placement).verdict from lib/feasibility-verdict.ts, with the same inputs as the displayed summary. Map Likely Feasible → eligible, Needs Review → review_needed, and Unlikely → blocked; use unknown only when no valid summary exists. Never independently derive this parameter from zoningStatus or an individual blocked constraint. These are planning-estimate labels, not permitting determinations.
+
+Entry attribution: when consent is already granted, the initiating landing CTA stores a bounded landing_cta marker for the next Studio navigation. A share link may carry an explicit allowlisted shared_link source marker, read only after consent and removed from all analytics URL context. Consume one current-navigation marker once at the Studio route boundary; a same-navigation internal CTA marker takes precedence over a shared-link marker. Clear internal markers on consumption or canceled navigation, and expire them after five minutes. Never infer source from parcel parameters, a referrer, or the absence of a marker: use unknown. Loading a saved scenario inside an existing Studio entry does not create another studio_opened event. Do not store or reconstruct denied-period attribution; late consent uses unknown unless a current consented navigation establishes source.
+
+Search mapping: AddressSearch.onSelect emits places; onSubmitText, including signed-in manual submissions and server-suggestion fallback, emits free_text. auth_state independently records whether the user is signed in.
 
 Billing mapping: detectPurchaseChannel() web → web_stripe, app-store → ios_storekit, google-play → android_play. Screen size does not identify billing channel.
 
@@ -297,7 +303,7 @@ Business meaning:
 The user entered the Studio product surface.
 
 Fire:
-Once per Studio mount.
+Once per Studio route entry when current consent is granted and the analytics dispatcher is ready, before recording later events from that entry. Own this at the route boundary outside SignedInStudioGate so the initial address gate is part of Studio entry. If consent or dispatcher readiness arrives while the route is still open, emit once then using current state; this is a new observation, not replay of denied-period actions. Keep the sent flag across gate-to-studio transitions and React remounts within that entry. Withdrawal cancels any pending observation; regrant does not duplicate an entry already sent.
 
 Parameters:
 - device_mode
@@ -306,7 +312,7 @@ Parameters:
 - entry_source from the common bounded domain
 
 Owner:
-components/FeasibilityStudio.tsx or the Studio route wrapper.
+app/(firebase)/studio/page.tsx, above SignedInStudioGate, native onboarding, and FeasibilityStudio.
 
 ### 2. address_search_submitted
 
@@ -314,17 +320,17 @@ Business meaning:
 The user intentionally submitted an address lookup.
 
 Fire:
-On submit, not on every keystroke.
+On an accepted lookup submission, not on every keystroke. Include the signed-in entry gate and landing address handoff as well as searches inside the Studio; a handoff is one submission, not another event at each boundary. Only observe submissions made after consent and analytics readiness; never replay a pre-consent handoff.
 
 Parameters:
-- search_mode: guest_text | places
+- search_mode: free_text | places
 - auth_state
 - device_mode
 
 Do not send the address query.
 
 Owner:
-FindStep / ConstraintsPanel / FeasibilityInspector boundary, or a shared address-search callback.
+SignedInStudioGate.lookupText/lookupCoordinates plus FindStep / ConstraintsPanel / FeasibilityInspector, delegating to one shared submission helper. Pass only the bounded search mechanism, never the query or coordinates.
 
 ### 3. parcel_lookup_completed
 
@@ -332,7 +338,7 @@ Business meaning:
 A parcel lookup attempt finished.
 
 Fire:
-Exactly once per search attempt after the lookup settles.
+Exactly once per accepted attempt after the complete geocode/parcel lookup settles, including geocoding failures before fetchParcel. Start latency when the accepted lookup begins and stop at settlement. Emit only if consent was granted at start and remains granted at settlement; a withdrawal cancels that attempt's analytics even if consent is later regranted. Suppress abandoned/canceled attempts. Use a local attempt token for deduplication across handoff boundaries; never send it to GA4.
 
 Parameters:
 - result: success | fallback | error
@@ -343,7 +349,7 @@ Parameters:
 - latency_bucket from the common bounded domain (register it as an event-scoped custom dimension)
 
 Owner:
-lib/parcel-context.tsx is the preferred single instrumentation point.
+Both SignedInStudioGate.lookupText/lookupCoordinates (before FeasibilityStudio mounts) and ParcelProvider.searchByAddress/searchParcel in lib/parcel-context.tsx must use the same completion helper. Handing a resolved parcel into the provider is not a second lookup. A helper only around fetchParcel is insufficient because earlier geocoding can fail.
 
 ### 4. feasibility_result_viewed
 
@@ -403,7 +409,7 @@ Business meaning:
 The concept/certificate report preview became visible.
 
 Fire:
-When reportOpen changes from false to true due to user action.
+When reportOpen changes from false to true after an explicit view action or a newly reconciled certificate purchase opens the report. Passive entitlement hydration alone does not count.
 
 Parameters:
 - feasibility_status
@@ -562,7 +568,7 @@ Business meaning:
 The client reconciled a granted lead unlock.
 
 Fire:
-Once when access changes to unlocked.
+Once per newly reconciled confirmed grant associated with a consented unlock attempt, whether access changes in place or is already unlocked on the first post-checkout dashboard load. Before redirect, retain a pending attempt only while consent is granted. On return, reconcile authenticated grant state with that pending attempt; the unlocked=1 URL marker alone is not proof of payment or access. Allow bounded refresh/retry for webhook delay, but emit nothing without confirmed access. Deduplicate the in-place and return paths with one opaque grant/attempt receipt and a durable sent marker; neither raw lead IDs nor account IDs reach GA4. Require consent at attempt and reconciliation, clear pending analytics state on withdrawal, and never replay denied-period unlocks or passive historical grants. Safe receipts and return reconciliation are implementation prerequisites; they do not exist merely because this document is merged.
 
 Parameters:
 - purchase_type: lead_unlock
@@ -573,7 +579,7 @@ Business reporting:
 Use Firestore unlock grants for entitlement counts and timestamps. Monetary revenue comes from reconciled processor/store financial records; a credit spend or demo grant is not a new sale.
 
 Owner:
-builder lead access reconciliation boundary.
+BuilderInbox for in-place grants and BuilderDashboard for authenticated post-Stripe-return reconciliation, using one shared dedupe helper. Dashboard hydration can already contain unlocked=true before BuilderInbox mounts, so do not rely solely on a locked-to-unlocked render transition.
 
 ## Phase 2 event contract
 
@@ -655,7 +661,10 @@ Recommended event-scoped custom dimensions:
 - purchase_type
 - purchase_channel
 - builder_match_bucket
+- result
 - latency_bucket
+- entry_source
+- search_mode
 
 Parcel Health reports use the registered latency_bucket dimension for GA4 distributions; raw latency percentiles belong in operational telemetry. DebugView visibility alone is not a reporting definition. See [Google's custom definitions guidance](https://support.google.com/analytics/answer/14240153).
 
@@ -666,14 +675,15 @@ Do not register high-cardinality property or user identifiers.
 
 ### View 1 — Product funnel
 
-Sequence:
+Report separate entry paths:
 
-studio_opened
-→ address_search_submitted
-→ parcel_lookup_completed with success or fallback
-→ feasibility_result_viewed
-→ report_opened
-→ certificate_checkout_started or builder_connection_submitted
+- Live lookup: studio_opened → address_search_submitted → parcel_lookup_completed with success or fallback → feasibility_result_viewed. Include lookups made in SignedInStudioGate before FeasibilityStudio mounts.
+- Preset/demo: studio_opened → feasibility_result_viewed with parcel_mode=preset. Do not require or synthesize an address submission or API lookup.
+- Restored/shared/estimated context: studio_opened → feasibility_result_viewed for the current context; require lookup steps only if an actual lookup occurred.
+
+From activation, measure certificate_checkout_started and builder_connection_submitted as separate intent branches. Neither requires report_opened. For new certificate buyers, purchase reconciliation may then open the report; existing owners may open it without new checkout. Report views/exports are separate engagement measures, not prerequisites for either intent branch.
+
+Build conversion counts from distinct sessions and observed events within each path. Mark late-consent entries as partially observed and do not fabricate their earlier steps. Multiple parcel attempts in one session are not separate session activations; attempt-level parcel health is reported separately.
 
 Show:
 
@@ -707,9 +717,9 @@ Show:
 - lead-unlock revenue
 - credit-pack revenue
 - purchases by channel
-- revenue per activated feasibility session
+- consented same-session certificate revenue per activated feasibility session, separate from authoritative total revenue
 - certificate paywall → checkout conversion
-- builder preview → unlock conversion
+- matched-lead unlock rate from first-party records; preview impressions reported separately
 
 ### View 4 — Marketplace liquidity
 
@@ -751,11 +761,16 @@ Add tests for lib/analytics/events.ts:
 
 Update tests at instrumentation call sites:
 
-- parcel lookup success/fallback/error emits once
+- signed-in pre-mount gate and in-Studio lookup success/fallback/geocode-error paths emit once per attempt; passing resolved data to ParcelProvider does not duplicate completion
+- preset, restored, and estimated entries activate without synthetic lookup events
+- feasibility_status follows the rendered summarizeFeasibility verdict, including over-coverage review, minimum-envelope failure, placement review, and absent-summary cases
+- free_text covers guest and signed-in submissions; source markers obey precedence, expiry, consumption, and unknown fallback
 - failed scenario save does not emit scenario_saved
 - failed builder submission does not emit builder_connection_submitted
 - certificate checkout click emits checkout-start once
 - reconciled purchase emits purchase once
+- in-place and Stripe-return unlock reconciliation emit once for a confirmed new grant, including initially unlocked dashboard data and delayed webhook delivery; duplicate returns, forged markers, historical grants, and withdrawal do not emit
+- KPI fixtures use one population and unit for each numerator/denominator, with cohort cutoff, currency, demo exclusions, and duplicate records covered
 - report export emits the correct format
 
 ### Consent behavior
@@ -764,7 +779,7 @@ Implement and verify the required contract; the current helper behavior does not
 
 - without measurement ID, no tag and no banner
 - before consent, product event calls are harmless no-ops
-- after consent, events can send
+- after consent and dispatcher readiness, Studio entry emits once while still open and precedes subsequent observed events; gate-to-studio handoff and regrant do not duplicate it
 - after withdrawal, analytics cookies are removed and no new events send, even when window.gtag remains defined
 - initial and navigated `/studio?q=<address>` URLs never reach page-view, Ads, or inherited event context
 - denied-period events are never replayed on regrant
@@ -801,7 +816,8 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 - [ ] Add lib/analytics/events.ts
 - [ ] Add event helper tests
 - [ ] Document existing legacy event names
-- [ ] Add safe bucket helpers
+- [ ] Add safe bucket helpers and a single feasibility verdict mapper
+- [ ] Add consent-aware Studio route entry, bounded navigation attribution, and shared gate/provider lookup instrumentation
 
 ### P0 — Homeowner funnel
 
@@ -827,7 +843,7 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 - [ ] builder_connection_submitted
 - [ ] builder_lead_preview_viewed
 - [ ] builder_unlock_checkout_started
-- [ ] builder_lead_unlocked
+- [ ] builder_lead_unlocked, with consent-aware in-place/return reconciliation and opaque durable deduplication
 
 ### P0 — Privacy and QA
 
@@ -865,4 +881,4 @@ This work is complete when:
 
 ## Review basis
 
-Contract corrections were checked against master d637229: lib/analytics/gtag.ts, components/analytics/GoogleAnalytics.tsx, lib/analytics/adsConversion.ts, components/studio/CertificatePanel.tsx, lib/parcel-types.ts, lib/feasibility.ts, lib/marketplace-types.ts, lib/commerce/purchase-channel.ts, lib/lead-unlock-api.ts, lib/server/certificate-purchases.ts, lib/server/lead-unlocks.ts, app/api/stripe/webhook/route.ts, and components/FeasibilityStudio.tsx. All implementation checklist items remain outstanding until their code and tests land.
+Contract corrections were checked against master d637229: lib/analytics/gtag.ts, components/analytics/GoogleAnalytics.tsx, lib/analytics/adsConversion.ts, components/studio/CertificatePanel.tsx, lib/parcel-types.ts, lib/feasibility.ts, lib/marketplace-types.ts, lib/commerce/purchase-channel.ts, lib/lead-unlock-api.ts, lib/server/certificate-purchases.ts, lib/server/lead-unlocks.ts, app/api/stripe/webhook/route.ts, and components/FeasibilityStudio.tsx. Follow-up review against master 3e0c997 also checked app/(firebase)/studio/page.tsx, SignedInStudioGate, AddressSearch, BuilderDashboard, BuilderInbox, lib/feasibility-verdict.ts, and lib/marketplace-types.ts. All implementation checklist items remain outstanding until their code and tests land.
