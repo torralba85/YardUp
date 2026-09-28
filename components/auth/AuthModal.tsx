@@ -12,6 +12,7 @@ import {
   type AuthSurface,
 } from "@/lib/analytics/events";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
+import type { User as FirebaseUser } from "firebase/auth";
 
 /**
  * Why the modal closed.
@@ -41,6 +42,8 @@ export interface AuthModalProps {
   /** Bounded analytics context; never pass free text or PII. */
   analyticsSurface?: AuthSurface;
   analyticsSource?: AuthPromptSource;
+  /** Called with the authenticated Firebase user before the modal closes. */
+  onAuthenticated?: (user: FirebaseUser) => void;
 }
 
 /** Keyboard-reachable controls, excluding disabled ones the browser won't focus. */
@@ -65,6 +68,7 @@ export function AuthModal({
   initialMode = "sign-in",
   analyticsSurface = "studio",
   analyticsSource = "account_control",
+  onAuthenticated,
 }: AuthModalProps) {
   const { signIn, signUp, signInWithGoogle, signInWithApple, user } = useAuth();
   const [isSignUp, setIsSignUp] = useState(initialMode === "sign-up");
@@ -153,7 +157,6 @@ export function AuthModal({
         const signUpMode = initialMode === "sign-up";
         // Open-edge synchronization is intentional: the modal stays mounted
         // between prompts, but each caller can choose its initial auth mode.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSignUp(signUpMode);
         trackAuthPromptShown({
           surface: analyticsSurface,
@@ -277,7 +280,7 @@ export function AuthModal({
           source: analyticsSource,
           role,
         });
-        await signUp(
+        const credential = await signUp(
           email,
           password,
           displayName,
@@ -290,8 +293,10 @@ export function AuthModal({
           source: analyticsSource,
           role,
         });
+        onAuthenticated?.(credential.user);
       } else {
-        await signIn(email, password);
+        const credential = await signIn(email, password);
+        onAuthenticated?.(credential.user);
       }
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
@@ -334,7 +339,7 @@ export function AuthModal({
           role,
         });
       }
-      await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+      const credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
       if (isSignUp) {
         trackSignupSucceeded({
           method: "google",
@@ -343,6 +348,7 @@ export function AuthModal({
           role,
         });
       }
+      onAuthenticated?.(credential.user);
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
@@ -384,7 +390,7 @@ export function AuthModal({
           role,
         });
       }
-      await signInWithApple(role, CURRENT_LEGAL_CONSENT);
+      const credential = await signInWithApple(role, CURRENT_LEGAL_CONSENT);
       if (isSignUp) {
         trackSignupSucceeded({
           method: "apple",
@@ -393,6 +399,7 @@ export function AuthModal({
           role,
         });
       }
+      onAuthenticated?.(credential.user);
       signInInitiatedCloseRef.current = true;
       onClose("signed-in");
     } catch (err: unknown) {
