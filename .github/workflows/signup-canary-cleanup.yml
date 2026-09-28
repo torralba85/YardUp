@@ -1,0 +1,29 @@
+name: Signup Canary Cleanup
+
+on:
+  push:
+    branches:
+      - ops/signup-canary-20260928
+    paths:
+      - ".github/workflows/signup-canary-cleanup.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Remove disposable signup canary account
+        run: node scripts/cleanup-signup-smoke-admin.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
