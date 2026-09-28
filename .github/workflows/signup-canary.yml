@@ -21,10 +21,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Run production signup canary
-        run: npm run smoke:signup
-        env:
-          FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN: ${{ secrets.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN }}
-          FIREBASE_SMOKE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          FIREBASE_SMOKE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          FIREBASE_SMOKE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run live production signup canary
+        run: node scripts/live-signup-canary.mjs
