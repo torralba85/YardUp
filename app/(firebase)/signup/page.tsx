@@ -7,6 +7,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
+import {
+  trackAuthPromptShown,
+  trackSignupFailed,
+  trackSignupStarted,
+  trackSignupSucceeded,
+} from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
 function SignupForm() {
@@ -25,6 +31,14 @@ function SignupForm() {
   const [selectedRole, setRole] = useState<"user" | "builder">(initialRole);
   const role = buildersAllowed ? selectedRole : "user";
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackAuthPromptShown({
+      surface: "signup_page",
+      source: "direct_signup",
+      mode: "sign_up",
+    });
+  }, []);
 
   useEffect(() => {
     if (user && profile) {
@@ -51,10 +65,29 @@ function SignupForm() {
 
     startTransition(async () => {
       try {
+        trackSignupStarted({
+          method: "password",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+        });
         await signUp(email, password, displayName, role, CURRENT_LEGAL_CONSENT);
+        trackSignupSucceeded({
+          method: "password",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+        });
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
+        trackSignupFailed({
+          method: "password",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+          error_code: code,
+        });
         setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
       }
     });
@@ -68,10 +101,29 @@ function SignupForm() {
     }
     startTransition(async () => {
       try {
+        trackSignupStarted({
+          method: "google",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+        });
         await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+        trackSignupSucceeded({
+          method: "google",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+        });
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
+        trackSignupFailed({
+          method: "google",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+          error_code: code,
+        });
         setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
       }
     });
@@ -85,10 +137,29 @@ function SignupForm() {
     }
     startTransition(async () => {
       try {
+        trackSignupStarted({
+          method: "apple",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+        });
         await signInWithApple(role, CURRENT_LEGAL_CONSENT);
+        trackSignupSucceeded({
+          method: "apple",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+        });
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
+        trackSignupFailed({
+          method: "apple",
+          surface: "signup_page",
+          source: "direct_signup",
+          role,
+          error_code: code,
+        });
         setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
       }
     });
