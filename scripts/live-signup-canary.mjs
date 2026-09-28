@@ -9,6 +9,34 @@ const displayName = "LotFoundry Live Smoke";
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext();
 const page = await context.newPage();
+
+const watchedHosts = new Set([
+  "identitytoolkit.googleapis.com",
+  "firestore.googleapis.com",
+  "firebaseappcheck.googleapis.com",
+  "recaptchaenterprise.googleapis.com",
+]);
+
+page.on("response", (response) => {
+  try {
+    const url = new URL(response.url());
+    if (!watchedHosts.has(url.hostname)) return;
+    console.log(`[live-signup][net] ${response.status()} ${url.hostname}${url.pathname}`);
+  } catch {
+    // Ignore malformed/non-HTTP response URLs.
+  }
+});
+
+page.on("console", (message) => {
+  if (message.type() !== "error" && message.type() !== "warning") return;
+  const text = message.text().replace(/lotfoundry-live-smoke\+[^\s@]+@example\.com/gi, "[redacted-canary-email]");
+  console.log(`[live-signup][console:${message.type()}] ${text.slice(0, 1200)}`);
+});
+
+page.on("pageerror", (error) => {
+  console.log(`[live-signup][pageerror] ${error.message.slice(0, 1200)}`);
+});
+
 let signupSucceeded = false;
 let cleanupSucceeded = false;
 
@@ -40,7 +68,7 @@ try {
   await page.getByRole("button", { name: "Create account" }).click();
 
   try {
-    await page.waitForURL((url) => url.pathname === "/studio", { timeout: 90_000 });
+    await page.waitForURL((url) => url.pathname === "/studio", { timeout: 35_000 });
   } catch (error) {
     const formText = (await page.locator("form").textContent().catch(() => ""))?.replace(/\s+/g, " ").trim();
     throw new Error(
