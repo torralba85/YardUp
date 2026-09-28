@@ -161,3 +161,49 @@ async function unlockViaStripe(
   clearCheckoutAttemptId("lead_unlock", requestId);
   return { kind: "granted", demo: Boolean(data.demo) };
 }
+
+/**
+ * Report a bad lead (e.g. disconnected phone, bounced email) to receive an immediate
+ * replacement unlock credit in accordance with our bad-lead guarantee.
+ */
+export async function reportBadLead(
+  requestId: string,
+  options?: { reason?: string; notes?: string; idToken?: string },
+): Promise<{ success: boolean; newCredits: number; message: string }> {
+  let res: Response;
+  try {
+    res = await fetch("/api/marketplace/report-lead", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(options?.idToken ? { Authorization: `Bearer ${options.idToken}` } : {}),
+      },
+      body: JSON.stringify({
+        requestId,
+        reason: options?.reason ?? "bounced_contact",
+        notes: options?.notes ?? null,
+      }),
+    });
+  } catch {
+    throw new LeadUnlockError(
+      "Could not reach the report service. Check your connection and try again.",
+    );
+  }
+
+  const data = (await res.json().catch(() => null)) as {
+    success?: boolean;
+    newCredits?: number;
+    message?: string;
+    error?: string;
+  } | null;
+
+  if (!res.ok) {
+    throw new LeadUnlockError(data?.error ?? `Reporting failed (${res.status}).`);
+  }
+
+  return {
+    success: Boolean(data?.success),
+    newCredits: data?.newCredits ?? 0,
+    message: data?.message ?? "Lead reported and credited.",
+  };
+}

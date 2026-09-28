@@ -18,6 +18,7 @@ import type {
 } from "@/lib/marketplace-types";
 import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
+import BillingLedger from "./BillingLedger";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { reconcilePendingLeadUnlock } from "@/lib/analytics/lead-unlock-tracking";
@@ -45,6 +46,7 @@ export default function BuilderDashboard({
   const [profile, setProfile] = useState<BuilderProfile | null>(null);
   const [items, setItems] = useState<BuilderInboxItem[]>([]);
   const [ledger, setLedger] = useState<BuilderLedgerEntry[]>([]);
+  const [activeView, setActiveView] = useState<"inbox" | "billing">("inbox");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -157,12 +159,46 @@ export default function BuilderDashboard({
               onSave={handleSaveProfile}
             />
           ) : (
-            <BuilderInbox
-              profile={profile}
-              items={items}
-              ledger={ledger}
-              onRespond={handleRespond}
-            />
+            <div className="mt-6 space-y-6">
+              <nav aria-label="Dashboard views" className="flex border-b border-lf-hairline">
+                <button
+                  type="button"
+                  onClick={() => setActiveView("inbox")}
+                  className={`border-b-2 px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.08em] motion-safe:transition-colors ${
+                    activeView === "inbox"
+                      ? "border-lf-commit text-lf-espresso"
+                      : "border-transparent text-lf-muted hover:text-lf-espresso"
+                  }`}
+                >
+                  Leads Inbox ({items.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveView("billing")}
+                  className={`border-b-2 px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.08em] motion-safe:transition-colors ${
+                    activeView === "billing"
+                      ? "border-lf-commit text-lf-espresso"
+                      : "border-transparent text-lf-muted hover:text-lf-espresso"
+                  }`}
+                >
+                  Billing & Credits
+                </button>
+              </nav>
+
+              {activeView === "inbox" ? (
+                <BuilderInbox
+                  profile={profile}
+                  items={items}
+                  ledger={ledger}
+                  onRespond={handleRespond}
+                />
+              ) : (
+                <BillingLedger
+                  ledger={ledger}
+                  credits={profile.credits}
+                />
+              )}
+            </div>
           )}
         </div>
       </main>

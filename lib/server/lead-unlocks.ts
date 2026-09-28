@@ -37,6 +37,7 @@ export async function grantLeadUnlock(
     .collection(LEAD_UNLOCKS)
     .doc(unlockId(input.builderId, input.requestId));
 
+  let created = false;
   try {
     await ref.create({
       builderId: input.builderId,
@@ -47,11 +48,36 @@ export async function grantLeadUnlock(
       demo: input.demo ?? false,
       createdAt: FieldValue.serverTimestamp(),
     });
-    return true;
+    created = true;
   } catch (err) {
     if (isAlreadyExists(err)) return false;
     throw err;
   }
+
+  if (created) {
+    try {
+      const connRef = getAdminDb()
+        .collection("connectionRequests")
+        .doc(input.requestId);
+      const connSnap = await connRef.get();
+      if (connSnap.exists && !connSnap.data()?.headStartUntil) {
+        await connRef.update({
+          headStartUntil: new Date(
+            Date.now() + 48 * 60 * 60 * 1000,
+          ).toISOString(),
+          firstUnlockedBy: input.builderId,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      console.error(
+        `[grantLeadUnlock] Failed to set headStartUntil on lead ${input.requestId}:`,
+        err,
+      );
+    }
+  }
+
+  return created;
 }
 
 /**

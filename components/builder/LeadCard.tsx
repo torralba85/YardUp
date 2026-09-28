@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CheckCircle2, CircleSlash, FileText, Flag, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { finishLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
@@ -33,6 +34,8 @@ export interface LeadCardProps {
   onViewCertificate?: () => void;
   /** Wired by T9 (report-this-lead / bad-lead credit). */
   onReport?: () => void;
+  /** Whether this lead has already been credited via a bad-lead report. */
+  reported?: boolean;
   /** Whether the builder has bulk credits available. */
   hasCredits?: boolean;
 }
@@ -58,6 +61,7 @@ export default function LeadCard({
   demo,
   responding,
   hasCredits,
+  reported,
   onUnlockClick,
   onRespond,
   onViewCertificate,
@@ -70,6 +74,19 @@ export default function LeadCard({
   const unlockPrice = useStorePrice("builder1");
   const headline =
     access === "unlocked" && contact ? contact.streetAddress : preview.neighborhood;
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!item.request.headStartUntil) return;
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, [item.request.headStartUntil]);
+
+  const headStartUntil = item.request.headStartUntil;
+  const headStartMs = headStartUntil
+    ? new Date(headStartUntil).getTime() - now
+    : 0;
+  const isHeadStartActive = headStartMs > 0 && access === "locked";
 
   return (
     <article className="border border-lf-hairline bg-lf-card p-5">
@@ -169,14 +186,32 @@ export default function LeadCard({
       <div className="mt-3 border-t border-dashed border-lf-hairline pt-3">
         {access === "locked" && (
           <div>
-            <div className="flex items-center gap-1.5 lf-kicker-dense text-lf-muted">
-              <Lock size={13} />
-              Contact locked — unlock to view
-            </div>
-            <Button variant="commit" onClick={onUnlockClick} className="mt-2.5">
-              {hasCredits ? "Unlock with 1 Credit" : "Unlock lead"}
-              <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : unlockPrice.amountCompact}</span>
-            </Button>
+            {isHeadStartActive ? (
+              <div className="border border-lf-amber-ink/30 bg-lf-amber-soft p-3">
+                <div className="flex items-center gap-1.5 font-sans text-[10.5px] font-medium uppercase tracking-[0.08em] text-lf-amber-ink">
+                  <Lock size={13} />
+                  Exclusive window active · Unlocked by 1 builder
+                </div>
+                <p className="mt-1 text-xs text-lf-espresso">
+                  This lead is in an exclusive 48h head start window. Opens to all builders in{" "}
+                  <span className="font-mono font-semibold">{formatHeadStartRemaining(headStartMs)}</span>.
+                </p>
+                <Button variant="secondary" disabled className="mt-2.5 w-full cursor-not-allowed opacity-60">
+                  Exclusive window ({formatHeadStartRemaining(headStartMs)} left)
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-1.5 lf-kicker-dense text-lf-muted">
+                  <Lock size={13} />
+                  Contact locked — unlock to view
+                </div>
+                <Button variant="commit" onClick={onUnlockClick} className="mt-2.5">
+                  {hasCredits ? "Unlock with 1 Credit" : "Unlock lead"}
+                  <span className="font-display text-base font-semibold">{hasCredits ? "1 Credit" : unlockPrice.amountCompact}</span>
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -207,7 +242,7 @@ export default function LeadCard({
                 {contact.ownerContact.phone ? ` · ${contact.ownerContact.phone}` : ""}
               </span>
             </address>
-            <div className="mt-2.5 flex gap-2">
+            <div className="mt-2.5 flex items-center gap-2">
               {onViewCertificate && (
                 <Button
                   variant="ghost"
@@ -219,16 +254,23 @@ export default function LeadCard({
                   View certificate
                 </Button>
               )}
-              {onReport && (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={onReport}
-                  leftIcon={<Flag size={13} />}
-                  className="border border-lf-hairline"
-                >
-                  Report this lead
-                </Button>
+              {reported ? (
+                <span className="inline-flex items-center gap-1 rounded-none border border-lf-amber-ink/30 bg-lf-amber-soft px-2 py-1 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-amber-ink">
+                  <CheckCircle2 size={12} />
+                  Bad-lead credited
+                </span>
+              ) : (
+                onReport && (
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={onReport}
+                    leftIcon={<Flag size={13} />}
+                    className="border border-lf-hairline"
+                  >
+                    Report this lead
+                  </Button>
+                )
               )}
             </div>
           </div>
@@ -261,4 +303,14 @@ function formatRecorded(iso: string | null): string | null {
       day: "2-digit",
     })
     .toUpperCase();
+}
+
+function formatHeadStartRemaining(ms: number): string {
+  const totalMinutes = Math.max(1, Math.floor(ms / (60 * 1000)));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 }

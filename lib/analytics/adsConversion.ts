@@ -22,7 +22,6 @@ export const GOOGLE_ADS_PURCHASE_SEND_TO =
 // conversion call below — do not redeclare it here (TS2717).
 
 import { readConsent } from "./consent";
-import { isAnalyticsConfigured } from "./gtag";
 
 /** Input for {@link trackPurchase}. */
 export interface TrackPurchaseInput {

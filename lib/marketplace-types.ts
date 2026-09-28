@@ -161,6 +161,8 @@ export interface ConnectionRequest {
   ownerVerified: boolean;
   /** 19C head-start window end (ISO). Null until the first unlock (T8). */
   headStartUntil: string | null;
+  /** Builder ID who unlocked the lead first, establishing the exclusive window. */
+  firstUnlockedBy?: string | null;
   /** ISO creation timestamp, or `null`. */
   createdAt: string | null;
   /** ISO update timestamp, or `null`. */

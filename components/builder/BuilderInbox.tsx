@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useBuilderInboxView } from "@/lib/use-builder-inbox-view";
 import { useAuth } from "@/lib/auth-context";
 import { computeBuilderMetrics } from "@/lib/builder-metrics";
-import { startLeadUnlock } from "@/lib/lead-unlock-api";
+import { startLeadUnlock, reportBadLead } from "@/lib/lead-unlock-api";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
 import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
@@ -93,6 +93,8 @@ export default function BuilderInbox({
   const [access, setAccess] = useState<Record<string, LeadAccess>>({});
   const [contacts, setContacts] = useState<Record<string, UnlockedLeadContact>>({});
   const [demoGrants, setDemoGrants] = useState<Record<string, boolean>>({});
+  const [reportedLeads, setReportedLeads] = useState<Set<string>>(new Set());
+  const [reportingId, setReportingId] = useState<string | null>(null);
   const [slipId, setSlipId] = useState<string | null>(null);
   const [slipPending, setSlipPending] = useState(false);
   const [slipError, setSlipError] = useState<string | null>(null);
@@ -285,6 +287,46 @@ export default function BuilderInbox({
     }
   }
 
+  async function handleReportLead(requestId: string, serial: string) {
+    if (reportingId || reportedLeads.has(requestId)) return;
+    const confirmed = typeof window !== "undefined" && window.confirm
+      ? window.confirm(
+          `Report lead ${serial}? If the homeowner contact info is disconnected or bounced, 1 unlock credit will be refunded to your account immediately.`,
+        )
+      : true;
+    if (!confirmed) return;
+
+    setReportingId(requestId);
+    try {
+      const idToken = user ? await user.getIdToken() : undefined;
+      const res = await reportBadLead(requestId, { idToken });
+      setReportedLeads((prev) => new Set(prev).add(requestId));
+      setCredits(res.newCredits);
+      setSessionLedger((prev) => [
+        {
+          id: `${profile.id}_${requestId}_credit`,
+          builderId: profile.id,
+          type: "credit",
+          creditsChange: 1,
+          amountPaid: 0,
+          referenceId: requestId,
+          description: `Bad-lead credit for lead ${serial}`,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+      setAnnounce(`Lead ${serial} reported. 1 unlock credit added to your account.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to report lead.";
+      if (typeof window !== "undefined" && window.alert) {
+        window.alert(msg);
+      }
+      setAnnounce(`Failed to report lead ${serial}: ${msg}`);
+    } finally {
+      setReportingId(null);
+    }
+  }
+
   return (
     <section className="mt-6">
       <div className="border border-lf-hairline bg-lf-card p-4">
@@ -388,11 +430,18 @@ export default function BuilderInbox({
                     demo={demoGrants[item.request.id]}
                     hasCredits={credits > 0}
                     responding={isPending && pendingId === item.request.id}
+                    reported={reportedLeads.has(item.request.id)}
                     onUnlockClick={() => {
                       setSlipId(item.request.id);
                       setSlipError(null);
                     }}
                     onRespond={(status) => respond(item.request.id, status)}
+                    onReport={() =>
+                      handleReportLead(
+                        item.request.id,
+                        item.request.preview.previewSerial,
+                      )
+                    }
                   />
                 ))}
               </div>

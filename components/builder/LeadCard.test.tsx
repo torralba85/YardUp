@@ -105,4 +105,74 @@ describe("LeadCard", () => {
       valueBand.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
+
+  it("locked with active head start: shows exclusive window countdown and disables unlock button", () => {
+    const headStartItem: BuilderInboxItem = {
+      ...item,
+      request: {
+        ...item.request,
+        headStartUntil: new Date(Date.now() + 36 * 3600 * 1000).toISOString(),
+        firstUnlockedBy: "another-builder",
+      },
+    };
+
+    render(
+      <LeadCard
+        item={headStartItem}
+        access="locked"
+        contact={null}
+        onUnlockClick={noop}
+        onRespond={noop}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Exclusive window active · Unlocked by 1 builder/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Exclusive window/i }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /Unlock lead/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("unlocked: shows report button when onReport provided and reported is false", () => {
+    const onReport = vi.fn();
+    render(
+      <LeadCard
+        item={item}
+        access="unlocked"
+        contact={contact}
+        onUnlockClick={noop}
+        onRespond={noop}
+        onReport={onReport}
+      />,
+    );
+
+    const reportBtn = screen.getByRole("button", { name: /Report this lead/i });
+    expect(reportBtn).toBeInTheDocument();
+    reportBtn.click();
+    expect(onReport).toHaveBeenCalledTimes(1);
+  });
+
+  it("unlocked and reported: shows bad-lead credited badge instead of report button", () => {
+    const onReport = vi.fn();
+    render(
+      <LeadCard
+        item={item}
+        access="unlocked"
+        contact={contact}
+        reported={true}
+        onUnlockClick={noop}
+        onRespond={noop}
+        onReport={onReport}
+      />,
+    );
+
+    expect(screen.getByText(/Bad-lead credited/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Report this lead/i }),
+    ).not.toBeInTheDocument();
+  });
 });

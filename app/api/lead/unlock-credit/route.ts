@@ -38,6 +38,15 @@ export async function POST(req: NextRequest) {
         throw new Error("Lead is not matched to this builder");
       }
 
+      if (
+        requestData?.headStartUntil &&
+        new Date(requestData.headStartUntil).getTime() > Date.now() &&
+        requestData?.firstUnlockedBy &&
+        requestData.firstUnlockedBy !== builderId
+      ) {
+        throw new Error("This lead is currently in an exclusive 48-hour window with another builder.");
+      }
+
       const credits = profileSnap.data()?.credits ?? 0;
       if (credits < 1) {
         throw new Error("Insufficient credits");
@@ -55,6 +64,15 @@ export async function POST(req: NextRequest) {
         credits: credits - 1,
         updatedAt: new Date().toISOString(),
       });
+
+      const requestUpdate: Record<string, unknown> = {
+        updatedAt: new Date().toISOString(),
+      };
+      if (!requestData?.headStartUntil) {
+        requestUpdate.headStartUntil = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+        requestUpdate.firstUnlockedBy = builderId;
+      }
+      transaction.update(requestRef, requestUpdate);
 
       transaction.set(unlockRef, {
         builderId,

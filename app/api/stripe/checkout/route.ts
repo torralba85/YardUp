@@ -77,6 +77,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "granted", alreadyUnlocked: true });
   }
 
+  // 48h head start exclusivity check: if another builder holds the window, block purchase.
+  if (
+    requestData?.headStartUntil &&
+    new Date(requestData.headStartUntil).getTime() > Date.now() &&
+    requestData?.firstUnlockedBy &&
+    requestData.firstUnlockedBy !== builderId
+  ) {
+    return NextResponse.json(
+      { error: "This lead is currently in an exclusive 48-hour window with another builder." },
+      { status: 409 },
+    );
+  }
+
   const stripe = await getStripe();
 
   if (!stripe) {

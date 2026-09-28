@@ -336,6 +336,7 @@ function firestoreToConnectionRequest(
     status: "submitted",
     ownerVerified: Boolean(data.ownerVerified),
     headStartUntil: timestampToIso(data.headStartUntil),
+    firstUnlockedBy: (data.firstUnlockedBy as string | null) || null,
     createdAt: timestampToIso(data.createdAt),
     updatedAt: timestampToIso(data.updatedAt),
   };
