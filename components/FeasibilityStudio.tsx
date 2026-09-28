@@ -89,6 +89,20 @@ import { Button } from "./ui/Button";
 import { MoneyFigure } from "./ui/MoneyFigure";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { ArrowRight, ImageOff, Search } from "lucide-react";
+import { summarizeFeasibility } from "@/lib/feasibility-verdict";
+import {
+  trackFeasibilityResultViewed,
+  trackAduDesignCommitted,
+  trackScenarioSaved,
+  trackReportOpened,
+  trackBuilderConnectionSubmitted,
+  mapFeasibilityVerdict,
+  mapParcelSource,
+  getLotSizeBucket,
+  getAduSqftBucket,
+  getBuilderMatchBucket,
+  extractStateCode,
+} from "@/lib/analytics/events";
 
 import { getSplatSceneForParcel } from "@/lib/splat-registry";
 import SplatCalibrationPanel from "./studio/SplatCalibrationPanel";
@@ -541,6 +555,38 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     window.history.replaceState(window.history.state, "", next);
   }, [assumptions, config, hydratedFromUrl, parcelId, pose]);
 
+  // Track feasibility result review once per parcel context when reached
+  const reviewedParcelsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const isReviewed = isDesktop ? activeStep !== "lot" : journeyStep !== "find";
+    if (!isReviewed) return;
+
+    const parcelKey = `${parcelMode}_${activeParcel.address}_${activeParcel.city}`;
+    if (reviewedParcelsRef.current.has(parcelKey)) return;
+    reviewedParcelsRef.current.add(parcelKey);
+
+    const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+    const feasibility_status = mapFeasibilityVerdict(summary.verdict);
+    const parcel_source = "source" in activeParcel && typeof activeParcel.source === "string"
+      ? mapParcelSource(activeParcel.source)
+      : parcelMode === "preset"
+        ? "preset"
+        : "unknown";
+    const lot_size_bucket = getLotSizeBucket(activeParcel.lotArea);
+    const adu_sqft_bucket = getAduSqftBucket(config.footprint);
+    const state_code = extractStateCode(activeParcel);
+
+    trackFeasibilityResultViewed({
+      parcel_mode: parcelMode,
+      parcel_source,
+      feasibility_status,
+      lot_size_bucket,
+      adu_sqft_bucket,
+      auth_state: user ? "signed_in" : "guest",
+      state_code,
+    });
+  }, [activeStep, journeyStep, isDesktop, activeParcel, parcelMode, result, config, user]);
+
   // Managed focus: when the active step changes, move focus to the new step's
   // body so keyboard/screen-reader users follow the navigation instead of being
   // stranded in the rail. Skipped on the initial mount (no prior step to leave).
@@ -572,6 +618,15 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   }
 
   function handleStepSelect(id: StudioStep) {
+    if (activeStep === "design" && (id === "certificate" || id === "builders")) {
+      const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+      trackAduDesignCommitted({
+        adu_sqft_bucket: getAduSqftBucket(config.footprint),
+        roof_style: config.roof,
+        finish: config.finish,
+        feasibility_status: mapFeasibilityVerdict(summary.verdict),
+      });
+    }
     setActiveStep(id);
   }
 
@@ -597,6 +652,12 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
         error: projectBriefUnavailableError,
       }));
     }
+    const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+    trackReportOpened({
+      feasibility_status: mapFeasibilityVerdict(summary.verdict),
+      has_ai_brief: Boolean(projectBriefState?.data),
+      auth_state: user ? "signed_in" : "guest",
+    });
     setReportOpen(true);
     setReportAutoFocus(true);
   }
@@ -687,6 +748,11 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
       const created = await saveSavedScenario(user.uid, entry);
       setSavedScenarios((prev) => [created, ...prev]);
       setSaveNotice("Saved");
+      const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+      trackScenarioSaved({
+        parcel_mode: parcelMode,
+        feasibility_status: mapFeasibilityVerdict(summary.verdict),
+      });
     } catch {
       setSaveNotice("Save failed");
     } finally {
@@ -758,6 +824,14 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
       ownerContact: input.contact,
       snapshot: input.snapshot,
       matchedBuilderIds: matchedBuilders.map((builder) => builder.id),
+    });
+
+    const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+    trackBuilderConnectionSubmitted({
+      builder_match_bucket: getBuilderMatchBucket(matchedBuilders.length),
+      feasibility_status: mapFeasibilityVerdict(summary.verdict),
+      adu_sqft_bucket: getAduSqftBucket(config.footprint),
+      state_code: extractStateCode({ state: input.snapshot.parcelState, city: input.snapshot.parcelCity }),
     });
 
     return { matchedCount: matchedBuilders.length };
@@ -921,7 +995,16 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             />
           }
           onFineTune={() => setFineTuneOpen(true)}
-          onContinue={() => setJourneyStep("check")}
+          onContinue={() => {
+            const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+            trackAduDesignCommitted({
+              adu_sqft_bucket: getAduSqftBucket(config.footprint),
+              roof_style: config.roof,
+              finish: config.finish,
+              feasibility_status: mapFeasibilityVerdict(summary.verdict),
+            });
+            setJourneyStep("check");
+          }}
         />
       );
     } else if (journeyStep === "check") {
@@ -1179,7 +1262,11 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
             onGenerateProjectBrief={handleGenerateProjectBrief}
           />
         ) : (
-          <BuildersPanel parcelCity={activeParcel.city} onConnect={() => setBuilderLeadOpen(true)} />
+          <BuildersPanel
+            parcelCity={activeParcel.city}
+            feasibilityStatus={mapFeasibilityVerdict(result.zoningStatus)}
+            onConnect={() => setBuilderLeadOpen(true)}
+          />
         )}
       </section>
 

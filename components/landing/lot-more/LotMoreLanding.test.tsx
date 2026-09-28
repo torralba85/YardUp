@@ -50,11 +50,14 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
   },
 );
 
+import { consumeEntrySource } from "@/lib/analytics/entry-source";
+
 describe("landing address handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
     window.localStorage.clear();
+    window.sessionStorage.clear();
     vi.stubGlobal(
       "IntersectionObserver",
       class {
@@ -132,6 +135,7 @@ describe("landing address handoff", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(stash).toHaveBeenCalledExactlyOnceWith("456 Pine St, Denver, CO");
     expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
+    expect(consumeEntrySource()).toBe("landing_cta");
     expect(screen.getByRole("status")).toHaveTextContent(
       "Bringing your lot into focus",
     );
@@ -152,6 +156,7 @@ describe("landing address handoff", () => {
     fireEvent.click(screen.getByRole("button", { name: "Complete sign in" }));
     expect(stash).toHaveBeenCalledExactlyOnceWith("456 Pine St, Denver, CO");
     expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
+    expect(consumeEntrySource()).toBe("landing_cta");
     expect(screen.getByRole("status")).toHaveTextContent(
       "Bringing your lot into focus",
     );
@@ -279,6 +284,7 @@ describe("landing address handoff", () => {
     expect(example).toHaveAttribute("href", "/studio?parcel=oak-street");
     fireEvent.click(example);
     expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(consumeEntrySource()).toBe("landing_cta");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

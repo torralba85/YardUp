@@ -18,11 +18,22 @@ const mocks = vi.hoisted(() => ({
   access: {
     purchased: true,
     loading: false,
+    analyticsOrderId: "order-safe-12345",
   },
   auth: {
     user: null as { uid: string; getIdToken: () => Promise<string> } | null,
   },
 }));
+
+const analyticsEvents = vi.hoisted(() => ({
+  trackCertificatePaywallViewed: vi.fn(),
+  trackCertificateCheckoutStarted: vi.fn(),
+  trackCertificatePurchase: vi.fn(),
+  mapPurchaseChannel: vi.fn(() => "web_stripe"),
+  mapFeasibilityVerdict: vi.fn(() => "eligible"),
+}));
+
+vi.mock("@/lib/analytics/events", () => analyticsEvents);
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({ user: mocks.auth.user }),
@@ -264,7 +275,7 @@ describe("CertificatePanel", () => {
     await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
   });
 
-  it("reports the Ads conversion once when returning from Stripe checkout", async () => {
+  it("reports the Ads conversion and GA4 purchase once when returning from Stripe checkout", async () => {
     window.history.replaceState(null, "", `/?cert=${certificateKey(parcel)}`);
     const props = createProps({ projectBrief: brief });
 
@@ -273,10 +284,16 @@ describe("CertificatePanel", () => {
     await waitFor(() =>
       expect(mocks.trackPurchase).toHaveBeenCalledWith({
         value: CERTIFICATE_PRICE_CENTS / 100,
-        transactionId: `owner-1_${certificateKey(parcel)}`,
+        transactionId: "order-safe-12345",
       }),
     );
     expect(mocks.trackPurchase).toHaveBeenCalledTimes(1);
+    expect(analyticsEvents.trackCertificatePurchase).toHaveBeenCalledWith({
+      transaction_id: "order-safe-12345",
+      value: CERTIFICATE_PRICE_CENTS / 100,
+      currency: "USD",
+      purchase_channel: "web_stripe",
+    });
   });
 
   it("does not report a conversion for a grant read passively on a fresh visit", async () => {

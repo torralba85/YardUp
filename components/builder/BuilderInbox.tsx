@@ -1,12 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useBuilderInboxView } from "@/lib/use-builder-inbox-view";
 import { useAuth } from "@/lib/auth-context";
 import { computeBuilderMetrics } from "@/lib/builder-metrics";
 import { startLeadUnlock } from "@/lib/lead-unlock-api";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
+import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
+import { LEAD_UNLOCK_PRICE_CENTS } from "@/lib/lead-unlock-pricing";
+import {
+  trackBuilderLeadPreviewViewed,
+  trackBuilderUnlockCheckoutStarted,
+  getProjectValueBucket,
+  getMatchReasonCountBucket,
+  mapPurchaseChannel,
+} from "@/lib/analytics/events";
+import {
+  recordPendingLeadUnlockAttempt,
+  recordInPlaceLeadUnlock,
+  clearPendingLeadUnlock,
+} from "@/lib/analytics/lead-unlock-tracking";
 import type {
   BuilderInboxItem,
   BuilderLedgerEntry,
@@ -115,6 +129,24 @@ export default function BuilderInbox({
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const previewedLeadsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    for (const item of visibleItems) {
+      if (!previewedLeadsRef.current.has(item.request.id)) {
+        previewedLeadsRef.current.add(item.request.id);
+        trackBuilderLeadPreviewViewed({
+          triage_status: item.response.status,
+          access_status: item.unlocked ? "unlocked" : "locked",
+          project_value_bucket: getProjectValueBucket(item.request.preview?.buildBandLow),
+          match_reason_count_bucket: getMatchReasonCountBucket(
+            item.request.preview?.matchReasons?.length ?? 0,
+          ),
+        });
+      }
+    }
+  }, [visibleItems]);
+
   const tabCounts: Record<TabKey, number> = {
     all: items.length,
     new: metrics.newLeadCount,
@@ -173,6 +205,12 @@ export default function BuilderInbox({
           },
         ]);
 
+        recordInPlaceLeadUnlock({
+          requestId,
+          unlockMode: "credit",
+          triageStatus: slipItem.response.status,
+        });
+
         setSlipId(null);
         setAccess((current) => ({ ...current, [requestId]: "confirming" }));
         setAnnounce(`Lead ${serial}: credit applied, recording unlock.`);
@@ -187,6 +225,17 @@ export default function BuilderInbox({
         return;
       }
 
+      const channel = mapPurchaseChannel(detectPurchaseChannel());
+      trackBuilderUnlockCheckoutStarted({
+        value: LEAD_UNLOCK_PRICE_CENTS / 100,
+        currency: "USD",
+        purchase_channel: channel,
+      });
+      recordPendingLeadUnlockAttempt({
+        requestId,
+        triageStatus: slipItem.response.status,
+      });
+
       const outcome = await startLeadUnlock(requestId, idToken);
 
       if (outcome.kind === "redirect") {
@@ -195,6 +244,12 @@ export default function BuilderInbox({
       }
 
       // Demo / already-granted: record, then reveal in place (never a flip).
+      recordInPlaceLeadUnlock({
+        requestId,
+        unlockMode: outcome.demo ? "demo" : "paid",
+        triageStatus: slipItem.response.status,
+      });
+
       setSlipId(null);
       setAccess((current) => ({ ...current, [requestId]: "confirming" }));
       setAnnounce(`Lead ${serial}: payment received, recording unlock.`);
@@ -223,6 +278,7 @@ export default function BuilderInbox({
       setAccess((current) => ({ ...current, [requestId]: "unlocked" }));
       setAnnounce(`Lead ${serial} unlocked. Owner contact is now visible.`);
     } catch (err) {
+      clearPendingLeadUnlock();
       setSlipError(err instanceof Error ? err.message : "Unlock failed.");
     } finally {
       setSlipPending(false);

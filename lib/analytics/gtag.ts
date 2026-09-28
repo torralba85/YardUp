@@ -6,6 +6,8 @@
  * Nothing in this module loads a script or writes a cookie on its own.
  */
 
+import { readConsent } from "./consent";
+
 /** Arguments accepted by the global `gtag` command queue. */
 type GtagArgs =
   | ["js", Date]
@@ -46,6 +48,71 @@ export function isAnalyticsConfigured(): boolean {
 }
 
 /**
+ * Strips search queries (`?q=...`) and hash fragments (`#...`) from a path or URL,
+ * returning only the clean pathname. Prevents addresses or query parameters from
+ * ever reaching analytics.
+ *
+ * @param url - Path or URL, e.g. `/studio?q=123+Main+St` or `https://.../studio#top`.
+ * @returns Sanitized path, e.g. `/studio`.
+ */
+export function sanitizePath(url: string): string {
+  if (!url) return "/";
+  try {
+    const dummyOrigin = "https://lotfoundry.net";
+    const parsed = new URL(url, dummyOrigin);
+    return parsed.pathname || "/";
+  } catch {
+    return url.split("?")[0].split("#")[0] || "/";
+  }
+}
+
+/**
+ * Strips search queries and hash fragments from a referrer URL.
+ *
+ * @param referrer - Full referrer URL.
+ * @returns Origin plus clean pathname without query or hash.
+ */
+export function sanitizeReferrer(referrer: string): string {
+  if (!referrer) return "";
+  try {
+    const parsed = new URL(referrer);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return referrer.split("?")[0].split("#")[0];
+  }
+}
+
+/**
+ * Explicitly disable GA4 tracking on `window`, purge analytics cookies,
+ * and mark opt-out state.
+ */
+export function disableAnalytics(): void {
+  if (typeof window === "undefined") return;
+  const id = getMeasurementId();
+  if (id) {
+    (window as unknown as Record<string, boolean>)[`ga-disable-${id}`] = true;
+  }
+  clearAnalyticsCookies();
+  try {
+    window.sessionStorage.removeItem("lf:analytics-entry-source");
+    window.sessionStorage.removeItem("lf:analytics-pending-lead-unlock");
+  } catch {
+    // sessionStorage unavailable
+  }
+}
+
+/**
+ * Re-enable GA4 tracking on `window` when consent is granted.
+ */
+export function enableAnalytics(): void {
+  if (typeof window === "undefined") return;
+  const id = getMeasurementId();
+  if (id) {
+    delete (window as unknown as Record<string, boolean>)[`ga-disable-${id}`];
+  }
+}
+
+/**
  * Record a page view.
  *
  * The App Router does not emit a document load on client-side navigation, so
@@ -53,16 +120,28 @@ export function isAnalyticsConfigured(): boolean {
  * first one included — is sent from here. That keeps the initial view from
  * being counted twice.
  *
- * @param url - Path plus query, e.g. `/studio?address=...`.
+ * Enforces:
+ * - Current configured and granted consent.
+ * - Sanitized path and location: query parameters and fragments are stripped
+ *   so property addresses never reach GA4.
+ * - Sanitized referrer: queries are stripped.
+ *
+ * @param url - Path, e.g. `/studio`.
  */
 export function pageview(url: string): void {
   if (typeof window === "undefined" || !window.gtag) return;
+  if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
   const id = getMeasurementId();
   if (!id) return;
 
+  const sanitized = sanitizePath(url);
+  const location = `${window.location.origin}${sanitized}`;
+  const referrer = sanitizeReferrer(document.referrer);
+
   window.gtag("event", "page_view", {
-    page_path: url,
-    page_location: `${window.location.origin}${url}`,
+    page_path: sanitized,
+    page_location: location,
+    page_referrer: referrer,
     page_title: document.title,
     send_to: id,
   });
@@ -84,6 +163,7 @@ export function trackEvent(
   params: Record<string, unknown> = {},
 ): void {
   if (typeof window === "undefined" || !window.gtag) return;
+  if (readConsent() !== "granted") return;
   window.gtag("event", name, params);
 }
 

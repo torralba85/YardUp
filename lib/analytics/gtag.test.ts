@@ -1,16 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearAnalyticsCookies,
+  disableAnalytics,
+  enableAnalytics,
   getMeasurementId,
   isAnalyticsConfigured,
   pageview,
+  sanitizePath,
+  sanitizeReferrer,
   trackEvent,
 } from "./gtag";
+import { clearConsent, writeConsent } from "./consent";
 
 describe("gtag helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    clearConsent();
+    delete (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"];
   });
 
   describe("configuration", () => {
@@ -25,8 +32,6 @@ describe("gtag helpers", () => {
     });
 
     it("rejects a GTM container ID pasted in by mistake", () => {
-      // GTM-XXXX is a different product; configuring GA4 with it silently
-      // collects nothing, so fail closed rather than load a dead tag.
       vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "GTM-ABC123");
       expect(isAnalyticsConfigured()).toBe(false);
     });
@@ -38,17 +43,43 @@ describe("gtag helpers", () => {
     });
   });
 
+  describe("URL sanitization", () => {
+    it("strips queries and hash fragments from relative paths", () => {
+      expect(sanitizePath("/studio?q=123+Main+St&mode=live")).toBe("/studio");
+      expect(sanitizePath("/studio#summary")).toBe("/studio");
+      expect(sanitizePath("/studio?q=123+Main+St#top")).toBe("/studio");
+    });
+
+    it("strips queries and hash fragments from absolute URLs", () => {
+      expect(
+        sanitizePath("https://lotfoundry.net/studio?address=413+Elmwood#details"),
+      ).toBe("/studio");
+    });
+
+    it("strips queries from referrers", () => {
+      expect(
+        sanitizeReferrer("https://lotfoundry.net/studio?address=secret"),
+      ).toBe("https://lotfoundry.net/studio");
+      expect(sanitizeReferrer("")).toBe("");
+    });
+  });
+
   describe("pageview", () => {
     beforeEach(() => {
       vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
     });
 
-    it("does nothing when the tag has not loaded", () => {
-      // No window.gtag: consent was refused, or the script has not run yet.
-      expect(() => pageview("/studio")).not.toThrow();
+    it("does nothing when consent is not granted", () => {
+      const gtag = vi.fn();
+      window.gtag = gtag;
+
+      pageview("/studio");
+
+      expect(gtag).not.toHaveBeenCalled();
     });
 
-    it("sends a page_view with the path and query", () => {
+    it("sends a page_view with sanitized path and location when consent is granted", () => {
+      writeConsent("granted");
       const gtag = vi.fn();
       window.gtag = gtag;
 
@@ -58,13 +89,15 @@ describe("gtag helpers", () => {
         "event",
         "page_view",
         expect.objectContaining({
-          page_path: "/studio?address=main",
+          page_path: "/studio",
+          page_location: expect.stringMatching(/\/studio$/),
           send_to: "G-ABC1234567",
         }),
       );
     });
 
     it("does not send when no measurement ID is configured", () => {
+      writeConsent("granted");
       vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "");
       const gtag = vi.fn();
       window.gtag = gtag;
@@ -76,11 +109,21 @@ describe("gtag helpers", () => {
   });
 
   describe("trackEvent", () => {
-    it("does nothing when the tag has not loaded", () => {
-      expect(() => trackEvent("report_generated")).not.toThrow();
+    beforeEach(() => {
+      vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
     });
 
-    it("forwards the event name and params", () => {
+    it("does nothing when consent is not granted", () => {
+      const gtag = vi.fn();
+      window.gtag = gtag;
+
+      trackEvent("report_generated", { market: "seattle" });
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("forwards the event name and params when consent is granted", () => {
+      writeConsent("granted");
       const gtag = vi.fn();
       window.gtag = gtag;
 
@@ -89,6 +132,32 @@ describe("gtag helpers", () => {
       expect(gtag).toHaveBeenCalledWith("event", "report_generated", {
         market: "seattle",
       });
+    });
+  });
+
+  describe("disableAnalytics and enableAnalytics", () => {
+    beforeEach(() => {
+      vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
+    });
+
+    it("disables tracking on window and clears cookies", () => {
+      document.cookie = "_ga=test; path=/";
+      disableAnalytics();
+
+      expect(
+        (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"],
+      ).toBe(true);
+      expect(document.cookie).not.toContain("_ga=");
+    });
+
+    it("enables tracking on window", () => {
+      (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"] =
+        true;
+      enableAnalytics();
+
+      expect(
+        (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"],
+      ).toBeUndefined();
     });
   });
 
@@ -108,7 +177,6 @@ describe("gtag helpers", () => {
     });
 
     it("leaves non-analytics cookies alone", () => {
-      // Auth/session state must survive a consent withdrawal.
       clearAnalyticsCookies();
 
       expect(document.cookie).toContain("lf_keep=value");

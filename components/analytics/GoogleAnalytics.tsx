@@ -1,27 +1,30 @@
 "use client";
 
 import Script from "next/script";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Suspense, useEffect } from "react";
-import { getMeasurementId, isAnalyticsConfigured, pageview } from "@/lib/analytics/gtag";
+import {
+  disableAnalytics,
+  enableAnalytics,
+  getMeasurementId,
+  isAnalyticsConfigured,
+  pageview,
+} from "@/lib/analytics/gtag";
 import { GOOGLE_ADS_ID } from "@/lib/analytics/adsConversion";
 import { useConsent } from "@/lib/analytics/use-consent";
 
 /**
  * Sends a page view on the initial render and on every client-side navigation.
  *
- * Split out so the `useSearchParams` call sits inside a `Suspense` boundary:
- * reading search params opts a subtree out of static rendering, and without the
- * boundary that would deopt every prerendered page in the app.
+ * Always sends only the clean pathname without query parameters or hash fragments,
+ * ensuring no address queries or user search terms ever reach Google Analytics.
  */
 function PageViewTracker() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const query = searchParams.toString();
-    pageview(query ? `${pathname}?${query}` : pathname);
-  }, [pathname, searchParams]);
+    pageview(pathname);
+  }, [pathname]);
 
   return null;
 }
@@ -36,12 +39,20 @@ function PageViewTracker() {
  * leaves the page exactly as it is without analytics.
  *
  * Revoking consent stops all further collection immediately, because the
- * component unmounts the tag and `pageview()` no-ops without `window.gtag`.
+ * component unmounts the tag, calls `disableAnalytics()`, and `pageview()` no-ops without `window.gtag`.
  * Already-set cookies are cleared by `clearAnalyticsCookies()` in the banner.
  */
 export function GoogleAnalytics() {
   const consent = useConsent();
   const measurementId = getMeasurementId();
+
+  useEffect(() => {
+    if (consent === "granted") {
+      enableAnalytics();
+    } else {
+      disableAnalytics();
+    }
+  }, [consent]);
 
   if (!isAnalyticsConfigured()) return null;
   if (consent !== "granted") return null;

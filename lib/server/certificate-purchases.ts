@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "./firebase-admin";
 import { purchaseId } from "../certificate-purchases-id";
@@ -42,6 +43,8 @@ export interface GrantCertificateInput {
   stripeSessionId: string;
   /** Amount paid, in cents. */
   amount: number;
+  /** Opaque random analytics order ID (safe transaction_id for GA4 / Google Ads). */
+  analyticsOrderId?: string;
   /** Whether this is a demo (non-paid) grant. */
   demo?: boolean;
   /** Display name of the lot. */
@@ -84,6 +87,7 @@ export async function grantCertificate(
       amount: input.amount,
       status: "granted",
       demo: input.demo ?? false,
+      analyticsOrderId: input.analyticsOrderId ?? randomUUID(),
       createdAt: FieldValue.serverTimestamp(),
     };
     if (input.parcelName) docData.parcelName = input.parcelName;

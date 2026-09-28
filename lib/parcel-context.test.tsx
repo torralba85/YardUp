@@ -9,7 +9,21 @@ const mocks = vi.hoisted(() => ({
   },
   geocodeAddress: vi.fn(),
   fetchParcel: vi.fn(),
+  trackerSettle: vi.fn(),
+  trackerCancel: vi.fn(),
+  startParcelLookupTracking: vi.fn(() => ({
+    settle: mocks.trackerSettle,
+    cancel: mocks.trackerCancel,
+  })),
 }));
+
+vi.mock("./analytics/events", async () => {
+  const actual = await vi.importActual<typeof import("./analytics/events")>("./analytics/events");
+  return {
+    ...actual,
+    startParcelLookupTracking: mocks.startParcelLookupTracking,
+  };
+});
 
 vi.mock("./auth-context", () => ({
   useAuth: () => mocks.authState,
@@ -249,5 +263,27 @@ describe("ParcelProvider estimated mode", () => {
     );
     expect(result.current.parcelMode).toBe("live");
     expect(result.current.parcel).toBe(liveParcel);
+    expect(mocks.startParcelLookupTracking).toHaveBeenCalledWith("signed_in");
+    expect(mocks.trackerSettle).toHaveBeenCalledWith({
+      ok: true,
+      parcel: liveParcel,
+    });
+  });
+
+  it("settles lookup tracker with error on failed parcel fetch", async () => {
+    signIn();
+    const error = new Error("Fetch failed");
+    mocks.fetchParcel.mockRejectedValueOnce(error);
+
+    const { result } = renderHook(() => useParcel(), { wrapper });
+
+    await act(async () => {
+      await result.current.searchParcel(34.05, -118.25);
+    });
+
+    expect(mocks.trackerSettle).toHaveBeenCalledWith({
+      ok: false,
+      error,
+    });
   });
 });

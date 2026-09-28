@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/Field";
 import { ParcelMark } from "@/components/ui/BrandLockup";
 import { stashAddressQuery } from "@/lib/address-handoff";
+import { stashEntrySource } from "@/lib/analytics/entry-source";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { SOCIAL_LINKS } from "@/lib/social-links";
 import { canGuestLookup } from "@/lib/guest-lookup";
@@ -168,6 +169,7 @@ export function LotMoreLanding({
     // have seen their own lot, not before.
     if (!hasMemberSession && canGuestLookup()) {
       stashAddressQuery(pendingAddress.current);
+      stashEntrySource("landing_cta");
       setEntering(true);
       router.push("/studio");
       return;
@@ -334,7 +336,10 @@ export function LotMoreLanding({
                 className={styles.textLink}
                 href="/studio?parcel=oak-street"
                 prefetch={false}
-                onClick={() => stashAddressQuery("")}
+                onClick={() => {
+                  stashAddressQuery("");
+                  stashEntrySource("landing_cta");
+                }}
               >
                 Just looking? Try an example
                 <ArrowRight size={17} aria-hidden="true" />
@@ -542,7 +547,10 @@ export function LotMoreLanding({
                   href="/studio?parcel=oak-street"
                   prefetch={false}
                   className={styles.darkButton}
-                  onClick={() => stashAddressQuery("")}
+                  onClick={() => {
+                    stashAddressQuery("");
+                    stashEntrySource("landing_cta");
+                  }}
                 >
                   Try the Oak Street demo{" "}
                   <ArrowUpRight size={18} aria-hidden="true" />
@@ -962,7 +970,11 @@ export function LotMoreLanding({
               Informed next steps.
             </p>
             <nav aria-label="Footer">
-              <Link href="/studio" prefetch={false}>
+              <Link
+                href="/studio"
+                prefetch={false}
+                onClick={() => stashEntrySource("landing_cta")}
+              >
                 The studio
               </Link>
               <WebBuilderOnly><Link href="/signup?role=builder" prefetch={false}>
@@ -1045,6 +1057,7 @@ export function LotMoreLanding({
         <LandingAuthGate
           onAuthenticated={() => {
             stashAddressQuery(pendingAddress.current);
+            stashEntrySource("landing_cta");
             setEntering(true);
             setAuthOpen(false);
             router.push("/studio");

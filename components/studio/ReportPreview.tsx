@@ -21,6 +21,7 @@ import type { AIPermitStage, AIProjectBrief, AIRiskLevel } from "@/lib/ai-types"
 import { formatCurrency } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
 import type { FeasibilityResult } from "./types";
+import { trackReportExported, mapFeasibilityVerdict } from "@/lib/analytics/events";
 
 const FOCUSABLE_SELECTOR =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -185,7 +186,13 @@ export default function ReportPreview({
               variant="primary"
               size="md"
               className="text-[11px]"
-              onClick={() => window.print()}
+              onClick={() => {
+                trackReportExported({
+                  report_format: "print",
+                  feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                });
+                window.print();
+              }}
               leftIcon={<Printer size={14} />}
             >
               Print / Save
@@ -195,7 +202,13 @@ export default function ReportPreview({
               variant="secondary"
               size="md"
               className="text-[11px]"
-              onClick={onDownload}
+              onClick={() => {
+                trackReportExported({
+                  report_format: "html",
+                  feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                });
+                onDownload();
+              }}
               leftIcon={<Download size={14} />}
             >
               Download
@@ -206,7 +219,13 @@ export default function ReportPreview({
                 variant="secondary"
                 size="md"
                 className="text-[11px]"
-                onClick={onExportCsv}
+                onClick={() => {
+                  trackReportExported({
+                    report_format: "csv",
+                    feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                  });
+                  onExportCsv();
+                }}
                 leftIcon={<FileSpreadsheet size={14} />}
               >
                 CSV Export
@@ -218,7 +237,13 @@ export default function ReportPreview({
                 variant="secondary"
                 size="md"
                 className="text-[11px]"
-                onClick={onShare}
+                onClick={() => {
+                  trackReportExported({
+                    report_format: "share",
+                    feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                  });
+                  onShare();
+                }}
                 leftIcon={<Share2 size={14} />}
               >
                 {shareNotice ?? "Share Link"}

@@ -16,6 +16,7 @@ import { fetchParcel, ParcelFetchError } from "./parcel-api";
 import { geocodeAddress, GeocodeError } from "./geocode-api";
 import { canGuestLookup, consumeGuestLookup, resetGuestLookups } from "./guest-lookup";
 import { clearInitialParcel, peekInitialParcel } from "./parcel-handoff";
+import { startParcelLookupTracking } from "./analytics/events";
 
 /**
  * Shown once an anonymous visitor has spent their free lookup. Names what they
@@ -115,15 +116,18 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       }
       setParcelLoading(true);
       setParcelError(null);
+      const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
       try {
         const idToken = await user?.getIdToken();
         const data = await fetchParcel(lat, lng, idToken, address);
         // Spent only on a resolved lookup: a failed fetch must not burn the
         // visitor's single try.
         if (!user) consumeGuestLookup();
+        tracker.settle({ ok: true, parcel: data });
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
+        tracker.settle({ ok: false, error: err });
         if (err instanceof ParcelFetchError) {
           setParcelError(err.userMessage);
         } else {
@@ -150,6 +154,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       }
       setParcelLoading(true);
       setParcelError(null);
+      const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
       try {
         const idToken = await user?.getIdToken();
         const { lat, lng, formattedAddress } = await geocodeAddress(q, idToken);
@@ -157,9 +162,11 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         // Spent only on a resolved lookup: an address we could not find, or a
         // parcel service that did not answer, must not burn the free try.
         if (!user) consumeGuestLookup();
+        tracker.settle({ ok: true, parcel: data });
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
+        tracker.settle({ ok: false, error: err });
         if (err instanceof GeocodeError || err instanceof ParcelFetchError) {
           setParcelError(err.userMessage);
         } else {

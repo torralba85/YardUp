@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { MapPin, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { recordAddressSearchSubmission } from "@/lib/analytics/events";
 
 /** A selected address with its resolved coordinates. */
 export interface AddressSearchResult {
@@ -260,6 +261,7 @@ export default function AddressSearch({
           selectedValueRef.current = formattedAddress;
           resolvedValueRef.current = formattedAddress;
           setInputValue(formattedAddress);
+          recordAddressSearchSubmission("places", user ? "signed_in" : "guest");
           onSelect({
             lat: place.location.lat(),
             lng: place.location.lng(),
@@ -279,6 +281,7 @@ export default function AddressSearch({
     }
 
     // Server-suggestion pick, or a Google pick whose place couldn't resolve.
+    recordAddressSearchSubmission("free_text", user ? "signed_in" : "guest");
     onSubmitText?.(suggestion.text);
   }
 
@@ -309,7 +312,10 @@ export default function AddressSearch({
     // Skip re-submitting only a fully resolved Google pick. Server picks and
     // failed Google resolves stay retryable so a flaky lookup can be retried.
     if (query && query === resolvedValueRef.current) return;
-    if (query && onSubmitText) onSubmitText(query);
+    if (query && onSubmitText) {
+      recordAddressSearchSubmission("free_text", user ? "signed_in" : "guest");
+      onSubmitText(query);
+    }
   }
 
   return (

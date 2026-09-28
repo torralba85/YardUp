@@ -125,14 +125,14 @@ describe("GoogleAnalytics", () => {
     await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/studio"));
   });
 
-  it("includes the query string in the reported path", async () => {
+  it("sanitizes the path and strips query parameters from page views", async () => {
     grantConsent();
     navigation.pathname = "/builder";
     navigation.search = "lead=r1";
 
     render(<GoogleAnalytics />);
 
-    await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/builder?lead=r1"));
+    await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/builder"));
   });
 
   it("configures the Ads account alongside GA4 for conversion measurement", async () => {

@@ -11,6 +11,7 @@ import { consumeAddressQuery } from "@/lib/address-handoff";
 import { geocodeAddress, GeocodeError } from "@/lib/geocode-api";
 import { fetchParcel, ParcelFetchError } from "@/lib/parcel-api";
 import { peekInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
+import { startParcelLookupTracking } from "@/lib/analytics/events";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 
 /**
@@ -40,11 +41,14 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       if (lookupLoading) return;
       setLookupLoading(true);
       setLookupError(null);
+      const tracker = startParcelLookupTracking("signed_in");
       try {
         const idToken = await user.getIdToken();
         const parcel = await fetchParcel(lat, lng, idToken, address);
+        tracker.settle({ ok: true, parcel });
         openWithParcel(parcel);
       } catch (error) {
+        tracker.settle({ ok: false, error });
         setLookupError(getLookupError(error));
       } finally {
         setLookupLoading(false);
@@ -59,12 +63,15 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       if (!trimmed || lookupLoading) return;
       setLookupLoading(true);
       setLookupError(null);
+      const tracker = startParcelLookupTracking("signed_in");
       try {
         const idToken = await user.getIdToken();
         const { lat, lng, formattedAddress } = await geocodeAddress(trimmed, idToken);
         const parcel = await fetchParcel(lat, lng, idToken, formattedAddress.trim() || trimmed);
+        tracker.settle({ ok: true, parcel });
         openWithParcel(parcel);
       } catch (error) {
+        tracker.settle({ ok: false, error });
         setLookupError(getLookupError(error));
       } finally {
         setLookupLoading(false);

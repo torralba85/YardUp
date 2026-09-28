@@ -13,6 +13,10 @@ export interface CertificateAccess {
   loading: boolean;
   /** Re-read the purchase status (e.g. after returning from Stripe). */
   refresh: () => void;
+  /** Safe opaque order ID for GA4 and Google Ads conversions. */
+  analyticsOrderId?: string;
+  /** Verified amount paid, in cents. */
+  amount?: number;
 }
 
 /**
@@ -30,7 +34,12 @@ export function useCertificateAccess(
   uid: string | null | undefined,
   certKey: string,
 ): CertificateAccess {
-  const [access, setAccess] = useState({ requestKey: "", purchased: false });
+  const [access, setAccess] = useState<{
+    requestKey: string;
+    purchased: boolean;
+    analyticsOrderId?: string;
+    amount?: number;
+  }>({ requestKey: "", purchased: false });
   const [nonce, setNonce] = useState(0);
 
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
@@ -43,7 +52,21 @@ export function useCertificateAccess(
 
     getDoc(doc(db, "certificatePurchases", docId))
       .then((snap) => {
-        if (!cancelled) setAccess({ requestKey, purchased: snap.exists() });
+        if (!cancelled) {
+          const data = snap.data();
+          const analyticsOrderId =
+            typeof data?.analyticsOrderId === "string"
+              ? data.analyticsOrderId
+              : undefined;
+          const amount =
+            typeof data?.amount === "number" ? data.amount : undefined;
+          setAccess({
+            requestKey,
+            purchased: snap.exists(),
+            analyticsOrderId,
+            amount,
+          });
+        }
       })
       .catch(() => {
         if (!cancelled) setAccess({ requestKey, purchased: false });
@@ -57,6 +80,8 @@ export function useCertificateAccess(
   return {
     purchased: Boolean(uid) && access.requestKey === requestKey && access.purchased,
     loading: Boolean(uid) && access.requestKey !== requestKey,
+    analyticsOrderId: access.analyticsOrderId,
+    amount: access.amount,
     refresh,
   };
 }

@@ -12,6 +12,8 @@ import { TYPICAL_MARKET } from "@/lib/typical-market";
 import { parseScenarioParams } from "@/lib/scenario-url";
 import { peekAddressQuery } from "@/lib/address-handoff";
 import { peekInitialParcel } from "@/lib/parcel-handoff";
+import { trackStudioOpened } from "@/lib/analytics/events";
+import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 // The native shell is fixed for the life of the page; there is nothing to observe.
 const subscribeToNothing = () => () => {};
@@ -30,6 +32,7 @@ export default function StudioPage() {
   const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
   const [demoEntry, setDemoEntry] = useState<boolean | null>(null);
   const initialDemoEntry = useRef<boolean | null>(null);
+  const studioOpenedSent = useRef(false);
 
   useEffect(() => {
     // Resolve once after hydration. Studio rewrites its scenario URL during
@@ -45,6 +48,22 @@ export default function StudioPage() {
     }
     setDemoEntry(initialDemoEntry.current);
   }, []);
+
+  useEffect(() => {
+    if (loading || studioOpenedSent.current) return;
+    studioOpenedSent.current = true;
+    const entrySource = consumeEntrySource();
+    const deviceMode =
+      typeof window !== "undefined" && window.innerWidth < 800
+        ? "mobile"
+        : "desktop";
+    trackStudioOpened({
+      device_mode: deviceMode,
+      auth_state: user ? "signed_in" : "guest",
+      entry_source: entrySource,
+      parcel_mode: demoEntry ? "preset" : undefined,
+    });
+  }, [loading, user, demoEntry]);
 
   useEffect(() => {
     if (buildersAllowed && !loading && profile?.role === "builder") {

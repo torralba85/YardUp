@@ -8,10 +8,17 @@ import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { trackPurchase } from "@/lib/analytics/adsConversion";
+import {
+  mapFeasibilityVerdict,
+  mapPurchaseChannel,
+  trackCertificateCheckoutStarted,
+  trackCertificatePaywallViewed,
+  trackCertificatePurchase,
+} from "@/lib/analytics/events";
 import { certificateKey } from "@/lib/certificate-key";
-import { purchaseId } from "@/lib/certificate-purchases-id";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { useStorePrice } from "@/lib/commerce/store-price";
+import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
 import { useCertificateAccess } from "@/lib/certificate-access";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
 import {
@@ -73,7 +80,7 @@ export default function CertificatePanel({
 }: CertificatePanelProps) {
   const { user } = useAuth();
   const certKey = certificateKey(parcel);
-  const { purchased, loading, refresh } = useCertificateAccess(user?.uid, certKey);
+  const { purchased, loading, refresh, analyticsOrderId, amount } = useCertificateAccess(user?.uid, certKey);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -82,6 +89,7 @@ export default function CertificatePanel({
   const sawSettledUnpurchased = useRef(false);
   const returnedFromCheckout = useRef(false);
   const adsConversionFiredFor = useRef<string | null>(null);
+  const paywallViewedFor = useRef<string | null>(null);
 
   // A parcel switch is a new purchase context — never carry unlock history
   // from one certificate key to another.
@@ -90,7 +98,22 @@ export default function CertificatePanel({
     sawSettledUnpurchased.current = false;
     returnedFromCheckout.current = false;
     adsConversionFiredFor.current = null;
+    paywallViewedFor.current = null;
   }, [certKey]);
+
+  // Track certificate paywall view once per lot context for unpurchased visitors.
+  useEffect(() => {
+    if (loading || purchased) return;
+    if (paywallViewedFor.current === certKey) return;
+    paywallViewedFor.current = certKey;
+    const channel = mapPurchaseChannel(detectPurchaseChannel());
+    const status = mapFeasibilityVerdict(result.zoningStatus);
+    trackCertificatePaywallViewed({
+      auth_state: user ? "signed_in" : "guest",
+      feasibility_status: status,
+      purchase_channel: channel,
+    });
+  }, [loading, purchased, certKey, user, result.zoningStatus]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -176,21 +199,31 @@ export default function CertificatePanel({
     }
   }, [loading, prepareAndOpenCertificate, purchased, user]);
 
-  // Report the Google Ads purchase conversion exactly once per Stripe
-  // checkout return. `transaction_id` is the deterministic grant id, so the
-  // same purchase can never double-count across a refresh; the ref covers
-  // the in-session case. Demo, store-shell, and already-purchased grants
-  // never carry the `?cert=` return marker, so they never report a conversion.
+  // Report the GA4 purchase event and Google Ads conversion exactly once per Stripe
+  // checkout return using the safe, opaque analyticsOrderId.
+  // Suppresses emission if analyticsOrderId is absent to guarantee zero PII transmission.
   useEffect(() => {
     if (!purchased || !user) return;
     if (!returnedFromCheckout.current) return;
     if (adsConversionFiredFor.current === certKey) return;
+    if (!analyticsOrderId) return;
     adsConversionFiredFor.current = certKey;
-    trackPurchase({
-      value: CERTIFICATE_PRICE_CENTS / 100,
-      transactionId: purchaseId(user.uid, certKey),
+
+    const valueDollars = amount ? amount / 100 : CERTIFICATE_PRICE_CENTS / 100;
+    const channel = mapPurchaseChannel(detectPurchaseChannel());
+
+    trackCertificatePurchase({
+      transaction_id: analyticsOrderId,
+      value: valueDollars,
+      currency: "USD",
+      purchase_channel: channel,
     });
-  }, [purchased, user, certKey]);
+
+    trackPurchase({
+      value: valueDollars,
+      transactionId: analyticsOrderId,
+    });
+  }, [purchased, user, certKey, analyticsOrderId, amount]);
 
   async function handleCta() {
     if (purchased) {
@@ -203,6 +236,16 @@ export default function CertificatePanel({
     }
     setBusy(true);
     setError(null);
+
+    const channel = mapPurchaseChannel(detectPurchaseChannel());
+    const status = mapFeasibilityVerdict(result.zoningStatus);
+    trackCertificateCheckoutStarted({
+      value: CERTIFICATE_PRICE_CENTS / 100,
+      currency: "USD",
+      purchase_channel: channel,
+      feasibility_status: status,
+    });
+
     try {
       const idToken = await user.getIdToken();
       const isLive = "source" in parcel && Boolean(parcel.source);

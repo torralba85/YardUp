@@ -1,13 +1,21 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   GOOGLE_ADS_ID,
   GOOGLE_ADS_PURCHASE_SEND_TO,
   trackPurchase,
 } from "./adsConversion";
+import { clearConsent, writeConsent } from "./consent";
 
 describe("adsConversion", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
+    writeConsent("granted");
+  });
+
   afterEach(() => {
+    vi.unstubAllEnvs();
     delete window.gtag;
+    clearConsent();
   });
 
   it("targets the configured Ads conversion action", () => {
@@ -22,6 +30,16 @@ describe("adsConversion", () => {
     expect(() =>
       trackPurchase({ value: 29, transactionId: "owner-1_abc" }),
     ).not.toThrow();
+  });
+
+  it("does nothing when consent is not granted", () => {
+    clearConsent();
+    const gtag = vi.fn();
+    window.gtag = gtag;
+
+    trackPurchase({ value: 29, transactionId: "owner-1_abc" });
+
+    expect(gtag).not.toHaveBeenCalled();
   });
 
   it("fires a conversion with value, currency, and the dedupe id", () => {

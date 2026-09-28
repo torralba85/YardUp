@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Hammer, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -9,6 +9,12 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import { fetchActiveBuilders } from "@/lib/marketplace-firestore";
 import { getMatchedBuilders } from "@/lib/marketplace";
 import type { BuilderDirectoryProfile } from "@/lib/marketplace-types";
+import {
+  trackBuilderMatchesViewed,
+  getBuilderMatchBucket,
+  extractStateCode,
+  type FeasibilityStatus,
+} from "@/lib/analytics/events";
 
 /** Props for {@link BuildersPanel}. */
 export interface BuildersPanelProps {
@@ -16,6 +22,8 @@ export interface BuildersPanelProps {
   parcelCity: string;
   /** Open the connect-with-builders flow (the existing BuilderLeadPanel). */
   onConnect: () => void;
+  /** Feasibility status of the current scenario. */
+  feasibilityStatus?: FeasibilityStatus;
 }
 
 /**
@@ -26,11 +34,31 @@ export interface BuildersPanelProps {
  * the existing {@link BuilderLeadPanel} flow, which creates the referral that
  * builders pay to unlock.
  */
-export default function BuildersPanel({ parcelCity, onConnect }: BuildersPanelProps) {
+export default function BuildersPanel({
+  parcelCity,
+  onConnect,
+  feasibilityStatus = "unknown",
+}: BuildersPanelProps) {
   const { user } = useAuth();
   const [builders, setBuilders] = useState<BuilderDirectoryProfile[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const hasTrackedParcelRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!user || builders === null) return;
+    if (hasTrackedParcelRef.current === parcelCity) return;
+    hasTrackedParcelRef.current = parcelCity;
+
+    const matchedList = getMatchedBuilders(builders, parcelCity);
+    const stateCode = extractStateCode({ city: parcelCity });
+
+    trackBuilderMatchesViewed({
+      builder_match_bucket: getBuilderMatchBucket(matchedList.length),
+      state_code: stateCode,
+      feasibility_status: feasibilityStatus,
+    });
+  }, [user, builders, parcelCity, feasibilityStatus]);
 
   useEffect(() => {
     let cancelled = false;

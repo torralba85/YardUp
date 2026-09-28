@@ -20,6 +20,7 @@ import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AccountMenu } from "@/components/account/AccountMenu";
+import { reconcilePendingLeadUnlock } from "@/lib/analytics/lead-unlock-tracking";
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -61,6 +62,7 @@ export default function BuilderDashboard({
           setItems(loadedItems);
           setLedger(loadedLedger);
           setLoadError(null);
+          reconcilePendingLeadUnlock(loadedItems);
         }
       } catch {
         if (!cancelled) {
@@ -114,6 +116,7 @@ export default function BuilderDashboard({
     ]);
     setItems(loadedItems);
     setLedger(loadedLedger);
+    reconcilePendingLeadUnlock(loadedItems);
   }
 
   async function handleRespond(
