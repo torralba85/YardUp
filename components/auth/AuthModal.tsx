@@ -51,6 +51,26 @@ const FOCUSABLE_SELECTOR =
   'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
 /**
+ * Sign-up subline for the moment the modal opened.
+ *
+ * The prompt appears at three very different points: the visitor just spent
+ * their free lookup, just saw their own lot's numbers, or just tried to save.
+ * One generic sentence undersells all three, so each names what the free
+ * account gives *that* person. Only benefits that exist today are claimed.
+ */
+function signUpBlurb(source: AuthPromptSource): string {
+  switch (source) {
+    case "guest_limit":
+      return "That was your free address lookup. A free account lets you look up more lots and keep your 3D design. No card needed.";
+    case "post_result":
+    case "save_scenario":
+      return "Create a free account to save this lot and come back to your numbers and 3D design any time. No card needed.";
+    default:
+      return "Create an account to save ADU estimates, reports, and builder-ready snapshots.";
+  }
+}
+
+/**
  * Modal that toggles between sign-in and sign-up, supporting email/password
  * and Google sign-in via {@link useAuth}. Renders nothing when closed.
  *
@@ -443,7 +463,7 @@ export function AuthModal({
           </h2>
           <p className="lf-body-sm mb-6 text-lf-taupe">
             {isSignUp
-              ? "Create an account to save ADU estimates, reports, and builder-ready snapshots."
+              ? signUpBlurb(analyticsSource)
               : "Sign in to access your saved ADU estimates, reports, and builder-ready snapshots."}
           </p>
 

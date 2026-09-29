@@ -128,6 +128,7 @@ export function LotMoreLanding({
   const router = useRouter();
   const scenario = scenarios[scenarioIndex];
   const reportScenario = scenarios[0];
+  const sample = scenarios.find((item) => item.id === "market") ?? scenarios[0];
 
   useEffect(() => {
     const update = () => {
@@ -332,17 +333,50 @@ export function LotMoreLanding({
                 rental potential.
               </p>
               {addressForm("hero")}
+              {/* A real engine result, one tap from the address box. A cold
+                  visitor who is not ready to type an address can still see
+                  what the studio produces, which the illustration alone
+                  does not show. */}
               <Link
-                className={styles.textLink}
+                className={styles.sampleResult}
                 href="/studio?parcel=oak-street"
                 prefetch={false}
+                aria-label="Open the Seattle sample lot in the 3D studio"
                 onClick={() => {
                   stashAddressQuery("");
                   stashEntrySource("landing_cta");
                 }}
               >
-                Just looking? Try an example
-                <ArrowRight size={17} aria-hidden="true" />
+                <span className={styles.sampleKicker}>
+                  Just looking? See a sample result
+                </span>
+                <dl className={styles.sampleFigures}>
+                  <div>
+                    <dt>Est. rent</dt>
+                    <dd>
+                      {money(sample.rent)}
+                      <small>/mo</small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Simple payback</dt>
+                    <dd>
+                      {sample.payback}
+                      <small> yrs</small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Build cost</dt>
+                    <dd>
+                      {money(sample.costLow / 1000)}k–
+                      {money(sample.costHigh / 1000)}k
+                    </dd>
+                  </div>
+                </dl>
+                <span className={styles.sampleCta}>
+                  Seattle demo lot · open it in 3D
+                  <ArrowRight size={17} aria-hidden="true" />
+                </span>
               </Link>
             </div>
             <figure className={styles.heroVisual}>

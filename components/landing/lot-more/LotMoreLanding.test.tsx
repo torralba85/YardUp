@@ -272,6 +272,27 @@ describe("landing address handoff", () => {
     ).toBeVisible();
   });
 
+  it("shows the engine's market-case result in the hero and opens the demo lot from it", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const sample = screen.getByRole("link", {
+      name: "Open the Seattle sample lot in the 3D studio",
+    });
+    const market = scenarios[1];
+    const usd = (value: number) =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(value);
+    expect(sample).toHaveAttribute("href", "/studio?parcel=oak-street");
+    expect(within(sample).getByText(usd(market.rent))).toBeVisible();
+    expect(within(sample).getByText(String(market.payback))).toBeVisible();
+    fireEvent.click(sample);
+    expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(consumeEntrySource()).toBe("landing_cta");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("clears a typed address when the visitor chooses the explicit demo", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
