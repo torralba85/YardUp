@@ -31,6 +31,8 @@ import {
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
+import { shadowClassifyZoning } from "@/lib/server/zoning-classifier";
+import { deriveMaxCoverage } from "@/lib/server/zoning-heuristics";
 
 const REGRID_API = "https://app.regrid.com/api/v2/parcels/point";
 const TIMEOUT_MS = 5000;
@@ -211,6 +213,15 @@ export async function GET(request: NextRequest) {
       structuresPromise,
     ]);
     const loc = mergeLocations(extractRegridLocation(fields), census);
+    // Shadow only: Jev's read of the district class is logged next to the
+    // regex verdicts and never touches this response. Started here so it
+    // overlaps the market-data lookup; it cannot reject.
+    const zoningShadow = shadowClassifyZoning({
+      zoning: fields.zoning,
+      description: fields.zoning_description,
+      state: loc.state,
+      county: loc.county,
+    });
     const marketData = await resolveMarketData({ lat, lng, ...loc });
     const structuresFootprint = positiveNumber(structures?.totalSqft);
     const buildingAreaFallback = positiveNumber(fields.sqft);
@@ -323,6 +334,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
+    await zoningShadow;
     return NextResponse.json(parcelData, {
       headers: { "Cache-Control": "private, max-age=3600" },
     });
@@ -828,16 +840,6 @@ function parseSetbacks(
     rear: raw.rear ?? raw.rear_setback ?? DEFAULT_SETBACKS.rear,
     side: raw.side ?? raw.side_setback ?? DEFAULT_SETBACKS.side,
   };
-}
-
-function deriveMaxCoverage(zoning?: string): number {
-  if (!zoning) return 40;
-  const z = zoning.toUpperCase();
-  if (z.includes("R1") || z.includes("R-1")) return 40;
-  if (z.includes("R2") || z.includes("R-2")) return 45;
-  if (z.includes("R3") || z.includes("R-3")) return 50;
-  if (z.includes("MF") || z.includes("RM")) return 55;
-  return 40;
 }
 
 function formatAddress(

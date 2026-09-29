@@ -1,9 +1,14 @@
 import { spawnSync } from "node:child_process";
 
+// Runs one opt-in live eval file: the geocode picker's by default, or the file
+// named as the first argument (npm run test:jev-zoning-eval).
+const evalFile =
+  process.argv[2] ?? "lib/server/geocode-candidate-picker.eval.test.ts";
+
 if (!process.env.TYPESAFE_API_KEY) {
   console.error(
-    "TYPESAFE_API_KEY is required for the live Jev geocode eval. " +
-      "Set it in your shell, then rerun npm run test:jev-eval.",
+    "TYPESAFE_API_KEY is required for the live Jev eval. " +
+      "Set it in your shell, then rerun the npm script.",
   );
   process.exit(1);
 }
@@ -16,7 +21,7 @@ const result = spawnSync(
     "--",
     "vitest",
     "run",
-    "lib/server/geocode-candidate-picker.eval.test.ts",
+    evalFile,
     "--reporter=verbose",
   ],
   {
