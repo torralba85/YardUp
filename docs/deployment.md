@@ -74,7 +74,8 @@ APPLE_ROOT_CA_FINGERPRINT256         # native verification only
 GOOGLE_PLAY_PACKAGE_NAME             # native verification only
 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON     # native verification only
 TYPESAFE_GEOCODE_PICKER              # "true" binds the TypeSafe key to `api`; spends metered quota on guest lookups
-TYPESAFE_API_KEY                     # geocode picker only
+TYPESAFE_ZONING_SHADOW               # repository variable (not a secret); "true" binds the TypeSafe key to `api`; signed-in Regrid lookups only
+TYPESAFE_API_KEY                     # TypeSafe flags only
 ```
 
 Store production server-only values in Google Secret Manager. `functions/index.js`
@@ -82,7 +83,7 @@ binds `OPENAI_API_KEY` only to `apiAi`, Stripe values only to `apiStripe`, Googl
 Maps/server Places fallback/Regrid values only to `api`, and platform-specific
 native-store credentials only to `apiStore` when the matching Apple or Google
 verification flag is enabled, and the TypeSafe key (`TYPESAFE_API_KEY_SECRET`)
-to `api` only when `TYPESAFE_GEOCODE_PICKER=true` is in `functions/.env`. The legacy `ENABLE_NATIVE_STORE_VERIFICATION`
+to `api` only when `TYPESAFE_GEOCODE_PICKER=true` or `TYPESAFE_ZONING_SHADOW=true` is in `functions/.env`. The legacy `ENABLE_NATIVE_STORE_VERIFICATION`
 flag enables both platforms. The production secret
 IDs are `OPENAI_API_KEY_SECRET`, `GOOGLE_MAPS_API_KEY_SECRET`,
 `GOOGLE_PLACES_SERVER_KEY_SECRET`, and `REGRID_API_KEY_SECRET`; the handler maps
