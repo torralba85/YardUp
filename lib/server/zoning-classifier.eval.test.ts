@@ -49,7 +49,12 @@ describe.skipIf(!liveEvalEnabled)("live Jev zoning classification eval", () => {
     it(`${testCase.id}: ${testCase.zoning} (${testCase.state})`, async () => {
       clearZoningCache();
 
-      const result = await classifyZoning(testCase);
+      // ZONING_EVAL_OMIT_CITY=true is the control for the city experiment.
+      const result = await classifyZoning(
+        process.env.ZONING_EVAL_OMIT_CITY === "true"
+          ? { ...testCase, city: undefined }
+          : testCase,
+      );
 
       const judgment = result.judgment;
       const accepted = acceptedClasses(testCase);

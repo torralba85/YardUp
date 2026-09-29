@@ -74,14 +74,41 @@ describe("classifyZoning", () => {
   it("asks one Choice offering every class, with only the parcel fields it has", async () => {
     const fetchMock = stubAnswer({ type: "choice", choice: "single_family", confidence: 0.95 });
 
-    await classifyZoning({ zoning: "NR3", state: "WA" });
+    await classifyZoning({ zoning: "NR3", state: "WA", county: "King", city: "Seattle" });
 
     const body = requestBody(fetchMock);
     expect(Object.keys(body.questions)).toEqual(["district"]);
     expect(body.questions.district.type).toBe("choice");
     expect(Object.keys(body.questions.district.criteria)).toEqual([...ZONING_CLASSES]);
     expect(body.questions.district.instructions).toContain("`parcel.zoningCode`");
-    expect(body.state).toEqual({ parcel: { state: "WA", zoningCode: "NR3" } });
+    expect(body.state).toEqual({
+      parcel: { state: "WA", county: "King", city: "Seattle", zoningCode: "NR3" },
+    });
+    expect(Object.keys(body.state.parcel)).toEqual(["state", "county", "city", "zoningCode"]);
+  });
+
+  it("omits the city from the parcel when it is absent", async () => {
+    const fetchMock = stubAnswer({ type: "choice", choice: "single_family", confidence: 0.95 });
+
+    await classifyZoning({ zoning: "NR3", state: "WA", county: "King" });
+
+    const body = requestBody(fetchMock);
+    expect(body.state).toEqual({ parcel: { state: "WA", county: "King", zoningCode: "NR3" } });
+    expect(body.state.parcel).not.toHaveProperty("city");
+  });
+
+  it("names the city in the instructions only when a city is sent", async () => {
+    const withCity = stubAnswer({ type: "choice", choice: "single_family", confidence: 0.95 });
+    await classifyZoning({ zoning: "NR3", state: "WA", city: "Seattle" });
+    const cityInstructions = requestBody(withCity).questions.district.instructions;
+
+    const without = stubAnswer({ type: "choice", choice: "single_family", confidence: 0.95 });
+    await classifyZoning({ zoning: "R1-6", state: "AZ" });
+    const plainInstructions = requestBody(without).questions.district.instructions;
+
+    expect(cityInstructions).toContain("the named city, county and state");
+    expect(plainInstructions).toContain("the named state and county");
+    expect(plainInstructions).not.toContain("city");
   });
 
   it("returns the class and marks a concentrated answer confident", async () => {
@@ -192,6 +219,24 @@ describe("classifyZoning", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("keeps different cities apart in the cache", async () => {
+    const fetchMock = stubAnswer({ type: "choice", choice: "industrial", confidence: 0.95 });
+
+    await classifyZoning({ zoning: "A-1", state: "AZ", county: "Maricopa", city: "Phoenix" });
+    await classifyZoning({ zoning: "A-1", state: "AZ", county: "Maricopa", city: "Mesa" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("ignores city case and spacing in the cache", async () => {
+    const fetchMock = stubAnswer({ type: "choice", choice: "industrial", confidence: 0.95 });
+
+    await classifyZoning({ zoning: "A-1", state: "AZ", county: "Maricopa", city: "Phoenix" });
+    await classifyZoning({ zoning: "A-1", state: "AZ", county: "Maricopa", city: "  phoenix " });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("does not cache a failure", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 503 }));
     await classifyZoning({ zoning: "R1-6" });
@@ -262,6 +307,7 @@ describe("shadowClassifyZoning", () => {
       description: "Residential Estate",
       state: "ca",
       county: "Los Angeles",
+      city: "Pasadena",
     });
 
     const line = String(info.mock.calls[0][0]);
@@ -281,6 +327,7 @@ describe("shadowClassifyZoning", () => {
     // Public designation and state only; nothing that could identify a parcel or person.
     expect(line).not.toContain("Los Angeles");
     expect(line).not.toContain("Residential Estate");
+    expect(line).not.toContain("Pasadena");
   });
 
   it("compares the residential screen only in California", async () => {

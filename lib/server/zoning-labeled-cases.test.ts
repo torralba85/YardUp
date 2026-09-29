@@ -34,6 +34,12 @@ describe("labeled zoning cases", () => {
     }
   });
 
+  it("names a city for every case", () => {
+    for (const testCase of LABELED_ZONING_CASES) {
+      expect(testCase.city?.trim(), testCase.id).toBeTruthy();
+    }
+  });
+
   it("covers every class, including declining to answer", () => {
     const labels = new Set(LABELED_ZONING_CASES.map((c) => c.label));
     for (const zoningClass of ZONING_CLASSES) {

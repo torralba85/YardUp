@@ -945,7 +945,8 @@ describe("GET /api/parcel — zoning shadow classification", () => {
     zoning: "NR3",
     zoning_description: "Neighborhood Residential 3",
     address: "123 Oak St",
-    city: "Seattle",
+    scity: "Seattle",
+    city: "Kirkland",
     state: "WA",
     county: "King",
     zip: "98105",
@@ -1024,20 +1025,42 @@ describe("GET /api/parcel — zoning shadow classification", () => {
     });
   });
 
-  it("sends Jev the state, county, designation and Regrid's description", async () => {
+  it("sends Jev the state, county, site city, designation and Regrid's description", async () => {
     const fetchMock = stubWithTypeSafe(JEV_ANSWER);
 
     await GET(makeRequest(47.65, -122.31));
 
     const body = JSON.parse(String(typeSafeCalls(fetchMock)[0][1]?.body));
+    // The site city wins over the mailing city, as it does for the parcel's own city.
     expect(body.state).toEqual({
       parcel: {
         state: "WA",
         county: "King",
+        city: "Seattle",
         zoningCode: "NR3",
         zoningDescription: "Neighborhood Residential 3",
       },
     });
+  });
+
+  it("falls back to the mailing city and omits a city Regrid does not supply", async () => {
+    const withoutSiteCity: Record<string, unknown> = { ...SHADOW_FIELDS };
+    delete withoutSiteCity.scity;
+    const fetchMock = stubWithTypeSafe(JEV_ANSWER, withoutSiteCity);
+    await GET(makeRequest(47.65, -122.31));
+    expect(
+      JSON.parse(String(typeSafeCalls(fetchMock)[0][1]?.body)).state.parcel.city,
+    ).toBe("Kirkland");
+
+    clearZoningCache();
+    const withoutAnyCity: Record<string, unknown> = { ...SHADOW_FIELDS };
+    delete withoutAnyCity.scity;
+    delete withoutAnyCity.city;
+    const noCityFetch = stubWithTypeSafe(JEV_ANSWER, withoutAnyCity);
+    await GET(makeRequest(47.65, -122.31));
+    expect(
+      JSON.parse(String(typeSafeCalls(noCityFetch)[0][1]?.body)).state.parcel,
+    ).not.toHaveProperty("city");
   });
 
   it("does not call TypeSafe when the flag is off", async () => {

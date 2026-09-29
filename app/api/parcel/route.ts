@@ -221,6 +221,7 @@ export async function GET(request: NextRequest) {
       description: fields.zoning_description,
       state: loc.state,
       county: loc.county,
+      city: fields.scity ?? fields.city,
     });
     const marketData = await resolveMarketData({ lat, lng, ...loc });
     const structuresFootprint = positiveNumber(structures?.totalSqft);

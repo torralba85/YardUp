@@ -68,23 +68,36 @@ const CLASS_CRITERIA: Record<ZoningClass, string> = {
     "The code and description are not enough to say which kind of district this is.",
 };
 
-const QUESTION: TypeSafeChoiceQuestion = {
-  type: "choice",
-  instructions:
-    "What kind of zoning district does `parcel` describe? Judge it from " +
-    "`parcel.zoningCode` and `parcel.zoningDescription` using the conventions " +
-    "of the named state and county. The same letters mean different things in " +
-    "different places (A-1 is light industrial in Phoenix but agricultural " +
-    "elsewhere), so answer unclear rather than guess when the designation " +
-    "cannot be read with confidence.",
-  criteria: CLASS_CRITERIA,
-};
+/**
+ * Only names the city in the instructions when one is sent: the wording
+ * "named city, county and state" with no city measurably hurt (35-36 of 49
+ * cases against 38-39 with the original wording), so a parcel without a city
+ * keeps the original text.
+ */
+function buildQuestion(withCity: boolean): TypeSafeChoiceQuestion {
+  return {
+    type: "choice",
+    instructions:
+      "What kind of zoning district does `parcel` describe? Judge it from " +
+      "`parcel.zoningCode` and `parcel.zoningDescription` using the conventions " +
+      `of the named ${withCity ? "city, county and state" : "state and county"}. ` +
+      "The same letters mean different things in different places (A-1 is " +
+      "light industrial in Phoenix but agricultural elsewhere), so answer " +
+      "unclear rather than guess when the designation cannot be read with " +
+      "confidence.",
+    criteria: CLASS_CRITERIA,
+  };
+}
+
+const QUESTION = buildQuestion(false);
+const QUESTION_WITH_CITY = buildQuestion(true);
 
 export interface ZoningInput {
   zoning: string;
   description?: string;
   state?: string;
   county?: string;
+  city?: string;
 }
 
 export interface ZoningJudgment {
@@ -118,7 +131,7 @@ export interface ZoningClassification {
 const cache = new Map<string, ZoningJudgment>();
 
 function cacheKey(input: ZoningInput): string {
-  return [input.state, input.county, input.zoning, input.description]
+  return [input.state, input.county, input.city, input.zoning, input.description]
     .map((part) => (part ?? "").trim().replace(/\s+/g, " ").toUpperCase())
     .join("|");
 }
@@ -183,11 +196,15 @@ export async function classifyZoning(
     const parcel = {
       ...(input.state ? { state: input.state } : {}),
       ...(input.county ? { county: input.county } : {}),
+      ...(input.city ? { city: input.city } : {}),
       zoningCode: input.zoning,
       ...(input.description ? { zoningDescription: input.description } : {}),
     };
     const response = await askTypeSafe(
-      { state: { parcel }, questions: { [QUESTION_ID]: QUESTION } },
+      {
+        state: { parcel },
+        questions: { [QUESTION_ID]: input.city ? QUESTION_WITH_CITY : QUESTION },
+      },
       TIMEOUT_MS,
     );
     const durationMs = Date.now() - startedAt;
@@ -288,13 +305,14 @@ function round(value: number): number {
  *
  * The event carries the public zoning designation and state so disagreements
  * can be reviewed and added to the labeled set. It carries no address,
- * coordinates, county, description or user identifier.
+ * coordinates, city, county, description or user identifier.
  */
 export async function shadowClassifyZoning(input: {
   zoning?: unknown;
   description?: unknown;
   state?: unknown;
   county?: unknown;
+  city?: unknown;
 }): Promise<void> {
   if (!isZoningShadowEnabled()) return;
   const zoning = text(input.zoning);
@@ -307,6 +325,7 @@ export async function shadowClassifyZoning(input: {
       description: text(input.description) || undefined,
       state: state || undefined,
       county: text(input.county) || undefined,
+      city: text(input.city) || undefined,
     });
     // The residential screen is California's, so only compare it there.
     const regexResidential = state === "CA" ? residentialZoningCode(zoning) : undefined;

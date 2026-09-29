@@ -30,8 +30,9 @@ cost rule is unchanged.
 Each event carries the public zoning designation (first 40 characters), the state,
 the outcome, Jev's class, confidence, probability margin, whether it cleared the
 provisional bands, both regex verdicts and, in California, whether they disagree
-(`residentialAgreement`). It carries no address, coordinates, county, provider
-description or user identifier.
+(`residentialAgreement`). It carries no address, coordinates, county, city,
+provider description or user identifier. (TypeSafe itself receives the state,
+county, site city, designation and description; only the log omits them.)
 
 ## Evaluating before anything acts on it
 
@@ -73,14 +74,47 @@ evidence.
   `RU-1`/`RU-3`, Seattle `NR3` and San Diego `RX-1-1` came back agricultural;
   Phoenix `A-1` and Portland `EG1` came back unclear; Austin `SF-6` was read as
   single-family at 0.87, the one confident miss.
-- Not tried: sending the parcel's city as well. Regrid supplies it and most misses
-  are a specific city's own code, but it adds a field to what TypeSafe receives.
-- These are self-labeled cases and a prompt written by the same author, so this
-  is a regression baseline, not accuracy evidence.
+- Sending the parcel's city as well was then tried; see "City context" below.
+- These cases were first labeled by the prompt's author, so this is a regression
+  baseline, not accuracy evidence. See "Independent labels" for the cross-check.
+
+### Independent labels (September 28, 2026)
+
+Two other models labeled all 49 designations blind: opaque ids, no labels or
+notes, the same class definitions. Gemini 3.1 Pro matched the fixture's primary
+class on 48 and was compatible on all 49; Muse matched 47 and was compatible on
+48. The one incompatible label was Phoenix `A-1`: Muse gave the generic
+agricultural reading, while Gemini agreed with the fixture (light industrial
+under Phoenix's code). The two labelers agreed with each other on 46 of 49. This
+cross-checks the labels; it is still models, not a planner, and they saw class
+definitions written by the same author as the prompt.
+
+### City context (September 28, 2026)
+
+Regrid supplies the site city (`scity`, else `city`). The classifier now sends it
+to Jev beside state and county when present. The eval's
+`ZONING_EVAL_OMIT_CITY=true` is the control (no city, original wording).
+
+- Cases in an accepted class: 39, 38, 39, 39 without a city against 39, 38, 38
+  with one. Accuracy did not change.
+- Confident answers rose from 22-23 to 25-26 at the same precision (21-22 of
+  22-23 without, 24-25 of 25-26 with).
+- On the 38 clear residential-or-not cases: 31 right and 7 declined in each of
+  the three no-city runs analyzed, against 32-33 right and 5-6 declined with a
+  city. Every confident answer there was right with a city; one confident answer
+  per no-city run was a decline. No run gave a wrong-direction answer.
+  California, the only place the screen is used, stayed at 12 of 14 in all runs.
+- Wording matters: naming the city in the instructions when none was sent cost
+  three cases (35-36 of 49), so the instructions mention the city only when one
+  is sent.
+- Verdict: a small, consistent gain in coverage, within run-to-run noise on
+  accuracy, so not a proven improvement. It is its own commit so it can be
+  dropped. The cost is one more coarse public field in what TypeSafe receives;
+  it is not logged.
 
 ## Before it can change a parcel
 
-- A second person's labels on a sample of the labeled set (the live run itself is done).
+- A person's labels on a sample of the labeled set (two models have cross-checked it; the live runs are done).
 - Real designations from `jev_zoning_shadow` events added to the set.
 - Thresholds (`ZONING_CONFIDENCE_THRESHOLD` 0.80, margin 0.15) tuned on those,
   since they are provisional carry-overs from the address picker.
