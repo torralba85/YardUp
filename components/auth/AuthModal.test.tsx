@@ -81,6 +81,23 @@ describe("AuthModal focus restore", () => {
     expect(screen.getByLabelText("Name")).toBeTruthy();
   });
 
+  it.each([
+    ["guest_limit", /That was your free address lookup/],
+    ["post_result", /save this lot and come back/],
+    ["save_scenario", /save this lot and come back/],
+    ["account_control", /save ADU estimates, reports, and builder-ready snapshots/],
+  ] as const)("names what a free account gives when opened from %s", (source, blurb) => {
+    render(
+      <AuthModal
+        isOpen
+        initialMode="sign-up"
+        analyticsSource={source}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByText(blurb)).toBeTruthy();
+  });
+
   it("returns focus to the trigger when it is still mounted", () => {
     render(<Host />);
     const trigger = screen.getByRole("button", { name: "Sign In" });
