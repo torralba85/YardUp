@@ -619,9 +619,13 @@ export function AuthModal({
               </div>
             </div>
 
+            <p id="auth-social-consent-help" className="mt-4 text-xs leading-5 text-lf-taupe" aria-live="polite">
+              {legalAccepted ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
+            </p>
             <button
               type="button"
               onClick={handleGoogleSignIn}
+              aria-describedby="auth-social-consent-help"
               disabled={loading || !legalAccepted}
               className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -648,6 +652,7 @@ export function AuthModal({
             <button
               type="button"
               onClick={handleAppleSignIn}
+              aria-describedby="auth-social-consent-help"
               disabled={loading || !legalAccepted}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >

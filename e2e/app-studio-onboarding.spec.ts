@@ -3,6 +3,9 @@ import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test.describe("native app Studio onboarding", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 1024, "the native app is a phone surface");
+  test.beforeEach(async ({ page }) => {
+    await mockTestOwnerAuth(page);
+  });
 
   /** Stand in for the Android shell: the same flag the purchase-channel detector reads. */
   async function openInAndroidApp(page: Page) {
@@ -40,33 +43,20 @@ test.describe("native app Studio onboarding", () => {
     await expect(page.getByTestId("app-welcome")).toBeVisible();
   });
 
-  test("my property requires sign-in, then the guide, then the address workspace", async ({ page }, testInfo) => {
+  test("my property opens the guide and guest address workspace without sign-in", async ({ page }, testInfo) => {
     test.setTimeout(60_000);
-    await mockTestOwnerAuth(page);
     await openInAndroidApp(page);
 
     await page.getByRole("button", { name: /Explore my property/ }).click();
-    await expect(page.getByRole("heading", { name: "Sign in to explore your property." })).toBeVisible();
-    await page.screenshot({ path: testInfo.outputPath("app-sign-in.png"), fullPage: true });
-
-    const open = page.getByRole("button", { name: /Sign in or create account/ });
-    await open.click();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(page.getByTestId("app-sign-in")).toBeVisible();
-
-    await open.click();
-    const dialog = page.getByRole("dialog");
-    await dialog.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
-    await dialog.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
-    await dialog.locator('button[type="submit"]').click();
-
     await expect(page.getByRole("heading", { name: "How the Studio works." })).toBeVisible({ timeout: 25_000 });
     await expect(page.getByText("Find your lot")).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("button", { name: /Open the Studio/ }).click();
-    await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Start with your address." })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Search property address" })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath("app-guest-address.png"), fullPage: true });
 
-    // Back from the workspace returns to the guide; the completed sign-in screen was replaced.
+    // Back from the guest workspace returns through the guide to Welcome.
     await page.goBack();
     await expect(page.getByTestId("app-guide")).toBeVisible();
     await page.goBack();

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  distanceToPolygonFt,
   estimateLotDimensions,
+  interiorPoint,
   orientedLotDimensions,
   polygonAreaSqft,
+  polygonContainsPoint,
 } from "./parcel-geometry";
 import type { GeoJsonPolygon } from "./parcel-types";
 
@@ -151,5 +154,140 @@ describe("polygonAreaSqft", () => {
   it("returns 0 for degenerate input", () => {
     const poly: GeoJsonPolygon = { type: "Polygon", coordinates: [[]] };
     expect(polygonAreaSqft(poly)).toBe(0);
+  });
+});
+
+describe("distanceToPolygonFt", () => {
+  const LAT = 47.69;
+  const LNG = -122.31;
+  const lngScale = FT_PER_DEG_LAT * Math.cos((LAT * Math.PI) / 180);
+  // 50 ft wide (east-west) by 100 ft long (north-south), centered on (LAT, LNG).
+  const lot = rectPolygon(LAT, LNG, 50, 100, 0);
+
+  it("is 0 for a point inside the polygon", () => {
+    expect(distanceToPolygonFt(lot, LNG, LAT)).toBe(0);
+  });
+
+  it("measures straight-line feet to the nearest edge", () => {
+    // 75 ft east of center is 50 ft past the 25 ft half-width.
+    expect(distanceToPolygonFt(lot, LNG + 75 / lngScale, LAT)).toBeCloseTo(50, 0);
+  });
+
+  it("measures to the nearest corner for a diagonal point", () => {
+    // Corner is at (25, 50) ft; the point sits 30 ft east and 40 ft north of it.
+    const distance = distanceToPolygonFt(
+      lot,
+      LNG + 55 / lngScale,
+      LAT + 90 / FT_PER_DEG_LAT,
+    );
+    expect(distance).toBeCloseTo(50, 0);
+  });
+
+  it("is Infinity when the polygon has no usable exterior ring", () => {
+    const empty: GeoJsonPolygon = { type: "Polygon", coordinates: [[]] };
+    expect(distanceToPolygonFt(empty, LNG, LAT)).toBe(Infinity);
+  });
+});
+
+describe("interiorPoint", () => {
+  it("returns a point inside a plain lot", () => {
+    const lot = rectPolygon(47.69, -122.31, 50, 100, 30);
+    const point = interiorPoint(lot);
+    expect(point).not.toBeNull();
+    expect(polygonContainsPoint(lot, point!.lng, point!.lat)).toBe(true);
+  });
+
+  it("stays on an L-shaped lot whose centroid falls outside it", () => {
+    const ell: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [[[0, 0], [10, 0], [10, 1], [1, 1], [1, 10], [0, 10], [0, 0]]],
+    };
+    const point = interiorPoint(ell);
+    expect(point).not.toBeNull();
+    expect(polygonContainsPoint(ell, point!.lng, point!.lat)).toBe(true);
+  });
+
+  it("avoids a hole", () => {
+    const donut: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [
+        [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
+        [[3, 3], [3, 7], [7, 7], [7, 3], [3, 3]],
+      ],
+    };
+    const point = interiorPoint(donut);
+    expect(point).not.toBeNull();
+    expect(polygonContainsPoint(donut, point!.lng, point!.lat)).toBe(true);
+  });
+
+  it.each([false, true])("finds the thin frame around a courtyard regardless of ring winding (%s)", (reverse) => {
+    const courtyard: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [
+        [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
+        [[0.05, 0.05], [0.05, 9.95], [9.95, 9.95], [9.95, 0.05], [0.05, 0.05]],
+      ],
+    };
+    if (reverse) courtyard.coordinates = courtyard.coordinates.map((ring) => [...ring].reverse());
+    // Every old exterior-only scan midpoint was (5, lat), inside the hole.
+    const point = interiorPoint(courtyard);
+    expect(point).not.toBeNull();
+    expect(polygonContainsPoint(courtyard, point!.lng, point!.lat)).toBe(true);
+  });
+
+  it("finds a usable strip between multiple courtyard holes", () => {
+    const courtyards: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [
+        [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
+        [[0.1, 0.1], [0.1, 9.9], [5.5, 9.9], [5.5, 0.1], [0.1, 0.1]],
+        [[5.6, 0.1], [5.6, 9.9], [9.9, 9.9], [9.9, 0.1], [5.6, 0.1]],
+      ],
+    };
+    const point = interiorPoint(courtyards);
+    expect(point).not.toBeNull();
+    expect(polygonContainsPoint(courtyards, point!.lng, point!.lat)).toBe(true);
+  });
+
+  it("finds an interior point for a thin courtyard frame at geographic parcel scale", () => {
+    const frame = rectPolygon(47.69, -122.31, 50, 100, 0);
+    const courtyard = rectPolygon(47.69, -122.31, 49, 99, 0);
+    frame.coordinates.push([...courtyard.coordinates[0]].reverse());
+    const point = interiorPoint(frame);
+    expect(point).not.toBeNull();
+    expect(polygonContainsPoint(frame, point!.lng, point!.lat)).toBe(true);
+  });
+
+  it("returns null when a hole is malformed rather than ignoring it", () => {
+    const malformed: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [
+        [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
+        [[3, 3], [7, 3]],
+      ],
+    };
+    expect(interiorPoint(malformed)).toBeNull();
+  });
+
+  it("returns null for nonfinite or unclosed rings", () => {
+    const invalid: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+    };
+    invalid.coordinates.push([[3, 3], [3, 7], [7, 7], [NaN, 3], [3, 3]]);
+    expect(interiorPoint(invalid)).toBeNull();
+    invalid.coordinates[1] = [[3, 3], [3, 7], [7, 7], [7, 3]];
+    expect(interiorPoint(invalid)).toBeNull();
+    invalid.coordinates[1] = [[3, 3], [4, 4], [5, 5], [3, 3]];
+    expect(interiorPoint(invalid)).toBeNull();
+  });
+
+  it("returns null for a degenerate polygon", () => {
+    expect(interiorPoint({ type: "Polygon", coordinates: [[]] })).toBeNull();
+    const flat: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [[[0, 1], [5, 1], [9, 1], [0, 1]]],
+    };
+    expect(interiorPoint(flat)).toBeNull();
   });
 });

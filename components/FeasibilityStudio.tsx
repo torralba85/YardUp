@@ -338,12 +338,10 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
   // Only a geocoded (Regrid/fallback) parcel has real lat/lng for AerialView's
   // satellite imagery — demo presets and wizard estimates never do.
   const aerialAvailable = parcelMode === "live" && "lat" in activeParcel;
-  // User-controlled scene mode. Seeded once from today's default (aerial for an
-  // already-geocoded parcel, 3D otherwise) but never auto-switched afterward —
+  // User-controlled scene mode. Seeded once to the conceptual 3D model and
+  // never auto-switched afterward —
   // this replaces the old data-driven auto-switch with an explicit toggle.
-  const [viewMode, setViewMode] = useState<SceneViewMode>(() =>
-    aerialAvailable ? "aerial" : "3d",
-  );
+  const [viewMode, setViewMode] = useState<SceneViewMode>("3d");
   const parcelPresetId = parcelMode === "preset" && "id" in activeParcel ? activeParcel.id : undefined;
   const splatScene = useMemo(() => getSplatSceneForParcel(parcelPresetId), [parcelPresetId]);
   const [userCalibration, setUserCalibration] = useState<{ id: string; transform: SplatTransform } | null>(null);

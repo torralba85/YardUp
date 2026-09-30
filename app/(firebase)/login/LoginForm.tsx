@@ -191,6 +191,7 @@ export default function LoginForm() {
       <button
         type="button"
         onClick={handleGoogle}
+        aria-describedby="login-social-consent-help"
         disabled={isPending || !socialConsent}
         className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:cursor-not-allowed disabled:opacity-50"
       >
@@ -217,6 +218,7 @@ export default function LoginForm() {
       <button
         type="button"
         onClick={handleApple}
+        aria-describedby="login-social-consent-help"
         disabled={isPending || !socialConsent}
         className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:cursor-not-allowed disabled:opacity-50"
       >
@@ -226,6 +228,9 @@ export default function LoginForm() {
         Apple
       </button>
 
+      <p id="login-social-consent-help" className="mt-3 text-xs leading-5 text-lf-muted" aria-live="polite">
+        {socialConsent ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
+      </p>
       <div className="mt-6 flex flex-col space-y-2">
         <p className="lf-body-sm text-center text-lf-muted">
           Don&apos;t have an account?{" "}

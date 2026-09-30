@@ -128,11 +128,15 @@ describe("AuthModal focus restore", () => {
     render(<AuthModal isOpen onClose={() => {}} />);
 
     const checkbox = screen.getByRole("checkbox", { name: /18 or older/i });
+    expect(checkbox).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription(/confirmation above to enable/);
+    expect(screen.getByRole("button", { name: "Apple" })).toHaveAccessibleDescription(/confirmation above to enable/);
     expect(screen.getByRole("button", { name: "Sign In" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Google" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Apple" })).toBeDisabled();
 
     fireEvent.click(checkbox);
+    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription("Google and Apple sign-in are ready.");
     expect(screen.getByRole("button", { name: "Google" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Apple" })).toBeEnabled();
 
