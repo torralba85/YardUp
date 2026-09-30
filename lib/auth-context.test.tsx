@@ -302,6 +302,51 @@ describe("AuthProvider profile creation", () => {
     expect(authMocks.signOut).toHaveBeenCalled();
   });
 
+  it("reports whether a social sign-in created the profile, including on a retry", async () => {
+    // A first attempt whose profile write fails leaves the Firebase Auth account
+    // behind, so the retry is not `isNewUser` but is still the registration.
+    authMocks.signInWithPopup.mockResolvedValue({
+      user: { uid: "user-1", email: "user@example.com", displayName: "User Person" },
+    });
+    firestoreMocks.setDoc.mockRejectedValueOnce(new Error("Firestore unavailable"));
+    const results: Array<boolean | "failed"> = [];
+    function Probe() {
+      const { signInWithGoogle } = useAuth();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            signInWithGoogle("user", CURRENT_LEGAL_CONSENT).then(
+              (result) => results.push(result.profileCreated),
+              () => results.push("failed"),
+            )
+          }
+        >
+          Continue with Google
+        </button>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+    const button = screen.getByRole("button", { name: "Continue with Google" });
+
+    await userEvent.click(button);
+    await waitFor(() => expect(results).toEqual(["failed"]));
+    await userEvent.click(button);
+    await waitFor(() => expect(results).toEqual(["failed", true]));
+
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ role: "user", legalConsent: { ...CURRENT_LEGAL_CONSENT } }),
+    });
+    await userEvent.click(button);
+    await waitFor(() => expect(results).toEqual(["failed", true, false]));
+  });
+
   it("rolls back a new email account when the consent receipt cannot be stored", async () => {
     const createdUser = {
       uid: "user-1",

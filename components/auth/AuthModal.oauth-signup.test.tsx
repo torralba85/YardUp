@@ -5,7 +5,6 @@ import { AuthModal } from "./AuthModal";
 const mocks = vi.hoisted(() => ({
   google: vi.fn(),
   apple: vi.fn(),
-  additionalUserInfo: vi.fn(),
   signupSucceeded: vi.fn(),
 }));
 
@@ -20,11 +19,6 @@ vi.mock("@/lib/auth-context", () => ({
   }),
 }));
 
-vi.mock("firebase/auth", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("firebase/auth")>()),
-  getAdditionalUserInfo: mocks.additionalUserInfo,
-}));
-
 vi.mock("@/lib/analytics/events", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/analytics/events")>()),
   trackSignupSucceeded: mocks.signupSucceeded,
@@ -33,10 +27,13 @@ vi.mock("@/lib/analytics/events", async (importOriginal) => ({
 describe("OAuth sign-up conversion tracking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    const credential = { user: { uid: "u1" } };
+  });
+
+  function resolveSignIn(profileCreated: boolean) {
+    const credential = { user: { uid: "u1" }, profileCreated };
     mocks.google.mockResolvedValue(credential);
     mocks.apple.mockResolvedValue(credential);
-  });
+  }
 
   function continueWith(provider: string) {
     const onClose = vi.fn();
@@ -46,8 +43,8 @@ describe("OAuth sign-up conversion tracking", () => {
     return onClose;
   }
 
-  it.each(["Google", "Apple"])("records a sign-up when %s creates a new account", async (provider) => {
-    mocks.additionalUserInfo.mockReturnValue({ isNewUser: true });
+  it.each(["Google", "Apple"])("records a sign-up when %s registers the account", async (provider) => {
+    resolveSignIn(true);
     const onClose = continueWith(provider);
     await waitFor(() => expect(onClose).toHaveBeenCalledWith("signed-in"));
     expect(mocks.signupSucceeded).toHaveBeenCalledWith(
@@ -55,8 +52,8 @@ describe("OAuth sign-up conversion tracking", () => {
     );
   });
 
-  it.each(["Google", "Apple"])("does not record a sign-up when %s signs in an existing account", async (provider) => {
-    mocks.additionalUserInfo.mockReturnValue({ isNewUser: false });
+  it.each(["Google", "Apple"])("does not record a sign-up when %s signs in a registered account", async (provider) => {
+    resolveSignIn(false);
     const onClose = continueWith(provider);
     await waitFor(() => expect(onClose).toHaveBeenCalledWith("signed-in"));
     expect(mocks.signupSucceeded).not.toHaveBeenCalled();

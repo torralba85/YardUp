@@ -57,6 +57,14 @@ export interface UserProfile {
   createdAt: Date | null;
 }
 
+/**
+ * A popup sign-in result. `profileCreated` is true when this sign-in wrote the
+ * user's first profile, which is what completes registration. Firebase's own
+ * `isNewUser` cannot stand in for it: a first attempt whose profile write fails
+ * leaves the Auth account behind, so the retry that registers them is not new.
+ */
+export type SocialSignInResult = UserCredential & { profileCreated: boolean };
+
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
@@ -69,8 +77,8 @@ interface AuthContextType {
     role: UserRole,
     legalConsent: LegalConsent,
   ) => Promise<UserCredential>;
-  signInWithGoogle: (role?: UserRole, legalConsent?: LegalConsent) => Promise<UserCredential>;
-  signInWithApple: (role?: UserRole, legalConsent?: LegalConsent) => Promise<UserCredential>;
+  signInWithGoogle: (role?: UserRole, legalConsent?: LegalConsent) => Promise<SocialSignInResult>;
+  signInWithApple: (role?: UserRole, legalConsent?: LegalConsent) => Promise<SocialSignInResult>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -119,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role?: UserRole;
       legalConsent?: LegalConsent;
     } = {},
-  ) => {
+  ): Promise<boolean> => {
     const request = ++profileRequestRef.current;
     const publishProfile = (value: UserProfile) => {
       if (request === profileRequestRef.current) setProfile(value);
@@ -199,11 +207,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           updatedAt: serverTimestamp(),
         }, { merge: true });
         publishProfile(fallbackProfile);
+        return true;
       }
     } catch (error) {
       if (options.legalConsent) throw error;
       publishProfile(fallbackProfile);
     }
+    return false;
   }, []);
 
   useEffect(() => {
@@ -292,21 +302,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async (
     role: UserRole = "user",
     legalConsent?: LegalConsent,
-  ) => {
+  ): Promise<SocialSignInResult> => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
+      let profileCreated: boolean;
       try {
-        await ensureProfile(cred.user, { role, legalConsent });
+        profileCreated = await ensureProfile(cred.user, { role, legalConsent });
         setUser(cred.user);
         setLoading(false);
       } catch (error) {
         await signOut(auth).catch(() => undefined);
         throw error;
       }
-      return cred;
+      return { ...cred, profileCreated };
     } finally {
       pendingAuthRoleRef.current = null;
     }
@@ -315,22 +326,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithApple = async (
     role: UserRole = "user",
     legalConsent?: LegalConsent,
-  ) => {
+  ): Promise<SocialSignInResult> => {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
+      let profileCreated: boolean;
       try {
-        await ensureProfile(cred.user, { role, legalConsent });
+        profileCreated = await ensureProfile(cred.user, { role, legalConsent });
         setUser(cred.user);
         setLoading(false);
       } catch (error) {
         await signOut(auth).catch(() => undefined);
         throw error;
       }
-      return cred;
+      return { ...cred, profileCreated };
     } finally {
       pendingAuthRoleRef.current = null;
     }
