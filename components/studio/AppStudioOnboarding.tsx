@@ -160,8 +160,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
 
   if (view === "studio") {
     if (destination.kind === "demo") return <FeasibilityStudio demoChosen />;
-    if (user) return <SignedInStudioGate user={user} />;
-    return <FeasibilityStudio />;
+    return <PropertyStudio user={user} />;
   }
 
   if (view === "welcome") {
@@ -283,6 +282,17 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
       </p>
     </Screen>
   );
+}
+
+function PropertyStudio({ user }: { user: User | null }) {
+  const [guestStudioStarted, setGuestStudioStarted] = useState(() => !user);
+  // Latch only a mounted guest workspace, not the welcome/guide. Switching
+  // component types on sign-in would discard its unsaved design and the
+  // ParcelProvider lookup queued for auth. A signed-in entry keeps the private
+  // gate; sign-out removes that gate before opening a fresh guest workspace.
+  if (!user && !guestStudioStarted) setGuestStudioStarted(true);
+  if (user && !guestStudioStarted) return <SignedInStudioGate user={user} />;
+  return <FeasibilityStudio />;
 }
 
 function Screen({ testId, onBack, children }: { testId: string; onBack?: () => void; children: ReactNode }) {

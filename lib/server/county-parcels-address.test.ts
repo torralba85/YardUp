@@ -114,7 +114,7 @@ describe("verifyParcelAddressAtPoint", () => {
   it("verifies a point whose official parcel publishes the searched address", async () => {
     const fetchSpy = vi
       .fn()
-      .mockResolvedValue(featuresResponse([feature(null, TARGET_SITUS)]));
+      .mockResolvedValue(featuresResponse([feature(TARGET_LOT, TARGET_SITUS)]));
     vi.stubGlobal("fetch", fetchSpy);
 
     const check = await verifyParcelAddressAtPoint(TARGET_POINT.lat, TARGET_POINT.lng, SEARCH);
@@ -122,6 +122,7 @@ describe("verifyParcelAddressAtPoint", () => {
     expect(check.verdict).toBe("verified");
     expect(check.parcelId).toBe("8562901005");
     expect(check.localityConfirmed).toBe(true);
+    expect(check.parcel?.polygon).toEqual(TARGET_LOT);
     expect(check.attempts).toEqual([
       expect.objectContaining({
         provider: "ArcGIS",
@@ -129,13 +130,14 @@ describe("verifyParcelAddressAtPoint", () => {
         outcome: "matched",
       }),
     ]);
-    // A point query for the allowlisted attributes only, with no geometry back.
+    // Allowlisted attributes and geometry from the same official parcel record.
     const calledUrl = String(fetchSpy.mock.calls[0][0]);
     expect(calledUrl.startsWith(SITUS_URL)).toBe(true);
     const params = new URL(calledUrl).searchParams;
     expect(params.get("outFields")).toBe(ALLOWLIST);
     expect(params.get("geometryType")).toBe("esriGeometryPoint");
-    expect(params.get("returnGeometry")).toBe("false");
+    expect(params.get("returnGeometry")).toBe("true");
+    expect(params.get("outSR")).toBe("4326");
     expect(params.get("geometry")).toBe(`${TARGET_POINT.lng},${TARGET_POINT.lat}`);
   });
 
@@ -211,7 +213,7 @@ describe("verifyParcelAddressAtPoint", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        featuresResponse([feature(null, TARGET_SITUS), feature(null, TARGET_SITUS)]),
+        featuresResponse([feature(TARGET_LOT, TARGET_SITUS), feature(TARGET_LOT, TARGET_SITUS)]),
       ),
     );
 

@@ -231,9 +231,11 @@ export function summarizeFeasibility(
     },
   ];
 
-  const placementReview = placement !== undefined && placement.status !== "fits";
-  if (placement) {
-    const feedback = describePlacementWithEvidence(placement, parcel);
+  const feedback = placement ? describePlacementWithEvidence(placement, parcel) : undefined;
+  // Model geometry can fit while its real-world alignment remains unverified.
+  // Count the same evidence-aware status shown in the row in the aggregate.
+  const placementReview = feedback !== undefined && feedback.tone !== "clear";
+  if (feedback) {
     constraints.push({
       id: "placement",
       group: "Site & utilities",

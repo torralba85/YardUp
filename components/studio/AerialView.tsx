@@ -113,9 +113,10 @@ export default function AerialView({
 
   return (
     <div
-      className="relative h-full min-h-[460px] w-full overflow-hidden bg-lf-espresso"
+      className="relative flex h-full min-h-[460px] w-full flex-col overflow-hidden bg-lf-espresso"
       aria-label="Aerial lot view"
     >
+      <div className="relative min-h-[240px] flex-1">
       {aerialSrc ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,7 +127,7 @@ export default function AerialView({
                 ? `Fallback parcel map for ${parcel.address}`
                 : `Satellite context near ${parcel.address}`
             }
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
             width={IMG_W}
             height={IMG_H}
             draggable={false}
@@ -150,7 +151,7 @@ export default function AerialView({
       {/* Address coordinates cannot establish building placement or bearing. */}
       {boundaryPoints && aerialSrc && !aerialError && (
         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${IMG_W} ${IMG_H}`}
-          preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          preserveAspectRatio="xMidYMid meet" aria-hidden="true">
           <polygon points={boundaryPoints} fill="none" stroke="#161616" strokeWidth="5" strokeDasharray="8 4" />
           <polygon points={boundaryPoints} fill="none" stroke="#F5F5F0" strokeWidth="2.5" strokeDasharray="8 4" />
         </svg>
@@ -186,18 +187,14 @@ export default function AerialView({
         </div>
       )}
 
-      {/* Imagery attribution (required for the keyless Esri fallback base) */}
-      {attribution && (
-        <div
-          className="pointer-events-none absolute bottom-1 right-2 text-[10px] leading-tight text-lot-chalk/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]"
-          role="note"
-        >
-          {attribution}
-        </div>
-      )}
+      </div>
 
-      <div
-          className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+      {/* Normal flow reserves space when the context and credits wrap on phones.
+          Provider-embedded Google logos/credits stay in the uncropped image. */}
+      <div className="shrink-0 space-y-[7px] border-t border-lot-line-dark bg-lf-espresso px-4 py-[13px]"
+        aria-label="Aerial context and imagery credits">
+        <div
+          className="pointer-events-none flex items-start gap-2 rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-on-dark" aria-hidden="true" />
@@ -206,6 +203,13 @@ export default function AerialView({
             {boundaryPoints ? " Dashed line: published GIS boundary, not a survey." : " Parcel boundary unavailable; model dimensions are estimated."}
             {" "}Use the 3D model for conceptual placement and verify site measurements.
           </span>
+        </div>
+        {/* Required attribution for the keyless Esri imagery provider. */}
+        {attribution && (
+          <div className="pointer-events-none text-[10px] leading-4 text-lot-stone-on-dark" role="note">
+            {attribution}
+          </div>
+        )}
       </div>
     </div>
   );

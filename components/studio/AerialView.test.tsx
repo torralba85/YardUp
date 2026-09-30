@@ -57,4 +57,27 @@ describe("aerial context honesty", () => {
     expect(container.querySelectorAll("svg polygon")).toHaveLength(0);
     expect(screen.getByText(/Satellite detail is unavailable/)).toHaveTextContent("Use the 3D model for conceptual placement");
   });
+
+  it("keeps wrapped provider credits and context in separate normal-flow footer rows", async () => {
+    const credit = "Imagery: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true, headers: new Headers({ "X-Aerial-Attribution": credit }), blob: async () => new Blob(["image"]),
+    } as Response);
+    draw();
+    const attribution = await screen.findByText(credit);
+    const context = screen.getByText(/Imagery is context only/).closest('[role="note"]')!;
+    const footer = screen.getByLabelText("Aerial context and imagery credits");
+    expect(footer).toContainElement(attribution);
+    expect(footer).toContainElement(context as HTMLElement);
+    expect(context).not.toHaveClass("absolute");
+    expect(attribution).not.toHaveClass("absolute");
+    expect(footer).not.toHaveClass("absolute");
+  });
+
+  it("does not crop embedded Google logo or credit pixels", async () => {
+    draw();
+    const image = await screen.findByAltText("Satellite context near Public test address");
+    expect(image).toHaveClass("object-contain");
+    expect(image).not.toHaveClass("object-cover");
+  });
 });

@@ -79,9 +79,11 @@ function geometryHit(polygon: unknown, area = 5160) {
   return featuresResponse([feature(polygon, { Shape__Area: area })]);
 }
 
-/** Address-layer records for a point query (no geometry comes back). */
+/** Address-layer records include their own official geometry. */
 function situsRecords(...records: Array<Record<string, unknown>>) {
-  return featuresResponse(records.map((record) => feature(null, record)));
+  return featuresResponse(records.map((record) => feature(
+    record.PIN === TARGET_SITUS.PIN ? TARGET_LOT : POINT_LOT, record,
+  )));
 }
 
 /** Twelve unrelated parcels, like the audit's crowded window: none is the searched address. */
@@ -273,6 +275,75 @@ afterEach(() => {
 });
 
 describe("GET /api/parcel — official street-address verification", () => {
+  it("uses the verified situs feature's own polygon, not a larger overlapping geometry-layer lot", async () => {
+    const otherLot = lot(TARGET_POINT.lat, TARGET_POINT.lng, 100, 150);
+    stubProviders({
+      kingPoint: geometryHit(otherLot, 15000),
+      situsPoint: featuresResponse([feature(TARGET_LOT, TARGET_SITUS)]),
+    });
+    const { data } = await lookup(TARGET_POINT, GOOGLE_ADDRESS, false);
+    expect(data.boundaryGeoJson).toEqual(TARGET_LOT);
+    expect(data.lotArea).toBe(5160);
+    expect(data.dataQuality!.fields.boundaryGeoJson.source).toMatchObject({
+      dataset: "King parcel addresses", recordId: TARGET_SITUS.PIN,
+    });
+  });
+
+  it("does not attach a verified PIN to unrelated geometry when situs geometry is missing", async () => {
+    stubProviders({
+      kingPoint: geometryHit(TARGET_LOT),
+      situsPoint: featuresResponse([feature(null, TARGET_SITUS)]),
+    });
+    const { data } = await lookup(TARGET_POINT, GOOGLE_ADDRESS, false);
+    expect(data.dataQuality!.fields.boundaryGeoJson.confidence).toBe("medium");
+    expect(data.dataQuality!.fields.boundaryGeoJson.source.recordId).toBeUndefined();
+    expect(data.dataQuality!.fields.address.confidence).not.toBe("high");
+  });
+
+  it("refuses a successful Regrid hit when the official address layer contradicts it", async () => {
+    stubProviders({
+      regrid: { ok: true, status: 200, json: async () => ({ parcels: { features: [{
+        geometry: POINT_LOT,
+        properties: { fields: { ll_gisacre: 0.5, saddress: "1421 NE 88th St", scity: "Seattle" } },
+      }] } }) },
+      kingPoint: geometryHit(POINT_LOT, 5155),
+      situsPoint: situsRecords(AUDIT_POINT_SITUS),
+      situsWindow: featuresResponse([feature(POINT_LOT, AUDIT_POINT_SITUS)]),
+    });
+    const { data } = await lookup(GUEST_POINT, GOOGLE_ADDRESS, true);
+    expectRefusedFallback(data, GUEST_POINT, "conflict");
+  });
+
+  it("uses the official feature for a successful paid hit instead of attaching its PIN to Regrid geometry", async () => {
+    stubProviders({
+      regrid: { ok: true, status: 200, json: async () => ({ parcels: { features: [{
+        geometry: lot(TARGET_POINT.lat, TARGET_POINT.lng, 100, 150),
+        properties: { fields: { ll_gisacre: 0.5, saddress: "1421 NE 88th St" } },
+      }] } }) },
+      situsPoint: situsRecords(TARGET_SITUS),
+    });
+    const { data } = await lookup(TARGET_POINT, GOOGLE_ADDRESS, true);
+    expect(data.source).toBe("county-gis");
+    expect(data.boundaryGeoJson).toEqual(TARGET_LOT);
+    expect(data.lotArea).toBe(5160);
+    expect(data.dataQuality!.fields.boundaryGeoJson.source.recordId).toBe(TARGET_SITUS.PIN);
+  });
+
+  it("preserves a usable paid record at reduced confidence when official identity cannot be checked", async () => {
+    stubProviders({
+      regrid: { ok: true, status: 200, json: async () => ({ parcels: { features: [{
+        geometry: TARGET_LOT,
+        properties: { fields: { ll_gisacre: 0.5, saddress: "1421 NE 88th St" } },
+      }] } }) },
+      situsPoint: UNAVAILABLE,
+    });
+    const { data } = await lookup(TARGET_POINT, GOOGLE_ADDRESS, true);
+    expect(data.source).toBe("regrid");
+    expect(data.dataQuality!.fields.boundaryGeoJson.confidence).toBe("medium");
+    expect(data.dataQuality!.fields.address.confidence).toBe("medium");
+    expect(data.dataQuality!.warnings.join(" ")).toContain("could not confirm");
+  });
+
   describe.each(CALLERS)("$name", ({ signedIn, address, prefix }) => {
     it("verifies a point-hit parcel against its official address and records the PIN", async () => {
       const fetchMock = stubProviders({
@@ -294,11 +365,11 @@ describe("GET /api/parcel — official street-address verification", () => {
         "King parcel addresses:matched",
       ]);
       const fields = data.dataQuality!.fields;
-      // Geometry still credited to the geometry layer; the PIN is the address layer's.
+      // The boundary and PIN are both credited to the same official situs feature.
       expect(fields.boundaryGeoJson).toMatchObject({
         status: "observed",
         confidence: "high",
-        source: { provider: "ArcGIS", dataset: "King parcels", recordId: "8562901005" },
+        source: { provider: "ArcGIS", dataset: "King parcel addresses", recordId: "8562901005" },
       });
       expect(fields.lotArea).toMatchObject({ status: "observed", confidence: "high" });
       // The address is derived from the searched text but now checked against an official record.
@@ -500,8 +571,8 @@ describe("GET /api/parcel — official street-address verification", () => {
         expect(outFields).toBe(ALLOWLIST);
         expect(outFields).not.toContain("*");
       }
-      // Only the point check may skip geometry; the window needs the polygon.
-      expect(new URL(situsPointCalls(fetchMock)[0]).searchParams.get("returnGeometry")).toBe("false");
+      // Point and window both need the geometry that belongs to the published PIN.
+      expect(new URL(situsPointCalls(fetchMock)[0]).searchParams.get("returnGeometry")).toBe("true");
     });
 
     it("never logs or echoes the searched street address", async () => {

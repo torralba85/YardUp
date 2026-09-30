@@ -213,6 +213,43 @@ export async function GET(request: NextRequest) {
     }
     const lotAreaSqft = Math.round(gisAcres * 43560);
 
+    // Paid point hits obey the same official identity requirement as guests.
+    // A verified PIN always uses its own situs-layer polygon. An outage does
+    // not assert a conflict, but must reduce confidence in the Regrid hit.
+    const searchedAddress = fullStreetAddress(requestedAddress);
+    const identityDeadline = addressStageDeadline();
+    const regridIdentity = searchedAddress
+      ? await verifyParcelAddressAtPoint(lat, lng, searchedAddress, identityDeadline)
+      : undefined;
+    if (regridIdentity?.verdict === "verified" && regridIdentity.parcel) {
+      const situsAttempt = regridIdentity.attempts.findLast((attempt) => attempt.outcome === "matched");
+      return await countyGisResponse(lat, lng, requestedAddress, regridIdentity.parcel,
+        await censusLocation, [regridAttempt("matched"), ...regridIdentity.attempts], {
+          identity: { kind: "verified", parcelId: regridIdentity.parcelId,
+            localityConfirmed: regridIdentity.localityConfirmed, situsAttempt },
+          boundaryAttempt: situsAttempt,
+        });
+    }
+    if (regridIdentity?.verdict === "mismatch" && searchedAddress) {
+      const lookup = await fetchCountyParcelByAddress(lat, lng, searchedAddress, identityDeadline);
+      const attempts = [regridAttempt("invalid-response", "The official address layer contradicted the paid point hit."),
+        ...regridIdentity.attempts, ...lookup.attempts];
+      const census = await censusLocation;
+      if (lookup.parcel) {
+        const matched = lookup.parcel;
+        return await countyGisResponse(matched.point.lat, matched.point.lng, requestedAddress,
+          matched, census, attempts, {
+            identity: { kind: "matched", parcelId: matched.parcelId, offsetFt: matched.offsetFt,
+              localityConfirmed: matched.localityConfirmed, situsAttempt: matched.attempt },
+            boundaryAttempt: matched.attempt,
+          });
+      }
+      return await presetFallbackResponse(lat, lng, requestedAddress, census, attempts, "conflict");
+    }
+    const identityWarnings = regridIdentity?.verdict === "unverified"
+      ? ["The official address layer could not confirm that this parcel is the searched street address; verify the parcel against county records."]
+      : [];
+
     const regridFootprint = positiveNumber(fields.ll_bldg_footprint_sqft);
     const structuresPromise =
       regridFootprint === null && boundaryGeoJson
@@ -322,11 +359,11 @@ export async function GET(request: NextRequest) {
         version: 1,
         fields: {
           address: addressObserved
-            ? evidence("observed", "high")
+            ? evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings)
             : evidence("derived", "medium", [
                 "The provider did not publish a situs address; the searched address or coordinates were used.",
               ], userInputSource()),
-          lotArea: evidence("observed", "high"),
+          lotArea: evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings),
           lotDimensions: evidence("derived", boundaryGeoJson ? "medium" : "low", [
             boundaryGeoJson
               ? "Lot dimensions are derived from the parcel polygon."
@@ -351,14 +388,15 @@ export async function GET(request: NextRequest) {
                 "Address-specific zoning was unavailable.",
               ]),
           boundaryGeoJson: boundaryGeoJson
-            ? evidence("observed", "high")
+            ? evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings)
             : evidence("unavailable", "unknown", [
                 "The provider did not return a parcel boundary.",
               ]),
         },
-        providerAttempts: [regridAttempt("matched")],
+        providerAttempts: [regridAttempt("matched"), ...(regridIdentity?.attempts ?? [])],
         warnings: [
           "Setbacks and maximum lot coverage require confirmation with the local planning authority.",
+          ...identityWarnings,
         ],
       },
     };
@@ -424,13 +462,19 @@ async function successWithoutRegrid(
     if (address) {
       const check = await verifyParcelAddressAtPoint(lat, lng, address, deadline);
       providerAttempts.push(...check.attempts);
-      if (check.verdict === "verified") {
-        identity = {
-          kind: "verified",
-          parcelId: check.parcelId,
-          localityConfirmed: check.localityConfirmed,
-          situsAttempt: check.attempts.findLast((attempt) => attempt.outcome === "matched"),
-        };
+      if (check.verdict === "verified" && check.parcel) {
+        // The PIN and boundary must come from the same official feature, not
+        // two independently selected overlapping/condominium tax parcels.
+        return await countyGisResponse(lat, lng, requestedAddress, check.parcel, census, providerAttempts, {
+          identity: {
+            kind: "verified", parcelId: check.parcelId,
+            localityConfirmed: check.localityConfirmed,
+            situsAttempt: check.attempts.findLast((attempt) => attempt.outcome === "matched"),
+          },
+          boundaryAttempt: check.attempts.findLast((attempt) => attempt.outcome === "matched"),
+        });
+      } else if (check.verdict === "verified") {
+        identity = { kind: "unverified" };
       } else if (check.verdict === "unverified") {
         identity = { kind: "unverified" };
       } else if (check.verdict === "mismatch") {

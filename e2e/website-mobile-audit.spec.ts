@@ -96,3 +96,39 @@ test("unverified aerial is context only, without invented house, ADU or setback 
   await expect(aerial).toContainText(/context|not.*aligned|alignment|boundary unavailable/i);
   await page.screenshot({ path: testInfo.outputPath("context-only-aerial.png"), fullPage: true });
 });
+
+test("imagery credits stay visible below the context notice at desktop and 320px phone width", async ({ page, isMobile }, testInfo) => {
+  if (isMobile) await page.setViewportSize({ width: 320, height: 844 });
+  await mockLookup(page);
+  const credit = "Imagery: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
+  await page.route("**/api/aerial?**", (route) => route.fulfill({
+    contentType: "image/svg+xml",
+    headers: { "X-Aerial-Attribution": credit },
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="540"><rect width="800" height="540" fill="#161616"/></svg>',
+  }));
+  await page.goto("/studio");
+  await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  if (isMobile) {
+    await page.getByRole("button", { name: /Shape your ADU/ }).click();
+  } else {
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+  }
+  await page.getByRole("group", { name: "Parcel view" }).getByRole("button", { name: "Aerial" }).click();
+  const aerial = page.getByLabel("Aerial lot view", { exact: true });
+  const footer = aerial.getByLabel("Aerial context and imagery credits");
+  const attribution = footer.getByText(credit, { exact: true });
+  const context = footer.getByRole("note").filter({ hasText: "Imagery is context only" });
+  await expect(attribution).toBeVisible();
+  await expect(context).toBeVisible();
+  const image = aerial.getByRole("img");
+  await expect(image).toHaveCSS("object-fit", "contain");
+  const [creditBox, contextBox, aerialBox] = await Promise.all([
+    attribution.boundingBox(), context.boundingBox(), aerial.boundingBox(),
+  ]);
+  expect(creditBox!.y).toBeGreaterThanOrEqual(contextBox!.y + contextBox!.height);
+  expect(creditBox!.y + creditBox!.height).toBeLessThanOrEqual(aerialBox!.y + aerialBox!.height);
+  expect(creditBox!.x).toBeGreaterThanOrEqual(aerialBox!.x);
+  expect(creditBox!.x + creditBox!.width).toBeLessThanOrEqual(aerialBox!.x + aerialBox!.width);
+  await page.screenshot({ path: testInfo.outputPath("aerial-context-and-credits.png"), fullPage: true });
+});

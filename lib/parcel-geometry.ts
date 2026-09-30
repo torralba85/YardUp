@@ -250,16 +250,33 @@ export function distanceToPolygonFt(
 
 /**
  * A point that lies inside the polygon (hole-aware), or null when none is
- * found. Scans horizontal lines across the exterior ring, middle first, and
- * takes the midpoint of the widest interior stretch (the most central on a
- * tie), so an L- or U-shaped lot still yields a point on the lot rather than a
- * centroid that may fall outside it.
+ * found. Scans horizontal lines across every ring, middle first, and takes the
+ * midpoint of the widest stretch inside the exterior and outside every hole
+ * (the most central scan line on a tie). This also handles courtyard parcels
+ * whose exterior midpoint always falls inside a hole.
  */
 export function interiorPoint(
   polygon: GeoJsonPolygon,
 ): { lng: number; lat: number } | null {
-  const outer = polygon?.coordinates?.[0];
-  if (!outer || outer.length < 4) return null;
+  const rings = polygon?.coordinates;
+  if (!Array.isArray(rings) || rings.length === 0) return null;
+  if (rings.some((ring) => {
+    if (!Array.isArray(ring) || ring.length < 4 || ring.some((point) =>
+      !Array.isArray(point) || point.length < 2 ||
+      !Number.isFinite(point[0]) || !Number.isFinite(point[1]),
+    )) return true;
+    const [lng0, lat0] = ring[0];
+    const last = ring[ring.length - 1];
+    if (last[0] !== lng0 || last[1] !== lat0) return true;
+    // Relative coordinates avoid cancellation for small geographic parcels.
+    let twiceArea = 0;
+    for (let i = 0; i < ring.length - 1; i++) {
+      twiceArea += (ring[i][0] - lng0) * (ring[i + 1][1] - lat0) -
+        (ring[i + 1][0] - lng0) * (ring[i][1] - lat0);
+    }
+    return !Number.isFinite(twiceArea) || twiceArea === 0;
+  })) return null;
+  const outer = rings[0];
   const lats = outer.map((point) => point[1]);
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
@@ -270,15 +287,19 @@ export function interiorPoint(
   for (const fraction of SCAN_FRACTIONS) {
     const lat = minLat + (maxLat - minLat) * fraction;
     const crossings: number[] = [];
-    for (let i = 0; i < outer.length - 1; i++) {
-      const [x1, y1] = outer[i];
-      const [x2, y2] = outer[i + 1];
-      if (y1 > lat !== y2 > lat) {
-        crossings.push(x1 + ((lat - y1) * (x2 - x1)) / (y2 - y1));
+    for (const ring of rings) {
+      for (let i = 0; i < ring.length - 1; i++) {
+        const [x1, y1] = ring[i];
+        const [x2, y2] = ring[i + 1];
+        if (y1 > lat !== y2 > lat) {
+          crossings.push(x1 + ((lat - y1) * (x2 - x1)) / (y2 - y1));
+        }
       }
     }
     crossings.sort((a, b) => a - b);
-    for (let k = 0; k + 1 < crossings.length; k += 2) {
+    // Hole edges subdivide exterior intervals. Check each resulting stretch
+    // rather than only exterior midpoints, retaining the hole-aware final test.
+    for (let k = 0; k + 1 < crossings.length; k++) {
       const width = crossings[k + 1] - crossings[k];
       const lng = (crossings[k] + crossings[k + 1]) / 2;
       if (width > (best?.width ?? 0) && polygonContainsPoint(polygon, lng, lat)) {

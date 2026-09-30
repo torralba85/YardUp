@@ -549,6 +549,8 @@ export interface PointAddressCheck {
   parcelId?: string;
   /** For `verified`: whether the layer's own city or ZIP confirmed the match. */
   localityConfirmed?: boolean;
+  /** Geometry and area from the SAME official feature that supplied the PIN. */
+  parcel?: CountyParcelResult;
   attempts: ProviderAttempt[];
 }
 
@@ -558,7 +560,8 @@ export interface PointAddressCheck {
  *
  * A geocoder's point can land on a neighbouring lot; a polygon that merely
  * contains the point proves nothing about the address. Only the allowlisted
- * situs attributes are requested and no geometry is returned. Never throws.
+ * situs attributes are requested, together with that record's geometry so its
+ * identity can never be attached to an unrelated point-layer polygon. Never throws.
  */
 export async function verifyParcelAddressAtPoint(
   lat: number,
@@ -584,7 +587,8 @@ export async function verifyParcelAddressAtPoint(
       geometryType: "esriGeometryPoint",
       inSR: "4326",
       spatialRel: "esriSpatialRelIntersects",
-      returnGeometry: "false",
+      returnGeometry: "true",
+      outSR: "4326",
       outFields: situsOutFields(source.situs.fields),
     });
     const fetched = await fetchSitusFeatures(
@@ -603,6 +607,33 @@ export async function verifyParcelAddressAtPoint(
 
     try {
       const check = classifyPointParcels(source, fetched.features, address);
+      if (check.verdict === "verified") {
+        const best = pickBestFeature(
+          fetched.features.filter((raw) => readFeatureSitus(raw, source.situs.fields)?.id === check.parcelId),
+          lat,
+          lng,
+        );
+        if (!best?.containsPoint) {
+          attempts.push(situsAttempt(source, "invalid-response", "The published address has no usable polygon containing the searched point; identity could not be tied to the boundary."));
+          continue;
+        }
+        const parcel = buildParcelResult(
+          { ...source, areaField: source.situs.fields.area },
+          best.feature,
+          best.polygon,
+          best.partCount,
+          best.selectedAreaSqft,
+        );
+        if ((parcel.lotAreaSqft ?? 0) <= 0) {
+          attempts.push(situsAttempt(source, "invalid-response", "The published address has no usable parcel area."));
+          continue;
+        }
+        attempts.push(check.attempt);
+        return {
+          verdict: "verified", parcelId: check.parcelId,
+          localityConfirmed: check.localityConfirmed, parcel, attempts,
+        };
+      }
       attempts.push(check.attempt);
       if (check.verdict !== "unverified") {
         return {
