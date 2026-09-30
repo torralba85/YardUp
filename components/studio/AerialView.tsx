@@ -4,12 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TriangleAlert } from "lucide-react";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
-import {
-  buildAduSceneModel,
-  buildSceneOrigin,
-  projectLocalToGeodetic,
-  type Pose2D,
-} from "@/lib/scene-model";
+import type { Pose2D } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
 import { latLngToPixel } from "@/lib/map-utils";
 import { useAuth } from "@/lib/auth-context";
@@ -17,43 +12,31 @@ import { useAuth } from "@/lib/auth-context";
 const IMG_W = 800;
 const IMG_H = 540;
 const ZOOM = 19;
-const STATUS_TONES_ON_DARK = { eligible: "#5FBF93", review: "#E0A33C" };
-const STATUS_TONES_ON_CHALK = { eligible: "#176B4C", review: "#8A5300" };
 
 /** Props for {@link AerialView}. */
 export interface AerialViewProps {
   /** The live parcel whose boundary and location drive the overlay. */
   parcel: LiveParcelData;
-  /** The ADU configuration whose footprint is drawn on the image. */
+  /** Legacy caller contract; conceptual geometry is shown only in the model. */
   config: ADUConfig;
-  /** Whether the current design is zoning-compliant (affects overlay styling). */
+  /** Legacy caller contract; model fit never implies zoning approval here. */
   isCompliant: boolean;
-  /**
-   * The committed ADU pose, in the same local frame the 3D scene uses. The
-   * aerial overlay used to place the ADU at a fixed rear-of-lot position of
-   * its own, so the three surfaces disagreed about where the building was
-   * (D3); it now projects the shared footprint corners.
-   */
+  /** Legacy caller contract; no geographic pose transform is established. */
   pose: Pose2D;
   /** Returns to the 3D model — the aerial view is read-only. */
   onReturnToModel?: () => void;
 }
 
 /**
- * Renders a satellite aerial view of the parcel with:
- * - Parcel boundary polygon overlay (dashed forest green)
- * - ADU footprint rectangle overlay (solid forest green)
- * - Setback dimension labels
- * - "PROPOSED ADU" and "EXISTING HOUSE" labels
+ * Renders satellite context and a published parcel boundary when available.
+ * Conceptual buildings and setbacks remain in the drafting model; an address
+ * point cannot establish their real-world origin and orientation.
  *
  * The satellite image is proxied through /api/aerial so GOOGLE_MAPS_API_KEY
  * is never exposed to the browser.
  */
 export default function AerialView({
   parcel,
-  config,
-  isCompliant,
-  pose,
   onReturnToModel,
 }: AerialViewProps) {
   const { user } = useAuth();
@@ -128,49 +111,6 @@ export default function AerialView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parcel.boundaryGeoJson, lat, lng]);
 
-  // The ADU footprint, projected from the shared scene model rather than
-  // re-derived here. `bearingDeg` is 0 because the parcel's true compass
-  // bearing is unknown — this matches the fixed "N" badge the renderer already
-  // shows, and the overlay is labelled as approximate rather than surveyed.
-  const aduRect = useMemo(() => {
-    const origin = buildSceneOrigin({ lat, lng });
-    const corners = buildAduSceneModel(config, pose).footprintCorners;
-    if (origin.lat === null || origin.lng === null || !corners) return null;
-    const anchor = { lat: origin.lat, lng: origin.lng };
-    const geodetic = corners.map((corner) => projectLocalToGeodetic(anchor, 0, corner));
-    if (geodetic.some((point) => point === null)) return null;
-
-    const pixels = (geodetic as { lat: number; lng: number }[]).map((c) => toPixel(c.lat, c.lng));
-    const centerLocal = { x: pose.x, z: pose.z };
-    const centerGeodetic = projectLocalToGeodetic(anchor, 0, centerLocal);
-    if (!centerGeodetic) return null;
-    const centerPixel = toPixel(centerGeodetic.lat, centerGeodetic.lng);
-
-    return {
-      points: pixels.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
-      labelX: centerPixel.x,
-      labelY: centerPixel.y,
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lat, lng, config.width, config.length, config.height, config.roof, pose.x, pose.z, pose.rotationDeg]);
-
-  // Approximate existing house center (middle of lot, slightly front-biased)
-  const houseCenter = useMemo(() => {
-    const ftPerDegLat = 364000;
-    const houseLat = lat - (parcel.lotLength * 0.3) / ftPerDegLat;
-    return toPixel(houseLat, lng);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lat, lng, parcel.lotLength]);
-
-  // Status tones from design-system §2.5, kept as hex because the ADU fill
-  // appends an alpha suffix. Satellite imagery is a dark ground, so it takes the
-  // on-carbon pair, as does the carbon placeholder shown while loading or when no
-  // image arrives. Only the loaded drafting-grid fallback is chalk.
-  // Non-compliant here means "review needed", never blocked.
-  const onChalkGrid = aerialSrc !== null && aerialError;
-  const tones = onChalkGrid ? STATUS_TONES_ON_CHALK : STATUS_TONES_ON_DARK;
-  const statusColor = isCompliant ? tones.eligible : tones.review;
-
   return (
     <div
       className="relative h-full min-h-[460px] w-full overflow-hidden bg-lf-espresso"
@@ -184,7 +124,7 @@ export default function AerialView({
             alt={
               aerialError
                 ? `Fallback parcel map for ${parcel.address}`
-                : `Satellite view of ${parcel.address}`
+                : `Satellite context near ${parcel.address}`
             }
             className="absolute inset-0 h-full w-full object-cover"
             width={IMG_W}
@@ -207,105 +147,14 @@ export default function AerialView({
         />
       )}
 
-      {/* SVG overlay */}
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox={`0 0 ${IMG_W} ${IMG_H}`}
-        preserveAspectRatio="xMidYMid slice"
-        aria-hidden="true"
-      >
-        {/* Parcel boundary */}
-        {boundaryPoints && (
-          <polygon
-            points={boundaryPoints}
-            fill="none"
-            stroke={statusColor}
-            strokeWidth="2.5"
-            strokeDasharray="8 4"
-            strokeLinejoin="round"
-            opacity="0.9"
-          />
-        )}
-
-        {/* ADU footprint, at the same position and rotation as the 3D model */}
-        {aduRect && (
-          <>
-            <polygon
-              points={aduRect.points}
-              fill={`${statusColor}22`}
-              stroke={statusColor}
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-            <rect
-              x={aduRect.labelX - 46}
-              y={aduRect.labelY - 10}
-              width="92"
-              height="18"
-              rx="3"
-              fill="rgba(38,19,7,0.78)"
-            />
-            <text
-              x={aduRect.labelX}
-              y={aduRect.labelY + 4}
-              textAnchor="middle"
-              fill="#F5F5F0"
-              fontSize="10"
-              style={{ fontFamily: "var(--font-mono)" }}
-              fontWeight="600"
-              letterSpacing="0.06em"
-            >
-              PROPOSED ADU
-            </text>
-          </>
-        )}
-
-        {/* Existing house marker */}
-        <rect
-          x={houseCenter.x - 52}
-          y={houseCenter.y - 10}
-          width="104"
-          height="18"
-          rx="3"
-          fill="rgba(38,19,7,0.66)"
-        />
-        <text
-          x={houseCenter.x}
-          y={houseCenter.y + 4}
-          textAnchor="middle"
-          fill="#F5F5F0"
-          fontSize="10"
-          style={{ fontFamily: "var(--font-mono)" }}
-          fontWeight="600"
-          letterSpacing="0.06em"
-        >
-          EXISTING HOUSE
-        </text>
-
-        {/* Setback labels — rear */}
-        <SetbackLabel
-          x={IMG_W / 2}
-          y={40}
-          text={`Rear Setback ${parcel.setbacks.rear}.0 ft`}
-        />
-        {/* Setback labels — side. Inset to ~35% of the width so the label
-            survives the `xMidYMid slice` horizontal crop on portrait phone
-            viewports: the visible X window is 400 ± 270·R (R = viewport
-            aspect), i.e. as narrow as [275, 525] on tall phones, so a smaller
-            inset would still be cropped. Stays left of the ADU footprint. */}
-        <SetbackLabel
-          x={IMG_W * 0.35}
-          y={IMG_H / 2}
-          text={`Side ${parcel.setbacks.side}.0 ft`}
-          rotate={-90}
-        />
-        {/* Setback labels — front */}
-        <SetbackLabel
-          x={IMG_W / 2}
-          y={IMG_H - 24}
-          text={`Front Setback ${parcel.setbacks.front}.0 ft`}
-        />
-      </svg>
+      {/* Address coordinates cannot establish building placement or bearing. */}
+      {boundaryPoints && aerialSrc && !aerialError && (
+        <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${IMG_W} ${IMG_H}`}
+          preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <polygon points={boundaryPoints} fill="none" stroke="#161616" strokeWidth="5" strokeDasharray="8 4" />
+          <polygon points={boundaryPoints} fill="none" stroke="#F5F5F0" strokeWidth="2.5" strokeDasharray="8 4" />
+        </svg>
+      )}
 
       {/* The aerial view is read-only; give it a labelled way back to the
           editable model instead of leaving the user to find the toggle (U8). */}
@@ -321,15 +170,8 @@ export default function AerialView({
         </Button>
       )}
 
-      {/* Zoning badge */}
-      <div
-        className={`pointer-events-none absolute right-4 top-4 rounded-none px-2.5 py-1.5 font-sans text-xs font-semibold shadow-none ${
-          isCompliant
-            ? "bg-lf-forest text-lf-sand"
-            : "border border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink"
-        }`}
-        aria-label={`Zoning status: ${isCompliant ? "Compliant" : "Review needed"}`}
-      >
+      <div className="pointer-events-none absolute right-4 top-4 border border-lot-line bg-lot-chalk px-2.5 py-1.5 text-xs font-semibold text-lot-ink"
+        aria-label="Zoning designation, not approval">
         {parcel.zoning}
       </div>
 
@@ -340,7 +182,7 @@ export default function AerialView({
           role="note"
         >
           <span className="flex items-center gap-2 font-semibold"><TriangleAlert size={16} className="shrink-0 text-status-review" aria-hidden="true" />Aerial imagery unavailable</span>
-          <span className="mt-1 block text-lot-stone">The parcel overlay is shown on a drafting grid. Satellite detail is unavailable.</span>
+          <span className="mt-1 block text-lot-stone">Satellite detail is unavailable. Use the 3D model for conceptual placement.</span>
         </div>
       )}
 
@@ -354,56 +196,17 @@ export default function AerialView({
         </div>
       )}
 
-      {parcel.source === "fallback" && (
-        <div
+      <div
           className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-start gap-2 rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
           role="note"
         >
           <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-on-dark" aria-hidden="true" />
           <span>
-            Parcel boundary unavailable for this address — showing estimated defaults. Verify dimensions with your local jurisdiction.
+            Imagery is context only. House and ADU positions are not geographically aligned.
+            {boundaryPoints ? " Dashed line: published GIS boundary, not a survey." : " Parcel boundary unavailable; model dimensions are estimated."}
+            {" "}Use the 3D model for conceptual placement and verify site measurements.
           </span>
-        </div>
-      )}
+      </div>
     </div>
-  );
-}
-
-function SetbackLabel({
-  x,
-  y,
-  text,
-  rotate,
-}: {
-  x: number;
-  y: number;
-  text: string;
-  rotate?: number;
-}) {
-  const transform = rotate ? `rotate(${rotate}, ${x}, ${y})` : undefined;
-  const w = text.length * 6.2 + 12;
-  return (
-    <g transform={transform}>
-      <rect
-        x={x - w / 2}
-        y={y - 10}
-        width={w}
-        height="18"
-        rx="3"
-        fill="rgba(38,19,7,0.66)"
-      />
-      <text
-        x={x}
-        y={y + 4}
-        textAnchor="middle"
-        fill="#F5F5F0"
-        fontSize="9.5"
-        style={{ fontFamily: "var(--font-mono)" }}
-        opacity="0.92"
-        letterSpacing="0.04em"
-      >
-        {text}
-      </text>
-    </g>
   );
 }

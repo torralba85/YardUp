@@ -21,7 +21,8 @@ import {
   type FeasibilityResult,
   type Parcel,
 } from "./feasibility";
-import { describePlacement, type PlacementResult } from "./placement-validation";
+import { type PlacementResult } from "./placement-validation";
+import { describePlacementWithEvidence } from "./placement-evidence";
 import { parcelConfidence } from "./parcel-confidence";
 
 export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
@@ -232,8 +233,14 @@ export function summarizeFeasibility(
 
   const placementReview = placement !== undefined && placement.status !== "fits";
   if (placement) {
-    const feedback = describePlacement(placement);
-    constraints.push({ id: "placement", group: "Site & utilities", label: "Modeled ADU placement", detail: feedback.detail, status: feedback.tone });
+    const feedback = describePlacementWithEvidence(placement, parcel);
+    constraints.push({
+      id: "placement",
+      group: "Site & utilities",
+      label: "Modeled ADU placement",
+      detail: feedback.missingEvidenceNotice ? `${feedback.detail} ${feedback.missingEvidenceNotice}` : feedback.detail,
+      status: feedback.tone,
+    });
   }
   const cleared = constraints.filter((c) => c.status === "clear").length;
 

@@ -4,6 +4,7 @@ import { finishColors } from "@/lib/feasibility";
 import { buildSceneModel, type Pose2D } from "@/lib/scene-model";
 import { getScenePlacement } from "@/lib/site-fit";
 import { buildSetbackEnvelope } from "@/lib/placement-validation";
+import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 
 /**
  * The 2D concept plan, drawn from the same scene model the 3D view renders.
@@ -33,10 +34,11 @@ export function ParcelPlan({
     corners?.map((p) => `${p.x},${p.z}`).join(" ");
   const color =
     placement.status === "fits" ? "#176B4C" : placement.status === "blocked" ? "#A82D16" : "#8A5300";
+  const placementFeedback = describePlacementWithEvidence(placement, parcel);
   return (
     <svg
       role="img"
-      aria-label={`2D concept plan. ADU ${config.width} by ${config.length} feet, rotated ${pose.rotationDeg} degrees. ${placement.status === "fits" ? "Fits at this placement." : "Does not clear the buildable envelope or the existing structure at this placement."}`}
+      aria-label={`2D concept plan. ADU ${config.width} by ${config.length} feet, rotated ${pose.rotationDeg} degrees. ${placementFeedback.title}.`}
       viewBox={`${-parcel.lotWidth / 2 - 12} ${-parcel.lotLength / 2 - 12} ${parcel.lotWidth + 24} ${parcel.lotLength + 24}`}
       className="h-full w-full bg-[#F5F5F0]"
       preserveAspectRatio="xMidYMid meet"
