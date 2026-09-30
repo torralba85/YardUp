@@ -519,6 +519,18 @@ describe("fetchCountyParcelByAddress", () => {
     expect(attempts[0].outcome).toBe("invalid-response");
   });
 
+  it.each([
+    { PIN: "unrelated-vacant", ADDR_FULL: null },
+    { ...TARGET_SITUS, PIN: undefined, ADDR_FULL: "1423 NE 88TH ST" },
+  ])("does not let unrelated unpublished or different situs invalidate a unique match", async (unrelated) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(featuresResponse([
+      feature(TARGET_LOT, TARGET_SITUS),
+      feature(NEIGHBOR_LOT, unrelated),
+    ])));
+    const { parcel } = await fetchCountyParcelByAddress(PHONE_POINT.lat, PHONE_POINT.lng, SEARCH);
+    expect(parcel?.parcelId).toBe(TARGET_SITUS.PIN);
+  });
+
   it("accepts one parcel published as several features and scores it as multipart", async () => {
     const island = lot(GUEST_POINT.lat, GUEST_POINT.lng + 0.0016, 20, 30);
     vi.stubGlobal(

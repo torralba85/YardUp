@@ -257,6 +257,26 @@ export function readSitusRecord(
   attributes: Record<string, unknown> | undefined,
   fields: SitusFieldNames,
 ): SitusRecord | null {
+  const record = readSitusFields(attributes, fields);
+  return record?.id ? record : null;
+}
+
+/** Read published address facts independently of parcel identity, without inventing an ID. */
+export function readSitusAddress(
+  attributes: Record<string, unknown> | undefined,
+  fields: SitusFieldNames,
+): Omit<SitusRecord, "id"> | null {
+  const record = readSitusFields(attributes, fields);
+  if (!record) return null;
+  const { id: _id, ...address } = record;
+  void _id;
+  return address;
+}
+
+function readSitusFields(
+  attributes: Record<string, unknown> | undefined,
+  fields: SitusFieldNames,
+): SitusRecord | null {
   if (!attributes || typeof attributes !== "object") return null;
   // Servers echo field names in their own case; look them up case-insensitively.
   const byName = new Map<string, unknown>();
@@ -278,7 +298,7 @@ export function readSitusRecord(
         ? String(rawId)
         : "";
   const line = text(fields.line);
-  if (!id || !line) return null;
+  if (!line) return null;
 
   const zip = /^(\d{5})/.exec(text(fields.zip) ?? "")?.[1];
   const stateText = text(fields.state)?.toUpperCase();
@@ -299,7 +319,7 @@ export function readSitusRecord(
  */
 export function compareSitus(
   requested: StreetAddress,
-  situs: SitusRecord,
+  situs: Omit<SitusRecord, "id">,
 ): SitusComparison {
   const published = parseStreetLine(situs.line);
   if (

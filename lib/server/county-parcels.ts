@@ -22,6 +22,7 @@ import {
   type SitusRecord,
   type StreetAddress,
   compareSitus,
+  readSitusAddress,
   readSitusRecord,
   situsOutFields,
 } from "@/lib/server/address-match";
@@ -860,7 +861,17 @@ async function queryAddressWindow(
     for (const raw of features) {
       const record = readFeatureSitus(raw, source.situs.fields);
       if (!record) {
-        incompleteIdentity = true;
+        // Vacant/unaddressed records and demonstrably different street lines
+        // cannot publish this address. A matching situs without a PIN still
+        // prevents uniqueness; do not invent an identifier to select it.
+        const feature = raw as RawFeature | null;
+        const published = feature && (
+          readSitusAddress(feature.properties, source.situs.fields) ??
+          readSitusAddress(feature.attributes, source.situs.fields)
+        );
+        if (published && compareSitus(address, published).verdict === "match") {
+          incompleteIdentity = true;
+        }
         continue;
       }
       publishing += 1;
