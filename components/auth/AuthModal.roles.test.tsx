@@ -21,7 +21,7 @@ describe("builder registration in the auth modal", () => {
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Builder" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "builder@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create free account" }));
     await waitFor(() => expect(mocks.signUp).toHaveBeenCalledWith("builder@example.com", "password123", "Builder", "builder", expect.objectContaining({ adultConfirmed: true })));
   });
   it.each(["Google", "Apple"])("passes the builder role to %s registration", async (provider) => {

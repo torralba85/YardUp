@@ -48,6 +48,9 @@ function Gate({ onAuthenticated, onDismiss }: LandingAuthGateProps) {
   return (
     <AuthModal
       isOpen
+      initialMode="sign-up"
+      analyticsSurface="landing"
+      analyticsSource="guest_limit"
       onClose={(reason) => {
         if (reason === "signed-in") {
           setAwaitingSession(true);
