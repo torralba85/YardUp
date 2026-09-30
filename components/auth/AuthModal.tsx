@@ -12,7 +12,7 @@ import {
   type AuthSurface,
 } from "@/lib/analytics/events";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
-import type { User as FirebaseUser } from "firebase/auth";
+import { getAdditionalUserInfo, type User as FirebaseUser } from "firebase/auth";
 
 /**
  * Why the modal closed.
@@ -360,7 +360,8 @@ export function AuthModal({
         });
       }
       const credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
-      if (isSignUp) {
+      // A popup sign-in with an existing account is a login, not a sign-up.
+      if (isSignUp && getAdditionalUserInfo(credential)?.isNewUser) {
         trackSignupSucceeded({
           method: "google",
           surface: analyticsSurface,
@@ -411,7 +412,8 @@ export function AuthModal({
         });
       }
       const credential = await signInWithApple(role, CURRENT_LEGAL_CONSENT);
-      if (isSignUp) {
+      // A popup sign-in with an existing account is a login, not a sign-up.
+      if (isSignUp && getAdditionalUserInfo(credential)?.isNewUser) {
         trackSignupSucceeded({
           method: "apple",
           surface: analyticsSurface,
