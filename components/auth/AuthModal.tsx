@@ -672,7 +672,7 @@ export function AuthModal({
           >
             {isSignUp
               ? "Already have an account? Sign in"
-              : "New to LotFoundry? Create free account"}
+              : "Don't have an account? Create free account"}
           </button>
         </div>
       </div>
