@@ -3,23 +3,33 @@
 import { useEffect, useRef, useState } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import type { AuthPromptSource } from "@/lib/analytics/events";
 
 /** Props for {@link LandingAuthGate}. */
 export interface LandingAuthGateProps {
   /** Called once, when a signed-in user is confirmed. */
   onAuthenticated: () => void;
-  /** Called when the visitor dismisses the sign-in modal without signing in. */
+  /** Called when the visitor dismisses the auth modal without signing in. */
   onDismiss: () => void;
+  /** Mode to show when a session is not already present. */
+  initialMode?: "sign-in" | "sign-up";
+  /** Bounded reason for the prompt, used by conversion analytics and copy. */
+  analyticsSource?: AuthPromptSource;
 }
 
 /**
  * Inner gate, rendered beneath its own {@link AuthProvider}.
  *
  * Resolves the current session, then either reports an authenticated visitor
- * upward or shows the sign-in modal. Renders nothing while Firebase is still
+ * upward or shows the appropriate auth modal. Renders nothing while Firebase is still
  * resolving, so a signed-in visitor never sees the modal flash.
  */
-function Gate({ onAuthenticated, onDismiss }: LandingAuthGateProps) {
+function Gate({
+  onAuthenticated,
+  onDismiss,
+  initialMode = "sign-in",
+  analyticsSource = "account_control",
+}: LandingAuthGateProps) {
   const firedRef = useRef(false);
   // `AuthModal` closes itself on a *successful* sign-in, not just on cancel.
   // This gate owns the `AuthProvider` the modal reads from, so forwarding that
@@ -48,6 +58,9 @@ function Gate({ onAuthenticated, onDismiss }: LandingAuthGateProps) {
   return (
     <AuthModal
       isOpen
+      initialMode={initialMode}
+      analyticsSurface="landing"
+      analyticsSource={analyticsSource}
       onClose={(reason) => {
         if (reason === "signed-in") {
           setAwaitingSession(true);
