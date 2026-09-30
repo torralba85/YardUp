@@ -49,10 +49,10 @@ LotFoundry integrates OpenAI models to augment deterministic spatial calculation
 
 ## Studio access
 
-On the web, guests open the demo Studio directly and signed-in owners start from
-an address. In the Android and iOS apps only, the Studio opens with a welcome,
-sign-in, and a quick guide; sign-in is required for a real property, and demo
-cities stay open to guests. See
+Web and native guests can look up one address before creating an account;
+another successful lookup and cloud saves require sign-in. Android and iOS
+start with a welcome and quick guide, then the same guest address workspace.
+Signed-in owners use their authenticated workspace, and demo cities stay free. See
 [`docs/design/2026-09-12-app-studio-onboarding.md`](docs/design/2026-09-12-app-studio-onboarding.md).
 
 ## Run locally

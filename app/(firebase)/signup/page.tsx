@@ -295,6 +295,7 @@ function SignupForm() {
       <button
         type="button"
         onClick={handleGoogle}
+        aria-describedby="signup-social-consent-help"
         disabled={isPending || !legalAccepted}
         className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:opacity-50"
       >
@@ -321,6 +322,7 @@ function SignupForm() {
       <button
         type="button"
         onClick={handleApple}
+        aria-describedby="signup-social-consent-help"
         disabled={isPending || !legalAccepted}
         className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:opacity-50"
       >
@@ -330,6 +332,9 @@ function SignupForm() {
         {isPending ? "Connecting..." : "Apple"}
       </button>
 
+      <p id="signup-social-consent-help" className="mt-3 text-xs leading-5 text-lf-muted" aria-live="polite">
+        {legalAccepted ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
+      </p>
       <p className="lf-body-sm mt-6 text-center text-lf-muted">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-lf-clay-ink hover:text-lf-mahogany">

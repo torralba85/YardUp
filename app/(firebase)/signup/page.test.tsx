@@ -26,6 +26,26 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 
 describe("builder auth in store shells", () => {
+  it.each([
+    ["signup", SignupPage],
+    ["login", LoginForm],
+  ])("explains required social consent on %s", (_surface, Surface) => {
+    render(<Surface />);
+    const agreement = screen.getByRole("checkbox");
+    expect(agreement).not.toBeChecked();
+    for (const provider of ["Google", "Apple"]) {
+      expect(screen.getByRole("button", { name: provider })).toBeDisabled();
+      expect(screen.getByRole("button", { name: provider })).toHaveAccessibleDescription(/confirmation above/i);
+    }
+    fireEvent.click(agreement);
+    for (const provider of ["Google", "Apple"]) {
+      expect(screen.getByRole("button", { name: provider })).toBeEnabled();
+      expect(screen.getByRole("button", { name: provider })).toHaveAccessibleDescription(/ready/i);
+    }
+    expect(mocks.google).not.toHaveBeenCalled();
+    expect(mocks.apple).not.toHaveBeenCalled();
+  });
+
   it.each(["email", "Google", "Apple"])("ignores the builder query for %s signup", async (method) => {
     vi.stubGlobal("LotFoundryNative", { platform: "android" });
     render(<SignupPage />);

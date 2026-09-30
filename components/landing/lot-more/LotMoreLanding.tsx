@@ -33,6 +33,7 @@ import {
   subscribeMemberSession,
 } from "@/lib/member-session-hint";
 import { useStorePrice } from "@/lib/commerce/store-price";
+import { defaultScenarioState, serializeScenarioParams } from "@/lib/scenario-url";
 import styles from "./LotMoreLanding.module.css";
 
 const LandingAuthGate = dynamic(() => import("../LandingAuthGate"), {
@@ -129,7 +130,10 @@ export function LotMoreLanding({
   const scenario = scenarios[scenarioIndex];
   const reportScenario = scenarios[0];
   const sample = scenarios.find((item) => item.id === "market") ?? scenarios[0];
-
+  const sampleHref = `/studio?${serializeScenarioParams({
+    ...defaultScenarioState,
+    assumptions: { ...defaultScenarioState.assumptions, rentScenario: sample.id },
+  })}`;
   useEffect(() => {
     const update = () => {
       const hero = heroRef.current?.getBoundingClientRect();
@@ -339,7 +343,7 @@ export function LotMoreLanding({
                   does not show. */}
               <Link
                 className={styles.sampleResult}
-                href="/studio?parcel=oak-street"
+                href={sampleHref}
                 prefetch={false}
                 aria-label="Open the Seattle sample lot in the 3D studio"
                 onClick={() => {
@@ -374,7 +378,7 @@ export function LotMoreLanding({
                   </div>
                 </dl>
                 <span className={styles.sampleCta}>
-                  Seattle demo lot · open it in 3D
+                  Seattle demo lot · {sample.id} rent · open it in 3D
                   <ArrowRight size={17} aria-hidden="true" />
                 </span>
               </Link>

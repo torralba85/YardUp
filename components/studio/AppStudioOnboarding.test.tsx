@@ -6,6 +6,7 @@ import AppStudioOnboarding, { APP_GUIDE_SEEN_KEY } from "./AppStudioOnboarding";
 
 vi.mock("@/components/FeasibilityStudio", () => ({
   default: function MockFeasibilityStudio({ demoChosen }: { demoChosen?: boolean }) {
+    if (!demoChosen) return <div>Guest Studio Mock</div>;
     return <div>Demo Studio Mock {demoChosen ? "chosen" : "unchosen"} {window.location.search}</div>;
   },
 }));
@@ -48,27 +49,18 @@ describe("AppStudioOnboarding", () => {
     vi.restoreAllMocks();
   });
 
-  it("requires sign-in before the address workspace, then shows the guide", async () => {
+  it("opens the guest address workspace through the guide without sign-in", async () => {
     const clicker = userEvent.setup();
-    const { rerender } = render(<AppStudioOnboarding user={null} />);
+    render(<AppStudioOnboarding user={null} />);
 
     expect(screen.getByRole("heading", { name: "A little more room for life." })).toBeInTheDocument();
     await clicker.click(screen.getByRole("button", { name: /Explore my property/ }));
-    expect(screen.getByRole("heading", { name: "Sign in to explore your property." })).toHaveFocus();
-
-    await clicker.click(screen.getByRole("button", { name: /Sign in or create account/ }));
-    await clicker.click(screen.getByRole("button", { name: "Dismiss" }));
-    expect(screen.getByTestId("app-sign-in")).toBeInTheDocument();
-    expect(screen.queryByText("Address Workspace Mock")).not.toBeInTheDocument();
-
-    await clicker.click(screen.getByRole("button", { name: /Sign in or create account/ }));
-    await clicker.click(screen.getByRole("button", { name: "Finish sign-in" }));
-    rerender(<AppStudioOnboarding user={member} />);
-    expect(screen.getByRole("heading", { name: "How the Studio works." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "How the Studio works." })).toHaveFocus();
     expect(screen.getByText("Find your lot")).toBeInTheDocument();
 
     await clicker.click(screen.getByRole("button", { name: /Open the Studio/ }));
-    expect(screen.getByText("Address Workspace Mock")).toBeInTheDocument();
+    expect(screen.getByText("Guest Studio Mock")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(window.localStorage.getItem(APP_GUIDE_SEEN_KEY)).toBe("1");
   });
 
@@ -144,6 +136,30 @@ describe("AppStudioOnboarding", () => {
 
     rerender(<AppStudioOnboarding user={null} />);
     expect(screen.queryByText("Address Workspace Mock")).not.toBeInTheDocument();
-    expect(screen.getByTestId("app-sign-in")).toBeInTheDocument();
+    expect(screen.getByText("Guest Studio Mock")).toBeInTheDocument();
+  });
+
+  it("preserves guest property entry on remount and Back without storing an address", async () => {
+    const clicker = userEvent.setup();
+    const first = render(<AppStudioOnboarding user={null} />);
+    await clicker.click(screen.getByRole("button", { name: /Explore my property/ }));
+    await clicker.click(screen.getByRole("button", { name: /Open the Studio/ }));
+    first.unmount();
+    render(<AppStudioOnboarding user={null} />);
+    expect(screen.getByText("Guest Studio Mock")).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+    expect(window.history.state.lfAppOnboardingStep).toBe("studio");
+    goBack();
+    expect(await screen.findByTestId("app-guide")).toBeInTheDocument();
+    goBack();
+    expect(await screen.findByTestId("app-welcome")).toBeInTheDocument();
+  });
+
+  it("keeps the signed-in property entry on the authenticated gate", async () => {
+    const clicker = userEvent.setup();
+    render(<AppStudioOnboarding user={member} />);
+    await clicker.click(screen.getByRole("button", { name: /Open the Studio/ }));
+    expect(screen.getByText("Address Workspace Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Guest Studio Mock")).not.toBeInTheDocument();
   });
 });
