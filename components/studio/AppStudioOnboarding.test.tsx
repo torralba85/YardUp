@@ -64,6 +64,19 @@ describe("AppStudioOnboarding", () => {
     expect(window.localStorage.getItem(APP_GUIDE_SEEN_KEY)).toBe("1");
   });
 
+  it("keeps the guest workspace mounted when the guest signs in from the Studio", async () => {
+    const clicker = userEvent.setup();
+    const { rerender } = render(<AppStudioOnboarding user={null} />);
+
+    await clicker.click(screen.getByRole("button", { name: /Explore my property/ }));
+    await clicker.click(screen.getByRole("button", { name: /Open the Studio/ }));
+    expect(screen.getByText("Guest Studio Mock")).toBeInTheDocument();
+
+    rerender(<AppStudioOnboarding user={member} />);
+    expect(screen.getByText("Guest Studio Mock")).toBeInTheDocument();
+    expect(screen.queryByText("Address Workspace Mock")).not.toBeInTheDocument();
+  });
+
   it("opens a demo city without an account and starts past the find step", async () => {
     const clicker = userEvent.setup();
     render(<AppStudioOnboarding user={null} />);

@@ -84,6 +84,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
   );
   const [{ step, destination }, setEntry] = useState<OnboardingEntry>(initialEntry);
   const [authOpen, setAuthOpen] = useState(false);
+  const [guestStudioEntered, setGuestStudioEntered] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousView = useRef<Step | null>(null);
 
@@ -137,6 +138,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
 
   function openStudio() {
     rememberGuideSeen();
+    if (destination.kind === "property" && !user) setGuestStudioEntered(true);
     if (destination.kind === "demo") {
       // The Studio reads its lot from the URL on mount, so write it first. A
       // shared link for the same lot keeps its design parameters.
@@ -160,7 +162,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
 
   if (view === "studio") {
     if (destination.kind === "demo") return <FeasibilityStudio demoChosen />;
-    if (user) return <SignedInStudioGate user={user} />;
+    if (user && !guestStudioEntered) return <SignedInStudioGate user={user} />;
     return <FeasibilityStudio />;
   }
 
