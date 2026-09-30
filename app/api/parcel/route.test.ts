@@ -520,6 +520,70 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.lotArea).toBe(6000);
   });
 
+  it("reports a sanitized auth failure and degrades to county GIS on Regrid 401", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    stubProviders({
+      regrid: { ok: false, status: 401, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(
+        rotatedRectPolygon(47.65, -122.31, 50, 120, 0),
+        { Shape__Area: 6000 },
+      ),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31, "123 Secret St, Seattle, WA"));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "auth-failed" }),
+    );
+    expect(error).toHaveBeenCalledOnce();
+    const line = String(error.mock.calls[0][0]);
+    expect(JSON.parse(line)).toEqual({
+      severity: "ERROR",
+      event: "regrid_auth_failed",
+      status: 401,
+    });
+    expect(line).not.toContain("test-token");
+    expect(line).not.toContain("regrid.com");
+    expect(line).not.toContain("123 Secret St");
+  });
+
+  it("reports a sanitized auth failure and degrades to county GIS on Regrid 403", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    stubProviders({
+      regrid: { ok: false, status: 403, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(
+        rotatedRectPolygon(47.65, -122.31, 50, 120, 0),
+        { Shape__Area: 6000 },
+      ),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31, "123 Secret St, Seattle, WA"));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "auth-failed" }),
+    );
+    expect(error).toHaveBeenCalledOnce();
+    const line = String(error.mock.calls[0][0]);
+    expect(JSON.parse(line)).toEqual({
+      severity: "ERROR",
+      event: "regrid_auth_failed",
+      status: 403,
+    });
+    expect(line).not.toContain("test-token");
+    expect(line).not.toContain("regrid.com");
+    expect(line).not.toContain("123 Secret St");
+  });
+
   it("degrades to the preset fallback when Regrid rate-limits with no GIS cover", async () => {
     stubProviders({
       regrid: { ok: false, status: 429, json: async () => ({}) },

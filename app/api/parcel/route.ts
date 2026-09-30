@@ -145,6 +145,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (regridRes.status === 401 || regridRes.status === 403) {
+      console.error(JSON.stringify({
+        severity: "ERROR",
+        event: "regrid_auth_failed",
+        status: regridRes.status,
+      }));
+      return await successWithoutRegrid(
+        lat,
+        lng,
+        requestedAddress,
+        censusLocation,
+        [regridAttempt("auth-failed", "Regrid rejected the provider credential.")],
+      );
+    }
+
     if (!regridRes.ok) {
       throw new Error(`Regrid returned ${regridRes.status}`);
     }

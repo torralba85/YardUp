@@ -35,6 +35,7 @@ export type ProviderOutcome =
   | "no-match"
   | "unsupported"
   | "timeout"
+  | "auth-failed"
   | "provider-error"
   | "invalid-response";
 
