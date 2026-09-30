@@ -77,7 +77,7 @@ describe("AuthModal focus restore", () => {
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "Create an account" })).toBeTruthy(),
     );
-    expect(screen.getByRole("button", { name: "Sign Up" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Create free account" })).toBeEnabled();
     expect(screen.getByLabelText("Name")).toBeTruthy();
   });
 
@@ -129,16 +129,16 @@ describe("AuthModal focus restore", () => {
 
     const checkbox = screen.getByRole("checkbox", { name: /18 or older/i });
     expect(checkbox).not.toBeChecked();
-    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription(/confirmation above to enable/);
-    expect(screen.getByRole("button", { name: "Apple" })).toHaveAccessibleDescription(/confirmation above to enable/);
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription(/confirmation above to enable/);
+    expect(screen.getByRole("button", { name: "Continue with Apple" })).toHaveAccessibleDescription(/confirmation above to enable/);
     expect(screen.getByRole("button", { name: "Sign In" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Google" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Apple" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue with Apple" })).toBeDisabled();
 
     fireEvent.click(checkbox);
-    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription("Google and Apple sign-in are ready.");
-    expect(screen.getByRole("button", { name: "Google" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Apple" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription("Google and Apple sign-in are ready.");
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Continue with Apple" })).toBeEnabled();
 
     fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));
     fireEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
@@ -149,7 +149,7 @@ describe("AuthModal focus restore", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password123" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create free account" }));
     expect(screen.getByRole("alert")).toHaveTextContent(/confirm that you are 18 or older/i);
   });
 
