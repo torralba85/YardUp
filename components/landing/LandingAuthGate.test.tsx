@@ -5,6 +5,11 @@ import LandingAuthGate from "./LandingAuthGate";
 const authMock = vi.hoisted(() => ({
   user: null as { uid: string } | null,
   loading: false,
+  modalProps: null as null | {
+    initialMode?: string;
+    analyticsSurface?: string;
+    analyticsSource?: string;
+  },
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -20,11 +25,18 @@ vi.mock("@/components/auth/AuthModal", () => ({
   AuthModal: ({
     isOpen,
     onClose,
+    initialMode,
+    analyticsSurface,
+    analyticsSource,
   }: {
     isOpen: boolean;
     onClose: (reason: "signed-in" | "dismissed") => void;
-  }) =>
-    isOpen ? (
+    initialMode?: string;
+    analyticsSurface?: string;
+    analyticsSource?: string;
+  }) => {
+    authMock.modalProps = { initialMode, analyticsSurface, analyticsSource };
+    return isOpen ? (
       <div role="dialog" aria-label="Sign in to continue">
         <button onClick={() => onClose("dismissed")}>Close</button>
         <button
@@ -37,7 +49,8 @@ vi.mock("@/components/auth/AuthModal", () => ({
           Sign in
         </button>
       </div>
-    ) : null,
+    ) : null;
+  },
 }));
 
 /**
@@ -49,6 +62,7 @@ describe("LandingAuthGate", () => {
   beforeEach(() => {
     authMock.user = null;
     authMock.loading = false;
+    authMock.modalProps = null;
   });
 
   it("shows the sign-in modal to a guest and hands nothing off", () => {
@@ -61,6 +75,18 @@ describe("LandingAuthGate", () => {
       screen.getByRole("dialog", { name: /sign in to continue/i }),
     ).toBeInTheDocument();
     expect(onAuthenticated).not.toHaveBeenCalled();
+  });
+
+  it("opens the exhausted-guest handoff in signup mode with funnel context", () => {
+    render(
+      <LandingAuthGate onAuthenticated={vi.fn()} onDismiss={vi.fn()} />,
+    );
+
+    expect(authMock.modalProps).toEqual({
+      initialMode: "sign-up",
+      analyticsSurface: "landing",
+      analyticsSource: "guest_limit",
+    });
   });
 
   it("stays silent while the session is still resolving", () => {
