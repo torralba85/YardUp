@@ -76,7 +76,7 @@ jobs:
           cache: npm
       - if: steps.gate.outputs.run_canary == 'true'
         run: npm ci
-      - name: Run production signup canary
+      - name: Run production signup + login canary
         if: steps.gate.outputs.run_canary == 'true'
         run: npm run smoke:signup
         env:
