@@ -51,12 +51,14 @@ const nativeStoreSecrets = [
   ...(googlePlaySecretParams ? Object.values(googlePlaySecretParams) : []),
 ];
 
-// The TypeSafe geocode picker is opt-in: it spends metered quota, guest
-// lookups included. Its key is bound behind the same flag the route reads, so
-// a deploy never prompts for a secret that has not been created. Set it with:
+// The TypeSafe uses on `api` are opt-in: each spends metered quota, guest
+// geocode lookups included. The key is bound only when one of the flags the
+// routes read is on (geocode picker, zoning shadow classifier), so a deploy
+// never prompts for a secret that has not been created. Set it with:
 //   firebase functions:secrets:set TYPESAFE_API_KEY_SECRET
 const typeSafeApiKey =
-  process.env.TYPESAFE_GEOCODE_PICKER === "true"
+  process.env.TYPESAFE_GEOCODE_PICKER === "true" ||
+  process.env.TYPESAFE_ZONING_SHADOW === "true"
     ? defineSecret("TYPESAFE_API_KEY_SECRET")
     : null;
 const apiSecrets = [

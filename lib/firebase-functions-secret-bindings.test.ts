@@ -52,9 +52,9 @@ describe("Firebase Functions provider secret bindings", () => {
     expect(functionsEntry).toMatch(
       /const apiSecrets = \[\s*googleMapsApiKey,\s*googlePlacesServerKey,\s*regridApiKey,\s*\.\.\.\(typeSafeApiKey \? \[typeSafeApiKey\] : \[\]\),\s*\]/,
     );
-    // Opt-in, like native store: never bound unless the picker flag is on.
+    // Opt-in, like native store: never bound unless a TypeSafe flag is on.
     expect(functionsEntry).toMatch(
-      /const typeSafeApiKey =\s*process\.env\.TYPESAFE_GEOCODE_PICKER === "true"\s*\? defineSecret\("TYPESAFE_API_KEY_SECRET"\)\s*: null;/,
+      /const typeSafeApiKey =\s*process\.env\.TYPESAFE_GEOCODE_PICKER === "true" \|\|\s*process\.env\.TYPESAFE_ZONING_SHADOW === "true"\s*\? defineSecret\("TYPESAFE_API_KEY_SECRET"\)\s*: null;/,
     );
     expect(functionsEntry).toContain(
       "{ ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] }",
@@ -81,6 +81,10 @@ describe("Firebase Functions provider secret bindings", () => {
     );
     expect(envWrite).toContain(
       'TYPESAFE_GEOCODE_PICKER="${{ secrets.TYPESAFE_GEOCODE_PICKER }}"',
+    );
+    // A flag, not a credential: a repository variable, like the key it gates.
+    expect(envWrite).toContain(
+      'TYPESAFE_ZONING_SHADOW="${{ vars.TYPESAFE_ZONING_SHADOW }}"',
     );
     expect(envWrite).not.toMatch(
       /GOOGLE_MAPS_API_KEY|GOOGLE_PLACES_SERVER_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON|TYPESAFE_API_KEY/,

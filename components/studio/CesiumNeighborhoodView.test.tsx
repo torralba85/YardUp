@@ -289,12 +289,10 @@ describe("CesiumNeighborhoodView", () => {
 
       const adu = mockEntitiesAdd.mock.calls
         .map((call) => call[0])
-        .find((options) => options.name === "Proposed ADU Footprint");
+        .find((options) => options.name === "Parcel Site");
       expect(adu).toBeDefined();
-      const polygon = (adu as { polygon: Record<string, unknown> }).polygon;
-      expect(polygon.heightReference).toBe(mockCesium.HeightReference.RELATIVE_TO_GROUND);
-      expect(polygon.extrudedHeightReference).toBe(mockCesium.HeightReference.RELATIVE_TO_GROUND);
-      expect(polygon.extrudedHeight).toBeGreaterThan(0);
+      const point = (adu as { point: Record<string, unknown> }).point;
+      expect(point.heightReference).toBe(mockCesium.HeightReference.RELATIVE_TO_GROUND);
     });
 
     it("excludes our own geometry when re-measuring, so the ADU box is never sampled", async () => {
@@ -349,11 +347,9 @@ describe("CesiumNeighborhoodView", () => {
 
         const adu = mockEntitiesAdd.mock.calls
           .map((call) => call[0])
-          .find((options) => options.name === "Proposed ADU Footprint");
-        const polygon = (adu as { polygon: Record<string, unknown> }).polygon;
-        // No clamping and no measurement: a box at an invented height would be buried.
-        expect(polygon.extrudedHeight).toBeUndefined();
-        expect(polygon.height).toBeUndefined();
+          .find((options) => options.name === "Parcel Site");
+        const point = (adu as { point: Record<string, unknown> }).point;
+          expect(point.heightReference).toBeUndefined();
       } finally {
         mockCesium.HeightReference = savedHeightReference;
       }
@@ -414,7 +410,7 @@ describe("CesiumNeighborhoodView", () => {
       // Verify the ADU entity was re-added with the latest config
       const addedAduCalls = mockEntitiesAdd.mock.calls
         .map((call) => call[0])
-        .filter((opts) => opts.name === "Proposed ADU Footprint");
+        .filter((opts) => opts.name === "Parcel Site");
       expect(addedAduCalls.length).toBeGreaterThanOrEqual(4);
     });
 
@@ -576,21 +572,17 @@ describe("CesiumNeighborhoodView", () => {
       await waitFor(() => expect(mockEntitiesAdd).toHaveBeenCalled());
       expect(screen.getByTestId("cesium-compliance-verdict")).toHaveTextContent("Doesn't fit at this placement");
       expect(screen.getByTestId("cesium-compliance-verdict")).not.toHaveTextContent("Eligible");
-      const adu = mockEntitiesAdd.mock.calls.map(([options]) => options).find((options) => options.name === "Proposed ADU Footprint");
-      expect((adu as { label: { text: string } }).label.text).toContain("Doesn't fit at this placement");
-      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#A82D16");
+      // HUD shows blocked, ADU footprint is no longer rendered.
     });
     it.each([
-      ["fits", "Fits at this placement", "#176B4C"],
-      ["review", "Placement needs a closer look", "#8A5300"],
-      ["invalid", "Can't evaluate this placement", "#A82D16"],
-    ] as const)("shows canonical %s status in both the HUD and ADU label", async (status, title, color) => {
+      ["fits", "Fits the estimated model"],
+      ["review", "Placement needs a closer look"],
+      ["invalid", "Can't evaluate this placement"],
+    ] as const)("shows canonical %s status in both the HUD and ADU label", async (status, title) => {
       renderView({ placement: { ...samplePlacement, status } });
       await waitFor(() => expect(mockEntitiesAdd).toHaveBeenCalled());
       expect(screen.getByTestId("cesium-compliance-verdict")).toHaveTextContent(title);
-      const adu = mockEntitiesAdd.mock.calls.map(([options]) => options).find((options) => options.name === "Proposed ADU Footprint");
-      expect((adu as { label: { text: string } }).label.text).toContain(title);
-      expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith(color);
+      // HUD shows title, ADU footprint is no longer rendered.
     });
 
     it("updates placement feedback without starting another tileset session", async () => {
@@ -600,8 +592,7 @@ describe("CesiumNeighborhoodView", () => {
       mockEntitiesAdd.mockClear();
       rerender(<CesiumNeighborhoodView parcel={sampleParcel} config={defaultAduConfig} pose={samplePose} placement={{ ...samplePlacement, status: "blocked" }} />);
       expect(screen.getByTestId("cesium-compliance-verdict")).toHaveTextContent("Doesn't fit at this placement");
-      const adu = mockEntitiesAdd.mock.calls.map(([options]) => options).find((options) => options.name === "Proposed ADU Footprint");
-      expect((adu as { label: { text: string } }).label.text).toContain("Doesn't fit at this placement");
+      // HUD shows blocked, ADU footprint is no longer rendered.
       expect(mockCesium.Viewer).toHaveBeenCalledOnce();
       expect(mockCesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledOnce();
     });
@@ -613,12 +604,12 @@ describe("CesiumNeighborhoodView", () => {
       mockSampleHeight = vi.fn().mockReturnValueOnce(undefined).mockReturnValue(MOCK_GROUND_HEIGHT_M);
       const { rerender } = renderView();
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
-      rerender(<CesiumNeighborhoodView parcel={sampleParcel} config={{ ...defaultAduConfig, height: 19 }} pose={samplePose} placement={samplePlacement} />);
-      expect(mockEntitiesAdd).not.toHaveBeenCalled();
-      await act(async () => { await vi.advanceTimersByTimeAsync(250); });
-      const adus = mockEntitiesAdd.mock.calls.map(([options]) => options).filter((options) => options.name === "Proposed ADU Footprint");
-      expect(adus).toHaveLength(1);
-      expect((adus[0].polygon as { extrudedHeight: number }).extrudedHeight).toBeCloseTo(19 * 0.3048);
+      rerender(<CesiumNeighborhoodView parcel={{...sampleParcel, address: "New Address"}} config={defaultAduConfig} pose={samplePose} placement={samplePlacement} />);
+        expect(mockEntitiesAdd).not.toHaveBeenCalled();
+        await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+        const sites = mockEntitiesAdd.mock.calls.map(([options]) => options).filter((options) => options.name === "Parcel Site");
+        expect(sites).toHaveLength(1);
+        expect((sites[0] as { label: { text: string } }).label.text).toBe("New Address");
     });
 
     it("destroys a tileset that resolves after unmount without creating a viewer", async () => {

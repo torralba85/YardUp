@@ -6,8 +6,10 @@ import {
   calculateFeasibility,
   defaultAduConfig,
   defaultFinancialAssumptions,
+  getParcelById,
   parcelPresets,
 } from "@/lib/feasibility";
+import { mergeScenarioPartial, parseScenarioParams } from "@/lib/scenario-url";
 
 const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
@@ -270,6 +272,56 @@ describe("landing address handoff", () => {
         }).format(scenarios[2].rent),
       ),
     ).toBeVisible();
+  });
+
+  it("shows the engine's market-case result in the hero and opens the demo lot from it", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const sample = screen.getByRole("link", {
+      name: "Open the Seattle sample lot in the 3D studio",
+    });
+    const market = scenarios[1];
+    const usd = (value: number) =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(value);
+    expect(new URLSearchParams(sample.getAttribute("href")!.split("?")[1]).get("rent")).toBe("market");
+    expect(within(sample).getByText(/market rent/)).toBeVisible();
+    expect(within(sample).getByText(usd(market.rent))).toBeVisible();
+    expect(within(sample).getByText(String(market.payback))).toBeVisible();
+    fireEvent.click(sample);
+    expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(consumeEntrySource()).toBe("landing_cta");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("reproduces the advertised market figures through the scenario parser", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const href = screen
+      .getByRole("link", { name: "Open the Seattle sample lot in the 3D studio" })
+      .getAttribute("href")!;
+    const merged = mergeScenarioPartial(
+      parseScenarioParams(new URLSearchParams(href.split("?")[1])),
+    );
+    expect(merged.parcelId).toBe(parcelPresets[0].id);
+    expect(merged.config).toMatchObject({
+      footprint: 600,
+      roof: "shed",
+      finish: "cedar",
+      includeOpenings: true,
+    });
+    expect(merged.assumptions.rentScenario).toBe("market");
+    const market = scenarios[1];
+    const result = calculateFeasibility(
+      getParcelById(merged.parcelId),
+      merged.config,
+      merged.assumptions,
+    );
+    expect(result.monthlyRent).toBe(market.rent);
+    expect(result.paybackYears).toBe(market.payback);
+    expect(result.costLow).toBe(market.costLow);
+    expect(result.costHigh).toBe(market.costHigh);
   });
 
   it("clears a typed address when the visitor chooses the explicit demo", () => {

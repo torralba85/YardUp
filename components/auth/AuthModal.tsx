@@ -51,6 +51,26 @@ const FOCUSABLE_SELECTOR =
   'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
 /**
+ * Sign-up subline for the moment the modal opened.
+ *
+ * The prompt appears at three very different points: the visitor just spent
+ * their free lookup, just saw their own lot's numbers, or just tried to save.
+ * One generic sentence undersells all three, so each names what the free
+ * account gives *that* person. Only benefits that exist today are claimed.
+ */
+function signUpBlurb(source: AuthPromptSource): string {
+  switch (source) {
+    case "guest_limit":
+      return "That was your free address lookup. A free account lets you look up more lots and keep your 3D design. No card needed.";
+    case "post_result":
+    case "save_scenario":
+      return "Create a free account to save this lot and come back to your numbers and 3D design any time. No card needed.";
+    default:
+      return "Create an account to save ADU estimates, reports, and builder-ready snapshots.";
+  }
+}
+
+/**
  * Modal that toggles between sign-in and sign-up, supporting email/password
  * and Google sign-in via {@link useAuth}. Renders nothing when closed.
  *
@@ -443,7 +463,7 @@ export function AuthModal({
           </h2>
           <p className="lf-body-sm mb-6 text-lf-taupe">
             {isSignUp
-              ? "Create an account to save ADU estimates, reports, and builder-ready snapshots."
+              ? signUpBlurb(analyticsSource)
               : "Sign in to access your saved ADU estimates, reports, and builder-ready snapshots."}
           </p>
 
@@ -599,9 +619,13 @@ export function AuthModal({
               </div>
             </div>
 
+            <p id="auth-social-consent-help" className="mt-4 text-xs leading-5 text-lf-taupe" aria-live="polite">
+              {legalAccepted ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
+            </p>
             <button
               type="button"
               onClick={handleGoogleSignIn}
+              aria-describedby="auth-social-consent-help"
               disabled={loading || !legalAccepted}
               className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -628,6 +652,7 @@ export function AuthModal({
             <button
               type="button"
               onClick={handleAppleSignIn}
+              aria-describedby="auth-social-consent-help"
               disabled={loading || !legalAccepted}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >

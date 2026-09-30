@@ -22,13 +22,18 @@ function parcelState(parcel: Parcel): string {
   return match?.[1]?.toUpperCase() ?? "";
 }
 
-function residentialZoning(parcel: Parcel): RuleCheck {
-  if (!("zoning" in parcel)) return "unknown";
-  const zoning = String((parcel as LiveParcelData).zoning ?? "").trim().toUpperCase();
+/** Whether a raw zoning designation reads as residential, by code pattern. */
+export function residentialZoningCode(rawZoning: string): RuleCheck {
+  const zoning = rawZoning.trim().toUpperCase();
   if (!zoning || zoning === "UNKNOWN") return "unknown";
   if (/RESIDENTIAL|SINGLE[- ]?FAMILY|MULTI[- ]?FAMILY/.test(zoning)) return "yes";
   if (/^(R|RS|RM|RD|RL|RH|SF|MF|LDR|MDR|HDR)(?:[-\s\d]|$)/.test(zoning)) return "yes";
   return "no";
+}
+
+function residentialZoning(parcel: Parcel): RuleCheck {
+  if (!("zoning" in parcel)) return "unknown";
+  return residentialZoningCode(String((parcel as LiveParcelData).zoning ?? ""));
 }
 
 /**

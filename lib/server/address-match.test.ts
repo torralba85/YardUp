@@ -1,0 +1,251 @@
+import { describe, expect, it } from "vitest";
+import {
+  type SitusFieldNames,
+  compareSitus,
+  normalizeCity,
+  parseStreetAddress,
+  readSitusRecord,
+  situsOutFields,
+} from "./address-match";
+
+/** The field names of King County's address-enriched parcel layer. */
+const KING_FIELDS: SitusFieldNames = {
+  id: "PIN",
+  line: "ADDR_FULL",
+  cities: ["CTYNAME", "POSTALCTYNAME"],
+  zip: "ZIP5",
+  state: "STATE_ABBR",
+  area: "Shape__Area",
+};
+
+function situs(overrides: Record<string, unknown> = {}) {
+  const record = readSitusRecord(
+    {
+      PIN: "8562901005",
+      ADDR_FULL: "1421 NE 88TH ST",
+      CTYNAME: "SEATTLE",
+      POSTALCTYNAME: "SEATTLE",
+      ZIP5: "98115",
+      STATE_ABBR: "WA",
+      ...overrides,
+    },
+    KING_FIELDS,
+  );
+  if (!record) throw new Error("fixture must publish identity and situs");
+  return record;
+}
+
+const SEARCH = parseStreetAddress("1421 NE 88th St, Seattle, WA 98115, USA");
+if (!SEARCH) throw new Error("fixture must parse");
+
+describe("parseStreetAddress", () => {
+  it("reads a Google-style formatted address", () => {
+    expect(SEARCH).toEqual({
+      houseNumber: "1421",
+      street: "NE 88 ST",
+      city: "SEATTLE",
+      state: "WA",
+      zip: "98115",
+    });
+  });
+
+  it("normalizes a Nominatim-style address with spelled-out directional and suffix", () => {
+    expect(parseStreetAddress("1421 Northeast 88th Street, Seattle, WA 98115")).toEqual(
+      SEARCH,
+    );
+  });
+
+  it("reads state and ZIP given as separate trailing parts", () => {
+    expect(parseStreetAddress("1421 NE 88th St, Seattle, WA, 98115")).toEqual(SEARCH);
+  });
+
+  it("drops a unit designator and leading zeros from the house number", () => {
+    const parsed = parseStreetAddress("01421 NE 88th St Apt 4, Seattle, WA");
+    expect(parsed?.houseNumber).toBe("1421");
+    expect(parsed?.street).toBe("NE 88 ST");
+  });
+
+  it("keeps a house-number letter suffix distinct", () => {
+    expect(parseStreetAddress("1245B NE 88th St, Seattle, WA")?.houseNumber).toBe("1245B");
+  });
+
+  it("leaves locality unset when the address carries none", () => {
+    const parsed = parseStreetAddress("1421 NE 88th St");
+    expect(parsed).toEqual({ houseNumber: "1421", street: "NE 88 ST" });
+  });
+
+  it("does not read a two-letter word that is not a state as one", () => {
+    const parsed = parseStreetAddress("1421 NE 88th St, Seattle, ZZ");
+    expect(parsed?.state).toBeUndefined();
+    expect(parsed?.city).toBe("ZZ");
+  });
+
+  it("refuses text that is not a numbered street line", () => {
+    expect(parseStreetAddress("Seattle, WA")).toBeNull();
+    expect(parseStreetAddress("Oak Street, Seattle, WA")).toBeNull();
+    expect(parseStreetAddress("   ")).toBeNull();
+    expect(parseStreetAddress(undefined)).toBeNull();
+  });
+});
+
+describe("normalizeCity", () => {
+  it("folds case, punctuation, and Saint/Mount/Fort", () => {
+    expect(normalizeCity("St. Louis")).toBe("ST LOUIS");
+    expect(normalizeCity("Saint Louis")).toBe("ST LOUIS");
+    expect(normalizeCity("mount  vernon")).toBe("MT VERNON");
+  });
+});
+
+describe("situsOutFields", () => {
+  it("requests exactly the allowlisted attributes, never a wildcard", () => {
+    expect(situsOutFields(KING_FIELDS)).toBe(
+      "PIN,ADDR_FULL,CTYNAME,POSTALCTYNAME,ZIP5,STATE_ABBR,Shape__Area",
+    );
+  });
+
+  it("omits optional fields a layer does not have and never repeats one", () => {
+    expect(
+      situsOutFields({ id: "APN", line: "SITUS", cities: ["CITY", "CITY"] }),
+    ).toBe("APN,SITUS,CITY");
+  });
+});
+
+describe("readSitusRecord", () => {
+  it("reads identity, situs line, every city-like value, ZIP, and state", () => {
+    expect(
+      readSitusRecord(
+        {
+          pin: 6401670000,
+          addr_full: " 1421 NE 88TH ST ",
+          CTYNAME: "SEATTLE",
+          POSTALCTYNAME: "SHORELINE",
+          zip5: "98115-1234",
+          STATE_ABBR: "wa",
+        },
+        KING_FIELDS,
+      ),
+    ).toEqual({
+      id: "6401670000",
+      line: "1421 NE 88TH ST",
+      cities: ["SEATTLE", "SHORELINE"],
+      zip: "98115",
+      state: "WA",
+    });
+  });
+
+  it("surfaces only the allowlisted attributes, even if a server sends more", () => {
+    const record = readSitusRecord(
+      {
+        PIN: "1",
+        ADDR_FULL: "1421 NE 88TH ST",
+        // A server that ignored `outFields` must not leak owner data through us.
+        TAXPAYER_NAME: "SOMEONE",
+        MAILADDR: "PO BOX 1",
+      },
+      KING_FIELDS,
+    );
+    expect(record).toEqual({ id: "1", line: "1421 NE 88TH ST", cities: [] });
+    expect(JSON.stringify(record)).not.toMatch(/SOMEONE|PO BOX/);
+  });
+
+  it("does not treat the lot-area attribute as part of the address record", () => {
+    const record = readSitusRecord(
+      { PIN: "1", ADDR_FULL: "1421 NE 88TH ST", Shape__Area: 5155.45 },
+      KING_FIELDS,
+    );
+    expect(record).toEqual({ id: "1", line: "1421 NE 88TH ST", cities: [] });
+  });
+
+  it("needs both an official identifier and a situs street line", () => {
+    expect(readSitusRecord({ ADDR_FULL: "1421 NE 88TH ST" }, KING_FIELDS)).toBeNull();
+    expect(readSitusRecord({ PIN: "1" }, KING_FIELDS)).toBeNull();
+    expect(readSitusRecord({ PIN: 0, ADDR_FULL: "1421 NE 88TH ST" }, KING_FIELDS)).toBeNull();
+    expect(readSitusRecord({ PIN: "  ", ADDR_FULL: "1421 NE 88TH ST" }, KING_FIELDS)).toBeNull();
+    expect(readSitusRecord(undefined, KING_FIELDS)).toBeNull();
+  });
+
+  it("does not guess at fields the layer did not name", () => {
+    // A situs-looking attribute the config does not list is not read.
+    expect(
+      readSitusRecord({ PIN: "1", SITUS_ADDRESS: "1421 NE 88TH ST" }, KING_FIELDS),
+    ).toBeNull();
+  });
+
+  it("ignores a state that is not a state", () => {
+    expect(situs({ STATE_ABBR: "??" }).state).toBeUndefined();
+  });
+});
+
+describe("compareSitus", () => {
+  it("matches an equal street line and confirms locality from the layer's city and ZIP", () => {
+    expect(compareSitus(SEARCH, situs())).toEqual({
+      verdict: "match",
+      localityConfirmed: true,
+    });
+  });
+
+  it("treats spelling variants of the same street as equal", () => {
+    expect(compareSitus(SEARCH, situs({ ADDR_FULL: "1421 NORTHEAST 88TH STREET" })).verdict).toBe(
+      "match",
+    );
+    expect(compareSitus(SEARCH, situs({ ADDR_FULL: "1421 NE 88 ST" })).verdict).toBe("match");
+    expect(compareSitus(SEARCH, situs({ ADDR_FULL: "1421 NE 88TH ST #B" })).verdict).toBe(
+      "match",
+    );
+  });
+
+  it.each([
+    ["a different house number", "1423 NE 88TH ST"],
+    ["a house-number letter suffix", "1421B NE 88TH ST"],
+    ["a different directional", "1421 NW 88TH ST"],
+    ["a different street number", "1421 NE 89TH ST"],
+    ["a different street type", "1421 NE 88TH AVE"],
+    ["a different street name", "1421 NE 88TH PL"],
+    ["a line that is not a numbered street", "NE 88TH ST"],
+  ])("rejects %s as a different address", (_label, line) => {
+    expect(compareSitus(SEARCH, situs({ ADDR_FULL: line })).verdict).toBe(
+      "different-address",
+    );
+  });
+
+  it("does not match the audit's point parcel to the searched address", () => {
+    // The parcel the audit point falls on is officially 1245B, not 1421.
+    expect(
+      compareSitus(SEARCH, situs({ PIN: "6401670000", ADDR_FULL: "1245B NE 88TH ST" })).verdict,
+    ).toBe("different-address");
+  });
+
+  it("flags the same street line in another city, ZIP, or state as a conflict, never a match", () => {
+    expect(compareSitus(SEARCH, situs({ CTYNAME: "SHORELINE", POSTALCTYNAME: "SHORELINE" })).verdict).toBe(
+      "locality-conflict",
+    );
+    expect(compareSitus(SEARCH, situs({ ZIP5: "98125" })).verdict).toBe("locality-conflict");
+    expect(compareSitus(SEARCH, situs({ STATE_ABBR: "OR" })).verdict).toBe("locality-conflict");
+  });
+
+  it("accepts a city that matches any one of the layer's city-like values", () => {
+    expect(
+      compareSitus(SEARCH, situs({ CTYNAME: "UNINCORPORATED", POSTALCTYNAME: "SEATTLE" })).verdict,
+    ).toBe("match");
+  });
+
+  it("matches without confirmation when the layer publishes neither city nor ZIP", () => {
+    const bare = readSitusRecord({ PIN: "1", ADDR_FULL: "1421 NE 88TH ST" }, KING_FIELDS);
+    expect(bare).not.toBeNull();
+    expect(compareSitus(SEARCH, bare!)).toEqual({
+      verdict: "match",
+      localityConfirmed: false,
+    });
+  });
+
+  it("does not count a matching state alone as confirming the locality", () => {
+    const stateOnly = readSitusRecord(
+      { PIN: "1", ADDR_FULL: "1421 NE 88TH ST", STATE_ABBR: "WA" },
+      KING_FIELDS,
+    );
+    expect(compareSitus(SEARCH, stateOnly!)).toEqual({
+      verdict: "match",
+      localityConfirmed: false,
+    });
+  });
+});

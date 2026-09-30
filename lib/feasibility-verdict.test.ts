@@ -10,6 +10,7 @@ import {
   buildableArea,
   summarizeFeasibility,
 } from "@/lib/feasibility-verdict";
+import type { PlacementResult } from "@/lib/placement-validation";
 
 const preset = parcelPresets[0]; // oak-street: 5000 sf, 40×125, setbacks 20/25/5
 
@@ -74,6 +75,35 @@ describe("buildableArea", () => {
 });
 
 describe("summarizeFeasibility", () => {
+  const fittedPlacement: PlacementResult = {
+    status: "fits", envelopeStatus: "fits", houseStatus: "clear",
+    envelopeClearanceFt: 5, houseClearanceFt: 15, roofClearanceFt: 12,
+    reasons: [], rotatedAlternative: null,
+  };
+
+  it("preserves a curated demo fit's verdict and readiness", () => {
+    const summary = summarizeFeasibility(preset, baseResult(), defaultAduConfig, fittedPlacement);
+    expect(summary.constraints.find((c) => c.id === "placement")?.status).toBe("clear");
+    expect(summary.verdict).toBe("Likely Feasible");
+    expect(summary.readiness).toBe(82);
+    expect(summary.openCount).toBe(2);
+  });
+
+  it.each([null, { type: "Polygon", coordinates: [] }])(
+    "counts an evidence-qualified live model fit as an open review item",
+    (boundaryGeoJson) => {
+      const { expectedRent, ...liveParcel } = preset;
+      expect(expectedRent).toBeDefined();
+      const parcel = { ...liveParcel, source: "regrid", zoning: "R-1", boundaryGeoJson };
+      const summary = summarizeFeasibility(parcel, baseResult(), defaultAduConfig, fittedPlacement);
+      expect(summary.constraints.find((c) => c.id === "placement")?.status).toBe("review");
+      expect(summary.verdict).toBe("Needs Review");
+      expect(summary.readiness).toBe(67);
+      expect(summary.openCount).toBe(3);
+      expect(summary.reviewNote).toBe("3 items to confirm before permit");
+    },
+  );
+
   it("rates the default compliant lot as Likely Feasible / 82", () => {
     const summary = summarizeFeasibility(preset, baseResult(), defaultAduConfig);
     expect(summary.verdict).toBe("Likely Feasible");

@@ -1,0 +1,84 @@
+name: Signup Canary
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  deployments: read
+
+concurrency:
+  group: signup-canary-production
+  cancel-in-progress: false
+
+jobs:
+  signup-canary:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'master' &&
+       (github.event.workflow_run.event == 'push' ||
+        github.event.workflow_run.event == 'workflow_dispatch'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Confirm CI deployed production
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_canary=true" >> "$GITHUB_OUTPUT"
+            echo "checkout_ref=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          deployment_id="$(
+            curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "${{ github.api_url }}/repos/${{ github.repository }}/deployments?environment=firebase-production&sha=$WORKFLOW_SHA&per_page=100" |
+            jq -r --arg run_id "$RUN_ID" 'map(select((.payload.run_id // "" | tostring) == $run_id)) | sort_by(.created_at // "") | last | .id // ""'
+          )"
+
+          deployment_state=""
+          if [ -n "$deployment_id" ]; then
+            deployment_state="$(
+              curl -fsSL \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "${{ github.api_url }}/repos/${{ github.repository }}/deployments/$deployment_id/statuses?per_page=100" |
+              jq -r 'sort_by(.created_at // "") | last | .state // ""'
+            )"
+          fi
+
+          if [ "$deployment_state" = "success" ]; then
+            echo "run_canary=true" >> "$GITHUB_OUTPUT"
+            echo "checkout_ref=$WORKFLOW_SHA" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_canary=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        if: steps.gate.outputs.run_canary == 'true'
+        with:
+          ref: ${{ steps.gate.outputs.checkout_ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        if: steps.gate.outputs.run_canary == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.gate.outputs.run_canary == 'true'
+        run: npm ci
+      - name: Run production signup canary
+        if: steps.gate.outputs.run_canary == 'true'
+        run: npm run smoke:signup
+        env:
+          FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN: ${{ secrets.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

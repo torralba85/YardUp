@@ -18,9 +18,14 @@ import {
   fetchCensusLocation,
 } from "@/lib/server/census-geocode";
 import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
+import { type StreetAddress, parseStreetAddress } from "@/lib/server/address-match";
 import {
+  type AddressParcelResult,
   type CountyParcelResult,
+  addressStageDeadline,
+  fetchCountyParcelByAddress,
   fetchCountyParcelWithDiagnostics,
+  verifyParcelAddressAtPoint,
 } from "@/lib/server/county-parcels";
 import { resolveMarketData } from "@/lib/server/market/resolve-market";
 import {
@@ -31,6 +36,8 @@ import {
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
+import { shadowClassifyZoning } from "@/lib/server/zoning-classifier";
+import { deriveMaxCoverage } from "@/lib/server/zoning-heuristics";
 
 const REGRID_API = "https://app.regrid.com/api/v2/parcels/point";
 const TIMEOUT_MS = 5000;
@@ -49,6 +56,14 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  * preset's typical dimensions. Returns a LiveParcelData object. Requests
  * without a bearer token start at the free county/statewide GIS step, so an
  * anonymous lookup costs nothing but still returns real parcel geometry.
+ *
+ * Where an official address-enriched layer is registered (King County today),
+ * a full `address` is also checked against it. A point-hit parcel is served as
+ * the searched property only if the layer publishes that street address for it;
+ * if the layer contradicts it, or the point found no parcel, the layer is asked
+ * which single parcel publishes the address (see `reconcileAddressParcel`), and
+ * otherwise the response falls back to the estimate with the reason recorded.
+ * Nowhere else is address data inferred.
  *
  * The free US Census geocoder resolves state/ZIP/county alongside the chain
  * for every path, so financials key off the address's own geography even when
@@ -130,6 +145,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (regridRes.status === 401 || regridRes.status === 403) {
+      console.error(JSON.stringify({
+        severity: "ERROR",
+        event: "regrid_auth_failed",
+        status: regridRes.status,
+      }));
+      return await successWithoutRegrid(
+        lat,
+        lng,
+        requestedAddress,
+        censusLocation,
+        [regridAttempt("auth-failed", "Regrid rejected the provider credential.")],
+      );
+    }
+
     if (!regridRes.ok) {
       throw new Error(`Regrid returned ${regridRes.status}`);
     }
@@ -183,6 +213,43 @@ export async function GET(request: NextRequest) {
     }
     const lotAreaSqft = Math.round(gisAcres * 43560);
 
+    // Paid point hits obey the same official identity requirement as guests.
+    // A verified PIN always uses its own situs-layer polygon. An outage does
+    // not assert a conflict, but must reduce confidence in the Regrid hit.
+    const searchedAddress = fullStreetAddress(requestedAddress);
+    const identityDeadline = addressStageDeadline();
+    const regridIdentity = searchedAddress
+      ? await verifyParcelAddressAtPoint(lat, lng, searchedAddress, identityDeadline)
+      : undefined;
+    if (regridIdentity?.verdict === "verified" && regridIdentity.parcel) {
+      const situsAttempt = regridIdentity.attempts.findLast((attempt) => attempt.outcome === "matched");
+      return await countyGisResponse(lat, lng, requestedAddress, regridIdentity.parcel,
+        await censusLocation, [regridAttempt("matched"), ...regridIdentity.attempts], {
+          identity: { kind: "verified", parcelId: regridIdentity.parcelId,
+            localityConfirmed: regridIdentity.localityConfirmed, situsAttempt },
+          boundaryAttempt: situsAttempt,
+        });
+    }
+    if (regridIdentity?.verdict === "mismatch" && searchedAddress) {
+      const lookup = await fetchCountyParcelByAddress(lat, lng, searchedAddress, identityDeadline);
+      const attempts = [regridAttempt("invalid-response", "The official address layer contradicted the paid point hit."),
+        ...regridIdentity.attempts, ...lookup.attempts];
+      const census = await censusLocation;
+      if (lookup.parcel) {
+        const matched = lookup.parcel;
+        return await countyGisResponse(matched.point.lat, matched.point.lng, requestedAddress,
+          matched, census, attempts, {
+            identity: { kind: "matched", parcelId: matched.parcelId, offsetFt: matched.offsetFt,
+              localityConfirmed: matched.localityConfirmed, situsAttempt: matched.attempt },
+            boundaryAttempt: matched.attempt,
+          });
+      }
+      return await presetFallbackResponse(lat, lng, requestedAddress, census, attempts, "conflict");
+    }
+    const identityWarnings = regridIdentity?.verdict === "unverified"
+      ? ["The official address layer could not confirm that this parcel is the searched street address; verify the parcel against county records."]
+      : [];
+
     const regridFootprint = positiveNumber(fields.ll_bldg_footprint_sqft);
     const structuresPromise =
       regridFootprint === null && boundaryGeoJson
@@ -211,6 +278,16 @@ export async function GET(request: NextRequest) {
       structuresPromise,
     ]);
     const loc = mergeLocations(extractRegridLocation(fields), census);
+    // Shadow only: Jev's read of the district class is logged next to the
+    // regex verdicts and never touches this response. Started here so it
+    // overlaps the market-data lookup; it cannot reject.
+    const zoningShadow = shadowClassifyZoning({
+      zoning: fields.zoning,
+      description: fields.zoning_description,
+      state: loc.state,
+      county: loc.county,
+      city: fields.scity ?? fields.city,
+    });
     const marketData = await resolveMarketData({ lat, lng, ...loc });
     const structuresFootprint = positiveNumber(structures?.totalSqft);
     const buildingAreaFallback = positiveNumber(fields.sqft);
@@ -282,11 +359,11 @@ export async function GET(request: NextRequest) {
         version: 1,
         fields: {
           address: addressObserved
-            ? evidence("observed", "high")
+            ? evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings)
             : evidence("derived", "medium", [
                 "The provider did not publish a situs address; the searched address or coordinates were used.",
               ], userInputSource()),
-          lotArea: evidence("observed", "high"),
+          lotArea: evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings),
           lotDimensions: evidence("derived", boundaryGeoJson ? "medium" : "low", [
             boundaryGeoJson
               ? "Lot dimensions are derived from the parcel polygon."
@@ -311,18 +388,20 @@ export async function GET(request: NextRequest) {
                 "Address-specific zoning was unavailable.",
               ]),
           boundaryGeoJson: boundaryGeoJson
-            ? evidence("observed", "high")
+            ? evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings)
             : evidence("unavailable", "unknown", [
                 "The provider did not return a parcel boundary.",
               ]),
         },
-        providerAttempts: [regridAttempt("matched")],
+        providerAttempts: [regridAttempt("matched"), ...(regridIdentity?.attempts ?? [])],
         warnings: [
           "Setbacks and maximum lot coverage require confirmation with the local planning authority.",
+          ...identityWarnings,
         ],
       },
     };
 
+    await zoningShadow;
     return NextResponse.json(parcelData, {
       headers: { "Cache-Control": "private, max-age=3600" },
     });
@@ -366,17 +445,94 @@ async function successWithoutRegrid(
   ]);
   const countyParcel = countyLookup.parcel;
   const providerAttempts = [...priorAttempts, ...countyLookup.attempts];
+  // The geometry layer that answered the point lookup; the address checks below
+  // add their own attempts and must not be mistaken for the boundary's source.
+  const pointAttempt = countyLookup.attempts.findLast(
+    (attempt) => attempt.provider === "ArcGIS" && attempt.outcome === "matched",
+  );
+  const address = fullStreetAddress(requestedAddress);
+  // One deadline for the whole address stage (verify, then look up).
+  const deadline = addressStageDeadline();
 
-  // A GIS hit without a usable area cannot describe a lot, so it falls
-  // through to the preset rather than yielding a zero-area parcel.
+  // A point parcel that the official address layer contradicts is not the
+  // searched property, however well the polygon contains the point.
+  let contradicted = false;
   if (countyParcel && (countyParcel.lotAreaSqft ?? 0) > 0) {
+    let identity: AddressIdentity | undefined;
+    if (address) {
+      const check = await verifyParcelAddressAtPoint(lat, lng, address, deadline);
+      providerAttempts.push(...check.attempts);
+      if (check.verdict === "verified" && check.parcel) {
+        // The PIN and boundary must come from the same official feature, not
+        // two independently selected overlapping/condominium tax parcels.
+        return await countyGisResponse(lat, lng, requestedAddress, check.parcel, census, providerAttempts, {
+          identity: {
+            kind: "verified", parcelId: check.parcelId,
+            localityConfirmed: check.localityConfirmed,
+            situsAttempt: check.attempts.findLast((attempt) => attempt.outcome === "matched"),
+          },
+          boundaryAttempt: check.attempts.findLast((attempt) => attempt.outcome === "matched"),
+        });
+      } else if (check.verdict === "verified") {
+        identity = { kind: "unverified" };
+      } else if (check.verdict === "unverified") {
+        identity = { kind: "unverified" };
+      } else if (check.verdict === "mismatch") {
+        contradicted = true;
+      }
+      // "unsupported": no address layer is registered here, so nothing was
+      // asked and the response is exactly what it was before.
+    }
+    // A GIS hit without a usable area cannot describe a lot, so it falls
+    // through to the preset rather than yielding a zero-area parcel.
+    if (!contradicted) {
+      return await countyGisResponse(
+        lat,
+        lng,
+        requestedAddress,
+        countyParcel,
+        census,
+        providerAttempts,
+        { identity, boundaryAttempt: pointAttempt },
+      );
+    }
+  }
+
+  // Either the point found no parcel or its parcel was contradicted. A geocoder
+  // can return a street-side, interpolated, or next-door point for a real
+  // address, so before settling for a demo preset, ask the official address
+  // layer which single parcel publishes that street address.
+  const reconciliation =
+    countyParcel && !contradicted
+      ? null
+      : await reconcileAddressParcel(
+          lat,
+          lng,
+          address,
+          countyLookup.attempts,
+          contradicted,
+          deadline,
+        );
+  if (reconciliation) providerAttempts.push(...reconciliation.attempts);
+  if (reconciliation?.parcel) {
+    const matched = reconciliation.parcel;
     return await countyGisResponse(
-      lat,
-      lng,
+      matched.point.lat,
+      matched.point.lng,
       requestedAddress,
-      countyParcel,
+      matched,
       census,
       providerAttempts,
+      {
+        identity: {
+          kind: "matched",
+          parcelId: matched.parcelId,
+          offsetFt: matched.offsetFt,
+          localityConfirmed: matched.localityConfirmed,
+          situsAttempt: matched.attempt,
+        },
+        boundaryAttempt: matched.attempt,
+      },
     );
   }
   return await presetFallbackResponse(
@@ -385,10 +541,88 @@ async function successWithoutRegrid(
     requestedAddress,
     census,
     providerAttempts,
+    contradicted
+      ? "conflict"
+      : reconciliation !== null && reconciliation.attempts.length > 0
+        ? "unresolved"
+        : undefined,
   );
 }
 
-/** Build a LiveParcelData from a free county/statewide GIS parcel polygon. */
+/**
+ * The searched address, when it is complete enough to verify a parcel against:
+ * a numbered street line plus a city or ZIP. A bare "1421 NE 88th St" is never
+ * checked, so one town's street cannot match another's.
+ */
+function fullStreetAddress(requestedAddress: string | undefined): StreetAddress | null {
+  const address = parseStreetAddress(requestedAddress);
+  return address && (address.city || address.zip) ? address : null;
+}
+
+/**
+ * How a parcel's official street address relates to the searched one. Absent
+ * means no address layer covers the area, so nothing was checked.
+ *
+ * - `verified`: the official parcel at the searched point publishes the address.
+ * - `matched`: the point missed or contradicted, and the one parcel publishing
+ *   the address was found by looking it up.
+ * - `unverified`: an address layer covers the area but could not answer.
+ */
+interface AddressIdentity {
+  kind: "verified" | "matched" | "unverified";
+  /** The official parcel identifier the address was verified against. */
+  parcelId?: string;
+  /** Feet from the searched point to the matched parcel (`matched` only). */
+  offsetFt?: number;
+  /** Whether the layer's own city or ZIP confirmed the address. */
+  localityConfirmed?: boolean;
+  /** The address-layer attempt that vouched for the address. */
+  situsAttempt?: ProviderAttempt;
+}
+
+/**
+ * Address-driven reconciliation for a searched address whose point found no
+ * parcel, or whose point parcel the official address layer contradicted.
+ * Returns null when there is nothing to reconcile: no full street address was
+ * supplied, or (for a point miss) no service ever answered "nothing here" — an
+ * outage would only repeat and double the caller's wait.
+ *
+ * Runs only against the free public address layers, so it is identical for
+ * guests and members and can never spend metered Google or Regrid quota.
+ */
+async function reconcileAddressParcel(
+  lat: number,
+  lng: number,
+  address: StreetAddress | null,
+  pointAttempts: ProviderAttempt[],
+  contradicted: boolean,
+  deadline: number,
+): Promise<{ parcel: AddressParcelResult | null; attempts: ProviderAttempt[] } | null> {
+  if (!address) return null;
+  if (
+    !contradicted &&
+    !pointAttempts.some(
+      (attempt) => attempt.outcome === "no-match" || attempt.outcome === "invalid-response",
+    )
+  ) {
+    return null;
+  }
+  const lookup = await fetchCountyParcelByAddress(lat, lng, address, deadline);
+  // A point whose parcel was contradicted stays "refused" even when no address
+  // layer produced an attempt (e.g. the stage ran out of time).
+  return lookup.attempts.length === 0 && !contradicted && !lookup.parcel ? null : lookup;
+}
+
+/**
+ * Build a LiveParcelData from a free county/statewide GIS parcel polygon.
+ *
+ * `options.identity` records how the parcel's official street address relates
+ * to the searched one (absent when no address layer covers the area, which
+ * leaves the response exactly as it was). A parcel found by looking the address
+ * up (`matched`) is reported at lower confidence than a point hit, and its
+ * `lat`/`lng` are the in-parcel point the caller passes in. `boundaryAttempt`
+ * names the layer whose geometry this is.
+ */
 async function countyGisResponse(
   lat: number,
   lng: number,
@@ -396,7 +630,9 @@ async function countyGisResponse(
   countyParcel: CountyParcelResult,
   census: CensusLocation | null,
   providerAttempts: ProviderAttempt[],
+  options: { identity?: AddressIdentity; boundaryAttempt?: ProviderAttempt } = {},
 ): Promise<NextResponse> {
+  const { identity, boundaryAttempt } = options;
   const lotArea = countyParcel.lotAreaSqft as number;
   const { lotWidth, lotLength } =
     orientedLotDimensions(countyParcel.polygon, lotArea) ??
@@ -424,16 +660,47 @@ async function countyGisResponse(
     fetchBuildingFootprint(countyParcel.polygon),
   ]);
   const retrievedAt = new Date().toISOString();
-  const matchedProvider = providerAttempts.findLast(
-    (attempt) => attempt.provider === "ArcGIS" && attempt.outcome === "matched",
-  );
-  const parcelSource = matchedProvider
+  const parcelSource = {
+    provider: boundaryAttempt?.provider ?? "ArcGIS",
+    dataset: boundaryAttempt?.dataset ?? `${countyParcel.county} parcels`,
+    ...(boundaryAttempt?.sourceUrl ? { sourceUrl: boundaryAttempt.sourceUrl } : {}),
+    // The official parcel identifier the searched address was verified against.
+    ...(identity?.parcelId ? { recordId: identity.parcelId } : {}),
+  };
+  // Geometry and area come from an official record either way. Confidence in
+  // "this is the searched lot" depends on how the address was tied to it: a
+  // verified point hit is as strong as before, a parcel found by looking the
+  // address up (point moved) or one the address layer could not confirm is not.
+  const addressVerified = identity?.kind === "verified" || identity?.kind === "matched";
+  const boundaryConfidence: DataEvidence["confidence"] =
+    identity?.kind === "matched" || identity?.kind === "unverified" ? "medium" : "high";
+  const boundaryWarnings =
+    identity?.kind === "matched"
+      ? [
+          `The searched point did not fall on a parcel published under the searched address, so this parcel was matched by its published street address instead (${identity.offsetFt ?? 0} ft from the searched point) and the reported coordinates were moved inside it.${
+            identity.localityConfirmed === false
+              ? " The layer published no city or ZIP to confirm the match."
+              : ""
+          } Verify the parcel against county records.`,
+        ]
+      : identity?.kind === "unverified"
+        ? [
+            "The official address layer could not confirm that this parcel is the searched street address; verify the parcel against county records.",
+          ]
+        : [];
+  // Only a parcel whose official address was actually checked earns a
+  // stronger address record than "the searched text"; the display value is
+  // still the searched address, hence derived, not observed.
+  const addressSource = identity?.situsAttempt
     ? {
-        provider: matchedProvider.provider,
-        dataset: matchedProvider.dataset,
-        sourceUrl: matchedProvider.sourceUrl,
+        provider: identity.situsAttempt.provider,
+        dataset: identity.situsAttempt.dataset,
+        ...(identity.situsAttempt.sourceUrl
+          ? { sourceUrl: identity.situsAttempt.sourceUrl }
+          : {}),
+        ...(identity.parcelId ? { recordId: identity.parcelId } : {}),
       }
-    : { provider: "ArcGIS", dataset: `${countyParcel.county} parcels` };
+    : undefined;
   const structuresSqft = positiveNumber(structures?.totalSqft);
 
   const parcel: LiveParcelData = {
@@ -460,20 +727,34 @@ async function countyGisResponse(
     dataQuality: {
       version: 1,
       fields: {
-        address: fieldEvidence({
-          status: "derived",
-          confidence: "medium",
-          source: userInputSource(),
-          retrievedAt,
-          warnings: [
-            "The display address comes from the searched address and Census geography, not the parcel layer.",
-          ],
-        }),
+        address:
+          addressVerified && addressSource
+            ? fieldEvidence({
+                status: "derived",
+                confidence: identity?.localityConfirmed === false ? "medium" : "high",
+                source: addressSource,
+                retrievedAt,
+                warnings: [
+                  "The display address is the searched address, checked against the parcel's official published street address.",
+                  ...(identity?.kind === "matched" ? boundaryWarnings : []),
+                ],
+              })
+            : fieldEvidence({
+                status: "derived",
+                confidence: "medium",
+                source: userInputSource(),
+                retrievedAt,
+                warnings: [
+                  "The display address comes from the searched address and Census geography, not the parcel layer.",
+                  ...boundaryWarnings,
+                ],
+              }),
         lotArea: fieldEvidence({
           status: "observed",
-          confidence: "high",
+          confidence: boundaryConfidence,
           source: parcelSource,
           retrievedAt,
+          warnings: boundaryWarnings,
         }),
         lotDimensions: fieldEvidence({
           status: "derived",
@@ -516,14 +797,16 @@ async function countyGisResponse(
         }),
         boundaryGeoJson: fieldEvidence({
           status: "observed",
-          confidence: "high",
+          confidence: boundaryConfidence,
           source: parcelSource,
           retrievedAt,
+          warnings: boundaryWarnings,
         }),
       },
       providerAttempts,
       warnings: [
         "Zoning, setbacks, and maximum lot coverage are unverified; confirm local planning rules.",
+        ...boundaryWarnings,
       ],
     },
   };
@@ -538,8 +821,23 @@ async function presetFallbackResponse(
   requestedAddress: string | undefined,
   census: CensusLocation | null,
   providerAttempts: ProviderAttempt[],
+  addressIssue?: "unresolved" | "conflict",
 ): Promise<NextResponse> {
   const preset = nearestPreset(lat, lng);
+  // Set when a street-address check ran and still found no single official
+  // parcel, so the fallback says the match was tried rather than never made.
+  // `conflict` is stronger: the official address layer positively contradicted
+  // the parcel at the searched point, so the point's parcel was withheld.
+  const issueWarnings =
+    addressIssue === "conflict"
+      ? [
+          "The parcel at the searched point is published under a different street address than the one searched, and no single official parcel matched the searched address; the parcel shown is an estimate, not the searched property.",
+        ]
+      : addressIssue === "unresolved"
+        ? [
+            "The searched street address could not be matched to a single official parcel record.",
+          ]
+        : [];
   // The preset only lends typical *dimensions*, never its identity: a
   // coordinate-only lookup reports its own coordinates and whatever geography
   // the Census geocoder resolved, not the preset's street address.
@@ -584,11 +882,14 @@ async function presetFallbackResponse(
       fields: {
         address: fieldEvidence({
           status: "derived",
-          confidence: "medium",
+          // No source verified this address against a parcel; when a check ran
+          // and failed, that is recorded here as evidence rather than dropped.
+          confidence: addressIssue ? "low" : "medium",
           source: userInputSource(),
           retrievedAt,
           warnings: [
             "The display address comes from the searched address and Census geography.",
+            ...issueWarnings,
           ],
         }),
         lotArea: fieldEvidence({
@@ -640,12 +941,16 @@ async function presetFallbackResponse(
           confidence: "unknown",
           source: presetSource,
           retrievedAt,
-          warnings: ["No parcel boundary provider matched this coordinate."],
+          warnings: [
+            "No parcel boundary provider matched this coordinate.",
+            ...issueWarnings,
+          ],
         }),
       },
       providerAttempts,
       warnings: [
         "No configured parcel provider returned usable property data; physical and regulatory values are demo assumptions.",
+        ...issueWarnings,
       ],
     },
   };
@@ -828,16 +1133,6 @@ function parseSetbacks(
     rear: raw.rear ?? raw.rear_setback ?? DEFAULT_SETBACKS.rear,
     side: raw.side ?? raw.side_setback ?? DEFAULT_SETBACKS.side,
   };
-}
-
-function deriveMaxCoverage(zoning?: string): number {
-  if (!zoning) return 40;
-  const z = zoning.toUpperCase();
-  if (z.includes("R1") || z.includes("R-1")) return 40;
-  if (z.includes("R2") || z.includes("R-2")) return 45;
-  if (z.includes("R3") || z.includes("R-3")) return 50;
-  if (z.includes("MF") || z.includes("RM")) return 55;
-  return 40;
 }
 
 function formatAddress(

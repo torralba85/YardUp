@@ -67,9 +67,9 @@ function cityLabel(city: string) {
 
 /**
  * Native-app entry to the Studio (Android TWA and iOS shell only; the web keeps
- * its direct Studio). Welcome → sign-in → quick guide → address-first
- * workspace, or Welcome → quick guide → demo Studio for a sample city, which
- * needs no account. Each screen gets a history entry so the Android back
+ * its direct Studio). Welcome → quick guide → address-first workspace uses
+ * the same one-lookup guest allowance as the web. Demo cities need no account.
+ * Each screen gets a history entry so the Android back
  * gesture steps back through onboarding instead of leaving the app.
  */
 export default function AppStudioOnboarding({ user }: { user: User | null }) {
@@ -87,11 +87,10 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousView = useRef<Step | null>(null);
 
-  // A signed-in visitor has nothing to do on the sign-in screen, and a
-  // signed-out one can never reach the private workspace.
+  // A signed-in visitor has nothing to do on the legacy sign-in screen.
+  // Guest property studies use FeasibilityStudio, never the private gate.
   let view = step;
   if (view === "sign-in" && user) view = "guide";
-  if (view === "studio" && destination.kind === "property" && !user) view = "sign-in";
 
   useEffect(() => {
     window.history.replaceState(withEntry(window.history.state, initialEntry), "", window.location.href);
@@ -129,7 +128,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
   }
 
   function exploreProperty() {
-    go(user ? "guide" : "sign-in", { to: { kind: "property" } });
+    go("guide", { to: { kind: "property" } });
   }
 
   function chooseDemo(parcelId: string) {
@@ -161,7 +160,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
 
   if (view === "studio") {
     if (destination.kind === "demo") return <FeasibilityStudio demoChosen />;
-    if (user) return <SignedInStudioGate user={user} />;
+    return <PropertyStudio user={user} />;
   }
 
   if (view === "welcome") {
@@ -192,7 +191,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
           Explore my property <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
         </button>
         <p className="mt-2 text-xs leading-relaxed text-lot-stone">
-          {user ? "Signed in. Your studies save to your account." : "Requires a free account so your studies are saved."}
+          {user ? "Signed in. Your studies save to your account." : "Your first address lookup is free. Create an account to save studies or explore another address."}
         </p>
 
         <section aria-labelledby="app-demo-heading" className="mt-8 border-t border-lot-line pt-6">
@@ -226,12 +225,12 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
     return (
       <Screen testId="app-sign-in" onBack={() => go("welcome")}>
         <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.08em] text-lot-stone">Your property</p>
-        <Heading headingRef={headingRef}>Sign in to explore your property.</Heading>
+        <Heading headingRef={headingRef}>Keep exploring your property.</Heading>
         <p className="mt-3 text-[15px] leading-relaxed text-lot-stone">
-          An account unlocks real parcel data for your address and keeps every study you make.
+          Your first address lookup is free. Sign in to save studies and explore more addresses.
         </p>
         <ul className="mt-6 space-y-3 text-sm leading-relaxed">
-          <li className="border-l-2 border-lot-ink pl-3">Load your lot, local zoning, and area rents.</li>
+          <li className="border-l-2 border-lot-ink pl-3">Explore another address with available parcel and market data.</li>
           <li className="border-l-2 border-lot-ink pl-3">Save studies and reports to your account.</li>
         </ul>
         <button type="button" onClick={() => setAuthOpen(true)} className={`${primaryButton} mt-8`}>
@@ -253,7 +252,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
   const guide = [
     demo
       ? { title: `Start in ${cityLabel(demo.city)}`, copy: "A sample lot with typical local rules and rents. Estimates are labelled as demo data." }
-      : { title: "Find your lot", copy: "Search your address. We load the parcel, setbacks, and local rents." },
+      : { title: "Find your lot", copy: "Search your address. Review available parcel and market data, with missing facts and planning assumptions clearly labelled." },
     { title: "Shape your backyard home", copy: "Choose a size and roof style, then see it placed on the lot in 3D." },
     { title: "Check the numbers", copy: "Review estimated cost and rent, and what to confirm with your city." },
   ];
@@ -283,6 +282,17 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
       </p>
     </Screen>
   );
+}
+
+function PropertyStudio({ user }: { user: User | null }) {
+  const [guestStudioStarted, setGuestStudioStarted] = useState(() => !user);
+  // Latch only a mounted guest workspace, not the welcome/guide. Switching
+  // component types on sign-in would discard its unsaved design and the
+  // ParcelProvider lookup queued for auth. A signed-in entry keeps the private
+  // gate; sign-out removes that gate before opening a fresh guest workspace.
+  if (!user && !guestStudioStarted) setGuestStudioStarted(true);
+  if (user && !guestStudioStarted) return <SignedInStudioGate user={user} />;
+  return <FeasibilityStudio />;
 }
 
 function Screen({ testId, onBack, children }: { testId: string; onBack?: () => void; children: ReactNode }) {

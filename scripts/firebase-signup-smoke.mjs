@@ -1,3 +1,7 @@
+import { cert, deleteApp, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
+
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
   projectId: "yardup-2026",
@@ -17,6 +21,7 @@ const appId =
   process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
   DEFAULT_FIREBASE_CONFIG.appId;
 const appCheckDebugToken = process.env.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN;
+const serviceAccountRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
 
 if (!appCheckDebugToken) {
   console.error(
@@ -25,13 +30,41 @@ if (!appCheckDebugToken) {
   process.exit(1);
 }
 
+if (!serviceAccountRaw) {
+  console.error(
+    "Missing FIREBASE_SERVICE_ACCOUNT. Admin cleanup is required for the signup canary.",
+  );
+  process.exit(1);
+}
+
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(serviceAccountRaw);
+} catch {
+  console.error("FIREBASE_SERVICE_ACCOUNT is not valid JSON.");
+  process.exit(1);
+}
+
+const adminApp = initializeApp(
+  {
+    credential: cert({
+      projectId: serviceAccount.project_id,
+      clientEmail: serviceAccount.client_email,
+      privateKey: serviceAccount.private_key,
+    }),
+    projectId,
+  },
+  "signup-smoke-cleanup",
+);
+const adminAuth = getAuth(adminApp);
+const adminDb = getFirestore(adminApp);
+
 const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const email = `lotfoundry-signup-smoke+${suffix}@example.com`;
 const password = `LfSmoke!${Date.now()}xQ`;
 const displayName = "LotFoundry Signup Smoke";
 let appCheckToken = null;
 let session = null;
-let profileCreated = false;
 
 async function exchangeAppCheckDebugToken() {
   const response = await fetch(
@@ -152,25 +185,9 @@ async function verifyProfile({ idToken, uid }) {
   }
 }
 
-async function deleteProfile({ idToken, uid }) {
-  await requestJson(
-    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`,
-    {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${idToken}` },
-    },
-  );
-}
-
-async function deleteAccount(idToken) {
-  await requestJson(
-    `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    },
-  );
+async function cleanupAccount(uid) {
+  await adminDb.collection("users").doc(uid).delete();
+  await adminAuth.deleteUser(uid);
 }
 
 try {
@@ -179,24 +196,22 @@ try {
   session = await createAccount();
   console.log("[signup-smoke] Disposable Firebase Auth user created.");
   await createProfile(session);
-  profileCreated = true;
   console.log("[signup-smoke] Firestore profile and legal consent created.");
   await verifyProfile(session);
   console.log("[signup-smoke] Signup profile verified.");
-  await deleteProfile(session);
-  profileCreated = false;
-  await deleteAccount(session.idToken);
+
+  await cleanupAccount(session.uid);
   session = null;
-  console.log("[signup-smoke] Disposable account cleaned up.");
+  console.log("[signup-smoke] Disposable account cleaned up with Firebase Admin.");
   console.log("[signup-smoke] Firebase signup + profile persistence passed.");
 } catch (error) {
   console.error(
     `[signup-smoke] ${error instanceof Error ? error.message : String(error)}`,
   );
+
   if (session) {
     try {
-      if (profileCreated) await deleteProfile(session);
-      await deleteAccount(session.idToken);
+      await cleanupAccount(session.uid);
       console.error("[signup-smoke] Cleaned up disposable account after failure.");
     } catch (cleanupError) {
       console.error(
@@ -206,5 +221,8 @@ try {
       );
     }
   }
-  process.exit(1);
+
+  process.exitCode = 1;
+} finally {
+  await deleteApp(adminApp);
 }

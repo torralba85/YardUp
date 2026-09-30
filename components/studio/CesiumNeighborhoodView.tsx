@@ -5,8 +5,9 @@ import { AlertCircle, AlertTriangle, CheckCircle2, XCircle, Globe, RefreshCw } f
 import { Button } from "@/components/ui/Button";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
-import { buildAduSceneModel, projectLocalToGeodetic, type Pose2D } from "@/lib/scene-model";
-import { describePlacement, type PlacementResult } from "@/lib/placement-validation";
+import { type Pose2D } from "@/lib/scene-model";
+import { type PlacementResult } from "@/lib/placement-validation";
+import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import { loadCesium } from "@/lib/cesium-loader";
 import {
   describePhotorealRoute,
@@ -34,7 +35,7 @@ export interface CesiumNeighborhoodViewProps {
   placement: PlacementResult;
   onReturnToModel?: () => void;
 }
-const FEET_TO_METERS = 0.3048;
+
 const PLACEMENT_STYLE = {
   clear: { color: "#176B4C", className: "text-status-eligible", Icon: CheckCircle2 },
   review: { color: "#8A5300", className: "text-status-review", Icon: AlertTriangle },
@@ -115,13 +116,12 @@ interface SceneGeometryOptions {
   parcel: Parcel | LiveParcelData;
   config: ADUConfig;
   pose: Pose2D;
-  placement: PlacementResult;
   lat: number;
   lng: number;
 }
 
 /**
- * Adds the parcel pin, boundary, and proposed ADU, and returns the entities so
+ * Adds the address pin and published GIS boundary, and returns the entities so
  * they can be excluded from a later height sample or replaced on refinement.
  *
  * Heights come from Cesium's own ground clamping where the build supports it,
@@ -129,8 +129,8 @@ interface SceneGeometryOptions {
  * measurement. The measured height is the fallback, and draping flat is the
  * last resort: an extruded box at an invented height is the burial bug.
  *
- * Canonical placement feedback supplies the footprint and HUD status.
- * A zoning result alone cannot establish that the proposed position fits.
+ * Conceptual buildings are deliberately absent: address coordinates cannot
+ * establish the model's real-world origin or compass bearing.
  */
 function placeSceneGeometry(
   Cesium: CesiumModule,
@@ -138,7 +138,7 @@ function placeSceneGeometry(
   groundHeightMeters: number | null,
   options: SceneGeometryOptions,
 ): unknown[] {
-  const { parcel, config, pose, placement, lat, lng } = options;
+  const { parcel, lat, lng } = options;
   const added: unknown[] = [];
   const clampToGround = Cesium.HeightReference?.RELATIVE_TO_GROUND;
   const canClamp = typeof clampToGround === "number";
@@ -192,68 +192,6 @@ function placeSceneGeometry(
     );
   }
 
-  // 3. Project Proposed ADU Footprint to geodetic coordinates
-  try {
-    const aduModel = buildAduSceneModel(config, pose);
-    const anchor = { lat, lng };
-    const corners = aduModel.footprintCorners;
-    if (corners && corners.length === 4) {
-      const geodeticCorners = corners.map((corner) => projectLocalToGeodetic(anchor, 0, corner));
-      if (geodeticCorners.every((c): c is { lat: number; lng: number } => c !== null)) {
-        const flatAduCoords = geodeticCorners.flatMap((c) => [c.lng, c.lat]);
-        const aduHeightM = (config.height || 14) * FEET_TO_METERS;
-        const canExtrude = canClamp || groundHeightMeters !== null;
-
-        const feedback = describePlacement(placement);
-        const statusColor = PLACEMENT_STYLE[feedback.tone].color;
-        const statusLabel = feedback.title;
-
-        const centerLng = geodeticCorners.reduce((sum, c) => sum + c.lng, 0) / 4;
-        const centerLat = geodeticCorners.reduce((sum, c) => sum + c.lat, 0) / 4;
-
-        added.push(
-          activeViewer.entities.add({
-            name: "Proposed ADU Footprint",
-            position: Cesium.Cartesian3.fromDegrees(centerLng, centerLat, baseHeight + aduHeightM),
-            label: {
-              text: `Proposed ADU (${statusLabel})`,
-              font: "600 12px Manrope, sans-serif",
-              fillColor: Cesium.Color.fromCssColorString("#161616"),
-              outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
-              outlineWidth: 3,
-              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-              pixelOffset: new Cesium.Cartesian2(0, -10),
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-              ...heightRef,
-            },
-            polygon: {
-              hierarchy: Cesium.Cartesian3.fromDegreesArray(flatAduCoords),
-              material: Cesium.Color.fromCssColorString(statusColor).withAlpha(0.75),
-              outline: true,
-              outlineColor: Cesium.Color.fromCssColorString(statusColor),
-              // With no clamping support and no measurement, the ground height
-              // is unknown: drape the footprint instead of burying a box.
-              ...(canExtrude
-                ? {
-                    height: baseHeight,
-                    extrudedHeight: baseHeight + aduHeightM,
-                    ...(canClamp
-                      ? {
-                          heightReference: clampToGround,
-                          extrudedHeightReference: clampToGround,
-                        }
-                      : {}),
-                  }
-                : {}),
-            },
-          }),
-        );
-      }
-    }
-  } catch {
-    // Keep base parcel site visible if local projection fails
-  }
 
   return added;
 }
@@ -265,7 +203,7 @@ export default function CesiumNeighborhoodView({
   placement,
   onReturnToModel,
 }: CesiumNeighborhoodViewProps) {
-  const placementFeedback = describePlacement(placement);
+  const placementFeedback = describePlacementWithEvidence(placement, parcel);
   const placementStyle = PLACEMENT_STYLE[placementFeedback.tone];
   const PlacementIcon = placementStyle.Icon;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -311,13 +249,11 @@ export default function CesiumNeighborhoodView({
     parcel,
     config,
     pose,
-    placement,
-    lat,
-    lng,
+    lat, lng,
   });
   useEffect(() => {
-    latestPropsRef.current = { parcel, config, pose, placement, lat, lng };
-  }, [parcel, config, pose, placement, lat, lng]);
+    latestPropsRef.current = { parcel, config, pose, lat, lng };
+  }, [parcel, config, pose, lat, lng]);
 
   const viewerRef = useRef<CesiumViewerInstance | null>(null);
   const cesiumModuleRef = useRef<CesiumModule | null>(null);
@@ -608,7 +544,7 @@ export default function CesiumNeighborhoodView({
 
   // ---------------------------------------------------------------------------
   // 2. Geometry Effect (Task 1)
-  // Rebuilds ONLY parcel pin, boundary, and ADU footprint when config, pose, or
+  // Rebuilds ONLY the parcel pin and boundary when model inputs or
   // compliance changes. Does NOT rerun tileset factory, sampling, or camera flight.
   // ---------------------------------------------------------------------------
   useEffect(() => {
@@ -627,7 +563,7 @@ export default function CesiumNeighborhoodView({
       measuredGroundRef.current,
       latestPropsRef.current,
     ));
-  }, [parcel, config, pose, placement]);
+  }, [parcel, config, pose]);
 
   const groundLine = useMemo(() => {
     if (!ground) return null;
@@ -681,6 +617,9 @@ export default function CesiumNeighborhoodView({
           <PlacementIcon size={14} className={`${placementStyle.className} shrink-0`} aria-hidden="true" />
           <span className={placementStyle.className}>{placementFeedback.title}</span>
         </div>
+        <p className="mt-1 text-[11px] leading-tight text-status-review font-medium" data-testid="cesium-context-notice">
+          Context-only imagery. {placementFeedback.missingEvidenceNotice || "Confirm surveyed boundaries and building separations."}
+        </p>
         {photorealNotice && (
           <p className="text-[11px] text-lf-muted" data-testid="cesium-photoreal-notice">
             {photorealNotice}

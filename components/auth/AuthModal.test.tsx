@@ -81,6 +81,23 @@ describe("AuthModal focus restore", () => {
     expect(screen.getByLabelText("Name")).toBeTruthy();
   });
 
+  it.each([
+    ["guest_limit", /That was your free address lookup/],
+    ["post_result", /save this lot and come back/],
+    ["save_scenario", /save this lot and come back/],
+    ["account_control", /save ADU estimates, reports, and builder-ready snapshots/],
+  ] as const)("names what a free account gives when opened from %s", (source, blurb) => {
+    render(
+      <AuthModal
+        isOpen
+        initialMode="sign-up"
+        analyticsSource={source}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByText(blurb)).toBeTruthy();
+  });
+
   it("returns focus to the trigger when it is still mounted", () => {
     render(<Host />);
     const trigger = screen.getByRole("button", { name: "Sign In" });
@@ -111,11 +128,15 @@ describe("AuthModal focus restore", () => {
     render(<AuthModal isOpen onClose={() => {}} />);
 
     const checkbox = screen.getByRole("checkbox", { name: /18 or older/i });
+    expect(checkbox).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription(/confirmation above to enable/);
+    expect(screen.getByRole("button", { name: "Apple" })).toHaveAccessibleDescription(/confirmation above to enable/);
     expect(screen.getByRole("button", { name: "Sign In" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Google" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Apple" })).toBeDisabled();
 
     fireEvent.click(checkbox);
+    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription("Google and Apple sign-in are ready.");
     expect(screen.getByRole("button", { name: "Google" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Apple" })).toBeEnabled();
 

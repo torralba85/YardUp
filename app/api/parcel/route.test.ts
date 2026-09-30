@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
+import { clearZoningCache } from "@/lib/server/zoning-classifier";
 import { GET } from "./route";
 import { extractRegridLocation } from "@/lib/server/parcel-location";
 import type { LiveParcelData } from "@/lib/parcel-types";
@@ -519,6 +520,70 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.lotArea).toBe(6000);
   });
 
+  it("reports a sanitized auth failure and degrades to county GIS on Regrid 401", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    stubProviders({
+      regrid: { ok: false, status: 401, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(
+        rotatedRectPolygon(47.65, -122.31, 50, 120, 0),
+        { Shape__Area: 6000 },
+      ),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31, "123 Secret St, Seattle, WA"));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "auth-failed" }),
+    );
+    expect(error).toHaveBeenCalledOnce();
+    const line = String(error.mock.calls[0][0]);
+    expect(JSON.parse(line)).toEqual({
+      severity: "ERROR",
+      event: "regrid_auth_failed",
+      status: 401,
+    });
+    expect(line).not.toContain("test-token");
+    expect(line).not.toContain("regrid.com");
+    expect(line).not.toContain("123 Secret St");
+  });
+
+  it("reports a sanitized auth failure and degrades to county GIS on Regrid 403", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    stubProviders({
+      regrid: { ok: false, status: 403, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(
+        rotatedRectPolygon(47.65, -122.31, 50, 120, 0),
+        { Shape__Area: 6000 },
+      ),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31, "123 Secret St, Seattle, WA"));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("county-gis");
+    expect(data.lotArea).toBe(6000);
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "auth-failed" }),
+    );
+    expect(error).toHaveBeenCalledOnce();
+    const line = String(error.mock.calls[0][0]);
+    expect(JSON.parse(line)).toEqual({
+      severity: "ERROR",
+      event: "regrid_auth_failed",
+      status: 403,
+    });
+    expect(line).not.toContain("test-token");
+    expect(line).not.toContain("regrid.com");
+    expect(line).not.toContain("123 Secret St");
+  });
+
   it("degrades to the preset fallback when Regrid rate-limits with no GIS cover", async () => {
     stubProviders({
       regrid: { ok: false, status: 429, json: async () => ({}) },
@@ -935,5 +1000,169 @@ describe("GET /api/parcel — anonymous callers", () => {
 
     expect(limited.status).toBe(429);
     expect(limited.headers.get("Retry-After")).toBeTruthy();
+  });
+});
+
+describe("GET /api/parcel — zoning shadow classification", () => {
+  const SHADOW_FIELDS = {
+    ll_gisacre: 0.25,
+    zoning: "NR3",
+    zoning_description: "Neighborhood Residential 3",
+    address: "123 Oak St",
+    scity: "Seattle",
+    city: "Kirkland",
+    state: "WA",
+    county: "King",
+    zip: "98105",
+  };
+
+  const JEV_ANSWER = {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      model: "jev-test",
+      answers: {
+        district: { type: "choice", choice: "single_family", confidence: 0.95 },
+      },
+    }),
+  };
+
+  function stubWithTypeSafe(
+    typeSafe: unknown,
+    fields: Record<string, unknown> = SHADOW_FIELDS,
+  ) {
+    const fetchMock = vi.fn(async (input: unknown) => {
+      const url = String(input);
+      if (url.includes("api.typesafe.ai")) return typeSafe;
+      if (url.includes("regrid.com")) return regridResponse(fields);
+      return EMPTY_FEATURES;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  function typeSafeCalls(fetchMock: ReturnType<typeof vi.fn>) {
+    return fetchMock.mock.calls.filter((call) =>
+      String(call[0]).includes("api.typesafe.ai"),
+    );
+  }
+
+  function shadowEvents(spy: ReturnType<typeof vi.spyOn>) {
+    return spy.mock.calls
+      .map((call: unknown[]) => String(call[0]))
+      .filter((line: string) => line.includes("jev_zoning_shadow"))
+      .map((line: string) => JSON.parse(line));
+  }
+
+  let info: ReturnType<typeof vi.spyOn>;
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    clearZoningCache();
+    vi.stubEnv("TYPESAFE_ZONING_SHADOW", "true");
+    vi.stubEnv("TYPESAFE_API_KEY", "ts-key");
+    info = vi.spyOn(console, "info").mockImplementation(() => {});
+    warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  it("logs Jev's class and leaves the parcel response unchanged", async () => {
+    const fetchMock = stubWithTypeSafe(JEV_ANSWER);
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("regrid");
+    expect(data.zoning).toBe("NR3");
+    // The existing heuristic still decides coverage, and is still labeled a guess.
+    expect(data.maxLotCoveragePercent).toBe(50);
+    expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
+    expect(typeSafeCalls(fetchMock)).toHaveLength(1);
+    const events = shadowEvents(info);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      outcome: "classified",
+      state: "WA",
+      zoning: "NR3",
+      zoningClass: "single_family",
+      regexCoveragePercent: 50,
+    });
+  });
+
+  it("sends Jev the state, county, site city, designation and Regrid's description", async () => {
+    const fetchMock = stubWithTypeSafe(JEV_ANSWER);
+
+    await GET(makeRequest(47.65, -122.31));
+
+    const body = JSON.parse(String(typeSafeCalls(fetchMock)[0][1]?.body));
+    // The site city wins over the mailing city, as it does for the parcel's own city.
+    expect(body.state).toEqual({
+      parcel: {
+        state: "WA",
+        county: "King",
+        city: "Seattle",
+        zoningCode: "NR3",
+        zoningDescription: "Neighborhood Residential 3",
+      },
+    });
+  });
+
+  it("falls back to the mailing city and omits a city Regrid does not supply", async () => {
+    const withoutSiteCity: Record<string, unknown> = { ...SHADOW_FIELDS };
+    delete withoutSiteCity.scity;
+    const fetchMock = stubWithTypeSafe(JEV_ANSWER, withoutSiteCity);
+    await GET(makeRequest(47.65, -122.31));
+    expect(
+      JSON.parse(String(typeSafeCalls(fetchMock)[0][1]?.body)).state.parcel.city,
+    ).toBe("Kirkland");
+
+    clearZoningCache();
+    const withoutAnyCity: Record<string, unknown> = { ...SHADOW_FIELDS };
+    delete withoutAnyCity.scity;
+    delete withoutAnyCity.city;
+    const noCityFetch = stubWithTypeSafe(JEV_ANSWER, withoutAnyCity);
+    await GET(makeRequest(47.65, -122.31));
+    expect(
+      JSON.parse(String(typeSafeCalls(noCityFetch)[0][1]?.body)).state.parcel,
+    ).not.toHaveProperty("city");
+  });
+
+  it("does not call TypeSafe when the flag is off", async () => {
+    vi.stubEnv("TYPESAFE_ZONING_SHADOW", "");
+    const fetchMock = stubWithTypeSafe(JEV_ANSWER);
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.zoning).toBe("NR3");
+    expect(typeSafeCalls(fetchMock)).toHaveLength(0);
+    expect(shadowEvents(info)).toHaveLength(0);
+  });
+
+  it("still returns the parcel when TypeSafe fails", async () => {
+    stubWithTypeSafe({ ok: false, status: 503 });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("regrid");
+    expect(data.maxLotCoveragePercent).toBe(50);
+    expect(shadowEvents(warn)[0]).toMatchObject({
+      severity: "WARNING",
+      outcome: "fallback-provider-error",
+    });
+  });
+
+  it("does not classify a Regrid record that has no zoning", async () => {
+    const withoutZoning: Record<string, unknown> = { ...SHADOW_FIELDS };
+    delete withoutZoning.zoning;
+    const fetchMock = stubWithTypeSafe(JEV_ANSWER, withoutZoning);
+
+    const res = await GET(makeRequest(47.65, -122.31));
+
+    expect(res.status).toBe(200);
+    expect(typeSafeCalls(fetchMock)).toHaveLength(0);
   });
 });
