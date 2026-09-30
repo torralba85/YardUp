@@ -21,12 +21,20 @@ vi.mock("next/dynamic", () => ({
       : function TestAuthGate({
           onAuthenticated,
           onDismiss,
+          initialMode,
+          analyticsSource,
         }: {
           onAuthenticated: () => void;
           onDismiss: () => void;
+          initialMode?: "sign-in" | "sign-up";
+          analyticsSource?: string;
         }) {
           return (
-            <div role="dialog">
+            <div
+              role="dialog"
+              data-initial-mode={initialMode}
+              data-analytics-source={analyticsSource}
+            >
               <button onClick={onAuthenticated}>Complete sign in</button>
               <button onClick={onDismiss}>Dismiss sign in</button>
             </div>
@@ -155,6 +163,9 @@ describe("landing address handoff", () => {
     );
     expect(stash).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
+    const authDialog = screen.getByRole("dialog");
+    expect(authDialog).toHaveAttribute("data-initial-mode", "sign-up");
+    expect(authDialog).toHaveAttribute("data-analytics-source", "guest_limit");
     fireEvent.click(screen.getByRole("button", { name: "Complete sign in" }));
     expect(stash).toHaveBeenCalledExactlyOnceWith("456 Pine St, Denver, CO");
     expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
@@ -177,7 +188,10 @@ describe("landing address handoff", () => {
       screen.getAllByRole("button", { name: "Explore my lot" })[0],
     );
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    const authDialog = screen.getByRole("dialog");
+    expect(authDialog).toBeInTheDocument();
+    expect(authDialog).toHaveAttribute("data-initial-mode", "sign-in");
+    expect(authDialog).toHaveAttribute("data-analytics-source", "account_control");
     expect(push).not.toHaveBeenCalled();
   });
 

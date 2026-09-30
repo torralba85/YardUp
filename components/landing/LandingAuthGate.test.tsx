@@ -65,7 +65,7 @@ describe("LandingAuthGate", () => {
     authMock.modalProps = null;
   });
 
-  it("shows the sign-in modal to a guest and hands nothing off", () => {
+  it("shows the auth modal to a guest and hands nothing off", () => {
     const onAuthenticated = vi.fn();
     render(
       <LandingAuthGate onAuthenticated={onAuthenticated} onDismiss={vi.fn()} />,
@@ -86,6 +86,23 @@ describe("LandingAuthGate", () => {
       initialMode: "sign-up",
       analyticsSurface: "landing",
       analyticsSource: "guest_limit",
+    });
+  });
+
+  it("keeps returning members in sign-in mode when the caller asks", () => {
+    render(
+      <LandingAuthGate
+        onAuthenticated={vi.fn()}
+        onDismiss={vi.fn()}
+        initialMode="sign-in"
+        analyticsSource="account_control"
+      />,
+    );
+
+    expect(authMock.modalProps).toEqual({
+      initialMode: "sign-in",
+      analyticsSurface: "landing",
+      analyticsSource: "account_control",
     });
   });
 

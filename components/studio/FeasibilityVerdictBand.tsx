@@ -60,7 +60,7 @@ export default function FeasibilityVerdictBand({
             onClick={onCreateAccount}
             className="min-h-11 rounded-[3px] bg-lot-orange-ink px-4 text-sm font-semibold text-lot-chalk motion-safe:transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
           >
-            Save this property
+            Save this property — free account
           </button>
         )}
         <button type="button" aria-expanded={numbersOpen} aria-controls={numbersId}

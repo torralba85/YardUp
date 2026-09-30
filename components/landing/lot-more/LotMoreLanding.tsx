@@ -1093,6 +1093,8 @@ export function LotMoreLanding({
       </div>
       {authOpen && (
         <LandingAuthGate
+          initialMode={hasMemberSession ? "sign-in" : "sign-up"}
+          analyticsSource={hasMemberSession ? "account_control" : "guest_limit"}
           onAuthenticated={() => {
             stashAddressQuery(pendingAddress.current);
             stashEntrySource("landing_cta");

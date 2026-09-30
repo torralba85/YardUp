@@ -360,7 +360,8 @@ export function AuthModal({
         });
       }
       const credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
-      if (isSignUp) {
+      // A popup sign-in to an already-registered account is a login, not a sign-up.
+      if (isSignUp && credential.profileCreated) {
         trackSignupSucceeded({
           method: "google",
           surface: analyticsSurface,
@@ -411,7 +412,8 @@ export function AuthModal({
         });
       }
       const credential = await signInWithApple(role, CURRENT_LEGAL_CONSENT);
-      if (isSignUp) {
+      // A popup sign-in to an already-registered account is a login, not a sign-up.
+      if (isSignUp && credential.profileCreated) {
         trackSignupSucceeded({
           method: "apple",
           surface: analyticsSurface,
