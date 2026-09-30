@@ -47,7 +47,8 @@ must be raised whenever a new bundle is accepted.
 | 1.0.9 | 10 | production change saved 2026-09-10; not submitted for review | Locally signed AAB accepted by Play. Chalk launch/system-bar colors. See the [mobile audit](../../docs/design/2026-09-10-mobile-audit.md) for the artifact hash and outstanding device, billing, and web-deployment gates. |
 | 1.0.10 | 11 | live production at 100%, verified 2026-09-12 | Signed bundle from Actions run `34624314664`; Play release summary confirms available on Google Play. |
 | 1.0.11 | 12 | production | Mobile landing performance improvements and current A LOT MORE icons throughout launcher, splash, shortcuts, notifications, and web assets; verified at 100% production rollout on 2026-09-21. |
-| 1.0.12 | 13 | next build | Current TWA wrapper for the latest live LotFoundry web release; Play submission pending. |
+| 1.0.12 | 13 | accepted internal-testing draft 2026-09-29 | Locally signed with the current Play upload key after the CI bundle was rejected for using the retired key. Tester rollout and production submission remain pending explicit confirmation and device verification. |
+| 1.0.13 | 14 | next build | Reserved after Play accepted code 13. No bundle built or uploaded. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
 cross-origin redirect when verifying Digital Asset Links, so a bundle built
