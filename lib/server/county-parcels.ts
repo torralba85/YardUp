@@ -656,6 +656,14 @@ function classifyPointParcels(
     };
   }
 
+  // A filtered subset cannot prove uniqueness among all overlapping records.
+  if (records.length !== features.length) {
+    return {
+      verdict: "unverified",
+      attempt: situsAttempt(source, "invalid-response", "Some overlapping parcels have incomplete identity; the searched point could not be verified."),
+    };
+  }
+
   const matches = new Map<string, boolean>();
   // The geometry-only point layer may select a different overlapping parcel.
   // Without a common identity key, one matching situs among distinct lots
@@ -846,20 +854,30 @@ async function queryAddressWindow(
 
     let publishing = 0;
     let conflicts = 0;
+    let incompleteIdentity = false;
+    let unusableMatchingGeometry = false;
     const byParcel = new Map<string, AddressCandidate[]>();
     for (const raw of features) {
       const record = readFeatureSitus(raw, source.situs.fields);
-      if (!record) continue;
+      if (!record) {
+        incompleteIdentity = true;
+        continue;
+      }
       publishing += 1;
       const { verdict, localityConfirmed } = compareSitus(address, record);
       if (verdict === "locality-conflict") conflicts += 1;
       if (verdict !== "match") continue;
+      const group = byParcel.get(record.id) ?? [];
+      // Count official matching identities before checking rendering geometry.
+      // A missing polygon must not hide a second parcel claiming the address.
+      byParcel.set(record.id, group);
       const feature = raw as RawFeature;
       const parts = normalizeParts(feature.geometry);
-      if (parts.length === 0) continue;
-      const group = byParcel.get(record.id) ?? [];
+      if (parts.length === 0) {
+        unusableMatchingGeometry = true;
+        continue;
+      }
       group.push({ feature, parcelId: record.id, parts, localityConfirmed });
-      byParcel.set(record.id, group);
     }
 
     if (publishing === 0) {
@@ -870,6 +888,12 @@ async function queryAddressWindow(
           "invalid-response",
           "The address layer returned parcels without a parcel identifier and street address.",
         ),
+      };
+    }
+    if (incompleteIdentity) {
+      return {
+        parcel: null,
+        attempt: situsAttempt(source, "invalid-response", "Some nearby parcels have incomplete identity; a unique address match could not be verified."),
       };
     }
     if (byParcel.size === 0) {
@@ -893,6 +917,13 @@ async function queryAddressWindow(
           "invalid-response",
           "Multiple distinct parcels publish this street address near the searched point; no match was selected.",
         ),
+      };
+    }
+
+    if (unusableMatchingGeometry) {
+      return {
+        parcel: null,
+        attempt: situsAttempt(source, "invalid-response", "A matching parcel has unusable geometry; no address match was selected."),
       };
     }
 

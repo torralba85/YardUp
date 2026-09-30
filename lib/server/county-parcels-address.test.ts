@@ -236,6 +236,16 @@ describe("verifyParcelAddressAtPoint", () => {
     expect(check.attempts[0].detail).toContain("Multiple distinct parcels");
   });
 
+  it("does not verify a point when another overlapping record has no identity", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(featuresResponse([
+      feature(null, TARGET_SITUS),
+      feature(null, { ...TARGET_SITUS, PIN: undefined }),
+    ])));
+    const check = await verifyParcelAddressAtPoint(TARGET_POINT.lat, TARGET_POINT.lng, SEARCH);
+    expect(check.verdict).toBe("unverified");
+    expect(check.attempts[0].outcome).toBe("invalid-response");
+  });
+
   it("does not verify a point from a truncated address response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(featuresResponse(
       [feature(null, TARGET_SITUS)], { exceededTransferLimit: true },
@@ -484,6 +494,29 @@ describe("fetchCountyParcelByAddress", () => {
         detail: expect.stringContaining("Multiple distinct parcels"),
       }),
     ]);
+  });
+
+  it("refuses distinct matching IDs even when one parcel has no usable geometry", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(featuresResponse([
+      feature(TARGET_LOT, TARGET_SITUS),
+      feature(null, { ...TARGET_SITUS, PIN: "8562901010" }),
+    ])));
+    const { parcel, attempts } = await fetchCountyParcelByAddress(PHONE_POINT.lat, PHONE_POINT.lng, SEARCH);
+    expect(parcel).toBeNull();
+    expect(attempts[0]).toMatchObject({
+      outcome: "invalid-response",
+      detail: expect.stringContaining("Multiple distinct parcels"),
+    });
+  });
+
+  it("does not prove a unique window match by dropping a record with missing identity", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(featuresResponse([
+      feature(TARGET_LOT, TARGET_SITUS),
+      feature(NEIGHBOR_LOT, { ...TARGET_SITUS, PIN: undefined }),
+    ])));
+    const { parcel, attempts } = await fetchCountyParcelByAddress(PHONE_POINT.lat, PHONE_POINT.lng, SEARCH);
+    expect(parcel).toBeNull();
+    expect(attempts[0].outcome).toBe("invalid-response");
   });
 
   it("accepts one parcel published as several features and scores it as multipart", async () => {
