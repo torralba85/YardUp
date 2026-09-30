@@ -20,12 +20,23 @@ vi.mock("@/components/auth/AuthModal", () => ({
   AuthModal: ({
     isOpen,
     onClose,
+    initialMode,
+    analyticsSurface,
+    analyticsSource,
   }: {
     isOpen: boolean;
     onClose: (reason: "signed-in" | "dismissed") => void;
+    initialMode?: "sign-in" | "sign-up";
+    analyticsSurface?: string;
+    analyticsSource?: string;
   }) =>
     isOpen ? (
-      <div role="dialog" aria-label="Sign in to continue">
+      <div
+        role="dialog"
+        aria-label={initialMode === "sign-up" ? "Create account to continue" : "Sign in to continue"}
+        data-analytics-surface={analyticsSurface}
+        data-analytics-source={analyticsSource}
+      >
         <button onClick={() => onClose("dismissed")}>Close</button>
         <button
           onClick={() => {
@@ -57,10 +68,26 @@ describe("LandingAuthGate", () => {
       <LandingAuthGate onAuthenticated={onAuthenticated} onDismiss={vi.fn()} />,
     );
 
-    expect(
-      screen.getByRole("dialog", { name: /sign in to continue/i }),
-    ).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: /sign in to continue/i });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("data-analytics-surface", "landing");
+    expect(dialog).toHaveAttribute("data-analytics-source", "account_control");
     expect(onAuthenticated).not.toHaveBeenCalled();
+  });
+
+  it("opens spent-guest prompts directly in create-account mode", () => {
+    render(
+      <LandingAuthGate
+        onAuthenticated={vi.fn()}
+        onDismiss={vi.fn()}
+        initialMode="sign-up"
+        analyticsSource="guest_limit"
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog", { name: /create account to continue/i });
+    expect(dialog).toHaveAttribute("data-analytics-surface", "landing");
+    expect(dialog).toHaveAttribute("data-analytics-source", "guest_limit");
   });
 
   it("stays silent while the session is still resolving", () => {
