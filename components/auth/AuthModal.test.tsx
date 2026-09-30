@@ -75,7 +75,7 @@ describe("AuthModal focus restore", () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByRole("heading", { name: "Create an account" })).toBeTruthy(),
+      expect(screen.getByRole("heading", { name: "Save your property" })).toBeTruthy(),
     );
     expect(screen.getByRole("button", { name: "Create free account" })).toBeEnabled();
     expect(screen.getByLabelText("Name")).toBeTruthy();
