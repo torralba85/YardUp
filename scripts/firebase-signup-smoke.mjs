@@ -118,6 +118,21 @@ async function createAccount() {
   return { idToken: body.idToken, uid: body.localId };
 }
 
+async function signInAccount() {
+  const body = await requestJson(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    },
+  );
+  if (!body.idToken || !body.localId) {
+    throw new Error("Firebase Auth login did not return an ID token and uid.");
+  }
+  return { idToken: body.idToken, uid: body.localId };
+}
+
 async function createProfile({ idToken, uid }) {
   const documentName =
     `projects/${projectId}/databases/(default)/documents/users/${uid}`;
@@ -200,10 +215,18 @@ try {
   await verifyProfile(session);
   console.log("[signup-smoke] Signup profile verified.");
 
+  const loginSession = await signInAccount();
+  if (loginSession.uid !== session.uid) {
+    throw new Error("Firebase Auth login returned a different uid.");
+  }
+  console.log("[signup-smoke] Disposable account signed back in.");
+  await verifyProfile(loginSession);
+  console.log("[signup-smoke] Login token verified persisted profile and consent.");
+
   await cleanupAccount(session.uid);
   session = null;
   console.log("[signup-smoke] Disposable account cleaned up with Firebase Admin.");
-  console.log("[signup-smoke] Firebase signup + profile persistence passed.");
+  console.log("[signup-smoke] Firebase signup + login + profile persistence passed.");
 } catch (error) {
   console.error(
     `[signup-smoke] ${error instanceof Error ? error.message : String(error)}`,

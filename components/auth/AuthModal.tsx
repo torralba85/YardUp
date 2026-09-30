@@ -461,7 +461,7 @@ export function AuthModal({
 
         <div className="p-8">
           <h2 id="auth-modal-title" className="lf-panel-heading mb-2 text-lf-espresso">
-            {isSignUp ? "Create an account" : "Welcome back"}
+            {isSignUp ? "Save your property" : "Welcome back"}
           </h2>
           <p className="lf-body-sm mb-6 text-lf-taupe">
             {isSignUp
@@ -580,7 +580,7 @@ export function AuthModal({
               disabled={loading}
               className="mt-2 min-h-11 w-full rounded-[3px] bg-lf-clay px-4 py-2.5 text-sm font-semibold text-lf-espresso motion-safe:transition hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? "Please wait..." : isSignUp ? "Create free account" : "Sign In"}
             </button>
           </form>
 
@@ -649,7 +649,7 @@ export function AuthModal({
                   fill="#EA4335"
                 />
               </svg>
-              Google
+              Continue with Google
             </button>
             <button
               type="button"
@@ -661,7 +661,7 @@ export function AuthModal({
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
               </svg>
-              Apple
+              Continue with Apple
             </button>
           </div>
         </div>
@@ -673,8 +673,8 @@ export function AuthModal({
             className="min-h-11 rounded-[3px] text-sm text-lf-taupe motion-safe:transition-colors hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
           >
             {isSignUp
-              ? "Already have an account? Sign In"
-              : "Don't have an account? Sign Up"}
+              ? "Already have an account? Sign in"
+              : "Don't have an account? Create free account"}
           </button>
         </div>
       </div>

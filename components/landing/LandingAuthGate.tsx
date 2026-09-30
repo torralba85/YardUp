@@ -11,7 +11,7 @@ export interface LandingAuthGateProps {
   onAuthenticated: () => void;
   /** Called when the visitor dismisses the auth modal without signing in. */
   onDismiss: () => void;
-  /** Mode to show when a session is not already present. */
+  /** Mode to show when a session is not already present. Defaults to account creation. */
   initialMode?: "sign-in" | "sign-up";
   /** Bounded reason for the prompt, used by conversion analytics and copy. */
   analyticsSource?: AuthPromptSource;
@@ -27,8 +27,8 @@ export interface LandingAuthGateProps {
 function Gate({
   onAuthenticated,
   onDismiss,
-  initialMode = "sign-in",
-  analyticsSource = "account_control",
+  initialMode = "sign-up",
+  analyticsSource = "guest_limit",
 }: LandingAuthGateProps) {
   const firedRef = useRef(false);
   // `AuthModal` closes itself on a *successful* sign-in, not just on cancel.

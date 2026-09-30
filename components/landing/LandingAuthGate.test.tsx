@@ -5,6 +5,11 @@ import LandingAuthGate from "./LandingAuthGate";
 const authMock = vi.hoisted(() => ({
   user: null as { uid: string } | null,
   loading: false,
+  modalProps: null as null | {
+    initialMode?: string;
+    analyticsSurface?: string;
+    analyticsSource?: string;
+  },
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -26,17 +31,13 @@ vi.mock("@/components/auth/AuthModal", () => ({
   }: {
     isOpen: boolean;
     onClose: (reason: "signed-in" | "dismissed") => void;
-    initialMode?: "sign-in" | "sign-up";
+    initialMode?: string;
     analyticsSurface?: string;
     analyticsSource?: string;
-  }) =>
-    isOpen ? (
-      <div
-        role="dialog"
-        aria-label={initialMode === "sign-up" ? "Create account to continue" : "Sign in to continue"}
-        data-analytics-surface={analyticsSurface}
-        data-analytics-source={analyticsSource}
-      >
+  }) => {
+    authMock.modalProps = { initialMode, analyticsSurface, analyticsSource };
+    return isOpen ? (
+      <div role="dialog" aria-label="Sign in to continue">
         <button onClick={() => onClose("dismissed")}>Close</button>
         <button
           onClick={() => {
@@ -48,7 +49,8 @@ vi.mock("@/components/auth/AuthModal", () => ({
           Sign in
         </button>
       </div>
-    ) : null,
+    ) : null;
+  },
 }));
 
 /**
@@ -60,34 +62,48 @@ describe("LandingAuthGate", () => {
   beforeEach(() => {
     authMock.user = null;
     authMock.loading = false;
+    authMock.modalProps = null;
   });
 
-  it("shows the sign-in modal to a guest and hands nothing off", () => {
+  it("shows the auth modal to a guest and hands nothing off", () => {
     const onAuthenticated = vi.fn();
     render(
       <LandingAuthGate onAuthenticated={onAuthenticated} onDismiss={vi.fn()} />,
     );
 
-    const dialog = screen.getByRole("dialog", { name: /sign in to continue/i });
-    expect(dialog).toBeInTheDocument();
-    expect(dialog).toHaveAttribute("data-analytics-surface", "landing");
-    expect(dialog).toHaveAttribute("data-analytics-source", "account_control");
+    expect(
+      screen.getByRole("dialog", { name: /sign in to continue/i }),
+    ).toBeInTheDocument();
     expect(onAuthenticated).not.toHaveBeenCalled();
   });
 
-  it("opens spent-guest prompts directly in create-account mode", () => {
+  it("opens the exhausted-guest handoff in signup mode with funnel context", () => {
+    render(
+      <LandingAuthGate onAuthenticated={vi.fn()} onDismiss={vi.fn()} />,
+    );
+
+    expect(authMock.modalProps).toEqual({
+      initialMode: "sign-up",
+      analyticsSurface: "landing",
+      analyticsSource: "guest_limit",
+    });
+  });
+
+  it("keeps returning members in sign-in mode when the caller asks", () => {
     render(
       <LandingAuthGate
         onAuthenticated={vi.fn()}
         onDismiss={vi.fn()}
-        initialMode="sign-up"
-        analyticsSource="guest_limit"
+        initialMode="sign-in"
+        analyticsSource="account_control"
       />,
     );
 
-    const dialog = screen.getByRole("dialog", { name: /create account to continue/i });
-    expect(dialog).toHaveAttribute("data-analytics-surface", "landing");
-    expect(dialog).toHaveAttribute("data-analytics-source", "guest_limit");
+    expect(authMock.modalProps).toEqual({
+      initialMode: "sign-in",
+      analyticsSurface: "landing",
+      analyticsSource: "account_control",
+    });
   });
 
   it("stays silent while the session is still resolving", () => {
