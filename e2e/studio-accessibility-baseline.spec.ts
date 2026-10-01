@@ -16,7 +16,7 @@ test.describe("T08 mobile accessibility verification", () => {
     await openShape(page);
     const scene = page.getByRole("group", { name: "Interactive ADU placement model", exact: true });
     await expect(scene).toBeVisible();
-    const cameraActions = scene.locator("button[aria-pressed]");
+    const cameraActions = page.getByRole("radiogroup", { name: "Camera view" }).getByRole("radio");
     await expect(cameraActions).toHaveCount(3);
     await page.screenshot({ path: testInfo.outputPath("shape-camera-controls.png"), fullPage: true });
     await expect(cameraActions.nth(0)).toHaveAccessibleName("Frame lot");

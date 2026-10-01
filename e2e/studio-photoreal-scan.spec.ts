@@ -18,7 +18,7 @@ const SCAN_ASSET = "**/scans/oak-street-curated.spz";
 
 /** The floating lens switch that owns every scene view mode. */
 function parcelViews(page: import("@playwright/test").Page) {
-  return page.getByRole("group", { name: "Parcel view" });
+  return page.getByRole("radiogroup", { name: "Parcel view" });
 }
 
 test.describe("Studio photoreal scan (beta)", () => {
@@ -32,15 +32,12 @@ test.describe("Studio photoreal scan (beta)", () => {
     await page.goto("/studio");
 
     const views = parcelViews(page);
-    await expect(views.getByRole("button", { name: "3D model" })).toBeVisible();
-    await expect(views.getByRole("button", { name: /^Scan/ })).toBeVisible();
-    await expect(views.getByRole("button", { name: "Neighborhood" })).toBeVisible();
-    await expect(views.getByRole("button", { name: "Aerial" })).toBeVisible();
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeVisible();
+    await expect(views.getByRole("radio", { name: /^Scan/ })).toBeVisible();
+    await expect(views.getByRole("radio", { name: "Neighborhood" })).toBeVisible();
+    await expect(views.getByRole("radio", { name: "Aerial" })).toBeVisible();
     // 3D stays the safe default for a preset parcel with no aerial imagery.
-    await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeChecked();
   });
 
   test("a parcel with no registered scan hides Scan entirely", async ({ page }) => {
@@ -49,20 +46,20 @@ test.describe("Studio photoreal scan (beta)", () => {
     await page.getByRole("button", { name: "Your Lot" }).click();
 
     const views = parcelViews(page);
-    await expect(views.getByRole("button", { name: /^Scan/ })).toBeVisible();
+    await expect(views.getByRole("radio", { name: /^Scan/ })).toBeVisible();
 
     await page.getByText("Try a sample property").click();
     await page.getByLabel("Sample Property").selectOption("corner-lot");
 
-    await expect(views.getByRole("button", { name: /^Scan/ })).toHaveCount(0);
-    await expect(views.getByRole("button", { name: "3D model" })).toBeVisible();
+    await expect(views.getByRole("radio", { name: /^Scan/ })).toHaveCount(0);
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeVisible();
   });
 
   test("entering Scan states the sample provenance and keeps 3D reachable", async ({ page }) => {
     await page.goto("/studio");
 
     const views = parcelViews(page);
-    await views.getByRole("button", { name: /^Scan/ }).click();
+    await views.getByRole("radio", { name: /^Scan/ }).click();
 
     // The banner must never imply the scan is a survey of this property.
     await expect(page.getByText(/Sample scan/)).toBeVisible();
@@ -76,10 +73,7 @@ test.describe("Studio photoreal scan (beta)", () => {
     }
 
     await page.getByRole("button", { name: "Return to 3D model" }).first().click();
-    await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeChecked();
   });
 
   test("calibration panel adjusts, resets, and exports the scan transform", async ({
@@ -92,7 +86,7 @@ test.describe("Studio photoreal scan (beta)", () => {
     );
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/studio");
-    await parcelViews(page).getByRole("button", { name: /^Scan/ }).click();
+    await parcelViews(page).getByRole("radio", { name: /^Scan/ }).click();
 
     const openCalibration = page.getByRole("button", { name: "Calibrate Scan" });
     await openCalibration.click();
@@ -140,17 +134,14 @@ test.describe("Studio photoreal scan (beta)", () => {
 
     await page.goto("/studio");
     const views = parcelViews(page);
-    await views.getByRole("button", { name: /^Scan/ }).click();
+    await views.getByRole("radio", { name: /^Scan/ }).click();
 
     await expect(page.getByText(/Scan unavailable/)).toBeVisible({ timeout: 30_000 });
     // The rest of the Studio must survive a dead asset.
-    await expect(views.getByRole("button", { name: "3D model" })).toBeVisible();
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeVisible();
 
     await page.getByRole("button", { name: "Return to 3D model" }).first().click();
-    await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeChecked();
     expect(pageErrors, pageErrors.join(" | ")).toEqual([]);
   });
 
@@ -158,21 +149,21 @@ test.describe("Studio photoreal scan (beta)", () => {
     await page.goto("/studio");
     await page.getByRole("button", { name: /Design/i }).click();
 
-    const sizes = page.getByRole("group", { name: "ADU footprint size" });
-    const large = sizes.getByRole("button", { name: /800 sf/ });
+    const sizes = page.getByRole("radiogroup", { name: "ADU footprint size" });
+    const large = sizes.getByRole("radio", { name: /800 sf/ });
     await large.click();
-    await expect(large).toHaveAttribute("aria-pressed", "true");
+    await expect(large).toBeChecked();
 
-    const roofs = page.getByRole("group", { name: "Roof style" });
-    const roof = roofs.getByRole("button").nth(1);
+    const roofs = page.getByRole("radiogroup", { name: "Roof style" });
+    const roof = roofs.getByRole("radio").nth(1);
     await roof.click();
-    await expect(roof).toHaveAttribute("aria-pressed", "true");
+    await expect(roof).toBeChecked();
 
     const views = parcelViews(page);
-    await views.getByRole("button", { name: /^Scan/ }).click();
-    await views.getByRole("button", { name: "3D model" }).click();
+    await views.getByRole("radio", { name: /^Scan/ }).click();
+    await views.getByRole("radio", { name: "3D model" }).click();
 
-    await expect(large).toHaveAttribute("aria-pressed", "true");
-    await expect(roof).toHaveAttribute("aria-pressed", "true");
+    await expect(large).toBeChecked();
+    await expect(roof).toBeChecked();
   });
 });

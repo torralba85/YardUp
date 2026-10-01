@@ -36,8 +36,8 @@ it("opens desktop Design at usable controls without repeating the property journ
   expect(screen.getByRole("heading", { name: "Design your ADU" })).toBeVisible();
   expect(screen.queryByRole("button", { name: /Your Property/ })).not.toBeInTheDocument();
   expect(screen.queryByText("Money model")).not.toBeInTheDocument();
-  expect(screen.getByRole("group", { name: "Exterior finish" })).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "400 sf" }));
+  expect(screen.getByRole("radiogroup", { name: "Exterior finish" })).toBeVisible();
+  await user.click(screen.getByRole("radio", { name: "400 sf" }));
   expect(onConfigChange).toHaveBeenCalledWith(expect.objectContaining({ footprint: 400 }));
   expect(screen.getByLabelText("Width (ft)")).not.toBeVisible();
   await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));

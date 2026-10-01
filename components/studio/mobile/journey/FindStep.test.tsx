@@ -29,11 +29,11 @@ describe("FindStep", () => {
     const onPresetSelect = vi.fn();
     render(<FindStep {...defaultProps} onPresetSelect={onPresetSelect} />);
 
-    const group = screen.getByRole("group", { name: "Demo lots" });
+    const group = screen.getByRole("radiogroup", { name: "Demo lots" });
     expect(group).toBeInTheDocument();
 
-    const seattleButton = screen.getByRole("button", { name: parcelPresets[0].city.split(",")[0] });
-    expect(seattleButton).toHaveAttribute("aria-pressed", "false");
+    const seattleButton = screen.getByRole("radio", { name: parcelPresets[0].city.split(",")[0] });
+    expect(seattleButton).toHaveAttribute("aria-checked", "false");
     expect(seattleButton).toHaveAttribute("tabindex", "0");
 
     await user.click(seattleButton);
@@ -51,12 +51,12 @@ describe("FindStep", () => {
       />,
     );
 
-    const firstButton = screen.getByRole("button", { name: parcelPresets[0].city.split(",")[0] });
-    const secondButton = screen.getByRole("button", { name: parcelPresets[1].city.split(",")[0] });
+    const firstButton = screen.getByRole("radio", { name: parcelPresets[0].city.split(",")[0] });
+    const secondButton = screen.getByRole("radio", { name: parcelPresets[1].city.split(",")[0] });
 
-    expect(firstButton).toHaveAttribute("aria-pressed", "true");
+    expect(firstButton).toHaveAttribute("aria-checked", "true");
     expect(firstButton).toHaveAttribute("tabindex", "0");
-    expect(secondButton).toHaveAttribute("aria-pressed", "false");
+    expect(secondButton).toHaveAttribute("aria-checked", "false");
     expect(secondButton).toHaveAttribute("tabindex", "-1");
 
     firstButton.focus();
@@ -73,7 +73,7 @@ describe("FindStep", () => {
         onPresetSelect={onPresetSelect}
       />,
     );
-    expect(secondButton).toHaveAttribute("aria-pressed", "true");
+    expect(secondButton).toHaveAttribute("aria-checked", "true");
     expect(secondButton).toHaveAttribute("tabindex", "0");
     expect(firstButton).toHaveAttribute("tabindex", "-1");
   });
