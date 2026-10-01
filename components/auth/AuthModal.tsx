@@ -216,6 +216,17 @@ export function AuthModal({
     analyticsSource,
   ]);
 
+  const previousModeRef = useRef(isSignUp);
+  useEffect(() => {
+    if (previousModeRef.current === isSignUp) return;
+    previousModeRef.current = isSignUp;
+    if (!isOpen) return;
+    if (panelRef.current) panelRef.current.scrollTop = 0;
+    panelRef.current
+      ?.querySelector<HTMLElement>(isSignUp ? "#auth-role" : "#auth-email")
+      ?.focus({ preventScroll: true });
+  }, [isSignUp, isOpen]);
+
   // Email/password sign-in closes the modal before AuthProvider's
   // onAuthStateChanged render swaps the trigger for account UI, so the
   // restore above can land on a control that unmounts a moment later. When
@@ -447,6 +458,107 @@ export function AuthModal({
     }
   };
 
+  const socialChoices = (
+    <div className={isSignUp ? "mb-5" : "mt-6"}>
+      <label className="mb-4 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lf-taupe">
+        <input
+          type="checkbox"
+          checked={legalAccepted}
+          onChange={(event) => setLegalAccepted(event.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+        />
+        <span>
+          I confirm I am 18 or older, agree to the{" "}
+          <a
+            href="/terms"
+            className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+          >
+            Terms &amp; Conditions
+          </a>
+          , and acknowledge the{" "}
+          <a
+            href="/privacy"
+            className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
+          >
+            Privacy Policy
+          </a>
+          {isSignUp
+            ? ". This confirmation is required for email, Google, or Apple account creation."
+            : ". This confirmation is required for Google or Apple."}
+        </span>
+      </label>
+      {!isSignUp && (
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-lf-taupe" />
+          </div>
+          <div className="lf-caption relative flex justify-center">
+            <span className="bg-lf-card px-2 text-lf-taupe">Or continue with</span>
+          </div>
+        </div>
+      )}
+
+      <p id="auth-social-consent-help" className="mt-4 text-xs leading-5 text-lf-taupe" aria-live="polite">
+        {legalAccepted
+          ? isSignUp
+            ? "Google and Apple account creation are ready."
+            : "Google and Apple sign-in are ready."
+          : isSignUp
+            ? "Check the confirmation above to enable Google or Apple account creation."
+            : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
+      </p>
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        aria-describedby="auth-social-consent-help"
+        disabled={loading || !legalAccepted}
+        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
+          <path
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            fill="#4285F4"
+          />
+          <path
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            fill="#34A853"
+          />
+          <path
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            fill="#FBBC05"
+          />
+          <path
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            fill="#EA4335"
+          />
+        </svg>
+        Continue with Google
+      </button>
+      <button
+        type="button"
+        onClick={handleAppleSignIn}
+        aria-describedby="auth-social-consent-help"
+        disabled={loading || !legalAccepted}
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
+        </svg>
+        Continue with Apple
+      </button>
+      {isSignUp && (
+        <div className="relative mt-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-lf-taupe" />
+          </div>
+          <div className="lf-caption relative flex justify-center">
+            <span className="bg-lf-card px-2 text-lf-taupe">Or use email</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/75 p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div ref={panelRef} className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-none bg-lf-card text-lf-espresso shadow-[12px_16px_0_#16161630] relative border border-lf-hairline">
@@ -469,28 +581,36 @@ export function AuthModal({
               : "Sign in to access your saved ADU estimates, reports, and builder-ready snapshots."}
           </p>
 
+          {isSignUp && (
+            <div className="mb-4">
+              <label
+                htmlFor="auth-role"
+                className="lf-caption mb-1 block font-medium text-lf-taupe"
+              >
+                Account type
+              </label>
+              <select
+                id="auth-role"
+                value={role}
+                onChange={(event) =>
+                  setRole(event.target.value as "user" | "builder")
+                }
+                className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 px-3 text-base sm:text-sm text-lf-espresso motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+              >
+                <option value="user">Homeowner</option>
+                <option value="builder">Builder</option>
+              </select>
+            </div>
+          )}
+          {error && (
+            <div role="alert" className="lf-body-sm mb-4 flex items-start gap-2 rounded-none border border-lf-brick bg-lf-brick-soft p-3 text-lf-brick">
+              <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          )}
+          {isSignUp && socialChoices}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label
-                  htmlFor="auth-role"
-                  className="lf-caption mb-1 block font-medium text-lf-taupe"
-                >
-                  Account type
-                </label>
-                <select
-                  id="auth-role"
-                  value={role}
-                  onChange={(event) =>
-                    setRole(event.target.value as "user" | "builder")
-                  }
-                  className="w-full bg-lf-card border border-lf-taupe rounded-[3px] min-h-11 py-2 px-3 text-base sm:text-sm text-lf-espresso motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
-                >
-                  <option value="user">Homeowner</option>
-                  <option value="builder">Builder</option>
-                </select>
-              </div>
-            )}
             {isSignUp && (
               <div>
                 <label
@@ -568,13 +688,6 @@ export function AuthModal({
               </div>
             </div>
 
-            {error && (
-              <div role="alert" className="lf-body-sm flex items-start gap-2 rounded-none border border-lf-brick bg-lf-brick-soft p-3 text-lf-brick">
-                <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-                <span>{error}</span>
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -584,86 +697,7 @@ export function AuthModal({
             </button>
           </form>
 
-          <div className="mt-6">
-            <label className="mb-4 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lf-taupe">
-              <input
-                type="checkbox"
-                checked={legalAccepted}
-                onChange={(event) => setLegalAccepted(event.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 accent-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
-              />
-              <span>
-                I confirm I am 18 or older, agree to the{" "}
-                <a
-                  href="/terms"
-                  className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
-                >
-                  Terms &amp; Conditions
-                </a>
-                , and acknowledge the{" "}
-                <a
-                  href="/privacy"
-                  className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card"
-                >
-                  Privacy Policy
-                </a>
-                . This confirmation is required for Google or Apple.
-              </span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-lf-taupe"></div>
-              </div>
-              <div className="lf-caption relative flex justify-center">
-                <span className="bg-lf-card px-2 text-lf-taupe">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <p id="auth-social-consent-help" className="mt-4 text-xs leading-5 text-lf-taupe" aria-live="polite">
-              {legalAccepted ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
-            </p>
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              aria-describedby="auth-social-consent-help"
-              disabled={loading || !legalAccepted}
-              className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              onClick={handleAppleSignIn}
-              aria-describedby="auth-social-consent-help"
-              disabled={loading || !legalAccepted}
-              className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-taupe bg-lf-espresso px-4 py-2.5 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lf-card disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
-              </svg>
-              Continue with Apple
-            </button>
-          </div>
+          {!isSignUp && socialChoices}
         </div>
 
         <div className="bg-lf-sand-2 p-4 text-center border-t border-lf-taupe">

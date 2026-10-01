@@ -16,6 +16,7 @@ import {
   Facebook,
   Instagram,
   MapPin,
+  Menu,
   Plus,
   X,
   Youtube,
@@ -281,7 +282,7 @@ export function LotMoreLanding({
               {menuOpen ? (
                 <X aria-hidden="true" />
               ) : (
-                <Plus aria-hidden="true" />
+                <Menu aria-hidden="true" />
               )}
             </button>
           </div>
@@ -385,7 +386,7 @@ export function LotMoreLanding({
             </div>
             <figure className={styles.heroVisual}>
               <div className={styles.artHeader}>
-                <span>THE POSSIBILITY SERIES</span>
+                <span>ILLUSTRATIVE CONCEPT</span>
                 <span>LOT — 001</span>
               </div>
               <div className={styles.parcelCanvas} data-scene={scene}>
@@ -508,10 +509,24 @@ export function LotMoreLanding({
                   Try the same lot.
                 </h2>
               </div>
-              <p>
-                Start with our Oak Street demo in Seattle. Explore a 600 sq ft
-                backyard home, then make the next move your own.
-              </p>
+              <div className={styles.demoIntro}>
+                <p>
+                  Explore the same 600 sq ft Oak Street demo shown above, with
+                  the {money(sample.rent)}/mo market rent assumption.
+                </p>
+                <Link
+                  href={sampleHref}
+                  prefetch={false}
+                  className={styles.darkButton}
+                  onClick={() => {
+                    stashAddressQuery("");
+                    stashEntrySource("landing_cta");
+                  }}
+                >
+                  Try the Oak Street demo{" "}
+                  <ArrowUpRight size={18} aria-hidden="true" />
+                </Link>
+              </div>
             </div>
             <div className={styles.demoLayout}>
               <figure className={styles.studioDemo}>
@@ -581,18 +596,6 @@ export function LotMoreLanding({
                     </div>
                   </li>
                 </ol>
-                <Link
-                  href="/studio?parcel=oak-street"
-                  prefetch={false}
-                  className={styles.darkButton}
-                  onClick={() => {
-                    stashAddressQuery("");
-                    stashEntrySource("landing_cta");
-                  }}
-                >
-                  Try the Oak Street demo{" "}
-                  <ArrowUpRight size={18} aria-hidden="true" />
-                </Link>
               </div>
             </div>
             <div className={styles.intentBand}>

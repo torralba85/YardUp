@@ -153,16 +153,16 @@ interface ProjectBriefState {
  *   the studio opened (the native app's onboarding), so the mobile journey
  *   starts at the Earn reveal instead of asking them to find a lot again.
  */
-export default function FeasibilityStudio({ demoChosen = false }: { demoChosen?: boolean } = {}) {
+export default function FeasibilityStudio({ demoChosen = false, nativeShell = false }: { demoChosen?: boolean; nativeShell?: boolean } = {}) {
   const initialPreset = parcelPresets[0];
   return (
     <ParcelProvider initialPreset={initialPreset}>
-      <FeasibilityStudioInner demoChosen={demoChosen} />
+      <FeasibilityStudioInner demoChosen={demoChosen} nativeShell={nativeShell} />
     </ParcelProvider>
   );
 }
 
-function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
+function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boolean; nativeShell: boolean }) {
   const { user, loading: authLoading } = useAuth();
   const {
     parcel: liveParcel,
@@ -1190,6 +1190,7 @@ function FeasibilityStudioInner({ demoChosen }: { demoChosen: boolean }) {
     return (
       <>
         <MobileJourney
+          pageScroll={!nativeShell}
           header={
             <MobileHeader
               address={activeParcel.address}
