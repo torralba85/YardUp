@@ -89,6 +89,7 @@ import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
 import { Button } from "./ui/Button";
 import { MoneyFigure } from "./ui/MoneyFigure";
+import { Skeleton } from "./ui/Skeleton";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { ArrowRight, ImageOff, Search } from "lucide-react";
 import { summarizeFeasibility } from "@/lib/feasibility-verdict";
@@ -129,8 +130,8 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
     >
       <div className="absolute inset-0 motion-safe:animate-pulse bg-lot-ink/40" />
       <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
-        <div className="h-3 w-32 motion-safe:animate-pulse rounded bg-lot-stone/15" />
-        <div className="h-2.5 w-56 motion-safe:animate-pulse rounded bg-lot-stone/10" />
+        <Skeleton className="h-3 w-32 bg-lot-stone/15" />
+        <Skeleton className="h-2.5 w-56 bg-lot-stone/10" />
       </div>
     </div>
   ),

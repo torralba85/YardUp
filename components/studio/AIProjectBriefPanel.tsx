@@ -4,6 +4,7 @@ import { AlertTriangle, Lock, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import type {
   AIPermitStage,
   AIProjectBrief,
@@ -353,16 +354,16 @@ function ProjectBriefSkeleton() {
       className="rounded-none border border-lot-line bg-lot-surface p-3.5"
     >
       <span className="sr-only">Building property notes and timeline</span>
-      <div className="motion-safe:animate-pulse">
-        <div className="h-3 w-3/4 rounded bg-lot-stone-soft" />
-        <div className="mt-2 h-2.5 w-full rounded bg-lot-stone-soft" />
-        <div className="mt-1.5 h-2.5 w-5/6 rounded bg-lot-stone-soft" />
+      <div>
+        <Skeleton className="h-3 w-3/4" />
+        <Skeleton className="mt-2 h-2.5 w-full" />
+        <Skeleton className="mt-1.5 h-2.5 w-5/6" />
         <div className="my-3 h-px bg-lot-line" />
         <div className="space-y-2.5">
           {["w-11/12", "w-4/5", "w-2/3"].map((width) => (
             <div key={width} className="grid grid-cols-[22px_1fr] gap-2">
-              <div className="h-[22px] w-[22px] rounded-none bg-lot-stone-soft" />
-              <div className={`mt-1 h-2.5 rounded bg-lot-stone-soft ${width}`} />
+              <Skeleton className="h-[22px] w-[22px]" />
+              <Skeleton className={`mt-1 h-2.5 ${width}`} />
             </div>
           ))}
         </div>
