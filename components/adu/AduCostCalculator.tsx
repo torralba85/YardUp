@@ -53,7 +53,7 @@ export function AduCostCalculator() {
       <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
         <label className="text-sm font-semibold text-lf-espresso">
           County
-          <Select value={county} onChange={(event) => setCounty(event.target.value)}>
+          <Select className="mt-1 block" value={county} onChange={(event) => setCounty(event.target.value)}>
             {CALCULATOR_COUNTIES.map((entry) => (
               <option key={entry.slug} value={entry.slug}>
                 {entry.name}
@@ -63,7 +63,7 @@ export function AduCostCalculator() {
         </label>
         <label className="text-sm font-semibold text-lf-espresso">
           Unit size
-          <Select value={size} onChange={(event) => setSize(Number(event.target.value))}>
+          <Select className="mt-1 block" value={size} onChange={(event) => setSize(Number(event.target.value))}>
             {SIZES.map((value) => (
               <option key={value} value={value}>
                 {value.toLocaleString("en-US")} sq ft
@@ -73,7 +73,7 @@ export function AduCostCalculator() {
         </label>
         <label className="text-sm font-semibold text-lf-espresso">
           Exterior finish
-          <Select
+          <Select className="mt-1 block"
             value={finish}
             onChange={(event) => setFinish(event.target.value as ExteriorFinish)}
           >
@@ -86,7 +86,7 @@ export function AduCostCalculator() {
         </label>
         <label className="text-sm font-semibold text-lf-espresso">
           Rent assumption
-          <Select
+          <Select className="mt-1 block"
             value={rentScenario}
             onChange={(event) => setRentScenario(event.target.value as RentScenario)}
           >
