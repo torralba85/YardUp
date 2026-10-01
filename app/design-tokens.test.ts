@@ -120,6 +120,48 @@ describe("A LOT MORE shared design contract", () => {
     }
   });
 
+  it("keeps the retired mono layer out of product markup", () => {
+    // §3.1: two families only. `--font-mono` is aliased to Manrope as a safety net,
+    // so a stray `font-mono` renders fine and silently re-teaches the old layer.
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/(?<![\w-])font-mono(?![\w-])/);
+    }
+  });
+
+  it("keeps elevation hard-edged: no blurred Tailwind shadows", () => {
+    // §4.4: elevation is a hard offset (`shadow-paper`, `shadow-card`, `shadow-chip`,
+    // `shadow-modal`). The only blurred shadows are the landing's sticky CTA and mobile
+    // menu, which live in its CSS Module.
+    const classLists = /className=(?:"([^"]*)"|\{`([^`]*)`\})/g;
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      for (const [, plain, template] of Array.from(readFileSync(file, "utf8").matchAll(classLists))) {
+        const classes = plain ?? template ?? "";
+        expect(classes, file).not.toMatch(/(?<![\w-])(?:[\w-]+:)*shadow(?:-(?:xs|sm|md|lg|xl|2xl|inner))?(?![\w-])/);
+      }
+    }
+  });
+
+  it("never colours money or credit figures green", () => {
+    // §2.6: money is typographic. Green is eligible/verified status only, so a green
+    // class may not sit on the same line as a formatted amount or a signed credit.
+    const green = /(?<![\w-])text-(?:lf-forest|status-eligible)(?![\w-])/;
+    const figure = /formatCurrency|formatCompactCurrency|lf-money-|<MoneyFigure|creditsChange|\+\{/;
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      readFileSync(file, "utf8")
+        .split("\n")
+        .forEach((line, index) => {
+          if (green.test(line)) expect(figure.test(line), `${file}:${index + 1}`).toBe(false);
+        });
+    }
+  });
+
+  it("tracks every positive eyebrow and readout at the canonical 0.08em", () => {
+    // §3.2: one restrained tracking value. Negative tracking on display type is separate.
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/tracking-\[0?\.(?!08em\])\d+em\]/);
+    }
+  });
+
   it("keeps exported certificates on the shared typography and neutral ledger", () => {
     const report = readFileSync(resolve(root, "lib/report.ts"), "utf8");
     expect(report).toContain('"Space Grotesk", Arial, sans-serif');
