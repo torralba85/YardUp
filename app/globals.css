@@ -8,11 +8,17 @@
 @theme {
   --font-sans: var(--font-lot-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-lot-display), sans-serif;
+  /* Safety net only: the mono layer is retired and `font-mono` is banned by
+     app/design-tokens.test.ts. If it slips through, it still renders Manrope. */
   --font-mono: var(--font-lot-body), sans-serif;
 
   /* A LOT MORE Core Tokens */
   --color-lot-chalk: #F5F5F0;
+  /* Recessed well on chalk: table heads, inactive chips, secondary hover. */
+  --color-lot-chalk-2: #EBEBE6;
   --color-lot-ink: #161616;
+  /* Secondary (carbon) button and dark-row hover (§2.4). */
+  --color-lot-ink-hover: #33332F;
   --color-lot-orange: #FF5B24;
   --color-lot-orange-hover: #EE4B17;
   --color-lot-orange-ink: #C43708;
@@ -32,7 +38,21 @@
   --color-status-blocked: #A82D16;
   --color-status-blocked-on-dark: #F0705A;
 
-  /* Compatibility aliases while legacy class names are retired incrementally. */
+  /* Radius (§4.4): `rounded-none` for surfaces and cards, `rounded-control`
+     for every control, `rounded-full` for dots. */
+  --radius-control: 3px;
+
+  /* Elevation (§4.4) is a hard offset with no blur, like a print on a board. */
+  --shadow-paper: 12px 16px 0 #E7E7DF;
+  --shadow-card: 6px 8px 0 #16161618;
+  --shadow-chip: 4px 4px 0 #16161618;
+  --shadow-modal: 12px 16px 0 #16161630;
+
+  /* Motion easing (§5): `ease-settle` decelerates into place, nothing overshoots. */
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Legacy aliases. New code uses lot-* / status-*; app/design-tokens.test.ts
+     caps the number of lf-* references so the count can only fall. */
   --color-lf-sand: #F5F5F0;
   --color-lf-sand-2: #EBEBE6;
   --color-lf-card: #F5F5F0;
@@ -77,6 +97,14 @@
   --z-index-modal: 60;
   --z-index-toast: 70;
   --z-index-coach: 80;
+}
+
+/* Motion durations (§5). Tailwind has no duration theme namespace, so these are
+   plain custom properties, read as `duration-(--duration-hover)`. */
+:root {
+  --duration-hover: 180ms;
+  --duration-disclosure: 200ms;
+  --duration-settle: 300ms;
 }
 
 * {
@@ -139,7 +167,7 @@ p {
 
 /* Micro-print — the smallest sanctioned informational text (9px floor,
    2026-07-04 ruling). For micro labels in data-dense builder tables, ledger
-   slips, and inline certificates: mono, uppercase, kicker-tracked. Text below
+   slips, and inline certificates: Manrope, uppercase, kicker-tracked. Text below
    9px is reserved for decorative facsimiles (scaled-down document thumbnails),
    never informational content. */
 @utility lf-dataprint {
@@ -383,7 +411,7 @@ textarea {
   }
 
   /* Staggered settle: direct children land in sequence rather than all at
-     once (DESIGN.md "panels slide-settle with ease-out"). Used by the studio
+     once (design-system §5: enter ease-out, things settle). Used by the studio
      metrics grid so the six cells cascade in. Guarded by reduced-motion. */
   .lf-stagger > * {
     animation: lf-fade-in 220ms ease-out both;
