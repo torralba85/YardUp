@@ -159,7 +159,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
   }
 
   if (view === "studio") {
-    if (destination.kind === "demo") return <FeasibilityStudio demoChosen />;
+    if (destination.kind === "demo") return <FeasibilityStudio demoChosen nativeShell />;
     return <PropertyStudio user={user} />;
   }
 
@@ -292,7 +292,7 @@ function PropertyStudio({ user }: { user: User | null }) {
   // gate; sign-out removes that gate before opening a fresh guest workspace.
   if (!user && !guestStudioStarted) setGuestStudioStarted(true);
   if (user && !guestStudioStarted) return <SignedInStudioGate user={user} />;
-  return <FeasibilityStudio />;
+  return <FeasibilityStudio nativeShell />;
 }
 
 function Screen({ testId, onBack, children }: { testId: string; onBack?: () => void; children: ReactNode }) {

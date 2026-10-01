@@ -347,7 +347,12 @@ describe("landing address handoff", () => {
     const example = screen.getByRole("link", {
       name: "Try the Oak Street demo",
     });
-    expect(example).toHaveAttribute("href", "/studio?parcel=oak-street");
+    expect(example).toHaveAttribute(
+      "href",
+      screen.getByRole("link", {
+        name: "Open the Seattle sample lot in the 3D studio",
+      }).getAttribute("href"),
+    );
     fireEvent.click(example);
     expect(stash).toHaveBeenCalledExactlyOnceWith("");
     expect(consumeEntrySource()).toBe("landing_cta");

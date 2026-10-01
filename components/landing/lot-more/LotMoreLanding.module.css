@@ -351,7 +351,8 @@
 }
 .formNote {
   color: var(--stone);
-  font-size: 12px;
+  font-size: 14px;
+  line-height: 1.5;
   margin-top: 9px !important;
 }
 .formError {
@@ -464,7 +465,8 @@
   justify-content: space-between;
   padding: 0 15px 14px;
   color: var(--stone);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.1em;
 }
 .parcelCanvas {
@@ -571,7 +573,8 @@
 .artCaption {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--stone);
   border-top: 1px solid var(--line);
   padding: 13px 0 0;
@@ -1359,7 +1362,7 @@
   .artCaption {
     flex-direction: row;
     margin: 0;
-    font-size: 10px;
+    font-size: 13px;
   }
   .artHeader {
     padding-left: 0;
@@ -1586,7 +1589,7 @@
     padding: 12px 15px;
   }
   .formNote {
-    font-size: 11px;
+    font-size: 14px;
   }
   .heroVisual {
     margin-top: 18px !important;
@@ -1615,7 +1618,7 @@
   }
   .artCaption {
     flex-direction: column;
-    font-size: 10px;
+    font-size: 13px;
   }
   .page h2 {
     font-size: 38px;
@@ -1755,10 +1758,15 @@
   justify-content: space-between;
   gap: 42px;
 }
-.demoHeading > p {
+.demoIntro {
   max-width: 350px;
+}
+.demoIntro > p {
   color: var(--stone);
   font-size: 15px;
+}
+.demoIntro .darkButton {
+  margin-top: 18px;
 }
 .demoLayout {
   display: grid;
@@ -1819,9 +1827,6 @@
 .demoSteps .textLink {
   margin-top: 4px;
   font-size: 12px;
-}
-.demoSteps .darkButton {
-  margin-top: 7px;
 }
 .intentBand {
   display: grid;
@@ -1919,7 +1924,7 @@
   .demoHeading {
     display: block;
   }
-  .demoHeading > p {
+  .demoIntro {
     margin-top: 22px;
     max-width: 500px;
   }

@@ -29,6 +29,7 @@ export const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
   description,
+  alternates: { canonical: canonicalUrl },
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },
@@ -73,13 +74,8 @@ export default function LandingPage() {
     },
   );
   return (
-    <>
-      <head>
-        <link rel="canonical" href={canonicalUrl} />
-      </head>
-      <div className={`${display.variable} ${body.variable}`}>
-        <LotMoreLanding scenarios={scenarios} />
-      </div>
-    </>
+    <div className={`${display.variable} ${body.variable}`}>
+      <LotMoreLanding scenarios={scenarios} />
+    </div>
   );
 }
