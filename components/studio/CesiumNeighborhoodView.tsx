@@ -582,27 +582,28 @@ export default function CesiumNeighborhoodView({
       <div ref={containerRef} className="h-full w-full" data-testid="cesium-container" />
 
       {/* Floating HUD banner */}
-      <div className="pointer-events-none absolute top-3 left-3 z-10 flex max-w-sm flex-col gap-1 rounded-[3px] border border-lf-hairline bg-lot-chalk/95 p-3 shadow-md backdrop-blur-sm">
+      {/* A paper card on the imagery: hard offset shadow, no blur (design-system §4.4). */}
+      <div className="pointer-events-none absolute top-3 left-3 z-(--z-index-scene) flex max-w-sm flex-col gap-1 rounded-none border border-lot-line bg-lot-chalk/95 p-3 shadow-card">
         <div className="flex items-center gap-2">
           <Globe size={16} className="text-lot-orange-ink shrink-0" aria-hidden="true" />
           <span className="font-display text-sm font-semibold tracking-wide text-lot-ink">
             Neighborhood 3D
           </span>
-          <span className="rounded bg-lf-muted/10 px-1.5 py-0.5 font-mono text-[10px] text-lf-muted uppercase">
+          <span className="lf-kicker-dense rounded-none bg-lot-stone/10 px-1.5 py-0.5 text-lot-stone">
             CesiumJS
           </span>
         </div>
         <p className="truncate text-xs text-lot-ink font-medium">
           {parcel.address || "Proposed ADU Site"}
         </p>
-        <p className="font-mono text-[11px] text-lf-muted">
+        <p className="text-[11px] tabular-nums text-lot-stone">
           {lat.toFixed(5)}°N, {Math.abs(lng).toFixed(5)}°W {!isGeocoded ? "(City Default)" : ""}
         </p>
-        <p className="font-mono text-[11px] text-lf-muted" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
+        <p className="text-[11px] tabular-nums text-lot-stone" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
           {describePhotorealRoute(route)}
         </p>
           <p
-            className="font-mono text-[11px] text-lf-muted"
+            className="text-[11px] tabular-nums text-lot-stone"
             data-testid="cesium-ground-elevation"
             aria-live="polite"
             aria-atomic="true"
