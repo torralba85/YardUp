@@ -60,7 +60,7 @@ export default function StudioLayout({
             </div>
             <span
               aria-hidden="true"
-              className="shrink-0 text-2xl leading-none motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-45"
+              className="shrink-0 text-2xl leading-none motion-safe:transition-transform motion-safe:duration-(--duration-disclosure) group-open:rotate-45"
             >
               +
             </span>

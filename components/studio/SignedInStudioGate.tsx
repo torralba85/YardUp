@@ -113,7 +113,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="inline-flex min-h-11 items-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
+            className="inline-flex min-h-11 items-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
           >
             <BrandLockup className="h-8 w-auto" />
           </Link>
@@ -122,7 +122,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
             <button
               type="button"
               onClick={() => void logout()}
-              className="flex min-h-11 items-center gap-2 rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold motion-safe:transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="flex min-h-11 items-center gap-2 rounded-control border border-lf-hairline px-4 text-sm font-semibold motion-safe:transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
             >
               <LogOut size={15} />
               Sign out

@@ -8,7 +8,7 @@ import { createSplatDepthFixture, DEFAULT_SPLAT_TRANSFORM, validateLocalSplat, t
 import type { SplatLayerStatus } from "./GaussianSplatLayer";
 
 const SplatWorkbenchScene = dynamic(() => import("./SplatWorkbenchScene"), { ssr: false });
-const control = "min-h-11 w-full rounded-[3px] border border-lf-muted bg-lot-chalk px-3 text-base text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
+const control = "min-h-11 w-full rounded-control border border-lf-muted bg-lot-chalk px-3 text-base text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
 
 export default function SplatWorkbench() {
   const [source, setSource] = useState<SplatSource>(createSplatDepthFixture);

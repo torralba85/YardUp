@@ -46,7 +46,7 @@ export default function BuilderPage() {
             <Link
               href="/"
               aria-label="LotFoundry home"
-              className="rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
             >
               <BrandLockup className="h-7 w-auto" />
             </Link>

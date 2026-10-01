@@ -48,11 +48,11 @@ export function PlacementEditor({
   }
 
   return (
-    <details className="border-t border-[#DADAD3] bg-[#F5F5F0] px-3">
-      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#161616]">
+    <details className="border-t border-lot-line bg-lot-chalk px-3">
+      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink">
         Move or rotate ADU
       </summary>
-      <p className="mb-3 text-xs text-[#65655F]">
+      <p className="mb-3 text-xs text-lot-stone">
         Selected: {config.width} × {config.length} ft ADU · {config.height} ft walls · {total?.toFixed(1)} ft total height. Position uses modeled lot coordinates; +Z is the front.
       </p>
       <div className="grid grid-cols-3 gap-2">
@@ -95,7 +95,7 @@ export function PlacementEditor({
           Magnetic snap {snapEnabled ? "on" : "off"}
         </Button>
       </div>
-      <p className="mb-3 text-[11px] leading-4 text-[#65655F]">
+      <p className="mb-3 text-[11px] leading-4 text-lot-stone">
         Magnetic snap moves a placement back to the modeled legal boundary when it crosses by 0.5 ft or less. Larger conflicts stay visible for review.
       </p>
     </details>

@@ -88,7 +88,7 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
-                className={`flex min-h-24 items-center gap-3 rounded-[3px] border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                className={`flex min-h-24 items-center gap-3 rounded-control border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                   selected ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                 }`}
               >
@@ -150,7 +150,7 @@ export default function ShapeStep({
         <button
           type="button"
           onClick={onFineTune}
-          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-lot-orange-ink hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-semibold text-lot-orange-ink hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         >
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions

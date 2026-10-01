@@ -135,7 +135,7 @@ export default function CheckStep({
       <button
         type="button"
         onClick={onFineTune}
-        className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-[#C43708] motion-safe:transition hover:bg-lf-taupe-soft"
+        className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:bg-lf-taupe-soft"
       >
         <SlidersHorizontal size={15} />
         Fine-tune the numbers

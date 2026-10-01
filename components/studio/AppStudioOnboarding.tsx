@@ -42,7 +42,7 @@ function withEntry(state: unknown, { step, destination }: OnboardingEntry) {
 }
 
 const primaryButton =
-  "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-[3px] bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink motion-safe:transition-colors motion-safe:duration-[180ms]";
+  "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-control bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink motion-safe:transition-colors motion-safe:duration-(--duration-hover)";
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink";
 
 function readGuideSeen(): boolean {
@@ -205,7 +205,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
                 <button
                   type="button"
                   onClick={() => chooseDemo(preset.id)}
-                  className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-[3px] border-[1.5px] border-lot-ink px-4 py-2 text-left hover:bg-lot-line motion-safe:transition-colors motion-safe:duration-[180ms] ${focusRing}`}
+                  className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-control border-[1.5px] border-lot-ink px-4 py-2 text-left hover:bg-lot-line motion-safe:transition-colors motion-safe:duration-(--duration-hover) ${focusRing}`}
                 >
                   <span>
                     <span className="block text-sm font-bold">{cityLabel(preset.city)}</span>
@@ -239,7 +239,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
         <button
           type="button"
           onClick={() => go("welcome")}
-          className={`mt-3 min-h-11 w-full rounded-[3px] text-sm font-semibold underline underline-offset-4 ${focusRing}`}
+          className={`mt-3 min-h-11 w-full rounded-control text-sm font-semibold underline underline-offset-4 ${focusRing}`}
         >
           Try a demo city instead
         </button>
@@ -303,7 +303,7 @@ function Screen({ testId, onBack, children }: { testId: string; onBack?: () => v
           <button
             type="button"
             onClick={onBack}
-            className={`-ml-2 inline-flex min-h-11 items-center gap-2 rounded-[3px] px-2 text-sm font-semibold ${focusRing}`}
+            className={`-ml-2 inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold ${focusRing}`}
           >
             <ArrowLeft size={18} strokeWidth={1.5} aria-hidden="true" /> Back
           </button>

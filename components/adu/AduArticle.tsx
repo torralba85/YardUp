@@ -139,7 +139,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       {content.coastalCallout ? (
         <aside
           aria-label="Coastal Zone warning"
-          className="mt-12 rounded-[3px] border border-lf-hairline bg-lf-sand px-6 py-5"
+          className="mt-12 rounded-control border border-lf-hairline bg-lf-sand px-6 py-5"
         >
           <h2 className="font-semibold text-lf-espresso">
             Coastal Zone owners, read this
@@ -282,7 +282,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           <li>
             <Link
               href="/adu/ca"
-              className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              className="inline-flex min-h-11 items-center rounded-control border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               California ADU rules hub
             </Link>
@@ -291,7 +291,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             <li key={neighbor.slug}>
               <Link
                 href={`/adu/${neighbor.state}/${neighbor.slug}`}
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="inline-flex min-h-11 items-center rounded-control border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 ADU rules in {neighbor.city}
               </Link>

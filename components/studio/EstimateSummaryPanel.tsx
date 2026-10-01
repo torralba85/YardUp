@@ -69,7 +69,7 @@ export default function EstimateSummaryPanel({
   return (
     <aside
       aria-labelledby="estimate-summary-heading"
-      className="w-full overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card"
+      className="w-full overflow-hidden rounded-none border border-lot-line bg-lf-card"
     >
       <PanelHeader
         as="h2"
@@ -79,7 +79,7 @@ export default function EstimateSummaryPanel({
       />
 
       <div className="space-y-4 px-6 py-5">
-        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-4">
+        <div className="rounded-none border border-lot-line bg-lf-sand-2 p-4">
           <div className="flex items-start gap-3">
             <CheckCircle2
               size={18}
@@ -104,7 +104,7 @@ export default function EstimateSummaryPanel({
             return (
               <div
                 key={metric.label}
-                className="rounded-none border border-[#DADAD3] bg-lf-card p-4"
+                className="rounded-none border border-lot-line bg-lf-card p-4"
               >
                 <div className="flex items-center gap-2 lf-kicker-dense font-medium text-lf-muted">
                   <Icon size={13} />

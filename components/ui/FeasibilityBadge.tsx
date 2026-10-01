@@ -19,12 +19,12 @@ export function FeasibilityBadge({
   if (!evaluation.applicable) return null;
 
   const qualified = evaluation.status === "qualified";
-  const foreground = surface === "dark" ? "text-[#F5F5F0]" : "text-[#161616]";
-  const muted = surface === "dark" ? "text-[#B7B7AE]" : "text-[#65655F]";
-  const border = surface === "dark" ? "border-[#44443F]" : "border-[#DADAD3]";
+  const foreground = surface === "dark" ? "text-lot-chalk" : "text-lot-ink";
+  const muted = surface === "dark" ? "text-lot-stone-on-dark" : "text-lot-stone";
+  const border = surface === "dark" ? "border-lot-line-dark" : "border-lot-line";
   const statusColor = qualified
-    ? surface === "dark" ? "text-[#5FBF93]" : "text-[#176B4C]"
-    : surface === "dark" ? "text-[#E0A33C]" : "text-[#8A5300]";
+    ? surface === "dark" ? "text-status-eligible-on-dark" : "text-status-eligible"
+    : surface === "dark" ? "text-status-review-on-dark" : "text-status-review";
   const Icon = qualified ? CheckCircle2 : AlertTriangle;
 
   return (
@@ -32,7 +32,7 @@ export function FeasibilityBadge({
       <summary className={`flex min-h-11 cursor-pointer list-none items-center gap-2 text-xs font-semibold ${foreground}`}>
         <Icon className={`h-4 w-4 shrink-0 ${statusColor}`} aria-hidden="true" />
         <span className={statusColor}>{evaluation.title}</span>
-        <ChevronRight className="ml-auto h-4 w-4 shrink-0 motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-90" aria-hidden="true" />
+        <ChevronRight className="ml-auto h-4 w-4 shrink-0 motion-safe:transition-transform motion-safe:duration-(--duration-disclosure) group-open:rotate-90" aria-hidden="true" />
       </summary>
       <div className={`space-y-2 pb-2 text-xs leading-5 ${muted}`}>
         <p>{evaluation.summary}</p>

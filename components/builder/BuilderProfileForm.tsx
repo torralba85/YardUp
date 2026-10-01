@@ -206,7 +206,7 @@ export default function BuilderProfileForm({
       <Button
         type="submit"
         loading={isPending}
-        className="min-h-11 rounded-[3px] bg-lf-clay px-4 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
+        className="min-h-11 rounded-control bg-lf-clay px-4 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
       >
         {isPending ? "Saving…" : "Save builder profile"}
       </Button>

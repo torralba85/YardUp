@@ -100,7 +100,7 @@ export default function AIProjectBriefPanel({
       </div>
 
       {!response && !loading && !error && (
-        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-3">
+        <div className="rounded-none border border-lot-line bg-lf-sand-2 p-3">
           <p className="text-xs leading-5 text-lf-muted">
             Generate one readout that joins parcel fit, review flags, and a typical approval
             timeline. You&rsquo;ll see a free preview here; the complete brief is recorded in
@@ -160,13 +160,13 @@ export function ProjectBriefPreviewContent({
   ].join(" · ");
 
   return (
-    <div className="overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card">
+    <div className="overflow-hidden rounded-none border border-lot-line bg-lf-card">
       <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-display text-xl font-medium leading-tight text-lf-espresso">
             {preview.headline}
           </h4>
-          <span className="shrink-0 rounded-none border border-[#DADAD3] px-1.5 py-0.5 lf-dataprint text-lf-muted">
+          <span className="shrink-0 rounded-none border border-lot-line px-1.5 py-0.5 lf-dataprint text-lf-muted">
             Preview
           </span>
         </div>
@@ -240,7 +240,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
     : [];
 
   return (
-    <div className="overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card">
+    <div className="overflow-hidden rounded-none border border-lot-line bg-lf-card">
       <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
         <h4 className="font-display text-xl font-medium leading-tight text-lf-espresso">
           {brief.headline}
@@ -351,7 +351,7 @@ function ProjectBriefSkeleton() {
     <div
       role="status"
       aria-live="polite"
-      className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-3.5"
+      className="rounded-none border border-lot-line bg-lf-sand-2 p-3.5"
     >
       <span className="sr-only">Building property notes and timeline</span>
       <div>

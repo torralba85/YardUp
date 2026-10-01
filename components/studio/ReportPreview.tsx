@@ -162,7 +162,7 @@ export default function ReportPreview({
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-preview-heading"
-        className="flex h-[min(94dvh,920px)] w-full max-w-5xl flex-col overflow-hidden rounded-none border border-lf-hairline bg-lf-card shadow-[6px_8px_0_#16161618] motion-safe:animate-[lf-fade-in_180ms_ease-out] sm:h-auto sm:max-h-[min(92dvh,900px)] sm:rounded-none print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:border-0 print:shadow-none"
+        className="flex h-[min(94dvh,920px)] w-full max-w-5xl flex-col overflow-hidden rounded-none border border-lf-hairline bg-lf-card shadow-card motion-safe:animate-[lf-fade-in_180ms_ease-out] sm:h-auto sm:max-h-[min(92dvh,900px)] sm:rounded-none print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:border-0 print:shadow-none"
       >
         {/* Sticky chrome: title + primary actions always reachable */}
         <header className="shrink-0 border-b border-lf-hairline bg-lf-card/95 px-4 py-3 backdrop-blur-sm sm:px-6 sm:py-4 print:static print:border-b print:bg-lf-card">
@@ -184,7 +184,7 @@ export default function ReportPreview({
               type="button"
               onClick={onClose}
               aria-label="Close report preview"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 print:hidden"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 print:hidden"
             >
               <X size={18} aria-hidden="true" />
             </button>
@@ -526,7 +526,7 @@ function CertificateBriefSection({
                   type="button"
                   onClick={onRetry}
                   disabled={loading}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-[3px] border border-lf-brick/50 bg-transparent px-3 py-2 text-xs font-medium text-lf-brick hover:bg-lf-brick/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-brick motion-safe:transition-colors disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-lf-brick/50 bg-transparent px-3 py-2 text-xs font-medium text-lf-brick hover:bg-lf-brick/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-brick motion-safe:transition-colors disabled:opacity-50"
                 >
                   <RotateCcw size={12} className={loading ? "animate-spin" : ""} aria-hidden="true" />
                   <span>Try again</span>

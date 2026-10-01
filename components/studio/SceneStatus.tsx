@@ -50,7 +50,7 @@ export function SceneStatus({
       {setbackConflict && (
         <div
           role="alert"
-          className="flex items-start gap-2 border-b border-[#A82D16]/35 bg-[#A82D16]/5 px-3 py-2 text-xs leading-5 text-[#A82D16]"
+          className="flex items-start gap-2 border-b border-status-blocked/35 bg-status-blocked/5 px-3 py-2 text-xs leading-5 text-status-blocked"
         >
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
@@ -76,11 +76,11 @@ export function SceneStatus({
       </div>
 
       <details className="group/status px-4">
-        <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[3px] text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
+        <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
           Modeled site fit details
           <ChevronDown size={14} aria-hidden="true" className="ml-auto shrink-0 group-open/status:rotate-180" />
         </summary>
-        <div className="space-y-1 pb-3 text-xs leading-5 text-[#65655F]">
+        <div className="space-y-1 pb-3 text-xs leading-5 text-lot-stone">
           <p>{status.detail}</p>
           <p>
             {coverage.title}. {coverage.action}
@@ -95,7 +95,7 @@ export function SceneStatus({
       </details>
 
       {coverage.tone !== "ok" && (
-        <p className="flex items-start gap-2 px-3 pb-3 text-xs leading-5 text-[#8A5300]">
+        <p className="flex items-start gap-2 px-3 pb-3 text-xs leading-5 text-status-review">
           <TriangleAlert size={16} aria-hidden="true" className="shrink-0" />
           <span>{coverage.title}. {coverage.action}</span>
         </p>

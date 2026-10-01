@@ -366,7 +366,7 @@ export default function AddressSearch({
           activeIndex >= 0 ? `address-suggestion-${activeIndex}` : undefined
         }
         className={[
-          "h-11 w-full rounded-[3px] border pl-9 pr-26 text-sm",
+          "h-11 w-full rounded-control border pl-9 pr-26 text-sm",
           "bg-lf-card text-lf-espresso placeholder:text-lf-muted",
           "outline-none motion-safe:transition",
           "focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink",
@@ -379,7 +379,7 @@ export default function AddressSearch({
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-[3px] px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-primary-label enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
+        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-control px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-primary-label enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search

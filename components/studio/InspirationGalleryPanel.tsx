@@ -128,7 +128,7 @@ export default function InspirationGalleryPanel({
             <span className="font-display text-lg font-medium tracking-tight">Match your own home</span>
             <span className="text-sm text-lot-stone">Explore a concept inspired by your existing exterior.</span>
           </span>
-          <Plus size={22} aria-hidden="true" className="shrink-0 group-open:rotate-45 motion-safe:transition-transform motion-safe:duration-200" />
+          <Plus size={22} aria-hidden="true" className="shrink-0 group-open:rotate-45 motion-safe:transition-transform motion-safe:duration-(--duration-disclosure)" />
         </summary>
         <div className="pt-2 pb-4">
           <StyleMatchPanel key={styleMatchKey} onGenerationComplete={onGenerationComplete}

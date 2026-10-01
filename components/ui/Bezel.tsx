@@ -18,7 +18,7 @@ export const Bezel = React.forwardRef<HTMLDivElement, BezelProps>(
       <div
         ref={ref}
         className={cn(
-          "flex flex-col rounded-none border border-lf-hairline bg-lf-card shadow-[12px_16px_0_#E7E7DF]",
+          "flex flex-col rounded-none border border-lf-hairline bg-lf-card shadow-paper",
           className
         )}
         {...props}

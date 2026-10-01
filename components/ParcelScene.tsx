@@ -1234,7 +1234,7 @@ export default function ParcelScene({
             the audit found them collapsing to bare icons below `sm` (U4). */}
         <div
           aria-label="Camera view"
-          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-none border border-[#DADAD3] bg-[#F5F5F0]/95 p-1"
+          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-none border border-lot-line bg-lot-chalk/95 p-1"
           {...cameraGroupProps}
         >
           {[
@@ -1250,7 +1250,7 @@ export default function ParcelScene({
                 size="sm"
                 variant={active ? "selected" : "ghost"}
                 {...getCameraRadioProps(mode)}
-                className="h-11 gap-1.5 px-3 leading-none aria-[checked=false]:text-[#161616] aria-[checked=false]:hover:bg-[#161616]/5"
+                className="h-11 gap-1.5 px-3 leading-none aria-[checked=false]:text-lot-ink aria-[checked=false]:hover:bg-lot-ground-dark/5"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="text-xs font-medium">{label}</span>
@@ -1259,7 +1259,7 @@ export default function ParcelScene({
           })}
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-[#F5F5F0]">
+        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ground-dark px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
           N
         </div>
       </div>
@@ -1277,19 +1277,19 @@ export default function ParcelScene({
       <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}>
         <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
 
-      <details className="shrink-0 border-t border-[#DADAD3] bg-[#F5F5F0] px-3">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#161616]">
+      <details className="shrink-0 border-t border-lot-line bg-lot-chalk px-3">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink">
           Lighting and quality
         </summary>
         <div className="space-y-3 pb-3">
           <div
-            className="flex items-center gap-2 text-[#161616]"
+            className="flex items-center gap-2 text-lot-ink"
             role="group"
             aria-label="Illustrative shadow preview"
           >
-            <Sun className="h-4 w-4 shrink-0 text-[#161616]" aria-hidden="true" />
+            <Sun className="h-4 w-4 shrink-0 text-lot-ink" aria-hidden="true" />
             <span className="flex min-w-16 flex-col leading-none">
-              <span className="lf-dataprint text-[#65655F]">Shadow preview</span>
+              <span className="lf-dataprint text-lot-stone">Shadow preview</span>
               <output
                 htmlFor="shadow-preview-hour"
                 className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.08em]"
@@ -1307,7 +1307,7 @@ export default function ParcelScene({
               disabled={!shadowPreview}
               onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
               aria-label="Preview time"
-              className="h-8 w-28 cursor-pointer accent-[#FF5B24] disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-8 w-28 cursor-pointer accent-lot-orange disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div aria-label="Lighting preset" className="flex flex-wrap gap-1" {...lightingGroupProps}>
@@ -1338,13 +1338,13 @@ export default function ParcelScene({
               </Button>
             ))}
           </div>
-          <p className="text-xs leading-4 text-[#65655F]">
+          <p className="text-xs leading-4 text-lot-stone">
             Both presets are illustrative studio lighting, not a location- or
             date-based solar study. The preview time applies to Shadow Preview
             only. Quality tiers set pixel ratio and shadow resolution; they are
             budget settings, not measured frame rates.
           </p>
-          <p className="text-xs leading-4 text-[#65655F]">
+          <p className="text-xs leading-4 text-lot-stone">
             Drag to move · Arrow keys when the model has focus
           </p>
         </div>
@@ -1381,12 +1381,12 @@ function Parcel2DScene({
         className={`relative overflow-hidden p-4 ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[220px] flex-1"}`}
         style={{ backgroundImage: SCENE_BACKDROP }}
       >
-        <div className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-2 rounded-none border border-[#DADAD3] bg-[#F5F5F0] p-1.5 text-xs font-medium text-[#161616]">
-          <span className="rounded-none bg-[#161616] px-2 py-1 font-sans text-[11px] font-bold text-[#F5F5F0]">2D SITE PLAN</span>
-          <span className="px-1.5 py-0.5 font-sans text-xs text-[#65655F]">WebGL fallback</span>
+        <div className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-2 rounded-none border border-lot-line bg-lot-chalk p-1.5 text-xs font-medium text-lot-ink">
+          <span className="rounded-none bg-lot-ground-dark px-2 py-1 font-sans text-[11px] font-bold text-lot-chalk">2D SITE PLAN</span>
+          <span className="px-1.5 py-0.5 font-sans text-xs text-lot-stone">WebGL fallback</span>
         </div>
 
-        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-[#F5F5F0]">
+        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ground-dark px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
           N
         </div>
 

@@ -62,7 +62,7 @@ export default function FindStep({
       <div className="mt-5">
         <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} />
         {parcelLoading && (
-          <div className="mt-2 flex items-center gap-2 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+          <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
             <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
             Looking up property data…
           </div>

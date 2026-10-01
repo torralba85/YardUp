@@ -39,7 +39,7 @@ describe("Button", () => {
     // min-height 48px, padding 12px 19px, 14px/700.
     render(<Button>Continue</Button>);
     const button = screen.getByRole("button", { name: "Continue" });
-    expect(button).toHaveClass("rounded-[3px]", "min-h-12", "px-[19px]", "py-3", "text-sm", "font-bold");
+    expect(button).toHaveClass("rounded-control", "min-h-12", "px-[19px]", "py-3", "text-sm", "font-bold");
     expect(button).not.toHaveClass("rounded-full", "h-11");
   });
 

@@ -40,7 +40,7 @@ export function ParcelPlan({
       role="img"
       aria-label={`2D concept plan. ADU ${config.width} by ${config.length} feet, rotated ${pose.rotationDeg} degrees. ${placementFeedback.title}.`}
       viewBox={`${-parcel.lotWidth / 2 - 12} ${-parcel.lotLength / 2 - 12} ${parcel.lotWidth + 24} ${parcel.lotLength + 24}`}
-      className="h-full w-full bg-[#F5F5F0]"
+      className="h-full w-full bg-lot-chalk"
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>

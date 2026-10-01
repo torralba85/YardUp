@@ -1568,7 +1568,7 @@ function SceneViewToggle({
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-[3px] bg-lf-commit px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lf-sand">
+          <span className="ml-1 rounded-control bg-lf-commit px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lf-sand">
             Beta
           </span>
         </Button>

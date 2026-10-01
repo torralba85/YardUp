@@ -64,13 +64,13 @@ export function DeleteAccountPageClient() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/login?next=/delete-account"
-              className="inline-flex h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
+              className="inline-flex h-11 items-center justify-center rounded-control bg-lf-clay px-5 text-sm font-semibold text-lf-sand"
             >
               Sign in
             </Link>
             <Link
               href="/forgot-password"
-              className="inline-flex h-11 items-center justify-center rounded-[3px] border border-lf-hairline px-5 text-sm font-semibold text-lf-espresso"
+              className="inline-flex h-11 items-center justify-center rounded-control border border-lf-hairline px-5 text-sm font-semibold text-lf-espresso"
             >
               Reset password
             </Link>

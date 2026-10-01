@@ -162,7 +162,7 @@ export default function UnlockSlip({
             type="button"
             onClick={onConfirm}
             disabled={pending || priceBlocked}
-            className="mt-4 flex w-full items-center justify-between rounded-[3px] bg-lf-commit px-4 py-3.5 text-sm font-semibold text-lf-sand motion-safe:transition hover:brightness-95 disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-between rounded-control bg-lf-commit px-4 py-3.5 text-sm font-semibold text-lf-sand motion-safe:transition hover:brightness-95 disabled:opacity-60"
           >
             <span>{pending ? "Recording unlock…" : payLabel}</span>
             <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>

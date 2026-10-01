@@ -56,7 +56,7 @@ export function SettingsClient() {
         </p>
         <Link
           href="/login?next=/settings"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-control bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
         >
           Sign in
         </Link>
@@ -146,7 +146,7 @@ export function SettingsClient() {
             <div>
               <Link
                 href="/certificates"
-                className="inline-flex min-h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
               >
                 View your certificates
               </Link>
@@ -171,13 +171,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/help"
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-control border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
               >
                 Get help
               </Link>
               <Link
                 href="/feedback"
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-control border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
               >
                 Send feedback
               </Link>

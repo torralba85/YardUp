@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="min-h-11 w-full rounded-[3px] bg-lf-clay py-3 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="min-h-11 w-full rounded-control bg-lf-clay py-3 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           {isPending ? "Sending…" : "Send reset link"}
         </button>

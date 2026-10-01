@@ -154,7 +154,7 @@ export default function RootLayout({
         />
         <a
           href="#main-content"
-          className="sr-only rounded-[3px] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lf-espresso focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lf-sand focus:outline-2 focus:outline-offset-2 focus:outline-lf-sand"
+          className="sr-only rounded-control focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lf-espresso focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lf-sand focus:outline-2 focus:outline-offset-2 focus:outline-lf-sand"
         >
           Skip to content
         </a>

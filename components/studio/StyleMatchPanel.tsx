@@ -387,7 +387,7 @@ export default function StyleMatchPanel({
             </div>
 
             <div className="h-1.5 w-full bg-lf-taupe-soft mt-4 overflow-hidden rounded-full">
-              <div className="h-full w-full origin-left bg-lf-clay motion-safe:transition-transform duration-300 motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
+              <div className="h-full w-full origin-left bg-lf-clay motion-safe:transition-transform duration-(--duration-settle) motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
             </div>
 
             <p className="mt-3 text-[11px] text-lf-muted leading-normal">
@@ -403,21 +403,21 @@ export default function StyleMatchPanel({
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>

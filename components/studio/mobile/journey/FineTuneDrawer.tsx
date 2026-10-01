@@ -35,20 +35,20 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
             closeRef.current?.focus();
           }}
           aria-label="Fine-tune your ADU"
-          className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[92dvh] flex-col border-t border-[#DADAD3] bg-[#F5F5F0] shadow-[6px_8px_0_#16161618] outline-none"
+          className="fixed bottom-0 left-0 right-0 z-(--z-index-sheet) flex h-[92dvh] flex-col border-t border-lot-line bg-lot-chalk shadow-card outline-none"
         >
           <Drawer.Title className="sr-only">Fine-tune your ADU</Drawer.Title>
           <Drawer.Description className="sr-only">
             Adjust exact dimensions, roof, finish, and financial assumptions.
           </Drawer.Description>
           <div className="relative shrink-0 pt-2">
-            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-[#DADAD3]" />
+            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-lot-line" />
             <button
               type="button"
               ref={closeRef}
               aria-label="Close fine-tune panel"
               onClick={onClose}
-              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-[3px] text-[#65655F] motion-safe:transition hover:text-[#161616]"
+              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-control text-lot-stone motion-safe:transition hover:text-lot-ink"
             >
               <X size={20} />
             </button>

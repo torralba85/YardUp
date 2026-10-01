@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /** Shared visual recipe for native text inputs and selects on chalk surfaces. */
 export const fieldControlClass =
-  "min-h-11 w-full rounded-[3px] border border-lot-stone bg-lot-chalk px-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink aria-[invalid=true]:border-status-blocked disabled:cursor-not-allowed disabled:opacity-60";
+  "min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink aria-[invalid=true]:border-status-blocked disabled:cursor-not-allowed disabled:opacity-60";
 
 /** Native text input with the shared field boundary, spacing, and focus treatment. */
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
@@ -149,7 +149,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "min-h-11 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
+              "min-h-11 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
               checked
                 ? "border-lot-ink bg-lot-ink text-lot-chalk"
                 : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lf-taupe/50 hover:bg-lf-sand-2",

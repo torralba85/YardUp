@@ -97,7 +97,7 @@ export default function BuildersPanel({
       </div>
 
       {!user ? (
-        <div className="flex flex-col items-center gap-3 rounded-none border border-[#DADAD3] bg-lf-card p-6 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-none border border-lot-line bg-lf-card p-6 text-center">
           <p className="lf-body-sm text-lf-muted">
             Sign in to see the builders who serve your area and send them your concept.
           </p>
@@ -109,13 +109,13 @@ export default function BuildersPanel({
         <div
           role="status"
           aria-busy="true"
-          className="flex items-center justify-center gap-2 rounded-none border border-[#DADAD3] bg-lf-card p-6 text-sm text-lf-muted"
+          className="flex items-center justify-center gap-2 rounded-none border border-lot-line bg-lf-card p-6 text-sm text-lf-muted"
         >
           <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
           Finding builders near you…
         </div>
       ) : noneMatched ? (
-        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-6 text-center">
+        <div className="rounded-none border border-lot-line bg-lf-sand-2 p-6 text-center">
           <p className="text-sm font-semibold text-lf-espresso">
             No builders are registered for {parcelCity} yet.
           </p>
@@ -133,7 +133,7 @@ export default function BuildersPanel({
           </p>
           <ul className="grid gap-3 sm:grid-cols-2">
             {matched.map((b) => (
-              <li key={b.id} className="rounded-none border border-[#DADAD3] bg-lf-card p-4">
+              <li key={b.id} className="rounded-none border border-lot-line bg-lf-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-lf-espresso">{b.companyName}</span>
                   {b.licensed ? (
@@ -144,7 +144,7 @@ export default function BuildersPanel({
                   {(b.serviceAreas || []).slice(0, 3).map((area) => (
                     <span
                       key={area.key}
-                      className="inline-flex items-center gap-1 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-1.5 py-0.5 font-sans text-[10px] text-lf-muted"
+                      className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lf-sand-2 px-1.5 py-0.5 font-sans text-[10px] text-lf-muted"
                     >
                       <MapPin size={10} aria-hidden />
                       {area.city}, {area.state}

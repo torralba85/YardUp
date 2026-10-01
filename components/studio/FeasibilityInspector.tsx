@@ -219,7 +219,7 @@ export default function FeasibilityInspector({
           {!designOnly && <button
             type="button"
             onClick={handleReset}
-            className="flex h-11 items-center gap-2 rounded-[3px] px-4 text-sm font-medium text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+            className="flex h-11 items-center gap-2 rounded-control px-4 text-sm font-medium text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
@@ -254,7 +254,7 @@ export default function FeasibilityInspector({
                     </button>
                   </div>
 
-                  <div className="flex items-start gap-2 rounded-none border border-[#DADAD3] bg-lf-sand p-3">
+                  <div className="flex items-start gap-2 rounded-none border border-lot-line bg-lf-sand p-3">
                     <MapPin size={15} className="mt-0.5 shrink-0 text-lf-clay-ink" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-lf-espresso">
@@ -316,7 +316,7 @@ export default function FeasibilityInspector({
               )}
 
               {parcelLoading && (
-                <div className="flex items-center gap-2 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
+                <div className="flex items-center gap-2 rounded-none border border-lot-line bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
                   <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
                   Looking up property data…
                 </div>
@@ -377,7 +377,7 @@ export default function FeasibilityInspector({
                         aria-label={option.label}
                         aria-describedby={`${footprintDescriptionId}-${option.value}`}
                         {...getFootprintRadioProps(optionKey)}
-                        className={`relative flex min-h-28 flex-col items-start rounded-[3px] border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                        className={`relative flex min-h-28 flex-col items-start rounded-control border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isChecked ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                         }`}
                       >
@@ -444,10 +444,10 @@ export default function FeasibilityInspector({
                         key={key}
                         type="button"
                         {...getRoofRadioProps(key as ADUConfig["roof"])}
-                        className={`flex h-20 flex-col items-center justify-center gap-1 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                        className={`flex h-20 flex-col items-center justify-center gap-1 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isChecked
-                            ? "border-[#161616] bg-[#161616] text-[#F5F5F0] shadow-none"
-                            : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
+                            ? "border-lot-ink bg-lot-ground-dark text-lot-chalk shadow-none"
+                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lf-sand-2"
                         }`}
                       >
                         <RoofProfile roof={key as ADUConfig["roof"]} />
@@ -468,10 +468,10 @@ export default function FeasibilityInspector({
                         key={key}
                         type="button"
                         {...getFinishRadioProps(key as ADUConfig["finish"])}
-                        className={`rounded-[3px] border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                        className={`rounded-control border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isChecked
-                            ? "border-[#161616] bg-[#161616]/5 text-[#161616] ring-1 ring-[#161616]"
-                            : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
+                            ? "border-lot-ink bg-lot-ground-dark/5 text-lot-ink ring-1 ring-lot-ink"
+                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lf-sand-2"
                         }`}
                       >
                         <span
@@ -566,7 +566,7 @@ export default function FeasibilityInspector({
               <p><strong>Review needed.</strong> {result.warnings[0]}</p>
             </div>
           )}
-          {!designOnly && <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2">
+          {!designOnly && <div className="rounded-none border border-lot-line bg-lf-sand-2 px-3 py-2">
             <div className="lf-kicker-dense font-bold leading-4 text-lf-muted">
               Next best action
             </div>
@@ -696,7 +696,7 @@ function AccordionStep({
         </span>
         <ChevronDown
           size={16}
-          className={`shrink-0 text-lf-muted motion-safe:transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 text-lf-muted motion-safe:transition-transform duration-(--duration-disclosure) ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

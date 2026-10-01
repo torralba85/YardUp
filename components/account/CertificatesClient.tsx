@@ -64,7 +64,7 @@ export function CertificatesClient() {
         </header>
 
         <div className="mx-auto max-w-md px-4 py-20 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[3px] border border-lf-hairline bg-lf-card">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lf-hairline bg-lf-card">
             <Award className="h-6 w-6 text-lf-clay-ink" />
           </div>
           <h1 className="lf-section-heading mt-6">Certificates of Feasibility</h1>
@@ -74,7 +74,7 @@ export function CertificatesClient() {
           <div className="mt-8">
             <Link
               href="/login?next=/certificates"
-              className="inline-flex h-11 w-full items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
             >
               Sign in
             </Link>
@@ -149,7 +149,7 @@ export function CertificatesClient() {
           </div>
         ) : certificates.length === 0 ? (
           <div className="my-10 rounded-none border border-dashed border-lf-hairline bg-lf-card p-12 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[3px] border border-lf-hairline bg-lf-sand">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-control border border-lf-hairline bg-lf-sand">
               <ShieldCheck className="h-7 w-7 text-lf-muted" />
             </div>
             <h2 className="mt-4 text-base font-semibold text-lf-espresso">
@@ -163,7 +163,7 @@ export function CertificatesClient() {
             <div className="mt-6">
               <Link
                 href="/studio"
-                className="inline-flex min-h-11 items-center justify-center rounded-[3px] bg-lf-clay px-6 text-sm font-semibold text-lf-primary-label"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lf-clay px-6 text-sm font-semibold text-lf-primary-label"
               >
                 Explore 3D Studio
               </Link>

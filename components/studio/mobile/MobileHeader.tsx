@@ -40,19 +40,19 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       <Link
         href="/"
         aria-label="LotFoundry home"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
       >
         <ParcelMark className="h-7 w-7 text-lot-chalk" />
       </Link>
       <span className="min-w-0 flex-1 truncate rounded-none border border-lot-line-dark bg-lot-surface-dark px-2.5 py-1.5 text-xs text-lot-chalk">
         {address}
-        {estimated && <span className="ml-1.5 lf-dataprint text-[#E0A33C]">est.</span>}
+        {estimated && <span className="ml-1.5 lf-dataprint text-status-review-on-dark">est.</span>}
       </span>
       <button
         type="button"
         aria-label="Reset scenario"
         onClick={onReset}
-        className="flex h-11 w-11 items-center justify-center rounded-[3px] text-lot-stone-on-dark motion-safe:transition-colors hover:bg-lot-surface-dark hover:text-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
+        className="flex h-11 w-11 items-center justify-center rounded-control text-lot-stone-on-dark motion-safe:transition-colors hover:bg-lot-surface-dark hover:text-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
       >
         <RotateCcw size={17} />
       </button>
@@ -68,7 +68,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           type="button"
           aria-label="Sign in"
           onClick={() => setAuthOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-[3px] text-lot-stone-on-dark motion-safe:transition-colors hover:bg-lot-surface-dark hover:text-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
+          className="flex h-11 w-11 items-center justify-center rounded-control text-lot-stone-on-dark motion-safe:transition-colors hover:bg-lot-surface-dark hover:text-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
         >
           <UserRound size={18} />
         </button>

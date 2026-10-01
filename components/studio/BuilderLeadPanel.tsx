@@ -116,7 +116,7 @@ export default function BuilderLeadPanel({
           type="button"
           onClick={onClose}
           aria-label="Close builder connection form"
-          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[3px] text-lf-muted motion-safe:transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-lf-muted motion-safe:transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
         >
           <X size={18} aria-hidden="true" />
         </button>

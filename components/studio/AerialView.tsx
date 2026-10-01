@@ -179,7 +179,7 @@ export default function AerialView({
       {/* Fallback notice */}
       {aerialError && (
         <div
-          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lot-line bg-lot-chalk px-3 py-3 text-xs leading-5 text-lot-ink shadow-[4px_4px_0_#16161618]"
+          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lot-line bg-lot-chalk px-3 py-3 text-xs leading-5 text-lot-ink shadow-chip"
           role="note"
         >
           <span className="flex items-center gap-2 font-semibold"><TriangleAlert size={16} className="shrink-0 text-status-review" aria-hidden="true" />Aerial imagery unavailable</span>

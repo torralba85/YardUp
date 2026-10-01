@@ -226,7 +226,7 @@ function BuilderHeader({
         <Link
           href="/"
           aria-label="LotFoundry home"
-          className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+          className="shrink-0 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
         >
           <BrandLockup className="h-7 w-auto" />
         </Link>

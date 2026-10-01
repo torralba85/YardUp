@@ -163,7 +163,7 @@ export function AccountMenu({
           href={href}
           role="menuitem"
           className={cn(
-            "flex min-h-11 w-full items-center gap-2 rounded-[3px] px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
+            "flex min-h-11 w-full items-center gap-2 rounded-control px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
             isDark
               ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lf-mahogany"
               : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
@@ -182,7 +182,7 @@ export function AccountMenu({
           onSignOut();
         }}
         className={cn(
-          "flex min-h-11 w-full items-center gap-2 rounded-[3px] px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
+          "flex min-h-11 w-full items-center gap-2 rounded-control px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
           isDark
             ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lf-mahogany"
             : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
@@ -247,7 +247,7 @@ export function AccountMenu({
               zIndex: "var(--z-index-sheet)",
             }}
             className={cn(
-              "flex flex-col overflow-y-auto overscroll-contain rounded-none border p-3 shadow-[6px_8px_0_#16161618] motion-safe:animate-[lf-fade-in_140ms_ease-out]",
+              "flex flex-col overflow-y-auto overscroll-contain rounded-none border p-3 shadow-card motion-safe:animate-[lf-fade-in_140ms_ease-out]",
               isDark
                 ? "border-lf-taupe/30 bg-lf-mahogany text-lf-sand"
                 : "border-lf-hairline bg-lf-card text-lf-espresso",
@@ -270,7 +270,7 @@ export function AccountMenu({
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-[3px] text-sm font-bold motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
+          "flex h-11 w-11 items-center justify-center rounded-control text-sm font-bold motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
           isDark
             ? "bg-lf-clay text-lf-primary-label focus-visible:ring-lot-chalk focus-visible:ring-offset-lf-mahogany"
             : "bg-lf-clay text-lf-primary-label focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",

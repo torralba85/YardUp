@@ -30,7 +30,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
         aria-label="Back to previous step"
         onClick={onBack}
         disabled={!onBack}
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] text-[#65655F] motion-safe:transition hover:text-[#161616] ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-lot-stone motion-safe:transition hover:text-lot-ink ${
           onBack ? "" : "invisible"
         }`}
       >
@@ -48,19 +48,19 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 disabled={!isDone && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : ""}`}
-                className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-[3px] font-sans text-xs font-semibold motion-safe:transition ${
+                className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-control font-sans text-xs font-semibold motion-safe:transition ${
                   isCurrent
-                    ? "text-[#C43708]"
+                    ? "text-lot-orange-ink"
                     : isDone
-                      ? "text-[#176B4C]"
-                      : "text-[#65655F]"
+                      ? "text-status-eligible"
+                      : "text-lot-stone"
                 }`}
               >
                 {isDone ? <Check size={12} aria-hidden="true" /> : (
                 <span
                   aria-hidden
                   className={`block h-2 w-2 rounded-full ${
-                    isCurrent ? "bg-[#FF5B24]" : isDone ? "bg-[#176B4C]" : "bg-[#DADAD3]"
+                    isCurrent ? "bg-lot-orange" : isDone ? "bg-status-eligible" : "bg-lot-line"
                   }`}
                 />
                 )}

@@ -104,13 +104,13 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
             {guide.permitSteps.map((step, idx) => (
               <label
                 key={idx}
-                className="flex items-start gap-3 rounded-none border border-[#DADAD3] bg-lf-sand/20 p-3 hover:bg-lf-sand/40 motion-safe:transition cursor-pointer"
+                className="flex items-start gap-3 rounded-none border border-lot-line bg-lf-sand/20 p-3 hover:bg-lf-sand/40 motion-safe:transition cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-lot-orange-ink"
+                  className="mt-0.5 h-4 w-4 accent-lot-orange rounded-control focus:ring-lot-orange-ink"
                 />
                 <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
                   {step}

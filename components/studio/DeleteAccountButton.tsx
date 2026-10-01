@@ -111,7 +111,7 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
           onClick={() => setConfirming(false)}
           disabled={pending}
           className={cn(
-            "min-h-11 rounded-[3px] px-4 py-2 text-[11px] font-medium motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
+            "min-h-11 rounded-control px-4 py-2 text-[11px] font-medium motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
             isDark ? "text-lot-stone-on-dark hover:text-lf-sand" : "text-lf-muted hover:text-lf-espresso",
             actionRing,
             ringOffset,

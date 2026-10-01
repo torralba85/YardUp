@@ -58,23 +58,23 @@ export default function FeasibilityVerdictBand({
           <button
             type="button"
             onClick={onCreateAccount}
-            className="min-h-11 rounded-[3px] bg-lot-orange-ink px-4 text-sm font-semibold text-lot-chalk motion-safe:transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+            className="min-h-11 rounded-control bg-lot-orange-ink px-4 text-sm font-semibold text-lot-chalk motion-safe:transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
           >
             Save this property — free account
           </button>
         )}
         <button type="button" aria-expanded={numbersOpen} aria-controls={numbersId}
           onClick={() => setNumbersOpen(!numbersOpen)}
-          className="flex min-h-11 items-center gap-3 rounded-[3px] px-3 text-sm font-semibold hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
+          className="flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-semibold hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
           Numbers &amp; readiness
           <ChevronDown size={16} aria-hidden="true" className={numbersOpen ? "rotate-180" : ""} />
         </button>
       </div>
-      <div id={numbersId} hidden={!numbersOpen} className="border-t border-[#DADAD3]">
+      <div id={numbersId} hidden={!numbersOpen} className="border-t border-lot-line">
         <div className="max-h-[45vh] overflow-y-auto pt-4">
           <div className="px-6 pb-4 text-sm">
             <p className="font-semibold">Readiness: {summary.readiness}/100</p>
-            <p className="mt-1 text-xs text-[#65655F]">Early planning estimates, not permit approval or guaranteed income.</p>
+            <p className="mt-1 text-xs text-lot-stone">Early planning estimates, not permit approval or guaranteed income.</p>
             <FeasibilityBadge parcel={parcel} config={{ footprint: config.width * config.length, ...config }} surface="light" />
           </div>
           <MetricsSummary result={result} />
