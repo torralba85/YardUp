@@ -12,6 +12,7 @@ import {
   type ExteriorFinish,
   type RentScenario,
 } from "@/lib/feasibility";
+import { Select } from "@/components/ui/Field";
 
 /** Unit sizes offered by the calculator, in square feet. */
 const SIZES = [400, 600, 800, 1000, 1200];
@@ -23,9 +24,6 @@ const RENT_SCENARIOS: { value: RentScenario; label: string }[] = [
   { value: "market", label: "Market (+12%)" },
   { value: "optimistic", label: "Optimistic (+25%)" },
 ];
-
-const selectClass =
-  "mt-1 block min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 text-sm text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
 
 /**
  * Interactive ADU cost, rent, and payback calculator for California
@@ -55,51 +53,49 @@ export function AduCostCalculator() {
       <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
         <label className="text-sm font-semibold text-lf-espresso">
           County
-          <select value={county} onChange={(event) => setCounty(event.target.value)} className={selectClass}>
+          <Select value={county} onChange={(event) => setCounty(event.target.value)}>
             {CALCULATOR_COUNTIES.map((entry) => (
               <option key={entry.slug} value={entry.slug}>
                 {entry.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="text-sm font-semibold text-lf-espresso">
           Unit size
-          <select value={size} onChange={(event) => setSize(Number(event.target.value))} className={selectClass}>
+          <Select value={size} onChange={(event) => setSize(Number(event.target.value))}>
             {SIZES.map((value) => (
               <option key={value} value={value}>
                 {value.toLocaleString("en-US")} sq ft
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="text-sm font-semibold text-lf-espresso">
           Exterior finish
-          <select
+          <Select
             value={finish}
             onChange={(event) => setFinish(event.target.value as ExteriorFinish)}
-            className={selectClass}
           >
             {FINISHES.map((value) => (
               <option key={value} value={value}>
                 {finishLabels[value]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="text-sm font-semibold text-lf-espresso">
           Rent assumption
-          <select
+          <Select
             value={rentScenario}
             onChange={(event) => setRentScenario(event.target.value as RentScenario)}
-            className={selectClass}
           >
             {RENT_SCENARIOS.map((entry) => (
               <option key={entry.value} value={entry.value}>
                 {entry.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </form>
 

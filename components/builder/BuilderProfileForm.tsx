@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
 import { validateEmail } from "@/lib/account-settings";
 import { normalizeServiceArea } from "@/lib/marketplace";
 import type { BuilderProfile } from "@/lib/marketplace-types";
@@ -114,7 +115,7 @@ export default function BuilderProfileForm({
       )}
       <label htmlFor="builder-company-name" className="lf-body-sm font-medium text-lf-espresso">
         <span id="builder-company-name-label">Company name</span> <span aria-hidden="true">*</span>
-        <input
+        <Input
           id="builder-company-name"
           name="builder-company-name"
           ref={(element) => { fields.current["builder-company-name"] = element; }}
@@ -123,7 +124,7 @@ export default function BuilderProfileForm({
           aria-describedby={invalidField === "builder-company-name" ? "builder-company-name-error" : undefined}
           type="text"
           autoComplete="organization"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1"
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
           aria-required="true"
@@ -132,7 +133,7 @@ export default function BuilderProfileForm({
       </label>
       <label htmlFor="builder-contact-email" className="lf-body-sm font-medium text-lf-espresso">
         <span id="builder-contact-email-label">Contact email</span> <span aria-hidden="true">*</span>
-        <input
+        <Input
           id="builder-contact-email"
           name="builder-contact-email"
           ref={(element) => { fields.current["builder-contact-email"] = element; }}
@@ -141,7 +142,7 @@ export default function BuilderProfileForm({
           aria-describedby={invalidField === "builder-contact-email" ? "builder-contact-email-error" : undefined}
           type="email"
           autoComplete="email"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1"
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
           aria-required="true"
@@ -150,21 +151,21 @@ export default function BuilderProfileForm({
       </label>
       <label htmlFor="builder-phone" className="lf-body-sm font-medium text-lf-espresso">
         Phone (optional)
-        <input
+        <Input
           id="builder-phone"
           type="tel"
           autoComplete="tel"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
         />
       </label>
       <label htmlFor="builder-license" className="lf-body-sm font-medium text-lf-espresso">
         License number (optional)
-        <input
+        <Input
           id="builder-license"
           type="text"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1"
           value={licenseNumber}
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
@@ -174,7 +175,7 @@ export default function BuilderProfileForm({
         className="lf-body-sm font-medium text-lf-espresso md:col-span-2"
       >
         <span id="builder-service-areas-label">Service areas</span>
-        <input
+        <Input
           id="builder-service-areas"
           name="builder-service-areas"
           ref={(element) => { fields.current["builder-service-areas"] = element; }}
@@ -182,7 +183,7 @@ export default function BuilderProfileForm({
           aria-invalid={invalidField === "builder-service-areas"}
           aria-describedby={invalidField === "builder-service-areas" ? "builder-service-areas-error" : undefined}
           type="text"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1"
           placeholder="Seattle WA, Portland OR"
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}

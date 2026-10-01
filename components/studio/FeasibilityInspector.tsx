@@ -16,7 +16,7 @@ import {
 import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import { Button } from "@/components/ui/Button";
-import { Slider } from "@/components/ui/Field";
+import { Select, Slider } from "@/components/ui/Field";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import type {
   ADUConfig,
@@ -263,18 +263,17 @@ export default function FeasibilityInspector({
               ) : (
                 <>
                   <LabelRow label="Sample Property" htmlFor="parcel-preset" />
-                  <select
+                  <Select
                     id="parcel-preset"
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
-                    className="h-11 w-full rounded-[3px] border border-[#DADAD3] bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none motion-safe:transition focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                   >
                     {parcelPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
                         {preset.name} ({preset.lotArea.toLocaleString()} sf)
                       </option>
                     ))}
-                  </select>
+                  </Select>
 
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-lf-muted">Or search your address:</p>

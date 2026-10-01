@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
 import { validateDisplayName } from "@/lib/account-settings";
 
 export interface ProfileFormProps {
@@ -53,11 +54,10 @@ export function ProfileForm({
         <label htmlFor="settings-display-name" className="lf-body-sm mb-1.5 block font-medium">
           Display name
         </label>
-        <input
+        <Input
           id="settings-display-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm focus-visible:border-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           autoComplete="name"
         />
       </div>

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { parcelPresets, defaultAduConfig, type RoofStyle } from "@/lib/feasibility";
 import { StudioMeasurementCollector } from "@/lib/studio-measurement";
+import { Input, Select } from "@/components/ui/Field";
 
 const ParcelScene = dynamic(() => import("@/components/ParcelScene"), { ssr: false });
 const roofs: RoofStyle[] = ["shed", "gable", "flat"];
@@ -73,12 +74,12 @@ export default function StudioProfile() {
       <h1 className="font-display text-2xl">Local Studio profiling</h1>
       <p className="text-sm text-lf-muted">Direct scene workload. First render measures CPU submission; full Shape readiness and GPU completion remain separate. Idle samples exclude timing intervals but retain submitted frame counts.</p>
       <div className="flex flex-wrap items-end gap-3">
-        <label>Device description<input className="block min-h-11 rounded-[3px] border border-lf-hairline bg-lf-card px-3" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
-        <label>Thermal state<input className="block min-h-11 rounded-[3px] border border-lf-hairline bg-lf-card px-3" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
+        <label>Device description<Input className="block" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
+        <label>Thermal state<Input className="block" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
         <button className={control} onClick={start} disabled={running}>Start run</button>
         <button className={control} onClick={() => snapshot()} disabled={!run}>Snapshot</button>
         <button className={control} onClick={exportReport} disabled={!run}>Stop and export JSON</button>
-        <label>Sampling<select className={control} value={active ? "active" : "idle"} onChange={event => setActive(event.target.value === "active")} disabled={!running}><option value="active">Active</option><option value="idle">Idle</option></select></label>
+        <label>Sampling<Select value={active ? "active" : "idle"} onChange={event => setActive(event.target.value === "active")} disabled={!running}><option value="active">Active</option><option value="idle">Idle</option></Select></label>
         <button className={control} onClick={() => setCycle(value => value + 1)} disabled={!running || cycle >= 20}>Next edit cycle ({cycle}/20)</button>
         <button className={control} onClick={() => setRemount(value => value + 1)} disabled={!running}>Remount scene</button>
       </div>
