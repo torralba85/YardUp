@@ -11,6 +11,7 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 import { Button } from "@/components/ui/Button";
+import { Input, Textarea } from "@/components/ui/Field";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -134,7 +135,7 @@ export default function BuilderLeadPanel({
         )}
         <label htmlFor="builder-lead-name" className="text-sm font-medium text-lot-ink">
           Name
-          <input
+          <Input
             id="builder-lead-name"
             type="text"
             autoComplete="name"
@@ -145,7 +146,7 @@ export default function BuilderLeadPanel({
         </label>
         <label htmlFor="builder-lead-email" className="text-sm font-medium text-lot-ink">
           Email
-          <input
+          <Input
             id="builder-lead-email"
             type="email"
             autoComplete="email"
@@ -156,7 +157,7 @@ export default function BuilderLeadPanel({
         </label>
         <label htmlFor="builder-lead-phone" className="text-sm font-medium text-lot-ink">
           Phone optional
-          <input
+          <Input
             id="builder-lead-phone"
             type="tel"
             autoComplete="tel"
@@ -170,7 +171,7 @@ export default function BuilderLeadPanel({
           className="text-sm font-medium text-lot-ink md:col-span-2"
         >
           Message optional
-          <textarea
+          <Textarea
             id="builder-lead-message"
             className="mt-1 min-h-20 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
             value={message}

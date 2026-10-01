@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/Field";
 
 /**
  * Forgot-password route (`/forgot-password`). Sends a Firebase password-reset
@@ -91,7 +92,7 @@ export default function ForgotPasswordPage() {
           >
             Email
           </label>
-          <input
+          <Input
             id="email"
             name="email"
             ref={emailRef}
@@ -103,7 +104,6 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>

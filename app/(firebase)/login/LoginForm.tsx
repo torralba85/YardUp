@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
+import { Input } from "@/components/ui/Field";
 
 /** Email/password, Google, and Apple sign-in with a validated redirect. */
 export default function LoginForm() {
@@ -111,14 +112,13 @@ export default function LoginForm() {
           >
             Email
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>
@@ -138,14 +138,13 @@ export default function LoginForm() {
               Forgot password?
             </Link>
           </div>
-          <input
+          <Input
             id="password"
             type="password"
             required
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="Password"
           />
         </div>

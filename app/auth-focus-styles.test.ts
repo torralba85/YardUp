@@ -12,11 +12,13 @@ describe("auth focus color roles", () => {
     // the on-disk path even though the URLs are unchanged.
     const forgotPassword = source("app/(firebase)/forgot-password/page.tsx");
     const signup = source("app/(firebase)/signup/page.tsx");
+    const fields = source("components/ui/Field.tsx");
 
-    expect(forgotPassword).toContain("focus:border-lot-orange-ink");
-    expect(forgotPassword).toContain("focus:ring-lot-orange-ink");
-    expect(signup.match(/focus:border-lot-orange-ink/g)).toHaveLength(3);
-    expect(signup.match(/focus:ring-lot-orange-ink/g)).toHaveLength(3);
+    expect(forgotPassword).toContain('import { Input } from "@/components/ui/Field"');
+    expect(forgotPassword).toContain("<Input");
+    expect(signup).toContain('import { Input } from "@/components/ui/Field"');
+    expect(signup.match(/<Input\b/g)).toHaveLength(3);
+    expect(fields).toContain("focus-visible:ring-2 focus-visible:ring-lot-orange-ink");
     expect(signup).toContain("border-lot-ink bg-lot-ink");
     expect(signup).toContain("aria-pressed={selected}");
   });
