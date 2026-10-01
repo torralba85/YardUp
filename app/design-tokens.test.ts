@@ -145,13 +145,18 @@ describe("A LOT MORE shared design contract", () => {
     // §2.6: money is typographic. Green is eligible/verified status only, so a green
     // class may not sit on the same line as a formatted amount or a signed credit.
     const green = /(?<![\w-])text-(?:lf-forest|status-eligible)(?![\w-])/;
+    const greenMark = /(?<![\w-])(?:text|bg|border|decoration)-(?:lf-forest|status-eligible)(?![\w-])/;
     const figure = /formatCurrency|formatCompactCurrency|lf-money-|<MoneyFigure|creditsChange|\+\{/;
     for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
-      readFileSync(file, "utf8")
-        .split("\n")
-        .forEach((line, index) => {
-          if (green.test(line)) expect(figure.test(line), `${file}:${index + 1}`).toBe(false);
-        });
+      const lines = readFileSync(file, "utf8").split("\n");
+      lines.forEach((line, index) => {
+        if (green.test(line)) expect(figure.test(line), `${file}:${index + 1}`).toBe(false);
+        // Nor a green rule or underline decorating a money figure a few lines below it.
+        if (/lf-money-|<MoneyFigure/.test(line)) {
+          const following = lines.slice(index, index + 5).join("\n");
+          expect(greenMark.test(following), `${file}:${index + 1}`).toBe(false);
+        }
+      });
     }
   });
 
@@ -159,6 +164,58 @@ describe("A LOT MORE shared design contract", () => {
     // §3.2: one restrained tracking value. Negative tracking on display type is separate.
     for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
       expect(readFileSync(file, "utf8"), file).not.toMatch(/tracking-\[0?\.(?!08em\])\d+em\]/);
+    }
+  });
+
+  it("draws every field boundary at 3:1 or better, never the decorative hairline", () => {
+    // §2.3 rule 4: the drafting line (1.28:1 on chalk) is decorative only. Fields
+    // use ui/Field `Input` / `Select` / `Textarea`, whose boundary is stone.
+    expect(readFileSync(resolve(root, "components/ui/Field.tsx"), "utf8")).toMatch(/fieldControlClass\s*=[^;]*border-lot-stone(?![\w-])/);
+    const field = /<(input|select|textarea)\b([^>]*)>/g;
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      for (const [, , attributes] of Array.from(readFileSync(file, "utf8").matchAll(field))) {
+        if (/type=["{]?["'`]?(?:checkbox|radio|range|file|hidden)/.test(attributes)) continue;
+        expect(attributes, file).not.toMatch(/border-(?:lf-hairline|lot-line)(?![\w-])/);
+      }
+    }
+  });
+
+  it("uses the radius and elevation tokens instead of arbitrary values", () => {
+    // §4.4: `rounded-control` for controls; `shadow-paper|card|chip|modal` for elevation.
+    for (const file of [...productSources(), ...sourceFiles(resolve(root, "hooks"))]) {
+      const source = readFileSync(file, "utf8");
+      expect(source, file).not.toMatch(/(?<![\w-])(?:[\w-]+:)*rounded(?:-[trblse]{1,2})?-\[\d+(?:\.\d+)?px\]/);
+      expect(source, file).not.toMatch(/(?<![\w-])(?:[\w-]+:)*shadow-\[/);
+    }
+  });
+
+  it("only lets legacy aliases, raw hex, arbitrary type sizes and inline kickers fall (ratchet)", () => {
+    // §12: new code uses lot-* / status-*. When a change migrates a surface, lower the
+    // matching ceiling in the same commit. Never raise one.
+    // Pinned 2026-10-01 after the token codemod (lf-* was 1,759 at the 2026-09-30 audit).
+    // rawHex is already zero: every colour class names a token.
+    const ceilings = { lfAliases: 1616, rawHex: 0, arbitraryTextSizes: 161, inlineKickers: 21 };
+    const patterns = {
+      lfAliases:
+        /(?<![\w-])(?:[\w-]+:)*(?:text|bg|border(?:-[xytrblse])?|ring(?:-offset)?|outline|fill|stroke|decoration|divide|placeholder|caret|accent|from|via|to|shadow)-lf-[a-z0-9-]+|var\(--color-lf-[a-z0-9-]+\)/g,
+      rawHex: /-\[#[0-9a-fA-F]{3,8}\]/g,
+      arbitraryTextSizes: /(?<![\w-])(?:[\w-]+:)*text-\[\d+(?:\.\d+)?(?:px|rem)\]/g,
+    };
+    const counts = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 0, inlineKickers: 0 };
+    for (const file of [...productSources(), ...sourceFiles(resolve(root, "hooks"))]) {
+      const source = readFileSync(file, "utf8");
+      counts.lfAliases += source.match(patterns.lfAliases)?.length ?? 0;
+      counts.rawHex += source.match(patterns.rawHex)?.length ?? 0;
+      counts.arbitraryTextSizes += source.match(patterns.arbitraryTextSizes)?.length ?? 0;
+      // The kicker recipe written out by hand instead of `lf-kicker` / `lf-kicker-dense`.
+      for (const [classes] of Array.from(source.matchAll(/["'`][^"'`\n]*["'`]/g))) {
+        if (/\buppercase\b/.test(classes) && classes.includes("tracking-[0.08em]") && /text-\[1[01](?:\.5)?px\]/.test(classes)) {
+          counts.inlineKickers += 1;
+        }
+      }
+    }
+    for (const key of Object.keys(ceilings) as Array<keyof typeof ceilings>) {
+      expect(counts[key], `${key} rose above its ratchet ceiling; use lot-*/status-* tokens, lf-kicker or a type utility`).toBeLessThanOrEqual(ceilings[key]);
     }
   });
 
