@@ -138,7 +138,7 @@ describe("BuilderInbox table view keyboard access", () => {
   it("selects a ledger row with Enter and opens the detail panel", async () => {
     render(<BuilderInbox profile={profile} items={[item]} onRespond={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /table/i }));
+    await userEvent.click(screen.getByRole("radio", { name: /table/i }));
 
     const row = screen.getByText("LF-AB12CD").closest("tr");
     expect(row).not.toBeNull();
