@@ -106,7 +106,11 @@ Project-specific design rules:
 - New UI uses A LOT MORE: chalk `#F5F5F0` ground, carbon `#161616` ink, signal orange `#FF5B24` action,
   stone `#65655F` muted text on chalk (`#B7B7AE` on carbon), drafting line `#DADAD3` hairlines.
 - Space Grotesk for display, Manrope for body. Two families only - no serif, no mono layer.
-- Radius: `0` for surfaces and cards, `3px` for controls. Elevation is a hard offset shadow, no blur.
+- Radius: `rounded-none` for surfaces and cards, `rounded-control` (3px) for controls. Elevation is a hard
+  offset shadow, no blur: `shadow-paper`, `shadow-card`, `shadow-chip`, `shadow-modal`.
+- New code uses `lot-*` / `status-*` colour tokens only. `lf-*` aliases are legacy, and a ratchet in
+  `app/design-tokens.test.ts` caps them (plus raw `-[#hex]`, `text-[Npx]` and inline kicker recipes). Fields use
+  `Input` / `Select` / `Textarea` from `components/ui/Field`; single choices use `Segmented` or `useRadioGroup`.
 - Money is typographic, not chromatic: carbon, large, `tabular-nums`. Green is an eligible/verified
   status colour and **never** money.
 - Status colours (label + icon always, never colour alone): eligible `#176B4C` on chalk / `#5FBF93` on
