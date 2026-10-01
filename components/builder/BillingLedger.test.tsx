@@ -68,4 +68,22 @@ describe("BillingLedger", () => {
     expect(screen.getByText("Net Account Total")).toBeInTheDocument();
     expect(screen.getByText("5 balance")).toBeInTheDocument();
   });
+
+  it("keeps credits typographic and transaction types neutral", () => {
+    const entries: BuilderLedgerEntry[] = [
+      { id: "p", builderId: "b", type: "purchase", creditsChange: 5, amountPaid: 199, referenceId: "", description: "Pack", createdAt: "2026-06-15T12:00:00.000Z" },
+      { id: "c", builderId: "b", type: "credit", creditsChange: 1, amountPaid: 0, referenceId: "", description: "Refund", createdAt: "2026-06-16T12:00:00.000Z" },
+    ];
+    const { container } = render(<BillingLedger ledger={entries} credits={6} />);
+
+    // Money and credits are never green (design-system §2.6); the sign carries the direction.
+    const gain = screen.getByText("+5");
+    expect(gain.className).toContain("text-lot-ink");
+    // Green and amber are status colours (§2.5), not transaction categories.
+    for (const label of ["PURCHASE", "CREDITED"]) {
+      expect(screen.getByText(label).className).not.toMatch(/forest|amber|status-/);
+    }
+    // The retired mono layer stays retired.
+    expect(container.innerHTML).not.toContain("font-mono");
+  });
 });

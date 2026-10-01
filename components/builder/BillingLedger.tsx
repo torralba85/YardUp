@@ -125,49 +125,35 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
 
                   return (
                     <tr key={entry.id} className="hover:bg-lf-sand-2/50 motion-safe:transition-colors">
-                      <td className="whitespace-nowrap px-6 py-3.5 font-mono text-lf-muted">
+                      <td className="whitespace-nowrap px-6 py-3.5 tabular-nums text-lot-stone">
                         {formatLedgerDate(entry.createdAt)}
                       </td>
                       <td className="px-6 py-3.5 font-medium text-lf-espresso">
                         {entry.description || "Marketplace Lead Unlock"}
                         {entry.referenceId && (
-                          <span className="ml-2 font-mono text-[10.5px] font-normal text-lf-muted">
+                          <span className="ml-2 text-[10.5px] font-normal tabular-nums text-lot-stone">
                             ({entry.referenceId.startsWith("LF-") ? entry.referenceId : `Ref: ${entry.referenceId.slice(0, 10)}…`})
                           </span>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-3.5">
-                        {isCredit && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-amber-ink/20 bg-lf-amber-soft px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-amber-ink">
-                            CREDITED
-                          </span>
-                        )}
-                        {isPurchase && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-forest/20 bg-lf-forest-soft px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-forest">
-                            PURCHASE
-                          </span>
-                        )}
-                        {isUnlock && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-hairline bg-lf-sand-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
-                            UNLOCK
-                          </span>
-                        )}
-                        {!isCredit && !isPurchase && !isUnlock && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-hairline bg-lf-sand-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
-                            {entry.type.toUpperCase()}
-                          </span>
-                        )}
+                        {/* Transaction type is a category, not a status: one neutral chip, and the
+                            label carries the meaning (design-system §2.5 reserves green/amber). */}
+                        <span className="lf-kicker-dense inline-flex items-center rounded-none border border-lot-line bg-lot-chalk-2 px-2 py-0.5 text-lot-stone">
+                          {isCredit ? "CREDITED" : isPurchase ? "PURCHASE" : isUnlock ? "UNLOCK" : entry.type.toUpperCase()}
+                        </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-mono text-sm">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-right text-sm tabular-nums">
+                        {/* Money and credits are typographic, never green (§2.6): the sign carries the direction. */}
                         {entry.creditsChange > 0 && (
-                          <span className="text-lf-forest font-semibold">+{entry.creditsChange}</span>
+                          <span className="font-semibold text-lot-ink">+{entry.creditsChange}</span>
                         )}
                         {entry.creditsChange < 0 && (
-                          <span className="text-lf-muted">{entry.creditsChange}</span>
+                          <span className="text-lot-stone">{entry.creditsChange}</span>
                         )}
-                        {entry.creditsChange === 0 && <span className="text-lf-muted">—</span>}
+                        {entry.creditsChange === 0 && <span className="text-lot-stone">—</span>}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-mono text-sm font-semibold text-lf-espresso">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-right text-sm font-semibold tabular-nums text-lf-espresso">
                         {formatCurrency(entry.amountPaid || 0)}
                       </td>
                     </tr>
@@ -179,10 +165,10 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
                   <td colSpan={3} className="px-6 py-3.5 font-sans text-xs uppercase tracking-[0.08em]">
                     Net Account Total
                   </td>
-                  <td className="px-6 py-3.5 text-right font-mono text-sm">
+                  <td className="px-6 py-3.5 text-right text-sm tabular-nums">
                     {credits} balance
                   </td>
-                  <td className="px-6 py-3.5 text-right font-mono text-sm">
+                  <td className="px-6 py-3.5 text-right text-sm tabular-nums">
                     {formatCurrency(totals.totalPaid)}
                   </td>
                 </tr>

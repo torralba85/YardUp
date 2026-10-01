@@ -194,7 +194,7 @@ export default function LeadCard({
                 </div>
                 <p className="mt-1 text-xs text-lf-espresso">
                   This lead is in an exclusive 48h head start window. Opens to all builders in{" "}
-                  <span className="font-mono font-semibold">{formatHeadStartRemaining(headStartMs)}</span>.
+                  <span className="font-semibold tabular-nums">{formatHeadStartRemaining(headStartMs)}</span>.
                 </p>
                 <Button variant="secondary" disabled className="mt-2.5 w-full cursor-not-allowed opacity-60">
                   Exclusive window ({formatHeadStartRemaining(headStartMs)} left)
