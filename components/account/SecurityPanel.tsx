@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
 import type { AccountCapabilities } from "@/lib/account-settings";
 import { validateEmail, validatePassword } from "@/lib/account-settings";
 
@@ -42,13 +43,13 @@ export function SecurityPanel({
     return (
       <div>
         <label htmlFor={id} className="mb-1.5 block text-sm font-medium">{label}</label>
-        <input id={id} name={id} type={type} value={value} autoComplete={autoComplete}
+        <Input id={id} name={id} type={type} value={value} autoComplete={autoComplete}
           ref={(element) => { fields.current[id] = element; }}
           spellCheck={false}
           onChange={(event) => { onChange(event.target.value); if (invalid) { setInvalidField(null); setError(null); } }}
           aria-invalid={invalid}
           aria-describedby={invalid ? `${id}-error` : undefined}
-          className="min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" />
+        />
         {invalid && error && <p id={`${id}-error`} role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
       </div>
     );

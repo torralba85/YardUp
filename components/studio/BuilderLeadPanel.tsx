@@ -11,6 +11,7 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 import { Button } from "@/components/ui/Button";
+import { Input, Textarea } from "@/components/ui/Field";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -134,33 +135,33 @@ export default function BuilderLeadPanel({
         )}
         <label htmlFor="builder-lead-name" className="text-sm font-medium text-lf-espresso">
           Name
-          <input
+          <Input
             id="builder-lead-name"
             type="text"
             autoComplete="name"
-            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
         </label>
         <label htmlFor="builder-lead-email" className="text-sm font-medium text-lf-espresso">
           Email
-          <input
+          <Input
             id="builder-lead-email"
             type="email"
             autoComplete="email"
-            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
         </label>
         <label htmlFor="builder-lead-phone" className="text-sm font-medium text-lf-espresso">
           Phone optional
-          <input
+          <Input
             id="builder-lead-phone"
             type="tel"
             autoComplete="tel"
-            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
           />
@@ -170,9 +171,9 @@ export default function BuilderLeadPanel({
           className="text-sm font-medium text-lf-espresso md:col-span-2"
         >
           Message optional
-          <textarea
+          <Textarea
             id="builder-lead-message"
-            className="mt-1 min-h-20 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 min-h-20"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
           />

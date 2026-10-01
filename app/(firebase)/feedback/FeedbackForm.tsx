@@ -6,9 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "@/lib/feedback";
 import { validateEmail } from "@/lib/account-settings";
 import { Button } from "@/components/ui/Button";
-
-const INPUT_CLASS =
-  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus-visible:border-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
+import { Input, Select, Textarea } from "@/components/ui/Field";
 
 /**
  * The public feedback form: category, message, optional reply email, and a
@@ -143,25 +141,24 @@ function FeedbackFields() {
         <label htmlFor="feedback-category" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
           Category
         </label>
-        <select
+        <Select
           id="feedback-category"
           value={category}
           onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
-          className={INPUT_CLASS}
         >
           {FEEDBACK_CATEGORIES.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div>
         <label htmlFor="feedback-message" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
           What happened, or what should we build?
         </label>
-        <textarea
+        <Textarea
           id="feedback-message"
           name="message"
           ref={messageRef}
@@ -172,7 +169,6 @@ function FeedbackFields() {
           rows={5}
           value={message}
           onChange={(e) => { setMessage(e.target.value); if (invalidField === "message") { setInvalidField(null); setError(null); } }}
-          className={INPUT_CLASS}
           placeholder="For example, the map does not load…"
         />
         <p id="feedback-message-help" className="mt-1 text-xs text-lf-muted">
@@ -185,7 +181,7 @@ function FeedbackFields() {
         <label htmlFor="feedback-email" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
           Reply email <span className="font-normal text-lf-muted">(optional)</span>
         </label>
-        <input
+        <Input
           id="feedback-email"
           name="email"
           ref={emailRef}
@@ -196,7 +192,6 @@ function FeedbackFields() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={INPUT_CLASS}
           placeholder="you@example.com…"
         />
         {invalidField === "email" && <p id="feedback-email-error" role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
@@ -206,7 +201,7 @@ function FeedbackFields() {
           success with nothing persisted. */}
       <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden">
         <label htmlFor="feedback-company">Company</label>
-        <input
+        <Input
           id="feedback-company"
           type="text"
           tabIndex={-1}

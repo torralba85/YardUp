@@ -14,6 +14,7 @@ import {
   trackSignupSucceeded,
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { Input } from "@/components/ui/Field";
 
 function SignupForm() {
   const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
@@ -276,14 +277,13 @@ function SignupForm() {
           >
             Full name
           </label>
-          <input
+          <Input
             id="displayName"
             type="text"
             required
             autoComplete="name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="Alma Reyes"
           />
         </div>
@@ -295,14 +295,13 @@ function SignupForm() {
           >
             Email
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>
@@ -314,14 +313,13 @@ function SignupForm() {
           >
             Password
           </label>
-          <input
+          <Input
             id="password"
             type="password"
             required
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="At least 8 characters"
           />
         </div>

@@ -48,6 +48,7 @@ import {
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
 import { certificateKey } from "@/lib/certificate-key";
+import { Select } from "@/components/ui/Field";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -1672,10 +1673,9 @@ function LotStep({
           <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
           <label className="block pb-4 text-sm text-lf-muted">
             Sample Property
-            <select value={parcelId} onChange={(event) => onPresetChange(event.target.value)}
-              className="mt-2 block min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3 text-lf-espresso">
+            <Select value={parcelId} onChange={(event) => onPresetChange(event.target.value)} className="mt-2 block">
               {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({preset.lotArea.toLocaleString()} sf)</option>)}
-            </select>
+            </Select>
           </label>
         </details>
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">

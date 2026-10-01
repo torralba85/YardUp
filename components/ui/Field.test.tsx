@@ -1,6 +1,62 @@
+import { createRef } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { FieldLabel, Segmented, Slider } from "./Field";
+import { FieldLabel, Input, Select, Segmented, Slider, Textarea } from "./Field";
+
+describe("shared field controls", () => {
+  const sharedClasses = [
+    "border-lot-stone",
+    "focus-visible:ring-lot-orange-ink",
+    "aria-[invalid=true]:border-status-blocked",
+  ];
+
+  it("Input forwards its ref and native props and uses the shared field recipe", () => {
+    const ref = createRef<HTMLInputElement>();
+    render(<Input ref={ref} id="email" name="email" type="email" autoComplete="email" required aria-label="Email" aria-invalid="true" />);
+    const input = screen.getByRole("textbox", { name: "Email" });
+
+    expect(ref.current).toBe(input);
+    expect(input).toHaveAttribute("id", "email");
+    expect(input).toHaveAttribute("name", "email");
+    expect(input).toHaveAttribute("type", "email");
+    expect(input).toHaveAttribute("autocomplete", "email");
+    expect(input).toBeRequired();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveClass(...sharedClasses);
+  });
+
+  it("Select forwards its ref and native props and uses the shared field recipe", () => {
+    const ref = createRef<HTMLSelectElement>();
+    render(
+      <Select ref={ref} id="category" name="category" required aria-invalid="true" defaultValue="bug">
+        <option value="bug">Bug</option>
+      </Select>,
+    );
+    const select = screen.getByRole("combobox");
+
+    expect(ref.current).toBe(select);
+    expect(select).toHaveAttribute("id", "category");
+    expect(select).toHaveAttribute("name", "category");
+    expect(select).toBeRequired();
+    expect(select).toHaveAttribute("aria-invalid", "true");
+    expect(select).toHaveClass(...sharedClasses);
+  });
+
+  it("Textarea forwards its ref and native props and uses the shared field recipe", () => {
+    const ref = createRef<HTMLTextAreaElement>();
+    render(<Textarea ref={ref} id="message" name="message" rows={5} required aria-label="Message" aria-invalid="true" placeholder="Your message" />);
+    const textarea = screen.getByRole("textbox", { name: "Message" });
+
+    expect(ref.current).toBe(textarea);
+    expect(textarea).toHaveAttribute("id", "message");
+    expect(textarea).toHaveAttribute("name", "message");
+    expect(textarea).toHaveAttribute("rows", "5");
+    expect(textarea).toHaveAttribute("placeholder", "Your message");
+    expect(textarea).toBeRequired();
+    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    expect(textarea).toHaveClass(...sharedClasses, "py-2");
+  });
+});
 
 describe("FieldLabel", () => {
   it("renders the label text and an optional value readout", () => {
