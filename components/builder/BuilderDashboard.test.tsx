@@ -207,7 +207,7 @@ describe("BuilderDashboard", () => {
     expect(await screen.findByText(/LF-AB12CD/)).toBeInTheDocument();
     
     // Toggle to table view
-    const tableToggle = screen.getByRole("button", { name: "Table" });
+    const tableToggle = screen.getByRole("radio", { name: "Table" });
     await userEvent.click(tableToggle);
 
     // Ledger table is rendered with headers and columns
@@ -224,7 +224,7 @@ describe("BuilderDashboard", () => {
     render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
 
     // Toggle to table
-    await userEvent.click(await screen.findByRole("button", { name: "Table" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Table" }));
 
     // Inspection pane initially shows "No lead selected"
     expect(screen.getByText(/no lead selected/i)).toBeInTheDocument();

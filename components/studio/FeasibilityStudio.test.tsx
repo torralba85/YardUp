@@ -272,9 +272,9 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     const viewport = screen.getByTestId("scene-viewport");
-    const viewControl = within(viewport).getByRole("group", { name: "Parcel view" });
-    const modelButton = within(viewControl).getByRole("button", { name: "3D model" });
-    const aerialButton = within(viewControl).getByRole("button", { name: "Aerial" });
+    const viewControl = within(viewport).getByRole("radiogroup", { name: "Parcel view" });
+    const modelButton = within(viewControl).getByRole("radio", { name: "3D model" });
+    const aerialButton = within(viewControl).getByRole("radio", { name: "Aerial" });
 
     // The switch is docked above the scene rather than floating over it: the
     // audit measured phone overlays covering 40.4% of the viewport (U3), so
@@ -282,34 +282,34 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(viewControl).not.toHaveClass("absolute");
     expect(viewControl).toHaveClass("pointer-events-auto", "shrink-0", "border-b");
     expect(viewport.firstElementChild).toBe(viewControl);
-    const scanButton = within(viewControl).getByRole("button", { name: /scan/i });
-    const neighborhoodButton = within(viewControl).getByRole("button", { name: "Neighborhood" });
-    expect(modelButton).toHaveAttribute("aria-pressed", "true");
-    expect(scanButton).toHaveAttribute("aria-pressed", "false");
-    expect(neighborhoodButton).toHaveAttribute("aria-pressed", "false");
-    expect(aerialButton).toHaveAttribute("aria-pressed", "false");
+    const scanButton = within(viewControl).getByRole("radio", { name: /scan/i });
+    const neighborhoodButton = within(viewControl).getByRole("radio", { name: "Neighborhood" });
+    expect(modelButton).toHaveAttribute("aria-checked", "true");
+    expect(scanButton).toHaveAttribute("aria-checked", "false");
+    expect(neighborhoodButton).toHaveAttribute("aria-checked", "false");
+    expect(aerialButton).toHaveAttribute("aria-checked", "false");
 
     await user.click(scanButton);
 
-    expect(modelButton).toHaveAttribute("aria-pressed", "false");
-    expect(scanButton).toHaveAttribute("aria-pressed", "true");
+    expect(modelButton).toHaveAttribute("aria-checked", "false");
+    expect(scanButton).toHaveAttribute("aria-checked", "true");
     // Calibration is an internal tool: public visitors (including the landing's
     // "try an example" demo) must never see its trigger.
     expect(screen.queryByRole("button", { name: /calibrate scan/i })).not.toBeInTheDocument();
 
     await user.click(neighborhoodButton);
 
-    expect(modelButton).toHaveAttribute("aria-pressed", "false");
-    expect(scanButton).toHaveAttribute("aria-pressed", "false");
-    expect(neighborhoodButton).toHaveAttribute("aria-pressed", "true");
-    expect(aerialButton).toHaveAttribute("aria-pressed", "false");
+    expect(modelButton).toHaveAttribute("aria-checked", "false");
+    expect(scanButton).toHaveAttribute("aria-checked", "false");
+    expect(neighborhoodButton).toHaveAttribute("aria-checked", "true");
+    expect(aerialButton).toHaveAttribute("aria-checked", "false");
 
     await user.click(aerialButton);
 
-    expect(modelButton).toHaveAttribute("aria-pressed", "false");
-    expect(scanButton).toHaveAttribute("aria-pressed", "false");
-    expect(neighborhoodButton).toHaveAttribute("aria-pressed", "false");
-    expect(aerialButton).toHaveAttribute("aria-pressed", "true");
+    expect(modelButton).toHaveAttribute("aria-checked", "false");
+    expect(scanButton).toHaveAttribute("aria-checked", "false");
+    expect(neighborhoodButton).toHaveAttribute("aria-checked", "false");
+    expect(aerialButton).toHaveAttribute("aria-checked", "true");
     expect(
       within(viewport).getByText(/Aerial view requires a real address/i),
     ).toBeInTheDocument();
@@ -325,8 +325,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.selectOptions(sampleSelect, "corner-lot");
 
     const viewport = screen.getByTestId("scene-viewport");
-    const viewControl = within(viewport).getByRole("group", { name: "Parcel view" });
-    expect(within(viewControl).queryByRole("button", { name: /scan/i })).not.toBeInTheDocument();
+    const viewControl = within(viewport).getByRole("radiogroup", { name: "Parcel view" });
+    expect(within(viewControl).queryByRole("radio", { name: /scan/i })).not.toBeInTheDocument();
   });
 
   describe("with internal scan calibration enabled", () => {
@@ -341,7 +341,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       const user = userEvent.setup();
       render(<FeasibilityStudio />, { wrapper: TestWrapper });
       const pose = screen.getByTestId("parcel-scene").getAttribute("data-pose");
-      await user.click(screen.getByRole("button", { name: /^Scan/ }));
+      await user.click(screen.getByRole("radio", { name: /^Scan/ }));
       expect(screen.getByText(/not a capture of this property/)).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
       await user.click(screen.getByRole("button", { name: "Splat-Only Inspection" }));
@@ -356,9 +356,9 @@ describe("FeasibilityStudio (guided spine)", () => {
     it("moves view selection by keyboard and restores focus after calibration", async () => {
       const user = userEvent.setup();
       render(<FeasibilityStudio />, { wrapper: TestWrapper });
-      screen.getByRole("button", { name: "3D model" }).focus();
+      screen.getByRole("radio", { name: "3D model" }).focus();
       await user.keyboard("{ArrowRight}");
-      expect(screen.getByRole("button", { name: /^Scan/ })).toHaveFocus();
+      expect(screen.getByRole("radio", { name: /^Scan/ })).toHaveFocus();
       await user.click(screen.getByRole("button", { name: "Calibrate Scan" }));
       expect(screen.getByRole("button", { name: "Close calibration panel" })).toHaveFocus();
       await user.keyboard("{Escape}");
@@ -470,7 +470,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(stepButton(/Design/));
 
     expect(screen.queryByRole("combobox", { name: "Sample Property" })).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "ADU footprint size" })).toBeVisible();
+    expect(screen.getByRole("radiogroup", { name: "ADU footprint size" })).toBeVisible();
     expect(screen.getByText("Build Cost Range")).not.toBeVisible();
     await user.click(screen.getByRole("button", { name: "Numbers & readiness" }));
     expect(screen.getByText("Build Cost Range")).toBeVisible();
@@ -485,8 +485,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.selectOptions(screen.getByLabelText("Sample Property"), "compact-lot");
     await user.click(stepButton(/Design/));
 
-    const sizeGroup = screen.getByRole("group", { name: /ADU footprint size/i });
-    await user.click(within(sizeGroup).getByRole("button", { name: "1,000 sf" }));
+    const sizeGroup = screen.getByRole("radiogroup", { name: /ADU footprint size/i });
+    await user.click(within(sizeGroup).getByRole("radio", { name: "1,000 sf" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(/Review needed/i);
   });
@@ -701,7 +701,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // Select a different demo preset while still on Find — changes
     // parcelId, which is one of the scenario-URL sync effect's deps. This
     // is the exact action from the live-browser repro that found this bug.
-    fireEvent.click(screen.getByRole("button", { name: /Portland/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /Portland/i }));
 
     // Capture what that effect actually left on the current (launch)
     // entry's state, right before burying it under a new push below. This

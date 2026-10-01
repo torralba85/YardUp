@@ -29,9 +29,9 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/signup");
 
     await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Homeowner/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Builder/i })).toBeVisible();
-    await page.getByRole("button", { name: /Builder/i }).click();
+    await expect(page.getByRole("radio", { name: /Homeowner/i })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Builder/i })).toBeVisible();
+    await page.getByRole("radio", { name: /Builder/i }).click();
     await expect(page.getByRole("button", { name: /Create account/i })).toBeVisible();
   });
 
@@ -86,8 +86,8 @@ test.describe("Public LotFoundry flows", () => {
 
     // The applied template updates the active ADU config in the studio.
     await expect(page.getByRole("heading", { name: "Design your ADU", level: 2 }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Cedar/i })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("button", { name: /Shed/i })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("radio", { name: /Cedar/i })).toBeChecked();
+    await expect(page.getByRole("radio", { name: /Shed/i })).toBeChecked();
   });
 
   test("Design keeps setup and secondary tools out of the initial workspace", async ({ page, isMobile }) => {
@@ -95,7 +95,7 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/studio?parcel=oak-street");
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
     await expect(page.getByRole("heading", { name: "Design your ADU", exact: true })).toBeVisible();
-    await expect(page.getByRole("group", { name: "ADU footprint size" })).toBeVisible();
+    await expect(page.getByRole("radiogroup", { name: "ADU footprint size" })).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Search property address" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Reset", exact: true })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Courtyard Studio" })).not.toBeVisible();
@@ -125,7 +125,7 @@ test.describe("Public LotFoundry flows", () => {
     test.skip(!isMobile, "The five-reveal journey is the mobile layout only");
 
     await page.goto("/studio");
-    await page.getByRole("button", { name: /Seattle/i }).click();
+    await page.getByRole("radio", { name: /Seattle/i }).click();
     await page.getByRole("button", { name: /Reveal my backyard/i }).click();
     await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();
 

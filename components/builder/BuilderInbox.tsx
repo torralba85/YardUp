@@ -21,6 +21,7 @@ import {
   recordInPlaceLeadUnlock,
   clearPendingLeadUnlock,
 } from "@/lib/analytics/lead-unlock-tracking";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import type {
   BuilderInboxItem,
   BuilderLedgerEntry,
@@ -327,6 +328,12 @@ export default function BuilderInbox({
     }
   }
 
+  const { groupProps: viewModeGroupProps, getRadioProps: getViewModeRadioProps } = useRadioGroup({
+    value: viewMode,
+    onChange: setViewMode,
+    values: ["cards", "table"] as const,
+  });
+
   return (
     <section className="mt-6">
       <div className="border border-lf-hairline bg-lf-card p-4">
@@ -382,14 +389,13 @@ export default function BuilderInbox({
               </div>
 
               {/* Cards vs Table View Mode Segment Toggle */}
-              <div className="flex rounded-none border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card">
+              <div aria-label="View mode" className="flex rounded-none border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card" {...viewModeGroupProps}>
                 <Button
                   type="button"
                   size="sm"
                   variant={viewMode === "cards" ? "selected" : "ghost"}
-                  onClick={() => setViewMode("cards")}
-                  aria-pressed={viewMode === "cards"}
-                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
+                  {...getViewModeRadioProps("cards")}
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[checked=false]:text-lf-muted aria-[checked=false]:hover:bg-lf-sand-2"
                 >
                   Cards
                 </Button>
@@ -397,9 +403,8 @@ export default function BuilderInbox({
                   type="button"
                   size="sm"
                   variant={viewMode === "table" ? "selected" : "ghost"}
-                  onClick={() => setViewMode("table")}
-                  aria-pressed={viewMode === "table"}
-                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
+                  {...getViewModeRadioProps("table")}
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[checked=false]:text-lf-muted aria-[checked=false]:hover:bg-lf-sand-2"
                 >
                   Table
                 </Button>

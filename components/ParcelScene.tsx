@@ -22,6 +22,7 @@ import {
 import { SCENE_QUALITY, type SceneQuality } from "@/lib/scene-quality";
 import { useSceneDrag } from "@/lib/use-scene-drag";
 import type { SceneView } from "@/lib/scene-camera-fit";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import { Button } from "@/components/ui/Button";
 import { StudioMeasurementAdapter, type StudioMeasurementAdapterProps } from "@/components/studio/StudioMeasurementAdapter";
 import { AduArchitecture } from "@/components/studio/AduArchitecture";
@@ -1032,6 +1033,24 @@ export default function ParcelScene({
     if (gl && gl.isContextLost()) armFallback();
   }, []);
 
+  // Radio-group wiring for the camera, lighting and quality toolbars. Called
+  // before the 2D fallback return so the hook order never changes.
+  const { groupProps: cameraGroupProps, getRadioProps: getCameraRadioProps } = useRadioGroup({
+    value: viewMode,
+    onChange: selectView,
+    values: ["overview", "adu", "setbacks"] as const,
+  });
+  const { groupProps: lightingGroupProps, getRadioProps: getLightingRadioProps } = useRadioGroup({
+    value: lighting,
+    onChange: setLighting,
+    values: Object.keys(LIGHTING_PRESETS) as LightingPresetId[],
+  });
+  const { groupProps: qualityGroupProps, getRadioProps: getQualityRadioProps } = useRadioGroup({
+    value: quality,
+    onChange: setQuality,
+    values: Object.keys(SCENE_QUALITY) as SceneQuality[],
+  });
+
   if (!webglAvailable) {
     return (
       <Parcel2DScene
@@ -1214,9 +1233,9 @@ export default function ParcelScene({
         {/* Compact viewport toolbar. Button names stay visible at every width —
             the audit found them collapsing to bare icons below `sm` (U4). */}
         <div
-          role="group"
           aria-label="Camera view"
           className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-none border border-[#DADAD3] bg-[#F5F5F0]/95 p-1"
+          {...cameraGroupProps}
         >
           {[
             { mode: "overview" as const, label: "Frame lot", icon: Home },
@@ -1230,9 +1249,8 @@ export default function ParcelScene({
                 type="button"
                 size="sm"
                 variant={active ? "selected" : "ghost"}
-                onClick={() => selectView(mode)}
-                aria-pressed={active}
-                className="h-11 gap-1.5 px-3 leading-none aria-[pressed=false]:text-[#161616] aria-[pressed=false]:hover:bg-[#161616]/5"
+                {...getCameraRadioProps(mode)}
+                className="h-11 gap-1.5 px-3 leading-none aria-[checked=false]:text-[#161616] aria-[checked=false]:hover:bg-[#161616]/5"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="text-xs font-medium">{label}</span>
@@ -1292,31 +1310,29 @@ export default function ParcelScene({
               className="h-8 w-28 cursor-pointer accent-[#FF5B24] disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
-          <div role="group" aria-label="Lighting preset" className="flex flex-wrap gap-1">
+          <div aria-label="Lighting preset" className="flex flex-wrap gap-1" {...lightingGroupProps}>
             {(Object.keys(LIGHTING_PRESETS) as LightingPresetId[]).map((id) => (
               <Button
                 key={id}
                 type="button"
                 size="sm"
                 variant={lighting === id ? "selected" : "secondary"}
-                aria-pressed={lighting === id}
                 className="min-h-11"
-                onClick={() => setLighting(id)}
+                {...getLightingRadioProps(id)}
               >
                 {LIGHTING_PRESETS[id].name}
               </Button>
             ))}
           </div>
-          <div role="group" aria-label="Render quality" className="flex flex-wrap gap-1">
+          <div aria-label="Render quality" className="flex flex-wrap gap-1" {...qualityGroupProps}>
             {(Object.keys(SCENE_QUALITY) as SceneQuality[]).map((tier) => (
               <Button
                 key={tier}
                 type="button"
                 size="sm"
                 variant={quality === tier ? "selected" : "secondary"}
-                aria-pressed={quality === tier}
                 className="min-h-11 capitalize"
-                onClick={() => setQuality(tier)}
+                {...getQualityRadioProps(tier)}
               >
                 {tier}
               </Button>
