@@ -107,19 +107,19 @@ export function AduCostCalculator() {
         <dl className="mt-8 grid gap-6 sm:grid-cols-[1.6fr_1fr_1fr]" aria-live="polite">
           <div>
             <dt className="text-xs uppercase tracking-[0.08em] text-lf-muted">Build cost</dt>
-            <dd className="mt-1 whitespace-nowrap font-display text-2xl font-bold tabular-nums text-lf-espresso">
+            <dd className="lf-money-md mt-1 whitespace-nowrap text-lot-ink">
               {formatCompactCurrency(estimate.costLow)}–{formatCompactCurrency(estimate.costHigh)}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-[0.08em] text-lf-muted">Rent per month</dt>
-            <dd className="mt-1 whitespace-nowrap font-display text-2xl font-bold tabular-nums text-lf-espresso">
+            <dd className="lf-money-md mt-1 whitespace-nowrap text-lot-ink">
               {formatCurrency(estimate.monthlyRent)}
             </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-[0.08em] text-lf-muted">Simple payback</dt>
-            <dd className="mt-1 whitespace-nowrap font-display text-2xl font-bold tabular-nums text-lf-espresso">
+            <dd className="lf-money-md mt-1 whitespace-nowrap text-lot-ink">
               {estimate.paybackYears.toFixed(1)} years
             </dd>
           </div>
