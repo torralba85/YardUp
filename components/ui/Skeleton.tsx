@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /**
  * A loading placeholder block that stands in for content while it loads.
  *
- * Uses a warm taupe fill with a subtle pulse; the global
+ * Uses a 12% stone tint on chalk with a subtle pulse; the global
  * `prefers-reduced-motion` rule disables the animation. Wrap a group of
  * skeletons in an element with `role="status"` + an `aria-label` (and an
  * `sr-only` "Loading…") so the loading state is announced to assistive tech.

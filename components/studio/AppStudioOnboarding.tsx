@@ -268,7 +268,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
               {index + 1}
             </span>
             <div>
-              <h2 className="text-[15px] font-bold leading-6">{item.title}</h2>
+              <h2 className="text-[15px] font-semibold leading-6">{item.title}</h2>
               <p className="mt-1 text-sm leading-relaxed text-lot-stone">{item.copy}</p>
             </div>
           </li>

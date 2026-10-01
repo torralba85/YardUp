@@ -161,7 +161,7 @@ export default function StudioShell({
                       {savedScenarios.slice(0, 5).map((scenario) => (
                         <li
                           key={scenario.id}
-                          className="flex min-h-11 items-center gap-2 rounded-none px-1.5 py-1 text-xs hover:bg-[#2A2A2A]"
+                          className="flex min-h-11 items-center gap-2 rounded-none px-1.5 py-1 text-xs hover:bg-lot-ink-hover"
                         >
                           <button
                             type="button"

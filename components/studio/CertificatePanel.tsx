@@ -6,6 +6,7 @@ import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
 import type { AIProjectBrief, AIProjectBriefResponse } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { trackPurchase } from "@/lib/analytics/adsConversion";
 import {
@@ -356,9 +357,9 @@ export default function CertificatePanel({
               ) : projectBriefLoading || preparingBrief ? (
                 <div className="mt-3 border-t border-lf-hairline pt-3" role="status">
                   <span className="sr-only">Adding property notes and timeline</span>
-                  <div className="motion-safe:animate-pulse">
-                    <div className="h-2.5 w-28 rounded bg-lf-taupe-soft" />
-                    <div className="mt-2 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />
+                  <div>
+                    <Skeleton className="h-2.5 w-28" />
+                    <Skeleton className="mt-2 h-2.5 w-4/5" />
                   </div>
                 </div>
               ) : projectBriefError ? (

@@ -20,6 +20,7 @@ import {
 import type { AIPermitStage, AIProjectBrief, AIRiskLevel } from "@/lib/ai-types";
 import { formatCurrency } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import type { FeasibilityResult } from "./types";
 import { trackReportExported, mapFeasibilityVerdict } from "@/lib/analytics/events";
 
@@ -463,7 +464,7 @@ function CertificateStyleMatchSection({
             {concept.traits.map((trait) => (
               <span
                 key={trait}
-                className="rounded-none border border-lf-hairline bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium tracking-[0.04em] text-lf-espresso"
+                className="rounded-none border border-lf-hairline bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium text-lf-espresso"
               >
                 {trait}
               </span>
@@ -498,14 +499,14 @@ function CertificateBriefSection({
           <h3 className="text-sm font-semibold text-lf-espresso">AI Parcel &amp; Permit Brief</h3>
         </div>
         {loading ? (
-          <div className="mt-4 motion-safe:animate-pulse" role="status">
+          <div className="mt-4" role="status">
             <span className="sr-only">Adding property notes and timeline</span>
-            <div className="h-3 w-52 rounded bg-lf-taupe-soft" />
-            <div className="mt-2 h-2.5 w-full rounded bg-lf-taupe-soft" />
-            <div className="mt-1.5 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />
+            <Skeleton className="h-3 w-52" />
+            <Skeleton className="mt-2 h-2.5 w-full" />
+            <Skeleton className="mt-1.5 h-2.5 w-4/5" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="h-24 rounded-none border border-lf-hairline bg-lf-sand-2" />
-              <div className="h-24 rounded-none border border-lf-hairline bg-lf-sand-2" />
+              <Skeleton className="h-24 border border-lf-hairline bg-lf-sand-2" />
+              <Skeleton className="h-24 border border-lf-hairline bg-lf-sand-2" />
             </div>
           </div>
         ) : error ? (
