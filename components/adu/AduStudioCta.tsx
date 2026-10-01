@@ -65,11 +65,11 @@ export function AduStudioCta({
           placeholder="123 Main St, San Diego, CA"
           value={address}
           onChange={(event) => setAddress(event.target.value)}
-          className="min-h-11 flex-1 rounded-[3px] border border-lf-hairline/30 bg-lf-dark-surface px-4 text-sm text-lf-sand placeholder:text-lf-unit-on-dark/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-sand"
+          className="min-h-11 flex-1 rounded-control border border-lot-stone-on-dark bg-lot-surface-dark px-4 text-base text-lot-chalk placeholder:text-lf-unit-on-dark/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk sm:text-sm"
         />
         <button
           type="submit"
-          className="inline-flex min-h-11 items-center justify-center rounded-[3px] bg-lot-orange px-6 text-sm font-bold text-lf-espresso motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-sand focus-visible:ring-offset-2 focus-visible:ring-offset-lf-espresso"
+          className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-6 text-sm font-bold text-lf-espresso motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-sand focus-visible:ring-offset-2 focus-visible:ring-offset-lf-espresso"
         >
           Check my address
         </button>

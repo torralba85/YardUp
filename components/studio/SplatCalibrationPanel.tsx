@@ -16,7 +16,7 @@ export interface SplatCalibrationPanelProps {
 }
 
 const inputControl =
-  "min-h-11 w-full rounded-[3px] border border-lf-muted bg-lf-sand px-3 text-base text-lf-espresso tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
+  "min-h-11 w-full rounded-control border border-lf-muted bg-lf-sand px-3 text-base text-lf-espresso tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
 
 export default function SplatCalibrationPanel({
   scene,
@@ -231,7 +231,7 @@ export default function SplatCalibrationPanel({
                 readOnly
                 value={jsonString}
                 aria-label="Calibration JSON export"
-                className="mt-1 h-32 w-full rounded-[3px] border border-lf-hairline bg-lf-sand-2 p-2 tabular-nums text-base text-lf-espresso"
+                className="mt-1 h-32 w-full rounded-control border border-lot-stone bg-lot-chalk-2 p-2 tabular-nums text-base text-lot-ink"
               />
             </label>
           </div>
