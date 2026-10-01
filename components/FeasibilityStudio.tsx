@@ -24,6 +24,7 @@ import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import {
   defaultPose,
   isValidAduConfig,
@@ -1554,30 +1555,27 @@ function SceneViewToggle({
   onChange: (mode: SceneViewMode) => void;
   hasScan?: boolean;
 }) {
+  const options: SceneViewMode[] = ["3d"];
+  if (hasScan) options.push("scan");
+  options.push("neighborhood", "aerial");
+
+  const { groupProps, getRadioProps } = useRadioGroup({
+    value: mode,
+    onChange,
+    values: options,
+  });
+
   return (
     <div
-      role="group"
-      aria-label="Parcel view"
-      onKeyDown={(event) => {
-        const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
-        if (!keys.includes(event.key)) return;
-        const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
-        const index = buttons.indexOf(event.target as HTMLButtonElement);
-        if (index < 0) return;
-        event.preventDefault();
-        const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1
-          : (index + (event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length;
-        buttons[next].focus();
-        buttons[next].click();
-      }}
       className="pointer-events-auto flex flex-wrap shrink-0 items-center gap-1 border-b border-lot-line bg-lot-chalk px-2 py-1"
+      aria-label="Parcel view"
+      {...groupProps}
     >
       <Button
         type="button"
         size="xs"
         variant={mode === "3d" ? "selected" : "ghost"}
-        aria-pressed={mode === "3d"}
-        onClick={() => onChange("3d")}
+        {...getRadioProps("3d")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
           mode === "3d" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
@@ -1589,14 +1587,13 @@ function SceneViewToggle({
           type="button"
           size="xs"
           variant={mode === "scan" ? "selected" : "ghost"}
-          aria-pressed={mode === "scan"}
-          onClick={() => onChange("scan")}
+          {...getRadioProps("scan")}
           className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
             mode === "scan" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-[2px] bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
+          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
             Beta
           </span>
         </Button>
@@ -1605,8 +1602,7 @@ function SceneViewToggle({
         type="button"
         size="xs"
         variant={mode === "neighborhood" ? "selected" : "ghost"}
-        aria-pressed={mode === "neighborhood"}
-        onClick={() => onChange("neighborhood")}
+        {...getRadioProps("neighborhood")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
           mode === "neighborhood" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
@@ -1617,8 +1613,7 @@ function SceneViewToggle({
         type="button"
         size="xs"
         variant={mode === "aerial" ? "selected" : "ghost"}
-        aria-pressed={mode === "aerial"}
-        onClick={() => onChange("aerial")}
+        {...getRadioProps("aerial")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
           mode === "aerial" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}

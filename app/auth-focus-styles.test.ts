@@ -20,6 +20,6 @@ describe("auth focus color roles", () => {
     expect(signup.match(/<Input\b/g)).toHaveLength(3);
     expect(fields).toContain("focus-visible:ring-2 focus-visible:ring-lot-orange-ink");
     expect(signup).toContain("border-lot-ink bg-lot-ink");
-    expect(signup).toContain("aria-pressed={selected}");
+    expect(signup).toContain("{...radioProps}");
   });
 });

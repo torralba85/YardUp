@@ -15,6 +15,7 @@ import {
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input } from "@/components/ui/Field";
+import { useRadioGroup, type RadioItemProps } from "@/components/ui/useRadioGroup";
 
 function SignupForm() {
   const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
@@ -47,6 +48,13 @@ function SignupForm() {
       router.replace(allowBuilder && profile.role === "builder" ? "/builder" : "/studio");
     }
   }, [profile, router, user]);
+
+  // Called before the signed-in early return so the hook order never changes.
+  const { groupProps: roleGroupProps, getRadioProps: getRoleRadioProps } = useRadioGroup({
+    value: role,
+    onChange: setRole,
+    values: ["user", "builder"] as const,
+  });
 
   if (user) return null;
 
@@ -181,18 +189,18 @@ function SignupForm() {
         <label className="lf-body-sm mb-1.5 block font-medium text-lot-ink">
           I am a...
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3" aria-label="Account type" {...roleGroupProps}>
           <RoleButton
             label="Homeowner"
             description="Estimating my lot"
             selected={role === "user"}
-            onClick={() => setRole("user")}
+            radioProps={getRoleRadioProps("user")}
           />
           <RoleButton
             label="Builder"
             description="Reviewing client lots"
             selected={role === "builder"}
-            onClick={() => setRole("builder")}
+            radioProps={getRoleRadioProps("builder")}
           />
         </div>
       </div>}
@@ -347,18 +355,17 @@ function RoleButton({
   label,
   description,
   selected,
-  onClick,
+  radioProps,
 }: {
   label: string;
   description: string;
   selected: boolean;
-  onClick: () => void;
+  radioProps: RadioItemProps;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-pressed={selected}
+      {...radioProps}
       className={`rounded-control border p-3 text-left motion-safe:transition ${
         selected
           ? "border-lot-ink bg-lot-ink"
