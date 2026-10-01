@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /** Money display size, mapped to the `lf-money-*` Major Third scale in globals.css. */
 export type MoneyFigureSize = "hero" | "band" | "inline" | "sm";
 /** Money surface tone. Money is always carbon or chalk — never green. */
-export type MoneyFigureTone = "onLight" | "onDark" | "forest";
+export type MoneyFigureTone = "onLight" | "onDark";
 /** Small trailing unit (Manrope). Empty string renders no unit. */
 export type MoneyFigureUnit = "/mo" | "/yr" | "yrs" | "";
 
@@ -31,15 +31,11 @@ const UNIT_SIZE_CLASS: Record<MoneyFigureSize, string> = {
 const TONE_CLASS: Record<MoneyFigureTone, string> = {
   onLight: "text-lf-espresso",
   onDark: "text-lf-money-on-dark",
-  // Vestigial name: A LOT MORE retired money-green, so this renders carbon like
-  // every other recorded fact across the product.
-  forest: "text-lf-money",
 };
 
 const UNIT_TONE_CLASS: Record<MoneyFigureTone, string> = {
   onLight: "text-lf-muted",
   onDark: "text-lf-unit-on-dark",
-  forest: "text-lf-muted",
 };
 
 /** Props for {@link MoneyFigure}. */

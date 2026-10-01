@@ -52,7 +52,7 @@ export default function FeasibilityVerdictBand({
         </div>
         <div className="ml-auto">
           <p className="text-xs text-lot-stone">Estimated rent</p>
-          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" className="mt-0.5 text-base font-semibold" />
+          <MoneyFigure value={result.monthlyRent} animate size="inline" className="mt-0.5 text-base font-semibold" />
         </div>
         {onCreateAccount && (
           <button

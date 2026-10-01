@@ -51,7 +51,7 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
       <p className="mt-1 font-sans text-xs text-lf-muted">{parcelName}</p>
 
       <div className="mt-7">
-        <MoneyFigure value={result.monthlyRent} animate size="hero" tone="forest" />
+        <MoneyFigure value={result.monthlyRent} animate size="hero" />
         <p className="mt-3 text-sm text-lf-muted">
           About{" "}
           <span className="font-display text-lg font-semibold text-lf-money">

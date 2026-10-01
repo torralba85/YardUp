@@ -144,7 +144,7 @@ export default function ShapeStep({
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-lot-line pt-4">
           <p className="text-xs text-lot-stone">Projected rent / mo</p>
-          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" />
+          <MoneyFigure value={result.monthlyRent} animate size="inline" />
         </div>
 
         <button

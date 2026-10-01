@@ -1681,7 +1681,7 @@ function LotStep({
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             {hasParcel && <div>
               <p className="lf-kicker-dense text-lf-muted">If built</p>
-              <MoneyFigure value={monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
+              <MoneyFigure value={monthlyRent} animate size="inline" className="mt-0.5" />
             </div>}
             <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
               Continue to Rules &amp; Fit

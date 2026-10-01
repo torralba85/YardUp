@@ -155,12 +155,12 @@ function LeadCell({
       <CellLabel icon={Icon} label={label} />
       <div
         data-metric-lead="true"
-        data-accent="forest"
+        data-accent="ink"
         className="mt-2 inline-block lf-money-lg text-lf-money"
       >
         {format(animated)}
-        {/* Forest hairline — money figures carry the forest semantic (DESIGN.md). */}
-        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lf-forest" />
+        {/* Carbon hairline: money is typographic, never green (design-system §2.6). */}
+        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lot-ink" />
       </div>
       <div className="mt-2 text-[11px] text-lf-muted">{detail}</div>
     </div>

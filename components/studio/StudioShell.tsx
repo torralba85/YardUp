@@ -120,7 +120,7 @@ export default function StudioShell({
                 <button
                   type="button"
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-[3px] border border-[#44443F] text-xs font-medium text-[#F5F5F0] motion-safe:transition hover:border-[#65655F] hover:bg-[#2A2A2A] motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-[3px] border border-[#44443F] text-xs font-medium text-[#F5F5F0] motion-safe:transition hover:border-[#65655F] hover:bg-lot-ink-hover motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
                 >
                   <MapPin size={13} />
                   Change address
@@ -129,7 +129,7 @@ export default function StudioShell({
               <button
                 type="button"
                 onClick={onReset}
-                className="mt-3 h-11 w-full rounded-[3px] border border-[#44443F] text-xs font-medium text-[#F5F5F0] motion-safe:transition hover:border-[#65655F] hover:bg-[#2A2A2A] motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
+                className="mt-3 h-11 w-full rounded-[3px] border border-[#44443F] text-xs font-medium text-[#F5F5F0] motion-safe:transition hover:border-[#65655F] hover:bg-lot-ink-hover motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5F0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616]"
               >
                 Reset Project
               </button>

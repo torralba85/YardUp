@@ -595,15 +595,18 @@ describe("FeasibilityStudio (guided spine)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("marks the lead money figures with the forest money accent", () => {
+  it("marks the lead money figures with a carbon accent, never green", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     const summary = document.getElementById("summary");
     expect(summary).not.toBeNull();
     const leads = summary!.querySelectorAll('[data-metric-lead="true"]');
     // Exactly the two lead figures: Monthly Rent and Annual NOI.
     expect(leads).toHaveLength(2);
-    // Positive financial value renders forest, never amber (amber = risk).
-    leads.forEach((el) => expect(el).toHaveAttribute("data-accent", "forest"));
+    // Money is typographic (design-system §2.6): green is status-only, never money.
+    leads.forEach((el) => {
+      expect(el).toHaveAttribute("data-accent", "ink");
+      expect(el.innerHTML).not.toMatch(/forest|eligible/);
+    });
   });
 
   it("refuses to resurrect a stale history entry left behind by start over", async () => {
