@@ -18,6 +18,8 @@ export interface EstimateSummaryPanelProps {
   reportCtaLabel?: string;
   /** Show the CTA in a busy/disabled state (e.g. while starting checkout). */
   reportCtaBusy?: boolean;
+  /** Error message to display above the CTA button if checkout or generation fails. */
+  error?: string | null;
 }
 
 /**
@@ -32,6 +34,7 @@ export default function EstimateSummaryPanel({
   onGenerateReport,
   reportCtaLabel = "Create report",
   reportCtaBusy = false,
+  error,
 }: EstimateSummaryPanelProps) {
   const metrics = [
     {
@@ -129,6 +132,21 @@ export default function EstimateSummaryPanel({
               <div>
                 <div className="text-sm font-semibold">Review Needed</div>
                 <p className="mt-1 text-xs leading-5">{result.warnings[0]}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div
+            role="alert"
+            className="rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+          >
+            <div className="flex items-start gap-2">
+              <TriangleAlert className="mt-0.5 shrink-0" size={15} />
+              <div>
+                <div className="text-xs font-semibold">Payment Issue</div>
+                <p className="mt-0.5 leading-4">{error}</p>
               </div>
             </div>
           </div>

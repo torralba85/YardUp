@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       {
         mode: "payment",
         submit_type: "pay",
+        adaptive_pricing: { enabled: false },
         integration_identifier: "lotfoundry_credit_pack_hscytrve",
         payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
         line_items: [

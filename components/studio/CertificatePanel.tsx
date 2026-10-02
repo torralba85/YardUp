@@ -164,7 +164,7 @@ export default function CertificatePanel({
     params.delete("cert");
     const next = params.toString();
     window.history.replaceState(
-      null,
+      window.history.state,
       "",
       `${window.location.pathname}${next ? `?${next}` : ""}`,
     );
@@ -317,6 +317,7 @@ export default function CertificatePanel({
         onGenerateReport={handleCta}
         reportCtaLabel={ctaLabel}
         reportCtaBusy={reportBusy}
+        error={!purchased ? error : null}
       />
 
       <div className="rounded-none border border-lf-hairline bg-lf-sand-2 px-6 py-5">
@@ -435,11 +436,6 @@ export default function CertificatePanel({
               <strong>One purchase unlocks this property.</strong> Revise the ADU concept and
               regenerate its certificate without paying again.
             </p>
-            {error && (
-              <p role="alert" className="mt-3 text-xs text-lf-brick">
-                {error}
-              </p>
-            )}
             <p className="lf-caption mt-3 text-lf-muted">
               Planning estimate only. Not a permit, appraisal, architectural or engineering opinion, lending decision, government determination, or guarantee of income. Third-party data may be incomplete or outdated; verify with local authorities and licensed professionals before building or investing.
             </p>

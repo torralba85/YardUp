@@ -148,4 +148,22 @@ describe("POST /api/stripe/checkout-credits", () => {
     expect(res.status).toBe(503);
     expect(mocks.runTransaction).not.toHaveBeenCalled();
   });
+
+  it("disables adaptive pricing to ensure USD billing", async () => {
+    mocks.stripe = {
+      checkout: {
+        sessions: {
+          create: vi
+            .fn()
+            .mockResolvedValue({ url: "https://stripe.test/credits" }),
+        },
+      },
+    };
+
+    await POST(postRequest({ pack: 5, checkoutAttemptId: "attempt-5" }));
+
+    expect(mocks.stripe.checkout.sessions.create.mock.calls[0][0].adaptive_pricing).toEqual({
+      enabled: false,
+    });
+  });
 });

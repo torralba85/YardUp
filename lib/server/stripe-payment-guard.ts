@@ -15,10 +15,15 @@ export function hasExpectedPayment(
   expectedAmountCents: number,
   logPrefix = "stripe/webhook",
 ): boolean {
+  const isUsd = session.currency?.toLowerCase() === "usd";
+  const directMatch = session.amount_total === expectedAmountCents;
+  const convertedMatch =
+    session.currency_conversion?.source_currency?.toLowerCase() === "usd" &&
+    session.currency_conversion?.amount_total === expectedAmountCents;
+
   const valid =
     session.mode === "payment" &&
-    session.currency?.toLowerCase() === "usd" &&
-    session.amount_total === expectedAmountCents;
+    ((isUsd && directMatch) || convertedMatch);
 
   if (!valid) {
     console.error(
