@@ -602,8 +602,12 @@ describe("FeasibilityStudio (guided spine)", () => {
     const leads = summary!.querySelectorAll('[data-metric-lead="true"]');
     // Exactly the two lead figures: Monthly Rent and Annual NOI.
     expect(leads).toHaveLength(2);
-    // Financial values use neutral ink; status colors describe verification.
-    leads.forEach((el) => expect(el).toHaveAttribute("data-accent", "neutral"));
+    // Financial values use neutral ink; status colors describe verification,
+    // so nothing green decorates a money figure either (rules, underlines).
+    leads.forEach((el) => {
+      expect(el).toHaveAttribute("data-accent", "neutral");
+      expect(el.innerHTML).not.toMatch(/forest|eligible/);
+    });
   });
 
   it("refuses to resurrect a stale history entry left behind by start over", async () => {
