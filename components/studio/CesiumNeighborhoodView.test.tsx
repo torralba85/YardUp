@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CesiumNeighborhoodView from "./CesiumNeighborhoodView";
@@ -28,6 +28,19 @@ let mockSampleHeight: ReturnType<typeof vi.fn> | undefined;
 let mockSampleHeightSupported = true;
 let mockGlobe: { show: boolean };
 
+type MockVec = { x: number; y: number; z: number };
+/**
+ * Live camera state for the control tests. The mocked east-north-up frame is
+ * world axes shifted up to the ground, so world and local poses differ only by
+ * the ground height.
+ */
+const mockCamera: { positionWC: MockVec; directionWC: MockVec; upWC: MockVec } = {
+  positionWC: { x: 0, y: 0, z: 0 },
+  directionWC: { x: 0, y: 1, z: 0 },
+  upWC: { x: 0, y: 0, z: 1 },
+};
+const mockCancelFlight = vi.fn();
+
 const mockCesium = {
   Viewer: vi.fn(function (_container: Element, _options?: Record<string, unknown>) {
     void _container;
@@ -37,11 +50,12 @@ const mockCesium = {
       destroy: mockDestroy,
       isDestroyed: vi.fn().mockReturnValue(false),
       entities: { add: mockEntitiesAdd, remove: mockEntitiesRemove },
-      camera: {
+      camera: Object.assign(mockCamera, {
         flyTo: mockCameraFlyTo,
         setView: mockCameraSetView,
         flyToBoundingSphere: mockCameraFlyToBoundingSphere,
-      },
+        cancelFlight: mockCancelFlight,
+      }),
       scene: {
         primitives: { add: mockPrimitivesAdd },
         globe: mockGlobe,
@@ -56,6 +70,16 @@ const mockCesium = {
   Cartesian3: {
     fromDegrees: vi.fn((lng: number, lat: number, alt?: number) => ({ lng, lat, alt })),
     fromDegreesArray: vi.fn((arr: number[]) => arr),
+    fromElements: vi.fn((x: number, y: number, z: number) => ({ x, y, z })),
+  },
+  Transforms: {
+    // Column-major identity rotation, translated up to the requested height.
+    eastNorthUpToFixedFrame: vi.fn((origin: { alt?: number }) => [
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, origin.alt ?? 0, 1,
+    ]),
   },
   Cartesian2: vi.fn(function (x: number, y: number) {
     return { x, y };
@@ -117,11 +141,46 @@ function renderView(props: Partial<React.ComponentProps<typeof CesiumNeighborhoo
   );
 }
 
+/** Puts the mocked camera south of the parcel, looking north, `height` m above the mocked ground. */
+function placeCamera(height: number, pitchDeg = -35) {
+  const pitch = (pitchDeg * Math.PI) / 180;
+  const range = height / Math.sin(-pitch);
+  mockCamera.positionWC = { x: 0, y: -range * Math.cos(pitch), z: MOCK_GROUND_HEIGHT_M + height };
+  mockCamera.directionWC = { x: 0, y: Math.cos(pitch), z: Math.sin(pitch) };
+  mockCamera.upWC = { x: 0, y: -Math.sin(pitch), z: Math.cos(pitch) };
+}
+
+let matchMediaSpy: { mockRestore: () => void } | null = null;
+
+function preferReducedMotion() {
+  matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation(
+    (query: string) => ({ matches: query.includes("reduce"), media: query }) as MediaQueryList,
+  );
+}
+
+function lastSetViewPose() {
+  const options = mockCameraSetView.mock.calls.at(-1)?.[0] as {
+    destination: MockVec;
+    orientation: { direction: MockVec; up: MockVec };
+  };
+  return { position: options.destination, direction: options.orientation.direction };
+}
+
 describe("CesiumNeighborhoodView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCameraFlyTo.mockImplementation((options) => options.complete?.());
     mockCameraFlyToBoundingSphere.mockImplementation((_sphere, options) => options?.complete?.());
+    // Only a direction/up view moves the mocked camera; the provisional
+    // heading/pitch overhead view is recorded but leaves the pose alone.
+    mockCameraSetView.mockImplementation((options: { destination?: MockVec; orientation?: { direction?: MockVec; up?: MockVec } }) => {
+      if (options.destination && options.orientation?.direction && options.orientation.up) {
+        mockCamera.positionWC = options.destination;
+        mockCamera.directionWC = options.orientation.direction;
+        mockCamera.upWC = options.orientation.up;
+      }
+    });
+    placeCamera(280);
     mockSampleHeight = vi.fn(() => MOCK_GROUND_HEIGHT_M);
     mockSampleHeightSupported = true;
     setGeoidModuleForTesting({ meanSeaLevel: () => MOCK_UNDULATION_M });
@@ -130,6 +189,9 @@ describe("CesiumNeighborhoodView", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    matchMediaSpy?.mockRestore();
+    matchMediaSpy = null;
     resetGeoidForTesting();
     vi.useRealTimers();
   });
@@ -629,6 +691,173 @@ describe("CesiumNeighborhoodView", () => {
       const { unmount } = renderView();
       // Immediate unmount while loadCesium / loadPhotorealTileset are pending
       expect(() => unmount()).not.toThrow();
+    });
+  });
+
+  describe("compact HUD", () => {
+    it("keeps the verdict and its caveat on screen and the rest behind Details", async () => {
+      const user = userEvent.setup();
+      renderView();
+      await waitFor(() => {
+        expect(screen.getByTestId("cesium-ground-elevation")).toHaveTextContent(/Ground/);
+      });
+
+      const toggle = screen.getByRole("button", { name: "Details" });
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+      const details = document.getElementById(toggle.getAttribute("aria-controls")!);
+      expect(details).not.toBeVisible();
+      expect(screen.getByTestId("cesium-compliance-verdict")).toBeVisible();
+      // Imagery provenance stays visible for the Map Tiles policy.
+      expect(screen.getByTestId("cesium-basemap-route")).toBeVisible();
+      expect(screen.getByTestId("cesium-context-notice")).toHaveTextContent(/not a survey or zoning approval/);
+      expect(screen.getByTestId("cesium-context-notice")).toBeVisible();
+
+      await user.click(toggle);
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+      expect(details).toBeVisible();
+      expect(screen.getByTestId("cesium-ground-elevation")).toBeVisible();
+      expect(screen.getByTestId("cesium-evidence-notice")).toBeVisible();
+
+      await user.click(toggle);
+      expect(details).not.toBeVisible();
+    });
+  });
+
+  describe("camera controls", () => {
+    const controls = () => screen.getByRole("group", { name: "Camera controls" });
+    const control = (name: string) => within(controls()).getByRole("button", { name });
+
+    async function renderReady() {
+      renderView();
+      await waitFor(() => expect(control("Zoom in")).toBeEnabled());
+      mockCameraSetView.mockClear();
+      mockCameraFlyTo.mockClear();
+    }
+
+    it("offers zoom, rotate, tilt and recenter, enabled once the view is ready", async () => {
+      renderView();
+      expect(control("Zoom in")).toBeDisabled();
+      await waitFor(() => expect(control("Zoom in")).toBeEnabled());
+      for (const name of [
+        "Zoom out",
+        "Rotate counterclockwise",
+        "Rotate clockwise",
+        "Tilt up",
+        "Tilt down",
+        "Recenter on property",
+      ]) {
+        expect(control(name)).toBeEnabled();
+      }
+    });
+
+    it("zooms toward the centre of the view", async () => {
+      preferReducedMotion();
+      const user = userEvent.setup();
+      await renderReady();
+
+      await user.click(control("Zoom in"));
+
+      const { position, direction } = lastSetViewPose();
+      expect(position.z - MOCK_GROUND_HEIGHT_M).toBeCloseTo(280 * 0.65, 6);
+      // A zoom moves the camera, it does not turn it.
+      expect(direction.y).toBeCloseTo(mockCamera.directionWC.y, 6);
+      expect(mockCancelFlight).toHaveBeenCalled();
+    });
+
+    it("rotates counterclockwise by turning the heading toward the east", async () => {
+      preferReducedMotion();
+      const user = userEvent.setup();
+      await renderReady();
+
+      await user.click(control("Rotate counterclockwise"));
+
+      const { position, direction } = lastSetViewPose();
+      const heading = (Math.atan2(direction.x, direction.y) * 180) / Math.PI;
+      expect(heading).toBeCloseTo(15, 6);
+      expect(position.z - MOCK_GROUND_HEIGHT_M).toBeCloseTo(280, 6);
+    });
+
+    it("tilts down toward overhead", async () => {
+      preferReducedMotion();
+      const user = userEvent.setup();
+      await renderReady();
+
+      await user.click(control("Tilt down"));
+
+      const pitch = (Math.asin(lastSetViewPose().direction.z) * 180) / Math.PI;
+      expect(pitch).toBeCloseTo(-45, 6);
+    });
+
+    it("recenters on the property, centred and facing north", async () => {
+      preferReducedMotion();
+      const user = userEvent.setup();
+      await renderReady();
+      placeCamera(900, -70);
+
+      await user.click(control("Recenter on property"));
+
+      const options = mockCameraFlyTo.mock.calls.at(-1)?.[0] as {
+        destination: MockVec;
+        orientation: { direction: MockVec };
+        duration: number;
+      };
+      expect(options.destination.z - MOCK_GROUND_HEIGHT_M).toBeCloseTo(200, 6);
+      expect(options.destination.x).toBeCloseTo(0, 6);
+      // Centred: the view ray meets the ground at the property.
+      const { destination, orientation } = options;
+      const reach = (destination.z - MOCK_GROUND_HEIGHT_M) / -orientation.direction.z;
+      expect(destination.y + reach * orientation.direction.y).toBeCloseTo(0, 6);
+      expect((Math.asin(options.orientation.direction.z) * 180) / Math.PI).toBeCloseTo(-35, 6);
+      // Reduced motion: the jump is instant.
+      expect(options.duration).toBe(0);
+    });
+
+    it("animates a step across frames and lands it when pressed again", async () => {
+      const frames = new Map<number, FrameRequestCallback>();
+      let nextFrame = 0;
+      vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+        nextFrame += 1;
+        frames.set(nextFrame, callback);
+        return nextFrame;
+      });
+      vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id));
+      const runFrame = (now: number) => {
+        const [id, callback] = frames.entries().next().value!;
+        frames.delete(id);
+        callback(now);
+      };
+      const user = userEvent.setup();
+      await renderReady();
+
+      await user.click(control("Zoom in"));
+      // Nothing jumps: the first frame starts the clock at the start pose.
+      runFrame(1000);
+      expect(mockCamera.positionWC.z - MOCK_GROUND_HEIGHT_M).toBeCloseTo(280, 6);
+      runFrame(1120);
+      const midway = mockCamera.positionWC.z - MOCK_GROUND_HEIGHT_M;
+      expect(midway).toBeLessThan(280);
+      expect(midway).toBeGreaterThan(280 * 0.65);
+
+      // A second press lands the first step, then plans from where it ended.
+      await user.click(control("Zoom in"));
+      expect(mockCamera.positionWC.z - MOCK_GROUND_HEIGHT_M).toBeCloseTo(280 * 0.65, 6);
+      expect(frames.size).toBe(1);
+      runFrame(2000);
+      runFrame(2240);
+      expect(mockCamera.positionWC.z - MOCK_GROUND_HEIGHT_M).toBeCloseTo(280 * 0.65 * 0.65, 6);
+      expect(frames.size).toBe(0);
+    });
+
+    it("waits for a ground measurement before steering photogrammetry", async () => {
+      vi.useFakeTimers();
+      vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY", "test-map-tiles-key");
+      mockSampleHeight = vi.fn().mockReturnValue(undefined);
+      renderView();
+      await act(async () => { await vi.advanceTimersByTimeAsync(12000); });
+
+      expect(control("Zoom in")).toBeDisabled();
+      expect(control("Recenter on property")).toBeDisabled();
+      expect(screen.getByTestId("cesium-camera-controls-waiting")).toHaveTextContent(/wait for a ground reading/);
     });
   });
 });

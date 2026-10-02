@@ -1,7 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, AlertTriangle, CheckCircle2, XCircle, Globe, RefreshCw } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Globe,
+  LocateFixed,
+  Minus,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  RotateCw,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
@@ -26,6 +40,17 @@ import {
   type GroundSnapStatus,
 } from "@/lib/cesium-ground-snap";
 import { ensureGeoidReady, formatGroundElevation, geoidHeightMeters } from "@/lib/geoid";
+import {
+  applyCameraStep,
+  enuFrameFromMatrix,
+  planCameraStep,
+  poseToLocal,
+  poseToWorld,
+  recenterPose,
+  type CameraPose,
+  type NeighborhoodCameraStep,
+  type Vec3,
+} from "@/lib/neighborhood-camera";
 import styles from "./CesiumNeighborhoodView.module.css";
 
 export interface CesiumNeighborhoodViewProps {
@@ -57,6 +82,38 @@ const NEIGHBORHOOD_VIEW_HEIGHT_M = 280;
 /** Latitude offset that puts the camera south of the parcel for the oblique approach. */
 const NEIGHBORHOOD_VIEW_LAT_OFFSET_DEG = 0.0022;
 
+/** How long one rotate, tilt or zoom press takes to play out. */
+const CAMERA_STEP_MS = 240;
+/** Flight time back to the property from wherever the user has wandered. */
+const RECENTER_FLIGHT_S = 1;
+
+/** One narrow column, grouped zoom / rotate / tilt / recenter, so phones keep the middle of the map. */
+const CAMERA_CONTROL_GROUPS: ReadonlyArray<
+  ReadonlyArray<{ control: NeighborhoodCameraStep | "recenter"; label: string; title: string; Icon: typeof Plus }>
+> = [
+  [
+    { control: "zoom-in", label: "Zoom in", title: "Zoom in", Icon: Plus },
+    { control: "zoom-out", label: "Zoom out", title: "Zoom out", Icon: Minus },
+  ],
+  [
+    { control: "rotate-ccw", label: "Rotate counterclockwise", title: "Rotate counterclockwise", Icon: RotateCcw },
+    { control: "rotate-cw", label: "Rotate clockwise", title: "Rotate clockwise", Icon: RotateCw },
+  ],
+  [
+    { control: "tilt-up", label: "Tilt up", title: "Tilt up, toward the horizon", Icon: ChevronUp },
+    { control: "tilt-down", label: "Tilt down", title: "Tilt down, toward overhead", Icon: ChevronDown },
+  ],
+  [{ control: "recenter", label: "Recenter on property", title: "Recenter on property", Icon: LocateFixed }],
+];
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 interface CesiumEntityCollection {
   add: (options: Record<string, unknown>) => unknown;
   remove: (entity: unknown) => boolean;
@@ -70,6 +127,10 @@ interface CesiumViewerInstance {
     flyTo: (options: Record<string, unknown>) => void;
     setView: (options: Record<string, unknown>) => void;
     flyToBoundingSphere: (boundingSphere: unknown, options?: Record<string, unknown>) => void;
+    cancelFlight?: () => void;
+    positionWC: Vec3;
+    directionWC: Vec3;
+    upWC: Vec3;
   };
   scene: GroundSnapScene & {
     primitives: {
@@ -86,6 +147,11 @@ interface CesiumModule extends PhotorealCesiumModule, GroundSnapCesiumModule {
   Cartesian3: {
     fromDegrees: (lng: number, lat: number, height?: number) => unknown;
     fromDegreesArray: (coordinates: number[]) => unknown;
+    fromElements: (x: number, y: number, z: number) => unknown;
+  };
+  Transforms: {
+    /** A column-major Matrix4; see `enuFrameFromMatrix`. */
+    eastNorthUpToFixedFrame: (origin: unknown) => Readonly<Record<number, number>>;
   };
   Cartesian2: new (x: number, y: number) => unknown;
   Color: {
@@ -260,6 +326,90 @@ export default function CesiumNeighborhoodView({
   const placedEntitiesRef = useRef<unknown[]>([]);
   const measuredGroundRef = useRef<number | null>(null);
   const geometryReadyRef = useRef(false);
+  const cameraAnimationRef = useRef<{ frame: number; finish: () => void } | null>(null);
+
+  // The HUD stays a compact verdict card over the imagery; provenance, ground
+  // height and the full evidence notice open on request.
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsId = useId();
+
+  /** Lands a step still playing out on its final pose. */
+  function landCameraAnimation() {
+    const active = cameraAnimationRef.current;
+    if (!active) return;
+    cameraAnimationRef.current = null;
+    cancelAnimationFrame(active.frame);
+    active.finish();
+  }
+
+  /**
+   * The property's ground as the camera controls' reference plane. Flat imagery
+   * has its ground on the ellipsoid; photogrammetry needs a measurement, and an
+   * unmeasured ground disables the buttons rather than steering by a guess.
+   */
+  function cameraGroundMeters(): number | null {
+    if (measuredGroundRef.current !== null) return measuredGroundRef.current;
+    return route === "osm" ? 0 : null;
+  }
+
+  function runCameraControl(control: NeighborhoodCameraStep | "recenter") {
+    const viewer = viewerRef.current;
+    const Cesium = cesiumModuleRef.current;
+    const groundMeters = cameraGroundMeters();
+    if (!viewer || viewer.isDestroyed() || !Cesium || groundMeters === null) return;
+
+    // Land any step still animating so rapid presses add up exactly, and stop
+    // an opening or recenter flight that would otherwise overwrite this one.
+    landCameraAnimation();
+    viewer.camera.cancelFlight?.();
+
+    const frame = enuFrameFromMatrix(
+      Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(lng, lat, groundMeters)),
+    );
+    const toCesiumView = (pose: CameraPose) => {
+      const world = poseToWorld(frame, pose);
+      const cartesian = ({ x, y, z }: Vec3) => Cesium.Cartesian3.fromElements(x, y, z);
+      return {
+        destination: cartesian(world.position),
+        orientation: { direction: cartesian(world.direction), up: cartesian(world.up) },
+      };
+    };
+    const reduceMotion = prefersReducedMotion();
+
+    if (control === "recenter") {
+      viewer.camera.flyTo({ ...toCesiumView(recenterPose()), duration: reduceMotion ? 0 : RECENTER_FLIGHT_S });
+      return;
+    }
+
+    const { positionWC, directionWC, upWC } = viewer.camera;
+    const start = poseToLocal(frame, { position: positionWC, direction: directionWC, up: upWC });
+    const plan = planCameraStep(start, control);
+    if (!plan) return;
+
+    const showFraction = (fraction: number) => {
+      if (!viewer.isDestroyed()) viewer.camera.setView(toCesiumView(applyCameraStep(start, plan, fraction)));
+    };
+    if (reduceMotion) {
+      showFraction(1);
+      return;
+    }
+
+    // The clock starts on the first frame's timestamp.
+    let startedAt: number | null = null;
+    const animation = { frame: 0, finish: () => showFraction(1) };
+    const tick = (now: number) => {
+      startedAt ??= now;
+      const progress = Math.min(1, (now - startedAt) / CAMERA_STEP_MS);
+      showFraction(1 - (1 - progress) ** 3);
+      if (progress < 1) {
+        animation.frame = requestAnimationFrame(tick);
+      } else if (cameraAnimationRef.current === animation) {
+        cameraAnimationRef.current = null;
+      }
+    };
+    animation.frame = requestAnimationFrame(tick);
+    cameraAnimationRef.current = animation;
+  }
 
   // ---------------------------------------------------------------------------
   // 1. Viewer Lifecycle Effect (Task 1)
@@ -531,6 +681,10 @@ export default function CesiumNeighborhoodView({
     return () => {
       cancelled = true;
       finishFlight?.();
+      // A step mid-animation must not touch the viewer being destroyed.
+      const animation = cameraAnimationRef.current;
+      cameraAnimationRef.current = null;
+      if (animation) cancelAnimationFrame(animation.frame);
       geometryReadyRef.current = false;
       viewerRef.current = null;
       cesiumModuleRef.current = null;
@@ -576,68 +730,129 @@ export default function CesiumNeighborhoodView({
       : `Ground ${feet} ft (ellipsoid — sea-level correction pending)`;
   }, [ground]);
 
+  // Mirrors cameraGroundMeters: buttons work once the reference plane is known.
+  const cameraControlsReady = status === "ready" && (ground?.status === "measured" || route === "osm");
+
   return (
     <div className="relative h-full w-full min-h-[440px] overflow-hidden bg-lot-chalk text-lot-ink">
       {/* Cesium canvas target */}
       <div ref={containerRef} className="h-full w-full" data-testid="cesium-container" />
 
-      {/* Floating HUD banner */}
-      <div className="pointer-events-none absolute top-3 left-3 z-10 flex max-w-sm flex-col gap-1 rounded-[3px] border border-lf-hairline bg-lot-chalk/95 p-3 shadow-md backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <Globe size={16} className="text-lot-orange-ink shrink-0" aria-hidden="true" />
-          <span className="font-display text-sm font-semibold tracking-wide text-lot-ink">
-            Neighborhood 3D
-          </span>
-          <span className="rounded bg-lf-muted/10 px-1.5 py-0.5 font-mono text-[10px] text-lf-muted uppercase">
-            CesiumJS
-          </span>
+      {/* Compact HUD: the verdict and its caveat stay on screen, everything else
+          opens on request so the card does not sit over the neighborhood. The
+          right-hand allowance keeps it clear of the camera controls. */}
+      <div
+        data-testid="cesium-hud"
+        className="pointer-events-none absolute top-3 left-3 z-(--z-index-scene) flex max-w-[min(24rem,calc(100%-6.5rem))] flex-col border border-lot-line bg-lot-chalk/95"
+      >
+        <div className="flex items-start gap-2 px-3 pt-2.5">
+          <Globe size={16} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="font-display text-sm font-semibold tracking-wide text-lot-ink">Neighborhood 3D</p>
+            {/* Same placement verdict as the model, paired with a status icon. */}
+            <div
+              className="mt-0.5 flex items-center gap-1.5 text-xs font-medium"
+              data-testid="cesium-compliance-verdict"
+            >
+              <PlacementIcon size={14} className={`${placementStyle.className} shrink-0`} aria-hidden="true" />
+              <span className={placementStyle.className}>{placementFeedback.title}</span>
+            </div>
+            {/* Stays visible: the Map Tiles policy wants it clear which imagery is
+                Google's (docs/cesium-photoreal-deployment.md). */}
+            <p className="mt-0.5 text-[11px] text-lot-stone" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
+              {describePhotorealRoute(route)}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-tight font-medium text-status-review" data-testid="cesium-context-notice">
+              Context only — not a survey or zoning approval.
+            </p>
+            {status === "ready" && !cameraControlsReady && (
+              <p className="mt-0.5 text-[11px] leading-tight text-lot-stone" data-testid="cesium-camera-controls-waiting">
+                Camera buttons wait for a ground reading. Drag to move.
+              </p>
+            )}
+          </div>
         </div>
-        <p className="truncate text-xs text-lot-ink font-medium">
-          {parcel.address || "Proposed ADU Site"}
-        </p>
-        <p className="font-mono text-[11px] text-lf-muted">
-          {lat.toFixed(5)}°N, {Math.abs(lng).toFixed(5)}°W {!isGeocoded ? "(City Default)" : ""}
-        </p>
-        <p className="font-mono text-[11px] text-lf-muted" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
-          {describePhotorealRoute(route)}
-        </p>
+        <div className="pointer-events-auto flex flex-wrap items-center gap-1 px-1.5 pt-1 pb-1.5">
+          {onReturnToModel && (
+            <Button type="button" variant="secondary" size="xs" onClick={onReturnToModel} className="font-medium">
+              Return to 3D model
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            aria-expanded={detailsOpen}
+            aria-controls={detailsId}
+            onClick={() => setDetailsOpen((open) => !open)}
+            rightIcon={
+              <ChevronDown
+                size={14}
+                className={`motion-safe:transition-transform motion-safe:duration-200 ${detailsOpen ? "rotate-180" : ""}`}
+              />
+            }
+            className="font-medium"
+          >
+            Details
+          </Button>
+        </div>
+        <div
+          id={detailsId}
+          hidden={!detailsOpen}
+          className="flex flex-col gap-1 border-t border-lot-line px-3 pt-2 pb-2.5"
+        >
+          <p className="truncate text-xs font-medium text-lot-ink">{parcel.address || "Proposed ADU Site"}</p>
+          <p className="text-[11px] tabular-nums text-lot-stone">
+            {lat.toFixed(5)}°N, {Math.abs(lng).toFixed(5)}°W {!isGeocoded ? "(City Default)" : ""}
+          </p>
           <p
-            className="font-mono text-[11px] text-lf-muted"
+            className="text-[11px] tabular-nums text-lot-stone"
             data-testid="cesium-ground-elevation"
             aria-live="polite"
             aria-atomic="true"
           >
             {groundLine}
           </p>
-        {/* Same placement verdict as the model, paired with a status icon. */}
-        <div
-          className="flex items-center gap-1.5 pt-0.5 text-xs font-medium"
-          data-testid="cesium-compliance-verdict"
-        >
-          <PlacementIcon size={14} className={`${placementStyle.className} shrink-0`} aria-hidden="true" />
-          <span className={placementStyle.className}>{placementFeedback.title}</span>
-        </div>
-        <p className="mt-1 text-[11px] leading-tight text-status-review font-medium" data-testid="cesium-context-notice">
-          Context-only imagery. {placementFeedback.missingEvidenceNotice || "Confirm surveyed boundaries and building separations."}
-        </p>
-        {photorealNotice && (
-          <p className="text-[11px] text-lf-muted" data-testid="cesium-photoreal-notice">
-            {photorealNotice}
+          <p className="text-[11px] leading-tight font-medium text-status-review" data-testid="cesium-evidence-notice">
+            {placementFeedback.missingEvidenceNotice || "Confirm surveyed boundaries and building separations."}
           </p>
-        )}
-        {onReturnToModel && (
-          <div className="pointer-events-auto mt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="xs"
-              onClick={onReturnToModel}
-              className="h-8 w-full text-xs font-medium"
-            >
-              Return to 3D model
-            </Button>
+          {photorealNotice && (
+            <p className="text-[11px] text-lot-stone" data-testid="cesium-photoreal-notice">
+              {photorealNotice}
+            </p>
+          )}
+          <p className="text-[11px] leading-tight text-lot-stone">
+            Mouse: drag to pan, scroll to zoom, Ctrl + drag to rotate and tilt. Touch: pinch to zoom, two-finger drag to rotate and tilt.
+          </p>
+        </div>
+      </div>
+
+      {/* Camera controls: button equivalents of the drag, scroll and pinch gestures. */}
+      <div
+        role="group"
+        aria-label="Camera controls"
+        data-testid="cesium-camera-controls"
+        className="pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk/95 p-1"
+      >
+        {CAMERA_CONTROL_GROUPS.map((group) => (
+          <div key={group[0].control} className="flex flex-col border-t border-lot-line first:border-t-0">
+            {group.map(({ control, label, title, Icon }) => (
+              <Button
+                key={control}
+                type="button"
+                variant="ghost"
+                size="xs"
+                aria-label={label}
+                title={title}
+                disabled={!cameraControlsReady}
+                onClick={() => runCameraControl(control)}
+                className="w-11 px-0"
+              >
+                <Icon size={18} aria-hidden="true" />
+              </Button>
+            ))}
           </div>
-        )}
+        ))}
       </div>
 
       {/* Explicit visible credit container outside canvas with legible chalk/carbon styling per Task 3 */}

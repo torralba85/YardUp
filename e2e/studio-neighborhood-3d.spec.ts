@@ -21,6 +21,22 @@ function parcelViews(page: import("@playwright/test").Page) {
   return page.getByRole("group", { name: "Parcel view" });
 }
 
+/** The HUD opens collapsed; provenance and ground height sit behind Details. */
+async function openHudDetails(page: import("@playwright/test").Page) {
+  const toggle = page.getByTestId("cesium-hud").getByRole("button", { name: "Details" });
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+}
+
+const CAMERA_CONTROL_NAMES = [
+  "Zoom in",
+  "Zoom out",
+  "Rotate counterclockwise",
+  "Rotate clockwise",
+  "Tilt up",
+  "Tilt down",
+  "Recenter on property",
+];
+
 test.describe("Studio Neighborhood 3D", () => {
   test.beforeEach(async ({ viewport }) => {
     // Desktop-only: the mobile journey reaches the scene through the Shape reveal.
@@ -79,6 +95,8 @@ test.describe("Studio Neighborhood 3D", () => {
 
     // Mount plus ground-elevation lookup share one CDN-backed load.
     test.setTimeout(120_000);
+    await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 60_000 });
+    await openHudDetails(page);
     const elevation = page.getByTestId("cesium-ground-elevation");
     await expect(elevation).toBeVisible({ timeout: 30_000 });
 
@@ -112,6 +130,8 @@ test.describe("Studio Neighborhood 3D", () => {
       }
       await expect(credits).toBeVisible({ timeout: 60_000 });
       await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 30_000 });
+      // Measure against the HUD at its largest, with the details open.
+      await openHudDetails(page);
       await credits.scrollIntoViewIfNeeded();
       const bounds = await credits.boundingBox();
       const hud = await page.getByTestId("cesium-basemap-route").boundingBox();
@@ -121,6 +141,13 @@ test.describe("Studio Neighborhood 3D", () => {
       expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
       expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900);
       expect(bounds!.y).toBeGreaterThan(hud!.y + hud!.height);
+      // The open HUD and the camera controls share the top edge without overlapping.
+      const hudCard = await page.getByTestId("cesium-hud").boundingBox();
+      const controls = await page.getByRole("group", { name: "Camera controls" }).boundingBox();
+      expect(hudCard).not.toBeNull();
+      expect(controls).not.toBeNull();
+      expect(hudCard!.x + hudCard!.width).toBeLessThan(controls!.x);
+      expect(controls!.x + controls!.width).toBeLessThanOrEqual(width);
       await expect(canvas).toBeVisible();
     }
   });
@@ -142,6 +169,33 @@ test.describe("Studio Neighborhood 3D", () => {
       "aria-pressed",
       "true",
     );
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("opens with a compact HUD and drives the camera from the control buttons", async ({ page }) => {
+    // One CDN-backed viewer load.
+    test.setTimeout(120_000);
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    await page.goto("/studio");
+    await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
+    const controls = page.getByRole("group", { name: "Camera controls" });
+    await expect(controls.getByRole("button", { name: "Zoom in" })).toBeEnabled({ timeout: 60_000 });
+
+    // Collapsed, the HUD is a corner card: the neighborhood stays in view.
+    const hud = await page.getByTestId("cesium-hud").boundingBox();
+    const view = await page.getByTestId("cesium-container").boundingBox();
+    expect(hud).not.toBeNull();
+    expect(view).not.toBeNull();
+    expect(hud!.width * hud!.height).toBeLessThan(view!.width * view!.height * 0.12);
+    await expect(page.getByTestId("cesium-compliance-verdict")).toBeVisible();
+    await expect(page.getByTestId("cesium-ground-elevation")).toBeHidden();
+
+    for (const name of CAMERA_CONTROL_NAMES) {
+      await controls.getByRole("button", { name }).click();
+    }
+    await expect(page.locator(".cesium-widget canvas")).toBeVisible();
     expect(pageErrors).toEqual([]);
   });
 
