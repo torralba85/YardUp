@@ -205,6 +205,35 @@ export async function POST(request: NextRequest) {
             });
             return NextResponse.json({ status: "granted", reconciled: true });
           }
+
+          const isSessionExpired =
+            (existing.expires_at && existing.expires_at * 1000 <= Date.now()) ||
+            reservation.expiresAtMs <= Date.now();
+
+          let isPaymentFailed = false;
+          if (existing.payment_intent) {
+            const pi =
+              typeof existing.payment_intent === "string"
+                ? await stripe.paymentIntents
+                    .retrieve(existing.payment_intent)
+                    .catch(() => null)
+                : existing.payment_intent;
+            if (
+              pi &&
+              (pi.status === "canceled" || pi.status === "requires_payment_method")
+            ) {
+              isPaymentFailed = true;
+            }
+          }
+
+          if (isSessionExpired || isPaymentFailed) {
+            reservation = await replaceExpiredActiveCheckout(
+              reservationInput,
+              reservation.attemptId,
+            );
+            continue;
+          }
+
           return NextResponse.json(
             { error: "Payment is being confirmed. Please refresh shortly." },
             { status: 409 },
@@ -239,6 +268,7 @@ export async function POST(request: NextRequest) {
         {
           mode: "payment",
           submit_type: "pay",
+          adaptive_pricing: { enabled: false },
           integration_identifier: "lotfoundry_certificate_wndqkplz",
           payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
           line_items: [
@@ -260,6 +290,7 @@ export async function POST(request: NextRequest) {
             purchaseType: "certificate",
             uid,
             certKey,
+            ...(reservedParcelName ? { parcelName: reservedParcelName.slice(0, 100) } : {}),
             ...(reservedAddress ? { address: reservedAddress.slice(0, 100) } : {}),
             ...(reservedCity ? { city: reservedCity.slice(0, 50) } : {}),
             ...(reservedState ? { state: reservedState.slice(0, 50) } : {}),

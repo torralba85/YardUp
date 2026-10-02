@@ -182,6 +182,35 @@ export async function POST(request: NextRequest) {
             });
             return NextResponse.json({ status: "granted", reconciled: true });
           }
+
+          const isSessionExpired =
+            (existing.expires_at && existing.expires_at * 1000 <= Date.now()) ||
+            reservation.expiresAtMs <= Date.now();
+
+          let isPaymentFailed = false;
+          if (existing.payment_intent) {
+            const pi =
+              typeof existing.payment_intent === "string"
+                ? await stripe.paymentIntents
+                    .retrieve(existing.payment_intent)
+                    .catch(() => null)
+                : existing.payment_intent;
+            if (
+              pi &&
+              (pi.status === "canceled" || pi.status === "requires_payment_method")
+            ) {
+              isPaymentFailed = true;
+            }
+          }
+
+          if (isSessionExpired || isPaymentFailed) {
+            reservation = await replaceExpiredActiveCheckout(
+              reservationInput,
+              reservation.attemptId,
+            );
+            continue;
+          }
+
           // Genuinely still pending (a delayed payment method): the webhook
           // will fulfil it, or rotate the reservation if it fails.
           return NextResponse.json(
@@ -208,6 +237,7 @@ export async function POST(request: NextRequest) {
         {
           mode: "payment",
           submit_type: "pay",
+          adaptive_pricing: { enabled: false },
           integration_identifier: "lotfoundry_lead_unlock_qmvdjrxn",
           payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
           line_items: [

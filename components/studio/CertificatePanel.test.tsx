@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   calculateFeasibility,
@@ -9,12 +9,14 @@ import {
 import type { AIProjectBrief } from "@/lib/ai-types";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { CertificateCheckoutError } from "@/lib/certificate-checkout";
 import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
 
 const mocks = vi.hoisted(() => ({
   getIdToken: vi.fn(),
   refresh: vi.fn(),
   trackPurchase: vi.fn(),
+  startCertificateCheckout: vi.fn(),
   access: {
     purchased: true,
     loading: false,
@@ -50,6 +52,14 @@ vi.mock("@/lib/analytics/adsConversion", () => ({
 vi.mock("@/components/auth/AuthModal", () => ({
   AuthModal: () => null,
 }));
+
+vi.mock("@/lib/certificate-checkout", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/certificate-checkout")>();
+  return {
+    ...actual,
+    startCertificateCheckout: mocks.startCertificateCheckout,
+  };
+});
 
 const brief: AIProjectBrief = {
   headline: "A workable backyard concept",
@@ -114,6 +124,7 @@ describe("CertificatePanel", () => {
     mocks.getIdToken.mockReset().mockResolvedValue("test-token");
     mocks.refresh.mockReset();
     mocks.trackPurchase.mockReset();
+    mocks.startCertificateCheckout.mockReset();
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
@@ -321,5 +332,22 @@ describe("CertificatePanel", () => {
     rerender(<CertificatePanel {...props} />);
 
     await waitFor(() => expect(mocks.trackPurchase).toHaveBeenCalledTimes(1));
+  });
+
+  it("displays checkout error banner directly in EstimateSummaryPanel above CTA", async () => {
+    mocks.access.purchased = false;
+    mocks.startCertificateCheckout.mockRejectedValueOnce(
+      new CertificateCheckoutError("Could not connect to payment processor. Please try again."),
+    );
+    const props = createProps();
+    render(<CertificatePanel {...props} />);
+
+    const button = screen.getByRole("button", { name: /unlock complete certificate/i });
+    fireEvent.click(button);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not connect to payment processor. Please try again.",
+    );
+    expect(screen.getByText("Payment Issue")).toBeInTheDocument();
   });
 });

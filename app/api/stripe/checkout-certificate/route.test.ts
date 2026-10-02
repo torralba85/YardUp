@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
         retrieve?: ReturnType<typeof vi.fn>;
       };
     };
+    paymentIntents?: {
+      retrieve?: ReturnType<typeof vi.fn>;
+    };
   },
   grant: vi.fn(),
   reservations: new Map<
@@ -195,6 +198,7 @@ describe("POST /api/stripe/checkout-certificate", () => {
           purchaseType: "certificate",
           uid: "user-1",
           certKey: "parcel-1",
+          parcelName: "123 Main Street",
         },
         payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
         line_items: [
@@ -337,5 +341,126 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(args.success_url).not.toContain("evil");
     expect(args.cancel_url).toContain("parcelId=abc");
     expect(args.cancel_url).not.toContain("cert=");
+  });
+
+  it("reconciles a completed paid Session on retry", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/cert/1" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "paid",
+      mode: "payment",
+      currency: "usd",
+      amount_total: 2900,
+      metadata: { uid: "user-1", certKey: "parcel-1" },
+    });
+    mocks.stripe = { checkout: { sessions: { create, retrieve } } };
+
+    await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+    const res = await POST(
+      postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: "granted", reconciled: true });
+    expect(mocks.grant).toHaveBeenCalledWith(
+      expect.objectContaining({
+        uid: "user-1",
+        certKey: "parcel-1",
+        stripeSessionId: "cs_1",
+        amount: 2900,
+      }),
+    );
+  });
+
+  it("rotates a completed Session whose payment failed instead of 409 lockout", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "cs_1", url: "https://stripe.test/cert/1" })
+      .mockResolvedValueOnce({ id: "cs_2", url: "https://stripe.test/cert/2" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "unpaid",
+      payment_intent: "pi_1",
+    });
+    const retrievePi = vi.fn().mockResolvedValue({
+      id: "pi_1",
+      status: "requires_payment_method",
+    });
+    mocks.stripe = {
+      checkout: { sessions: { create, retrieve } },
+      paymentIntents: { retrieve: retrievePi },
+    };
+
+    await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+    const retry = await POST(
+      postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({ url: "https://stripe.test/cert/2" });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("rotates an expired completed Session instead of 409 lockout", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "cs_1", url: "https://stripe.test/cert/1" })
+      .mockResolvedValueOnce({ id: "cs_2", url: "https://stripe.test/cert/2" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "unpaid",
+      expires_at: Math.floor(Date.now() / 1000) - 60,
+    });
+    mocks.stripe = {
+      checkout: { sessions: { create, retrieve } },
+    };
+
+    await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+    const retry = await POST(
+      postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({ url: "https://stripe.test/cert/2" });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("carries parcelName through to fulfilment metadata", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(
+      postRequest({
+        certKey: "parcel-1",
+        parcelName: "123 Main Street",
+        checkoutAttemptId: "attempt-1",
+      }),
+    );
+
+    expect(create.mock.calls[0][0].metadata).toMatchObject({
+      purchaseType: "certificate",
+      uid: "user-1",
+      certKey: "parcel-1",
+      parcelName: "123 Main Street",
+    });
+  });
+
+  it("disables adaptive pricing to ensure USD billing", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(
+      postRequest({
+        certKey: "parcel-1",
+        checkoutAttemptId: "attempt-1",
+      }),
+    );
+
+    expect(create.mock.calls[0][0].adaptive_pricing).toEqual({ enabled: false });
   });
 });

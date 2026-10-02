@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
         retrieve?: ReturnType<typeof vi.fn>;
       };
     };
+    paymentIntents?: {
+      retrieve?: ReturnType<typeof vi.fn>;
+    };
   },
   grant: vi.fn(),
   reservations: new Map<
@@ -457,5 +460,74 @@ describe("POST /api/stripe/checkout", () => {
       alreadyUnlocked: true,
     });
     expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("rotates a completed Session whose payment failed instead of 409 lockout", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "cs_1", url: "https://stripe.test/checkout/1" })
+      .mockResolvedValueOnce({ id: "cs_2", url: "https://stripe.test/checkout/2" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "unpaid",
+      payment_intent: "pi_1",
+    });
+    const retrievePi = vi.fn().mockResolvedValue({
+      id: "pi_1",
+      status: "requires_payment_method",
+    });
+    mocks.stripe = {
+      checkout: { sessions: { create, retrieve } },
+      paymentIntents: { retrieve: retrievePi },
+    };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const retry = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({ url: "https://stripe.test/checkout/2" });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("rotates an expired completed Session instead of 409 lockout", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "cs_1", url: "https://stripe.test/checkout/1" })
+      .mockResolvedValueOnce({ id: "cs_2", url: "https://stripe.test/checkout/2" });
+    const retrieve = vi.fn().mockResolvedValue({
+      id: "cs_1",
+      status: "complete",
+      payment_status: "unpaid",
+      expires_at: Math.floor(Date.now() / 1000) - 60,
+    });
+    mocks.stripe = {
+      checkout: { sessions: { create, retrieve } },
+    };
+
+    await POST(postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }));
+    const retry = await POST(
+      postRequest({ requestId: "r1", checkoutAttemptId: "attempt-1" }),
+    );
+
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({ url: "https://stripe.test/checkout/2" });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("disables adaptive pricing to ensure USD billing", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/checkout/x" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(
+      postRequest({
+        requestId: "r1",
+        checkoutAttemptId: "attempt-1",
+      }),
+    );
+
+    expect(create.mock.calls[0][0].adaptive_pricing).toEqual({ enabled: false });
   });
 });

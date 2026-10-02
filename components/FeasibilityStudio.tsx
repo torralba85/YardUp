@@ -411,6 +411,11 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   // already emptied by the first — while still resetting on a real refresh or
   // back-navigation, which must not re-run the search.
   const incomingAddressRef = useRef<string | null | undefined>(undefined);
+  const incomingCertRef = useRef<string | null>(
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("cert")?.trim() ?? null
+      : null,
+  );
 
   // ── Mobile five-reveal journey (find → earn → shape → check → act) ──────
   // Separate from the desktop StudioStep spine by design (issue #130). An
@@ -511,7 +516,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       setJourneyStep((step) => (step === "find" ? "earn" : step));
     }
 
-    const certParam = params.get("cert");
+    const certParam = incomingCertRef.current ?? params.get("cert");
     const stepParam = params.get("step");
     if (certParam || stepParam === "certificate") {
       setActiveStep("certificate");
@@ -547,7 +552,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   // and no parcel has been handed off via sessionStorage.
   useEffect(() => {
     if (authLoading || !user || typeof window === "undefined") return;
-    const certParam = new URLSearchParams(window.location.search).get("cert");
+    const certParam = incomingCertRef.current ?? new URLSearchParams(window.location.search).get("cert");
     if (!certParam || parcelMode !== "preset") return;
     const isPreset = parcelPresets.some(
       (p) => certificateKey(p) === certParam || p.id === certParam,
@@ -555,22 +560,39 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     if (isPreset) return;
 
     let cancelled = false;
-    getDoc(doc(db, "certificatePurchases", `${user.uid}_${certParam}`))
-      .then((snap) => {
-        if (cancelled || !snap.exists()) return;
-        const data = snap.data();
-        if (data.parcelData) {
-          restoreLiveParcel(data.parcelData as LiveParcelData);
-        } else if (typeof data.address === "string" && data.address) {
-          void searchByAddress(data.address);
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    const pollCertificate = async () => {
+      try {
+        const snap = await getDoc(doc(db, "certificatePurchases", `${user.uid}_${certParam}`));
+        if (cancelled) return;
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.parcelData) {
+            restoreLiveParcel(data.parcelData as LiveParcelData);
+          } else if (typeof data.address === "string" && data.address) {
+            void searchByAddress(data.address);
+          }
+          return;
         }
-      })
-      .catch((err) => {
+        if (attempts < maxAttempts) {
+          attempts += 1;
+          timerId = setTimeout(() => {
+            void pollCertificate();
+          }, 1500);
+        }
+      } catch (err) {
         console.error("Failed to recover parcel for certificate:", err);
-      });
+      }
+    };
+
+    void pollCertificate();
 
     return () => {
       cancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
   }, [authLoading, user, parcelMode, restoreLiveParcel, searchByAddress]);
 
@@ -585,7 +607,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       return;
     }
     const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
-    const next = `${window.location.pathname}?${serialized}`;
+    const currentParams = new URLSearchParams(window.location.search);
+    const certParam = currentParams.get("cert");
+    const nextQuery = certParam ? `${serialized}&cert=${encodeURIComponent(certParam)}` : serialized;
+    const next = `${window.location.pathname}?${nextQuery}`;
     // Preserve the current entry's state — never pass `null` here. This
     // effect only means to rewrite the URL; a null state would also erase
     // the journey hook's lfJourneyStep key (use-journey-history.ts) and
