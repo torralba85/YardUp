@@ -108,8 +108,9 @@ test.describe("Studio Neighborhood 3D", () => {
   });
 
   test("keeps renderer attribution visible and separate from the HUD at narrow widths", async ({ page }) => {
-    // Two renderer mounts share this test; each external CDN load can take 60s.
-    test.setTimeout(150_000);
+    // Two renderer mounts share this test; each external CDN load can take 60s,
+    // and CI's software WebGL makes every later action slow as well.
+    test.setTimeout(240_000);
     await page.goto("/studio");
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const canvas = page.getByTestId("cesium-container");
@@ -131,10 +132,14 @@ test.describe("Studio Neighborhood 3D", () => {
       await expect(credits).toBeVisible({ timeout: 60_000 });
       await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 30_000 });
       // Measure against the HUD at its largest, with the details open.
+      const route = page.getByTestId("cesium-basemap-route");
+      await expect(route).toBeVisible({ timeout: 60_000 });
       await openHudDetails(page);
-      await credits.scrollIntoViewIfNeeded();
+      // Cesium rewrites its credit list as tiles stream, so the box may never be
+      // "stable" for scrollIntoViewIfNeeded; a plain scroll is all this needs.
+      await credits.evaluate((element) => element.scrollIntoView({ block: "nearest" }));
       const bounds = await credits.boundingBox();
-      const hud = await page.getByTestId("cesium-basemap-route").boundingBox();
+      const hud = await route.boundingBox();
       expect(bounds).not.toBeNull();
       expect(hud).not.toBeNull();
       expect(bounds!.x).toBeGreaterThanOrEqual(0);
@@ -170,15 +175,18 @@ test.describe("Studio Neighborhood 3D", () => {
   });
 
   test("opens with a compact HUD and drives the camera from the control buttons", async ({ page }) => {
-    // One CDN-backed viewer load.
-    test.setTimeout(120_000);
+    // One CDN-backed viewer load, then seven camera moves under software WebGL.
+    test.setTimeout(180_000);
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
+    // Reduced motion applies each step at once instead of animating it frame by
+    // frame, which is slow under CI's software WebGL. The step maths is the same.
+    await page.emulateMedia({ reducedMotion: "reduce" });
 
     await page.goto("/studio");
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const controls = page.getByRole("group", { name: "Camera controls" });
-    await expect(controls.getByRole("button", { name: "Zoom in" })).toBeEnabled({ timeout: 60_000 });
+    await expect(controls.getByRole("button", { name: "Zoom in" })).toBeEnabled({ timeout: 90_000 });
 
     // Collapsed, the HUD is a corner card: the neighborhood stays in view.
     const hud = await page.getByTestId("cesium-hud").boundingBox();
