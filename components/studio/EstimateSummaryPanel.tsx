@@ -140,7 +140,7 @@ export default function EstimateSummaryPanel({
         {error && (
           <div
             role="alert"
-            className="rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+            className="rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
           >
             <div className="flex items-start gap-2">
               <TriangleAlert className="mt-0.5 shrink-0" size={15} />
