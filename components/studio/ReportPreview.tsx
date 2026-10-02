@@ -464,7 +464,7 @@ function CertificateStyleMatchSection({
             {concept.traits.map((trait) => (
               <span
                 key={trait}
-                className="rounded-none border border-lot-line bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium tracking-[0.04em] text-lot-ink"
+                className="rounded-none border border-lot-line bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium text-lot-ink"
               >
                 {trait}
               </span>
