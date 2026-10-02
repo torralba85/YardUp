@@ -110,7 +110,7 @@ test.describe("Studio Neighborhood 3D", () => {
   test("keeps renderer attribution visible and separate from the HUD at narrow widths", async ({ page }) => {
     // Two renderer mounts share this test; each external CDN load can take 60s,
     // and CI's software WebGL makes every later action slow as well.
-    test.setTimeout(240_000);
+    test.setTimeout(300_000);
     await page.goto("/studio");
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const canvas = page.getByTestId("cesium-container");
@@ -175,8 +175,10 @@ test.describe("Studio Neighborhood 3D", () => {
   });
 
   test("opens with a compact HUD and drives the camera from the control buttons", async ({ page }) => {
-    // One CDN-backed viewer load, then seven camera moves under software WebGL.
-    test.setTimeout(180_000);
+    // One CDN-backed viewer load, then seven camera moves. Cesium's render loop
+    // keeps CI's software WebGL busy, so every action waits on the page: on a
+    // slow runner each click took about 17s and the whole test about 185s.
+    test.setTimeout(300_000);
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
     // Reduced motion applies each step at once instead of animating it frame by
