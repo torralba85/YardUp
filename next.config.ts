@@ -23,9 +23,9 @@ const nextConfig: NextConfig = {
             value: "same-origin-allow-popups",
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // Nothing embeds LotFoundry, and the Firebase Auth helper iframe is
-          // served from authDomain (yardup-2026.firebaseapp.com), a different
-          // origin, so denying frames here does not affect sign-in.
+          // Nothing embeds LotFoundry app pages. Firebase Hosting serves the
+          // reserved `/__/auth/*` helper before the Next app, so this header
+          // does not apply to Firebase's OAuth helper iframe.
           { key: "X-Frame-Options", value: "DENY" },
           {
             key: "Referrer-Policy",
