@@ -745,7 +745,7 @@ export default function CesiumNeighborhoodView({
           right-hand allowance keeps it clear of the camera controls. */}
       <div
         data-testid="cesium-hud"
-        className="pointer-events-none absolute top-3 left-3 z-(--z-index-scene) flex max-w-[min(24rem,calc(100%-6.5rem))] flex-col border border-lot-line bg-lot-chalk"
+        className="pointer-events-none absolute top-3 left-3 z-(--z-index-scene) flex max-w-[min(24rem,calc(100%-6.5rem))] flex-col border border-lot-line bg-lot-chalk shadow-card"
       >
         <div className="flex items-start gap-2 px-3 pt-2.5">
           <Globe size={16} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
@@ -834,7 +834,7 @@ export default function CesiumNeighborhoodView({
         role="group"
         aria-label="Camera controls"
         data-testid="cesium-camera-controls"
-        className="pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk p-1"
+        className="pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk p-1 shadow-card"
       >
         {CAMERA_CONTROL_GROUPS.map((group) => (
           <div key={group[0].control} className="flex flex-col border-t border-lot-line first:border-t-0">
