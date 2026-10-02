@@ -64,7 +64,7 @@ export function DeleteAccountPageClient() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/login?next=/delete-account"
-              className="inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-chalk"
+              className="inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
             >
               Sign in
             </Link>
