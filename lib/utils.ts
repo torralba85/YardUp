@@ -1,5 +1,18 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
+
+// Teach tailwind-merge the design-system scales that scripts/design/generate.mjs
+// writes into app/design-theme.css, so `rounded-control` and the hard `shadow-*`
+// tokens resolve conflicts like the built-in sizes do (otherwise
+// `cn("rounded-control", "rounded-none")` keeps both).
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      radius: ["control"],
+      shadow: ["paper", "paper-sm", "card", "overlay", "callout"],
+    },
+  },
+})
 
 /**
  * Merge class names, resolving Tailwind conflicts.
