@@ -5,14 +5,14 @@ import { formatCurrency } from "@/lib/feasibility";
 import { useCountUp } from "@/components/ui/use-count-up";
 import { cn } from "@/lib/utils";
 
-/** Money display size, mapped to the docs/design/design-system.md money scale. */
+/** Money display size, mapped to the `lf-money-*` Major Third scale in globals.css. */
 export type MoneyFigureSize = "hero" | "band" | "inline" | "sm";
 /** Money surface tone. Money is always carbon or chalk — never green. */
 export type MoneyFigureTone = "onLight" | "onDark";
 /** Small trailing unit (Manrope). Empty string renders no unit. */
 export type MoneyFigureUnit = "/mo" | "/yr" | "yrs" | "";
 
-/* Sizes sit on the Major Third money scale (docs/design/design-system.md): 20 · 25 · 31 · 39 ·
+/* Sizes sit on the Major Third money scale (globals.css `lf-money-*`): 20 · 25 · 31 · 39 ·
    49 · 61–76. `sm` stays on the body ramp for money set inside prose rows. */
 const SIZE_CLASS: Record<MoneyFigureSize, string> = {
   hero: "text-[3.8125rem] leading-none sm:text-[4.75rem]",
@@ -62,7 +62,7 @@ export interface MoneyFigureProps {
  * divergent `$/mo` treatments the studio grew (band / rail / metrics / estimate)
  * so the asset figure reads with one voice everywhere.
  *
- * `animate` opts into the mechanical count-up (docs/design/design-system.md motion). The underlying
+ * `animate` opts into the mechanical count-up (design-system §5: things settle, nothing bounces). The underlying
  * {@link useCountUp} snaps immediately under `prefers-reduced-motion` and in
  * jsdom, so the final value is always present without extra wiring.
  */

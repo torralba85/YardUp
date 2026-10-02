@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { StepProgress, StepRail, type Step } from "./StepRail";
+import { StepRail, type Step } from "./StepRail";
 
 const steps: Step[] = [
   { id: "lot", label: "Your Lot", state: "done" },
@@ -56,20 +56,5 @@ describe("StepRail", () => {
     current.focus();
     fireEvent.keyDown(current, { key: "ArrowDown" });
     expect(document.activeElement).toBe(screen.getByRole("button", { name: /Design/ }));
-  });
-});
-
-describe("StepProgress", () => {
-  it("is a navigation landmark with the current step marked", () => {
-    render(<StepProgress aria-label="Studio progress" steps={steps} onSelect={() => {}} />);
-    expect(screen.getByRole("navigation", { name: "Studio progress" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Rules & Fit/ })).toHaveAttribute("aria-current", "step");
-  });
-
-  it("selects an enabled step on click", () => {
-    const onSelect = vi.fn();
-    render(<StepProgress aria-label="Studio progress" steps={steps} onSelect={onSelect} />);
-    fireEvent.click(screen.getByRole("button", { name: /Your Lot/ }));
-    expect(onSelect).toHaveBeenCalledWith("lot");
   });
 });

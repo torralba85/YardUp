@@ -151,7 +151,7 @@ export default function StudioShell({
                   </span>
                   <ChevronDown
                     size={13}
-                    className={`text-lot-stone-on-dark motion-safe:transition-transform duration-200 ${scenariosOpen ? "rotate-180" : ""}`}
+                    className={`text-lot-stone-on-dark motion-safe:transition-transform duration-(--duration-disclosure) ${scenariosOpen ? "rotate-180" : ""}`}
                   />
                 </button>
 

@@ -14,6 +14,8 @@ import {
   trackSignupSucceeded,
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { Input } from "@/components/ui/Field";
+import { useRadioGroup, type RadioItemProps } from "@/components/ui/useRadioGroup";
 
 function SignupForm() {
   const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
@@ -46,6 +48,13 @@ function SignupForm() {
       router.replace(allowBuilder && profile.role === "builder" ? "/builder" : "/studio");
     }
   }, [profile, router, user]);
+
+  // Called before the signed-in early return so the hook order never changes.
+  const { groupProps: roleGroupProps, getRadioProps: getRoleRadioProps } = useRadioGroup({
+    value: role,
+    onChange: setRole,
+    values: ["user", "builder"] as const,
+  });
 
   if (user) return null;
 
@@ -180,18 +189,18 @@ function SignupForm() {
         <label className="lf-body-sm mb-1.5 block font-medium text-lot-ink">
           I am a...
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3" aria-label="Account type" {...roleGroupProps}>
           <RoleButton
             label="Homeowner"
             description="Estimating my lot"
             selected={role === "user"}
-            onClick={() => setRole("user")}
+            radioProps={getRoleRadioProps("user")}
           />
           <RoleButton
             label="Builder"
             description="Reviewing client lots"
             selected={role === "builder"}
-            onClick={() => setRole("builder")}
+            radioProps={getRoleRadioProps("builder")}
           />
         </div>
       </div>}
@@ -276,14 +285,13 @@ function SignupForm() {
           >
             Full name
           </label>
-          <input
+          <Input
             id="displayName"
             type="text"
             required
             autoComplete="name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="Alma Reyes"
           />
         </div>
@@ -295,14 +303,13 @@ function SignupForm() {
           >
             Email
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>
@@ -314,14 +321,13 @@ function SignupForm() {
           >
             Password
           </label>
-          <input
+          <Input
             id="password"
             type="password"
             required
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="At least 8 characters"
           />
         </div>
@@ -329,7 +335,7 @@ function SignupForm() {
         <button
           type="submit"
           disabled={isPending || !legalAccepted}
-          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
+          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-(--duration-settle) ease-settle hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Creating account..." : "Create account"}
         </button>
@@ -349,18 +355,17 @@ function RoleButton({
   label,
   description,
   selected,
-  onClick,
+  radioProps,
 }: {
   label: string;
   description: string;
   selected: boolean;
-  onClick: () => void;
+  radioProps: RadioItemProps;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-pressed={selected}
+      {...radioProps}
       className={`rounded-control border p-3 text-left motion-safe:transition ${
         selected
           ? "border-lot-ink bg-lot-ink"

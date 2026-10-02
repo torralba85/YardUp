@@ -16,7 +16,8 @@ import {
 import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import { Button } from "@/components/ui/Button";
-import { Slider } from "@/components/ui/Field";
+import { Segmented, Select, Slider } from "@/components/ui/Field";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import type {
   ADUConfig,
@@ -172,6 +173,29 @@ export default function FeasibilityInspector({
     onGenerateReport();
   }
 
+  const footprintGroupKeys = footprintOptions.map(o => `${o.value}-${o.width}-${o.length}`);
+  const currentFootprintKey = `${config.footprint}-${config.width}-${config.length}`;
+  const { groupProps: footprintGroupProps, getRadioProps: getFootprintRadioProps } = useRadioGroup({
+    value: currentFootprintKey,
+    onChange: (val) => {
+      const [f] = val.split('-');
+      onConfigChange(configForFootprint(Number(f), config));
+    },
+    values: footprintGroupKeys
+  });
+
+  const { groupProps: roofGroupProps, getRadioProps: getRoofRadioProps } = useRadioGroup({
+    value: config.roof,
+    onChange: (val) => onConfigChange({ ...config, roof: val as ADUConfig["roof"] }),
+    values: Object.keys(roofLabels) as ADUConfig["roof"][]
+  });
+
+  const { groupProps: finishGroupProps, getRadioProps: getFinishRadioProps } = useRadioGroup({
+    value: config.finish,
+    onChange: (val) => onConfigChange({ ...config, finish: val as ADUConfig["finish"] }),
+    values: Object.keys(finishLabels) as ADUConfig["finish"][]
+  });
+
   return (
     <section
       aria-labelledby="feasibility-heading"
@@ -263,18 +287,17 @@ export default function FeasibilityInspector({
               ) : (
                 <>
                   <LabelRow label="Sample Property" htmlFor="parcel-preset" />
-                  <select
+                  <Select
                     id="parcel-preset"
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
-                    className="h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-sm font-medium text-lot-ink outline-none motion-safe:transition focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                   >
                     {parcelPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
                         {preset.name} ({preset.lotArea.toLocaleString()} sf)
                       </option>
                     ))}
-                  </select>
+                  </Select>
 
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-lot-stone">Or search your address:</p>
@@ -339,36 +362,33 @@ export default function FeasibilityInspector({
               <div className="space-y-3">
                 <LabelRow label="Size and footprint" />
                 <div
-                  role="group"
                   aria-label="ADU footprint size"
                   className="grid gap-2"
                   style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))" }}
+                  {...footprintGroupProps}
                 >
                   {footprintOptions.map((option) => {
-                    const isPressed =
-                      config.footprint === option.value &&
-                      config.width === option.width &&
-                      config.length === option.length;
+                    const optionKey = `${option.value}-${option.width}-${option.length}`;
+                    const isChecked = currentFootprintKey === optionKey;
                     return (
                       <button
                         key={option.value}
                         type="button"
                         aria-label={option.label}
                         aria-describedby={`${footprintDescriptionId}-${option.value}`}
-                        onClick={() => onConfigChange(configForFootprint(option.value, config))}
-                        aria-pressed={isPressed}
+                        {...getFootprintRadioProps(optionKey)}
                         className={`relative flex min-h-28 flex-col items-start rounded-control border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
-                          isPressed ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
+                          isChecked ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                         }`}
                       >
                         <span className="flex w-full items-center justify-between gap-1">
                           <span className="whitespace-nowrap font-display text-xl font-medium tabular-nums">{option.label}</span>
                           <FootprintDiagram width={option.width} length={option.length} />
                         </span>
-                        <span id={`${footprintDescriptionId}-${option.value}`} className={`text-xs leading-5 ${isPressed ? "text-lot-stone-on-dark" : "text-lot-stone"}`}>
+                        <span id={`${footprintDescriptionId}-${option.value}`} className={`text-xs leading-5 ${isChecked ? "text-lot-stone-on-dark" : "text-lot-stone"}`}>
                           {option.summary}<br />{option.width} × {option.length} ft
                         </span>
-                        {isPressed && <Check size={13} aria-hidden="true" className="absolute right-2 bottom-3" />}
+                        {isChecked && <Check size={13} aria-hidden="true" className="absolute right-2 bottom-3" />}
                       </button>
                     );
                   })}
@@ -416,50 +436,52 @@ export default function FeasibilityInspector({
 
               <div className="space-y-3">
                 <LabelRow label="Roof shape" />
-                <div role="group" aria-label="Roof style" className="grid grid-cols-3 gap-3">
-                  {Object.entries(roofLabels).map(([key, label]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
-                      aria-pressed={config.roof === key}
-                      className={`flex h-20 flex-col items-center justify-center gap-1 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
-                        config.roof === key
-                          ? "border-lot-ink bg-lot-ink text-lot-chalk shadow-none"
-                          : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
-                      }`}
-                    >
-                      <RoofProfile roof={key as ADUConfig["roof"]} />
-                      {label}
-                    </button>
-                  ))}
+                <div aria-label="Roof style" className="grid grid-cols-3 gap-3" {...roofGroupProps}>
+                  {Object.entries(roofLabels).map(([key, label]) => {
+                    const isChecked = config.roof === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        {...getRoofRadioProps(key as ADUConfig["roof"])}
+                        className={`flex h-20 flex-col items-center justify-center gap-1 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                          isChecked
+                            ? "border-lot-ink bg-lot-ink text-lot-chalk shadow-none"
+                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
+                        }`}
+                      >
+                        <RoofProfile roof={key as ADUConfig["roof"]} />
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="space-y-3">
                 <LabelRow label="Exterior finish" />
-                <div role="group" aria-label="Exterior finish" className="grid grid-cols-2 gap-3">
-                  {Object.entries(finishLabels).map(([key, label]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() =>
-                        onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
-                      }
-                      aria-pressed={config.finish === key}
-                      className={`rounded-control border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
-                        config.finish === key
-                          ? "border-lot-ink bg-lot-ink/5 text-lot-ink ring-1 ring-lot-ink"
-                          : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
-                      }`}
-                    >
-                      <span
-                        className="mb-2 block h-8 rounded-none border border-lot-ink/10"
-                        style={{ background: finishColors[key as ADUConfig["finish"]] }}
-                      />
-                      {label}
-                    </button>
-                  ))}
+                <div aria-label="Exterior finish" className="grid grid-cols-2 gap-3" {...finishGroupProps}>
+                  {Object.entries(finishLabels).map(([key, label]) => {
+                    const isChecked = config.finish === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        {...getFinishRadioProps(key as ADUConfig["finish"])}
+                        className={`rounded-control border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                          isChecked
+                            ? "border-lot-ink bg-lot-ink/5 text-lot-ink ring-1 ring-lot-ink"
+                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
+                        }`}
+                      >
+                        <span
+                          className="mb-2 block h-8 rounded-none border border-lot-ink/10"
+                          style={{ background: finishColors[key as ADUConfig["finish"]] }}
+                        />
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -504,23 +526,17 @@ export default function FeasibilityInspector({
                   value={formatCurrency(result.monthlyRent)}
                   valueClass="font-display text-lot-ink tabular-nums"
                 />
-                <div role="group" aria-label="Rental estimate" className="grid grid-cols-3 gap-2">
-                  {(Object.keys(rentLabels) as RentScenario[]).map((scenario) => (
-                    <Button
-                      key={scenario}
-                      type="button"
-                      size="md"
-                      variant={assumptions.rentScenario === scenario ? "selected" : "secondary"}
-                      onClick={() =>
-                        onAssumptionsChange({ ...assumptions, rentScenario: scenario })
-                      }
-                      aria-pressed={assumptions.rentScenario === scenario}
-                      className="text-xs"
-                    >
-                      {rentLabels[scenario]}
-                    </Button>
-                  ))}
-                </div>
+                <Segmented
+                  aria-label="Rental estimate"
+                  value={assumptions.rentScenario}
+                  onChange={(scenario) =>
+                    onAssumptionsChange({ ...assumptions, rentScenario: scenario })
+                  }
+                  options={(Object.keys(rentLabels) as RentScenario[]).map((scenario) => ({
+                    value: scenario,
+                    label: rentLabels[scenario],
+                  }))}
+                />
               </div>
 
               {result.warnings.length > 0 && (
@@ -680,7 +696,7 @@ function AccordionStep({
         </span>
         <ChevronDown
           size={16}
-          className={`shrink-0 text-lot-stone motion-safe:transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 text-lot-stone motion-safe:transition-transform duration-(--duration-disclosure) ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

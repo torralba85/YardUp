@@ -41,6 +41,9 @@ Landing-local variables reference those globals. Non-CSS renderers import `COLOR
 | `--stone` | `#65655F` | Muted/secondary text **on chalk only**. |
 | `--line` | `#DADAD3` | Drafting hairline. Decorative dividers and frames. |
 
+Supporting tokens: `lot-surface` `#EBEBE6` is the recessed well on chalk (table heads, inactive chips,
+secondary hover). `lot-ink-hover` `#33332F` is the carbon hover (§2.4).
+
 ### 2.2 Verified contrast
 
 Measured, not estimated. WCAG 2.1: normal text needs 4.5:1, large text and UI boundaries need 3:1.
@@ -79,7 +82,7 @@ Measured, not estimated. WCAG 2.1: normal text needs 4.5:1, large text and UI bo
 | Primary action / commit | `--orange` fill, carbon label | `#FF5B24` | `#FF5B24` |
 | Primary action hover | shipped | `#EE4B17` | `#EE4B17` |
 | Secondary action | `--ink` fill, chalk label | `#161616` | inverted to chalk fill |
-| Secondary hover | shipped | `#33332F` | — |
+| Secondary hover | `lot-ink-hover` | `#33332F` | `#33332F` (dark rows) |
 | Proposed structure (concept) | `--orange` | `#FF5B24` | `#FF5B24` |
 | Existing structure (context) | `--line` / neutral fills | `#DADAD3` | `#44443F` |
 | Money / value | **carbon, type-led — see §2.6** | `#161616` | `#F5F5F0` |
@@ -215,19 +218,30 @@ Hero grid is `43% / 57%` at desktop — the artwork gets the larger half.
 
 ### 4.4 Radius, borders, elevation
 
-| Token | Value | Applies to |
-|---|---|---|
-| `radius-none` | `0` | Paper cards, sections, image frames, captions, badges, back-to-top |
-| `radius-control` | `3px` | Buttons, segmented controls, sticky CTA, menu |
-| `radius-dot` | `50%` | Status dots, index badges |
+| Token | Utility | Value | Applies to |
+|---|---|---|---|
+| `radius-none` | `rounded-none` | `0` | Paper cards, sections, image frames, captions, badges, back-to-top |
+| `--radius-control` | `rounded-control` | `3px` | Buttons, fields, segmented controls, sticky CTA, menu |
+| `radius-dot` | `rounded-full` | `50%` | Status dots, index badges |
 
-All controls strictly use `3px` (`radius-control`). The former `4px` on `.inputRow` and `2px` on inner scene buttons have been snapped to `3px`.
+All controls strictly use `rounded-control`. Do not write `rounded-[3px]` or a bare `rounded` (4px).
 
-- **Borders:** 1px hairline `--line` default; `1.5px`+ carbon for instrument-grade elements.
-- **Elevation is hard, not soft.** `box-shadow: 12px 16px 0 #E7E7DF` — an offset architectural drop with
-  no blur, like a print on a board. The only blurred shadows are the fixed sticky CTA
-  (`0 4px 18px #16161626`) and the mobile menu (`0 12px 16px #1616160a`), because floating elements need
-  to read as floating. **No other blurred shadows.**
+- **Borders:** 1px hairline `--line` default for decoration; a control's boundary is stone or carbon
+  (≥3:1, §2.3 rule 4); `1.5px`+ carbon for instrument-grade elements.
+- **Elevation is hard, not soft.** Every shadow is an offset architectural drop with no blur, like a print
+  on a board. Five tokens, generated into `app/design-theme.css` by `scripts/design/generate.mjs`:
+
+  | Utility | Value | Applies to |
+  |---|---|---|
+  | `shadow-paper` | `12px 16px 0 #E7E7DF` | Paper and bezel frames on chalk (landing artwork) |
+  | `shadow-paper-sm` | `6px 8px 0 #E7E7DF` | Smaller paper frames on chalk |
+  | `shadow-card` | `6px 8px 0 #16161618` | Raised cards and menus: account menu, report sheet, fine-tune drawer, map HUD |
+  | `shadow-callout` | `4px 4px 0 #16161618` | Small floating labels over imagery |
+  | `shadow-overlay` | `12px 16px 0 #16161630` | Modal dialogs |
+
+  The only blurred shadows are the fixed sticky CTA (`0 4px 18px #16161626`) and the mobile menu
+  (`0 12px 16px #1616160a`), because floating elements need to read as floating. They live in the landing
+  CSS Module. **No other blurred shadows**; `app/design-tokens.test.ts` rejects `shadow-sm|md|lg|xl`.
 
 ---
 
@@ -250,6 +264,11 @@ Everything is inside `@media (prefers-reduced-motion: no-preference)`.
 }
 ```
 
+Product tokens (`app/globals.css`): `--duration-hover` 180ms (colour and border hovers),
+`--duration-disclosure` 200ms (chevron and plus rotation), `--duration-settle` 300ms (press feedback, progress),
+read as `duration-(--duration-hover)`; and `ease-settle` (`cubic-bezier(0.32, 0.72, 0, 1)`), which
+decelerates into place without overshoot.
+
 **Rules:** enter `ease-out`, exit `ease-in`. No spring, no overshoot, no bounce, no parallax, no
 scroll-jacking, no autoplay media. Reduced motion disables entrance and crossfades entirely and shows
 composed still states — it never leaves a control unusable or a state unreadable.
@@ -264,12 +283,13 @@ composed still states — it never leaves a control unusable or a state unreadab
 | **Secondary button** | Carbon fill, chalk label, same metrics. Hover `#33332F`. |
 | **Product secondary button** | Shared `Button variant="secondary"`: chalk, carbon label, stone boundary; neutral surface hover. Carbon filled controls use `variant="commit"`. |
 | **Address input** | `.inputRow` wrapper owns the ring: `:focus-within` → `box-shadow: 0 0 0 2px var(--ink)`; the inner `input` sets `outline: none`. Input font `16px` at ≤480px to block iOS zoom. |
-| **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. The landing scene/intention/scenario/report pickers use `Segmented`. Hand-rolled Studio roof and finish groups remain migration debt. |
+| **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. The landing scene/intention/scenario/report pickers use `Segmented`. Custom-visual groups use `useRadioGroup` from `components/ui/useRadioGroup.ts`; deliberate `aria-pressed` exceptions include independent toggles, builder inbox filters, and lead responses. |
 | **Tabs (report)** | Single choice, so the radio-group pattern above; `min-height 44px`; content region is `aria-live="polite"`. |
 | **Disclosure** | Native `<details>`/`<summary>`; `min-height 44px`; chevron rotates `45deg`. |
 | **Paper card** | `radius 0`, chalk ground, hard shadow `12px 16px 0 #E7E7DF`. |
 | **Nav** | Desktop inline ≥800px; hamburger below, with `aria-expanded`/`aria-controls`, Escape closing and returning focus to the trigger. |
 | **Sticky CTA** | Appears ≤800px between hero and closing form; carbon fill; respects `env(safe-area-inset-bottom)`. |
+| **Text field / select** | `Input`, `Select`, `Textarea` from `components/ui/Field`: `rounded-control`, 1px **stone** border (5.36:1; the hairline is decorative and fails 3:1), chalk fill, `min-height 44px`, 16px text below `sm` (blocks iOS zoom). Focus: 2px deep-orange ring. `aria-invalid` turns the border blocked red. The landing address input keeps its §6 `.inputRow` recipe. |
 
 ---
 
@@ -362,6 +382,10 @@ The palette lives in `design/tokens.json`; `app/design-theme.css` is generated a
 must use `lot-*` / `status-*`. `lf-*` layout and typography utilities remain valid. `npm run lint`
 enforces palette freshness, contrast, platform parity and raw-color budgets. Exceptions need a reason
 in `design/color-exceptions.json`; never regenerate that file to silence an audit failure.
+
+Outside color, a ratchet in `app/design-tokens.test.ts` caps arbitrary `text-[Npx]` sizes and inline
+kicker recipes. Those counts can only fall: when you migrate a surface, lower the ceiling in the same
+commit.
 The landing CSS Module retains its optical layout. See [product surfaces](./product-surfaces.md).
 
 ## Open decisions
@@ -374,6 +398,7 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 
 | Date | Decision | Rationale |
 |---|---|---|
+| 2026-10-01 | New code uses `lot-*`/`status-*`; `lf-*` colour aliases are frozen (the lint audit rejects them in authored code). Radius, elevation and motion become theme tokens; text fields get shared primitives with a stone boundary (Andrew) | The 2026-09-30 re-audit found `lf-*` grew by 232 references in twelve days because §12 never said which names new code should use, and that 13 of 19 fields drew a 1.28:1 hairline boundary. See [audit record](./2026-10-01-design-system-audit.md). |
 | 2026-09-23 | Landing explains the tool before address entry, shows actual Studio evidence immediately after the hero, and distinguishes free exploration from the paid certificate (Andrew) | All critique fixes approved. Preserve A LOT MORE identity; reduce the small-screen hero to `21vw`, put the Android badge after the illustration on mobile, condense repeated aspirations, and complete the four landing radio-group migrations. See [implementation record](./2026-09-23-landing-clarity.md). |
 | 2026-09-05 | A LOT MORE replaces Blue Hour / Golden Hour as the design system | Authorized zero-constraint landing redesign; shipped and validated on `/`. |
 | 2026-09-05 | `docs/design/` is the source of truth; `DESIGN.md` retired to a pointer | A 45KB doc teaching the old system was still the file every agent was told to read. |

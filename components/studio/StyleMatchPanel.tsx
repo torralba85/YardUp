@@ -387,7 +387,7 @@ export default function StyleMatchPanel({
             </div>
 
             <div className="h-1.5 w-full bg-lot-stone-soft mt-4 overflow-hidden rounded-full">
-              <div className="h-full w-full origin-left bg-lot-orange motion-safe:transition-transform duration-300 motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
+              <div className="h-full w-full origin-left bg-lot-orange motion-safe:transition-transform duration-(--duration-settle) motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
             </div>
 
             <p className="mt-3 text-[11px] text-lot-stone leading-normal">

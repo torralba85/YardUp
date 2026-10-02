@@ -87,7 +87,7 @@ test("unverified aerial is context only, without invented house, ADU or setback 
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
   }
-  await page.getByRole("group", { name: "Parcel view" }).getByRole("button", { name: "Aerial" }).click();
+  await page.getByRole("radiogroup", { name: "Parcel view" }).getByRole("radio", { name: "Aerial" }).click();
   const aerial = page.getByLabel("Aerial lot view");
   await expect(aerial).toBeVisible();
   await expect(aerial).not.toContainText("EXISTING HOUSE");
@@ -114,7 +114,7 @@ test("imagery credits stay visible below the context notice at desktop and 320px
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
   }
-  await page.getByRole("group", { name: "Parcel view" }).getByRole("button", { name: "Aerial" }).click();
+  await page.getByRole("radiogroup", { name: "Parcel view" }).getByRole("radio", { name: "Aerial" }).click();
   const aerial = page.getByLabel("Aerial lot view", { exact: true });
   const footer = aerial.getByLabel("Aerial context and imagery credits");
   const attribution = footer.getByText(credit, { exact: true });

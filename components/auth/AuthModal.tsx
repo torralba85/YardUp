@@ -13,6 +13,7 @@ import {
 } from "@/lib/analytics/events";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
+import { Input, Select } from "@/components/ui/Field";
 
 /**
  * Why the modal closed.
@@ -589,17 +590,16 @@ export function AuthModal({
               >
                 Account type
               </label>
-              <select
+              <Select
                 id="auth-role"
                 value={role}
                 onChange={(event) =>
                   setRole(event.target.value as "user" | "builder")
                 }
-                className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 px-3 text-base sm:text-sm text-lot-ink motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
               >
                 <option value="user">Homeowner</option>
                 <option value="builder">Builder</option>
-              </select>
+              </Select>
             </div>
           )}
           {error && (
@@ -623,7 +623,7 @@ export function AuthModal({
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
                     <UserIcon size={16} />
                   </div>
-                  <input
+                  <Input
                     id="auth-display-name"
                     name="name"
                     type="text"
@@ -649,7 +649,7 @@ export function AuthModal({
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
                   <Mail size={16} />
                 </div>
-                <input
+                <Input
                   id="auth-email"
                   name="email"
                   type="email"
@@ -674,7 +674,7 @@ export function AuthModal({
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
                   <Lock size={16} />
                 </div>
-                <input
+                <Input
                   id="auth-password"
                   name="password"
                   type="password"

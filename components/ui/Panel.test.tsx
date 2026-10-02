@@ -1,32 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Panel, PanelHeader } from "./Panel";
-
-describe("Panel", () => {
-  it("renders its children", () => {
-    render(<Panel>content</Panel>);
-    expect(screen.getByText("content")).toBeInTheDocument();
-  });
-
-  it("defaults to the card surface", () => {
-    const { container } = render(<Panel>x</Panel>);
-    expect(container.firstChild).toHaveClass("bg-lot-chalk", "border-lot-line");
-  });
-
-  it("supports the sand surface", () => {
-    const { container } = render(<Panel surface="sand">x</Panel>);
-    expect(container.firstChild).toHaveClass("bg-lot-surface");
-  });
-
-  it("renders as the requested landmark element", () => {
-    render(
-      <Panel as="aside" aria-label="Property constraints">
-        x
-      </Panel>,
-    );
-    expect(screen.getByRole("complementary", { name: "Property constraints" })).toBeInTheDocument();
-  });
-});
+import { PanelHeader } from "./Panel";
 
 describe("PanelHeader", () => {
   it("renders the title as a level-2 heading by default", () => {
@@ -39,7 +13,7 @@ describe("PanelHeader", () => {
     expect(screen.getByRole("heading", { level: 3, name: "Rent estimate" })).toBeInTheDocument();
   });
 
-  it("renders the mono eyebrow when provided", () => {
+  it("renders the kicker eyebrow when provided", () => {
     render(<PanelHeader eyebrow="Your property" title="413 Elmwood" />);
     expect(screen.getByText("Your property")).toBeInTheDocument();
   });

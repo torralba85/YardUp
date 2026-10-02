@@ -18,7 +18,7 @@ import { expect, test } from "@playwright/test";
 
 /** The floating lens switch that owns every scene view mode. */
 function parcelViews(page: import("@playwright/test").Page) {
-  return page.getByRole("group", { name: "Parcel view" });
+  return page.getByRole("radiogroup", { name: "Parcel view" });
 }
 
 /** The HUD opens collapsed; provenance and ground height sit behind Details. */
@@ -50,7 +50,7 @@ test.describe("Studio Neighborhood 3D", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await page.goto("/studio");
-    await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
+    await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
 
     await expect(page.getByTestId("cesium-container")).toBeVisible();
 
@@ -76,11 +76,11 @@ test.describe("Studio Neighborhood 3D", () => {
     });
     await page.goto("/studio?v=2&hc=wall&parcel=oak-street&w=20&l=30&h=12&x=0&z=0&rotation=0&size=600&roof=shed&finish=cedar&openings=1");
     const views = parcelViews(page);
-    await views.getByRole("button", { name: "Neighborhood" }).click();
+    await views.getByRole("radio", { name: "Neighborhood" }).click();
     await expect(page.getByText("3D Globe currently unavailable")).toBeVisible();
     await expect(page.getByTestId("cesium-compliance-verdict")).toHaveText("Doesn't fit at this placement");
-    await views.getByRole("button", { name: "3D model" }).click();
-    await views.getByRole("button", { name: "Neighborhood" }).click();
+    await views.getByRole("radio", { name: "3D model" }).click();
+    await views.getByRole("radio", { name: "Neighborhood" }).click();
     await expect(page.locator(".cesium-widget canvas")).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId("cesium-ground-elevation")).toContainText(/Ground/, { timeout: 60_000 });
     await expect(page.getByTestId("cesium-compliance-verdict")).toHaveText("Doesn't fit at this placement");
@@ -91,7 +91,7 @@ test.describe("Studio Neighborhood 3D", () => {
     page,
   }) => {
     await page.goto("/studio");
-    await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
+    await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
 
     // Mount plus ground-elevation lookup share one CDN-backed load.
     test.setTimeout(120_000);
@@ -111,7 +111,7 @@ test.describe("Studio Neighborhood 3D", () => {
     // Two renderer mounts share this test; each external CDN load can take 60s.
     test.setTimeout(150_000);
     await page.goto("/studio");
-    await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
+    await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const canvas = page.getByTestId("cesium-container");
     const credits = page.locator(".cesium-credit-logoContainer");
     await expect(credits).toBeVisible({ timeout: 60_000 });
@@ -160,15 +160,12 @@ test.describe("Studio Neighborhood 3D", () => {
 
     await page.goto("/studio");
     const views = parcelViews(page);
-    await views.getByRole("button", { name: "Neighborhood" }).click();
+    await views.getByRole("radio", { name: "Neighborhood" }).click();
     await expect(page.getByTestId("cesium-container")).toBeVisible();
 
     await page.getByRole("button", { name: /Return to 3D model/i }).click();
 
-    await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(views.getByRole("radio", { name: "3D model" })).toBeChecked();
     expect(pageErrors).toEqual([]);
   });
 
@@ -179,7 +176,7 @@ test.describe("Studio Neighborhood 3D", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await page.goto("/studio");
-    await parcelViews(page).getByRole("button", { name: "Neighborhood" }).click();
+    await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const controls = page.getByRole("group", { name: "Camera controls" });
     await expect(controls.getByRole("button", { name: "Zoom in" })).toBeEnabled({ timeout: 60_000 });
 
@@ -213,13 +210,10 @@ test.describe("Studio Neighborhood 3D", () => {
     // Three viewer build/teardown round trips over the CDN.
     test.setTimeout(180_000);
     for (let pass = 0; pass < 3; pass += 1) {
-      await views.getByRole("button", { name: "Neighborhood" }).click();
+      await views.getByRole("radio", { name: "Neighborhood" }).click();
       await expect(page.getByTestId("cesium-container")).toBeVisible();
-      await views.getByRole("button", { name: "3D model" }).click();
-      await expect(views.getByRole("button", { name: "3D model" })).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
+      await views.getByRole("radio", { name: "3D model" }).click();
+      await expect(views.getByRole("radio", { name: "3D model" })).toBeChecked();
     }
 
     expect(pageErrors).toEqual([]);

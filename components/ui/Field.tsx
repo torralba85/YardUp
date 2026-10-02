@@ -3,14 +3,42 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+/** Shared visual recipe for native text inputs and selects on chalk surfaces. */
+export const fieldControlClass =
+  "min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink aria-[invalid=true]:border-status-blocked disabled:cursor-not-allowed disabled:opacity-60";
+
+/** Native text input with the shared field boundary, spacing, and focus treatment. */
+export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  function Input({ className, ...props }, ref) {
+    return <input ref={ref} className={cn(fieldControlClass, className)} {...props} />;
+  },
+);
+Input.displayName = "Input";
+
+/** Native select with the shared field boundary, spacing, and focus treatment. */
+export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
+  function Select({ className, ...props }, ref) {
+    return <select ref={ref} className={cn(fieldControlClass, className)} {...props} />;
+  },
+);
+Select.displayName = "Select";
+
+/** Native multiline text control with the shared field boundary and focus treatment. */
+export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  function Textarea({ className, ...props }, ref) {
+    return <textarea ref={ref} className={cn(fieldControlClass, "py-2", className)} {...props} />;
+  },
+);
+Textarea.displayName = "Textarea";
+
 /** Props for {@link FieldLabel}; extends native label attributes. */
 export interface FieldLabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
-  /** Optional right-aligned value readout (tabular). */
+  /** Optional right-aligned kicker-style value readout with tabular numerals. */
   value?: React.ReactNode;
 }
 
 /**
- * A control label in the shared recorded-fact voice, with an optional value
+ * A control label in the kicker voice, with an optional value
  * readout on the right (e.g. the live figure a slider controls). Wire `htmlFor`
  * to the control's id.
  */
@@ -146,7 +174,7 @@ export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 }
 
 /**
- * An accessible range control: a {@link FieldLabel} showing the live value,
+ * An accessible range control with a kicker {@link FieldLabel} showing the live value,
  * and a native `type=range` whose accessible name is the label and whose current
  * value is announced via `aria-valuetext` (so screen readers hear "600 sf", not
  * a bare number). The tall hit area keeps the thumb comfortable to grab.

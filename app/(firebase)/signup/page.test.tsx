@@ -49,7 +49,7 @@ describe("builder auth in store shells", () => {
   it.each(["email", "Google", "Apple"])("ignores the builder query for %s signup", async (method) => {
     vi.stubGlobal("LotFoundryNative", { platform: "android" });
     render(<SignupPage />);
-    expect(screen.queryByRole("button", { name: /Builder/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: /Builder/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox"));
     if (method === "email") {
       fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Test Owner" } });
@@ -70,7 +70,7 @@ describe("builder auth in store shells", () => {
   it("preserves builder registration in a phone web browser", () => {
     vi.stubGlobal("innerWidth", 390);
     render(<SignupPage />);
-    expect(screen.getByRole("button", { name: /Builder/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Builder/ })).toBeInTheDocument();
   });
 
   it.each(["", "next=%2Fbuilder", "next=%2Fbuilder%3Fpack%3D10"])(

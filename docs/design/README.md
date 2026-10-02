@@ -20,6 +20,7 @@ When two documents disagree, the higher entry wins:
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
 | [`2026-10-01-color-system.md`](./2026-10-01-color-system.md) | Color story, root causes of drift, shared palette, whole-project inventory and enforced checks. |
+| [`2026-10-01-design-system-audit.md`](./2026-10-01-design-system-audit.md) | Re-audit repairs that landed after the color system: shared field primitives, radio-group semantics, motion tokens, Skeleton adoption, and the guard tests and ratchet. |
 | [`2026-09-29-website-mobile-audit.md`](./2026-09-29-website-mobile-audit.md) | Truthful geospatial context, sample assumptions, native first-free entry, consent explanations, and release boundaries. |
 | [`2026-09-23-landing-clarity.md`](./2026-09-23-landing-clarity.md) | Clearer hero/mobile sequence, actual Studio preview provenance, free/paid comparison, and accessible landing selectors. |
 | [`2026-09-22-studio-fit.md`](./2026-09-22-studio-fit.md) | Studio footprint and roof comparisons, visible placement feedback, mobile flow layout, and local verification. |

@@ -16,6 +16,15 @@ ${Object.entries(tokens.aliases).map(([name, target]) => `  --color-${name}: var
   --shadow-card: 6px 8px 0 var(--color-lot-shadow-soft);
   --shadow-overlay: 12px 16px 0 var(--color-lot-shadow-overlay);
   --shadow-callout: 4px 4px 0 var(--color-lot-shadow-soft);
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Motion durations. Tailwind has no duration theme namespace, so these are
+   plain custom properties, read as duration-(--duration-hover). */
+:root {
+  --duration-hover: 180ms;
+  --duration-disclosure: 200ms;
+  --duration-settle: 300ms;
 }
 `;
 const output = new URL("app/design-theme.css", root);

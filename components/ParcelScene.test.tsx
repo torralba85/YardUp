@@ -139,10 +139,10 @@ describe("ParcelScene controls", () => {
       />,
     );
 
-    const presets = screen.getByRole("group", { name: "Lighting preset" });
+    const presets = screen.getByRole("radiogroup", { name: "Lighting preset" });
     expect(presets).toHaveTextContent("Gallery Daylight");
-    expect(screen.getByRole("button", { name: "Shadow Preview" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByRole("button", { name: "Golden Hour" })).not.toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Shadow Preview" })).toBeChecked();
+    expect(screen.queryByRole("radio", { name: "Golden Hour" })).not.toBeInTheDocument();
   });
 
   it("mounts in photoreal scan mode with registered splat scene without errors", () => {

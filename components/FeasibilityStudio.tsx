@@ -24,6 +24,7 @@ import {
   parseScenarioParams,
   serializeScenarioParams,
 } from "@/lib/scenario-url";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import {
   defaultPose,
   isValidAduConfig,
@@ -48,6 +49,7 @@ import {
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
 import { certificateKey } from "@/lib/certificate-key";
+import { Select } from "@/components/ui/Field";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -88,6 +90,7 @@ import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
 import { Button } from "./ui/Button";
 import { MoneyFigure } from "./ui/MoneyFigure";
+import { Skeleton } from "./ui/Skeleton";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { ArrowRight, ImageOff, Search } from "lucide-react";
 import { summarizeFeasibility } from "@/lib/feasibility-verdict";
@@ -128,8 +131,8 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
     >
       <div className="absolute inset-0 motion-safe:animate-pulse bg-lot-ink/40" />
       <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
-        <div className="h-3 w-32 motion-safe:animate-pulse rounded bg-lot-stone/15" />
-        <div className="h-2.5 w-56 motion-safe:animate-pulse rounded bg-lot-stone/10" />
+        <Skeleton className="h-3 w-32 bg-lot-stone/15" />
+        <Skeleton className="h-2.5 w-56 bg-lot-stone/10" />
       </div>
     </div>
   ),
@@ -1552,30 +1555,27 @@ function SceneViewToggle({
   onChange: (mode: SceneViewMode) => void;
   hasScan?: boolean;
 }) {
+  const options: SceneViewMode[] = ["3d"];
+  if (hasScan) options.push("scan");
+  options.push("neighborhood", "aerial");
+
+  const { groupProps, getRadioProps } = useRadioGroup({
+    value: mode,
+    onChange,
+    values: options,
+  });
+
   return (
     <div
-      role="group"
-      aria-label="Parcel view"
-      onKeyDown={(event) => {
-        const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
-        if (!keys.includes(event.key)) return;
-        const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
-        const index = buttons.indexOf(event.target as HTMLButtonElement);
-        if (index < 0) return;
-        event.preventDefault();
-        const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1
-          : (index + (event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length;
-        buttons[next].focus();
-        buttons[next].click();
-      }}
       className="pointer-events-auto flex flex-wrap shrink-0 items-center gap-1 border-b border-lot-line bg-lot-chalk px-2 py-1"
+      aria-label="Parcel view"
+      {...groupProps}
     >
       <Button
         type="button"
         size="xs"
         variant={mode === "3d" ? "selected" : "ghost"}
-        aria-pressed={mode === "3d"}
-        onClick={() => onChange("3d")}
+        {...getRadioProps("3d")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
           mode === "3d" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
@@ -1587,14 +1587,13 @@ function SceneViewToggle({
           type="button"
           size="xs"
           variant={mode === "scan" ? "selected" : "ghost"}
-          aria-pressed={mode === "scan"}
-          onClick={() => onChange("scan")}
+          {...getRadioProps("scan")}
           className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
             mode === "scan" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-[2px] bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
+          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
             Beta
           </span>
         </Button>
@@ -1603,8 +1602,7 @@ function SceneViewToggle({
         type="button"
         size="xs"
         variant={mode === "neighborhood" ? "selected" : "ghost"}
-        aria-pressed={mode === "neighborhood"}
-        onClick={() => onChange("neighborhood")}
+        {...getRadioProps("neighborhood")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
           mode === "neighborhood" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
@@ -1615,8 +1613,7 @@ function SceneViewToggle({
         type="button"
         size="xs"
         variant={mode === "aerial" ? "selected" : "ghost"}
-        aria-pressed={mode === "aerial"}
-        onClick={() => onChange("aerial")}
+        {...getRadioProps("aerial")}
         className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
           mode === "aerial" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
@@ -1696,10 +1693,9 @@ function LotStep({
           <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
           <label className="block pb-4 text-sm text-lot-stone">
             Sample Property
-            <select value={parcelId} onChange={(event) => onPresetChange(event.target.value)}
-              className="mt-2 block min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-lot-ink">
+            <Select value={parcelId} onChange={(event) => onPresetChange(event.target.value)} className="mt-2 block">
               {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({preset.lotArea.toLocaleString()} sf)</option>)}
-            </select>
+            </Select>
           </label>
         </details>
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">

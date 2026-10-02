@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
 import { validateEmail } from "@/lib/account-settings";
 import { normalizeServiceArea } from "@/lib/marketplace";
 import type { BuilderProfile } from "@/lib/marketplace-types";
@@ -114,7 +115,7 @@ export default function BuilderProfileForm({
       )}
       <label htmlFor="builder-company-name" className="lf-body-sm font-medium text-lot-ink">
         <span id="builder-company-name-label">Company name</span> <span aria-hidden="true">*</span>
-        <input
+        <Input
           id="builder-company-name"
           name="builder-company-name"
           ref={(element) => { fields.current["builder-company-name"] = element; }}
@@ -132,7 +133,7 @@ export default function BuilderProfileForm({
       </label>
       <label htmlFor="builder-contact-email" className="lf-body-sm font-medium text-lot-ink">
         <span id="builder-contact-email-label">Contact email</span> <span aria-hidden="true">*</span>
-        <input
+        <Input
           id="builder-contact-email"
           name="builder-contact-email"
           ref={(element) => { fields.current["builder-contact-email"] = element; }}
@@ -150,7 +151,7 @@ export default function BuilderProfileForm({
       </label>
       <label htmlFor="builder-phone" className="lf-body-sm font-medium text-lot-ink">
         Phone (optional)
-        <input
+        <Input
           id="builder-phone"
           type="tel"
           autoComplete="tel"
@@ -161,7 +162,7 @@ export default function BuilderProfileForm({
       </label>
       <label htmlFor="builder-license" className="lf-body-sm font-medium text-lot-ink">
         License number (optional)
-        <input
+        <Input
           id="builder-license"
           type="text"
           className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
@@ -174,7 +175,7 @@ export default function BuilderProfileForm({
         className="lf-body-sm font-medium text-lot-ink md:col-span-2"
       >
         <span id="builder-service-areas-label">Service areas</span>
-        <input
+        <Input
           id="builder-service-areas"
           name="builder-service-areas"
           ref={(element) => { fields.current["builder-service-areas"] = element; }}

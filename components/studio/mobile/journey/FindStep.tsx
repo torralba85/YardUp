@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import { ArrowRight, Search } from "lucide-react";
 import { parcelPresets } from "@/lib/feasibility";
-import { radioIndex } from "@/lib/radio-navigation";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "@/components/studio/AddressSearch";
 import { Button } from "@/components/ui/Button";
 
@@ -40,8 +39,11 @@ export default function FindStep({
   onPresetSelect,
   onReveal,
 }: FindStepProps) {
-  const demoLotRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const hasSelection = parcelPresets.some((p) => p.id === selectedPresetId);
+  const { groupProps, getRadioProps } = useRadioGroup({
+    value: selectedPresetId ?? "",
+    onChange: onPresetSelect,
+    values: parcelPresets.map((p) => p.id),
+  });
 
   return (
     <section
@@ -79,28 +81,16 @@ export default function FindStep({
       <p className="mt-7 lf-kicker-dense text-lot-stone">
         Or explore a demo lot
       </p>
-      <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">
-        {parcelPresets.map((preset, index) => {
+      <div className="mt-2 flex flex-wrap gap-2" aria-label="Demo lots" {...groupProps}>
+        {parcelPresets.map((preset) => {
           const selected = selectedPresetId === preset.id;
           return (
             <Button
               key={preset.id}
-              ref={(node) => {
-                demoLotRefs.current[index] = node;
-              }}
               type="button"
               size="md"
               variant={selected ? "selected" : "secondary"}
-              onClick={() => onPresetSelect(preset.id)}
-              aria-pressed={selected}
-              tabIndex={selected || (index === 0 && !hasSelection) ? 0 : -1}
-              onKeyDown={(event) => {
-                const next = radioIndex(event.key, index, parcelPresets.length);
-                if (next === null) return;
-                event.preventDefault();
-                onPresetSelect(parcelPresets[next].id);
-                demoLotRefs.current[next]?.focus();
-              }}
+              {...getRadioProps(preset.id)}
               className="px-4"
             >
               {preset.city.split(",")[0]}
