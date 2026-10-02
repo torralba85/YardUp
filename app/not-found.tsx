@@ -23,7 +23,7 @@ export default function NotFound() {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/"
-          className="inline-flex h-11 items-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-chalk"
+          className="inline-flex h-11 items-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
         >
           Home
         </Link>
