@@ -16,7 +16,7 @@ const firebaseConfig = {
     "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
   authDomain:
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ||
-    "yardup-2026.firebaseapp.com",
+    "lotfoundry.net",
   projectId:
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || "yardup-2026",
   storageBucket:
