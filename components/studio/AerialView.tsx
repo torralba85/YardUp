@@ -8,6 +8,8 @@ import type { Pose2D } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
 import { latLngToPixel } from "@/lib/map-utils";
 import { useAuth } from "@/lib/auth-context";
+import { COLOR } from "@/lib/design-tokens";
+
 
 const IMG_W = 800;
 const IMG_H = 540;
@@ -113,7 +115,7 @@ export default function AerialView({
 
   return (
     <div
-      className="relative flex h-full min-h-[460px] w-full flex-col overflow-hidden bg-lf-espresso"
+      className="relative flex h-full min-h-[460px] w-full flex-col overflow-hidden bg-lot-ink"
       aria-label="Aerial lot view"
     >
       <div className="relative min-h-[240px] flex-1">
@@ -142,7 +144,7 @@ export default function AerialView({
         </>
       ) : (
         <div
-          className="absolute inset-0 bg-lf-espresso"
+          className="absolute inset-0 bg-lot-ink"
           aria-label={aerialError ? "Aerial image unavailable" : "Loading aerial image"}
           role="status"
         />
@@ -152,8 +154,8 @@ export default function AerialView({
       {boundaryPoints && aerialSrc && !aerialError && (
         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${IMG_W} ${IMG_H}`}
           preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <polygon points={boundaryPoints} fill="none" stroke="#161616" strokeWidth="5" strokeDasharray="8 4" />
-          <polygon points={boundaryPoints} fill="none" stroke="#F5F5F0" strokeWidth="2.5" strokeDasharray="8 4" />
+          <polygon points={boundaryPoints} fill="none" stroke={COLOR["lot-ink"]} strokeWidth="5" strokeDasharray="8 4" />
+          <polygon points={boundaryPoints} fill="none" stroke={COLOR["lot-chalk"]} strokeWidth="2.5" strokeDasharray="8 4" />
         </svg>
       )}
 
@@ -179,7 +181,7 @@ export default function AerialView({
       {/* Fallback notice */}
       {aerialError && (
         <div
-          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lot-line bg-lot-chalk px-3 py-3 text-xs leading-5 text-lot-ink shadow-[4px_4px_0_#16161618]"
+          className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lot-line bg-lot-chalk px-3 py-3 text-xs leading-5 text-lot-ink shadow-callout"
           role="note"
         >
           <span className="flex items-center gap-2 font-semibold"><TriangleAlert size={16} className="shrink-0 text-status-review" aria-hidden="true" />Aerial imagery unavailable</span>
@@ -191,13 +193,13 @@ export default function AerialView({
 
       {/* Normal flow reserves space when the context and credits wrap on phones.
           Provider-embedded Google logos/credits stay in the uncropped image. */}
-      <div className="shrink-0 space-y-[7px] border-t border-lot-line-dark bg-lf-espresso px-4 py-[13px]"
+      <div className="shrink-0 space-y-[7px] border-t border-lot-line-dark bg-lot-ink px-4 py-[13px]"
         aria-label="Aerial context and imagery credits">
         <div
-          className="pointer-events-none flex items-start gap-2 rounded-none border border-lf-amber-on-dark/40 bg-lf-mahogany/90 px-3 py-2 text-xs text-lf-sand"
+          className="pointer-events-none flex items-start gap-2 rounded-none border border-status-review-on-dark/40 bg-lot-ink/90 px-3 py-2 text-xs text-lot-chalk"
           role="note"
         >
-          <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-on-dark" aria-hidden="true" />
+          <TriangleAlert size={14} className="mt-0.5 shrink-0 text-status-review-on-dark" aria-hidden="true" />
           <span>
             Imagery is context only. House and ADU positions are not geographically aligned.
             {boundaryPoints ? " Dashed line: published GIS boundary, not a survey." : " Parcel boundary unavailable; model dimensions are estimated."}

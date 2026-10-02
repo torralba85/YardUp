@@ -49,26 +49,26 @@ export default function FindStep({
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lf-clay-ink">Step 1 · Find</p>
-      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
+      <p className="lf-kicker text-lot-orange-ink">Step 1 · Find</p>
+      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
         Start with your address.
       </h1>
-      <p className="lf-body-sm mt-2 text-lf-muted">
+      <p className="lf-body-sm mt-2 text-lot-stone">
         We&rsquo;ll pull your parcel, local zoning, and your area&rsquo;s market rents.
       </p>
 
       <div className="mt-5">
         <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} />
         {parcelLoading && (
-          <div className="mt-2 flex items-center gap-2 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-            <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+          <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
+            <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
             Looking up property data…
           </div>
         )}
         {parcelError && (
           <div
             role="alert"
-            className="mt-2 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick/10 p-3 text-xs text-lf-brick"
+            className="mt-2 flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked/10 p-3 text-xs text-status-blocked"
           >
             <Search size={14} className="mt-0.5 shrink-0" />
             {parcelError}
@@ -76,7 +76,7 @@ export default function FindStep({
         )}
       </div>
 
-      <p className="mt-7 lf-kicker-dense text-lf-muted">
+      <p className="mt-7 lf-kicker-dense text-lot-stone">
         Or explore a demo lot
       </p>
       <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Demo lots">

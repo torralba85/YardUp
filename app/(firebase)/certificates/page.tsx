@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 /** Member certificates route (`/certificates`). */
 export default function CertificatesPage() {
   return (
-    <main id="main-content" className="min-h-dvh bg-lf-sand text-lf-espresso">
+    <main id="main-content" className="min-h-dvh bg-lot-chalk text-lot-ink">
       <CertificatesClient />
     </main>
   );

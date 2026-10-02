@@ -19,10 +19,10 @@ export default function Error({
   return (
     <main
       id="main-content"
-      className="flex min-h-dvh flex-col items-center justify-center bg-lf-sand px-6 py-16 text-center text-lf-espresso"
+      className="flex min-h-dvh flex-col items-center justify-center bg-lot-chalk px-6 py-16 text-center text-lot-ink"
     >
       <h1 className="lf-section-heading">Something went wrong</h1>
-      <p className="lf-body-sm mx-auto mt-3 max-w-md text-lf-muted">
+      <p className="lf-body-sm mx-auto mt-3 max-w-md text-lot-stone">
         We hit an unexpected error. Try again, or visit Help if it keeps happening.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -31,7 +31,7 @@ export default function Error({
         </Button>
         <Link
           href="/help"
-          className="inline-flex h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-5 text-sm font-semibold text-lf-espresso"
+          className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink"
         >
           Get help
         </Link>

@@ -1,3 +1,4 @@
+import { COLOR } from "@/lib/design-tokens";
 const PREVIEW_START_HOUR = 7;
 const PREVIEW_END_HOUR = 19;
 const SUN_RADIUS = 75;
@@ -67,10 +68,10 @@ export const LIGHTING_PRESETS: Record<LightingPresetId, LightingPreset> = {
     sunPosition: [25, 65, 35],
     sunColor: "#ffffff",
     sunIntensity: 1.15,
-    ambientColor: "#F5F5F0",
+    ambientColor: COLOR["lot-chalk"],
     ambientIntensity: 0.65,
     fillPosition: [-30, 40, -25],
-    fillColor: "#DADAD3",
+    fillColor: COLOR["lot-line"],
     fillIntensity: 0.35,
   },
   // The scene drives this preset's sun position and intensity from the time
@@ -82,10 +83,10 @@ export const LIGHTING_PRESETS: Record<LightingPresetId, LightingPreset> = {
     sunPosition: [55, 22, 28],
     sunColor: "#ffffff",
     sunIntensity: 1.35,
-    ambientColor: "#F5F5F0",
+    ambientColor: COLOR["lot-chalk"],
     ambientIntensity: 0.45,
     fillPosition: [-40, 25, -20],
-    fillColor: "#DADAD3",
+    fillColor: COLOR["lot-line"],
     fillIntensity: 0.25,
   },
 };

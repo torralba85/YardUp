@@ -10,12 +10,12 @@ describe("Panel", () => {
 
   it("defaults to the card surface", () => {
     const { container } = render(<Panel>x</Panel>);
-    expect(container.firstChild).toHaveClass("bg-lf-card", "border-lf-hairline");
+    expect(container.firstChild).toHaveClass("bg-lot-chalk", "border-lot-line");
   });
 
   it("supports the sand surface", () => {
     const { container } = render(<Panel surface="sand">x</Panel>);
-    expect(container.firstChild).toHaveClass("bg-lf-sand-2");
+    expect(container.firstChild).toHaveClass("bg-lot-surface");
   });
 
   it("renders as the requested landmark element", () => {

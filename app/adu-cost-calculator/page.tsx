@@ -83,8 +83,8 @@ const appJsonLd = {
 };
 
 const tableClass = "w-full border-collapse text-left text-sm";
-const thClass = "py-3 pr-4 font-semibold text-lf-espresso";
-const tdClass = "py-3 pr-4 tabular-nums text-lf-muted";
+const thClass = "py-3 pr-4 font-semibold text-lot-ink";
+const tdClass = "py-3 pr-4 tabular-nums text-lot-stone";
 
 /**
  * California ADU cost calculator (`/adu-cost-calculator`): an interactive
@@ -127,10 +127,10 @@ export default function AduCostCalculatorPage() {
       <AduCostCalculator />
 
       <section aria-labelledby="adu-cost-by-size">
-        <h2 id="adu-cost-by-size" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">
           How much does an ADU cost in California?
         </h2>
-        <p className="lf-body mt-3 text-lf-muted">
+        <p className="lf-body mt-3 text-lot-stone">
           Build cost by size, cedar finish and shed roof. Build cost uses the
           same national cost base in every county, so one table covers all three.
         </p>
@@ -139,7 +139,7 @@ export default function AduCostCalculatorPage() {
             <table className={tableClass}>
               <caption className="sr-only">Estimated ADU build cost in California by unit size</caption>
               <thead>
-                <tr className="border-b border-lf-hairline">
+                <tr className="border-b border-lot-line">
                   <th scope="col" className={thClass}>Unit size</th>
                   <th scope="col" className={thClass}>Estimated build cost</th>
                   <th scope="col" className={thClass}>Per sq ft</th>
@@ -147,7 +147,7 @@ export default function AduCostCalculatorPage() {
               </thead>
               <tbody>
                 {aggregates[0].aggregate.rows.map((row) => (
-                  <tr key={row.size} className="border-t border-lf-hairline">
+                  <tr key={row.size} className="border-t border-lot-line">
                     <th scope="row" className={thClass}>
                       {row.size.toLocaleString("en-US")} sq ft
                     </th>
@@ -166,10 +166,10 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-rental-income">
-        <h2 id="adu-rental-income" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-rental-income" className="lf-card-heading text-lot-ink">
           ADU rental income by county
         </h2>
-        <p className="lf-body mt-3 text-lf-muted">
+        <p className="lf-body mt-3 text-lot-stone">
           Monthly rent at the county&apos;s HUD Fair Market Rent: studio rent
           for 400 sq ft, one-bedroom for 600 and 800 sq ft, two-bedroom for
           1,200 sq ft. Market rents in desirable neighborhoods often run higher.
@@ -178,7 +178,7 @@ export default function AduCostCalculatorPage() {
           <table className={tableClass}>
             <caption className="sr-only">Estimated monthly ADU rent by county and unit size</caption>
             <thead>
-              <tr className="border-b border-lf-hairline">
+              <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>County</th>
                 {CITY_MARKET_SIZES.map((size) => (
                   <th key={size} scope="col" className={thClass}>
@@ -189,7 +189,7 @@ export default function AduCostCalculatorPage() {
             </thead>
             <tbody>
               {aggregates.map(({ county, aggregate }) => (
-                <tr key={county.slug} className="border-t border-lf-hairline">
+                <tr key={county.slug} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>{county.name}</th>
                   {aggregate.rows.map((row) => (
                     <td key={row.size} className={tdClass}>
@@ -204,10 +204,10 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-payback">
-        <h2 id="adu-payback" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-payback" className="lf-card-heading text-lot-ink">
           ADU payback and ROI
         </h2>
-        <p className="lf-body mt-3 text-lf-muted">
+        <p className="lf-body mt-3 text-lot-stone">
           Simple payback is the midpoint build cost divided by a year of rent
           after operating costs. It ignores financing, appreciation, and tax
           effects, so treat it as a comparison between options, not a forecast.
@@ -216,7 +216,7 @@ export default function AduCostCalculatorPage() {
           <table className={tableClass}>
             <caption className="sr-only">Estimated ADU payback in years by county and unit size</caption>
             <thead>
-              <tr className="border-b border-lf-hairline">
+              <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>County</th>
                 {CITY_MARKET_SIZES.map((size) => (
                   <th key={size} scope="col" className={thClass}>
@@ -227,7 +227,7 @@ export default function AduCostCalculatorPage() {
             </thead>
             <tbody>
               {aggregates.map(({ county, aggregate }) => (
-                <tr key={county.slug} className="border-t border-lf-hairline">
+                <tr key={county.slug} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>{county.name}</th>
                   {aggregate.rows.map((row) => (
                     <td key={row.size} className={tdClass}>
@@ -239,7 +239,7 @@ export default function AduCostCalculatorPage() {
             </tbody>
           </table>
         </div>
-        <p className="lf-body mt-3 text-sm text-lf-muted">
+        <p className="lf-body mt-3 text-sm text-lot-stone">
           Smaller units pay back faster because rent falls less than cost as
           size shrinks.
         </p>
@@ -248,10 +248,10 @@ export default function AduCostCalculatorPage() {
       <AduStudioCta city="California" slug="adu-cost-calculator" placement="mid" />
 
       <section aria-labelledby="adu-estimate-method">
-        <h2 id="adu-estimate-method" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-estimate-method" className="lf-card-heading text-lot-ink">
           What the estimate includes
         </h2>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lf-muted">
+        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
             Hard construction cost of ${lowFinish}–${highFinish} per sq ft
             depending on the exterior finish, plus a roof-style premium and
@@ -274,7 +274,7 @@ export default function AduCostCalculatorPage() {
           </li>
         </ul>
         {aggregates[0] ? (
-          <p className="lf-body mt-4 text-sm text-lf-muted">
+          <p className="lf-body mt-4 text-sm text-lot-stone">
             {marketProvenanceLine(aggregates[0].aggregate.provenance)}. The same
             HUD vintage backs every county row.
           </p>
@@ -282,17 +282,17 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-cost-rules">
-        <h2 id="adu-cost-rules" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-cost-rules" className="lf-card-heading text-lot-ink">
           State rules that change your budget
         </h2>
-        <p className="lf-body mt-3 text-lf-muted">
+        <p className="lf-body mt-3 text-lot-stone">
           California caps what a city can charge and require. No impact fees
           apply under 750 sq ft, a city can require at most one parking space,
           and converting a garage or other existing space needs no new
           setbacks. The{" "}
           <Link
             href="/adu/ca"
-            className="underline underline-offset-2 hover:text-lf-espresso"
+            className="underline underline-offset-2 hover:text-lot-ink"
           >
             California ADU rules guide
           </Link>{" "}
@@ -300,7 +300,7 @@ export default function AduCostCalculatorPage() {
           including the{" "}
           <Link
             href="/adu/ca/san-diego"
-            className="underline underline-offset-2 hover:text-lf-espresso"
+            className="underline underline-offset-2 hover:text-lot-ink"
           >
             City of San Diego
           </Link>

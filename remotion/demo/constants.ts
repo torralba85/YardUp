@@ -1,3 +1,4 @@
+import { COLOR } from "../../lib/design-tokens";
 /** LotFoundry product demo — marketing campaign composition. */
 export const DEMO_FPS = 30;
 export const DEMO_WIDTH = 1920;
@@ -11,20 +12,20 @@ export const DEMO_DURATION_IN_FRAMES =
   90 + 150 + 150 + 210 + 240 + 240 + 180 + 210 - 7 * 12;
 
 export const DEMO_PALETTE = {
-  ink: "#161616",
-  navy: "#161616",
-  card: "#212121",
-  mist: "#F5F5F0",
-  slate: "#B7B7AE",
-  glow: "#FF5B24",
-  money: "#F5F5F0",
-  hairline: "#44443F",
-  sand: "#F5F5F0",
-  espresso: "#161616",
-  forest: "#176B4C",
-  mahogany: "#161616",
-  clay: "#FF5B24",
-  parchment: "#F5F5F0",
+  ink: COLOR["lot-ink"],
+  navy: COLOR["lot-ink"],
+  card: COLOR["lot-surface-dark"],
+  mist: COLOR["lot-chalk"],
+  slate: COLOR["lot-stone-on-dark"],
+  glow: COLOR["lot-orange"],
+  money: COLOR["lot-chalk"],
+  hairline: COLOR["lot-line-dark"],
+  sand: COLOR["lot-chalk"],
+  espresso: COLOR["lot-ink"],
+  forest: COLOR["status-eligible"],
+  mahogany: COLOR["lot-ink"],
+  clay: COLOR["lot-orange"],
+  parchment: COLOR["lot-chalk"],
 } as const;
 
 /** Scene lengths in frames (30fps). Transition overlaps handled in composition. */

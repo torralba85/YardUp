@@ -329,21 +329,21 @@ export default function BuilderInbox({
 
   return (
     <section className="mt-6">
-      <div className="border border-lf-hairline bg-lf-card p-4">
+      <div className="border border-lot-line bg-lot-chalk p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="lf-panel-heading">{profile.companyName}</h2>
-            <p className="lf-body-sm mt-1 text-lf-muted">
+            <p className="lf-body-sm mt-1 text-lot-stone">
               {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
-          <span className="self-start rounded-none border border-lf-hairline px-2 py-1 lf-kicker-dense text-lf-muted">
+          <span className="self-start rounded-none border border-lot-line px-2 py-1 lf-kicker-dense text-lot-stone">
             {profile.active ? "Active" : "Inactive"}
           </span>
         </div>
       </div>
 
-      <div className="mt-4 border border-lf-hairline">
+      <div className="mt-4 border border-lot-line">
         <BuilderMoneyBand metrics={metrics} credits={credits} />
       </div>
 
@@ -352,7 +352,7 @@ export default function BuilderInbox({
       </div>
 
       {error && (
-        <div role="alert" className="mt-4 border border-lf-brick/20 bg-lf-brick-soft p-3 text-sm text-lf-brick">
+        <div role="alert" className="mt-4 border border-status-blocked/20 bg-status-blocked-soft p-3 text-sm text-status-blocked">
           {error}
         </div>
       )}
@@ -362,7 +362,7 @@ export default function BuilderInbox({
       ) : (
         <div className="mt-4 flex flex-col xl:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0 w-full">
-            <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lf-hairline pb-4">
+            <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lot-line pb-4">
               <div role="group" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
                 {TABS.map((t) => (
                   <Button
@@ -382,14 +382,14 @@ export default function BuilderInbox({
               </div>
 
               {/* Cards vs Table View Mode Segment Toggle */}
-              <div className="flex rounded-none border border-lf-hairline p-0.5 self-start md:self-auto bg-lf-card">
+              <div className="flex rounded-none border border-lot-line p-0.5 self-start md:self-auto bg-lot-chalk">
                 <Button
                   type="button"
                   size="sm"
                   variant={viewMode === "cards" ? "selected" : "ghost"}
                   onClick={() => setViewMode("cards")}
                   aria-pressed={viewMode === "cards"}
-                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lot-stone aria-[pressed=false]:hover:bg-lot-surface"
                 >
                   Cards
                 </Button>
@@ -399,7 +399,7 @@ export default function BuilderInbox({
                   variant={viewMode === "table" ? "selected" : "ghost"}
                   onClick={() => setViewMode("table")}
                   aria-pressed={viewMode === "table"}
-                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lf-muted aria-[pressed=false]:hover:bg-lf-sand-2"
+                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[pressed=false]:text-lot-stone aria-[pressed=false]:hover:bg-lot-surface"
                 >
                   Table
                 </Button>
@@ -409,12 +409,12 @@ export default function BuilderInbox({
             {pageCount > 1 && (
               <nav aria-label="Inbox pages" className="mt-4 flex items-center justify-between gap-3">
                 <Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Previous page</Button>
-                <span role="status" className="text-sm text-lf-muted">Page {currentPage} of {pageCount}</span>
+                <span role="status" className="text-sm text-lot-stone">Page {currentPage} of {pageCount}</span>
                 <Button variant="secondary" size="sm" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>Next page</Button>
               </nav>
             )}
             {filtered.length === 0 ? (
-              <div className="mt-4 border border-lf-hairline bg-lf-card p-6 text-sm text-lf-muted">
+              <div className="mt-4 border border-lot-line bg-lot-chalk p-6 text-sm text-lot-stone">
                 {tab === "archived"
                   ? "Nothing archived yet."
                   : `No ${tab} leads right now.`}
@@ -446,16 +446,16 @@ export default function BuilderInbox({
                 ))}
               </div>
             ) : (
-              <div className={`mt-4 ${selectedItemId ? "hidden xl:block" : "block"} overflow-x-auto border border-lf-hairline bg-lf-card`}>
+              <div className={`mt-4 ${selectedItemId ? "hidden xl:block" : "block"} overflow-x-auto border border-lot-line bg-lot-chalk`}>
                 <table className="w-full text-left border-collapse" aria-label="Inbox Leads Ledger">
                   <thead>
-                    <tr className="border-b border-lf-hairline bg-lf-sand-2">
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Lead / Recorded</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Location</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted text-right">Rent Potential</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Specs</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted">Economics</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lf-muted text-center">Status</th>
+                    <tr className="border-b border-lot-line bg-lot-surface">
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Lead / Recorded</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Location</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone text-right">Rent Potential</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Specs</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Economics</th>
+                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -478,50 +478,50 @@ export default function BuilderInbox({
                               setSelectedItemId(item.request.id);
                             }
                           }}
-                          className={`group border-b border-lf-hairline cursor-pointer motion-safe:transition hover:bg-lf-sand-2/50 ${
-                            isSelected ? "bg-lf-sand-2 border-l-[3px] border-l-lf-clay" : ""
+                          className={`group border-b border-lot-line cursor-pointer motion-safe:transition hover:bg-lot-surface/50 ${
+                            isSelected ? "bg-lot-surface border-l-[3px] border-l-lot-orange" : ""
                           }`}
                         >
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-sans text-[10.5px] font-semibold text-lf-espresso group-hover:text-lf-clay-ink motion-safe:transition">
+                            <div className="font-sans text-[10.5px] font-semibold text-lot-ink group-hover:text-lot-orange-ink motion-safe:transition">
                               {item.request.preview.previewSerial}
                             </div>
-                            <div className="font-sans text-[9px] text-lf-muted mt-0.5">{dateStr}</div>
+                            <div className="font-sans text-[9px] text-lot-stone mt-0.5">{dateStr}</div>
                           </td>
                           <td className="px-4 py-3.5">
-                            <div className="font-semibold text-lf-espresso text-xs truncate max-w-[180px]">
+                            <div className="font-semibold text-lot-ink text-xs truncate max-w-[180px]">
                               {hasAccess && itemContact ? itemContact.streetAddress : item.request.preview.neighborhood}
                             </div>
-                            <div className="font-sans text-[9.5px] text-lf-muted mt-0.5">{item.request.preview.zip}</div>
+                            <div className="font-sans text-[9.5px] text-lot-stone mt-0.5">{item.request.preview.zip}</div>
                           </td>
-                          <td className="px-4 py-3.5 text-right lf-money-sm text-lf-money whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right lf-money-sm text-lot-ink whitespace-nowrap">
                             {formatCurrency(item.request.preview.rentBand)}
-                            <span className="font-sans text-[9px] font-normal text-lf-muted ml-0.5">/mo</span>
+                            <span className="font-sans text-[9px] font-normal text-lot-stone ml-0.5">/mo</span>
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-sans text-[9.5px] text-lf-espresso font-medium">
+                            <div className="font-sans text-[9.5px] text-lot-ink font-medium">
                               {item.request.preview.aduSqft.toLocaleString()} sf ADU
                             </div>
-                            <div className="font-sans text-[9px] text-lf-muted mt-0.5">
+                            <div className="font-sans text-[9px] text-lot-stone mt-0.5">
                               {item.request.preview.lotSqft.toLocaleString()} sf lot
                             </div>
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-sans text-[9.5px] text-lf-espresso">
+                            <div className="font-sans text-[9.5px] text-lot-ink">
                               Build: {formatCompactCurrency(item.request.preview.buildBandLow)}–{formatCompactCurrency(item.request.preview.buildBandHigh)}
                             </div>
-                            <div className="font-sans text-[9px] text-lf-muted mt-0.5">
+                            <div className="font-sans text-[9px] text-lot-stone mt-0.5">
                               Payback: {item.request.preview.paybackYears} yrs
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-center whitespace-nowrap">
                             <div className="inline-flex items-center gap-1">
-                              {itemAccess === "locked" && <Lock size={12} className="text-lf-muted" />}
-                              {itemAccess === "unlocked" && <Unlock size={12} className="text-lf-forest" />}
+                              {itemAccess === "locked" && <Lock size={12} className="text-lot-stone" />}
+                              {itemAccess === "unlocked" && <Unlock size={12} className="text-status-eligible" />}
                               {itemAccess === "confirming" && (
-                                <span className="h-2 w-2 rounded-full bg-lf-amber motion-safe:animate-pulse" />
+                                <span className="h-2 w-2 rounded-full bg-status-review motion-safe:animate-pulse" />
                               )}
-                              <span className="lf-dataprint text-lf-muted ml-0.5">
+                              <span className="lf-dataprint text-lot-stone ml-0.5">
                                 {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
                               </span>
                             </div>
@@ -539,16 +539,16 @@ export default function BuilderInbox({
               <div className={`${selectedItemId ? "block" : "hidden xl:block"} xl:sticky xl:top-4 h-fit`}>
                 {selectedItemId === null ? (
                   /* No Selection State */
-                  <div className="flex flex-col items-center justify-center border border-dashed border-lf-taupe bg-lf-card/50 p-8 text-center min-h-[350px]">
-                    <FileText size={36} className="text-lf-taupe" />
-                    <h3 className="lf-card-heading mt-3 text-sm font-semibold text-lf-espresso">No lead selected</h3>
-                    <p className="lf-body-sm mt-1.5 max-w-xs text-lf-muted">
+                  <div className="flex flex-col items-center justify-center border border-dashed border-lot-stone bg-lot-chalk/50 p-8 text-center min-h-[350px]">
+                    <FileText size={36} className="text-lot-stone" />
+                    <h3 className="lf-card-heading mt-3 text-sm font-semibold text-lot-ink">No lead selected</h3>
+                    <p className="lf-body-sm mt-1.5 max-w-xs text-lot-stone">
                       Select a lead from the ledger table on the left to inspect its feasibility details and contact information.
                     </p>
                   </div>
                 ) : (
                   /* Lead Inspection Pane Container (defined in Task 3) */
-                  <div id="lead-inspection-pane" className="border border-lf-hairline bg-lf-card p-5">
+                  <div id="lead-inspection-pane" className="border border-lot-line bg-lot-chalk p-5">
                     {(() => {
                       const selectedItem = items.find((i) => i.request.id === selectedItemId);
                       if (!selectedItem) return null;
@@ -606,8 +606,8 @@ export default function BuilderInbox({
                             Back to inbox list
                           </Button>
 
-                          <div className="flex items-center justify-between border-b border-lf-hairline pb-3">
-                            <span className="lf-kicker-dense text-lf-muted">
+                          <div className="flex items-center justify-between border-b border-lot-line pb-3">
+                            <span className="lf-kicker-dense text-lot-stone">
                               NO. {selectedItem.request.preview.previewSerial}
                               {recordedDate ? ` · RECORDED ${recordedDate}` : ""}
                             </span>
@@ -634,28 +634,28 @@ export default function BuilderInbox({
                           {itemAccess === "locked" && (
                             <div className="space-y-4">
                               <div>
-                                <p className="lf-money-md text-lf-money">
+                                <p className="lf-money-md text-lot-ink">
                                   {formatCurrency(selectedItem.request.preview.rentBand)}
-                                  <span className="ml-1.5 lf-kicker-dense text-lf-muted">
+                                  <span className="ml-1.5 lf-kicker-dense text-lot-stone">
                                     /mo rent potential
                                   </span>
                                 </p>
-                                <p className="mt-2 font-semibold text-lf-espresso text-sm">
+                                <p className="mt-2 font-semibold text-lot-ink text-sm">
                                   {selectedItem.request.preview.neighborhood}
                                 </p>
-                                <p className="mt-1 flex flex-wrap gap-2.5 lf-kicker-dense text-lf-muted">
+                                <p className="mt-1 flex flex-wrap gap-2.5 lf-kicker-dense text-lot-stone">
                                   <span>{selectedItem.request.preview.lotSqft.toLocaleString()} sqft lot</span>
                                   <span>{selectedItem.request.preview.aduSqft.toLocaleString()} sf ADU</span>
                                   <span>{finishLabels[selectedItem.request.preview.config.finish]}</span>
                                 </p>
                               </div>
 
-                              <div className="space-y-3 rounded-none border border-dashed border-lf-taupe bg-lf-sand-2/30 p-4 text-center">
-                                <Lock size={24} className="mx-auto text-lf-taupe" />
-                                <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-lf-espresso">
+                              <div className="space-y-3 rounded-none border border-dashed border-lot-stone bg-lot-surface/30 p-4 text-center">
+                                <Lock size={24} className="mx-auto text-lot-stone" />
+                                <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
                                   Feasibility Certificate Locked
                                 </h4>
-                                <p className="mx-auto max-w-xs text-xs leading-relaxed text-lf-muted">
+                                <p className="mx-auto max-w-xs text-xs leading-relaxed text-lot-stone">
                                   Unlock this lead to reveal the exact street address, parcel boundaries, zoning calculations, detailed finances ledger, and direct homeowner contact info.
                                 </p>
                                 <Button
@@ -682,12 +682,12 @@ export default function BuilderInbox({
 
                           {/* 2. Confirming State Panel */}
                           {itemAccess === "confirming" && (
-                            <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3 rounded-none">
-                              <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-amber-ink">
-                                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber-ink" />
+                            <div className="border border-status-review/35 bg-status-review-soft px-3.5 py-3 rounded-none">
+                              <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.08em] text-status-review">
+                                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-status-review" />
                                 Recording lead unlock…
                               </div>
-                              <p className="mt-1.5 text-xs text-lf-espresso">
+                              <p className="mt-1.5 text-xs text-lot-ink">
                                 Usually a few seconds. The owner contact and certificate will appear right here.
                               </p>
                             </div>
@@ -697,27 +697,27 @@ export default function BuilderInbox({
                           {itemAccess === "unlocked" && itemContact && (
                             <div className="space-y-4 lf-stamp">
                               {/* Homeowner Info Block */}
-                              <div className="border border-lf-forest bg-lf-forest-soft p-4 rounded-none">
-                                <div className="flex items-center justify-between lf-dataprint text-lf-forest">
+                              <div className="border border-status-eligible bg-status-eligible-soft p-4 rounded-none">
+                                <div className="flex items-center justify-between lf-dataprint text-status-eligible">
                                   <span>Owner Contact Unlocked{demo ? " · Demo" : ""}</span>
                                 </div>
-                                <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lf-espresso">
+                                <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lot-ink">
                                   <span className="block font-semibold text-sm">{itemContact.ownerContact.name}</span>
                                   <span className="block mt-1">
-                                    <Mail size={11} className="inline mr-1 text-lf-muted" />
+                                    <Mail size={11} className="inline mr-1 text-lot-stone" />
                                     {itemContact.ownerContact.email}
                                   </span>
                                   {itemContact.ownerContact.phone && (
                                     <span className="block mt-0.5">
-                                      <Phone size={11} className="inline mr-1 text-lf-muted" />
+                                      <Phone size={11} className="inline mr-1 text-lot-stone" />
                                       {itemContact.ownerContact.phone}
                                     </span>
                                   )}
                                 </address>
                                 {itemContact.ownerContact.message && (
-                                  <div className="mt-3 border-t border-dashed border-lf-hairline pt-2">
-                                    <span className="font-sans text-[9px] uppercase text-lf-muted font-medium">Homeowner Message:</span>
-                                    <p className="text-xs italic text-lf-espresso mt-1 leading-relaxed bg-lf-card/60 p-2 border-l border-lf-taupe">
+                                  <div className="mt-3 border-t border-dashed border-lot-line pt-2">
+                                    <span className="font-sans text-[9px] uppercase text-lot-stone font-medium">Homeowner Message:</span>
+                                    <p className="text-xs italic text-lot-ink mt-1 leading-relaxed bg-lot-chalk/60 p-2 border-l border-lot-stone">
                                       &ldquo;{itemContact.ownerContact.message}&rdquo;
                                     </p>
                                   </div>
@@ -726,52 +726,52 @@ export default function BuilderInbox({
 
                               {/* Visual Certificate Section — single frame (no nested rounded cards). */}
                               <div className="space-y-3">
-                                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lf-espresso">
+                                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
                                   Feasibility Certificate
                                 </div>
 
                                 {(!itemContact.snapshot?.result || !itemContact.snapshot?.parcel || !itemContact.snapshot?.config) ? (
                                   /* Defensively Fallback to Plain Text Report if structure is not present (e.g. tests) */
-                                  <div className="max-h-[300px] overflow-y-auto border border-lf-hairline bg-lf-card/60 p-3.5">
-                                    <pre className="whitespace-pre-wrap font-sans text-[10px] leading-relaxed text-lf-espresso">
+                                  <div className="max-h-[300px] overflow-y-auto border border-lot-line bg-lot-chalk/60 p-3.5">
+                                    <pre className="whitespace-pre-wrap font-sans text-[10px] leading-relaxed text-lot-ink">
                                       {itemContact.snapshot?.reportText || "Feasibility certificate data unavailable."}
                                     </pre>
                                   </div>
                                 ) : (
                                   /* Full styled inline certificate — one instrument frame, not card-in-card. */
-                                  <div className="space-y-4 border-[1.5px] border-lf-espresso bg-lf-card p-4">
+                                  <div className="space-y-4 border-[1.5px] border-lot-ink bg-lot-chalk p-4">
                                       {/* Monogram / Header */}
-                                      <div className="border-b border-lf-hairline pb-2 text-center">
-                                        <div className="lf-dataprint text-lf-clay-ink">LotFoundry</div>
-                                        <h5 className="mt-0.5 font-display text-sm font-semibold leading-tight text-lf-espresso">Certificate of Feasibility</h5>
-                                        <p className="mt-1 truncate font-sans text-[9px] text-lf-muted">
+                                      <div className="border-b border-lot-line pb-2 text-center">
+                                        <div className="lf-dataprint text-lot-orange-ink">LotFoundry</div>
+                                        <h5 className="mt-0.5 font-display text-sm font-semibold leading-tight text-lot-ink">Certificate of Feasibility</h5>
+                                        <p className="mt-1 truncate font-sans text-[9px] text-lot-stone">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
                                         </p>
                                       </div>
 
                                       {/* Annual Ledger T-Account */}
                                       <div className="space-y-1">
-                                        <div className="lf-dataprint text-lf-clay-ink">Ledger Balance</div>
-                                        <div className="border border-lf-hairline text-[10px] divide-y divide-lf-hairline bg-lf-sand-2/20">
+                                        <div className="lf-dataprint text-lot-orange-ink">Ledger Balance</div>
+                                        <div className="border border-lot-line text-[10px] divide-y divide-lot-line bg-lot-surface/20">
                                           <div className="grid grid-cols-2 p-1.5">
                                             <div>
-                                              <span className="font-semibold block text-lf-espresso">Gross Rent (annual)</span>
-                                              <span className="text-[9px] text-lf-muted">ADU rent potential</span>
+                                              <span className="font-semibold block text-lot-ink">Gross Rent (annual)</span>
+                                              <span className="text-[9px] text-lot-stone">ADU rent potential</span>
                                             </div>
-                                            <div className="text-right font-sans font-semibold text-lf-espresso">
+                                            <div className="text-right font-sans font-semibold text-lot-ink">
                                               {formatCurrency(itemContact.snapshot.result.monthlyRent * 12)}
                                             </div>
                                           </div>
                                           <div className="grid grid-cols-2 p-1.5">
                                             <div>
-                                              <span className="font-semibold block text-lf-espresso">Allowance</span>
-                                              <span className="text-[9px] text-lf-muted">Maint, vacancy, taxes</span>
+                                              <span className="font-semibold block text-lot-ink">Allowance</span>
+                                              <span className="text-[9px] text-lot-stone">Maint, vacancy, taxes</span>
                                             </div>
-                                            <div className="text-right font-sans text-lf-muted">
+                                            <div className="text-right font-sans text-lot-stone">
                                               -{formatCurrency((itemContact.snapshot.result.monthlyRent * 12) - itemContact.snapshot.result.annualNoi)}
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-2 p-1.5 bg-lf-sand-2 text-lf-money font-semibold">
+                                          <div className="grid grid-cols-2 p-1.5 bg-lot-surface text-lot-ink font-semibold">
                                             <div>Net Income (NOI)</div>
                                             <div className="text-right font-sans">
                                               {formatCurrency(itemContact.snapshot.result.annualNoi)}
@@ -781,38 +781,38 @@ export default function BuilderInbox({
                                       </div>
 
                                       {/* Technical details table */}
-                                      <div className="text-[10px] space-y-1 border-t border-dashed border-lf-hairline pt-3">
+                                      <div className="text-[10px] space-y-1 border-t border-dashed border-lot-line pt-3">
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lf-muted">ADU Size</span>
-                                          <span className="font-semibold text-lf-espresso">{itemContact.snapshot.result.aduSqft} sf</span>
+                                          <span className="lf-dataprint text-lot-stone">ADU Size</span>
+                                          <span className="font-semibold text-lot-ink">{itemContact.snapshot.result.aduSqft} sf</span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lf-muted">Roof Style</span>
-                                          <span className="font-semibold text-lf-espresso">{roofLabels[itemContact.snapshot.config.roof]}</span>
+                                          <span className="lf-dataprint text-lot-stone">Roof Style</span>
+                                          <span className="font-semibold text-lot-ink">{roofLabels[itemContact.snapshot.config.roof]}</span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lf-muted">Zoning Status</span>
+                                          <span className="lf-dataprint text-lot-stone">Zoning Status</span>
                                           <span className={`font-semibold border px-1 text-[9px] ${
                                             itemContact.snapshot.result.zoningStatus === "Compliant"
-                                              ? "border-lf-forest text-lf-forest"
-                                              : "border-lf-amber-ink/40 text-lf-amber-ink"
+                                              ? "border-status-eligible text-status-eligible"
+                                              : "border-status-review/40 text-status-review"
                                           }`}>
                                             {itemContact.snapshot.result.zoningStatus}
                                           </span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lf-muted">Build cost range</span>
-                                          <span className="font-semibold text-lf-espresso">
+                                          <span className="lf-dataprint text-lot-stone">Build cost range</span>
+                                          <span className="font-semibold text-lot-ink">
                                             {formatCurrency(itemContact.snapshot.result.costLow)} - {formatCurrency(itemContact.snapshot.result.costHigh)}
                                           </span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lf-muted">Payback Estimate</span>
-                                          <span className="font-semibold text-lf-espresso">{itemContact.snapshot.result.paybackYears} yrs</span>
+                                          <span className="lf-dataprint text-lot-stone">Payback Estimate</span>
+                                          <span className="font-semibold text-lot-ink">{itemContact.snapshot.result.paybackYears} yrs</span>
                                         </div>
                                       </div>
 
-                                      <div className="lf-dataprint rotate-[-2deg] border-2 border-lf-brick/30 py-1 text-center font-bold text-lf-brick">
+                                      <div className="lf-dataprint rotate-[-2deg] border-2 border-status-blocked/30 py-1 text-center font-bold text-status-blocked">
                                         Concept &middot; Not a Permit
                                       </div>
                                   </div>
@@ -896,46 +896,46 @@ function ZeroEverEmptyState() {
   const unlockPrice = useStorePrice("builder1");
   return (
     <div className="mt-5">
-      <div className="border border-lf-hairline bg-lf-card p-6">
-        <h3 className="lf-card-heading text-lf-espresso">No matched leads yet</h3>
-        <p className="lf-body-sm mt-1.5 max-w-prose text-lf-muted">
+      <div className="border border-lot-line bg-lot-chalk p-6">
+        <h3 className="lf-card-heading text-lot-ink">No matched leads yet</h3>
+        <p className="lf-body-sm mt-1.5 max-w-prose text-lot-stone">
           A lead lands here when a homeowner in one of your service areas submits a feasibility
           report. Complete your profile and add every area you build in — complete profiles get
           matched first.
         </p>
       </div>
 
-      <p className="mt-5 lf-kicker-dense text-lf-muted">
+      <p className="mt-5 lf-kicker-dense text-lot-stone">
         Example · this is what a lead looks like
       </p>
       <article
         aria-label="Example lead"
-        className="mt-2 border border-dashed border-lf-taupe bg-lf-card/70 p-5"
+        className="mt-2 border border-dashed border-lot-stone bg-lot-chalk/70 p-5"
       >
         <div className="flex items-center justify-between">
-          <span className="lf-kicker-dense text-lf-muted">
+          <span className="lf-kicker-dense text-lot-stone">
             NO. LF-EXAMPLE
           </span>
-          <span className="rounded-none bg-lf-taupe-soft px-2.5 py-1 lf-kicker-dense text-lf-muted">
+          <span className="rounded-none bg-lot-stone-soft px-2.5 py-1 lf-kicker-dense text-lot-stone">
             Example
           </span>
         </div>
-        <p className="mt-2 font-semibold text-lf-espresso">
+        <p className="mt-2 font-semibold text-lot-ink">
           Ballard, WA
-          <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lf-muted">98107</span>
+          <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lot-stone">98107</span>
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lot-stone">
           <span>6,200 sqft</span>
           <span>800 sf ADU</span>
           <span>Compliant</span>
         </p>
-        <p className="mt-2 lf-money-md text-lf-money">
+        <p className="mt-2 lf-money-md text-lot-ink">
           $2,500
-          <span className="ml-1.5 lf-kicker-dense text-lf-muted">
+          <span className="ml-1.5 lf-kicker-dense text-lot-stone">
             /mo rent potential
           </span>
         </p>
-        <p className="mt-3 border-t border-dashed border-lf-hairline pt-3 lf-kicker-dense text-lf-muted">
+        <p className="mt-3 border-t border-dashed border-lot-line pt-3 lf-kicker-dense text-lot-stone">
           Owner contact unlocks for {unlockPrice.amountCompact} — once you have real leads
         </p>
       </article>
@@ -957,8 +957,8 @@ function ResponseTriage({
     status === "interested" ? "Interested" : status === "not-a-fit" ? "Archived" : "New";
 
   return (
-    <div className="flex items-center justify-between border-t border-lf-hairline pt-3">
-      <span className="lf-dataprint text-lf-muted">
+    <div className="flex items-center justify-between border-t border-lot-line pt-3">
+      <span className="lf-dataprint text-lot-stone">
         Response: {label}
       </span>
       <div className="flex gap-2">
@@ -1062,13 +1062,13 @@ function CreditShop() {
   }
 
   return (
-    <div className="border border-lf-hairline bg-lf-card p-5">
-      <h3 className="lf-card-heading text-lf-espresso">Credit Shop</h3>
-      <p className="mt-1 text-sm text-lf-muted">
+    <div className="border border-lot-line bg-lot-chalk p-5">
+      <h3 className="lf-card-heading text-lot-ink">Credit Shop</h3>
+      <p className="mt-1 text-sm text-lot-stone">
         Unlock leads instantly with credits.
       </p>
       {(error || priceError) && (
-        <div role="alert" className="mt-3 border border-lf-brick/30 bg-lf-brick-soft p-2 text-xs text-lf-brick">
+        <div role="alert" className="mt-3 border border-status-blocked/30 bg-status-blocked-soft p-2 text-xs text-status-blocked">
           {error ?? priceError}
         </div>
       )}
@@ -1078,15 +1078,15 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(5)}
           disabled={loading !== null || priceBlocked}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-hairline bg-lf-card p-3 text-left motion-safe:transition hover:border-lf-clay/40 hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lot-line bg-lot-chalk p-3 text-left motion-safe:transition hover:border-lot-orange/40 hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
-            <div className="font-semibold text-lf-espresso">5-Lead Pack</div>
-            <div className="text-xs text-lf-muted">
+            <div className="font-semibold text-lot-ink">5-Lead Pack</div>
+            <div className="text-xs text-lot-stone">
               {prices[5].perLead}
             </div>
           </div>
-          <div className="lf-money-md text-lf-money">
+          <div className="lf-money-md text-lot-ink">
             {loading === 5 ? "…" : prices[5].total}
           </div>
         </button>
@@ -1094,15 +1094,15 @@ function CreditShop() {
           type="button"
           onClick={() => buyPack(10)}
           disabled={loading !== null || priceBlocked}
-          className="flex w-full min-h-14 items-center justify-between border border-lf-clay bg-lf-clay p-3 text-left motion-safe:transition hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="flex w-full min-h-14 items-center justify-between border border-lot-orange bg-lot-orange p-3 text-left motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <div>
-            <div className="font-semibold text-lf-sand">10-Lead Pack</div>
-            <div className="text-xs text-lf-sand/80">
+            <div className="font-semibold text-lot-chalk">10-Lead Pack</div>
+            <div className="text-xs text-lot-chalk/80">
               {prices[10].perLead}
             </div>
           </div>
-          <div className="lf-money-md text-lf-sand">
+          <div className="lf-money-md text-lot-chalk">
             {loading === 10 ? "…" : prices[10].total}
           </div>
         </button>

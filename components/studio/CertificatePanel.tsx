@@ -303,9 +303,9 @@ export default function CertificatePanel({
     // Centered artifact layout; the estimate and the unlock offer are its content.
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
       <div className="text-center">
-        <p className="lf-kicker text-lf-clay-ink">{eyebrow}</p>
-        <h2 className="lf-section-heading mt-2 text-lf-espresso">Your Certificate of Feasibility.</h2>
-        <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
+        <p className="lf-kicker text-lot-orange-ink">{eyebrow}</p>
+        <h2 className="lf-section-heading mt-2 text-lot-ink">Your Certificate of Feasibility.</h2>
+        <p className="lf-body mx-auto mt-2 max-w-md text-lot-stone">
           Review your estimate, then create one recorded parcel, income, and approval-timeline
           artifact to share with builders and lenders.
         </p>
@@ -319,50 +319,50 @@ export default function CertificatePanel({
         reportCtaBusy={reportBusy}
       />
 
-      <div className="rounded-none border border-lf-hairline bg-lf-sand-2 px-6 py-5">
+      <div className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">
         {purchased ? (
           <div className="flex items-start gap-3">
-            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-lf-forest" />
+            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-status-eligible" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-lf-espresso">Certificate unlocked</h3>
+                <h3 className="text-sm font-semibold text-lot-ink">Certificate unlocked</h3>
                 <StatusChip status="clear" label="Purchased" />
               </div>
-              <p className="lf-body-sm mt-1 text-lf-muted">
+              <p className="lf-body-sm mt-1 text-lot-stone">
                 Your complete Certificate of Feasibility for {parcelName} is ready to print,
                 download, or share. This property remains unlocked when you revise the concept
                 and regenerate the certificate.
               </p>
               {projectBrief ? (
-                <div className="mt-3 flex items-start gap-2 border-t border-lf-hairline pt-3">
+                <div className="mt-3 flex items-start gap-2 border-t border-lot-line pt-3">
                   <Sparkles
                     size={15}
-                    className="mt-0.5 shrink-0 text-lf-forest"
+                    className="mt-0.5 shrink-0 text-status-eligible"
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="lf-dataprint text-lf-forest">
+                    <p className="lf-dataprint text-status-eligible">
                       AI brief recorded
                     </p>
-                    <p className="mt-1 text-xs font-semibold text-lf-espresso">
+                    <p className="mt-1 text-xs font-semibold text-lot-ink">
                       {projectBrief.headline}
                     </p>
-                    <p className="mt-0.5 text-[11px] leading-4 text-lf-muted">
+                    <p className="mt-0.5 text-[11px] leading-4 text-lot-stone">
                       Parcel assessment + {projectBrief.totalEstWeeksLow}&ndash;
                       {projectBrief.totalEstWeeksHigh} week approval timeline
                     </p>
                   </div>
                 </div>
               ) : projectBriefLoading || preparingBrief ? (
-                <div className="mt-3 border-t border-lf-hairline pt-3" role="status">
+                <div className="mt-3 border-t border-lot-line pt-3" role="status">
                   <span className="sr-only">Adding property notes and timeline</span>
                   <div className="motion-safe:animate-pulse">
-                    <div className="h-2.5 w-28 rounded bg-lf-taupe-soft" />
-                    <div className="mt-2 h-2.5 w-4/5 rounded bg-lf-taupe-soft" />
+                    <div className="h-2.5 w-28 rounded bg-lot-stone-soft" />
+                    <div className="mt-2 h-2.5 w-4/5 rounded bg-lot-stone-soft" />
                   </div>
                 </div>
               ) : projectBriefError ? (
-                <div className="mt-3 flex items-start gap-2 border-t border-lf-hairline pt-3 text-xs leading-5 text-lf-brick">
+                <div className="mt-3 flex items-start gap-2 border-t border-lot-line pt-3 text-xs leading-5 text-status-blocked">
                   <AlertTriangle
                     size={14}
                     className="mt-0.5 shrink-0"
@@ -373,7 +373,7 @@ export default function CertificatePanel({
                 </div>
               ) : null}
               {error && (
-                <p role="alert" className="mt-3 text-xs leading-5 text-lf-brick">
+                <p role="alert" className="mt-3 text-xs leading-5 text-status-blocked">
                   {error}
                 </p>
               )}
@@ -382,42 +382,42 @@ export default function CertificatePanel({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <Lock size={16} className="shrink-0 text-lf-clay-ink" />
-              <h3 className="text-sm font-semibold text-lf-espresso">
+              <Lock size={16} className="shrink-0 text-lot-orange-ink" />
+              <h3 className="text-sm font-semibold text-lot-ink">
                 Unlock the complete record for {parcel.address}
                 {certPrice.exact ? ` — one-time ${price}` : " — one-time purchase"}
               </h3>
             </div>
-            <p className="lf-body-sm mt-1 text-lf-muted">
+            <p className="lf-body-sm mt-1 text-lot-stone">
               The estimate above is free. The certificate turns this scenario into a
               decision record you can review with builders, lenders, and local professionals.
             </p>
             <div
               className={`mt-4 flex items-start gap-3 rounded-none border px-4 py-3 ${
                 siteFitStatus.tone === "ok"
-                  ? "border-lf-forest/25 bg-lf-forest/5"
-                  : "border-lf-amber/35 bg-lf-amber/5"
+                  ? "border-status-eligible/25 bg-status-eligible/5"
+                  : "border-status-review/35 bg-status-review/5"
               }`}
             >
               {siteFitStatus.tone === "ok" ? (
                 <CheckCircle2
                   size={17}
-                  className="mt-0.5 shrink-0 text-lf-forest"
+                  className="mt-0.5 shrink-0 text-status-eligible"
                   aria-hidden="true"
                 />
               ) : (
                 <AlertTriangle
                   size={17}
-                  className="mt-0.5 shrink-0 text-lf-amber-ink"
+                  className="mt-0.5 shrink-0 text-status-review"
                   aria-hidden="true"
                 />
               )}
               <div>
-                <p className="lf-dataprint text-lf-clay-ink">Current concept</p>
-                <p className="mt-1 text-sm font-semibold text-lf-espresso">
+                <p className="lf-dataprint text-lot-orange-ink">Current concept</p>
+                <p className="mt-1 text-sm font-semibold text-lot-ink">
                   {siteFitStatus.title}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-lf-muted">
+                <p className="mt-1 text-xs leading-5 text-lot-stone">
                   {siteFitStatus.action} The certificate preserves this finding with the
                   assumptions, financial model, and next steps behind it.
                 </p>
@@ -425,22 +425,22 @@ export default function CertificatePanel({
             </div>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {CERTIFICATE_INCLUDES.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-lf-muted">
-                  <CheckCircle2 size={15} className="shrink-0 text-lf-forest" />
+                <li key={item} className="flex items-center gap-2 text-sm text-lot-stone">
+                  <CheckCircle2 size={15} className="shrink-0 text-status-eligible" />
                   {item}
                 </li>
               ))}
             </ul>
-            <p className="mt-4 rounded-none border border-lf-hairline bg-lf-card px-3 py-2 text-xs leading-5 text-lf-espresso">
+            <p className="mt-4 rounded-none border border-lot-line bg-lot-chalk px-3 py-2 text-xs leading-5 text-lot-ink">
               <strong>One purchase unlocks this property.</strong> Revise the ADU concept and
               regenerate its certificate without paying again.
             </p>
             {error && (
-              <p role="alert" className="mt-3 text-xs text-lf-brick">
+              <p role="alert" className="mt-3 text-xs text-status-blocked">
                 {error}
               </p>
             )}
-            <p className="lf-caption mt-3 text-lf-muted">
+            <p className="lf-caption mt-3 text-lot-stone">
               Planning estimate only. Not a permit, appraisal, architectural or engineering opinion, lending decision, government determination, or guarantee of income. Third-party data may be incomplete or outdated; verify with local authorities and licensed professionals before building or investing.
             </p>
           </>

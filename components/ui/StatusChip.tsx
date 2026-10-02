@@ -21,22 +21,22 @@ const CONFIG: Record<StatusChipStatus, StatusConfig> = {
   clear: {
     icon: CheckCircle2,
     label: "Clear",
-    className: "text-lf-forest bg-lf-forest-soft border-lf-forest/30",
+    className: "text-status-eligible bg-status-eligible-soft border-status-eligible/30",
   },
   review: {
     icon: AlertTriangle,
     label: "Review",
-    className: "text-lf-amber-ink bg-lf-amber-soft border-lf-amber-ink/30",
+    className: "text-status-review bg-status-review-soft border-status-review/30",
   },
   blocked: {
     icon: XCircle,
     label: "Blocked",
-    className: "text-lf-brick bg-lf-brick-soft border-lf-brick/30",
+    className: "text-status-blocked bg-status-blocked-soft border-status-blocked/30",
   },
   info: {
     icon: BadgeDollarSign,
     label: "Info",
-    className: "text-lf-muted bg-lf-taupe-soft border-lf-hairline",
+    className: "text-lot-stone bg-lot-stone-soft border-lot-line",
   },
 };
 

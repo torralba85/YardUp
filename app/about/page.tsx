@@ -50,15 +50,15 @@ export default function AboutPage() {
       <LegalSection title="Contact">
         <p>
           Questions? Visit{" "}
-          <Link href="/help" className="font-medium text-lf-clay-ink underline">
+          <Link href="/help" className="font-medium text-lot-orange-ink underline">
             Help
           </Link>
           , send{" "}
-          <Link href="/feedback" className="font-medium text-lf-clay-ink underline">
+          <Link href="/feedback" className="font-medium text-lot-orange-ink underline">
             feedback
           </Link>
           , or email{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>
           .

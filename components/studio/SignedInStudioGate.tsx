@@ -107,22 +107,22 @@ export default function SignedInStudioGate({ user }: { user: User }) {
   const identity = user.displayName || user.email || "Account";
 
   return (
-    <div className="min-h-dvh bg-lf-sand text-lf-espresso">
-      <header className="border-b border-lf-hairline bg-lf-card">
+    <div className="min-h-dvh bg-lot-chalk text-lot-ink">
+      <header className="border-b border-lot-line bg-lot-chalk">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="inline-flex min-h-11 items-center rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
+            className="inline-flex min-h-11 items-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
           >
             <BrandLockup className="h-8 w-auto" />
           </Link>
           <div className="flex min-w-0 items-center gap-3">
-            <span className="hidden max-w-64 truncate text-sm text-lf-muted sm:block">{identity}</span>
+            <span className="hidden max-w-64 truncate text-sm text-lot-stone sm:block">{identity}</span>
             <button
               type="button"
               onClick={() => void logout()}
-              className="flex min-h-11 items-center gap-2 rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold motion-safe:transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+              className="flex min-h-11 items-center gap-2 rounded-control border border-lot-line px-4 text-sm font-semibold motion-safe:transition hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               <LogOut size={15} />
               Sign out
@@ -134,9 +134,9 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       <main id="main-content" tabIndex={-1} className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl items-center px-5 py-9 sm:px-8 sm:py-16">
         <section className="w-full lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-14">
           <div>
-            <p className="lf-kicker text-lf-clay-ink">Your workspace</p>
+            <p className="lf-kicker text-lot-orange-ink">Your workspace</p>
             <h1 className="lf-section-heading mt-3">Start with your property.</h1>
-            <p className="lf-body mt-4 max-w-[42ch] text-lf-muted">
+            <p className="lf-body mt-4 max-w-[42ch] text-lot-stone">
               See your lot in a new light. Find your property to explore its space, local rules, and estimated costs.
             </p>
             <div className="mt-7 max-w-xl">
@@ -147,15 +147,15 @@ export default function SignedInStudioGate({ user }: { user: User }) {
                 onSubmitText={(query) => void lookupText(query)}
               />
               {lookupLoading && (
-                <div role="status" className="mt-3 flex items-center gap-2 text-sm text-lf-muted">
-                  <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+                <div role="status" className="mt-3 flex items-center gap-2 text-sm text-lot-stone">
+                  <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
                   Loading your property…
                 </div>
               )}
               {lookupError && (
                 <div
                   role="alert"
-                  className="mt-3 flex items-start gap-2 rounded-none border border-lf-brick/30 bg-lf-brick-soft p-3 text-sm text-lf-brick"
+                  className="mt-3 flex items-start gap-2 rounded-none border border-status-blocked/30 bg-status-blocked-soft p-3 text-sm text-status-blocked"
                 >
                   <Search size={16} className="mt-0.5 shrink-0" />
                   {lookupError}

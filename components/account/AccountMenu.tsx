@@ -148,12 +148,12 @@ export function AccountMenu({
         <div
           className={cn(
             "truncate text-sm font-medium",
-            isDark ? "text-lf-sand-2" : "text-lf-espresso",
+            isDark ? "text-lot-surface" : "text-lot-ink",
           )}
         >
           {displayName}
         </div>
-        <div className={cn("text-xs", isDark ? "text-lot-stone-on-dark" : "text-lf-muted")}>
+        <div className={cn("text-xs", isDark ? "text-lot-stone-on-dark" : "text-lot-stone")}>
           {roleLabel}
         </div>
       </div>
@@ -163,10 +163,10 @@ export function AccountMenu({
           href={href}
           role="menuitem"
           className={cn(
-            "flex min-h-11 w-full items-center gap-2 rounded-[3px] px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
+            "flex min-h-11 w-full items-center gap-2 rounded-control px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
             isDark
-              ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lf-mahogany"
-              : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
+              ? "text-lot-chalk hover:bg-lot-ink/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+              : "text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink focus-visible:ring-offset-lot-chalk",
           )}
           onClick={() => !staticPanel && setOpen(false)}
         >
@@ -182,10 +182,10 @@ export function AccountMenu({
           onSignOut();
         }}
         className={cn(
-          "flex min-h-11 w-full items-center gap-2 rounded-[3px] px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
+          "flex min-h-11 w-full items-center gap-2 rounded-control px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
           isDark
-            ? "text-lf-sand hover:bg-lf-espresso/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lf-mahogany"
-            : "text-lf-espresso hover:bg-lf-sand-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
+            ? "text-lot-chalk hover:bg-lot-ink/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+            : "text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink focus-visible:ring-offset-lot-chalk",
         )}
       >
         <LogOut size={15} aria-hidden />
@@ -194,13 +194,13 @@ export function AccountMenu({
       <div
         className={cn(
           "border-t pt-2",
-          isDark ? "border-lf-taupe/20" : "border-lf-hairline",
+          isDark ? "border-lot-stone/20" : "border-lot-line",
         )}
       >
         <div
           className={cn(
             "flex items-center gap-2 px-2 pb-1 text-[11px] uppercase tracking-[0.08em]",
-            isDark ? "text-lot-stone-on-dark" : "text-lf-muted",
+            isDark ? "text-lot-stone-on-dark" : "text-lot-stone",
           )}
         >
           <Trash2 size={12} aria-hidden />
@@ -220,8 +220,8 @@ export function AccountMenu({
         className={cn(
           "w-64 max-w-[calc(100vw-2rem)] space-y-1 rounded-none border p-3 shadow-none",
           isDark
-            ? "border-lf-taupe/25 bg-lf-mahogany text-lf-sand"
-            : "border-lf-hairline bg-lf-card text-lf-espresso",
+            ? "border-lot-stone/25 bg-lot-ink text-lot-chalk"
+            : "border-lot-line bg-lot-chalk text-lot-ink",
         )}
       >
         {panelBody}
@@ -247,10 +247,10 @@ export function AccountMenu({
               zIndex: "var(--z-index-sheet)",
             }}
             className={cn(
-              "flex flex-col overflow-y-auto overscroll-contain rounded-none border p-3 shadow-[6px_8px_0_#16161618] motion-safe:animate-[lf-fade-in_140ms_ease-out]",
+              "flex flex-col overflow-y-auto overscroll-contain rounded-none border p-3 shadow-card motion-safe:animate-[lf-fade-in_140ms_ease-out]",
               isDark
-                ? "border-lf-taupe/30 bg-lf-mahogany text-lf-sand"
-                : "border-lf-hairline bg-lf-card text-lf-espresso",
+                ? "border-lot-stone/30 bg-lot-ink text-lot-chalk"
+                : "border-lot-line bg-lot-chalk text-lot-ink",
             )}
           >
             {panelBody}
@@ -270,10 +270,10 @@ export function AccountMenu({
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-[3px] text-sm font-bold motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
+          "flex h-11 w-11 items-center justify-center rounded-control text-sm font-bold motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
           isDark
-            ? "bg-lf-clay text-lf-primary-label focus-visible:ring-lot-chalk focus-visible:ring-offset-lf-mahogany"
-            : "bg-lf-clay text-lf-primary-label focus-visible:ring-lf-clay-ink focus-visible:ring-offset-lf-card",
+            ? "bg-lot-orange text-lot-ink focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+            : "bg-lot-orange text-lot-ink focus-visible:ring-lot-orange-ink focus-visible:ring-offset-lot-chalk",
         )}
       >
         {initials}

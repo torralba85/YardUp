@@ -54,16 +54,16 @@ export default function ForgotPasswordPage() {
     return (
       <AuthLayout title="Check your email" subtitle="Password reset instructions sent.">
         <div ref={confirmationRef} tabIndex={-1} role="status" aria-label="Password reset instructions sent" className="flex flex-col items-center gap-4 py-4 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lf-clay-soft text-lf-clay-ink">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lot-orange-soft text-lot-orange-ink">
             <CheckCircle className="h-6 w-6" />
           </div>
-          <p className="lf-body-sm text-lf-muted">
-            If <strong className="text-lf-espresso">{email}</strong> is registered,
+          <p className="lf-body-sm text-lot-stone">
+            If <strong className="text-lot-ink">{email}</strong> is registered,
             you&apos;ll receive a reset link shortly. Check your spam folder if it doesn&apos;t arrive.
           </p>
           <Link
             href="/login"
-            className="lf-body-sm mt-2 font-medium text-lf-clay-ink hover:text-lf-mahogany"
+            className="lf-body-sm mt-2 font-medium text-lot-orange-ink hover:text-lot-ink"
           >
             Back to sign in
           </Link>
@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div id="reset-email-error" role="alert" className="lf-body-sm rounded-none border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div id="reset-email-error" role="alert" className="lf-body-sm rounded-none border border-status-blocked/20 bg-status-blocked-soft px-3 py-2 text-status-blocked">
             {error}
           </div>
         )}
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
         <div>
           <label
             htmlFor="email"
-            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lot-ink"
           >
             Email
           </label>
@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
+            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>
@@ -111,15 +111,15 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="min-h-11 w-full rounded-[3px] bg-lf-clay py-3 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 disabled:opacity-50"
         >
           {isPending ? "Sending…" : "Send reset link"}
         </button>
       </form>
 
-      <p className="lf-body-sm mt-6 text-center text-lf-muted">
+      <p className="lf-body-sm mt-6 text-center text-lot-stone">
         Remembered it?{" "}
-        <Link href="/login" className="font-medium text-lf-clay-ink hover:text-lf-mahogany">
+        <Link href="/login" className="font-medium text-lot-orange-ink hover:text-lot-ink">
           Back to sign in
         </Link>
       </p>

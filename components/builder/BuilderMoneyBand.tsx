@@ -10,7 +10,7 @@ export default function BuilderMoneyBand({ metrics, credits }: { metrics: Builde
   const unlockLabel = `${metrics.unlockedCount} unlock${metrics.unlockedCount === 1 ? "" : "s"}`;
 
   return (
-    <div className="grid grid-cols-2 gap-px bg-lf-espresso text-lot-stone-on-dark sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-px bg-lot-ink text-lot-stone-on-dark sm:grid-cols-4">
       <Cell label="New leads" value={String(metrics.newLeadCount)} />
       <Cell
         label="Pipeline value · new"
@@ -36,10 +36,10 @@ function Cell({
   lead?: boolean;
 }) {
   return (
-    <div className="bg-lf-espresso px-6 py-4">
+    <div className="bg-lot-ink px-6 py-4">
       <p className="lf-dataprint text-lot-stone-on-dark">{label}</p>
       <p
-        className={`mt-1.5 text-lf-money-on-dark ${lead ? "lf-money-xl" : "lf-money-lg"}`}
+        className={`mt-1.5 text-lot-chalk ${lead ? "lf-money-xl" : "lf-money-lg"}`}
       >
         {value}
         {unit && <span className="ml-1.5 font-sans text-[11px] text-lot-stone-on-dark">{unit}</span>}

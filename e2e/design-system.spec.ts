@@ -6,6 +6,26 @@ const carbon = "rgb(22, 22, 22)";
 const orange = "rgb(255, 91, 36)";
 
 test.describe("Project-wide A LOT MORE contract", () => {
+  test("Studio gives the task action one signal-orange fill", async ({ page, isMobile }, testInfo) => {
+    test.skip(isMobile, "Desktop rail and context header; mobile has its own journey contract");
+    await page.goto("/studio?parcel=oak-street");
+    const save = page.getByRole("button", { name: "Save this property — free account", exact: true });
+    const certificate = page.getByRole("button", { name: "View certificate", exact: true });
+    const signIn = page.getByRole("complementary", { name: "Studio navigation" })
+      .getByRole("button", { name: "Sign In", exact: true });
+    await expect(save).toHaveCSS("background-color", chalk);
+    await expect(save).toHaveCSS("color", carbon);
+    await expect(save).toHaveCSS("border-color", "rgb(101, 101, 95)");
+    await expect(signIn).toHaveCSS("color", chalk);
+    await expect(signIn).not.toHaveCSS("background-color", orange);
+    await expect(certificate).toHaveCSS("background-color", orange);
+    await expect(certificate).toHaveCSS("color", carbon);
+    await save.focus();
+    await expect(save).toBeFocused();
+    await expect(save).toHaveCSS("box-shadow", /rgb\(196, 55, 8\)/);
+    await page.screenshot({ path: testInfo.outputPath("studio-color-hierarchy.png") });
+  });
+
   test("landing home target remains usable on narrow screens", async ({ page }) => {
     await page.goto("/");
     const home = page.getByRole("link", { name: "LotFoundry home", exact: true });

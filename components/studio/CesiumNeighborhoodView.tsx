@@ -27,6 +27,8 @@ import {
 } from "@/lib/cesium-ground-snap";
 import { ensureGeoidReady, formatGroundElevation, geoidHeightMeters } from "@/lib/geoid";
 import styles from "./CesiumNeighborhoodView.module.css";
+import { COLOR } from "@/lib/design-tokens";
+
 
 export interface CesiumNeighborhoodViewProps {
   parcel: Parcel | LiveParcelData;
@@ -37,9 +39,9 @@ export interface CesiumNeighborhoodViewProps {
 }
 
 const PLACEMENT_STYLE = {
-  clear: { color: "#176B4C", className: "text-status-eligible", Icon: CheckCircle2 },
-  review: { color: "#8A5300", className: "text-status-review", Icon: AlertTriangle },
-  blocked: { color: "#A82D16", className: "text-status-blocked", Icon: XCircle },
+  clear: { color: COLOR["status-eligible"], className: "text-status-eligible", Icon: CheckCircle2 },
+  review: { color: COLOR["status-review"], className: "text-status-review", Icon: AlertTriangle },
+  blocked: { color: COLOR["status-blocked"], className: "text-status-blocked", Icon: XCircle },
 } as const;
 
 /**
@@ -152,8 +154,8 @@ function placeSceneGeometry(
       position: Cesium.Cartesian3.fromDegrees(lng, lat, baseHeight),
       point: {
         pixelSize: 12,
-        color: Cesium.Color.fromCssColorString("#FF5B24"),
-        outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+        color: Cesium.Color.fromCssColorString(COLOR["lot-orange"]),
+        outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-chalk"]),
         outlineWidth: 3,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         ...heightRef,
@@ -161,8 +163,8 @@ function placeSceneGeometry(
       label: {
         text: parcel.address || "Proposed ADU Site",
         font: "600 13px Manrope, sans-serif",
-        fillColor: Cesium.Color.fromCssColorString("#161616"),
-        outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+        fillColor: Cesium.Color.fromCssColorString(COLOR["lot-ink"]),
+        outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-chalk"]),
         outlineWidth: 3,
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
@@ -183,9 +185,9 @@ function placeSceneGeometry(
         name: "Parcel Boundary",
         polygon: {
           hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-          material: Cesium.Color.fromCssColorString("#2D6A4F").withAlpha(0.25),
+          material: Cesium.Color.fromCssColorString(COLOR["lot-stone"]).withAlpha(0.25),
           outline: true,
-          outlineColor: Cesium.Color.fromCssColorString("#2D6A4F"),
+          outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-stone"]),
           outlineWidth: 2,
         },
       }),
@@ -582,27 +584,27 @@ export default function CesiumNeighborhoodView({
       <div ref={containerRef} className="h-full w-full" data-testid="cesium-container" />
 
       {/* Floating HUD banner */}
-      <div className="pointer-events-none absolute top-3 left-3 z-10 flex max-w-sm flex-col gap-1 rounded-[3px] border border-lf-hairline bg-lot-chalk/95 p-3 shadow-md backdrop-blur-sm">
+      <div className="pointer-events-none absolute top-3 left-3 z-10 flex max-w-sm flex-col gap-1 rounded-none border border-lot-line bg-lot-chalk p-3">
         <div className="flex items-center gap-2">
           <Globe size={16} className="text-lot-orange-ink shrink-0" aria-hidden="true" />
           <span className="font-display text-sm font-semibold tracking-wide text-lot-ink">
             Neighborhood 3D
           </span>
-          <span className="rounded bg-lf-muted/10 px-1.5 py-0.5 font-mono text-[10px] text-lf-muted uppercase">
+          <span className="rounded-none bg-lot-stone/10 px-1.5 py-0.5 font-sans tabular-nums text-[10px] text-lot-stone uppercase">
             CesiumJS
           </span>
         </div>
         <p className="truncate text-xs text-lot-ink font-medium">
           {parcel.address || "Proposed ADU Site"}
         </p>
-        <p className="font-mono text-[11px] text-lf-muted">
+        <p className="font-sans tabular-nums text-[11px] text-lot-stone">
           {lat.toFixed(5)}°N, {Math.abs(lng).toFixed(5)}°W {!isGeocoded ? "(City Default)" : ""}
         </p>
-        <p className="font-mono text-[11px] text-lf-muted" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
+        <p className="font-sans tabular-nums text-[11px] text-lot-stone" data-testid="cesium-basemap-route" aria-live="polite" aria-atomic="true">
           {describePhotorealRoute(route)}
         </p>
           <p
-            className="font-mono text-[11px] text-lf-muted"
+            className="font-sans tabular-nums text-[11px] text-lot-stone"
             data-testid="cesium-ground-elevation"
             aria-live="polite"
             aria-atomic="true"
@@ -621,7 +623,7 @@ export default function CesiumNeighborhoodView({
           Context-only imagery. {placementFeedback.missingEvidenceNotice || "Confirm surveyed boundaries and building separations."}
         </p>
         {photorealNotice && (
-          <p className="text-[11px] text-lf-muted" data-testid="cesium-photoreal-notice">
+          <p className="text-[11px] text-lot-stone" data-testid="cesium-photoreal-notice">
             {photorealNotice}
           </p>
         )}
@@ -645,7 +647,7 @@ export default function CesiumNeighborhoodView({
         ref={creditContainerRef}
         data-testid="cesium-credit-container"
         aria-label="Map data credits"
-        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lf-hairline bg-lot-chalk px-3 py-2 text-xs leading-normal text-lot-ink`}
+        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lot-line bg-lot-chalk px-3 py-2 text-xs leading-normal text-lot-ink`}
       />
 
       {/* Loading overlay */}
@@ -653,7 +655,7 @@ export default function CesiumNeighborhoodView({
         <div
           role="status"
           aria-live="polite"
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk/85 backdrop-blur-xs"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk"
         >
           <RefreshCw size={24} className="animate-spin text-lot-orange-ink" aria-hidden="true" />
           <p className="text-sm font-medium text-lot-ink">Streaming 3D globe & neighborhood data…</p>
@@ -670,7 +672,7 @@ export default function CesiumNeighborhoodView({
           <h3 className="font-display text-base font-semibold text-lot-ink">
             3D Globe currently unavailable
           </h3>
-          <p className="max-w-xs text-xs text-lf-muted">
+          <p className="max-w-xs text-xs text-lot-stone">
             {errorMessage ?? "Could not load CesiumJS resources in this browser session."}
           </p>
           {onReturnToModel && (

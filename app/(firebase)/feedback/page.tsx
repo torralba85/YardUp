@@ -17,7 +17,7 @@ export default function FeedbackPage() {
       title="Send Feedback"
       kicker="Bugs, ideas, data issues, billing"
     >
-      <div className="lf-body space-y-4 text-lf-muted">
+      <div className="lf-body space-y-4 text-lot-stone">
         <p>
           Found a bug, spotted incorrect parcel or zoning data, ran into a billing problem, or have
           an idea that would make LotFoundry more useful? Send the details below. Clear reports help

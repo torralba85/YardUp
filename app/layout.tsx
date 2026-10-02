@@ -7,6 +7,8 @@ import { SOCIAL_URLS } from "@/lib/social-links";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
+import { COLOR } from "@/lib/design-tokens";
+
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -121,7 +123,7 @@ export const metadata: Metadata = {
 
 /** Viewport config: theme color and `viewport-fit: cover` for PWA safe areas. */
 export const viewport: Viewport = {
-  themeColor: "#F5F5F0",
+  themeColor: COLOR["lot-chalk"],
   // Extend behind the iOS notch/home indicator so env(safe-area-inset-*)
   // paddings in the studio shell take effect in standalone PWA mode.
   viewportFit: "cover",
@@ -147,14 +149,14 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${manrope.variable}`}
       data-scroll-behavior="smooth"
     >
-      <body className="font-sans antialiased bg-lf-sand text-lf-espresso" suppressHydrationWarning>
+      <body className="font-sans antialiased bg-lot-chalk text-lot-ink" suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <a
           href="#main-content"
-          className="sr-only rounded-[3px] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lf-espresso focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lf-sand focus:outline-2 focus:outline-offset-2 focus:outline-lf-sand"
+          className="sr-only rounded-control focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lot-ink focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lot-chalk focus:outline-2 focus:outline-offset-2 focus:outline-lot-chalk"
         >
           Skip to content
         </a>

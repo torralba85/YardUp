@@ -89,16 +89,16 @@ export default function BuildersPanel({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
       <div className="text-center">
-        <p className="lf-kicker text-lf-clay-ink">Step 5 · Builders</p>
-        <h2 className="lf-section-heading mt-2 text-lf-espresso">Connect with local builders.</h2>
-        <p className="lf-body mx-auto mt-2 max-w-md text-lf-muted">
+        <p className="lf-kicker text-lot-orange-ink">Step 5 · Builders</p>
+        <h2 className="lf-section-heading mt-2 text-lot-ink">Connect with local builders.</h2>
+        <p className="lf-body mx-auto mt-2 max-w-md text-lot-stone">
           Share your concept with registered builders in your area. They may reach out with quotes and next steps.
         </p>
       </div>
 
       {!user ? (
-        <div className="flex flex-col items-center gap-3 rounded-none border border-[#DADAD3] bg-lf-card p-6 text-center">
-          <p className="lf-body-sm text-lf-muted">
+        <div className="flex flex-col items-center gap-3 rounded-none border border-lot-line bg-lot-chalk p-6 text-center">
+          <p className="lf-body-sm text-lot-stone">
             Sign in to see the builders who serve your area and send them your concept.
           </p>
           <Button variant="primary" onClick={() => setAuthOpen(true)}>
@@ -109,17 +109,17 @@ export default function BuildersPanel({
         <div
           role="status"
           aria-busy="true"
-          className="flex items-center justify-center gap-2 rounded-none border border-[#DADAD3] bg-lf-card p-6 text-sm text-lf-muted"
+          className="flex items-center justify-center gap-2 rounded-none border border-lot-line bg-lot-chalk p-6 text-sm text-lot-stone"
         >
-          <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+          <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
           Finding builders near you…
         </div>
       ) : noneMatched ? (
-        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-6 text-center">
-          <p className="text-sm font-semibold text-lf-espresso">
+        <div className="rounded-none border border-lot-line bg-lot-surface p-6 text-center">
+          <p className="text-sm font-semibold text-lot-ink">
             No builders are registered for {parcelCity} yet.
           </p>
-          <p className="lf-body-sm mt-1 text-lf-muted">
+          <p className="lf-body-sm mt-1 text-lot-stone">
             {loadError
               ? "We couldn't load the builder network — check your connection and try again."
               : "The network is growing. Save your concept and check back; we'll match you as builders join."}
@@ -127,15 +127,15 @@ export default function BuildersPanel({
         </div>
       ) : (
         <>
-          <p className="text-center lf-kicker text-lf-muted">
+          <p className="text-center lf-kicker text-lot-stone">
             {matched.length} builder{matched.length === 1 ? "" : "s"} serve{matched.length === 1 ? "s" : ""}{" "}
             {parcelCity}
           </p>
           <ul className="grid gap-3 sm:grid-cols-2">
             {matched.map((b) => (
-              <li key={b.id} className="rounded-none border border-[#DADAD3] bg-lf-card p-4">
+              <li key={b.id} className="rounded-none border border-lot-line bg-lot-chalk p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-semibold text-lf-espresso">{b.companyName}</span>
+                  <span className="text-sm font-semibold text-lot-ink">{b.companyName}</span>
                   {b.licensed ? (
                     <StatusChip status="clear" label="License provided" size="sm" className="shrink-0" />
                   ) : null}
@@ -144,7 +144,7 @@ export default function BuildersPanel({
                   {(b.serviceAreas || []).slice(0, 3).map((area) => (
                     <span
                       key={area.key}
-                      className="inline-flex items-center gap-1 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-1.5 py-0.5 font-sans text-[10px] text-lf-muted"
+                      className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-1.5 py-0.5 font-sans text-[10px] text-lot-stone"
                     >
                       <MapPin size={10} aria-hidden />
                       {area.city}, {area.state}
@@ -167,7 +167,7 @@ export default function BuildersPanel({
         >
           Connect with builders
         </Button>
-        <p className="lf-caption text-center text-lf-muted">
+        <p className="lf-caption text-center text-lot-stone">
           Free for homeowners — builders pay LotFoundry for the introduction, never you. Builder registration and license information are not guarantees of licensing, insurance, qualifications, availability, or work quality.
           Your contact details are only shared with builders you choose to hear from.
         </p>

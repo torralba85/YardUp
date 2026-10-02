@@ -1,3 +1,4 @@
+import { COLOR } from "@/lib/design-tokens";
 import { type NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
@@ -30,10 +31,10 @@ function aerialFallbackResponse(reason: "unconfigured" | "upstream") {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" role="img" aria-label="Aerial imagery unavailable">
   <defs>
     <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
-      <path d="M64 0H0v64" fill="none" stroke="#DADAD3" stroke-width="1"/>
+      <path d="M64 0H0v64" fill="none" stroke="${COLOR["lot-line"]}" stroke-width="1"/>
     </pattern>
   </defs>
-  <rect width="800" height="540" fill="#F5F5F0"/>
+  <rect width="800" height="540" fill="${COLOR["lot-chalk"]}"/>
   <rect width="800" height="540" fill="url(#grid)"/>
 </svg>`;
 

@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { COLOR } from "@/lib/design-tokens";
+
 
 export function ParcelMark({ className, strokeWidth = 4 }: { className?: string; strokeWidth?: number }) {
   return (
@@ -9,7 +11,7 @@ export function ParcelMark({ className, strokeWidth = 4 }: { className?: string;
         stroke="currentColor"
         strokeWidth={strokeWidth}
       />
-      <circle cx="39" cy="9" r="3" fill="#FF5B24" />
+      <circle cx="39" cy="9" r="3" fill={COLOR["lot-orange"]} />
     </svg>
   );
 }

@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
-const css = readFileSync(resolve(root, "app/globals.css"), "utf8");
+const css = readFileSync(resolve(root, "app/globals.css"), "utf8") + readFileSync(resolve(root, "app/design-theme.css"), "utf8");
 
 function componentFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -33,10 +33,10 @@ describe("A LOT MORE shared design contract", () => {
   it("does not regress money figures to status green or orange buttons to chalk labels", () => {
     for (const file of componentFiles(resolve(root, "components"))) {
       const source = readFileSync(file, "utf8");
-      expect(source, file).not.toMatch(/lf-money-\w+[^"\n]*text-lf-forest/);
+      expect(source, file).not.toMatch(/lf-money-\w+[^"\n]*text-status-eligible/);
       // Match unprefixed pairs only; selected/unselected variants intentionally
       // have different text colors in the same class string.
-      expect(source, file).not.toMatch(/(?<![\w:-])bg-lf-clay\s[^"\n]*(?<![\w:-])text-lf-sand(?:\s|")/);
+      expect(source, file).not.toMatch(/(?<![\w:-])bg-lot-orange\s[^"\n]*(?<![\w:-])text-lot-chalk(?:\s|")/);
     }
   });
 
@@ -70,7 +70,7 @@ describe("A LOT MORE shared design contract", () => {
   });
 
   it("draws light-surface focus indicators in deep orange ink", () => {
-    expect(css).toContain("--color-lf-focus-ring: #C43708;");
+    expect(css).toContain("--color-lf-focus-ring: var(--color-lot-orange-ink);");
     for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
       const source = readFileSync(file, "utf8");
       // Signal orange is 2.83:1 on chalk, below the 3:1 boundary floor.

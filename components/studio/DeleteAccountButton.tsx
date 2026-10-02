@@ -24,10 +24,10 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
   const [error, setError] = useState<string | null>(null);
   const isDark = tone === "dark";
   // Brick on light surfaces; brick-on-dark for AA on mahogany.
-  const errorText = isDark ? "text-lf-brick-on-dark" : "text-lf-brick";
-  const ringOffset = isDark ? "focus-visible:ring-offset-lf-mahogany" : "focus-visible:ring-offset-lf-card";
-  const actionRing = isDark ? "focus-visible:ring-lot-chalk" : "focus-visible:ring-lf-clay-ink";
-  const dangerRing = isDark ? "focus-visible:ring-lf-brick-on-dark" : "focus-visible:ring-lf-brick";
+  const errorText = isDark ? "text-status-blocked-on-dark" : "text-status-blocked";
+  const ringOffset = isDark ? "focus-visible:ring-offset-lot-ink" : "focus-visible:ring-offset-lot-chalk";
+  const actionRing = isDark ? "focus-visible:ring-lot-chalk" : "focus-visible:ring-lot-orange-ink";
+  const dangerRing = isDark ? "focus-visible:ring-status-blocked-on-dark" : "focus-visible:ring-status-blocked";
 
   async function handleDelete() {
     setPending(true);
@@ -55,8 +55,8 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
           className={cn(
             "inline-flex min-h-11 items-center text-[11px] underline-offset-2 motion-safe:transition hover:underline",
             isDark
-              ? "text-lot-stone-on-dark hover:text-lf-brick-on-dark"
-              : "text-lf-muted hover:text-lf-brick",
+              ? "text-lot-stone-on-dark hover:text-status-blocked-on-dark"
+              : "text-lot-stone hover:text-status-blocked",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
             dangerRing,
             ringOffset,
@@ -78,14 +78,14 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
       className={cn(
         "rounded-none border p-2.5",
         isDark
-          ? "border-lf-brick-on-dark/40 bg-lf-brick/15"
-          : "border-lf-brick/40 bg-lf-brick-soft",
+          ? "border-status-blocked-on-dark/40 bg-status-blocked/15"
+          : "border-status-blocked/40 bg-status-blocked-soft",
       )}
     >
       <p
         className={cn(
           "text-[11px] leading-snug",
-          isDark ? "text-lf-sand-2" : "text-lf-espresso",
+          isDark ? "text-lot-surface" : "text-lot-ink",
         )}
       >
         Permanently delete your account, saved concepts, and profile? This can&rsquo;t
@@ -111,8 +111,8 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
           onClick={() => setConfirming(false)}
           disabled={pending}
           className={cn(
-            "min-h-11 rounded-[3px] px-4 py-2 text-[11px] font-medium motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
-            isDark ? "text-lot-stone-on-dark hover:text-lf-sand" : "text-lf-muted hover:text-lf-espresso",
+            "min-h-11 rounded-control px-4 py-2 text-[11px] font-medium motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
+            isDark ? "text-lot-stone-on-dark hover:text-lot-chalk" : "text-lot-stone hover:text-lot-ink",
             actionRing,
             ringOffset,
           )}

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 /** Authenticated member settings route (`/settings`). */
 export default function SettingsPage() {
   return (
-    <main id="main-content" className="min-h-dvh bg-lf-sand text-lf-espresso">
+    <main id="main-content" className="min-h-dvh bg-lot-chalk text-lot-ink">
       <SettingsClient />
     </main>
   );

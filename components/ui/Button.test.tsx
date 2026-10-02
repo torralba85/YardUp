@@ -39,7 +39,7 @@ describe("Button", () => {
     // min-height 48px, padding 12px 19px, 14px/700.
     render(<Button>Continue</Button>);
     const button = screen.getByRole("button", { name: "Continue" });
-    expect(button).toHaveClass("rounded-[3px]", "min-h-12", "px-[19px]", "py-3", "text-sm", "font-bold");
+    expect(button).toHaveClass("rounded-control", "min-h-12", "px-[19px]", "py-3", "text-sm", "font-bold");
     expect(button).not.toHaveClass("rounded-full", "h-11");
   });
 
@@ -56,13 +56,13 @@ describe("Button", () => {
     // means eligible/verified status only (docs/design/design-system.md 2.6).
     render(<Button variant="commit">Generate certificate</Button>);
     const button = screen.getByRole("button", { name: "Generate certificate" });
-    expect(button).toHaveClass("bg-lf-commit", "text-lf-sand");
-    expect(button).not.toHaveClass("bg-lf-forest");
+    expect(button).toHaveClass("bg-lot-ink", "text-lot-chalk");
+    expect(button).not.toHaveClass("bg-status-eligible");
   });
 
   it("applies the primary (clay) variant by default", () => {
     render(<Button>Primary</Button>);
-    expect(screen.getByRole("button", { name: "Primary" })).toHaveClass("bg-lf-clay");
+    expect(screen.getByRole("button", { name: "Primary" })).toHaveClass("bg-lot-orange");
   });
 
   it("applies the selected variant for the current choice", () => {
@@ -74,26 +74,26 @@ describe("Button", () => {
     const selected = screen.getByRole("tab", { name: "Selected" });
     expect(selected).toHaveAttribute("aria-selected", "true");
     expect(selected).toHaveClass(
-      "border-lf-espresso",
-      "bg-lf-espresso",
-      "text-lf-sand",
+      "border-lot-ink",
+      "bg-lot-ink",
+      "text-lot-chalk",
     );
   });
 
   it("applies the destructive variant for irreversible actions", () => {
     render(<Button variant="destructive">Delete permanently</Button>);
     expect(screen.getByRole("button", { name: "Delete permanently" })).toHaveClass(
-      "bg-lf-brick",
-      "hover:bg-lf-brick-strong",
-      "focus-visible:ring-lf-brick",
+      "bg-status-blocked",
+      "hover:bg-status-blocked-hover",
+      "focus-visible:ring-status-blocked",
     );
   });
 
   it("uses accessible clay ink for ghost actions and focus", () => {
     render(<Button variant="ghost">Ghost</Button>);
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
-      "text-lf-espresso",
-      "hover:bg-lf-hairline/30",
+      "text-lot-ink",
+      "hover:bg-lot-line/30",
       "focus-visible:ring-lot-orange-ink",
     );
   });

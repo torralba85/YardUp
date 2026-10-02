@@ -8,7 +8,7 @@ import { createSplatDepthFixture, DEFAULT_SPLAT_TRANSFORM, validateLocalSplat, t
 import type { SplatLayerStatus } from "./GaussianSplatLayer";
 
 const SplatWorkbenchScene = dynamic(() => import("./SplatWorkbenchScene"), { ssr: false });
-const control = "min-h-11 w-full rounded-[3px] border border-lf-muted bg-lot-chalk px-3 text-base text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
+const control = "min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-base text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink";
 
 export default function SplatWorkbench() {
   const [source, setSource] = useState<SplatSource>(createSplatDepthFixture);
@@ -57,7 +57,7 @@ export default function SplatWorkbench() {
     <main id="main-content" className="min-h-screen bg-lot-chalk p-4 text-lot-ink md:p-8">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-lf-muted">Internal beta · visual registration</p>
+          <p className="text-sm text-lot-stone">Internal beta · visual registration</p>
           <h1 className="font-display text-3xl">3D scan workbench</h1>
           <p className="mt-2 max-w-2xl text-sm">Inspect a scan beside our dimensioned ADU. This sample has no property match. Calibration changes only the scan.</p>
         </div>
@@ -70,7 +70,7 @@ export default function SplatWorkbench() {
             <Button variant="secondary" onClick={() => { setStatus({ state: "loading" }); setGeneration(generation + 1); setVisible(true); }}>Reload scan</Button>
             <Button variant="secondary" aria-pressed={orthographic} onClick={() => setOrthographic(!orthographic)}>{orthographic ? "Perspective camera" : "Orthographic camera"}</Button>
           </div>
-          <div className="h-[55vh] min-h-80 overflow-hidden border border-lf-hairline lg:h-[65vh]">
+          <div className="h-[55vh] min-h-80 overflow-hidden border border-lot-line lg:h-[65vh]">
             <SplatWorkbenchScene source={source} transform={transform} visible={visible} generation={generation}
               orthographic={orthographic} aduZ={aduZ} onStatus={onStatus} sampleDiagnostics={sampleDiagnostics} />
           </div>
@@ -79,14 +79,14 @@ export default function SplatWorkbench() {
               ? `Decoded ${status.splats.toLocaleString()} splats in ${Math.round(status.loadMs)} ms. Orbit to inspect depth.`
               : status.state === "error" ? `Scan unavailable: ${status.message}` : "Loading scan…"}
           </p>
-          <p className="mt-1 break-all text-sm text-lf-muted">{source.fileName} · {source.bytes ? (source.bytes.length / 1048576).toFixed(2) : "0.00"} MiB · {source.normalizeForInspection ? "Scaled to 30 ft for inspection; source scale unknown." : "Synthetic blue wall, 44 × 18 ft; depth test only."}</p>
+          <p className="mt-1 break-all text-sm text-lot-stone">{source.fileName} · {source.bytes ? (source.bytes.length / 1048576).toFixed(2) : "0.00"} MiB · {source.normalizeForInspection ? "Scaled to 30 ft for inspection; source scale unknown." : "Synthetic blue wall, 44 × 18 ft; depth test only."}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setAduZ(28)}>ADU in front</Button>
             <Button variant="secondary" onClick={() => setAduZ(-28)}>ADU behind</Button>
             <Button variant="secondary" onClick={() => setDiagnostics(sampleDiagnostics.current?.() ?? "Scene not ready.")}>Refresh diagnostics</Button>
           </div>
           <p className="mt-2 text-sm">ADU center Z: {aduZ} ft. For the fixture, the blue splat wall should obscure the ADU behind it.</p>
-          {diagnostics && <pre aria-label="Rendering diagnostics" className="mt-3 overflow-auto border border-lf-hairline p-3 text-xs">{diagnostics}</pre>}
+          {diagnostics && <pre aria-label="Rendering diagnostics" className="mt-3 overflow-auto border border-lot-line p-3 text-xs">{diagnostics}</pre>}
         </section>
         <aside aria-label="Scan calibration" className="space-y-5">
           <div>
@@ -96,7 +96,7 @@ export default function SplatWorkbench() {
               if (file) void openFile(file);
               event.currentTarget.value = "";
             }} />
-            <p className="mt-2 text-sm text-lf-muted">Stays in this browser. Up to 32 MiB and 100,000 splats; no upload or saved property data.</p>
+            <p className="mt-2 text-sm text-lot-stone">Stays in this browser. Up to 32 MiB and 100,000 splats; no upload or saved property data.</p>
             {fileError && <p role="alert" className="mt-2 text-sm">{fileError}</p>}
             <Button variant="secondary" className="mt-3" onClick={fixture}>Use depth fixture</Button>
           </div>

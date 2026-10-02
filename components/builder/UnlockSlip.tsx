@@ -78,7 +78,7 @@ export default function UnlockSlip({
 
   return (
     <div
-      className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/90 p-6"
+      className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lot-ink/90 p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !pending) onClose();
       }}
@@ -87,48 +87,48 @@ export default function UnlockSlip({
         role="dialog"
         aria-modal="true"
         aria-labelledby="unlock-slip-title"
-        className="relative w-full max-w-[520px] border-[1.5px] border-lf-espresso bg-lf-card"
+        className="relative w-full max-w-[520px] border-[1.5px] border-lot-ink bg-lot-chalk"
       >
-        <div aria-hidden className="pointer-events-none absolute inset-1.5 border border-lf-hairline" />
+        <div aria-hidden className="pointer-events-none absolute inset-1.5 border border-lot-line" />
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           disabled={pending}
-          className="absolute right-4 top-3.5 z-10 lf-kicker-dense text-lf-muted disabled:opacity-40"
+          className="absolute right-4 top-3.5 z-10 lf-kicker-dense text-lot-stone disabled:opacity-40"
         >
           Esc · Close
         </button>
 
         <div className="relative px-8 py-7">
-          <div className="flex justify-between border-b-4 border-double border-lf-espresso pb-3 lf-kicker-dense text-lf-muted">
+          <div className="flex justify-between border-b-4 border-double border-lot-ink pb-3 lf-kicker-dense text-lot-stone">
             <span>Unlock slip · {preview.previewSerial}</span>
           </div>
 
           <h1
             id="unlock-slip-title"
-            className="mt-4 font-display text-[32px] font-semibold leading-[1.05] text-lf-espresso"
+            className="mt-4 font-display text-[32px] font-semibold leading-[1.05] text-lot-ink"
           >
             Unlock this lead
           </h1>
-          <p className="mt-1 text-[13px] text-lf-muted">
+          <p className="mt-1 text-[13px] text-lot-stone">
             One-time purchase. The homeowner is notified that {companyName} has their report.
           </p>
 
-          <div className="mt-4 border border-lf-hairline bg-lf-sand-2 px-4 py-3.5">
+          <div className="mt-4 border border-lot-line bg-lot-surface px-4 py-3.5">
             <p className="font-semibold">{preview.neighborhood}</p>
-            <p className="mt-1 flex flex-wrap gap-3.5 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+            <p className="mt-1 flex flex-wrap gap-3.5 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lot-stone">
               <span>{preview.lotSqft.toLocaleString()} sqft lot</span>
               <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
               {item.request.ownerVerified && <span>Owner-verified</span>}
             </p>
-            <p className="mt-2 lf-money-lg text-lf-money">
+            <p className="mt-2 lf-money-lg text-lot-ink">
               {formatCurrency(preview.rentBand)}
-              <span className="ml-1.5 font-sans text-[10px] uppercase text-lf-muted">/mo rent potential</span>
+              <span className="ml-1.5 font-sans text-[10px] uppercase text-lot-stone">/mo rent potential</span>
             </p>
           </div>
 
-          <ul className="mt-4 ml-4 list-disc text-[12.5px] text-lf-espresso marker:text-lf-taupe">
+          <ul className="mt-4 ml-4 list-disc text-[12.5px] text-lot-ink marker:text-lot-stone">
             <li className="my-1.5">
               <b className="font-semibold">Homeowner contact</b> — name, email, phone
             </li>
@@ -141,19 +141,19 @@ export default function UnlockSlip({
           </ul>
 
           <div className="mt-4 font-sans text-[11.5px]">
-            <div className="mb-2 text-[9.5px] uppercase tracking-[0.08em] text-lf-muted">This purchase</div>
-            <div className="flex justify-between border-b border-dashed border-lf-hairline py-1.5">
-              <span className="text-lf-muted">LEAD UNLOCK · {preview.previewSerial}</span>
-              <span className="text-lf-espresso">{hasCredits ? "1 Credit" : priceWithCents}</span>
+            <div className="mb-2 text-[9.5px] uppercase tracking-[0.08em] text-lot-stone">This purchase</div>
+            <div className="flex justify-between border-b border-dashed border-lot-line py-1.5">
+              <span className="text-lot-stone">LEAD UNLOCK · {preview.previewSerial}</span>
+              <span className="text-lot-ink">{hasCredits ? "1 Credit" : priceWithCents}</span>
             </div>
-            <div className="mt-1 flex justify-between border-t-4 border-double border-lf-espresso pt-2.5 font-semibold text-[13px] text-lf-espresso">
+            <div className="mt-1 flex justify-between border-t-4 border-double border-lot-ink pt-2.5 font-semibold text-[13px] text-lot-ink">
               <span>DUE NOW</span>
               <span>{hasCredits ? "1 Credit" : priceWithCents}</span>
             </div>
           </div>
 
           {(error || unlockPrice.error) && (
-            <div role="alert" className="mt-3 border border-lf-brick/40 bg-lf-brick-soft px-3 py-2 text-xs text-lf-brick">
+            <div role="alert" className="mt-3 border border-status-blocked/40 bg-status-blocked-soft px-3 py-2 text-xs text-status-blocked">
               {error ?? unlockPrice.error}
             </div>
           )}
@@ -162,25 +162,25 @@ export default function UnlockSlip({
             type="button"
             onClick={onConfirm}
             disabled={pending || priceBlocked}
-            className="mt-4 flex w-full items-center justify-between rounded-[3px] bg-lf-commit px-4 py-3.5 text-sm font-semibold text-lf-sand motion-safe:transition hover:brightness-95 disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-between rounded-control bg-lot-ink px-4 py-3.5 text-sm font-semibold text-lot-chalk motion-safe:transition hover:brightness-95 disabled:opacity-60"
           >
             <span>{pending ? "Recording unlock…" : payLabel}</span>
             <span className="font-display text-lg">{hasCredits ? "1 Credit" : price}</span>
           </button>
-          <div className="mt-3 flex justify-center gap-3.5 font-sans text-[9.5px] uppercase tracking-[0.08em] text-lf-muted">
+          <div className="mt-3 flex justify-center gap-3.5 font-sans text-[9.5px] uppercase tracking-[0.08em] text-lot-stone">
             <span>Receipt emailed</span>
             <span>{secureNote}</span>
           </div>
 
-          <div className="mt-3.5 flex items-center gap-2.5 border border-lf-hairline px-3.5 py-2.5">
+          <div className="mt-3.5 flex items-center gap-2.5 border border-lot-line px-3.5 py-2.5">
             <span
               aria-hidden
-              className="flex h-[30px] w-[30px] flex-none items-center justify-center border-[1.5px] border-lf-espresso font-display text-lg font-bold"
+              className="flex h-[30px] w-[30px] flex-none items-center justify-center border-[1.5px] border-lot-ink font-display text-lg font-bold"
             >
               LF
             </span>
-            <p className="text-[11.5px] text-lf-muted">
-              <b className="text-lf-espresso">Bad-lead credit.</b> Contact info bounces or the homeowner never
+            <p className="text-[11.5px] text-lot-stone">
+              <b className="text-lot-ink">Bad-lead credit.</b> Contact info bounces or the homeowner never
               submitted it? The unlock is credited back, no questions.
             </p>
           </div>

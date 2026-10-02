@@ -1,3 +1,4 @@
+import { COLOR } from "@/lib/design-tokens";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { buildExistingHouseSceneModel, rectangleCorners, type Pose2D } from "@/lib/scene-model";
 import { getScenePlacement } from "@/lib/site-fit";
@@ -57,9 +58,9 @@ function drawFallbackPlan(
 ) {
   const lotA = toCanvas(-parcel.lotWidth / 2, -parcel.lotLength / 2);
   const lotB = toCanvas(parcel.lotWidth / 2, parcel.lotLength / 2);
-  context.fillStyle = "#E8E8E1";
+  context.fillStyle = COLOR["lot-surface"];
   context.fillRect(lotA.x, lotA.y, lotB.x - lotA.x, lotB.y - lotA.y);
-  context.strokeStyle = "#161616";
+  context.strokeStyle = COLOR["lot-ink"];
   context.lineWidth = 4;
   context.strokeRect(lotA.x, lotA.y, lotB.x - lotA.x, lotB.y - lotA.y);
 
@@ -73,7 +74,7 @@ function drawFallbackPlan(
   );
   context.save();
   context.setLineDash([14, 10]);
-  context.strokeStyle = "#65655F";
+  context.strokeStyle = COLOR["lot-stone"];
   context.lineWidth = 3;
   context.strokeRect(setbackA.x, setbackA.y, setbackB.x - setbackA.x, setbackB.y - setbackA.y);
   context.restore();
@@ -81,8 +82,8 @@ function drawFallbackPlan(
   const house = buildExistingHouseSceneModel(parcel);
   if (house.corners) {
     const points = house.corners.map((point) => toCanvas(point.x, point.z));
-    context.fillStyle = "#DADAD3";
-    context.strokeStyle = "#161616";
+    context.fillStyle = COLOR["lot-line"];
+    context.strokeStyle = COLOR["lot-ink"];
     context.lineWidth = 3;
     context.beginPath();
     points.forEach((point, index) => {
@@ -100,8 +101,8 @@ function drawFallbackPlan(
     config.length,
     pose.rotationDeg,
   ).map((point) => toCanvas(point.x, point.z));
-  context.fillStyle = "#FF5B24";
-  context.strokeStyle = "#161616";
+  context.fillStyle = COLOR["lot-orange"];
+  context.strokeStyle = COLOR["lot-ink"];
   context.lineWidth = 3;
   context.beginPath();
   aduPoints.forEach((point, index) => {
@@ -131,7 +132,7 @@ export async function drawSiteDimensions({
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D context is unavailable for site plan annotation.");
 
-  context.fillStyle = "#F5F5F0";
+  context.fillStyle = COLOR["lot-chalk"];
   context.fillRect(0, 0, width, height);
   if (snapshotDataUrl) {
     const image = await loadImage(snapshotDataUrl);
@@ -145,8 +146,8 @@ export async function drawSiteDimensions({
   if (!snapshotDataUrl) drawFallbackPlan(context, parcel, config, pose, toCanvas);
 
   context.save();
-  context.strokeStyle = "#161616";
-  context.fillStyle = "#161616";
+  context.strokeStyle = COLOR["lot-ink"];
+  context.fillStyle = COLOR["lot-ink"];
   context.lineWidth = 3;
   context.font = "600 24px Manrope, Arial, sans-serif";
   context.textAlign = "center";

@@ -34,6 +34,8 @@ import { SceneTools } from "@/components/studio/SceneTools";
 import { SceneVisibility } from "@/components/studio/SceneVisibility";
 import GaussianSplatLayer, { type SplatLayerStatus } from "@/components/studio/GaussianSplatLayer";
 import type { SplatSceneDefinition, SplatTransform } from "@/lib/splat-scene";
+import { COLOR } from "@/lib/design-tokens";
+
 
 /** Minimal error boundary that falls back to a render function. */
 class ErrorBoundary extends Component<
@@ -87,31 +89,31 @@ type ViewMode = SceneView;
 // daylighting against a gallery backdrop (docs/design/design-system.md §8).
 const SCENE = {
   // Semantic — traces to A LOT MORE tokens
-  ink: "#161616", // --color-lot-ink: plat boundary, corner ticks, label text
-  eligible: "#176B4C", // --color-status-eligible: compliance ring/footprint
-  review: "#8A5300", // --color-status-review: over-limit boundary/ring
-  blocked: "#A82D16", // --color-status-blocked: placement ring when the ADU cannot fit
-  setback: "#65655F", // --color-lot-stone: dashed drafting setback lines
+  ink: COLOR["lot-ink"], // --color-lot-ink: plat boundary, corner ticks, label text
+  eligible: COLOR["status-eligible"], // --color-status-eligible: compliance ring/footprint
+  review: COLOR["status-review"], // --color-status-review: over-limit boundary/ring
+  blocked: COLOR["status-blocked"], // --color-status-blocked: placement ring when the ADU cannot fit
+  setback: COLOR["lot-stone"], // --color-lot-stone: dashed drafting setback lines
   labelChip: "rgba(245,245,240,0.95)", // --color-lot-chalk: LabelSprite chip fill
-  hoverGlow: "#FF5B24", // --color-lot-orange: interactive affordance glow on the ADU
+  hoverGlow: COLOR["lot-orange"], // --color-lot-orange: interactive affordance glow on the ADU
   // World — Possibility Series architectural maquette palette
   ground: "#768763", // architectural museum lawn / moss
-  groundPaper: "#EBEBE6", // chalk graph-paper architectural context plane
-  wall: "#F5F5F0", // ivory plaster existing-house walls
+  groundPaper: COLOR["lot-surface"], // chalk graph-paper architectural context plane
+  wall: COLOR["lot-chalk"], // ivory plaster existing-house walls
   roof: "#2B2B2B", // graphite pitched roof
-  glass: "#161616", // deep charcoal glazing with slender frames
-  slab: "#DADAD3", // concrete cut-earth slab datum
+  glass: COLOR["lot-ink"], // deep charcoal glazing with slender frames
+  slab: COLOR["lot-line"], // concrete cut-earth slab datum
   tree: "#476138", // tree canopy architectural green
   treeLight: "#587348", // sunlit canopy lobe
   treeDark: "#394d2d", // shaded canopy lobe
   treeTrunk: "#42372d", // bark dark umber
   fence: "#6e675f", // architectural slatted fence
   driveway: "#8c887f", // honed gravel driveway
-  fog: "#F5F5F0", // clean daylight gallery fog (light colours live in lib/scene-lighting.ts)
+  fog: COLOR["lot-chalk"], // clean daylight gallery fog (light colours live in lib/scene-lighting.ts)
 };
 
 const SCENE_BACKDROP =
-  "#F5F5F0";
+  COLOR["lot-chalk"];
 
 /** Footprint tint and ring colour per placement tone, matching `ParcelPlan`. */
 export function placementToneColor(tone: "clear" | "review" | "blocked"): string {
@@ -1216,7 +1218,7 @@ export default function ParcelScene({
         <div
           role="group"
           aria-label="Camera view"
-          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-none border border-[#DADAD3] bg-[#F5F5F0]/95 p-1"
+          className="absolute bottom-3 left-1/2 z-(--z-index-scene) flex -translate-x-1/2 gap-0.5 rounded-none border border-lot-line bg-lot-chalk/95 p-1"
         >
           {[
             { mode: "overview" as const, label: "Frame lot", icon: Home },
@@ -1232,7 +1234,7 @@ export default function ParcelScene({
                 variant={active ? "selected" : "ghost"}
                 onClick={() => selectView(mode)}
                 aria-pressed={active}
-                className="h-11 gap-1.5 px-3 leading-none aria-[pressed=false]:text-[#161616] aria-[pressed=false]:hover:bg-[#161616]/5"
+                className="h-11 gap-1.5 px-3 leading-none aria-[pressed=false]:text-lot-ink aria-[pressed=false]:hover:bg-lot-ink/5"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="text-xs font-medium">{label}</span>
@@ -1241,7 +1243,7 @@ export default function ParcelScene({
           })}
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-[#F5F5F0]">
+        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
           N
         </div>
       </div>
@@ -1259,19 +1261,19 @@ export default function ParcelScene({
       <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}>
         <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
 
-      <details className="shrink-0 border-t border-[#DADAD3] bg-[#F5F5F0] px-3">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#161616]">
+      <details className="shrink-0 border-t border-lot-line bg-lot-chalk px-3">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink">
           Lighting and quality
         </summary>
         <div className="space-y-3 pb-3">
           <div
-            className="flex items-center gap-2 text-[#161616]"
+            className="flex items-center gap-2 text-lot-ink"
             role="group"
             aria-label="Illustrative shadow preview"
           >
-            <Sun className="h-4 w-4 shrink-0 text-[#161616]" aria-hidden="true" />
+            <Sun className="h-4 w-4 shrink-0 text-lot-ink" aria-hidden="true" />
             <span className="flex min-w-16 flex-col leading-none">
-              <span className="lf-dataprint text-[#65655F]">Shadow preview</span>
+              <span className="lf-dataprint text-lot-stone">Shadow preview</span>
               <output
                 htmlFor="shadow-preview-hour"
                 className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.08em]"
@@ -1289,7 +1291,7 @@ export default function ParcelScene({
               disabled={!shadowPreview}
               onChange={(event) => setSunHour(Number.parseFloat(event.target.value))}
               aria-label="Preview time"
-              className="h-8 w-28 cursor-pointer accent-[#FF5B24] disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-8 w-28 cursor-pointer accent-lot-orange disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div role="group" aria-label="Lighting preset" className="flex flex-wrap gap-1">
@@ -1322,13 +1324,13 @@ export default function ParcelScene({
               </Button>
             ))}
           </div>
-          <p className="text-xs leading-4 text-[#65655F]">
+          <p className="text-xs leading-4 text-lot-stone">
             Both presets are illustrative studio lighting, not a location- or
             date-based solar study. The preview time applies to Shadow Preview
             only. Quality tiers set pixel ratio and shadow resolution; they are
             budget settings, not measured frame rates.
           </p>
-          <p className="text-xs leading-4 text-[#65655F]">
+          <p className="text-xs leading-4 text-lot-stone">
             Drag to move · Arrow keys when the model has focus
           </p>
         </div>
@@ -1365,12 +1367,12 @@ function Parcel2DScene({
         className={`relative overflow-hidden p-4 ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[220px] flex-1"}`}
         style={{ backgroundImage: SCENE_BACKDROP }}
       >
-        <div className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-2 rounded-none border border-[#DADAD3] bg-[#F5F5F0] p-1.5 text-xs font-medium text-[#161616]">
-          <span className="rounded-none bg-[#161616] px-2 py-1 font-sans text-[11px] font-bold text-[#F5F5F0]">2D SITE PLAN</span>
-          <span className="px-1.5 py-0.5 font-sans text-xs text-[#65655F]">WebGL fallback</span>
+        <div className="absolute left-4 top-4 z-(--z-index-scene) flex items-center gap-2 rounded-none border border-lot-line bg-lot-chalk p-1.5 text-xs font-medium text-lot-ink">
+          <span className="rounded-none bg-lot-ink px-2 py-1 font-sans text-[11px] font-bold text-lot-chalk">2D SITE PLAN</span>
+          <span className="px-1.5 py-0.5 font-sans text-xs text-lot-stone">WebGL fallback</span>
         </div>
 
-        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-[#44443F] bg-[#161616] px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-[#F5F5F0]">
+        <div className="absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
           N
         </div>
 

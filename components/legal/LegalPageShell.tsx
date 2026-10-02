@@ -17,12 +17,12 @@ export function LegalPageShell({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-lf-sand text-lf-espresso">
-      <header className="border-b border-lf-hairline/50">
+    <div className="min-h-dvh bg-lot-chalk text-lot-ink">
+      <header className="border-b border-lot-line/50">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="flex min-h-11 items-center gap-2 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="flex min-h-11 items-center gap-2 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             <BrandLockup className="h-8 w-auto" />
           </Link>
@@ -30,7 +30,7 @@ export function LegalPageShell({
             href="/studio"
             // Legal/support pages are Firebase-free; don't prefetch the group.
             prefetch={false}
-            className="inline-flex min-h-11 items-center rounded-[3px] px-4 text-sm font-semibold text-lf-clay-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+            className="inline-flex min-h-11 items-center rounded-control px-4 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             Open studio
           </Link>
@@ -38,8 +38,8 @@ export function LegalPageShell({
       </header>
 
       <main id="main-content" className="mx-auto max-w-prose px-6 py-16">
-        <h1 className="lf-section-heading text-lf-espresso">{title}</h1>
-        {kicker ? <p className="lf-kicker mt-3 text-lf-muted">{kicker}</p> : null}
+        <h1 className="lf-section-heading text-lot-ink">{title}</h1>
+        {kicker ? <p className="lf-kicker mt-3 text-lot-stone">{kicker}</p> : null}
         <div className="mt-10 space-y-8">{children}</div>
       </main>
 
@@ -58,8 +58,8 @@ export function LegalSection({
 }) {
   return (
     <section>
-      <h2 className="lf-card-heading text-lf-espresso">{title}</h2>
-      <div className="lf-body mt-3 space-y-3 text-lf-muted">{children}</div>
+      <h2 className="lf-card-heading text-lot-ink">{title}</h2>
+      <div className="lf-body mt-3 space-y-3 text-lot-stone">{children}</div>
     </section>
   );
 }

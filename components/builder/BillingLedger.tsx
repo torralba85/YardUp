@@ -45,51 +45,51 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
     <div className="space-y-6">
       {/* Account overview instruments */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="border border-lf-hairline bg-lf-card p-5">
-          <span className="lf-kicker-dense text-lf-muted">Available Balance</span>
-          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lf-espresso">
-            {credits} <span className="text-base font-normal text-lf-muted">{credits === 1 ? "Credit" : "Credits"}</span>
+        <div className="border border-lot-line bg-lot-chalk p-5">
+          <span className="lf-kicker-dense text-lot-stone">Available Balance</span>
+          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lot-ink">
+            {credits} <span className="text-base font-normal text-lot-stone">{credits === 1 ? "Credit" : "Credits"}</span>
           </p>
-          <p className="mt-1 text-xs text-lf-muted">
+          <p className="mt-1 text-xs text-lot-stone">
             1 credit unlocks 1 full homeowner feasibility lead.
           </p>
         </div>
 
-        <div className="border border-lf-hairline bg-lf-card p-5">
-          <span className="lf-kicker-dense text-lf-muted">Total Unlocks</span>
-          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lf-espresso">
+        <div className="border border-lot-line bg-lot-chalk p-5">
+          <span className="lf-kicker-dense text-lot-stone">Total Unlocks</span>
+          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lot-ink">
             {totals.totalCreditsUsed}
           </p>
-          <p className="mt-1 text-xs text-lf-muted">
+          <p className="mt-1 text-xs text-lot-stone">
             Homeowner leads unlocked across your service areas.
           </p>
         </div>
 
-        <div className="border border-lf-hairline bg-lf-card p-5">
-          <span className="lf-kicker-dense text-lf-muted">Total Spent</span>
-          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lf-espresso">
+        <div className="border border-lot-line bg-lot-chalk p-5">
+          <span className="lf-kicker-dense text-lot-stone">Total Spent</span>
+          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lot-ink">
             {formatCurrency(totals.totalPaid)}
           </p>
-          <p className="mt-1 text-xs text-lf-muted">
+          <p className="mt-1 text-xs text-lot-stone">
             Direct card & credit purchases. Receipts emailed upon checkout.
           </p>
         </div>
       </div>
 
       {/* Transaction ledger sheet */}
-      <div className="border border-lf-hairline bg-lf-card">
-        <div className="border-b border-lf-hairline px-6 py-4">
+      <div className="border border-lot-line bg-lot-chalk">
+        <div className="border-b border-lot-line px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg font-semibold text-lf-espresso">
+              <h2 className="font-display text-lg font-semibold text-lot-ink">
                 Billing & Credits Ledger
               </h2>
-              <p className="mt-0.5 text-xs text-lf-muted">
+              <p className="mt-0.5 text-xs text-lot-stone">
                 Audit trail of lead unlock purchases, credit grants, and bad-lead adjustments.
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-none border border-lf-hairline bg-lf-sand-2 px-2.5 py-1 text-[11px] font-medium text-lf-muted">
+              <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2.5 py-1 text-[11px] font-medium text-lot-stone">
                 <Receipt size={13} />
                 Tax Receipts via Stripe
               </span>
@@ -99,16 +99,16 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
 
         {ledger.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <FileText className="mx-auto h-8 w-8 text-lf-muted opacity-40" />
-            <p className="mt-3 text-sm font-medium text-lf-espresso">No billing activity recorded yet</p>
-            <p className="mt-1 text-xs text-lf-muted">
+            <FileText className="mx-auto h-8 w-8 text-lot-stone opacity-40" />
+            <p className="mt-3 text-sm font-medium text-lot-ink">No billing activity recorded yet</p>
+            <p className="mt-1 text-xs text-lot-stone">
               When you purchase lead unlocks or credit packs, transactions will appear in this ledger.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-lf-hairline bg-lf-sand-2 text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+              <thead className="border-b border-lot-line bg-lot-surface text-[10px] uppercase tracking-[0.08em] text-lot-stone">
                 <tr>
                   <th scope="col" className="px-6 py-3 font-medium">Date (UTC)</th>
                   <th scope="col" className="px-6 py-3 font-medium">Description</th>
@@ -117,72 +117,72 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
                   <th scope="col" className="px-6 py-3 font-medium text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-lf-hairline">
+              <tbody className="divide-y divide-lot-line">
                 {ledger.map((entry) => {
                   const isCredit = entry.type === "credit";
                   const isPurchase = entry.type === "purchase";
                   const isUnlock = entry.type === "unlock";
 
                   return (
-                    <tr key={entry.id} className="hover:bg-lf-sand-2/50 motion-safe:transition-colors">
-                      <td className="whitespace-nowrap px-6 py-3.5 font-mono text-lf-muted">
+                    <tr key={entry.id} className="hover:bg-lot-surface/50 motion-safe:transition-colors">
+                      <td className="whitespace-nowrap px-6 py-3.5 font-sans tabular-nums text-lot-stone">
                         {formatLedgerDate(entry.createdAt)}
                       </td>
-                      <td className="px-6 py-3.5 font-medium text-lf-espresso">
+                      <td className="px-6 py-3.5 font-medium text-lot-ink">
                         {entry.description || "Marketplace Lead Unlock"}
                         {entry.referenceId && (
-                          <span className="ml-2 font-mono text-[10.5px] font-normal text-lf-muted">
+                          <span className="ml-2 font-sans tabular-nums text-[10.5px] font-normal text-lot-stone">
                             ({entry.referenceId.startsWith("LF-") ? entry.referenceId : `Ref: ${entry.referenceId.slice(0, 10)}…`})
                           </span>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-3.5">
                         {isCredit && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-amber-ink/20 bg-lf-amber-soft px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-amber-ink">
+                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
                             CREDITED
                           </span>
                         )}
                         {isPurchase && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-forest/20 bg-lf-forest-soft px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-forest">
+                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
                             PURCHASE
                           </span>
                         )}
                         {isUnlock && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-hairline bg-lf-sand-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
                             UNLOCK
                           </span>
                         )}
                         {!isCredit && !isPurchase && !isUnlock && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lf-hairline bg-lf-sand-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-lf-muted">
+                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
                             {entry.type.toUpperCase()}
                           </span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-mono text-sm">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-sans tabular-nums text-sm">
                         {entry.creditsChange > 0 && (
-                          <span className="text-lf-forest font-semibold">+{entry.creditsChange}</span>
+                          <span className="text-lot-ink font-semibold">+{entry.creditsChange}</span>
                         )}
                         {entry.creditsChange < 0 && (
-                          <span className="text-lf-muted">{entry.creditsChange}</span>
+                          <span className="text-lot-stone">{entry.creditsChange}</span>
                         )}
-                        {entry.creditsChange === 0 && <span className="text-lf-muted">—</span>}
+                        {entry.creditsChange === 0 && <span className="text-lot-stone">—</span>}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-mono text-sm font-semibold text-lf-espresso">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-sans tabular-nums text-sm font-semibold text-lot-ink">
                         {formatCurrency(entry.amountPaid || 0)}
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
-              <tfoot className="border-t-4 border-double border-lf-espresso bg-lf-sand-2/80 font-semibold text-lf-espresso">
+              <tfoot className="border-t-4 border-double border-lot-ink bg-lot-surface/80 font-semibold text-lot-ink">
                 <tr>
                   <td colSpan={3} className="px-6 py-3.5 font-sans text-xs uppercase tracking-[0.08em]">
                     Net Account Total
                   </td>
-                  <td className="px-6 py-3.5 text-right font-mono text-sm">
+                  <td className="px-6 py-3.5 text-right font-sans tabular-nums text-sm">
                     {credits} balance
                   </td>
-                  <td className="px-6 py-3.5 text-right font-mono text-sm">
+                  <td className="px-6 py-3.5 text-right font-sans tabular-nums text-sm">
                     {formatCurrency(totals.totalPaid)}
                   </td>
                 </tr>
@@ -193,10 +193,10 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
       </div>
 
       {/* Bad-lead credit guarantee notice */}
-      <div className="flex items-start gap-3 border border-lf-hairline bg-lf-card p-4">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-lf-forest" />
-        <div className="text-xs text-lf-muted leading-relaxed">
-          <strong className="text-lf-espresso">Bad-Lead Guarantee:</strong> If homeowner contact details bounce, the phone
+      <div className="flex items-start gap-3 border border-lot-line bg-lot-chalk p-4">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-status-eligible" />
+        <div className="text-xs text-lot-stone leading-relaxed">
+          <strong className="text-lot-ink">Bad-Lead Guarantee:</strong> If homeowner contact details bounce, the phone
           is disconnected, or the owner denies having submitted their parcel feasibility request, use the &ldquo;Report this lead&rdquo;
           button on your unlocked lead card. An immediate 1-credit refund will be applied to your balance and recorded in this ledger.
         </div>

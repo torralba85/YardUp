@@ -10,12 +10,12 @@
 import { PLATES, type PlateTick, type StudioPlate } from "@/lib/studio-plates";
 
 const TICK_META: Record<PlateTick, { glyph: string; label: string; className: string }> = {
-  eligible: { glyph: "✓", label: "eligible", className: "text-lf-money-on-dark" },
-  review: { glyph: "△", label: "review", className: "text-lf-amber-on-dark" },
+  eligible: { glyph: "✓", label: "eligible", className: "text-lot-chalk" },
+  review: { glyph: "△", label: "review", className: "text-status-review-on-dark" },
   // On mahogany sidebar — use on-dark brick for AA contrast.
-  unlikely: { glyph: "✕", label: "unlikely", className: "text-lf-brick-on-dark" },
+  unlikely: { glyph: "✕", label: "unlikely", className: "text-status-blocked-on-dark" },
   pending: { glyph: "·", label: "not started", className: "text-lot-stone-on-dark" },
-  ready: { glyph: "◦", label: "ready to record", className: "text-lf-money-on-dark" },
+  ready: { glyph: "◦", label: "ready to record", className: "text-lot-chalk" },
 };
 
 export interface FieldBookIndexProps {
@@ -37,7 +37,7 @@ export default function FieldBookIndex({
         <p className="lf-dataprint text-lot-stone-on-dark">
           Survey of
         </p>
-        <p className="mt-1 truncate font-display text-base font-semibold text-lf-sand">
+        <p className="mt-1 truncate font-display text-base font-semibold text-lot-chalk">
           {subject.address}
         </p>
         {(subject.apn || subject.zone) && (
@@ -49,7 +49,7 @@ export default function FieldBookIndex({
         )}
       </div>
 
-      <nav aria-label="Studio sections" className="space-y-0.5 border-t border-lf-taupe/25 pt-2">
+      <nav aria-label="Studio sections" className="space-y-0.5 border-t border-lot-stone/25 pt-2">
         {PLATES.map((plate) => {
           const isActive = active === plate.id;
           const tick = TICK_META[statuses[plate.id]];
@@ -59,27 +59,27 @@ export default function FieldBookIndex({
               type="button"
               onClick={() => onNavigate(plate.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex w-full min-h-11 items-center gap-3 rounded-[3px] py-2 pl-3 pr-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset ${
-                isActive ? "bg-lf-espresso/45 ring-1 ring-lf-taupe/20" : "hover:bg-lf-sand/5"
+              className={`relative flex w-full min-h-11 items-center gap-3 rounded-control py-2 pl-3 pr-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset ${
+                isActive ? "bg-lot-ink/45 ring-1 ring-lot-stone/20" : "hover:bg-lot-chalk/5"
               }`}
             >
               {/* Sliding monument marker — the "you are here" gesture. */}
               <span
                 aria-hidden
-                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-none bg-lf-clay motion-safe:transition-opacity ${
+                className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-none bg-lot-orange motion-safe:transition-opacity ${
                   isActive ? "opacity-100" : "opacity-0"
                 }`}
               />
               <span
                 className={`w-6 shrink-0 font-sans text-[11px] font-semibold tracking-[0.08em] ${
-                  isActive ? "text-lf-sand" : "text-lot-stone-on-dark"
+                  isActive ? "text-lot-chalk" : "text-lot-stone-on-dark"
                 }`}
               >
                 {plate.numeral}
               </span>
               <span className="min-w-0 flex-1">
                 <span
-                  className={`block text-sm font-medium ${isActive ? "text-lf-sand" : "text-lot-stone-on-dark"}`}
+                  className={`block text-sm font-medium ${isActive ? "text-lot-chalk" : "text-lot-stone-on-dark"}`}
                 >
                   {plate.title}
                   {plate.optional && (

@@ -29,7 +29,9 @@ carries that: it looks like a studio presenting a model, not a bank approving a 
 
 ### 2.1 Core tokens
 
-Shared in `app/globals.css` as `lot-*` tokens, with matching landing-local CSS variables.
+Defined in `design/tokens.json`, generated into `app/design-theme.css` and imported by `app/globals.css`.
+Landing-local variables reference those globals. Non-CSS renderers import `COLOR` from
+`lib/design-tokens.ts`. See [color ownership and enforcement](./2026-10-01-color-system.md).
 
 | Token | Value | Role |
 |---|---|---|
@@ -81,6 +83,11 @@ Measured, not estimated. WCAG 2.1: normal text needs 4.5:1, large text and UI bo
 | Proposed structure (concept) | `--orange` | `#FF5B24` | `#FF5B24` |
 | Existing structure (context) | `--line` / neutral fills | `#DADAD3` | `#44443F` |
 | Money / value | **carbon, type-led — see §2.6** | `#161616` | `#F5F5F0` |
+
+For application controls, `Button primary` owns signal orange; `Button secondary` is a stone outline
+on chalk, and `Button commit` is carbon with chalk text. The landing's filled neutral button remains
+carbon. Choose one signal-orange task action per visible working panel. Save, sign-in and reset are
+secondary while reviewing feasibility. Deep orange is link/focus ink, never another primary fill.
 
 ### 2.5 Status tokens **NEW**
 
@@ -255,6 +262,7 @@ composed still states — it never leaves a control unusable or a state unreadab
 |---|---|
 | **Primary button** | Orange fill, carbon label, `3px`, `min-height 48px`, `padding 12px 19px`, `14px/700`, `gap 18px` between label and trailing arrow (leading icons keep `8px`). Hover `#EE4B17`. This is `ui/Button`'s default `md` size; `xs`/`sm` are compact 44px variants, never smaller. |
 | **Secondary button** | Carbon fill, chalk label, same metrics. Hover `#33332F`. |
+| **Product secondary button** | Shared `Button variant="secondary"`: chalk, carbon label, stone boundary; neutral surface hover. Carbon filled controls use `variant="commit"`. |
 | **Address input** | `.inputRow` wrapper owns the ring: `:focus-within` → `box-shadow: 0 0 0 2px var(--ink)`; the inner `input` sets `outline: none`. Input font `16px` at ≤480px to block iOS zoom. |
 | **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. The landing scene/intention/scenario/report pickers use `Segmented`. Hand-rolled Studio roof and finish groups remain migration debt. |
 | **Tabs (report)** | Single choice, so the radio-group pattern above; `min-height 44px`; content region is `aria-live="polite"`. |
@@ -349,7 +357,11 @@ bottom instrument rail; warm sand/clay/espresso as brand ground.
 
 A LOT MORE applies to landing, authentication and consent, account and support, builder, desktop and
 mobile Studio, generated reports, and the paid Certificate of Feasibility. No sign-in theme boundary remains.
-Shared tokens live in `app/globals.css`; `lf-*` aliases preserve existing component APIs, not old colors.
+The palette lives in `design/tokens.json`; `app/design-theme.css` is generated and imported by
+`app/globals.css`. `lf-*` color aliases remain definitions for compatibility, but authored sources
+must use `lot-*` / `status-*`. `lf-*` layout and typography utilities remain valid. `npm run lint`
+enforces palette freshness, contrast, platform parity and raw-color budgets. Exceptions need a reason
+in `design/color-exceptions.json`; never regenerate that file to silence an audit failure.
 The landing CSS Module retains its optical layout. See [product surfaces](./product-surfaces.md).
 
 ## Open decisions
@@ -376,3 +388,6 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 | 2026-09-18 | `ui/Button` default size follows the §6 button: 48px, `12px 19px`, 700 (Andrew) | The shared button shipped 44px/600 while the spec and the landing shipped 48px/700; the spec wins. |
 | 2026-09-18 | Focus rings on chalk are deep orange `#C43708`, not carbon (Andrew) | Ties focus to the signal colour while clearing 3:1 (4.93:1); 29 controls already shipped it. Carbon stays on orange grounds, chalk on carbon. |
 | 2026-09-18 | Product display headings drop from 700 to the spec's 500 (hero 600) (Andrew) | Compared 700/600/500 on login, the CA guide and Studio: 500 matches the landing's exhibition voice and stops long titles wrapping (the CA guide title fits one line at 1280px). |
+| 2026-10-01 | One executable palette; no new legacy aliases or unreviewed raw colors | Andrew requested a whole-project drift audit and prevention. Generated CSS and shared renderer values, contrast/platform checks and per-file literal budgets now run through lint/CI. |
+| 2026-10-01 | Signal orange belongs to the main task action; orange ink belongs to links/focus | Save and sidebar sign-in become neutral secondary actions in Studio. This removes the second rust-colored action theme and competing primary emphasis. |
+| 2026-10-01 | Neutral money/categories, stone field boundaries and opaque reading surfaces | Remove the forest money API/underlines, status-colored ledger categories and image-dependent HUD blur. Physical finishes, external imagery and provider marks retain their own colors. |

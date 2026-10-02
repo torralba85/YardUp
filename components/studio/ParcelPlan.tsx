@@ -5,6 +5,8 @@ import { buildSceneModel, type Pose2D } from "@/lib/scene-model";
 import { getScenePlacement } from "@/lib/site-fit";
 import { buildSetbackEnvelope } from "@/lib/placement-validation";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
+import { COLOR } from "@/lib/design-tokens";
+
 
 /**
  * The 2D concept plan, drawn from the same scene model the 3D view renders.
@@ -33,19 +35,19 @@ export function ParcelPlan({
   const points = (corners: { x: number; z: number }[] | null) =>
     corners?.map((p) => `${p.x},${p.z}`).join(" ");
   const color =
-    placement.status === "fits" ? "#176B4C" : placement.status === "blocked" ? "#A82D16" : "#8A5300";
+    placement.status === "fits" ? COLOR["status-eligible"] : placement.status === "blocked" ? COLOR["status-blocked"] : COLOR["status-review"];
   const placementFeedback = describePlacementWithEvidence(placement, parcel);
   return (
     <svg
       role="img"
       aria-label={`2D concept plan. ADU ${config.width} by ${config.length} feet, rotated ${pose.rotationDeg} degrees. ${placementFeedback.title}.`}
       viewBox={`${-parcel.lotWidth / 2 - 12} ${-parcel.lotLength / 2 - 12} ${parcel.lotWidth + 24} ${parcel.lotLength + 24}`}
-      className="h-full w-full bg-[#F5F5F0]"
+      className="h-full w-full bg-lot-chalk"
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
         <pattern id={grid} width={5} height={5} patternUnits="userSpaceOnUse">
-          <path d="M5 0 H0 V5" fill="none" stroke="#161616" strokeOpacity={0.08} strokeWidth={0.2} />
+          <path d="M5 0 H0 V5" fill="none" stroke={COLOR["lot-ink"]} strokeOpacity={0.08} strokeWidth={0.2} />
         </pattern>
       </defs>
       <rect
@@ -54,14 +56,14 @@ export function ParcelPlan({
         width={parcel.lotWidth}
         height={parcel.lotLength}
         fill={`url(#${grid})`}
-        stroke="#161616"
+        stroke={COLOR["lot-ink"]}
         strokeWidth={0.5}
       />
       {envelope && envelope.length > 0 && (
         <polygon
           points={points(envelope)}
           fill="none"
-          stroke="#65655F"
+          stroke={COLOR["lot-stone"]}
           strokeWidth={0.4}
           strokeDasharray="2 1"
         />
@@ -70,8 +72,8 @@ export function ParcelPlan({
         <polygon
           data-testid="plan-existing-house"
           points={points(model.existingHouse.corners)}
-          fill="#EBEBE6"
-          stroke="#161616"
+          fill={COLOR["lot-surface"]}
+          stroke={COLOR["lot-ink"]}
           strokeWidth={0.5}
         />
       )}
@@ -84,7 +86,7 @@ export function ParcelPlan({
           strokeWidth={0.8}
         />
       )}
-      <text x={0} y={parcel.lotLength / 2 + 7} fontSize={3} textAnchor="middle" fill="#161616" fontFamily="var(--font-lot-body, sans-serif)" fontWeight="bold">
+      <text x={0} y={parcel.lotLength / 2 + 7} fontSize={3} textAnchor="middle" fill={COLOR["lot-ink"]} fontFamily="var(--font-lot-body, sans-serif)" fontWeight="bold">
         FRONT · {parcel.lotWidth} ft
       </text>
     </svg>

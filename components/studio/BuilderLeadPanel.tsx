@@ -97,17 +97,17 @@ export default function BuilderLeadPanel({
   return (
     <section
       aria-labelledby="builder-lead-heading"
-      className="border-t border-lf-hairline bg-lf-card px-6 py-4"
+      className="border-t border-lot-line bg-lot-chalk px-6 py-4"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2
             id="builder-lead-heading"
-            className="font-display text-xl font-medium text-lf-espresso"
+            className="font-display text-xl font-medium text-lot-ink"
           >
             Connect with local builders
           </h2>
-          <p className="mt-1 text-sm leading-6 text-lf-muted">
+          <p className="mt-1 text-sm leading-6 text-lot-stone">
             Share this address and feasibility snapshot with registered builders that serve this area. Builders may contact you about your project.
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function BuilderLeadPanel({
           type="button"
           onClick={onClose}
           aria-label="Close builder connection form"
-          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[3px] text-lf-muted motion-safe:transition-colors hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-lot-stone motion-safe:transition-colors hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         >
           <X size={18} aria-hidden="true" />
         </button>
@@ -123,63 +123,63 @@ export default function BuilderLeadPanel({
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
         {error && (
-          <div role="alert" className="md:col-span-2 text-sm text-lf-brick">
+          <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
             {error}
           </div>
         )}
         {success && (
-          <div className="md:col-span-2 text-sm font-semibold text-lf-forest">
+          <div className="md:col-span-2 text-sm font-semibold text-status-eligible">
             {success}
           </div>
         )}
-        <label htmlFor="builder-lead-name" className="text-sm font-medium text-lf-espresso">
+        <label htmlFor="builder-lead-name" className="text-sm font-medium text-lot-ink">
           Name
           <input
             id="builder-lead-name"
             type="text"
             autoComplete="name"
-            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
         </label>
-        <label htmlFor="builder-lead-email" className="text-sm font-medium text-lf-espresso">
+        <label htmlFor="builder-lead-email" className="text-sm font-medium text-lot-ink">
           Email
           <input
             id="builder-lead-email"
             type="email"
             autoComplete="email"
-            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
         </label>
-        <label htmlFor="builder-lead-phone" className="text-sm font-medium text-lf-espresso">
+        <label htmlFor="builder-lead-phone" className="text-sm font-medium text-lot-ink">
           Phone optional
           <input
             id="builder-lead-phone"
             type="tel"
             autoComplete="tel"
-            className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
           />
         </label>
         <label
           htmlFor="builder-lead-message"
-          className="text-sm font-medium text-lf-espresso md:col-span-2"
+          className="text-sm font-medium text-lot-ink md:col-span-2"
         >
           Message optional
           <textarea
             id="builder-lead-message"
-            className="mt-1 min-h-20 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+            className="mt-1 min-h-20 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
           />
         </label>
         <label
           htmlFor="builder-lead-consent"
-          className="flex gap-2 text-sm leading-6 text-lf-muted md:col-span-2"
+          className="flex gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
         >
           <input
             id="builder-lead-consent"

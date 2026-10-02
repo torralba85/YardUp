@@ -39,15 +39,15 @@ export default function EstimateSummaryPanel({
       value: formatCurrency(result.monthlyRent),
       detail: "Current rental assumption",
       icon: Home,
-      // Income figures: forest only (DESIGN.md money semantic).
-      valueClass: "lf-money-md text-lf-money",
+      // Money is measured with neutral ink and tabular figures.
+      valueClass: "lf-money-md text-lot-ink",
     },
     {
       label: "Annual Net Income",
       value: formatCurrency(result.annualNoi),
       detail: "After expenses and vacancy",
       icon: BarChart3,
-      valueClass: "lf-money-md text-lf-money",
+      valueClass: "lf-money-md text-lot-ink",
     },
     {
       label: "Build Range",
@@ -55,21 +55,21 @@ export default function EstimateSummaryPanel({
       detail: `${formatCurrency(result.costPerSqftLow)}-${formatCurrency(result.costPerSqftHigh)} / sf`,
       icon: Ruler,
       // Cost is not payable income — keep espresso ledger ink.
-      valueClass: "lf-money-md text-lf-espresso",
+      valueClass: "lf-money-md text-lot-ink",
     },
     {
       label: "Payback",
       value: `${result.paybackYears} yrs`,
       detail: "At mid-range cost",
       icon: SlidersHorizontal,
-      valueClass: "lf-money-md text-lf-espresso",
+      valueClass: "lf-money-md text-lot-ink",
     },
   ] as const;
 
   return (
     <aside
       aria-labelledby="estimate-summary-heading"
-      className="w-full overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card"
+      className="w-full overflow-hidden rounded-none border border-lot-line bg-lot-chalk"
     >
       <PanelHeader
         as="h2"
@@ -79,17 +79,17 @@ export default function EstimateSummaryPanel({
       />
 
       <div className="space-y-4 px-6 py-5">
-        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-4">
+        <div className="rounded-none border border-lot-line bg-lot-surface p-4">
           <div className="flex items-start gap-3">
             <CheckCircle2
               size={18}
-              className={result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-amber-ink"}
+              className={result.zoningStatus === "Compliant" ? "text-status-eligible" : "text-status-review"}
             />
             <div>
-              <div className="text-sm font-semibold text-lf-espresso">
+              <div className="text-sm font-semibold text-lot-ink">
                 {result.zoningStatus}
               </div>
-              <p className="mt-1 text-xs leading-5 text-lf-muted">
+              <p className="mt-1 text-xs leading-5 text-lot-stone">
                 {result.zoningStatus === "Compliant"
                   ? "The selected concept appears to fit the current coverage assumptions."
                   : "The selected concept needs local planning review before moving forward."}
@@ -104,16 +104,16 @@ export default function EstimateSummaryPanel({
             return (
               <div
                 key={metric.label}
-                className="rounded-none border border-[#DADAD3] bg-lf-card p-4"
+                className="rounded-none border border-lot-line bg-lot-chalk p-4"
               >
-                <div className="flex items-center gap-2 lf-kicker-dense font-medium text-lf-muted">
+                <div className="flex items-center gap-2 lf-kicker-dense font-medium text-lot-stone">
                   <Icon size={13} />
                   {metric.label}
                 </div>
                 <div className={`mt-2 ${metric.valueClass}`}>
                   {metric.value}
                 </div>
-                <div className="mt-1 text-xs text-lf-muted">{metric.detail}</div>
+                <div className="mt-1 text-xs text-lot-stone">{metric.detail}</div>
               </div>
             );
           })}
@@ -122,7 +122,7 @@ export default function EstimateSummaryPanel({
         {result.warnings.length > 0 && (
           <div
             role="alert"
-            className="rounded-none border border-lf-amber-ink/35 bg-lf-amber-soft p-4 text-lf-amber-ink"
+            className="rounded-none border border-status-review/35 bg-status-review-soft p-4 text-status-review"
           >
             <div className="flex items-start gap-2">
               <TriangleAlert className="mt-0.5 shrink-0" size={16} />

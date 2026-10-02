@@ -83,19 +83,19 @@ export interface VerdictTone {
 
 const VERDICT_TONE: Record<VerdictLevel, VerdictTone> = {
   "Likely Feasible": {
-    color: "var(--color-lf-forest)",
+    color: "var(--color-status-eligible)",
     onDark: "var(--color-status-eligible-on-dark)",
-    soft: "var(--color-lf-forest-soft)",
+    soft: "var(--color-status-eligible-soft)",
   },
   "Needs Review": {
-    color: "var(--color-lf-amber-ink)",
-    onDark: "var(--color-lf-amber-on-dark)",
-    soft: "var(--color-lf-amber-soft)",
+    color: "var(--color-status-review)",
+    onDark: "var(--color-status-review-on-dark)",
+    soft: "var(--color-status-review-soft)",
   },
   Unlikely: {
-    color: "var(--color-lf-brick)",
-    onDark: "var(--color-lf-brick-on-dark)",
-    soft: "var(--color-lf-brick-soft)",
+    color: "var(--color-status-blocked)",
+    onDark: "var(--color-status-blocked-on-dark)",
+    soft: "var(--color-status-blocked-soft)",
   },
 };
 
@@ -107,13 +107,13 @@ export function verdictTone(level: VerdictLevel): VerdictTone {
 export function statusTone(status: ConstraintStatus): VerdictTone {
   switch (status) {
     case "clear":
-      return { color: "var(--color-lf-forest)", onDark: "var(--color-status-eligible-on-dark)", soft: "var(--color-lf-forest-soft)" };
+      return { color: "var(--color-status-eligible)", onDark: "var(--color-status-eligible-on-dark)", soft: "var(--color-status-eligible-soft)" };
     case "review":
-      return { color: "var(--color-lf-amber-ink)", onDark: "var(--color-lf-amber-on-dark)", soft: "var(--color-lf-amber-soft)" };
+      return { color: "var(--color-status-review)", onDark: "var(--color-status-review-on-dark)", soft: "var(--color-status-review-soft)" };
     case "blocked":
-      return { color: "var(--color-lf-brick)", onDark: "var(--color-lf-brick-on-dark)", soft: "var(--color-lf-brick-soft)" };
+      return { color: "var(--color-status-blocked)", onDark: "var(--color-status-blocked-on-dark)", soft: "var(--color-status-blocked-soft)" };
     default:
-      return { color: "var(--color-lf-muted)", onDark: "var(--color-lot-stone-on-dark)", soft: "var(--color-lf-taupe-soft)" };
+      return { color: "var(--color-lot-stone)", onDark: "var(--color-lot-stone-on-dark)", soft: "var(--color-lot-stone-soft)" };
   }
 }
 

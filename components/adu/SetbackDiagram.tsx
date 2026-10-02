@@ -14,7 +14,7 @@ export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
   return (
     <figure
       aria-label={`Setback diagram for ${content.city}`}
-      className="mt-6 text-lf-espresso dark:text-lf-sand"
+      className="mt-6 text-lot-ink dark:text-lot-chalk"
     >
       <svg
         viewBox="0 0 360 240"
@@ -92,7 +92,7 @@ export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
           </text>
         </g>
       </svg>
-      <figcaption className="lf-body mt-2 text-sm text-lf-muted">
+      <figcaption className="lf-body mt-2 text-sm text-lot-stone">
         Dashed lines are the property lines. On a narrow lot the short design
         can yield more usable square footage than the taller one — model both
         in the Studio before talking to a designer.
