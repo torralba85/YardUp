@@ -335,7 +335,7 @@ function SignupForm() {
         <button
           type="submit"
           disabled={isPending || !legalAccepted}
-          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
+          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-(--duration-settle) ease-settle hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Creating account..." : "Create account"}
         </button>

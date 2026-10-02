@@ -42,7 +42,7 @@ function withEntry(state: unknown, { step, destination }: OnboardingEntry) {
 }
 
 const primaryButton =
-  "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-control bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink motion-safe:transition-colors motion-safe:duration-[180ms]";
+  "flex min-h-12 w-full items-center justify-between gap-[18px] rounded-control bg-lot-orange px-[19px] py-3 text-left text-sm font-bold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink motion-safe:transition-colors motion-safe:duration-(--duration-hover)";
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-[5px] focus-visible:outline-lot-orange-ink";
 
 function readGuideSeen(): boolean {
@@ -205,7 +205,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
                 <button
                   type="button"
                   onClick={() => chooseDemo(preset.id)}
-                  className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-control border-[1.5px] border-lot-ink px-4 py-2 text-left hover:bg-lot-line motion-safe:transition-colors motion-safe:duration-[180ms] ${focusRing}`}
+                  className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-control border-[1.5px] border-lot-ink px-4 py-2 text-left hover:bg-lot-line motion-safe:transition-colors motion-safe:duration-(--duration-hover) ${focusRing}`}
                 >
                   <span>
                     <span className="block text-sm font-bold">{cityLabel(preset.city)}</span>

@@ -696,7 +696,7 @@ function AccordionStep({
         </span>
         <ChevronDown
           size={16}
-          className={`shrink-0 text-lot-stone motion-safe:transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 text-lot-stone motion-safe:transition-transform duration-(--duration-disclosure) ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
