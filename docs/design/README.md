@@ -19,6 +19,7 @@ When two documents disagree, the higher entry wins:
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
+| [`2026-10-01-color-system.md`](./2026-10-01-color-system.md) | Color story, root causes of drift, shared palette, whole-project inventory and enforced checks. |
 | [`2026-09-29-website-mobile-audit.md`](./2026-09-29-website-mobile-audit.md) | Truthful geospatial context, sample assumptions, native first-free entry, consent explanations, and release boundaries. |
 | [`2026-09-23-landing-clarity.md`](./2026-09-23-landing-clarity.md) | Clearer hero/mobile sequence, actual Studio preview provenance, free/paid comparison, and accessible landing selectors. |
 | [`2026-09-22-studio-fit.md`](./2026-09-22-studio-fit.md) | Studio footprint and roof comparisons, visible placement feedback, mobile flow layout, and local verification. |
@@ -61,8 +62,9 @@ type, disciplined white space, one vivid orange volume that is the thing you cou
 ## Working rules
 
 - The landing remains CSS-Module-scoped; its optical layout is preserved.
-- Every product route uses shared A LOT MORE tokens in `app/globals.css`, including auth and consent.
-- Legacy `lf-*` names are compatibility aliases, never permission to restore Golden Hour.
+- Every product route uses the palette in `design/tokens.json`, generated as `app/design-theme.css` and imported by `app/globals.css`, including auth and consent.
+- New and migrated code uses `lot-*` / `status-*` colors. Legacy `lf-*` color names are forbidden in authored source; layout/type utility names are unrelated and remain valid.
+- Run `npm run design:check` for palette freshness, contrast, platform parity and per-file literal budgets. Never regenerate the exception register simply to pass CI.
 - New colour pairing? Check contrast before shipping it. The palette contains a trap that looks fine.
 - Changing a rule here is a decision: add a row to the decisions log in `design-system.md` with the
   rationale, so the next person inherits the reasoning and not just the value.

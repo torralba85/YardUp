@@ -147,11 +147,11 @@ export default function PrivacyPage() {
         <p>
           We retain personal information for as long as your account remains active. You may delete your
           account at any time within your{" "}
-          <Link href="/settings" className="font-medium text-lf-clay-ink underline">
+          <Link href="/settings" className="font-medium text-lot-orange-ink underline">
             Account Settings
           </Link>{" "}
           or via our public{" "}
-          <Link href="/delete-account" className="font-medium text-lf-clay-ink underline">
+          <Link href="/delete-account" className="font-medium text-lot-orange-ink underline">
             Delete Account
           </Link>{" "}
           portal (accessible without installing our mobile application).
@@ -220,12 +220,12 @@ export default function PrivacyPage() {
         </ul>
         <p>
           <strong>Submitting Requests &amp; Appeals:</strong> To exercise any privacy right, email{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             privacy@lotfoundry.net
           </a>
           . We will verify your identity and respond within forty-five (45) days. If your request is
           denied, you have the right to appeal our decision by emailing{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             privacy@lotfoundry.net
           </a>{" "}
           with the subject line <em>“Privacy Appeal”</em>.
@@ -243,16 +243,16 @@ export default function PrivacyPage() {
       <LegalSection title="11. Contact Information">
         <p>
           For privacy inquiries or data requests, contact our Privacy Team at:{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             privacy@lotfoundry.net
           </a>
           . For general support:{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>
           .
         </p>
-        <p className="lf-caption text-lf-muted mt-2">
+        <p className="lf-caption text-lot-stone mt-2">
           LotFoundry LLC · Legal &amp; Privacy Compliance
         </p>
       </LegalSection>

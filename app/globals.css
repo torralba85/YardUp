@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./design-theme.css";
 
 /* Historical plan/spec documents carry JSX snippets of retired markup; without
    this exclusion Tailwind's automatic source scanning compiles utilities from
@@ -8,64 +9,6 @@
 @theme {
   --font-sans: var(--font-lot-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-lot-display), sans-serif;
-  --font-mono: var(--font-lot-body), sans-serif;
-
-  /* A LOT MORE Core Tokens */
-  --color-lot-chalk: #F5F5F0;
-  --color-lot-ink: #161616;
-  --color-lot-orange: #FF5B24;
-  --color-lot-orange-hover: #EE4B17;
-  --color-lot-orange-ink: #C43708;
-  --color-lot-orange-edge: #E5410B;
-  --color-lot-stone: #65655F;
-  --color-lot-stone-on-dark: #B7B7AE;
-  --color-lot-line: #DADAD3;
-  --color-lot-line-dark: #44443F;
-  --color-lot-surface-dark: #212121;
-  --color-lot-ground-dark: #161616;
-
-  /* Status Tokens */
-  --color-status-eligible: #176B4C;
-  --color-status-eligible-on-dark: #5FBF93;
-  --color-status-review: #8A5300;
-  --color-status-review-on-dark: #E0A33C;
-  --color-status-blocked: #A82D16;
-  --color-status-blocked-on-dark: #F0705A;
-
-  /* Compatibility aliases while legacy class names are retired incrementally. */
-  --color-lf-sand: #F5F5F0;
-  --color-lf-sand-2: #EBEBE6;
-  --color-lf-card: #F5F5F0;
-  --color-lf-taupe: #65655F;
-  --color-lf-taupe-soft: rgb(101 101 95 / 12%);
-  --color-lf-clay: #FF5B24;
-  --color-lf-clay-soft: rgb(255 91 36 / 12%);
-  --color-lf-clay-ink: #C43708;
-  --color-lf-primary-label: #161616;
-  --color-lf-clay-strong: #EE4B17;
-  --color-lf-clay-on-dark: #FF5B24;
-  --color-lf-mahogany: #161616;
-  --color-lf-espresso: #161616;
-  --color-lf-muted: #65655F;
-  --color-lf-hairline: #DADAD3;
-  --color-lf-focus-ring: #C43708;
-  --color-lf-money: #161616;
-  --color-lf-money-on-dark: #F5F5F0;
-  --color-lf-unit-on-dark: #B7B7AE;
-  --color-lf-commit: #161616;
-  --color-lf-commit-strong: #33332F;
-  --color-lf-dark-surface: #212121;
-  --color-lf-forest: #176B4C;
-  --color-lf-forest-strong: #12543B;
-  --color-lf-forest-soft: rgb(23 107 76 / 12%);
-  --color-lf-amber: #8A5300;
-  --color-lf-amber-soft: rgb(138 83 0 / 12%);
-  --color-lf-amber-ink: #8A5300;
-  --color-lf-amber-on-dark: #E0A33C;
-  --color-lf-brick: #A82D16;
-  --color-lf-brick-strong: #842F1F;
-  --color-lf-brick-soft: rgb(168 45 22 / 12%);
-  --color-lf-brick-on-dark: #F0705A;
 
   /* Layering scale — deterministic overlay ordering */
   --z-index-base: 0;
@@ -84,7 +27,7 @@
 }
 
 html {
-  background: var(--color-lf-sand);
+  background: var(--color-lot-chalk);
   scroll-behavior: smooth;
   font-size: 16px;
   text-size-adjust: 100%;
@@ -92,8 +35,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-lf-sand);
-  color: var(--color-lf-espresso);
+  background: var(--color-lot-chalk);
+  color: var(--color-lot-ink);
   font-family: var(--font-sans);
   line-height: 1.55;
   font-variant-numeric: tabular-nums;
@@ -296,7 +239,7 @@ textarea {
 @layer base {
   a:focus-visible,
   button:focus-visible {
-    outline: 2px solid var(--color-lf-focus-ring);
+    outline: 2px solid var(--color-lot-orange-ink);
     outline-offset: 5px;
   }
 }
@@ -316,18 +259,18 @@ textarea {
   }
 
   body {
-    background: #ffffff !important;
-    color: #161616 !important;
+    background: var(--color-lot-print-paper) !important;
+    color: var(--color-lot-ink) !important;
     overflow: visible !important;
   }
 
   html {
-    background: #ffffff !important;
+    background: var(--color-lot-print-paper) !important;
   }
 
   main {
     overflow: visible !important;
-    background: #ffffff !important;
+    background: var(--color-lot-print-paper) !important;
   }
 
   #export {
@@ -432,7 +375,7 @@ summary {
 
 /* Shared architectural ground for authentication surfaces. */
 .lf-backdrop {
-  background: var(--color-lf-sand);
+  background: var(--color-lot-chalk);
 }
 
 /* Committed-state stamp/settle (6A): a granted unlock lands at 1.02→1, it

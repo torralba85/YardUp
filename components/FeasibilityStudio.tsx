@@ -122,14 +122,14 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ssr: false,
   loading: () => (
     <div
-      className="relative h-full min-h-[460px] overflow-hidden bg-lf-espresso"
+      className="relative h-full min-h-[460px] overflow-hidden bg-lot-ink"
       aria-label="Loading parcel scene"
       role="status"
     >
-      <div className="absolute inset-0 motion-safe:animate-pulse bg-lf-mahogany/40" />
+      <div className="absolute inset-0 motion-safe:animate-pulse bg-lot-ink/40" />
       <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
-        <div className="h-3 w-32 motion-safe:animate-pulse rounded bg-lf-taupe/15" />
-        <div className="h-2.5 w-56 motion-safe:animate-pulse rounded bg-lf-taupe/10" />
+        <div className="h-3 w-32 motion-safe:animate-pulse rounded bg-lot-stone/15" />
+        <div className="h-2.5 w-56 motion-safe:animate-pulse rounded bg-lot-stone/10" />
       </div>
     </div>
   ),
@@ -1028,7 +1028,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       ) : (
         <div
           role="status"
-          className="flex h-full flex-col items-center justify-center gap-3 bg-lf-espresso p-8 text-center"
+          className="flex h-full flex-col items-center justify-center gap-3 bg-lot-ink p-8 text-center"
         >
           <ImageOff size={28} className="text-lot-stone-on-dark" aria-hidden="true" />
           <p className="lf-body max-w-[28ch] text-lot-stone-on-dark">
@@ -1041,7 +1041,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     ) : (
       <div className="relative flex h-full w-full min-h-0 flex-col">
         {effectiveViewMode === "scan" && splatScene && (
-          <div className="shrink-0 border-b border-lf-hairline bg-lf-sand px-3 py-2 text-xs text-lf-espresso">
+          <div className="shrink-0 border-b border-lot-line bg-lot-chalk px-3 py-2 text-xs text-lot-ink">
             <p>{splatScene.captureLabel}. Visual context only; placement uses the estimated model.</p>
             <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3">
               <p role="status" aria-live="polite">
@@ -1397,8 +1397,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
                 saveNotice={saveNotice}
               />
             </div>
-            <details className="group border-t border-lf-hairline bg-lf-card">
-              <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+            <details className="group border-t border-lot-line bg-lot-chalk">
+              <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                 Browse designs
                 <span aria-hidden="true" className="group-open:rotate-45">+</span>
               </summary>
@@ -1530,7 +1530,7 @@ function SceneSection({
   return (
     <section
       aria-label="Parcel massing scene"
-      className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-y-auto border-b border-lf-hairline bg-lf-espresso md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
+      className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-y-auto border-b border-lot-line bg-lot-ink md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
     >
       <SceneViewport
         sceneNode={sceneNode}
@@ -1568,7 +1568,7 @@ function SceneViewToggle({
         buttons[next].focus();
         buttons[next].click();
       }}
-      className="pointer-events-auto flex flex-wrap shrink-0 items-center gap-1 border-b border-lf-hairline bg-lf-card px-2 py-1"
+      className="pointer-events-auto flex flex-wrap shrink-0 items-center gap-1 border-b border-lot-line bg-lot-chalk px-2 py-1"
     >
       <Button
         type="button"
@@ -1576,8 +1576,8 @@ function SceneViewToggle({
         variant={mode === "3d" ? "selected" : "ghost"}
         aria-pressed={mode === "3d"}
         onClick={() => onChange("3d")}
-        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
-          mode === "3d" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+        className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
+          mode === "3d" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
       >
         3D model
@@ -1589,12 +1589,12 @@ function SceneViewToggle({
           variant={mode === "scan" ? "selected" : "ghost"}
           aria-pressed={mode === "scan"}
           onClick={() => onChange("scan")}
-          className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
-            mode === "scan" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+          className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
+            mode === "scan" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-[2px] bg-lf-commit px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lf-sand">
+          <span className="ml-1 rounded-[2px] bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
             Beta
           </span>
         </Button>
@@ -1605,8 +1605,8 @@ function SceneViewToggle({
         variant={mode === "neighborhood" ? "selected" : "ghost"}
         aria-pressed={mode === "neighborhood"}
         onClick={() => onChange("neighborhood")}
-        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
-          mode === "neighborhood" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+        className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
+          mode === "neighborhood" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
       >
         Neighborhood
@@ -1617,8 +1617,8 @@ function SceneViewToggle({
         variant={mode === "aerial" ? "selected" : "ghost"}
         aria-pressed={mode === "aerial"}
         onClick={() => onChange("aerial")}
-        className={`h-11 px-3.5 focus-visible:ring-offset-lf-card ${
-          mode === "aerial" ? "" : "text-lf-espresso hover:bg-lf-taupe-soft"
+        className={`h-11 px-3.5 focus-visible:ring-offset-lot-chalk ${
+          mode === "aerial" ? "" : "text-lot-ink hover:bg-lot-stone-soft"
         }`}
       >
         Aerial
@@ -1668,44 +1668,44 @@ function LotStep({
 }: LotStepProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-b border-lf-hairline bg-lf-sand px-6 py-8 lg:px-10">
-        <p className="lf-kicker text-lf-clay-ink">Step 1 · Your Lot</p>
-        <h2 className="lf-section-heading mt-2 text-lf-espresso">Start with your address.</h2>
-        <p className="lf-body mt-2 max-w-[60ch] text-lf-muted">
+      <div className="border-b border-lot-line bg-lot-chalk px-6 py-8 lg:px-10">
+        <p className="lf-kicker text-lot-orange-ink">Step 1 · Your Lot</p>
+        <h2 className="lf-section-heading mt-2 text-lot-ink">Start with your address.</h2>
+        <p className="lf-body mt-2 max-w-[60ch] text-lot-stone">
           We&rsquo;ll pull your parcel, local zoning, and market rents to show what an ADU could add to your property.
         </p>
         <div className="mt-5 max-w-xl">
           <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
           {parcelLoading && (
-            <div className="mt-2 flex items-center gap-2 rounded-none border border-lf-hairline bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-              <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+            <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
+              <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
               Looking up property data…
             </div>
           )}
           {parcelError && (
             <div
               role="alert"
-              className="mt-2 flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+              className="mt-2 flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
             >
               <Search size={14} className="mt-0.5 shrink-0" />
               {parcelError}
             </div>
           )}
         </div>
-        <details className="mt-4 max-w-xl border-y border-lf-hairline">
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
-          <label className="block pb-4 text-sm text-lf-muted">
+        <details className="mt-4 max-w-xl border-y border-lot-line">
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
+          <label className="block pb-4 text-sm text-lot-stone">
             Sample Property
             <select value={parcelId} onChange={(event) => onPresetChange(event.target.value)}
-              className="mt-2 block min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3 text-lf-espresso">
+              className="mt-2 block min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-lot-ink">
               {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({preset.lotArea.toLocaleString()} sf)</option>)}
             </select>
           </label>
         </details>
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             {hasParcel && <div>
-              <p className="lf-kicker-dense text-lf-muted">If built</p>
-              <MoneyFigure value={monthlyRent} animate size="inline" tone="forest" className="mt-0.5" />
+              <p className="lf-kicker-dense text-lot-stone">If built</p>
+              <MoneyFigure value={monthlyRent} animate size="inline" tone="onLight" className="mt-0.5" />
             </div>}
             <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
               Continue to Rules &amp; Fit

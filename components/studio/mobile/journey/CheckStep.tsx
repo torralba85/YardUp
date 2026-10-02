@@ -68,7 +68,7 @@ export default function CheckStep({
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lf-clay-ink">Step 4 · Check</p>
+      <p className="lf-kicker text-lot-orange-ink">Step 4 · Check</p>
 
       <div className="mt-3 flex items-center gap-2.5">
         <Icon size={28} style={{ color: tone.color }} aria-hidden="true" />
@@ -79,7 +79,7 @@ export default function CheckStep({
           {summary.verdict}
         </h1>
       </div>
-      <p className="lf-body-sm mt-2 text-lf-muted">{VERDICT_COPY[summary.verdict]}</p>
+      <p className="lf-body-sm mt-2 text-lot-stone">{VERDICT_COPY[summary.verdict]}</p>
 
       <FeasibilityBadge
         parcel={parcel}
@@ -87,11 +87,11 @@ export default function CheckStep({
         surface="light"
       />
 
-      <div className="mt-5 grid grid-cols-3 gap-px border border-lf-hairline bg-lf-hairline">
+      <div className="mt-5 grid grid-cols-3 gap-px border border-lot-line bg-lot-line">
         {metrics.map((metric) => (
-          <div key={metric.label} className="bg-lf-card px-2.5 py-3">
-            <p className="lf-dataprint text-lf-muted">{metric.label}</p>
-            <p className="mt-1 font-display text-lg font-semibold tabular-nums text-lf-espresso">
+          <div key={metric.label} className="bg-lot-chalk px-2.5 py-3">
+            <p className="lf-dataprint text-lot-stone">{metric.label}</p>
+            <p className="mt-1 font-display text-lg font-semibold tabular-nums text-lot-ink">
               {metric.value}
             </p>
           </div>
@@ -100,15 +100,15 @@ export default function CheckStep({
 
       {openItems.length > 0 && (
         <>
-          <p className="mt-6 lf-kicker-dense text-lf-muted">Verify before permit</p>
+          <p className="mt-6 lf-kicker-dense text-lot-stone">Verify before permit</p>
           <ul className="mt-2 flex flex-col gap-2">
             {openItems.map((item) => (
               <li
                 key={item.id}
                 className={`rounded-none border px-3 py-2.5 text-sm ${
                   item.status === "blocked"
-                    ? "border-lf-brick/40 bg-lf-brick-soft text-lf-brick"
-                    : "border-lf-amber-ink/35 bg-lf-amber-soft text-lf-amber-ink"
+                    ? "border-status-blocked/40 bg-status-blocked-soft text-status-blocked"
+                    : "border-status-review/35 bg-status-review-soft text-status-review"
                 }`}
               >
                 <span className="flex items-start gap-2">
@@ -128,14 +128,14 @@ export default function CheckStep({
         </>
       )}
 
-      <p className="mt-5 lf-dataprint text-lf-muted">
+      <p className="mt-5 lf-dataprint text-lot-stone">
         {marketProvenanceLine(result.market)}
       </p>
 
       <button
         type="button"
         onClick={onFineTune}
-        className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-[#C43708] motion-safe:transition hover:bg-lf-taupe-soft"
+        className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:bg-lot-stone-soft"
       >
         <SlidersHorizontal size={15} />
         Fine-tune the numbers

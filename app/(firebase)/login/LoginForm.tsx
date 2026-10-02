@@ -99,7 +99,7 @@ export default function LoginForm() {
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-none border border-lf-brick/20 bg-lf-brick-soft px-3 py-2 text-lf-brick">
+          <div className="lf-body-sm rounded-none border border-status-blocked/20 bg-status-blocked-soft px-3 py-2 text-status-blocked">
             {error}
           </div>
         )}
@@ -107,7 +107,7 @@ export default function LoginForm() {
         <div>
           <label
             htmlFor="email"
-            className="lf-body-sm mb-1.5 block font-medium text-lf-espresso"
+            className="lf-body-sm mb-1.5 block font-medium text-lot-ink"
           >
             Email
           </label>
@@ -118,7 +118,7 @@ export default function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
+            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="you@example.com"
           />
         </div>
@@ -127,13 +127,13 @@ export default function LoginForm() {
           <div className="mb-1.5 flex items-center justify-between">
             <label
               htmlFor="password"
-              className="lf-body-sm font-medium text-lf-espresso"
+              className="lf-body-sm font-medium text-lot-ink"
             >
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="lf-body-sm text-lf-clay-ink motion-safe:transition-colors hover:text-lf-mahogany"
+              className="lf-body-sm text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink"
             >
               Forgot password?
             </Link>
@@ -145,7 +145,7 @@ export default function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-[3px] border border-lf-taupe bg-lf-sand px-3.5 py-3 text-base sm:text-sm text-lf-espresso placeholder-lf-muted motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
+            className="w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-base sm:text-sm text-lot-ink placeholder-lot-stone motion-safe:transition-colors focus:border-lot-orange-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             placeholder="Password"
           />
         </div>
@@ -153,26 +153,26 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-[3px] bg-lf-clay py-3 text-sm font-semibold text-lf-primary-label motion-safe:transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lf-clay-strong motion-safe:active:scale-[0.99] disabled:opacity-50"
+          className="w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
-      <label className="mt-6 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lf-muted">
+      <label className="mt-6 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
         <input
           type="checkbox"
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         />
         <span>
           For Google or Apple, I confirm I am 18 or older, agree to the{" "}
-          <Link href="/terms" className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2">
+          <Link href="/terms" className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
             Terms &amp; Conditions
           </Link>
           , and acknowledge the{" "}
-          <Link href="/privacy" className="text-lf-clay-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2">
+          <Link href="/privacy" className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
             Privacy Policy
           </Link>
           .
@@ -181,10 +181,10 @@ export default function LoginForm() {
 
       <div className="relative mt-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-lf-hairline" />
+          <div className="w-full border-t border-lot-line" />
         </div>
         <div className="lf-caption relative flex justify-center">
-          <span className="bg-lf-card px-2 text-lf-muted">or continue with</span>
+          <span className="bg-lot-chalk px-2 text-lot-stone">or continue with</span>
         </div>
       </div>
 
@@ -193,7 +193,7 @@ export default function LoginForm() {
         onClick={handleGoogle}
         aria-describedby="login-social-consent-help"
         disabled={isPending || !socialConsent}
-        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
           <path
@@ -220,7 +220,7 @@ export default function LoginForm() {
         onClick={handleApple}
         aria-describedby="login-social-consent-help"
         disabled={isPending || !socialConsent}
-        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-lf-espresso bg-lf-espresso py-3 text-sm font-medium text-lf-sand motion-safe:transition-colors hover:bg-lf-commit-strong disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
           <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
@@ -228,21 +228,21 @@ export default function LoginForm() {
         Apple
       </button>
 
-      <p id="login-social-consent-help" className="mt-3 text-xs leading-5 text-lf-muted" aria-live="polite">
+      <p id="login-social-consent-help" className="mt-3 text-xs leading-5 text-lot-stone" aria-live="polite">
         {socialConsent ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
       </p>
       <div className="mt-6 flex flex-col space-y-2">
-        <p className="lf-body-sm text-center text-lf-muted">
+        <p className="lf-body-sm text-center text-lot-stone">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-lf-clay-ink hover:text-lf-mahogany">
+          <Link href="/signup" className="font-medium text-lot-orange-ink hover:text-lot-ink">
             Sign up
           </Link>
         </p>
-        {buildersAllowed && <p className="lf-body-sm text-center text-lf-muted">
+        {buildersAllowed && <p className="lf-body-sm text-center text-lot-stone">
           Are you a builder?{" "}
           <Link
             href="/signup?role=builder"
-            className="font-medium text-lf-clay-ink hover:text-lf-mahogany"
+            className="font-medium text-lot-orange-ink hover:text-lot-ink"
           >
             Register here
           </Link>

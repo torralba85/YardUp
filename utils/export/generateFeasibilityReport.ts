@@ -1,5 +1,6 @@
 "use client";
 
+import { COLOR } from "@/lib/design-tokens";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import type { Pose2D } from "@/lib/scene-model";
 import {
@@ -129,17 +130,17 @@ export async function generateFeasibilityReport({
   const context = page.getContext("2d");
   if (!context) throw new Error("Canvas 2D context is unavailable for feasibility PDF export.");
 
-  context.fillStyle = "#F5F5F0";
+  context.fillStyle = COLOR["lot-chalk"];
   context.fillRect(0, 0, page.width, page.height);
-  context.fillStyle = "#161616";
+  context.fillStyle = COLOR["lot-ink"];
   context.font = "700 25px Manrope, Arial, sans-serif";
   context.fillText("LOTFOUNDRY", 62, 70);
   context.font = "600 52px Space Grotesk, Arial, sans-serif";
   context.fillText("Preliminary Site Plan & Feasibility", 62, 132);
   context.font = "500 22px Manrope, Arial, sans-serif";
-  context.fillStyle = "#65655F";
+  context.fillStyle = COLOR["lot-stone"];
   context.fillText(`${parcel.address}, ${parcel.city}`, 62, 172);
-  context.strokeStyle = "#161616";
+  context.strokeStyle = COLOR["lot-ink"];
   context.lineWidth = 2;
   context.beginPath();
   context.moveTo(62, 198);
@@ -150,9 +151,9 @@ export async function generateFeasibilityReport({
   const boxY = 228;
   const boxW = 1151;
   const boxH = 810;
-  context.fillStyle = "#FFFFFF";
+  context.fillStyle = COLOR["lot-print-paper"];
   context.fillRect(boxX, boxY, boxW, boxH);
-  context.strokeStyle = "#DADAD3";
+  context.strokeStyle = COLOR["lot-line"];
   context.lineWidth = 2;
   context.strokeRect(boxX, boxY, boxW, boxH);
   const scale = Math.min(boxW / sitePlan.width, boxH / sitePlan.height);
@@ -163,7 +164,7 @@ export async function generateFeasibilityReport({
   const left = 62;
   const right = 660;
   let y = 1090;
-  context.fillStyle = "#161616";
+  context.fillStyle = COLOR["lot-ink"];
   context.font = "700 18px Manrope, Arial, sans-serif";
   context.fillText("PROPERTY", left, y);
   context.fillText("CURRENT CONCEPT", right, y);
@@ -210,24 +211,24 @@ export async function generateFeasibilityReport({
   );
 
   y += 65;
-  context.strokeStyle = "#DADAD3";
+  context.strokeStyle = COLOR["lot-line"];
   context.beginPath();
   context.moveTo(62, y - 28);
   context.lineTo(1213, y - 28);
   context.stroke();
-  context.fillStyle = "#161616";
+  context.fillStyle = COLOR["lot-ink"];
   context.font = "700 18px Manrope, Arial, sans-serif";
   context.fillText("BASELINE RULES & LIMITATIONS", 62, y);
   y += 31;
   context.font = "500 17px Manrope, Arial, sans-serif";
-  context.fillStyle = "#65655F";
+  context.fillStyle = COLOR["lot-stone"];
   const ca = evaluateCaliforniaAduRules({ parcel, config });
   const rules = ca.applicable
     ? "California baseline screen references Gov Code § 65852.2, including the four-foot side/rear setback baseline and the 800 sf statewide-exemption footprint screen. Transit proximity was not independently verified."
     : "This parcel is outside the California baseline screen. Confirm local setbacks, zoning, utilities, access, and state requirements with the applicable jurisdiction.";
   y = wrapText(context, rules, 62, y, 1151, 25);
   y += 8;
-  context.fillStyle = "#161616";
+  context.fillStyle = COLOR["lot-ink"];
   context.font = "600 16px Manrope, Arial, sans-serif";
   wrapText(
     context,

@@ -48,7 +48,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
       detail: `$${result.costPerSqftLow} - $${result.costPerSqftHigh} / sf`,
       detailMono: true,
-      valueClass: "font-display font-semibold text-xl tracking-tight text-lf-espresso",
+      valueClass: "font-display font-semibold text-xl tracking-tight text-lot-ink",
     },
     {
       key: "payback",
@@ -57,7 +57,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       value: `${result.paybackYears} yrs`,
       detail: "At mid-range cost",
       detailMono: false,
-      valueClass: "font-display font-semibold text-xl tracking-tight text-lf-espresso",
+      valueClass: "font-display font-semibold text-xl tracking-tight text-lot-ink",
     },
     {
       key: "lot-coverage",
@@ -67,7 +67,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       detail: result.footprintKnown === false ? "Existing footprint unavailable" : `of ${result.maxCoveragePercent}% ${result.regulationsEstimated ? "assumed max" : "max"}`,
       detailMono: true,
       valueClass: `font-sans font-semibold text-xl ${
-        result.remainingCapacity < 0 ? "text-lf-brick" : "text-lf-espresso"
+        result.remainingCapacity < 0 ? "text-status-blocked" : "text-lot-ink"
       }`,
     },
     {
@@ -78,7 +78,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       detail: result.zoningStatus === "Compliant" ? "ADU appears allowed" : "Needs review",
       detailMono: false,
       valueClass: `font-sans font-semibold text-xl ${
-        result.zoningStatus === "Compliant" ? "text-lf-forest" : "text-lf-amber-ink"
+        result.zoningStatus === "Compliant" ? "text-status-eligible" : "text-status-review"
       }`,
     },
   ] as const;
@@ -94,19 +94,19 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
     <section
       id="summary"
       aria-label="Feasibility metrics"
-      className="border-t border-lf-hairline"
+      className="border-t border-lot-line"
     >
-      <div className="lf-stagger grid grid-cols-2 gap-px bg-lf-hairline sm:grid-cols-3 lg:grid-cols-6">
+      <div className="lf-stagger grid grid-cols-2 gap-px bg-lot-line sm:grid-cols-3 lg:grid-cols-6">
         {leads.map(({ key, ...metric }) => (
           <LeadCell key={key} {...metric} />
         ))}
         {support.map(({ key, ...metric }) => {
           const Icon = metric.icon;
           return (
-            <div key={key} className="bg-lf-card px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+            <div key={key} className="bg-lot-chalk px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
               <CellLabel icon={Icon} label={metric.label} />
               <div className={`mt-2 tabular-nums ${metric.valueClass}`}>{metric.value}</div>
-              <div className={`mt-0.5 text-[11px] text-lf-muted ${metric.detailMono ? "font-sans" : ""}`}>
+              <div className={`mt-0.5 text-[11px] text-lot-stone ${metric.detailMono ? "font-sans" : ""}`}>
                 {metric.detail}
               </div>
             </div>
@@ -117,8 +117,8 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
           they are, and whether they trace to a verified local source. */}
       <div
         data-testid="market-provenance"
-        className={`flex items-start gap-1.5 border-t border-lf-hairline px-4 py-2 font-sans text-[10px] uppercase tracking-[0.08em] sm:px-5 lg:px-6 ${
-          unverifiedMarket ? "bg-lf-amber-soft text-lf-amber-ink" : "bg-lf-sand-2 text-lf-muted"
+        className={`flex items-start gap-1.5 border-t border-lot-line px-4 py-2 font-sans text-[10px] uppercase tracking-[0.08em] sm:px-5 lg:px-6 ${
+          unverifiedMarket ? "bg-status-review-soft text-status-review" : "bg-lot-surface text-lot-stone"
         }`}
       >
         {unverifiedMarket && <TriangleAlert size={12} className="mt-px shrink-0" aria-hidden="true" />}
@@ -151,25 +151,25 @@ function LeadCell({
 }) {
   const animated = useCountUp(value);
   return (
-    <div className="bg-lf-sand-2 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+    <div className="bg-lot-surface px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
       <CellLabel icon={Icon} label={label} />
       <div
         data-metric-lead="true"
-        data-accent="forest"
-        className="mt-2 inline-block lf-money-lg text-lf-money"
+        data-accent="neutral"
+        className="mt-2 inline-block lf-money-lg text-lot-ink"
       >
         {format(animated)}
-        {/* Forest hairline — money figures carry the forest semantic (DESIGN.md). */}
-        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lf-forest" />
+        {/* Neutral drafting line — green is reserved for verified status. */}
+        <span aria-hidden className="mt-1.5 block h-px w-10 bg-lot-line" />
       </div>
-      <div className="mt-2 text-[11px] text-lf-muted">{detail}</div>
+      <div className="mt-2 text-[11px] text-lot-stone">{detail}</div>
     </div>
   );
 }
 
 function CellLabel({ icon: Icon, label }: { icon: typeof Home; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 lf-kicker-dense font-medium text-lf-muted sm:text-[11px]">
+    <div className="flex items-center gap-1.5 lf-kicker-dense font-medium text-lot-stone sm:text-[11px]">
       <Icon size={13} />
       {label}
     </div>

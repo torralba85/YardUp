@@ -17,7 +17,7 @@ describe("auth focus color roles", () => {
     expect(forgotPassword).toContain("focus:ring-lot-orange-ink");
     expect(signup.match(/focus:border-lot-orange-ink/g)).toHaveLength(3);
     expect(signup.match(/focus:ring-lot-orange-ink/g)).toHaveLength(3);
-    expect(signup).toContain("border-lf-espresso bg-lf-espresso");
+    expect(signup).toContain("border-lot-ink bg-lot-ink");
     expect(signup).toContain("aria-pressed={selected}");
   });
 });

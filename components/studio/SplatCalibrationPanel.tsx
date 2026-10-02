@@ -16,7 +16,7 @@ export interface SplatCalibrationPanelProps {
 }
 
 const inputControl =
-  "min-h-11 w-full rounded-[3px] border border-lf-muted bg-lf-sand px-3 text-base text-lf-espresso tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-focus-ring";
+  "min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-base text-lot-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink";
 
 export default function SplatCalibrationPanel({
   scene,
@@ -67,15 +67,15 @@ export default function SplatCalibrationPanel({
     <aside
       aria-label="3DGS Visual Calibration"
       onKeyDown={(event) => { if (event.key === "Escape" && onClose) { event.stopPropagation(); onClose(); } }}
-      className="flex flex-col border border-lf-hairline bg-lf-sand text-lf-espresso w-full pb-[env(safe-area-inset-bottom)]"
+      className="flex flex-col border border-lot-line bg-lot-chalk text-lot-ink w-full pb-[env(safe-area-inset-bottom)]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-lf-hairline px-4 py-3">
+      <div className="flex items-center justify-between border-b border-lot-line px-4 py-3">
         <div>
-          <span className="inline-block bg-lf-commit px-1.5 py-0.5 text-[10px] tabular-nums uppercase tracking-[0.08em] text-lf-sand">
+          <span className="inline-block bg-lot-ink px-1.5 py-0.5 text-[10px] tabular-nums uppercase tracking-[0.08em] text-lot-chalk">
             BETA · INTERNAL
           </span>
-          <h2 className="font-display text-base font-semibold tracking-tight text-lf-espresso">
+          <h2 className="font-display text-base font-semibold tracking-tight text-lot-ink">
             Scan Calibration
           </h2>
         </div>
@@ -87,7 +87,7 @@ export default function SplatCalibrationPanel({
             onClick={onClose}
             aria-label="Close calibration panel"
             ref={closeButton}
-            className="h-11 w-11 shrink-0 p-0 text-lf-muted hover:text-lf-espresso"
+            className="h-11 w-11 shrink-0 p-0 text-lot-stone hover:text-lot-ink"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -95,8 +95,8 @@ export default function SplatCalibrationPanel({
       </div>
 
       {/* Survey Invariant Notice */}
-      <div className="border-b border-lf-hairline bg-lf-sand-2 px-4 py-2.5 text-xs text-lf-muted">
-        <p className="font-medium text-lf-espresso">VISUAL CALIBRATION — NOT SURVEYED</p>
+      <div className="border-b border-lot-line bg-lot-surface px-4 py-2.5 text-xs text-lot-stone">
+        <p className="font-medium text-lot-ink">VISUAL CALIBRATION — NOT SURVEYED</p>
         <p className="mt-0.5 leading-relaxed">
           Moves only the scan. Parcel bounds, setbacks, and feasibility still use the estimated model.
         </p>
@@ -108,7 +108,7 @@ export default function SplatCalibrationPanel({
         <label className="block">
           <div className="mb-1 flex justify-between text-xs font-medium">
             <span>Uniform Scale</span>
-            <span className="tabular-nums text-lf-muted">{transform.uniformScale.toFixed(2)}×</span>
+            <span className="tabular-nums text-lot-stone">{transform.uniformScale.toFixed(2)}×</span>
           </div>
           <input
             type="number"
@@ -131,7 +131,7 @@ export default function SplatCalibrationPanel({
         <label className="block">
           <div className="mb-1 flex justify-between text-xs font-medium">
             <span>Yaw Rotation</span>
-            <span className="tabular-nums text-lf-muted">{yawDeg}°</span>
+            <span className="tabular-nums text-lot-stone">{yawDeg}°</span>
           </div>
           <input
             type="number"
@@ -225,13 +225,13 @@ export default function SplatCalibrationPanel({
         {/* JSON Display toggle fallback */}
         {showJson && (
           <div className="pt-2">
-            <label className="block text-xs font-medium text-lf-muted">
+            <label className="block text-xs font-medium text-lot-stone">
               Exported Registration JSON:
               <textarea
                 readOnly
                 value={jsonString}
                 aria-label="Calibration JSON export"
-                className="mt-1 h-32 w-full rounded-[3px] border border-lf-hairline bg-lf-sand-2 p-2 tabular-nums text-base text-lf-espresso"
+                className="mt-1 h-32 w-full rounded-control border border-lot-stone bg-lot-surface p-2 tabular-nums text-base text-lot-ink"
               />
             </label>
           </div>

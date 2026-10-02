@@ -30,7 +30,7 @@ export function CookiePreferences() {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="lf-caption text-lf-muted">{STATUS_LABEL[consent]}</p>
+      <p className="lf-caption text-lot-stone">{STATUS_LABEL[consent]}</p>
       <div className="flex shrink-0 gap-3">
         {/* Only a granted decision has anything to turn off; an undecided
             visitor is already untracked, so offering it would misdescribe state. */}

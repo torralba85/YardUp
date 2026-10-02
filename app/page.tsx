@@ -7,6 +7,8 @@ import {
   defaultFinancialAssumptions,
   parcelPresets,
 } from "@/lib/feasibility";
+import { COLOR } from "@/lib/design-tokens";
+
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -20,7 +22,7 @@ const body = Manrope({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#F5F5F0",
+  themeColor: COLOR["lot-chalk"],
   viewportFit: "cover",
 };
 const description =

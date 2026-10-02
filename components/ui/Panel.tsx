@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 export type PanelSurface = "card" | "sand" | "raised";
 
 const SURFACE_CLASS: Record<PanelSurface, string> = {
-  card: "bg-lf-card",
-  sand: "bg-lf-sand-2",
-  raised: "bg-lf-card shadow-[6px_8px_0_#16161618]",
+  card: "bg-lot-chalk",
+  sand: "bg-lot-surface",
+  raised: "bg-lot-chalk shadow-card",
 };
 
 /** Props for {@link Panel}. */
@@ -23,7 +23,7 @@ export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
 /**
  * The standard studio rail/card surface: `lf-card` (or sand/raised) with the
  * hairline border every panel shares. Callers stop re-declaring
- * `border border-lf-hairline bg-lf-card` inline, so surfaces stay consistent.
+ * `border border-lot-line bg-lot-chalk` inline, so surfaces stay consistent.
  * Render as `aside`/`section`/`div` via `as` to keep the correct landmark.
  */
 export function Panel({ surface = "card", padded = false, as, className, children, ...props }: PanelProps) {
@@ -33,7 +33,7 @@ export function Panel({ surface = "card", padded = false, as, className, childre
   return React.createElement(
     Component,
     {
-      className: cn("flex flex-col border border-lf-hairline", SURFACE_CLASS[surface], padded && "p-5", className),
+      className: cn("flex flex-col border border-lot-line", SURFACE_CLASS[surface], padded && "p-5", className),
       ...props,
     },
     children,
@@ -45,7 +45,7 @@ export type PanelHeadingLevel = "h1" | "h2" | "h3" | "h4";
 
 /** Props for {@link PanelHeader}. */
 export interface PanelHeaderProps {
-  /** Optional mono uppercase kicker above the title (clay). */
+  /** Optional shared uppercase kicker above the title (deep orange ink). */
   eyebrow?: React.ReactNode;
   /** The panel title, set in the display face. */
   title: React.ReactNode;
@@ -62,20 +62,20 @@ export interface PanelHeaderProps {
 }
 
 /**
- * The standard panel header row: an optional mono eyebrow, a display-face title,
+ * The standard panel header row: an optional shared eyebrow, a display-face title,
  * an optional muted sub-line, and optional trailing actions — with the hairline
  * divider and the canonical `px-6 pt-5 pb-4` rhythm baked in (replacing the
  * hand-rolled `px-[22px] pt-[18px]` variants scattered across the studio).
  */
 export function PanelHeader({ eyebrow, title, sub, actions, as: Heading = "h2", id, className }: PanelHeaderProps) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 border-b border-lf-hairline px-6 pb-4 pt-5", className)}>
+    <div className={cn("flex items-start justify-between gap-4 border-b border-lot-line px-6 pb-4 pt-5", className)}>
       <div className="min-w-0">
-        {eyebrow ? <p className="lf-kicker pb-1 text-lf-clay-ink">{eyebrow}</p> : null}
-        <Heading id={id} className="lf-panel-heading text-lf-espresso">
+        {eyebrow ? <p className="lf-kicker pb-1 text-lot-orange-ink">{eyebrow}</p> : null}
+        <Heading id={id} className="lf-panel-heading text-lot-ink">
           {title}
         </Heading>
-        {sub ? <p className="lf-body-sm mt-1 text-lf-muted">{sub}</p> : null}
+        {sub ? <p className="lf-body-sm mt-1 text-lot-stone">{sub}</p> : null}
       </div>
       {actions ? <div className="shrink-0">{actions}</div> : null}
     </div>

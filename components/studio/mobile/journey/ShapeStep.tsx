@@ -88,7 +88,7 @@ export default function ShapeStep({
                 role="radio"
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
-                className={`flex min-h-24 items-center gap-3 rounded-[3px] border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                className={`flex min-h-24 items-center gap-3 rounded-control border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                   selected ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                 }`}
               >
@@ -131,7 +131,7 @@ export default function ShapeStep({
                 className="px-4"
                 leftIcon={
                   <span
-                    className="block h-3 w-3 rounded-full border border-lf-hairline"
+                    className="block h-3 w-3 rounded-full border border-lot-line"
                     style={{ backgroundColor: finishColors[finish] }}
                   />
                 }
@@ -144,13 +144,13 @@ export default function ShapeStep({
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-lot-line pt-4">
           <p className="text-xs text-lot-stone">Projected rent / mo</p>
-          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="forest" />
+          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="onLight" />
         </div>
 
         <button
           type="button"
           onClick={onFineTune}
-          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-[3px] px-3 text-sm font-semibold text-lot-orange-ink hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-semibold text-lot-orange-ink hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         >
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions

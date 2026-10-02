@@ -258,18 +258,18 @@ export default function StyleMatchPanel({
   const inputId = "style-match-photo-input";
 
   return (
-    <div className="border-[1.5px] border-lf-espresso bg-lf-sand-2">
-      <div className="border-b-4 border-double border-lf-espresso px-4 py-3">
+    <div className="border-[1.5px] border-lot-ink bg-lot-surface">
+      <div className="border-b-4 border-double border-lot-ink px-4 py-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="lf-kicker text-lf-clay-ink">
+            <p className="lf-kicker text-lot-orange-ink">
               Your house / your ADU
             </p>
-            <h3 className="mt-1 font-display text-xl font-medium leading-tight text-lf-espresso">
+            <h3 className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
               Style-match photo
             </h3>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center border border-lf-espresso bg-lf-card text-lf-espresso">
+          <div className="flex h-10 w-10 items-center justify-center border border-lot-ink bg-lot-chalk text-lot-ink">
             <Camera size={18} aria-hidden="true" />
           </div>
         </div>
@@ -281,18 +281,18 @@ export default function StyleMatchPanel({
         </p>
         {status === "idle" && (
           <div className="space-y-4">
-            <div className="border border-lf-hairline bg-lf-card px-3 py-3">
-              <div className="flex items-start gap-2.5 text-sm leading-6 text-lf-muted">
-                <ShieldCheck size={17} className="mt-1 shrink-0 text-lf-forest" aria-hidden="true" />
+            <div className="border border-lot-line bg-lot-chalk px-3 py-3">
+              <div className="flex items-start gap-2.5 text-sm leading-6 text-lot-stone">
+                <ShieldCheck size={17} className="mt-1 shrink-0 text-status-eligible" aria-hidden="true" />
                 <p>Used only to match your ADU&apos;s style. Never shown to builders.</p>
               </div>
             </div>
-            <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-lf-espresso">
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-lot-ink">
               <input
                 type="checkbox"
                 checked={aiConsent}
                 onChange={(e) => setAiConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-lf-hairline text-lf-clay-ink focus:ring-lf-clay-ink"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-lot-stone text-lot-orange-ink focus:ring-lot-orange-ink"
               />
               <span>
                 I agree to send this photo to OpenAI to generate a concept. LotFoundry does not
@@ -301,9 +301,9 @@ export default function StyleMatchPanel({
             </label>
             <label
               htmlFor={inputId}
-              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lf-clay bg-lf-card px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lot-orange-ink focus-within:ring-offset-2 ${
+              className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lot-orange bg-lot-chalk px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lot-orange-ink focus-within:ring-offset-2 ${
                 aiConsent
-                  ? "cursor-pointer hover:bg-lf-sand"
+                  ? "cursor-pointer hover:bg-lot-chalk"
                   : "cursor-not-allowed opacity-50"
               }`}
             >
@@ -316,11 +316,11 @@ export default function StyleMatchPanel({
                 className="sr-only"
                 onChange={(event) => void handleFile(event.target.files?.[0])}
               />
-              <ImagePlus size={22} className="text-lf-clay-ink" aria-hidden="true" />
-              <span className="mt-2 text-sm font-semibold text-lf-espresso">
+              <ImagePlus size={22} className="text-lot-orange-ink" aria-hidden="true" />
+              <span className="mt-2 text-sm font-semibold text-lot-ink">
                 Choose house photo
               </span>
-              <span className="mt-1 lf-kicker-dense text-lf-muted">
+              <span className="mt-1 lf-kicker-dense text-lot-stone">
                 JPG PNG WEBP HEIC
               </span>
             </label>
@@ -328,10 +328,10 @@ export default function StyleMatchPanel({
         )}
 
         {status === "preparing" && (
-          <div className="flex min-h-32 items-center justify-center border border-lf-hairline bg-lf-card px-4 py-6 text-lf-espresso">
+          <div className="flex min-h-32 items-center justify-center border border-lot-line bg-lot-chalk px-4 py-6 text-lot-ink">
             <Loader2
               size={20}
-              className="mr-2 motion-safe:animate-spin text-lf-clay-ink motion-reduce:animate-none"
+              className="mr-2 motion-safe:animate-spin text-lot-orange-ink motion-reduce:animate-none"
               aria-hidden="true"
             />
             <span className="lf-kicker">
@@ -341,40 +341,40 @@ export default function StyleMatchPanel({
         )}
 
         {status === "generating" && (
-          <div className="flex flex-col min-h-32 border border-lf-hairline bg-lf-card p-4 text-lf-espresso">
-            <div className="flex items-center justify-between lf-kicker-dense text-lf-muted mb-3">
+          <div className="flex flex-col min-h-32 border border-lot-line bg-lot-chalk p-4 text-lot-ink">
+            <div className="flex items-center justify-between lf-kicker-dense text-lot-stone mb-3">
               <span>Casting concept…</span>
             </div>
             
-            <div className="relative aspect-[4/3] w-full border border-lf-hairline overflow-hidden mb-3">
+            <div className="relative aspect-[4/3] w-full border border-lot-line overflow-hidden mb-3">
               {previewUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={previewUrl} alt="Uploading house" className="h-full w-full object-cover opacity-60" />
               )}
-              <div className="absolute inset-0 flex items-center justify-center bg-lf-espresso/10">
-                <Loader2 className="motion-safe:animate-spin text-lf-clay-ink" size={24} />
+              <div className="absolute inset-0 flex items-center justify-center bg-lot-ink/10">
+                <Loader2 className="motion-safe:animate-spin text-lot-orange-ink" size={24} />
               </div>
             </div>
 
-            <div className="space-y-2 border-t border-dashed border-lf-hairline pt-3">
+            <div className="space-y-2 border-t border-dashed border-lot-line pt-3">
               {GENERATING_STEPS.map((stepText, idx) => {
                 const state = getStepState(idx, generatingProgress);
                 let icon = null;
-                let textColor = "text-lf-muted";
+                let textColor = "text-lot-stone";
                 
                 if (state === "completed") {
-                  icon = <CheckCircle2 size={16} className="text-lf-forest shrink-0" aria-hidden="true" />;
-                  textColor = "text-lf-forest font-semibold";
+                  icon = <CheckCircle2 size={16} className="text-status-eligible shrink-0" aria-hidden="true" />;
+                  textColor = "text-status-eligible font-semibold";
                 } else if (state === "current") {
-                  icon = <Loader2 size={16} className="motion-safe:animate-spin text-lf-clay-ink shrink-0" aria-hidden="true" />;
-                  textColor = "text-lf-espresso font-semibold";
+                  icon = <Loader2 size={16} className="motion-safe:animate-spin text-lot-orange-ink shrink-0" aria-hidden="true" />;
+                  textColor = "text-lot-ink font-semibold";
                 } else {
                   icon = (
-                    <div className="h-4 w-4 rounded-full border border-lf-hairline flex items-center justify-center shrink-0" aria-hidden="true">
-                      <div className="h-1.5 w-1.5 rounded-full bg-lf-muted" />
+                    <div className="h-4 w-4 rounded-full border border-lot-line flex items-center justify-center shrink-0" aria-hidden="true">
+                      <div className="h-1.5 w-1.5 rounded-full bg-lot-stone" />
                     </div>
                   );
-                  textColor = "text-lf-muted";
+                  textColor = "text-lot-stone";
                 }
 
                 return (
@@ -386,38 +386,38 @@ export default function StyleMatchPanel({
               })}
             </div>
 
-            <div className="h-1.5 w-full bg-lf-taupe-soft mt-4 overflow-hidden rounded-full">
-              <div className="h-full w-full origin-left bg-lf-clay motion-safe:transition-transform duration-300 motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
+            <div className="h-1.5 w-full bg-lot-stone-soft mt-4 overflow-hidden rounded-full">
+              <div className="h-full w-full origin-left bg-lot-orange motion-safe:transition-transform duration-300 motion-safe:animate-pulse" style={{ transform: `scaleX(${generatingProgress / 100})` }} />
             </div>
 
-            <p className="mt-3 text-[11px] text-lf-muted leading-normal">
+            <p className="mt-3 text-[11px] text-lot-stone leading-normal">
               Usually under a minute. You can keep adjusting the plan — we will settle it into the gallery when it is ready.
             </p>
 
             {showDeveloperTestControls && (
-              <div className="mt-4 border border-dashed border-lf-hairline p-2 flex flex-col gap-1.5 bg-lf-sand-2">
-                <div className="font-sans text-[9px] uppercase text-lf-clay-ink text-center font-bold">
+              <div className="mt-4 border border-dashed border-lot-line p-2 flex flex-col gap-1.5 bg-lot-surface">
+                <div className="font-sans text-[9px] uppercase text-lot-orange-ink text-center font-bold">
                   Dev Test Controls
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-forest px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-forest-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control bg-status-eligible px-3 py-1 font-sans text-[10px] font-semibold text-lot-chalk motion-safe:transition hover:bg-status-eligible-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="inline-flex min-h-11 items-center rounded-[3px] bg-lf-brick px-3 py-1 font-sans text-[10px] font-semibold text-lf-sand motion-safe:transition hover:bg-lf-brick-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control bg-status-blocked px-3 py-1 font-sans text-[10px] font-semibold text-lot-chalk motion-safe:transition hover:bg-status-blocked-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-amber-ink/40 bg-lf-amber-soft px-3 py-1 font-sans text-[10px] font-semibold text-lf-amber-ink motion-safe:transition hover:bg-lf-amber-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control border border-status-review/40 bg-status-review-soft px-3 py-1 font-sans text-[10px] font-semibold text-status-review motion-safe:transition hover:bg-status-review-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>
@@ -429,7 +429,7 @@ export default function StyleMatchPanel({
 
         {(status === "preview" || status === "ready") && prepared && previewUrl && (
           <div className="space-y-4">
-            <div className="overflow-hidden border border-lf-hairline bg-lf-card">
+            <div className="overflow-hidden border border-lot-line bg-lot-chalk">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
@@ -438,7 +438,7 @@ export default function StyleMatchPanel({
               />
             </div>
 
-            <dl className="grid grid-cols-2 gap-px overflow-hidden border border-lf-hairline bg-lf-hairline text-[11px]">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden border border-lot-line bg-lot-line text-[11px]">
               <PhotoFact label="Output" value="JPEG" />
               <PhotoFact label="Max edge" value={`${Math.max(prepared.width, prepared.height)} px`} />
               <PhotoFact
@@ -449,8 +449,8 @@ export default function StyleMatchPanel({
             </dl>
 
             {status === "ready" ? (
-              <div className="lf-stamp border-[1.5px] border-lf-forest bg-lf-forest-soft px-3 py-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-lf-forest">
+              <div className="lf-stamp border-[1.5px] border-status-eligible bg-status-eligible-soft px-3 py-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-status-eligible">
                   <CheckCircle2 size={17} aria-hidden="true" />
                   Photo sealed for style match.
                 </div>
@@ -486,8 +486,8 @@ export default function StyleMatchPanel({
               role="alert"
               className={`border px-3 py-3 ${
                 status === "error"
-                  ? "border-lf-brick bg-lf-brick-soft text-lf-brick"
-                  : "border-lf-amber-ink/40 bg-lf-amber-soft text-lf-amber-ink"
+                  ? "border-status-blocked bg-status-blocked-soft text-status-blocked"
+                  : "border-status-review/40 bg-status-review-soft text-status-review"
               }`}
             >
               <div className="flex items-start gap-2 text-sm leading-6">
@@ -532,11 +532,11 @@ export default function StyleMatchPanel({
 
 function PhotoFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-lf-card px-3 py-2">
-      <dt className="lf-kicker-dense text-lf-muted">
+    <div className="bg-lot-chalk px-3 py-2">
+      <dt className="lf-kicker-dense text-lot-stone">
         {label}
       </dt>
-      <dd className="mt-0.5 font-sans font-semibold uppercase tracking-[0.08em] text-lf-espresso">
+      <dd className="mt-0.5 font-sans font-semibold uppercase tracking-[0.08em] text-lot-ink">
         {value}
       </dd>
     </div>

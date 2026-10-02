@@ -83,7 +83,7 @@ export default function BuilderDashboard({
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-lf-sand text-lf-espresso">
+      <div className="min-h-dvh bg-lot-chalk text-lot-ink">
         <BuilderHeader
           identity={displayName || email}
           displayName={displayName || email}
@@ -136,7 +136,7 @@ export default function BuilderDashboard({
   }
 
   return (
-    <div className="min-h-dvh bg-lf-sand text-lf-espresso">
+    <div className="min-h-dvh bg-lot-chalk text-lot-ink">
       <BuilderHeader
         identity={displayName || email}
         displayName={displayName || email}
@@ -145,11 +145,11 @@ export default function BuilderDashboard({
       <main id="main-content" tabIndex={-1} className="p-4 lg:p-8">
         <div className="mx-auto max-w-6xl">
           <h1 className="lf-section-heading">Builder dashboard</h1>
-        <p className="lf-body-sm mt-2 text-lf-muted">
+        <p className="lf-body-sm mt-2 text-lot-stone">
           Review consented ADU feasibility snapshots matched to your service area.
         </p>
         {loadError && (
-          <div role="alert" className="mt-4 rounded-none border border-lf-brick/20 bg-lf-brick-soft p-3 text-sm text-lf-brick">
+          <div role="alert" className="mt-4 rounded-none border border-status-blocked/20 bg-status-blocked-soft p-3 text-sm text-status-blocked">
             {loadError}
           </div>
         )}
@@ -160,14 +160,14 @@ export default function BuilderDashboard({
             />
           ) : (
             <div className="mt-6 space-y-6">
-              <nav aria-label="Dashboard views" className="flex border-b border-lf-hairline">
+              <nav aria-label="Dashboard views" className="flex border-b border-lot-line">
                 <button
                   type="button"
                   onClick={() => setActiveView("inbox")}
                   className={`border-b-2 px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.08em] motion-safe:transition-colors ${
                     activeView === "inbox"
-                      ? "border-lf-commit text-lf-espresso"
-                      : "border-transparent text-lf-muted hover:text-lf-espresso"
+                      ? "border-lot-ink text-lot-ink"
+                      : "border-transparent text-lot-stone hover:text-lot-ink"
                   }`}
                 >
                   Leads Inbox ({items.length})
@@ -177,8 +177,8 @@ export default function BuilderDashboard({
                   onClick={() => setActiveView("billing")}
                   className={`border-b-2 px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.08em] motion-safe:transition-colors ${
                     activeView === "billing"
-                      ? "border-lf-commit text-lf-espresso"
-                      : "border-transparent text-lf-muted hover:text-lf-espresso"
+                      ? "border-lot-ink text-lot-ink"
+                      : "border-transparent text-lot-stone hover:text-lot-ink"
                   }`}
                 >
                   Billing & Credits
@@ -221,17 +221,17 @@ function BuilderHeader({
   onSignOut: () => void;
 }) {
   return (
-    <header className="border-b border-lf-hairline bg-lf-card">
+    <header className="border-b border-lot-line bg-lot-chalk">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
         <Link
           href="/"
           aria-label="LotFoundry home"
-          className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink"
+          className="shrink-0 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
         >
           <BrandLockup className="h-7 w-auto" />
         </Link>
         <div className="flex min-w-0 items-center gap-3">
-          <span className="hidden min-w-0 truncate text-sm text-lf-muted sm:block">{identity}</span>
+          <span className="hidden min-w-0 truncate text-sm text-lot-stone sm:block">{identity}</span>
           <AccountMenu
             displayName={displayName}
             roleLabel="Builder"

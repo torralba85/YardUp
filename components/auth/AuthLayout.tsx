@@ -30,35 +30,35 @@ export function AuthLayout({
         {/* Card */}
         <Bezel>
           <div className="p-8">
-            <h1 className="lf-panel-heading text-lf-espresso">
+            <h1 className="lf-panel-heading text-lot-ink">
               {title}
             </h1>
             {subtitle && (
-              <p className="lf-body-sm mt-2 text-lf-muted">{subtitle}</p>
+              <p className="lf-body-sm mt-2 text-lot-stone">{subtitle}</p>
             )}
             <div className="mt-6">{children}</div>
           </div>
         </Bezel>
 
         {/* Footer links — 44px touch targets on auth secondary links */}
-        <div className="lf-caption mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-lf-muted">
+        <div className="lf-caption mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-lot-stone">
           <Link
             href="/terms"
-            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lf-espresso"
+            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lot-ink"
           >
             Terms &amp; Conditions
           </Link>
           <span aria-hidden>/</span>
           <Link
             href="/privacy"
-            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lf-espresso"
+            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lot-ink"
           >
             Privacy
           </Link>
           <span aria-hidden>/</span>
           <Link
             href="/help"
-            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lf-espresso"
+            className="inline-flex min-h-11 items-center motion-safe:transition-colors hover:text-lot-ink"
           >
             Help
           </Link>

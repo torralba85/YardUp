@@ -25,7 +25,7 @@ const RENT_SCENARIOS: { value: RentScenario; label: string }[] = [
 ];
 
 const selectClass =
-  "mt-1 block min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 text-sm text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
+  "mt-1 block min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-sm text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
 
 /**
  * Interactive ADU cost, rent, and payback calculator for California
@@ -47,13 +47,13 @@ export function AduCostCalculator() {
   return (
     <section
       aria-labelledby="adu-calculator-heading"
-      className="border border-lf-hairline p-6 sm:p-8"
+      className="border border-lot-line p-6 sm:p-8"
     >
-      <h2 id="adu-calculator-heading" className="lf-card-heading text-lf-espresso">
+      <h2 id="adu-calculator-heading" className="lf-card-heading text-lot-ink">
         Estimate your ADU
       </h2>
       <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
-        <label className="text-sm font-semibold text-lf-espresso">
+        <label className="text-sm font-semibold text-lot-ink">
           County
           <select value={county} onChange={(event) => setCounty(event.target.value)} className={selectClass}>
             {CALCULATOR_COUNTIES.map((entry) => (
@@ -63,7 +63,7 @@ export function AduCostCalculator() {
             ))}
           </select>
         </label>
-        <label className="text-sm font-semibold text-lf-espresso">
+        <label className="text-sm font-semibold text-lot-ink">
           Unit size
           <select value={size} onChange={(event) => setSize(Number(event.target.value))} className={selectClass}>
             {SIZES.map((value) => (
@@ -73,7 +73,7 @@ export function AduCostCalculator() {
             ))}
           </select>
         </label>
-        <label className="text-sm font-semibold text-lf-espresso">
+        <label className="text-sm font-semibold text-lot-ink">
           Exterior finish
           <select
             value={finish}
@@ -87,7 +87,7 @@ export function AduCostCalculator() {
             ))}
           </select>
         </label>
-        <label className="text-sm font-semibold text-lf-espresso">
+        <label className="text-sm font-semibold text-lot-ink">
           Rent assumption
           <select
             value={rentScenario}
@@ -106,27 +106,27 @@ export function AduCostCalculator() {
       {estimate ? (
         <dl className="mt-8 grid gap-6 sm:grid-cols-[1.6fr_1fr_1fr]" aria-live="polite">
           <div>
-            <dt className="text-xs uppercase tracking-[0.08em] text-lf-muted">Build cost</dt>
-            <dd className="mt-1 whitespace-nowrap font-display text-2xl font-bold tabular-nums text-lf-espresso">
+            <dt className="text-xs uppercase tracking-[0.08em] text-lot-stone">Build cost</dt>
+            <dd className="mt-1 whitespace-nowrap lf-money-md text-lot-ink">
               {formatCompactCurrency(estimate.costLow)}–{formatCompactCurrency(estimate.costHigh)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-[0.08em] text-lf-muted">Rent per month</dt>
-            <dd className="mt-1 whitespace-nowrap font-display text-2xl font-bold tabular-nums text-lf-espresso">
+            <dt className="text-xs uppercase tracking-[0.08em] text-lot-stone">Rent per month</dt>
+            <dd className="mt-1 whitespace-nowrap lf-money-md text-lot-ink">
               {formatCurrency(estimate.monthlyRent)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-[0.08em] text-lf-muted">Simple payback</dt>
-            <dd className="mt-1 whitespace-nowrap font-display text-2xl font-bold tabular-nums text-lf-espresso">
+            <dt className="text-xs uppercase tracking-[0.08em] text-lot-stone">Simple payback</dt>
+            <dd className="mt-1 whitespace-nowrap lf-money-md text-lot-ink">
               {estimate.paybackYears.toFixed(1)} years
             </dd>
           </div>
         </dl>
       ) : null}
       {estimate ? (
-        <p className="lf-body mt-4 text-sm text-lf-muted">
+        <p className="lf-body mt-4 text-sm text-lot-stone">
           A {size.toLocaleString("en-US")} sq ft ADU in {countyName} nets about{" "}
           {formatCurrency(estimate.annualNoi)} a year after operating costs. These
           are countywide estimates, not a quote for your lot.

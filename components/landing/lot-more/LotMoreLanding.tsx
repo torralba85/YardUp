@@ -36,6 +36,8 @@ import {
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { defaultScenarioState, serializeScenarioParams } from "@/lib/scenario-url";
 import styles from "./LotMoreLanding.module.css";
+import { COLOR } from "@/lib/design-tokens";
+
 
 const LandingAuthGate = dynamic(() => import("../LandingAuthGate"), {
   ssr: false,
@@ -428,8 +430,8 @@ export function LotMoreLanding({
                 >
                   <path
                     d="m800 578 250-70 166 94-231 110Z"
-                    fill="#FF5B2433"
-                    stroke="#FF5B24"
+                    fill={COLOR["lot-orange"]} fillOpacity={0.2}
+                    stroke={COLOR["lot-orange"]}
                     strokeWidth="5"
                     strokeDasharray="14 10"
                   />
@@ -811,8 +813,8 @@ export function LotMoreLanding({
                             strokeWidth="1"
                             strokeDasharray="5 5"
                           />
-                          <path d="M45 45h145v95H45Z" fill="#DADAD3" />
-                          <path d="M250 65h100v65H250Z" fill="#FF5B24" />
+                          <path d="M45 45h145v95H45Z" fill={COLOR["lot-line"]} />
+                          <path d="M250 65h100v65H250Z" fill={COLOR["lot-orange"]} />
                           <path
                             d="M195 95h50"
                             stroke="currentColor"

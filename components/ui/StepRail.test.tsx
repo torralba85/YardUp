@@ -24,7 +24,7 @@ describe("StepRail", () => {
     const current = screen.getByRole("button", { name: /Rules & Fit/ });
     expect(current).toHaveAttribute("aria-current", "step");
     expect(current).toHaveClass("focus-visible:ring-lot-chalk");
-    expect(screen.getByText("Rules & Fit")).toHaveClass("text-lf-sand");
+    expect(screen.getByText("Rules & Fit")).toHaveClass("text-lot-chalk");
   });
 
   it("selects an enabled step on click", () => {
@@ -47,7 +47,7 @@ describe("StepRail", () => {
     render(<StepRail aria-label="Studio steps" steps={steps} onSelect={() => {}} />);
     const revenueMarks = screen.getAllByText("$");
     expect(revenueMarks).toHaveLength(2);
-    revenueMarks.forEach((mark) => expect(mark).toHaveClass("text-lf-money-on-dark"));
+    revenueMarks.forEach((mark) => expect(mark).toHaveClass("text-lot-chalk"));
   });
 
   it("moves focus to the next enabled step with ArrowDown", () => {

@@ -1,3 +1,4 @@
+import { COLOR } from "@/lib/design-tokens";
 import {
   finishLabels,
   formatCurrency,
@@ -229,16 +230,16 @@ export function buildReportHtml({
        dashboard. Sharp corners, double frame, ledger T-account, recorder stamp. */
     :root {
       color-scheme: light;
-      --ink: #161616;
-      --muted: #65655F;
-      --line: #DADAD3;
-      --taupe: #B7B7AE;
-      --paper: #F5F5F0;
-      --card: #F5F5F0;
-      --clay: #C43708;
-      --forest: #176B4C;
-      --amber: #8A5300;
-      --brick: #A82D16;
+      --ink: ${COLOR["lot-ink"]};
+      --muted: ${COLOR["lot-stone"]};
+      --line: ${COLOR["lot-line"]};
+      --taupe: ${COLOR["lot-stone-on-dark"]};
+      --paper: ${COLOR["lot-chalk"]};
+      --card: ${COLOR["lot-chalk"]};
+      --clay: ${COLOR["lot-orange-ink"]};
+      --forest: ${COLOR["status-eligible"]};
+      --amber: ${COLOR["status-review"]};
+      --brick: ${COLOR["status-blocked"]};
       font-family: "Manrope", Arial, sans-serif;
     }
     * { box-sizing: border-box; }
@@ -360,8 +361,8 @@ export function buildReportHtml({
     .risk-row p, .track-basis, .stage-copy { margin-top: 4px; font-size: 11px; line-height: 1.55; }
     .data-chip { display: inline-block; border: 1px solid var(--line); padding: 2px 7px; font-family: "Manrope", Arial, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
     .tone-low { color: var(--muted); }
-    .tone-medium { color: #8A5300; border-color: #8A530060; background: #8A53001A; }
-    .tone-high { color: var(--brick); border-color: #A82D1660; background: #A82D161A; }
+    .tone-medium { color: ${COLOR["status-review"]}; border-color: ${COLOR["status-review"]}60; background: ${COLOR["status-review"]}1A; }
+    .tone-high { color: var(--brick); border-color: ${COLOR["status-blocked"]}60; background: ${COLOR["status-blocked"]}1A; }
     .stage-list { list-style: none; margin: 16px 0 0; padding: 0; }
     .stage { display: grid; grid-template-columns: 24px 1fr; gap: 10px; position: relative; padding-bottom: 13px; }
     .stage + .stage { margin-top: 0; }
@@ -372,7 +373,7 @@ export function buildReportHtml({
     .stage-weeks, .stage-status { font-family: "Manrope", Arial, sans-serif; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
     .stage-status { display: block; margin-top: 5px; font-weight: 600; letter-spacing: 0.08em; }
     .stage-clear { color: var(--forest); }
-    .stage-review { color: #8A5300; }
+    .stage-review { color: ${COLOR["status-review"]}; }
     .stage-blocker { color: var(--brick); }
     .brief-disclaimer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 10px; line-height: 1.6; }
     .motto {
@@ -419,7 +420,7 @@ export function buildReportHtml({
       .stamp { right: 18px; bottom: 18px; }
     }
     @media print {
-      body { background: white; }
+      body { background: ${COLOR["lot-print-paper"]}; }
       main { max-width: none; padding: 0; }
       .frame { border-color: var(--ink); }
       .stamp { opacity: 0.85; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

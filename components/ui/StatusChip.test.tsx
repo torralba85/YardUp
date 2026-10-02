@@ -26,12 +26,12 @@ describe("StatusChip", () => {
 
   it("uses the AA-safe amber ink for the review tone on light surfaces", () => {
     const { container } = render(<StatusChip status="review" />);
-    expect(container.firstChild).toHaveClass("text-lf-amber-ink");
+    expect(container.firstChild).toHaveClass("text-status-review");
   });
 
   it("uses forest for the clear tone", () => {
     const { container } = render(<StatusChip status="clear" />);
-    expect(container.firstChild).toHaveClass("text-lf-forest");
+    expect(container.firstChild).toHaveClass("text-status-eligible");
   });
 
   it("is rectangular, not a pill (chips are read-only data)", () => {

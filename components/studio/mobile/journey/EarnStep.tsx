@@ -44,22 +44,22 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lf-clay-ink">Step 2 · Earn</p>
-      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
+      <p className="lf-kicker text-lot-orange-ink">Step 2 · Earn</p>
+      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
         Your backyard could earn
       </h1>
-      <p className="mt-1 font-sans text-xs text-lf-muted">{parcelName}</p>
+      <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
 
       <div className="mt-7">
-        <MoneyFigure value={result.monthlyRent} animate size="hero" tone="forest" />
-        <p className="mt-3 text-sm text-lf-muted">
+        <MoneyFigure value={result.monthlyRent} animate size="hero" tone="onLight" />
+        <p className="mt-3 text-sm text-lot-stone">
           About{" "}
-          <span className="font-display text-lg font-semibold text-lf-money">
+          <span className="font-display text-lg font-semibold text-lot-ink">
             {formatCurrency(annualGross)}
           </span>{" "}
           a year in gross rent from a {result.aduSqft.toLocaleString()} sf backyard home.
         </p>
-        <p className="mt-1 font-sans text-xs text-lf-muted">
+        <p className="mt-1 font-sans text-xs text-lot-stone">
           Estimated potential for rental income, guest space, or family living.
         </p>
       </div>
@@ -69,8 +69,8 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
         data-testid="earn-confidence"
         className={`mt-6 flex items-start gap-1.5 rounded-none border px-3 py-2.5 font-sans text-xs leading-5 ${
           unverified
-            ? "border-lf-amber-ink/35 bg-lf-amber-soft text-lf-amber-ink"
-            : "border-lf-hairline bg-lf-card text-lf-muted"
+            ? "border-status-review/35 bg-status-review-soft text-status-review"
+            : "border-lot-line bg-lot-chalk text-lot-stone"
         }`}
       >
         {unverified && <TriangleAlert size={12} className="mt-px shrink-0" aria-hidden="true" />}
@@ -80,7 +80,7 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
         </span>
       </div>
       {estimated && (
-        <p className="mt-2 text-xs leading-5 text-lf-muted">
+        <p className="mt-2 text-xs leading-5 text-lot-stone">
           Demo figures — search your address for your own number.
         </p>
       )}

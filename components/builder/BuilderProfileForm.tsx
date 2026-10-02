@@ -44,7 +44,7 @@ export default function BuilderProfileForm({
   }
   function fieldError(id: string) {
     return invalidField === id && error
-      ? <span id={`${id}-error`} role="alert" className="mt-1 block text-sm text-lf-brick">{error}</span>
+      ? <span id={`${id}-error`} role="alert" className="mt-1 block text-sm text-status-blocked">{error}</span>
       : null;
   }
 
@@ -98,21 +98,21 @@ export default function BuilderProfileForm({
     <form
       noValidate
       onSubmit={handleSubmit}
-      className="mt-6 grid gap-4 rounded-none border border-lf-hairline bg-lf-card p-4 md:grid-cols-2"
+      className="mt-6 grid gap-4 rounded-none border border-lot-line bg-lot-chalk p-4 md:grid-cols-2"
     >
       <div className="md:col-span-2">
         <h2 className="lf-panel-heading">Builder profile</h2>
-        <p className="lf-body-sm mt-1 text-lf-muted">
+        <p className="lf-body-sm mt-1 text-lot-stone">
           Add your service coverage before receiving matched ADU snapshots.
         </p>
-        <p className="lf-caption mt-1 text-lf-muted">* Required</p>
+        <p className="lf-caption mt-1 text-lot-stone">* Required</p>
       </div>
       {error && !invalidField && (
-        <div role="alert" className="md:col-span-2 text-sm text-lf-brick">
+        <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
           {error}
         </div>
       )}
-      <label htmlFor="builder-company-name" className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-company-name" className="lf-body-sm font-medium text-lot-ink">
         <span id="builder-company-name-label">Company name</span> <span aria-hidden="true">*</span>
         <input
           id="builder-company-name"
@@ -123,14 +123,14 @@ export default function BuilderProfileForm({
           aria-describedby={invalidField === "builder-company-name" ? "builder-company-name-error" : undefined}
           type="text"
           autoComplete="organization"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
           aria-required="true"
         />
         {fieldError("builder-company-name")}
       </label>
-      <label htmlFor="builder-contact-email" className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-contact-email" className="lf-body-sm font-medium text-lot-ink">
         <span id="builder-contact-email-label">Contact email</span> <span aria-hidden="true">*</span>
         <input
           id="builder-contact-email"
@@ -141,37 +141,37 @@ export default function BuilderProfileForm({
           aria-describedby={invalidField === "builder-contact-email" ? "builder-contact-email-error" : undefined}
           type="email"
           autoComplete="email"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
           aria-required="true"
         />
         {fieldError("builder-contact-email")}
       </label>
-      <label htmlFor="builder-phone" className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-phone" className="lf-body-sm font-medium text-lot-ink">
         Phone (optional)
         <input
           id="builder-phone"
           type="tel"
           autoComplete="tel"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
         />
       </label>
-      <label htmlFor="builder-license" className="lf-body-sm font-medium text-lf-espresso">
+      <label htmlFor="builder-license" className="lf-body-sm font-medium text-lot-ink">
         License number (optional)
         <input
           id="builder-license"
           type="text"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           value={licenseNumber}
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
       </label>
       <label
         htmlFor="builder-service-areas"
-        className="lf-body-sm font-medium text-lf-espresso md:col-span-2"
+        className="lf-body-sm font-medium text-lot-ink md:col-span-2"
       >
         <span id="builder-service-areas-label">Service areas</span>
         <input
@@ -182,7 +182,7 @@ export default function BuilderProfileForm({
           aria-invalid={invalidField === "builder-service-areas"}
           aria-describedby={invalidField === "builder-service-areas" ? "builder-service-areas-error" : undefined}
           type="text"
-          className="mt-1 w-full rounded-[3px] border border-lf-hairline bg-lf-sand px-3 py-2 text-base sm:text-sm"
+          className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           placeholder="Seattle WA, Portland OR"
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}
@@ -191,12 +191,12 @@ export default function BuilderProfileForm({
       </label>
       <label
         htmlFor="builder-active"
-        className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-lf-muted md:col-span-2"
+        className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-lot-stone md:col-span-2"
       >
         <input
           id="builder-active"
           type="checkbox"
-          className="h-5 w-5 shrink-0 accent-lf-espresso"
+          className="h-5 w-5 shrink-0 accent-lot-ink"
           checked={active}
           onChange={(event) => setActive(event.target.checked)}
         />
@@ -205,7 +205,7 @@ export default function BuilderProfileForm({
       <Button
         type="submit"
         loading={isPending}
-        className="min-h-11 rounded-[3px] bg-lf-clay px-4 text-sm font-semibold text-lf-primary-label motion-safe:transition-colors hover:bg-lf-clay-strong disabled:opacity-50"
+        className="min-h-11 rounded-control bg-lot-orange px-4 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover disabled:opacity-50"
       >
         {isPending ? "Saving…" : "Save builder profile"}
       </Button>

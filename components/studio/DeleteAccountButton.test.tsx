@@ -23,9 +23,9 @@ describe("DeleteAccountButton", () => {
 
     const confirm = screen.getByRole("button", { name: "Delete permanently" });
     expect(confirm).toHaveClass(
-      "bg-lf-brick",
-      "hover:bg-lf-brick-strong",
-      "focus-visible:ring-lf-brick",
+      "bg-status-blocked",
+      "hover:bg-status-blocked-hover",
+      "focus-visible:ring-status-blocked",
     );
 
     await user.click(confirm);

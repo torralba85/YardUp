@@ -48,18 +48,18 @@ export function SecurityPanel({
           onChange={(event) => { onChange(event.target.value); if (invalid) { setInvalidField(null); setError(null); } }}
           aria-invalid={invalid}
           aria-describedby={invalid ? `${id}-error` : undefined}
-          className="min-h-11 w-full rounded-[3px] border border-lf-hairline bg-lf-card px-3.5 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" />
-        {invalid && error && <p id={`${id}-error`} role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
+          className="min-h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3.5 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" />
+        {invalid && error && <p id={`${id}-error`} role="alert" className="mt-1 text-sm text-status-blocked">{error}</p>}
       </div>
     );
   }
 
   if (!capabilities.canChangeEmail && !capabilities.canChangePassword) {
     return (
-      <div className="rounded-none border border-lf-hairline bg-lf-card p-4">
-        <p className="lf-body-sm text-lf-muted">
+      <div className="rounded-none border border-lot-line bg-lot-chalk p-4">
+        <p className="lf-body-sm text-lot-stone">
           Sign-in for this account is managed by{" "}
-          <strong className="text-lf-espresso">{capabilities.managedBy}</strong>. Update
+          <strong className="text-lot-ink">{capabilities.managedBy}</strong>. Update
           your email or password in that provider&rsquo;s account settings.
         </p>
       </div>
@@ -123,12 +123,12 @@ export function SecurityPanel({
 
   return (
     <div className="space-y-6">
-      <p className="lf-body-sm text-lf-muted">
-        Managed by <strong className="text-lf-espresso">{capabilities.managedBy}</strong>.
+      <p className="lf-body-sm text-lot-stone">
+        Managed by <strong className="text-lot-ink">{capabilities.managedBy}</strong>.
       </p>
       {capabilities.canChangeEmail && onChangeEmail ? (
         <form noValidate onSubmit={handleEmail} className="space-y-3">
-          <h3 className="text-sm font-semibold text-lf-espresso">Change email</h3>
+          <h3 className="text-sm font-semibold text-lot-ink">Change email</h3>
           {field("security-email", "New email", "email", email, setEmail, "email")}
           {field("security-email-password", "Current password", "password", emailPassword, setEmailPassword, "current-password")}
           <Button type="submit" variant="secondary" loading={pending}>
@@ -138,7 +138,7 @@ export function SecurityPanel({
       ) : null}
       {capabilities.canChangePassword && onChangePassword ? (
         <form noValidate onSubmit={handlePassword} className="space-y-3">
-          <h3 className="text-sm font-semibold text-lf-espresso">Change password</h3>
+          <h3 className="text-sm font-semibold text-lot-ink">Change password</h3>
           {field("security-current-password", "Current password", "password", passwordPassword, setPasswordPassword, "current-password")}
           {field("security-new-password", "New password", "password", nextPassword, setNextPassword, "new-password")}
           <Button type="submit" variant="secondary" loading={pending}>
@@ -147,12 +147,12 @@ export function SecurityPanel({
         </form>
       ) : null}
       {error && !invalidField ? (
-        <p role="alert" className="text-sm text-lf-brick">
+        <p role="alert" className="text-sm text-status-blocked">
           {error}
         </p>
       ) : null}
       {status ? (
-        <p role="status" className="text-sm text-lf-forest">
+        <p role="status" className="text-sm text-status-eligible">
           {status}
         </p>
       ) : null}

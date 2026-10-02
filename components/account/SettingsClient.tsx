@@ -42,7 +42,7 @@ export function SettingsClient() {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16" aria-busy="true">
-        <p className="lf-body-sm text-lf-muted">Loading account…</p>
+        <p className="lf-body-sm text-lot-stone">Loading account…</p>
       </div>
     );
   }
@@ -51,17 +51,17 @@ export function SettingsClient() {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
         <h1 className="lf-section-heading">Account settings</h1>
-        <p className="lf-body-sm mt-3 text-lf-muted">
+        <p className="lf-body-sm mt-3 text-lot-stone">
           Sign in to manage your profile, security, and data.
         </p>
         <Link
           href="/login?next=/settings"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
         >
           Sign in
         </Link>
         <div className="mt-4">
-          <Link href="/signup?next=/settings" className="text-sm font-medium text-lf-clay-ink">
+          <Link href="/signup?next=/settings" className="text-sm font-medium text-lot-orange-ink">
             Create account
           </Link>
         </div>
@@ -73,14 +73,14 @@ export function SettingsClient() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-lf-hairline bg-lf-card">
+      <header className="border-b border-lot-line bg-lot-chalk">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between gap-4 px-4">
           <Link href="/" className="shrink-0">
             <BrandLockup className="h-7 w-auto" />
           </Link>
           <Link
             href={buildersAllowed && profile.role === "builder" ? "/builder" : "/studio"}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
           >
             Back to {buildersAllowed && profile.role === "builder" ? "dashboard" : "studio"}
           </Link>
@@ -90,7 +90,7 @@ export function SettingsClient() {
       <div className="mx-auto max-w-2xl space-y-8 px-4 py-10">
         <div>
           <h1 className="lf-section-heading">Settings</h1>
-          <p className="lf-body-sm mt-2 text-lf-muted">
+          <p className="lf-body-sm mt-2 text-lot-stone">
             {displayName}
             {buildersAllowed && profile.role === "builder" ? " · Builder" : " · Lot owner"}
           </p>
@@ -124,12 +124,12 @@ export function SettingsClient() {
           <Bezel>
             <section className="space-y-3 p-6">
               <h2 className="lf-card-heading">Builder profile</h2>
-              <p className="lf-body-sm text-lf-muted">
+              <p className="lf-body-sm text-lot-stone">
                 Update company details and service areas from the builder dashboard.
               </p>
               <Link
                 href="/builder"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
               >
                 Open builder dashboard
               </Link>
@@ -140,13 +140,13 @@ export function SettingsClient() {
         <Bezel>
           <section className="space-y-3 p-6">
             <h2 className="lf-card-heading">Certificates of Feasibility</h2>
-            <p className="lf-body-sm text-lf-muted">
+            <p className="lf-body-sm text-lot-stone">
               View, download, or open previously unlocked feasibility certificates for your properties.
             </p>
             <div>
               <Link
                 href="/certificates"
-                className="inline-flex min-h-11 items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
               >
                 View your certificates
               </Link>
@@ -157,7 +157,7 @@ export function SettingsClient() {
         <Bezel>
           <section className="space-y-4 p-6">
             <h2 className="lf-card-heading">Your data</h2>
-            <p className="lf-body-sm text-lf-muted">
+            <p className="lf-body-sm text-lot-stone">
               Download a portable JSON export of your profile, saved concepts, and
               purchase ledger. Other users&rsquo; information is never included.
             </p>
@@ -171,13 +171,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/help"
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-4 text-sm font-semibold text-lot-ink"
               >
                 Get help
               </Link>
               <Link
                 href="/feedback"
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline bg-lf-card px-4 text-sm font-semibold text-lf-espresso"
+                className="inline-flex min-h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-4 text-sm font-semibold text-lot-ink"
               >
                 Send feedback
               </Link>
@@ -191,13 +191,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/terms"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
               >
                 Terms &amp; Conditions
               </Link>
               <Link
                 href="/privacy"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
               >
                 Privacy Policy
               </Link>
@@ -208,7 +208,7 @@ export function SettingsClient() {
         <Bezel>
           <section className="space-y-4 p-6">
             <h2 className="lf-card-heading">Danger zone</h2>
-            <p className="lf-body-sm text-lf-muted">
+            <p className="lf-body-sm text-lot-stone">
               Deleting your account removes saved concepts and profile data. Redacted
               marketplace and payment ledgers may be retained without contact PII.
             </p>

@@ -8,7 +8,7 @@ import { validateEmail } from "@/lib/account-settings";
 import { Button } from "@/components/ui/Button";
 
 const INPUT_CLASS =
-  "w-full rounded-none border border-lf-taupe/30 bg-lf-sand px-3.5 py-3 text-sm text-lf-espresso placeholder-lf-muted/60 motion-safe:transition-colors focus-visible:border-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
+  "w-full rounded-none border border-lot-stone/30 bg-lot-chalk px-3.5 py-3 text-sm text-lot-ink placeholder-lot-stone/60 motion-safe:transition-colors focus-visible:border-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink";
 
 /**
  * The public feedback form: category, message, optional reply email, and a
@@ -122,13 +122,13 @@ function FeedbackFields() {
 
   if (ticketId) {
     return (
-      <div ref={successRef} tabIndex={-1} role="status" className="rounded-none border border-lf-hairline bg-lf-card p-5">
-        <p className="lf-body text-lf-espresso">
+      <div ref={successRef} tabIndex={-1} role="status" className="rounded-none border border-lot-line bg-lot-chalk p-5">
+        <p className="lf-body text-lot-ink">
           Thank you — your note is in. We read every submission.
         </p>
-        <p className="lf-body-sm mt-3 text-lf-muted">
+        <p className="lf-body-sm mt-3 text-lot-stone">
           Ticket ID{" "}
-          <span className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-lf-espresso">
+          <span className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
             {ticketId}
           </span>
           {email ? " — we'll reply to the email you provided if follow-up is needed." : ""}
@@ -140,7 +140,7 @@ function FeedbackFields() {
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="feedback-category" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
+        <label htmlFor="feedback-category" className="lf-body-sm mb-1.5 block font-medium text-lot-ink">
           Category
         </label>
         <select
@@ -158,7 +158,7 @@ function FeedbackFields() {
       </div>
 
       <div>
-        <label htmlFor="feedback-message" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
+        <label htmlFor="feedback-message" className="lf-body-sm mb-1.5 block font-medium text-lot-ink">
           What happened, or what should we build?
         </label>
         <textarea
@@ -175,15 +175,15 @@ function FeedbackFields() {
           className={INPUT_CLASS}
           placeholder="For example, the map does not load…"
         />
-        <p id="feedback-message-help" className="mt-1 text-xs text-lf-muted">
+        <p id="feedback-message-help" className="mt-1 text-xs text-lot-stone">
           At least 10 characters.{draftAvailable ? " Your message draft stays in this tab until you send it." : ""}
         </p>
-        {invalidField === "message" && <p id="feedback-message-error" role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
+        {invalidField === "message" && <p id="feedback-message-error" role="alert" className="mt-1 text-sm text-status-blocked">{error}</p>}
       </div>
 
       <div>
-        <label htmlFor="feedback-email" className="lf-body-sm mb-1.5 block font-medium text-lf-espresso">
-          Reply email <span className="font-normal text-lf-muted">(optional)</span>
+        <label htmlFor="feedback-email" className="lf-body-sm mb-1.5 block font-medium text-lot-ink">
+          Reply email <span className="font-normal text-lot-stone">(optional)</span>
         </label>
         <input
           id="feedback-email"
@@ -199,7 +199,7 @@ function FeedbackFields() {
           className={INPUT_CLASS}
           placeholder="you@example.com…"
         />
-        {invalidField === "email" && <p id="feedback-email-error" role="alert" className="mt-1 text-sm text-lf-brick">{error}</p>}
+        {invalidField === "email" && <p id="feedback-email-error" role="alert" className="mt-1 text-sm text-status-blocked">{error}</p>}
       </div>
 
       {/* Honeypot: humans never see or fill this; bots that do get a generic
@@ -221,7 +221,7 @@ function FeedbackFields() {
       </Button>
 
       {error && !invalidField && (
-        <p role="alert" className="flex items-center gap-1.5 text-xs text-lf-brick">
+        <p role="alert" className="flex items-center gap-1.5 text-xs text-status-blocked">
           <TriangleAlert size={12} aria-hidden /> {error}
         </p>
       )}

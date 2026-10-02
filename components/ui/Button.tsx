@@ -9,7 +9,7 @@ import { haptic } from "@/lib/haptics";
  * - `primary` — Signal Orange (#FF5B24) fill with carbon label (#161616); hover #EE4B17.
  * - `commit` — Carbon (#161616) fill with chalk label (#F5F5F0); hover #33332F.
  * - `selected` — Carbon fill with chalk label in toggle sets.
- * - `secondary` — Drafting hairline outline (#DADAD3) on chalk ground (#F5F5F0).
+ * - `secondary` — Stone control boundary on chalk ground (#F5F5F0).
  * - `ghost` — Text-only carbon with soft hover wash.
  * - `destructive` — Blocked red (#A82D16) fill with chalk label.
  */
@@ -23,15 +23,15 @@ export type ButtonVariant =
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: "bg-lf-clay text-lf-primary-label hover:bg-lf-clay-strong",
-  commit: "bg-lf-commit text-lf-sand hover:bg-lf-commit-strong",
+  primary: "bg-lot-orange text-lot-ink hover:bg-lot-orange-hover",
+  commit: "bg-lot-ink text-lot-chalk hover:bg-lot-ink-hover",
   selected:
-    "border border-lf-espresso bg-lf-espresso text-lf-sand ring-1 ring-lf-espresso/20",
+    "border border-lot-ink bg-lot-ink text-lot-chalk ring-1 ring-lot-ink/20",
   secondary:
-    "border border-lf-hairline bg-lf-sand text-lf-espresso hover:border-lf-taupe hover:bg-lf-sand-2",
-  ghost: "text-lf-espresso hover:bg-lf-hairline/30",
+    "border border-lot-stone bg-lot-chalk text-lot-ink hover:border-lot-ink hover:bg-lot-surface",
+  ghost: "text-lot-ink hover:bg-lot-line/30",
   destructive:
-    "bg-lf-brick text-lf-sand hover:bg-lf-brick-strong focus-visible:ring-lf-brick",
+    "bg-status-blocked text-lot-chalk hover:bg-status-blocked-hover focus-visible:ring-status-blocked",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
@@ -91,7 +91,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         className={cn(
-          "inline-flex select-none items-center justify-center rounded-[3px] font-bold motion-safe:transition",
+          "inline-flex select-none items-center justify-center rounded-control font-bold motion-safe:transition",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
           "motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
           VARIANT_CLASS[variant],

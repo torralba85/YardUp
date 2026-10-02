@@ -46,15 +46,15 @@ export default function ActStep({
       className="flex min-h-full flex-col"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <div className="border-b border-lf-hairline bg-lf-sand-2 px-5 pb-6 pt-7">
-        <p className="lf-kicker flex items-center gap-1.5 text-lf-forest">
+      <div className="border-b border-lot-line bg-lot-surface px-5 pb-6 pt-7">
+        <p className="lf-kicker flex items-center gap-1.5 text-status-eligible">
           <Sparkles size={13} aria-hidden="true" />
           Step 5 · Act
         </p>
-        <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lf-espresso">
+        <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
           Your feasibility study is ready.
         </h1>
-        <p className="mt-1 font-sans text-[11px] text-lf-muted">{parcelName}</p>
+        <p className="mt-1 font-sans text-[11px] text-lot-stone">{parcelName}</p>
 
         <div className="mt-5 flex flex-col gap-2.5">
           <Button

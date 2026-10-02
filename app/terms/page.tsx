@@ -70,12 +70,12 @@ export default function TermsPage() {
           You must provide true, accurate, and complete information when creating an account. You
           are solely responsible for maintaining the confidentiality of your credentials and for all
           activities occurring under your account. You agree to notify{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>{" "}
           immediately of any unauthorized account access. You may delete your account at any time via
           Settings or through our public{" "}
-          <Link href="/delete-account" className="font-medium text-lf-clay-ink underline">
+          <Link href="/delete-account" className="font-medium text-lot-orange-ink underline">
             Delete Account
           </Link>{" "}
           surface.
@@ -95,7 +95,7 @@ export default function TermsPage() {
           generated and delivered immediately upon payment, sales are final and non-refundable, except
           where required by applicable law or platform store policies. If you experience a technical
           delivery defect, contact{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>
           . Demo environments may grant scenario unlocks without payment for evaluation purposes.
@@ -221,7 +221,7 @@ export default function TermsPage() {
         <p>
           <strong>Informal Negotiation:</strong> Before initiating arbitration, you and LotFoundry agree
           to attempt to resolve any dispute, claim, or controversy informally by contacting{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>{" "}
           for at least thirty (30) days.
@@ -269,7 +269,7 @@ export default function TermsPage() {
       <LegalSection title="17. Contact Information">
         <p>
           If you have questions regarding these Terms, contact us at:{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lf-clay-ink underline">
+          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>
           .

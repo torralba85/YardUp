@@ -41,22 +41,22 @@ export function CertificatesClient() {
   if (authLoading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center" aria-busy="true">
-        <p className="lf-body-sm text-lf-muted">Loading your certificates…</p>
+        <p className="lf-body-sm text-lot-stone">Loading your certificates…</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-dvh bg-lf-sand text-lf-espresso">
-        <header className="border-b border-lf-hairline bg-lf-card">
+      <div className="min-h-dvh bg-lot-chalk text-lot-ink">
+        <header className="border-b border-lot-line bg-lot-chalk">
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between gap-4 px-4 sm:px-6">
             <Link href="/" className="shrink-0" aria-label="LotFoundry home">
               <BrandLockup className="h-7 w-auto" />
             </Link>
             <Link
               href="/studio"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
             >
               Open studio
             </Link>
@@ -64,17 +64,17 @@ export function CertificatesClient() {
         </header>
 
         <div className="mx-auto max-w-md px-4 py-20 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[3px] border border-lf-hairline bg-lf-card">
-            <Award className="h-6 w-6 text-lf-clay-ink" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
+            <Award className="h-6 w-6 text-lot-orange-ink" />
           </div>
           <h1 className="lf-section-heading mt-6">Certificates of Feasibility</h1>
-          <p className="lf-body-sm mt-3 text-lf-muted">
+          <p className="lf-body-sm mt-3 text-lot-stone">
             Sign in to view, download, and open unlocked certificates for your properties.
           </p>
           <div className="mt-8">
             <Link
               href="/login?next=/certificates"
-              className="inline-flex h-11 w-full items-center justify-center rounded-[3px] bg-lf-clay px-5 text-sm font-semibold text-lf-primary-label"
+              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
             >
               Sign in
             </Link>
@@ -82,7 +82,7 @@ export function CertificatesClient() {
           <div className="mt-4">
             <Link
               href="/signup?next=/certificates"
-              className="text-sm font-medium text-lf-clay-ink"
+              className="text-sm font-medium text-lot-orange-ink"
             >
               Create free account
             </Link>
@@ -93,8 +93,8 @@ export function CertificatesClient() {
   }
 
   return (
-    <div className="min-h-dvh bg-lf-sand text-lf-espresso">
-      <header className="border-b border-lf-hairline bg-lf-card">
+    <div className="min-h-dvh bg-lot-chalk text-lot-ink">
+      <header className="border-b border-lot-line bg-lot-chalk">
         <div className="mx-auto flex h-16 max-w-4xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="shrink-0" aria-label="LotFoundry home">
             <BrandLockup className="h-7 w-auto" />
@@ -102,7 +102,7 @@ export function CertificatesClient() {
           <div className="flex items-center gap-4">
             <Link
               href="/studio"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-lf-clay-ink hover:underline"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink hover:underline"
             >
               Open 3D Studio
             </Link>
@@ -117,10 +117,10 @@ export function CertificatesClient() {
       </header>
 
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <div className="border-b border-lf-hairline pb-6">
-          <p className="lf-kicker-dense text-lf-muted">RECORDS · UNLOCKED PROPERTIES</p>
+        <div className="border-b border-lot-line pb-6">
+          <p className="lf-kicker-dense text-lot-stone">RECORDS · UNLOCKED PROPERTIES</p>
           <h1 className="lf-section-heading mt-2">Certificates of Feasibility</h1>
-          <p className="lf-body-sm mt-2 max-w-2xl text-lf-muted">
+          <p className="lf-body-sm mt-2 max-w-2xl text-lot-stone">
             Official feasibility records and verified property analyses unlocked for your lots.
             Every certificate remains unlocked permanently and can be reopened in the 3D Studio anytime.
           </p>
@@ -129,12 +129,12 @@ export function CertificatesClient() {
         {certsLoading ? (
           <div className="space-y-4 py-12" role="status" aria-busy="true">
             <span className="sr-only">Loading certificates…</span>
-            <Skeleton className="h-32 border border-lf-hairline" />
-            <Skeleton className="h-32 border border-lf-hairline" />
+            <Skeleton className="h-32 border border-lot-line" />
+            <Skeleton className="h-32 border border-lot-line" />
           </div>
         ) : error ? (
-          <div className="my-8 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-6 text-center">
-            <p role="alert" className="flex items-center justify-center gap-2 text-sm text-lf-brick">
+          <div className="my-8 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-6 text-center">
+            <p role="alert" className="flex items-center justify-center gap-2 text-sm text-status-blocked">
               <TriangleAlert size={16} className="shrink-0" aria-hidden="true" />
               {error}
             </p>
@@ -148,14 +148,14 @@ export function CertificatesClient() {
             </Button>
           </div>
         ) : certificates.length === 0 ? (
-          <div className="my-10 rounded-none border border-dashed border-lf-hairline bg-lf-card p-12 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[3px] border border-lf-hairline bg-lf-sand">
-              <ShieldCheck className="h-7 w-7 text-lf-muted" />
+          <div className="my-10 rounded-none border border-dashed border-lot-line bg-lot-chalk p-12 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
+              <ShieldCheck className="h-7 w-7 text-lot-stone" />
             </div>
-            <h2 className="mt-4 text-base font-semibold text-lf-espresso">
+            <h2 className="mt-4 text-base font-semibold text-lot-ink">
               No certificates unlocked yet
             </h2>
-            <p className="lf-body-sm mx-auto mt-2 max-w-md text-lf-muted">
+            <p className="lf-body-sm mx-auto mt-2 max-w-md text-lot-stone">
               When you evaluate a property in the 3D Studio and unlock its Certificate of
               Feasibility, it will appear here. Certificates include property records, zoning
               conformance, site fit analysis, and AI project briefs.
@@ -163,7 +163,7 @@ export function CertificatesClient() {
             <div className="mt-6">
               <Link
                 href="/studio"
-                className="inline-flex min-h-11 items-center justify-center rounded-[3px] bg-lf-clay px-6 text-sm font-semibold text-lf-primary-label"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-6 text-sm font-semibold text-lot-ink"
               >
                 Explore 3D Studio
               </Link>
@@ -171,7 +171,7 @@ export function CertificatesClient() {
           </div>
         ) : (
           <div className="mt-8 space-y-6">
-            <p className="lf-kicker-dense text-lf-muted">
+            <p className="lf-kicker-dense text-lot-stone">
               {certificates.length} {certificates.length === 1 ? "Certificate" : "Certificates"} Unlocked
             </p>
 
@@ -192,26 +192,26 @@ export function CertificatesClient() {
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusChip status="clear" label="Unlocked" />
-                          <span className="text-xs text-lf-muted">
+                          <span className="text-xs text-lot-stone">
                             {formatDate(cert.createdAt)}
                           </span>
                           {cert.demo && (
-                            <span className="rounded-none bg-lf-sand-2 px-1.5 py-0.5 text-[11px] font-medium text-lf-muted">
+                            <span className="rounded-none bg-lot-surface px-1.5 py-0.5 text-[11px] font-medium text-lot-stone">
                               Demo
                             </span>
                           )}
                         </div>
 
                         <div>
-                          <h2 className="text-lg font-semibold text-lf-espresso">
+                          <h2 className="text-lg font-semibold text-lot-ink">
                             {title}
                           </h2>
                           {subtitle && (
-                            <p className="lf-body-sm text-lf-muted">{subtitle}</p>
+                            <p className="lf-body-sm text-lot-stone">{subtitle}</p>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-3 pt-1 text-xs text-lf-muted">
+                        <div className="flex items-center gap-3 pt-1 text-xs text-lot-stone">
                           <span className="tabular-nums">ID: #{cert.certKey}</span>
                           <span>·</span>
                           <span>Amount: {formatPrice(cert.amount)}</span>

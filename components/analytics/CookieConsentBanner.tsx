@@ -35,12 +35,12 @@ export function CookieConsentBanner() {
       aria-label="Cookie consent"
       className="fixed inset-x-0 bottom-0 z-(--z-index-toast) px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4"
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-4 rounded-none border border-lf-hairline bg-lf-card p-5 shadow-none sm:flex-row sm:items-center sm:gap-6">
-        <p className="lf-caption flex-1 text-lf-muted">
+      <div className="mx-auto flex max-w-3xl flex-col gap-4 rounded-none border border-lot-line bg-lot-chalk p-5 shadow-none sm:flex-row sm:items-center sm:gap-6">
+        <p className="lf-caption flex-1 text-lot-stone">
           We&rsquo;d like to use Google Analytics to understand which parts of LotFoundry
           people actually use. It sets cookies in your browser. We never send your address,
           email, or feasibility results to Google. Read our{" "}
-          <Link href="/privacy" className="font-medium text-lf-clay-ink underline">
+          <Link href="/privacy" className="font-medium text-lot-orange-ink underline">
             Privacy Policy
           </Link>
           .

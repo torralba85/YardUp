@@ -116,11 +116,11 @@ describe("AuthModal focus restore", () => {
 
     expect(screen.getByRole("link", { name: /terms & conditions/i })).toHaveClass(
       "focus-visible:ring-lot-orange-ink",
-      "focus-visible:ring-offset-lf-card",
+      "focus-visible:ring-offset-lot-chalk",
     );
     expect(screen.getByRole("link", { name: /privacy policy/i })).toHaveClass(
       "focus-visible:ring-lot-orange-ink",
-      "focus-visible:ring-offset-lf-card",
+      "focus-visible:ring-offset-lot-chalk",
     );
   });
 

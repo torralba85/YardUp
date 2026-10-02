@@ -5,21 +5,21 @@ import { cn } from "@/lib/utils";
 
 /** Props for {@link FieldLabel}; extends native label attributes. */
 export interface FieldLabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
-  /** Optional right-aligned value readout (mono, tabular). */
+  /** Optional right-aligned value readout (tabular). */
   value?: React.ReactNode;
 }
 
 /**
- * A control label in the mono "recorded fact" voice, with an optional value
+ * A control label in the shared recorded-fact voice, with an optional value
  * readout on the right (e.g. the live figure a slider controls). Wire `htmlFor`
  * to the control's id.
  */
 export function FieldLabel({ value, className, children, ...props }: FieldLabelProps) {
   return (
-    <label className={cn("lf-kicker-dense flex items-center justify-between gap-2 text-lf-muted", className)} {...props}>
+    <label className={cn("lf-kicker-dense flex items-center justify-between gap-2 text-lot-stone", className)} {...props}>
       <span>{children}</span>
       {value != null ? (
-        <span className="font-sans text-xs font-semibold tabular-nums text-lf-espresso">{value}</span>
+        <span className="font-sans text-xs font-semibold tabular-nums text-lot-ink">{value}</span>
       ) : null}
     </label>
   );
@@ -121,10 +121,10 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
-              "min-h-11 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-2",
+              "min-h-11 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
               checked
-                ? "border-lf-espresso bg-lf-espresso text-lf-sand"
-                : "border-lf-hairline bg-lf-card text-lf-muted hover:border-lf-taupe/50 hover:bg-lf-sand-2",
+                ? "border-lot-ink bg-lot-ink text-lot-chalk"
+                : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone/50 hover:bg-lot-surface",
             )}
           >
             {option.label}
@@ -146,7 +146,7 @@ export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 }
 
 /**
- * An accessible range control: a mono {@link FieldLabel} showing the live value,
+ * An accessible range control: a {@link FieldLabel} showing the live value,
  * and a native `type=range` whose accessible name is the label and whose current
  * value is announced via `aria-valuetext` (so screen readers hear "600 sf", not
  * a bare number). The tall hit area keeps the thumb comfortable to grab.
@@ -164,11 +164,11 @@ export function Slider({ label, valueText, id, className, ...props }: SliderProp
         aria-valuetext={valueText}
         className={cn(
           "h-11 w-full cursor-pointer appearance-none bg-transparent",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lf-clay-ink",
-          "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-lf-hairline",
-          "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lot-ink [&::-webkit-slider-thumb]:bg-lf-clay",
-          "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-lf-hairline",
-          "[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-lot-ink [&::-moz-range-thumb]:bg-lf-clay",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink",
+          "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-lot-line",
+          "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lot-ink [&::-webkit-slider-thumb]:bg-lot-orange",
+          "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-lot-line",
+          "[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-lot-ink [&::-moz-range-thumb]:bg-lot-orange",
         )}
         {...props}
       />

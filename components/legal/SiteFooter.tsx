@@ -25,9 +25,9 @@ const FOOTER_LINKS = [
  * own scoped footer in `components/landing/lot-more/` and does not use this.
  */
 export function SiteFooter() {
-  const muted = "text-lf-muted";
-  const hover = "hover:text-lf-espresso";
-  const border = "border-lf-hairline/50";
+  const muted = "text-lot-stone";
+  const hover = "hover:text-lot-ink";
+  const border = "border-lot-line/50";
 
   return (
     <footer className={`border-t ${border}`}>
@@ -39,7 +39,7 @@ export function SiteFooter() {
         </Link>
         {FOOTER_LINKS.map((link) => (
           <span key={link.href} className="contents">
-            <span aria-hidden className="text-lf-taupe/50">
+            <span aria-hidden className="text-lot-stone/50">
               ·
             </span>
             <Link

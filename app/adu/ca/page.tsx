@@ -115,7 +115,7 @@ export default function AduCaliforniaHubPage() {
           ADU costs, rents for, and takes to pay back, use the{" "}
           <Link
             href="/adu-cost-calculator"
-            className="underline underline-offset-2 hover:text-lf-espresso"
+            className="underline underline-offset-2 hover:text-lot-ink"
           >
             California ADU cost calculator
           </Link>
@@ -124,15 +124,15 @@ export default function AduCaliforniaHubPage() {
       </div>
 
       <section aria-labelledby="adu-floor" className="mt-12">
-        <h2 id="adu-floor" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-floor" className="lf-card-heading text-lot-ink">
           California ADU laws: the state floor every city builds on
         </h2>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lf-muted">
+        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           {STATE_FLOOR_FACTS.map((fact) => (
             <li key={fact}>{fact}</li>
           ))}
         </ul>
-        <p className="lf-body mt-4 text-sm text-lf-muted">
+        <p className="lf-body mt-4 text-sm text-lot-stone">
           Sources:{" "}
           {STATE_BASELINE_SOURCES.map((source, index) => (
             <span key={source.url}>
@@ -140,7 +140,7 @@ export default function AduCaliforniaHubPage() {
               <a
                 href={source.url}
                 rel="noopener"
-                className="underline underline-offset-2 hover:text-lf-espresso"
+                className="underline underline-offset-2 hover:text-lot-ink"
               >
                 {source.label}
               </a>
@@ -151,25 +151,25 @@ export default function AduCaliforniaHubPage() {
       </section>
 
       <section aria-labelledby="adu-cities" className="mt-12">
-        <h2 id="adu-cities" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-cities" className="lf-card-heading text-lot-ink">
           City guides — San Diego County&apos;s five largest cities
         </h2>
         <ul className="mt-4 space-y-4">
           {ADU_CITIES.map((city) => (
             <li
               key={city.slug}
-              className="border border-lf-hairline p-5"
+              className="border border-lot-line p-5"
             >
               <Link
                 href={`/adu/${city.state}/${city.slug}`}
-                className="font-display text-xl font-bold text-lf-espresso underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="font-display text-xl font-bold text-lot-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 ADU Rules in {city.city} (2026)
               </Link>
-              <p className="lf-body mt-2 text-lf-muted">
+              <p className="lf-body mt-2 text-lot-stone">
                 {CITY_BLURBS[city.slug]}
               </p>
-              <p className="mt-2 text-xs uppercase tracking-[0.08em] text-lf-muted">
+              <p className="mt-2 text-xs uppercase tracking-[0.08em] text-lot-stone">
                 Updated {city.asOf} · {city.faqs.length} answered questions
               </p>
             </li>

@@ -1,4 +1,6 @@
 import { fonts } from "../demo/fonts";
+import { COLOR } from "../../lib/design-tokens";
+
 
 export const FPS = 30;
 export const WIDTH = 1920;
@@ -8,19 +10,19 @@ export const HEIGHT = 1080;
  * A LOT MORE design tokens (docs/design/design-system.md)
  */
 export const PALETTE = {
-  chalk: "#F5F5F0",
-  carbon: "#161616",
-  orange: "#FF5B24",
-  orangeHover: "#EE4B17",
-  orangeInk: "#C43708", // Contrast-safe orange text on light ground
-  stone: "#B7B7AE",     // Stone text for dark surfaces
-  lineDark: "#44443F",
-  lineLight: "#E7E7DF",
-  cardDark: "#1F1F1E",
-  cardDarkElevated: "#292927",
-  cardLight: "#FFFFFF",
-  green: "#176B4C",     // Strictly reserved for eligible/verified status
-  amber: "#D97706",
+  chalk: COLOR["lot-chalk"],
+  carbon: COLOR["lot-ink"],
+  orange: COLOR["lot-orange"],
+  orangeHover: COLOR["lot-orange-hover"],
+  orangeInk: COLOR["lot-orange-ink"], // Contrast-safe orange text on light ground
+  stone: COLOR["lot-stone-on-dark"],     // Stone text for dark surfaces
+  lineDark: COLOR["lot-line-dark"],
+  lineLight: COLOR["lot-paper-shadow"],
+  cardDark: COLOR["lot-surface-dark"],
+  cardDarkElevated: COLOR["lot-surface-dark-hover"],
+  cardLight: COLOR["lot-chalk"],
+  green: COLOR["status-eligible-on-dark"],     // Strictly reserved for eligible/verified status
+  amber: COLOR["status-review-on-dark"],
 } as const;
 
 export { fonts };

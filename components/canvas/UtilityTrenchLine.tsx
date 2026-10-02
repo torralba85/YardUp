@@ -5,6 +5,8 @@ import { Line } from "@react-three/drei";
 import type { ADUConfig } from "@/lib/feasibility";
 import type { Pose2D } from "@/lib/scene-model";
 import type { UtilityPoint } from "@/lib/studio-enhancements-store";
+import { COLOR } from "@/lib/design-tokens";
+
 
 export function nearestPointOnAdu(
   anchor: UtilityPoint,
@@ -63,7 +65,7 @@ export function UtilityTrenchLine({
     <Line
       name="lotfoundry-utility-trench"
       points={points}
-      color="#161616"
+      color={COLOR["lot-ink"]}
       lineWidth={2}
       dashed
       dashSize={1.6}

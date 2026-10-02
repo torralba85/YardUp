@@ -24,18 +24,18 @@ export interface AIProjectBriefPanelProps {
 }
 
 const RISK_TONE: Record<AIRiskLevel, string> = {
-  low: "border-lf-hairline text-lf-muted",
-  medium: "border-lf-amber-ink/35 bg-lf-amber-soft text-lf-amber-ink",
-  high: "border-lf-brick/35 bg-lf-brick-soft text-lf-brick",
+  low: "border-lot-line text-lot-stone",
+  medium: "border-status-review/35 bg-status-review-soft text-status-review",
+  high: "border-status-blocked/35 bg-status-blocked-soft text-status-blocked",
 };
 
 const STAGE_TONE: Record<AIPermitStage["status"], { label: string; className: string }> = {
-  clear: { label: "Clear", className: "border-lf-forest/30 bg-lf-forest-soft text-lf-forest" },
+  clear: { label: "Clear", className: "border-status-eligible/30 bg-status-eligible-soft text-status-eligible" },
   review: {
     label: "Review",
-    className: "border-lf-amber-ink/35 bg-lf-amber-soft text-lf-amber-ink",
+    className: "border-status-review/35 bg-status-review-soft text-status-review",
   },
-  blocker: { label: "Blocker", className: "border-lf-brick/35 bg-lf-brick-soft text-lf-brick" },
+  blocker: { label: "Blocker", className: "border-status-blocked/35 bg-status-blocked-soft text-status-blocked" },
 };
 
 /** "1 permit stage" / "3 permit stages" — the locked counts read as prose. */
@@ -76,10 +76,10 @@ export default function AIProjectBriefPanel({
     <section aria-label="Property notes and timeline" aria-busy={loading} className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-sans text-[9.5px] font-bold uppercase tracking-[0.08em] text-lf-clay-ink">
+          <p className="font-sans text-[9.5px] font-bold uppercase tracking-[0.08em] text-lot-orange-ink">
             Property notes
           </p>
-          <h3 className="mt-0.5 text-sm font-semibold text-lf-espresso">
+          <h3 className="mt-0.5 text-sm font-semibold text-lot-ink">
             One brief for your certificate
           </h3>
         </div>
@@ -99,17 +99,17 @@ export default function AIProjectBriefPanel({
       </div>
 
       {!response && !loading && !error && (
-        <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-3">
-          <p className="text-xs leading-5 text-lf-muted">
+        <div className="rounded-none border border-lot-line bg-lot-surface p-3">
+          <p className="text-xs leading-5 text-lot-stone">
             Generate one readout that joins parcel fit, review flags, and a typical approval
             timeline. You&rsquo;ll see a free preview here; the complete brief is recorded in
             your Certificate of Feasibility.
           </p>
-          <div className="mt-3 grid grid-cols-[20px_1fr] gap-x-2 gap-y-1.5 border-t border-lf-hairline pt-3">
-            <span className="font-sans text-[9px] text-lf-muted">01</span>
-            <span className="text-[11px] leading-4 text-lf-espresso">Parcel fit and open questions</span>
-            <span className="font-sans text-[9px] text-lf-muted">02</span>
-            <span className="text-[11px] leading-4 text-lf-espresso">Permit track and stage ranges</span>
+          <div className="mt-3 grid grid-cols-[20px_1fr] gap-x-2 gap-y-1.5 border-t border-lot-line pt-3">
+            <span className="font-sans text-[9px] text-lot-stone">01</span>
+            <span className="text-[11px] leading-4 text-lot-ink">Parcel fit and open questions</span>
+            <span className="font-sans text-[9px] text-lot-stone">02</span>
+            <span className="text-[11px] leading-4 text-lot-ink">Permit track and stage ranges</span>
           </div>
         </div>
       )}
@@ -119,7 +119,7 @@ export default function AIProjectBriefPanel({
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs leading-5 text-lf-brick"
+          className="flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs leading-5 text-status-blocked"
         >
           <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
           {error}
@@ -159,56 +159,56 @@ export function ProjectBriefPreviewContent({
   ].join(" · ");
 
   return (
-    <div className="overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card">
-      <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
+    <div className="overflow-hidden rounded-none border border-lot-line bg-lot-chalk">
+      <div className="border-b border-lot-line bg-lot-surface p-3.5">
         <div className="flex items-center justify-between gap-2">
-          <h4 className="font-display text-xl font-medium leading-tight text-lf-espresso">
+          <h4 className="font-display text-xl font-medium leading-tight text-lot-ink">
             {preview.headline}
           </h4>
-          <span className="shrink-0 rounded-none border border-[#DADAD3] px-1.5 py-0.5 lf-dataprint text-lf-muted">
+          <span className="shrink-0 rounded-none border border-lot-line px-1.5 py-0.5 lf-dataprint text-lot-stone">
             Preview
           </span>
         </div>
-        <p className="mt-1.5 text-xs leading-5 text-lf-muted">{preview.summary}</p>
+        <p className="mt-1.5 text-xs leading-5 text-lot-stone">{preview.summary}</p>
       </div>
 
-      <div className="border-b border-lf-hairline p-3.5">
+      <div className="border-b border-lot-line p-3.5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="lf-dataprint font-bold text-lf-clay-ink">
+            <p className="lf-dataprint font-bold text-lot-orange-ink">
               Typical approval path
             </p>
-            <h5 className="mt-1 text-xs font-semibold text-lf-espresso">{preview.permitTrack.name}</h5>
+            <h5 className="mt-1 text-xs font-semibold text-lot-ink">{preview.permitTrack.name}</h5>
           </div>
           <div className="shrink-0 text-right">
-            <span className="font-display text-[25px] font-bold leading-none text-lf-espresso">
+            <span className="font-display text-[25px] font-bold leading-none text-lot-ink">
               {preview.totalEstWeeksLow}&ndash;{preview.totalEstWeeksHigh}
             </span>
-            <span className="ml-1 font-sans text-[9px] uppercase text-lf-muted">weeks</span>
+            <span className="ml-1 font-sans text-[9px] uppercase text-lot-stone">weeks</span>
           </div>
         </div>
-        <div className="mt-3 border-t border-lf-hairline pt-2.5">
+        <div className="mt-3 border-t border-lot-line pt-2.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-lf-espresso">{preview.firstRisk.label}</span>
+            <span className="text-xs font-semibold text-lot-ink">{preview.firstRisk.label}</span>
             <span
               className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${RISK_TONE[preview.firstRisk.level]}`}
             >
               {preview.firstRisk.level}
             </span>
           </div>
-          <p className="mt-1 text-[11px] leading-4 text-lf-muted">{preview.firstRisk.explanation}</p>
+          <p className="mt-1 text-[11px] leading-4 text-lot-stone">{preview.firstRisk.explanation}</p>
         </div>
       </div>
 
-      <div className="border-b border-lf-hairline p-3.5">
-        <div className="rounded-none border border-dashed border-lf-taupe bg-lf-sand-2 p-3">
+      <div className="border-b border-lot-line p-3.5">
+        <div className="rounded-none border border-dashed border-lot-stone bg-lot-surface p-3">
           <div className="flex items-center gap-2">
-            <Lock size={14} className="shrink-0 text-lf-clay-ink" aria-hidden="true" />
-            <p className="text-xs font-semibold text-lf-espresso">
+            <Lock size={14} className="shrink-0 text-lot-orange-ink" aria-hidden="true" />
+            <p className="text-xs font-semibold text-lot-ink">
               The complete brief is recorded in your certificate
             </p>
           </div>
-          <p className="mt-1.5 text-[11px] leading-4 text-lf-muted">
+          <p className="mt-1.5 text-[11px] leading-4 text-lot-stone">
             {lockedLine} &mdash; attached to your engraved Certificate of Feasibility, ready to
             print and share with builders and lenders.
           </p>
@@ -226,7 +226,7 @@ export function ProjectBriefPreviewContent({
         </div>
       </div>
 
-      <p className="p-3.5 text-[11px] leading-4 text-lf-muted">{preview.disclaimer}</p>
+      <p className="p-3.5 text-[11px] leading-4 text-lot-stone">{preview.disclaimer}</p>
     </div>
   );
 }
@@ -239,54 +239,54 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
     : [];
 
   return (
-    <div className="overflow-hidden rounded-none border border-[#DADAD3] bg-lf-card">
-      <div className="border-b border-lf-hairline bg-lf-sand-2 p-3.5">
-        <h4 className="font-display text-xl font-medium leading-tight text-lf-espresso">
+    <div className="overflow-hidden rounded-none border border-lot-line bg-lot-chalk">
+      <div className="border-b border-lot-line bg-lot-surface p-3.5">
+        <h4 className="font-display text-xl font-medium leading-tight text-lot-ink">
           {brief.headline}
         </h4>
-        <p className="mt-1.5 text-xs leading-5 text-lf-muted">{brief.summary}</p>
+        <p className="mt-1.5 text-xs leading-5 text-lot-stone">{brief.summary}</p>
       </div>
 
-      <div className="border-b border-lf-hairline p-3.5">
-        <p className="lf-dataprint font-bold text-lf-clay-ink">
+      <div className="border-b border-lot-line p-3.5">
+        <p className="lf-dataprint font-bold text-lot-orange-ink">
           Property notes
         </p>
-        <p className="mt-1.5 text-xs leading-5 text-lf-espresso">{brief.bestFit}</p>
+        <p className="mt-1.5 text-xs leading-5 text-lot-ink">{brief.bestFit}</p>
         {risks.length > 0 && (
-          <div className="mt-3 divide-y divide-lf-hairline border-y border-lf-hairline">
+          <div className="mt-3 divide-y divide-lot-line border-y border-lot-line">
             {risks.map((risk) => (
               <div key={`${risk.label}-${risk.level}`} className="py-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-lf-espresso">{risk.label}</span>
+                  <span className="text-xs font-semibold text-lot-ink">{risk.label}</span>
                   <span
                     className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${RISK_TONE[risk.level]}`}
                   >
                     {risk.level}
                   </span>
                 </div>
-                <p className="mt-1 text-[11px] leading-4 text-lf-muted">{risk.explanation}</p>
+                <p className="mt-1 text-[11px] leading-4 text-lot-stone">{risk.explanation}</p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="border-b border-lf-hairline p-3.5">
+      <div className="border-b border-lot-line p-3.5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="lf-dataprint font-bold text-lf-clay-ink">
+            <p className="lf-dataprint font-bold text-lot-orange-ink">
               Typical approval path
             </p>
-            <h5 className="mt-1 text-xs font-semibold text-lf-espresso">{brief.permitTrack.name}</h5>
+            <h5 className="mt-1 text-xs font-semibold text-lot-ink">{brief.permitTrack.name}</h5>
           </div>
           <div className="shrink-0 text-right">
-            <span className="font-display text-[25px] font-bold leading-none text-lf-espresso">
+            <span className="font-display text-[25px] font-bold leading-none text-lot-ink">
               {brief.totalEstWeeksLow}&ndash;{brief.totalEstWeeksHigh}
             </span>
-            <span className="ml-1 font-sans text-[9px] uppercase text-lf-muted">weeks</span>
+            <span className="ml-1 font-sans text-[9px] uppercase text-lot-stone">weeks</span>
           </div>
         </div>
-        <p className="mt-1.5 text-[11px] leading-4 text-lf-muted">{brief.permitTrack.basis}</p>
+        <p className="mt-1.5 text-[11px] leading-4 text-lot-stone">{brief.permitTrack.basis}</p>
 
         {stages.length > 0 && (
           <ol className="mt-3 space-y-0">
@@ -297,20 +297,20 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
                   {index < stages.length - 1 && (
                     <span
                       aria-hidden="true"
-                      className="absolute bottom-0 left-[10px] top-5 w-px bg-lf-hairline"
+                      className="absolute bottom-0 left-[10px] top-5 w-px bg-lot-line"
                     />
                   )}
-                  <span className="relative flex h-[22px] w-[22px] items-center justify-center rounded-none border border-lf-hairline bg-lf-card font-sans text-[9px] text-lf-muted">
+                  <span className="relative flex h-[22px] w-[22px] items-center justify-center rounded-none border border-lot-line bg-lot-chalk font-sans text-[9px] text-lot-stone">
                     {index + 1}
                   </span>
-                  <div className="min-w-0 border-b border-lf-hairline pb-2.5 last:border-b-0">
+                  <div className="min-w-0 border-b border-lot-line pb-2.5 last:border-b-0">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs font-semibold leading-4 text-lf-espresso">{stage.name}</span>
-                      <span className="shrink-0 font-sans text-[9px] text-lf-muted">
+                      <span className="text-xs font-semibold leading-4 text-lot-ink">{stage.name}</span>
+                      <span className="shrink-0 font-sans text-[9px] text-lot-stone">
                         {stage.estWeeksLow}&ndash;{stage.estWeeksHigh} WK
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] leading-4 text-lf-muted">{stage.description}</p>
+                    <p className="mt-1 text-[11px] leading-4 text-lot-stone">{stage.description}</p>
                     <span
                       className={`mt-1.5 inline-flex rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${tone.className}`}
                     >
@@ -325,14 +325,14 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
       </div>
 
       {nextSteps.length > 0 && (
-        <div className="border-b border-lf-hairline p-3.5">
-          <p className="lf-dataprint font-bold text-lf-clay-ink">
+        <div className="border-b border-lot-line p-3.5">
+          <p className="lf-dataprint font-bold text-lot-orange-ink">
             Recommended next steps
           </p>
           <ol className="mt-2 space-y-2">
             {nextSteps.map((step, index) => (
-              <li key={`${index}-${step}`} className="grid grid-cols-[18px_1fr] gap-2 text-[11px] leading-4 text-lf-muted">
-                <span className="font-sans text-[9px] text-lf-taupe">{String(index + 1).padStart(2, "0")}</span>
+              <li key={`${index}-${step}`} className="grid grid-cols-[18px_1fr] gap-2 text-[11px] leading-4 text-lot-stone">
+                <span className="font-sans text-[9px] text-lot-stone">{String(index + 1).padStart(2, "0")}</span>
                 <span>{step}</span>
               </li>
             ))}
@@ -340,7 +340,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
         </div>
       )}
 
-      <p className="p-3.5 text-[11px] leading-4 text-lf-muted">{brief.disclaimer}</p>
+      <p className="p-3.5 text-[11px] leading-4 text-lot-stone">{brief.disclaimer}</p>
     </div>
   );
 }
@@ -350,19 +350,19 @@ function ProjectBriefSkeleton() {
     <div
       role="status"
       aria-live="polite"
-      className="rounded-none border border-[#DADAD3] bg-lf-sand-2 p-3.5"
+      className="rounded-none border border-lot-line bg-lot-surface p-3.5"
     >
       <span className="sr-only">Building property notes and timeline</span>
       <div className="motion-safe:animate-pulse">
-        <div className="h-3 w-3/4 rounded bg-lf-taupe-soft" />
-        <div className="mt-2 h-2.5 w-full rounded bg-lf-taupe-soft" />
-        <div className="mt-1.5 h-2.5 w-5/6 rounded bg-lf-taupe-soft" />
-        <div className="my-3 h-px bg-lf-hairline" />
+        <div className="h-3 w-3/4 rounded bg-lot-stone-soft" />
+        <div className="mt-2 h-2.5 w-full rounded bg-lot-stone-soft" />
+        <div className="mt-1.5 h-2.5 w-5/6 rounded bg-lot-stone-soft" />
+        <div className="my-3 h-px bg-lot-line" />
         <div className="space-y-2.5">
           {["w-11/12", "w-4/5", "w-2/3"].map((width) => (
             <div key={width} className="grid grid-cols-[22px_1fr] gap-2">
-              <div className="h-[22px] w-[22px] rounded-none bg-lf-taupe-soft" />
-              <div className={`mt-1 h-2.5 rounded bg-lf-taupe-soft ${width}`} />
+              <div className="h-[22px] w-[22px] rounded-none bg-lot-stone-soft" />
+              <div className={`mt-1 h-2.5 rounded bg-lot-stone-soft ${width}`} />
             </div>
           ))}
         </div>

@@ -18,7 +18,7 @@ environment files, sibling worktrees, or agent configuration.
 ## Manual web QA
 
 - [ ] A LOT MORE color check: chalk/carbon grounds, orange action fills with carbon labels, deep orange text on chalk, and stone-on-dark secondary text on carbon.
-- [ ] State-color check: selected controls are carbon/chalk; green is verified status only; money is neutral. Focus is carbon on light grounds and chalk on dark grounds.
+- [ ] State-color check: selected controls are carbon/chalk; green is verified status only; money is neutral. Focus is deep orange on chalk, carbon on orange grounds, and chalk on carbon.
 - [ ] Desktop at 1440×900 — no clipped UI or blank scene
 - [ ] Tablet at 768×1024 — no horizontal overflow
 - [ ] Mobile at 390×844 and 320×568 — no horizontal overflow

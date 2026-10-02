@@ -29,6 +29,7 @@ Use `.claude/launch.json` for Claude launch configs: `lotfoundry-dev` on port 30
 
 - Read relevant files first; do not assume architecture, API shape, styling, or test setup.
 - State assumptions when a task has more than one plausible interpretation. Ask before editing if the ambiguity affects user-visible behavior, data, deployment, or security.
+- Color work: read docs/design/2026-10-01-color-system.md; edit design/tokens.json, run npm run design:generate and npm run design:check. Use canonical lot-* / status-* roles; never refresh color-exceptions.json merely to pass CI.
 - Keep changes surgical. Do not refactor, reformat, or "improve" adjacent code unless it directly supports the task.
 - Match local style: TypeScript, strict mode, React function components, two-space indentation, double-quoted imports, and `@/*` repo-root imports.
 - Naming: React components and component files in `PascalCase` (e.g. `FeasibilityInspector.tsx`); utilities in `kebab-case` or domain-specific lower-case files (e.g. `scenario-url.ts`).

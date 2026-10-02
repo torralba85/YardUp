@@ -82,7 +82,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
 
-      <p className="lf-kicker text-lf-muted">
+      <p className="lf-kicker text-lot-stone">
         {content.county} · Updated {content.asOf}
       </p>
       <div className="mt-4 space-y-4">
@@ -94,7 +94,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </div>
 
       <section aria-labelledby="adu-glance" className="mt-12">
-        <h2 id="adu-glance" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-glance" className="lf-card-heading text-lot-ink">
           {content.city} ADU rules at a glance
         </h2>
         <div className="mt-4 overflow-x-auto">
@@ -109,14 +109,14 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
                 // checked can never reach a visitor as if it were law.
                 .filter((row) => row.confidence !== "unverified")
                 .map((row) => (
-                  <tr key={row.label} className="border-t border-lf-hairline">
+                  <tr key={row.label} className="border-t border-lot-line">
                     <th
                       scope="row"
-                      className="w-2/5 py-3 pr-4 align-top font-semibold text-lf-espresso"
+                      className="w-2/5 py-3 pr-4 align-top font-semibold text-lot-ink"
                     >
                       {row.label}
                     </th>
-                    <td className="py-3 text-lf-muted">
+                    <td className="py-3 text-lot-stone">
                       {row.value}
                       {row.confidence === "secondary" ? (
                         <span className="mt-1 block text-xs font-semibold uppercase tracking-wide">
@@ -139,22 +139,22 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       {content.coastalCallout ? (
         <aside
           aria-label="Coastal Zone warning"
-          className="mt-12 rounded-[3px] border border-lf-hairline bg-lf-sand px-6 py-5"
+          className="mt-12 rounded-control border border-lot-line bg-lot-chalk px-6 py-5"
         >
-          <h2 className="font-semibold text-lf-espresso">
+          <h2 className="font-semibold text-lot-ink">
             Coastal Zone owners, read this
           </h2>
-          <p className="lf-body mt-2 text-lf-muted">{content.coastalCallout}</p>
+          <p className="lf-body mt-2 text-lot-stone">{content.coastalCallout}</p>
         </aside>
       ) : null}
 
       <SetbackDiagram content={content} />
 
       <section aria-labelledby="adu-state-law" className="mt-12">
-        <h2 id="adu-state-law" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-state-law" className="lf-card-heading text-lot-ink">
           What state law guarantees you
         </h2>
-        <div className="lf-body mt-3 space-y-3 text-lf-muted">
+        <div className="lf-body mt-3 space-y-3 text-lot-stone">
           {STATE_BASELINE_PARAGRAPHS.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
@@ -166,7 +166,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
                 <a
                   href={source.url}
                   rel="noopener"
-                  className="underline underline-offset-2 hover:text-lf-espresso"
+                  className="underline underline-offset-2 hover:text-lot-ink"
                 >
                   {source.label}
                 </a>
@@ -180,10 +180,10 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       <div className="mt-12 space-y-10">
         {content.cityDiffers.map((section) => (
           <section key={section.heading} aria-label={section.heading}>
-            <h2 className="lf-card-heading text-lf-espresso">
+            <h2 className="lf-card-heading text-lot-ink">
               {section.heading}
             </h2>
-            <div className="lf-body mt-3 space-y-3 text-lf-muted">
+            <div className="lf-body mt-3 space-y-3 text-lot-stone">
               {section.paragraphs.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>
               ))}
@@ -193,16 +193,16 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </div>
 
       <section aria-labelledby="adu-fees" className="mt-12">
-        <h2 id="adu-fees" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-fees" className="lf-card-heading text-lot-ink">
           {content.fees.heading}
         </h2>
-        <div className="lf-body mt-3 space-y-3 text-lf-muted">
+        <div className="lf-body mt-3 space-y-3 text-lot-stone">
           {content.fees.paragraphs.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
         </div>
         {content.fees.bullets ? (
-          <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lf-muted">
+          <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
             {content.fees.bullets.map((bullet) => (
               <li key={bullet}>{bullet}</li>
             ))}
@@ -216,26 +216,26 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </section>
 
       <section aria-labelledby="adu-process" className="mt-12">
-        <h2 id="adu-process" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-process" className="lf-card-heading text-lot-ink">
           The {content.city} ADU permit process
         </h2>
-        <p className="lf-body mt-3 text-lf-muted">{content.processIntro}</p>
+        <p className="lf-body mt-3 text-lot-stone">{content.processIntro}</p>
         <ol className="mt-4 list-decimal space-y-4 pl-6">
           {content.processSteps.map((step) => (
-            <li key={step.title} className="lf-body text-lf-muted">
-              <span className="font-semibold text-lf-espresso">
+            <li key={step.title} className="lf-body text-lot-stone">
+              <span className="font-semibold text-lot-ink">
                 {step.title}.
               </span>{" "}
               {step.detail}
             </li>
           ))}
         </ol>
-        <p className="lf-body mt-4 text-lf-muted">
+        <p className="lf-body mt-4 text-lot-stone">
           Start at the city&apos;s own front door:{" "}
           <a
             href={content.permitPortal.url}
             rel="noopener"
-            className="underline underline-offset-2 hover:text-lf-espresso"
+            className="underline underline-offset-2 hover:text-lot-ink"
           >
             {content.permitPortal.label}
           </a>
@@ -245,7 +245,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
 
       {hasMarketFigures ? (
         <section aria-labelledby="adu-rent" className="mt-12">
-          <h2 id="adu-rent" className="lf-card-heading text-lf-espresso">
+          <h2 id="adu-rent" className="lf-card-heading text-lot-ink">
             What it rents for, and when it pays back
           </h2>
           <div className="mt-4">
@@ -259,30 +259,30 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </div>
 
       <section aria-labelledby="adu-faq" className="mt-12">
-        <h2 id="adu-faq" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-faq" className="lf-card-heading text-lot-ink">
           {content.city} ADU questions, answered
         </h2>
-        <div className="mt-4 divide-y divide-lf-hairline border-y border-lf-hairline">
+        <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {content.faqs.map((faq) => (
             <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lf-espresso marker:text-lf-clay-ink">
+              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
-              <p className="lf-body mt-2 text-lf-muted">{faq.answer}</p>
+              <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
             </details>
           ))}
         </div>
       </section>
 
       <nav aria-label="Neighboring jurisdictions" className="mt-12">
-        <h2 className="lf-card-heading text-lf-espresso">
+        <h2 className="lf-card-heading text-lot-ink">
           ADU rules in nearby cities
         </h2>
         <ul className="mt-4 flex flex-wrap gap-2">
           <li>
             <Link
               href="/adu/ca"
-              className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              className="inline-flex min-h-11 items-center rounded-control border border-lot-line px-4 text-sm font-semibold text-lot-ink motion-safe:transition hover:border-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               California ADU rules hub
             </Link>
@@ -291,7 +291,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             <li key={neighbor.slug}>
               <Link
                 href={`/adu/${neighbor.state}/${neighbor.slug}`}
-                className="inline-flex min-h-11 items-center rounded-[3px] border border-lf-hairline px-4 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="inline-flex min-h-11 items-center rounded-control border border-lot-line px-4 text-sm font-semibold text-lot-ink motion-safe:transition hover:border-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 ADU rules in {neighbor.city}
               </Link>
@@ -301,21 +301,21 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </nav>
 
       <section aria-labelledby="adu-sources" className="mt-12">
-        <h2 id="adu-sources" className="lf-card-heading text-lf-espresso">
+        <h2 id="adu-sources" className="lf-card-heading text-lot-ink">
           Sources and as-of date
         </h2>
-        <p className="lf-body mt-3 text-lf-muted">
+        <p className="lf-body mt-3 text-lot-stone">
           Every number on this page was checked against the sources below on{" "}
           {content.asOf}. Ordinances change once or twice a year — confirm
           against the live code before spending money on plans.
         </p>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lf-muted">
+        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           {content.sources.map((source) => (
             <li key={source.url}>
               <a
                 href={source.url}
                 rel="noopener"
-                className="underline underline-offset-2 hover:text-lf-espresso"
+                className="underline underline-offset-2 hover:text-lot-ink"
               >
                 {source.label}
               </a>

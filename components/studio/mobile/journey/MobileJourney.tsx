@@ -49,7 +49,7 @@ export default function MobileJourney({
   }, [activeStep?.id, pageScroll]);
 
   return (
-    <div data-testid="mobile-journey" className={pageScroll ? "flex min-h-dvh flex-col bg-lf-sand" : "flex h-dvh flex-col overflow-hidden bg-lf-sand"}>
+    <div data-testid="mobile-journey" className={pageScroll ? "flex min-h-dvh flex-col bg-lot-chalk" : "flex h-dvh flex-col overflow-hidden bg-lot-chalk"}>
       <div className={pageScroll ? "sticky top-0 z-(--z-index-nav) shrink-0" : "shrink-0"}>
         <div className="relative z-(--z-index-nav)">{header}</div>
         <div className="relative z-(--z-index-header)">

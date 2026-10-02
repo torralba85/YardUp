@@ -53,7 +53,7 @@ export function DataExportButton() {
         Export my data
       </Button>
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-lf-brick">
+        <p role="alert" className="mt-2 text-sm text-status-blocked">
           {error}
         </p>
       ) : null}

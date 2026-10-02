@@ -138,30 +138,30 @@ export default function BeforeAfterBoard({
     <div
       ref={dialogRef}
       onClick={handleScrimClick}
-      className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lf-espresso/90 p-4 md:p-8 overflow-y-auto backdrop-blur-sm"
+      className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lot-ink/90 p-4 md:p-8 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="board-title"
     >
-      <div className="w-full max-w-5xl border-[1.5px] border-lf-espresso bg-lf-card p-6 md:p-8 text-lf-espresso relative font-sans shadow-none lf-stamp select-text">
+      <div className="w-full max-w-5xl border-[1.5px] border-lot-ink bg-lot-chalk p-6 md:p-8 text-lot-ink relative font-sans shadow-none lf-stamp select-text">
         {/* Close Button */}
         <button
           ref={closeButtonRef}
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-[3px] border border-lf-hairline text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
+          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-control border border-lot-line text-lot-stone motion-safe:transition hover:bg-lot-surface hover:text-lot-ink focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
           aria-label="Close dialog"
         >
           <X size={20} aria-hidden="true" />
         </button>
 
         {/* Header */}
-        <header className="border-b-4 border-double border-lf-espresso pb-4 mb-6 pr-8">
+        <header className="border-b-4 border-double border-lot-ink pb-4 mb-6 pr-8">
           <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
             <h2 id="board-title" className="font-display text-2xl md:text-3xl font-medium">
               Your house → your ADU
             </h2>
-            <div className="lf-kicker-dense font-semibold text-lf-muted md:text-xs">
+            <div className="lf-kicker-dense font-semibold text-lot-stone md:text-xs">
               NO. {serialNo} · {finalDateStr}
             </div>
           </div>
@@ -171,10 +171,10 @@ export default function BeforeAfterBoard({
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-6 mb-6">
           {/* Left Pane: Before */}
           <div className="flex flex-col gap-2">
-            <h3 className="lf-kicker text-lf-muted">
+            <h3 className="lf-kicker text-lot-stone">
               Before — your photo
             </h3>
-            <div className="relative aspect-[4/3] w-full overflow-hidden border border-lf-hairline bg-lf-sand-2">
+            <div className="relative aspect-[4/3] w-full overflow-hidden border border-lot-line bg-lot-surface">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={beforePhotoUrl}
@@ -186,17 +186,17 @@ export default function BeforeAfterBoard({
 
           {/* Middle Spine */}
           <div className="flex items-center justify-center py-2 md:py-0 select-none">
-            <span className="text-3xl md:text-4xl text-lf-clay-ink font-light" aria-hidden="true">
+            <span className="text-3xl md:text-4xl text-lot-orange-ink font-light" aria-hidden="true">
               →
             </span>
           </div>
 
           {/* Right Pane: After */}
           <div className="flex flex-col gap-2 relative">
-            <h3 className="lf-kicker text-lf-muted">
+            <h3 className="lf-kicker text-lot-stone">
               After — ADU concept, matched style
             </h3>
-            <div className="relative aspect-[4/3] w-full overflow-hidden border border-lf-hairline bg-lf-sand-2">
+            <div className="relative aspect-[4/3] w-full overflow-hidden border border-lot-line bg-lot-surface">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={afterConceptUrl}
@@ -205,7 +205,7 @@ export default function BeforeAfterBoard({
               />
               {/* Rotated Concept Stamp */}
               <div
-                className="absolute right-4 bottom-4 border-2 border-lf-brick text-lf-brick bg-lf-card/95 px-3 py-1.5 lf-kicker-dense font-bold opacity-90 select-none shadow-none"
+                className="absolute right-4 bottom-4 border-2 border-status-blocked text-status-blocked bg-lot-chalk px-3 py-1.5 lf-kicker-dense font-bold opacity-90 select-none shadow-none"
                 style={{ transform: "rotate(5deg)" }}
               >
                 Concept · not a permit
@@ -215,16 +215,16 @@ export default function BeforeAfterBoard({
         </div>
 
         {/* Metadata Bar */}
-        <div className="bg-lf-sand-2 border border-lf-hairline p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-lot-surface border border-lot-line p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5">
-            <div className="font-sans text-xs font-bold uppercase tracking-[0.08em] text-lf-clay-ink">
+            <div className="font-sans text-xs font-bold uppercase tracking-[0.08em] text-lot-orange-ink">
               {`STYLE MATCH ${styleName} · ${matchPercentage}%`.toUpperCase()}
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {styleTraits.map((trait) => (
                 <span
                   key={trait}
-                  className="bg-lf-card border border-lf-hairline px-2 py-0.5 lf-kicker-dense text-lf-muted"
+                  className="bg-lot-chalk border border-lot-line px-2 py-0.5 lf-kicker-dense text-lot-stone"
                 >
                   {trait.toUpperCase()}
                 </span>
@@ -232,11 +232,11 @@ export default function BeforeAfterBoard({
             </div>
           </div>
           {lotSizeInfo && (
-            <div className="flex flex-col items-start md:items-end justify-center font-sans text-xs text-lf-muted">
-              <span className="text-[10px] uppercase tracking-[0.08em] text-lf-muted/70">
+            <div className="flex flex-col items-start md:items-end justify-center font-sans text-xs text-lot-stone">
+              <span className="text-[10px] uppercase tracking-[0.08em] text-lot-stone/70">
                 Lot info
               </span>
-              <span className="font-semibold text-lf-espresso uppercase mt-0.5 tracking-[0.08em]">
+              <span className="font-semibold text-lot-ink uppercase mt-0.5 tracking-[0.08em]">
                 {lotSizeInfo.toUpperCase()}
               </span>
             </div>
@@ -244,15 +244,15 @@ export default function BeforeAfterBoard({
         </div>
 
         {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-8 pt-6 border-t border-lf-hairline">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-8 pt-6 border-t border-lot-line">
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
               onClick={onToggleAttach}
-              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold motion-safe:transition select-none rounded-[3px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink ${
+              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold motion-safe:transition select-none rounded-control cursor-pointer focus:outline-none focus:ring-2 focus:ring-lot-orange-ink ${
                 isAttached
-                  ? "bg-lf-forest text-lf-sand hover:bg-lf-forest-strong"
-                  : "border-[1.5px] border-lf-clay bg-lf-card text-lf-espresso hover:bg-lf-sand-2"
+                  ? "bg-status-eligible text-lot-chalk hover:bg-status-eligible-hover"
+                  : "border-[1.5px] border-lot-orange bg-lot-chalk text-lot-ink hover:bg-lot-surface"
               }`}
             >
               {isAttached ? (
@@ -270,7 +270,7 @@ export default function BeforeAfterBoard({
             <button
               type="button"
               onClick={onRecast}
-              className="flex min-h-11 items-center justify-center gap-2 border border-lf-hairline bg-lf-card px-5 py-2 text-sm font-semibold text-lf-espresso motion-safe:transition hover:border-lf-clay hover:bg-lf-sand-2 rounded-[3px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-lf-clay-ink"
+              className="flex min-h-11 items-center justify-center gap-2 border border-lot-line bg-lot-chalk px-5 py-2 text-sm font-semibold text-lot-ink motion-safe:transition hover:border-lot-orange hover:bg-lot-surface rounded-control cursor-pointer focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
             >
               <RefreshCcw size={16} aria-hidden="true" />
               Cast another

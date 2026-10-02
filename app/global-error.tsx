@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { COLOR } from "@/lib/design-tokens";
+
 
 /** Root error boundary when the root layout itself fails. */
 export default function GlobalError({
@@ -17,7 +19,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <head>
-        <style>{`a:focus-visible,button:focus-visible{outline:2px solid #C43708;outline-offset:5px}button:hover{background:#EE4B17!important}a:hover{background:#EBEBE6!important}`}</style>
+        <style>{`a:focus-visible,button:focus-visible{outline:2px solid ${COLOR["lot-orange-ink"]};outline-offset:5px}button:hover{background:${COLOR["lot-orange-hover"]}!important}a:hover{background:${COLOR["lot-surface"]}!important}`}</style>
       </head>
       <body
         style={{
@@ -28,14 +30,14 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           fontFamily: "system-ui, sans-serif",
-          background: "#F5F5F0",
-          color: "#161616",
+          background: COLOR["lot-chalk"],
+          color: COLOR["lot-ink"],
           padding: "2rem",
           textAlign: "center",
         }}
       >
         <h1 style={{ fontSize: "1.75rem", letterSpacing: "-0.035em", lineHeight: 1.15, margin: 0 }}>Something went wrong</h1>
-        <p style={{ color: "#65655F", maxWidth: "28rem" }}>
+        <p style={{ color: COLOR["lot-stone"], maxWidth: "28rem" }}>
           LotFoundry could not load this page. Retry or open Help.
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.75rem", marginTop: "1.5rem" }}>
@@ -46,8 +48,8 @@ export default function GlobalError({
               minHeight: 44,
               borderRadius: 3,
               border: "none",
-              background: "#FF5B24",
-              color: "#161616",
+              background: COLOR["lot-orange"],
+              color: COLOR["lot-ink"],
               padding: "0 1.25rem",
               fontWeight: 600,
               fontFamily: "inherit",
@@ -64,9 +66,9 @@ export default function GlobalError({
               display: "inline-flex",
               alignItems: "center",
               borderRadius: 3,
-              border: "1px solid #65655F",
-              background: "#F5F5F0",
-              color: "#161616",
+              border: `1px solid ${COLOR["lot-stone"]}`,
+              background: COLOR["lot-chalk"],
+              color: COLOR["lot-ink"],
               padding: "0 1.25rem",
               fontWeight: 600,
               fontSize: "0.875rem",

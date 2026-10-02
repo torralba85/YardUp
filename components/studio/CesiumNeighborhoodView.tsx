@@ -52,6 +52,8 @@ import {
   type Vec3,
 } from "@/lib/neighborhood-camera";
 import styles from "./CesiumNeighborhoodView.module.css";
+import { COLOR } from "@/lib/design-tokens";
+
 
 export interface CesiumNeighborhoodViewProps {
   parcel: Parcel | LiveParcelData;
@@ -62,9 +64,9 @@ export interface CesiumNeighborhoodViewProps {
 }
 
 const PLACEMENT_STYLE = {
-  clear: { color: "#176B4C", className: "text-status-eligible", Icon: CheckCircle2 },
-  review: { color: "#8A5300", className: "text-status-review", Icon: AlertTriangle },
-  blocked: { color: "#A82D16", className: "text-status-blocked", Icon: XCircle },
+  clear: { color: COLOR["status-eligible"], className: "text-status-eligible", Icon: CheckCircle2 },
+  review: { color: COLOR["status-review"], className: "text-status-review", Icon: AlertTriangle },
+  blocked: { color: COLOR["status-blocked"], className: "text-status-blocked", Icon: XCircle },
 } as const;
 
 /**
@@ -218,8 +220,8 @@ function placeSceneGeometry(
       position: Cesium.Cartesian3.fromDegrees(lng, lat, baseHeight),
       point: {
         pixelSize: 12,
-        color: Cesium.Color.fromCssColorString("#FF5B24"),
-        outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+        color: Cesium.Color.fromCssColorString(COLOR["lot-orange"]),
+        outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-chalk"]),
         outlineWidth: 3,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         ...heightRef,
@@ -227,8 +229,8 @@ function placeSceneGeometry(
       label: {
         text: parcel.address || "Proposed ADU Site",
         font: "600 13px Manrope, sans-serif",
-        fillColor: Cesium.Color.fromCssColorString("#161616"),
-        outlineColor: Cesium.Color.fromCssColorString("#F5F5F0"),
+        fillColor: Cesium.Color.fromCssColorString(COLOR["lot-ink"]),
+        outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-chalk"]),
         outlineWidth: 3,
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
@@ -249,9 +251,9 @@ function placeSceneGeometry(
         name: "Parcel Boundary",
         polygon: {
           hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-          material: Cesium.Color.fromCssColorString("#2D6A4F").withAlpha(0.25),
+          material: Cesium.Color.fromCssColorString(COLOR["lot-stone"]).withAlpha(0.25),
           outline: true,
-          outlineColor: Cesium.Color.fromCssColorString("#2D6A4F"),
+          outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-stone"]),
           outlineWidth: 2,
         },
       }),
@@ -743,7 +745,7 @@ export default function CesiumNeighborhoodView({
           right-hand allowance keeps it clear of the camera controls. */}
       <div
         data-testid="cesium-hud"
-        className="pointer-events-none absolute top-3 left-3 z-(--z-index-scene) flex max-w-[min(24rem,calc(100%-6.5rem))] flex-col border border-lot-line bg-lot-chalk/95"
+        className="pointer-events-none absolute top-3 left-3 z-(--z-index-scene) flex max-w-[min(24rem,calc(100%-6.5rem))] flex-col border border-lot-line bg-lot-chalk"
       >
         <div className="flex items-start gap-2 px-3 pt-2.5">
           <Globe size={16} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
@@ -832,7 +834,7 @@ export default function CesiumNeighborhoodView({
         role="group"
         aria-label="Camera controls"
         data-testid="cesium-camera-controls"
-        className="pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk/95 p-1"
+        className="pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk p-1"
       >
         {CAMERA_CONTROL_GROUPS.map((group) => (
           <div key={group[0].control} className="flex flex-col border-t border-lot-line first:border-t-0">
@@ -860,7 +862,7 @@ export default function CesiumNeighborhoodView({
         ref={creditContainerRef}
         data-testid="cesium-credit-container"
         aria-label="Map data credits"
-        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lf-hairline bg-lot-chalk px-3 py-2 text-xs leading-normal text-lot-ink`}
+        className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lot-line bg-lot-chalk px-3 py-2 text-xs leading-normal text-lot-ink`}
       />
 
       {/* Loading overlay */}
@@ -868,7 +870,7 @@ export default function CesiumNeighborhoodView({
         <div
           role="status"
           aria-live="polite"
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk/85 backdrop-blur-xs"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk"
         >
           <RefreshCw size={24} className="animate-spin text-lot-orange-ink" aria-hidden="true" />
           <p className="text-sm font-medium text-lot-ink">Streaming 3D globe & neighborhood data…</p>
@@ -885,7 +887,7 @@ export default function CesiumNeighborhoodView({
           <h3 className="font-display text-base font-semibold text-lot-ink">
             3D Globe currently unavailable
           </h3>
-          <p className="max-w-xs text-xs text-lf-muted">
+          <p className="max-w-xs text-xs text-lot-stone">
             {errorMessage ?? "Could not load CesiumJS resources in this browser session."}
           </p>
           {onReturnToModel && (

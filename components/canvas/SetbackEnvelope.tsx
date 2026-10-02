@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { Line } from "@react-three/drei";
 import * as THREE from "three";
 import { polygonInset } from "@/utils/geometry/polygonInset";
+import { COLOR } from "@/lib/design-tokens";
+
 
 export interface SetbackEnvelopeProps {
   boundary: THREE.Vector2[];
@@ -30,8 +32,8 @@ function polygonPath(points: readonly THREE.Vector2[]) {
  */
 export function setbackEnvelopeStyle(violated: boolean) {
   return violated
-    ? { fill: { color: "#A82D16", opacity: 0.22 }, line: { color: "#A82D16", lineWidth: 2.25 } }
-    : { fill: null, line: { color: "#65655F", lineWidth: 1.5 } };
+    ? { fill: { color: COLOR["status-blocked"], opacity: 0.22 }, line: { color: COLOR["status-blocked"], lineWidth: 2.25 } }
+    : { fill: null, line: { color: COLOR["lot-stone"], lineWidth: 1.5 } };
 }
 
 /**

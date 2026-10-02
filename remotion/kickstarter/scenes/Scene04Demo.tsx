@@ -2,6 +2,8 @@ import React from "react";
 import { Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { fonts, PALETTE } from "../constants";
 import { KickstarterFrame } from "../components/KickstarterFrame";
+import { COLOR } from "../../../lib/design-tokens";
+
 
 export const Scene04Demo: React.FC = () => {
   const frame = useCurrentFrame();
@@ -78,7 +80,7 @@ export const Scene04Demo: React.FC = () => {
           <div
             style={{
               height: 38,
-              backgroundColor: "#161616",
+              backgroundColor: COLOR["lot-ink"],
               borderBottom: `1px solid ${PALETTE.lineDark}`,
               display: "flex",
               alignItems: "center",

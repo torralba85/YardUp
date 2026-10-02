@@ -175,12 +175,12 @@ export default function FeasibilityInspector({
   return (
     <section
       aria-labelledby="feasibility-heading"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-y-auto lg:w-[404px] lg:border-l"
+      className="w-full shrink-0 border-lot-line bg-lot-chalk lg:h-full lg:max-h-none lg:min-h-0 lg:overflow-y-auto lg:w-[404px] lg:border-l"
     >
       <div className="flex min-h-full flex-col">
 
         {/* Panel header */}
-        <div className="flex items-center justify-between border-b border-lf-hairline px-6 py-5">
+        <div className="flex items-center justify-between border-b border-lot-line px-6 py-5">
           <div>
             <h2
               id="feasibility-heading"
@@ -188,14 +188,14 @@ export default function FeasibilityInspector({
             >
               {designOnly ? "Design your ADU" : "Feasibility Studio"}
             </h2>
-            <p className="mt-1 text-sm text-lf-muted">
+            <p className="mt-1 text-sm text-lot-stone">
               {designOnly ? "Try a size. See how it sits on your lot." : "Confirm the lot, shape the ADU, then test the income case."}
             </p>
           </div>
           {!designOnly && <button
             type="button"
             onClick={handleReset}
-            className="flex h-11 items-center gap-2 rounded-[3px] px-4 text-sm font-medium text-lf-muted motion-safe:transition hover:bg-lf-sand-2 hover:text-lf-espresso focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+            className="flex h-11 items-center gap-2 rounded-control px-4 text-sm font-medium text-lot-stone motion-safe:transition hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
           >
             <RefreshCcw size={15} />
             Reset
@@ -205,7 +205,7 @@ export default function FeasibilityInspector({
         {!designOnly && <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />}
 
         {/* Accordion steps */}
-        <div className="flex-1 divide-y divide-lf-hairline">
+        <div className="flex-1 divide-y divide-lot-line">
 
           {/* Step 1 — Your Property */}
           {!designOnly && <AccordionStep
@@ -223,29 +223,29 @@ export default function FeasibilityInspector({
                     <button
                       type="button"
                       onClick={handleResetToPreset}
-                      className="relative flex min-h-11 items-center gap-1 text-xs font-medium text-lf-clay-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
+                      className="relative flex min-h-11 items-center gap-1 text-xs font-medium text-lot-orange-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
                     >
                       <RefreshCcw size={12} />
                       Demo mode
                     </button>
                   </div>
 
-                  <div className="flex items-start gap-2 rounded-none border border-[#DADAD3] bg-lf-sand p-3">
-                    <MapPin size={15} className="mt-0.5 shrink-0 text-lf-clay-ink" />
+                  <div className="flex items-start gap-2 rounded-none border border-lot-line bg-lot-chalk p-3">
+                    <MapPin size={15} className="mt-0.5 shrink-0 text-lot-orange-ink" />
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-lf-espresso">
+                      <div className="truncate text-sm font-semibold text-lot-ink">
                         {displayParcel.address}
                       </div>
-                      <div className="mt-0.5 text-xs text-lf-muted">{displayParcel.city}</div>
+                      <div className="mt-0.5 text-xs text-lot-stone">{displayParcel.city}</div>
                     </div>
                   </div>
 
                   {"source" in displayParcel && displayParcel.source === "fallback" && (
                     <div
                       role="note"
-                      className="flex items-start gap-2 rounded-none border border-lf-amber-ink/35 bg-lf-amber-soft p-3 text-xs text-lf-amber-ink"
+                      className="flex items-start gap-2 rounded-none border border-status-review/35 bg-status-review-soft p-3 text-xs text-status-review"
                     >
-                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-lf-amber-ink" />
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-status-review" />
                       Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
                     </div>
                   )}
@@ -253,7 +253,7 @@ export default function FeasibilityInspector({
                   {parcelError && (
                     <div
                       role="alert"
-                      className="flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+                      className="flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
                     >
                       <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                       {parcelError}
@@ -267,7 +267,7 @@ export default function FeasibilityInspector({
                     id="parcel-preset"
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
-                    className="h-11 w-full rounded-[3px] border border-[#DADAD3] bg-lf-card px-3 text-sm font-medium text-lf-espresso outline-none motion-safe:transition focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+                    className="h-11 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 text-sm font-medium text-lot-ink outline-none motion-safe:transition focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
                   >
                     {parcelPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
@@ -277,12 +277,12 @@ export default function FeasibilityInspector({
                   </select>
 
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-lf-muted">Or search your address:</p>
+                    <p className="text-xs font-medium text-lot-stone">Or search your address:</p>
                     <AddressSearch onSelect={handleAddressSelect} onSubmitText={handleAddressText} />
                     {parcelError && (
                       <div
                         role="alert"
-                        className="flex items-start gap-2 rounded-none border border-lf-brick/40 bg-lf-brick-soft p-3 text-xs text-lf-brick"
+                        className="flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
                       >
                         <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                         {parcelError}
@@ -293,8 +293,8 @@ export default function FeasibilityInspector({
               )}
 
               {parcelLoading && (
-                <div className="flex items-center gap-2 rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2 text-xs text-lf-muted">
-                  <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay" />
+                <div className="flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
+                  <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
                   Looking up property data…
                 </div>
               )}
@@ -357,7 +357,7 @@ export default function FeasibilityInspector({
                         aria-describedby={`${footprintDescriptionId}-${option.value}`}
                         onClick={() => onConfigChange(configForFootprint(option.value, config))}
                         aria-pressed={isPressed}
-                        className={`relative flex min-h-28 flex-col items-start rounded-[3px] border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                        className={`relative flex min-h-28 flex-col items-start rounded-control border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isPressed ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                         }`}
                       >
@@ -380,8 +380,8 @@ export default function FeasibilityInspector({
                 </p>
               </div>
 
-              <details open={!designOnly} className="group/dimensions border-y border-lf-hairline">
-                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lf-espresso focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+              <details open={!designOnly} className="group/dimensions border-y border-lot-line">
+                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Fine-tune dimensions
                   <ChevronDown size={16} aria-hidden="true" className="group-open/dimensions:rotate-180" />
                 </summary>
@@ -423,10 +423,10 @@ export default function FeasibilityInspector({
                       type="button"
                       onClick={() => onConfigChange({ ...config, roof: key as ADUConfig["roof"] })}
                       aria-pressed={config.roof === key}
-                      className={`flex h-20 flex-col items-center justify-center gap-1 rounded-[3px] border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                      className={`flex h-20 flex-col items-center justify-center gap-1 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                         config.roof === key
-                          ? "border-[#161616] bg-[#161616] text-[#F5F5F0] shadow-none"
-                          : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
+                          ? "border-lot-ink bg-lot-ink text-lot-chalk shadow-none"
+                          : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
                       }`}
                     >
                       <RoofProfile roof={key as ADUConfig["roof"]} />
@@ -447,10 +447,10 @@ export default function FeasibilityInspector({
                         onConfigChange({ ...config, finish: key as ADUConfig["finish"] })
                       }
                       aria-pressed={config.finish === key}
-                      className={`rounded-[3px] border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                      className={`rounded-control border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                         config.finish === key
-                          ? "border-[#161616] bg-[#161616]/5 text-[#161616] ring-1 ring-[#161616]"
-                          : "border-[#DADAD3] bg-lot-chalk text-[#65655F] hover:border-[#B7B7AE] hover:bg-lf-sand-2"
+                          ? "border-lot-ink bg-lot-ink/5 text-lot-ink ring-1 ring-lot-ink"
+                          : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
                       }`}
                     >
                       <span
@@ -502,7 +502,7 @@ export default function FeasibilityInspector({
                 <LabelRow
                   label="Rental Estimate"
                   value={formatCurrency(result.monthlyRent)}
-                  valueClass="font-display text-lf-money tabular-nums"
+                  valueClass="font-display text-lot-ink tabular-nums"
                 />
                 <div role="group" aria-label="Rental estimate" className="grid grid-cols-3 gap-2">
                   {(Object.keys(rentLabels) as RentScenario[]).map((scenario) => (
@@ -526,7 +526,7 @@ export default function FeasibilityInspector({
               {result.warnings.length > 0 && (
                 <div
                   role="alert"
-                  className="rounded-none border border-lf-amber-ink/35 bg-lf-amber-soft p-3 text-sm text-lf-amber-ink"
+                  className="rounded-none border border-status-review/35 bg-status-review-soft p-3 text-sm text-status-review"
                 >
                   <div className="flex items-start gap-2">
                     <TriangleAlert className="mt-0.5 shrink-0" size={17} />
@@ -543,18 +543,18 @@ export default function FeasibilityInspector({
         </div>
 
         {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
-        <div className="space-y-3 border-t border-lf-hairline px-6 py-5">
+        <div className="space-y-3 border-t border-lot-line px-6 py-5">
           {designOnly && result.warnings.length > 0 && (
-            <div role="alert" className="flex items-start gap-2 text-sm text-lf-amber-ink">
+            <div role="alert" className="flex items-start gap-2 text-sm text-status-review">
               <TriangleAlert size={17} aria-hidden="true" className="mt-0.5 shrink-0" />
               <p><strong>Review needed.</strong> {result.warnings[0]}</p>
             </div>
           )}
-          {!designOnly && <div className="rounded-none border border-[#DADAD3] bg-lf-sand-2 px-3 py-2">
-            <div className="lf-kicker-dense font-bold leading-4 text-lf-muted">
+          {!designOnly && <div className="rounded-none border border-lot-line bg-lot-surface px-3 py-2">
+            <div className="lf-kicker-dense font-bold leading-4 text-lot-stone">
               Next best action
             </div>
-            <p className="mt-1 text-xs leading-5 text-lf-espresso">
+            <p className="mt-1 text-xs leading-5 text-lot-ink">
               {nextActionByStep[openStep]}
             </p>
           </div>}
@@ -599,7 +599,7 @@ function JourneyProgress({
   completedSteps: Set<number>;
 }) {
   return (
-    <div className="border-b border-lf-hairline bg-lf-sand-2/65 px-6 py-4">
+    <div className="border-b border-lot-line bg-lot-surface/65 px-6 py-4">
       <ol className="grid gap-3">
         {journeySteps.map(({ step, title, description }) => {
           const isActive = activeStep === step;
@@ -609,10 +609,10 @@ function JourneyProgress({
               <span
                 className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
                   isActive
-                    ? "bg-lf-clay text-lf-primary-label"
+                    ? "bg-lot-orange text-lot-ink"
                     : isDone
-                    ? "bg-lf-forest-soft text-lf-forest"
-                    : "bg-lf-card text-lf-muted ring-1 ring-lf-hairline"
+                    ? "bg-status-eligible-soft text-status-eligible"
+                    : "bg-lot-chalk text-lot-stone ring-1 ring-lot-line"
                 }`}
               >
                 {isDone ? <Check size={12} /> : step}
@@ -620,12 +620,12 @@ function JourneyProgress({
               <div className="min-w-0">
                 <div
                   className={`text-sm font-semibold ${
-                    isActive ? "text-lf-espresso" : "text-lf-muted"
+                    isActive ? "text-lot-ink" : "text-lot-stone"
                   }`}
                 >
                   {title}
                 </div>
-                <p className="text-xs leading-5 text-lf-muted">
+                <p className="text-xs leading-5 text-lot-stone">
                   {description}
                 </p>
               </div>
@@ -662,25 +662,25 @@ function AccordionStep({
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="flex w-full items-center gap-3 px-6 py-4 text-left motion-safe:transition hover:bg-lf-sand-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lf-clay-ink"
+        className="flex w-full items-center gap-3 px-6 py-4 text-left motion-safe:transition hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink"
       >
         <span
           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold motion-safe:transition ${
             isOpen
-              ? "bg-lf-clay text-lf-primary-label"
+              ? "bg-lot-orange text-lot-ink"
               : isComplete
-              ? "bg-lf-forest-soft text-lf-forest"
-              : "bg-lf-sand-2 text-lf-muted"
+              ? "bg-status-eligible-soft text-status-eligible"
+              : "bg-lot-surface text-lot-stone"
           }`}
         >
           {isComplete && !isOpen ? <Check size={12} /> : step}
         </span>
-        <span className={`flex-1 text-sm font-semibold ${isOpen ? "text-lf-espresso" : "text-lf-muted"}`}>
+        <span className={`flex-1 text-sm font-semibold ${isOpen ? "text-lot-ink" : "text-lot-stone"}`}>
           {title}
         </span>
         <ChevronDown
           size={16}
-          className={`shrink-0 text-lf-muted motion-safe:transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 text-lot-stone motion-safe:transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -727,7 +727,7 @@ function LabelRow({
   htmlFor,
   // Default is espresso ink for non-money values. Money call sites pass
   // Money is neutral; green is reserved for verified status.
-  valueClass = "font-display text-lf-espresso",
+  valueClass = "font-display text-lot-ink",
 }: {
   label: string;
   value?: string;
@@ -738,7 +738,7 @@ function LabelRow({
   return (
     <div className="flex items-center justify-between">
       <Tag
-        className="text-sm font-semibold text-lf-espresso"
+        className="text-sm font-semibold text-lot-ink"
         {...(htmlFor ? { htmlFor } : {})}
       >
         {label}
@@ -751,8 +751,8 @@ function LabelRow({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-lf-muted">{label}</div>
-      <div className="mt-0.5 font-sans text-xs font-medium text-lf-espresso">{value}</div>
+      <div className="text-xs text-lot-stone">{label}</div>
+      <div className="mt-0.5 font-sans text-xs font-medium text-lot-ink">{value}</div>
     </div>
   );
 }

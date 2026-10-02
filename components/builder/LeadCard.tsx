@@ -41,9 +41,9 @@ export interface LeadCardProps {
 }
 
 const ACCESS_CHIP: Record<LeadAccess, { label: string; cls: string }> = {
-  locked: { label: "Locked", cls: "bg-lf-taupe-soft text-lf-muted" },
-  confirming: { label: "Confirming", cls: "bg-lf-amber-soft text-lf-amber-ink" },
-  unlocked: { label: "Unlocked", cls: "bg-lf-forest-soft text-lf-forest" },
+  locked: { label: "Locked", cls: "bg-lot-stone-soft text-lot-stone" },
+  confirming: { label: "Confirming", cls: "bg-status-review-soft text-status-review" },
+  unlocked: { label: "Unlocked", cls: "bg-status-eligible-soft text-status-eligible" },
 };
 
 /**
@@ -89,9 +89,9 @@ export default function LeadCard({
   const isHeadStartActive = headStartMs > 0 && access === "locked";
 
   return (
-    <article className="border border-lf-hairline bg-lf-card p-5">
+    <article className="border border-lot-line bg-lot-chalk p-5">
       <div className="flex items-center justify-between gap-2">
-        <span className="lf-kicker-dense text-lf-muted">
+        <span className="lf-kicker-dense text-lot-stone">
           NO. {preview.previewSerial}
           {recorded ? ` · RECORDED ${recorded}` : ""}
         </span>
@@ -104,35 +104,35 @@ export default function LeadCard({
       </div>
 
       {/* Value band first (B2): green is the money this lead pays the builder. */}
-      <p className="mt-3 lf-money-md text-lf-money">
+      <p className="mt-3 lf-money-md text-lot-ink">
         {formatCurrency(preview.rentBand)}
-        <span className="ml-1.5 lf-kicker-dense text-lf-muted">
+        <span className="ml-1.5 lf-kicker-dense text-lot-stone">
           /mo rent potential
         </span>
       </p>
       {preview.rentBasis && (
-        <p className="mt-1 lf-kicker-dense text-lf-muted">
+        <p className="mt-1 lf-kicker-dense text-lot-stone">
           {preview.rentBasis}
         </p>
       )}
 
       <div className="mt-2.5">
-        <p className="font-semibold text-lf-espresso">
+        <p className="font-semibold text-lot-ink">
           {headline}
           {preview.zip && (
-            <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lf-muted">
+            <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lot-stone">
               {preview.zip}
             </span>
           )}
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lot-stone">
           <span>{preview.lotSqft.toLocaleString()} sqft</span>
           <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
           <span>{finishLabels[preview.config.finish]}</span>
         </p>
       </div>
 
-      <p className="mt-2 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-muted">
+      <p className="mt-2 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lot-stone">
         <span>
           Build {formatCompactCurrency(preview.buildBandLow)}–{formatCompactCurrency(preview.buildBandHigh)}
         </span>
@@ -145,7 +145,7 @@ export default function LeadCard({
           {preview.matchReasons.map((reason) => (
             <li
               key={reason}
-              className="rounded-none bg-lf-sand-2 px-2 py-1 text-[11px] text-lf-muted"
+              className="rounded-none bg-lot-surface px-2 py-1 text-[11px] text-lot-stone"
             >
               {reason}
             </li>
@@ -154,7 +154,7 @@ export default function LeadCard({
       )}
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="lf-kicker-dense text-lf-muted">
+        <span className="lf-kicker-dense text-lot-stone">
           {statusLabel(item.response.status)}
         </span>
         <div className="flex gap-2">
@@ -183,18 +183,18 @@ export default function LeadCard({
         </div>
       </div>
 
-      <div className="mt-3 border-t border-dashed border-lf-hairline pt-3">
+      <div className="mt-3 border-t border-dashed border-lot-line pt-3">
         {access === "locked" && (
           <div>
             {isHeadStartActive ? (
-              <div className="border border-lf-amber-ink/30 bg-lf-amber-soft p-3">
-                <div className="flex items-center gap-1.5 font-sans text-[10.5px] font-medium uppercase tracking-[0.08em] text-lf-amber-ink">
+              <div className="border border-status-review/30 bg-status-review-soft p-3">
+                <div className="flex items-center gap-1.5 font-sans text-[10.5px] font-medium uppercase tracking-[0.08em] text-status-review">
                   <Lock size={13} />
                   Exclusive window active · Unlocked by 1 builder
                 </div>
-                <p className="mt-1 text-xs text-lf-espresso">
+                <p className="mt-1 text-xs text-lot-ink">
                   This lead is in an exclusive 48h head start window. Opens to all builders in{" "}
-                  <span className="font-mono font-semibold">{formatHeadStartRemaining(headStartMs)}</span>.
+                  <span className="font-sans tabular-nums font-semibold">{formatHeadStartRemaining(headStartMs)}</span>.
                 </p>
                 <Button variant="secondary" disabled className="mt-2.5 w-full cursor-not-allowed opacity-60">
                   Exclusive window ({formatHeadStartRemaining(headStartMs)} left)
@@ -202,7 +202,7 @@ export default function LeadCard({
               </div>
             ) : (
               <div>
-                <div className="flex items-center gap-1.5 lf-kicker-dense text-lf-muted">
+                <div className="flex items-center gap-1.5 lf-kicker-dense text-lot-stone">
                   <Lock size={13} />
                   Contact locked — unlock to view
                 </div>
@@ -216,26 +216,26 @@ export default function LeadCard({
         )}
 
         {access === "confirming" && (
-          <div className="border border-lf-amber-ink/35 bg-lf-amber-soft px-3.5 py-3">
-            <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-amber-ink">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-lf-amber-ink" />
+          <div className="border border-status-review/35 bg-status-review-soft px-3.5 py-3">
+            <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.08em] text-status-review">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-status-review" />
               Payment received · recording unlock…
             </div>
-            <p className="mt-1.5 text-xs text-lf-espresso">
+            <p className="mt-1.5 text-xs text-lot-ink">
               Usually a few seconds. Your contact details will appear right here.
             </p>
-            <p className="mt-2 font-sans text-[9.5px] uppercase tracking-[0.08em] text-lf-muted">
+            <p className="mt-2 font-sans text-[9.5px] uppercase tracking-[0.08em] text-lot-stone">
               You will not be charged twice.
             </p>
           </div>
         )}
 
         {access === "unlocked" && contact && (
-          <div className="lf-stamp relative border-[1.5px] border-lf-forest bg-lf-forest-soft px-3.5 py-3">
-            <div className="flex justify-between font-sans text-[9.5px] uppercase tracking-[0.08em] text-lf-forest">
+          <div className="lf-stamp relative border-[1.5px] border-status-eligible bg-status-eligible-soft px-3.5 py-3">
+            <div className="flex justify-between font-sans text-[9.5px] uppercase tracking-[0.08em] text-status-eligible">
               <span>Access recorded{demo ? " · demo" : ""}</span>
             </div>
-            <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lf-espresso">
+            <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lot-ink">
               <span className="block font-semibold">{contact.ownerContact.name}</span>
               <span className="block">
                 {contact.ownerContact.email}
@@ -249,13 +249,13 @@ export default function LeadCard({
                   size="xs"
                   onClick={onViewCertificate}
                   leftIcon={<FileText size={13} />}
-                  className="border border-lf-hairline"
+                  className="border border-lot-line"
                 >
                   View certificate
                 </Button>
               )}
               {reported ? (
-                <span className="inline-flex items-center gap-1 rounded-none border border-lf-amber-ink/30 bg-lf-amber-soft px-2 py-1 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lf-amber-ink">
+                <span className="inline-flex items-center gap-1 rounded-none border border-status-review/30 bg-status-review-soft px-2 py-1 font-sans text-[10.5px] uppercase tracking-[0.08em] text-status-review">
                   <CheckCircle2 size={12} />
                   Bad-lead credited
                 </span>
@@ -266,7 +266,7 @@ export default function LeadCard({
                     size="xs"
                     onClick={onReport}
                     leftIcon={<Flag size={13} />}
-                    className="border border-lf-hairline"
+                    className="border border-lot-line"
                   >
                     Report this lead
                   </Button>

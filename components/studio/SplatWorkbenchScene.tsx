@@ -7,6 +7,8 @@ import { defaultAduConfig } from "@/lib/feasibility";
 import type { SplatSource, SplatTransform } from "@/lib/splat-scene";
 import { AduArchitecture } from "./AduArchitecture";
 import GaussianSplatLayer, { type SplatLayerStatus } from "./GaussianSplatLayer";
+import { COLOR } from "@/lib/design-tokens";
+
 
 interface Props {
   source: SplatSource;
@@ -42,14 +44,14 @@ function Diagnostics({ sampleRef }: { sampleRef: Props["sampleDiagnostics"] }) {
 export default function SplatWorkbenchScene(props: Props) {
   return (
     <Canvas frameloop="demand" dpr={[1, 1.5]} gl={{ antialias: false }} aria-label="Scan and ADU depth scene">
-      <color attach="background" args={["#F5F5F0"]} />
+      <color attach="background" args={[COLOR["lot-chalk"]]} />
       {props.orthographic
         ? <OrthographicCamera makeDefault position={[0, 18, 85]} zoom={8} near={0.1} far={500} />
         : <PerspectiveCamera makeDefault position={[0, 18, 85]} fov={45} near={0.1} far={500} />}
       <OrbitControls makeDefault target={[0, 9, 0]} enableDamping={false} minDistance={8} maxDistance={180} />
       <ambientLight intensity={1.8} />
       <directionalLight position={[30, 50, 40]} intensity={2.5} />
-      <gridHelper args={[100, 20, "#65655F", "#DADAD3"]} />
+      <gridHelper args={[100, 20, COLOR["lot-stone"], COLOR["lot-line"]]} />
       <group position={[0, 0, props.aduZ]}><AduArchitecture config={defaultAduConfig} /></group>
       {props.visible && <GaussianSplatLayer key={props.generation} source={props.source} transform={props.transform} onStatus={props.onStatus} />}
       <Diagnostics sampleRef={props.sampleDiagnostics} />

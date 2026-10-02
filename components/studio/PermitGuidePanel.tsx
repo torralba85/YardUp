@@ -58,11 +58,11 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
   return (
     <section
       aria-label="Permit guide panel"
-      className="w-full shrink-0 border-lf-hairline bg-lf-card lg:border-t"
+      className="w-full shrink-0 border-lot-line bg-lot-chalk lg:border-t"
     >
-      <div className="flex flex-col gap-4 border-b border-lf-hairline px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 border-b border-lot-line px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="lf-panel-heading text-lf-espresso">
+          <h2 className="lf-panel-heading text-lot-ink">
             Permit Guide
           </h2>
           <StatusChip
@@ -84,35 +84,35 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
           />
         </div>
 
-        <div className="text-xs text-lf-muted">
+        <div className="text-xs text-lot-stone">
           Verified at: {guide.verifiedAt} · Confidence: {guide.confidence}
         </div>
       </div>
 
       <div className="grid gap-8 px-6 py-5 lg:grid-cols-3 lg:gap-10 xl:grid-cols-[minmax(0,3fr)_minmax(0,6fr)_minmax(0,3fr)]">
         <div>
-          <h3 className="font-display text-xl font-medium leading-snug text-lf-espresso">{guide.title}</h3>
-          <p className="lf-body-sm mt-2 text-lf-muted">{guide.summary}</p>
+          <h3 className="font-display text-xl font-medium leading-snug text-lot-ink">{guide.title}</h3>
+          <p className="lf-body-sm mt-2 text-lot-stone">{guide.summary}</p>
         </div>
 
         {/* Permit Steps Checklist */}
         <div className="space-y-3">
-          <h4 className="lf-kicker-dense text-lf-muted">
+          <h4 className="lf-kicker-dense text-lot-stone">
             Permitting Steps
           </h4>
           <div className="space-y-2.5">
             {guide.permitSteps.map((step, idx) => (
               <label
                 key={idx}
-                className="flex items-start gap-3 rounded-none border border-[#DADAD3] bg-lf-sand/20 p-3 hover:bg-lf-sand/40 motion-safe:transition cursor-pointer"
+                className="flex items-start gap-3 rounded-none border border-lot-line bg-lot-chalk/20 p-3 hover:bg-lot-chalk/40 motion-safe:transition cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-[#FF5B24] rounded-[3px] focus:ring-lot-orange-ink"
+                  className="mt-0.5 h-4 w-4 accent-lot-orange rounded-control focus:ring-lot-orange-ink"
                 />
-                <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lf-muted line-through" : "text-lf-espresso font-medium"}`}>
+                <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lot-stone line-through" : "text-lot-ink font-medium"}`}>
                   {step}
                 </span>
               </label>
@@ -124,10 +124,10 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
           {/* Blockers / Warnings */}
           {guide.blockers.length > 0 && (
             <div className="space-y-3">
-              <h4 className="lf-kicker-dense text-lf-muted">
+              <h4 className="lf-kicker-dense text-lot-stone">
                 Potential Blockers
               </h4>
-              <div className="rounded-none border border-lf-brick/30 bg-lf-brick-soft p-3.5 text-xs text-lf-brick">
+              <div className="rounded-none border border-status-blocked/30 bg-status-blocked-soft p-3.5 text-xs text-status-blocked">
                 <div className="flex gap-2">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <ul className="list-disc pl-3 space-y-1 font-medium">
@@ -143,7 +143,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
           {/* Sourced Citations */}
           {guide.citations.length > 0 && (
             <div className="space-y-3">
-              <h4 className="lf-kicker-dense text-lf-muted">
+              <h4 className="lf-kicker-dense text-lot-stone">
                 Local Resources
               </h4>
               <ul className="space-y-2">
@@ -157,7 +157,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           href={safeHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lf-clay-ink motion-safe:transition hover:text-lot-ink"
+                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:text-lot-ink"
                         >
                           <BookOpen size={14} />
                           {citationLabel}
@@ -167,7 +167,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                         <span
                           aria-disabled="true"
                           title="Citation link unavailable"
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lf-muted"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lot-stone"
                         >
                           <BookOpen size={14} />
                           {citationLabel}

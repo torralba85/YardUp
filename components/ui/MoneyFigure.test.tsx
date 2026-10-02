@@ -26,20 +26,20 @@ describe("MoneyFigure", () => {
     expect(screen.getByText("$9,999")).toBeInTheDocument();
   });
 
-  it("uses the surface-aware money token for the legacy forest tone", () => {
-    // The tone name is vestigial. A LOT MORE retired money-green; money reads
+  it("uses neutral ink on the light surface", () => {
+    // A LOT MORE uses neutral money; the figure reads
     // through scale and weight in carbon (docs/design/design-system.md 2.6).
-    const { container } = render(<MoneyFigure value={100} tone="forest" />);
-    expect(container.firstChild).toHaveClass("text-lf-money");
-    expect(container.firstChild).not.toHaveClass("text-lf-forest");
+    const { container } = render(<MoneyFigure value={100} tone="onLight" />);
+    expect(container.firstChild).toHaveClass("text-lot-ink");
+    expect(container.firstChild).not.toHaveClass("text-status-eligible");
   });
 
   it("applies the on-dark money tone", () => {
     const { container } = render(<MoneyFigure value={100} tone="onDark" />);
-    expect(container.firstChild).toHaveClass("text-lf-money-on-dark");
+    expect(container.firstChild).toHaveClass("text-lot-chalk");
   });
 
-  it("uses the Cormorant display face with tabular figures", () => {
+  it("uses the shared display face with tabular figures", () => {
     const { container } = render(<MoneyFigure value={100} />);
     expect(container.firstChild).toHaveClass("font-display", "tabular-nums");
   });

@@ -328,12 +328,12 @@ export default function AddressSearch({
           the form's center: helper text below the input stretches the form and
           would drag top-1/2 children out of the pill. */}
       <span
-        className="pointer-events-none absolute left-3 top-5.5 -translate-y-1/2 text-lf-muted"
+        className="pointer-events-none absolute left-3 top-5.5 -translate-y-1/2 text-lot-stone"
         aria-hidden="true"
       >
         {loading ? (
           <span
-            className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lf-hairline border-t-lf-clay"
+            className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange"
             role="status"
             aria-label="Loading address search"
           />
@@ -366,20 +366,20 @@ export default function AddressSearch({
           activeIndex >= 0 ? `address-suggestion-${activeIndex}` : undefined
         }
         className={[
-          "h-11 w-full rounded-[3px] border pl-9 pr-26 text-sm",
-          "bg-lf-card text-lf-espresso placeholder:text-lf-muted",
+          "h-11 w-full rounded-control border pl-9 pr-26 text-sm",
+          "bg-lot-chalk text-lot-ink placeholder:text-lot-stone",
           "outline-none motion-safe:transition",
           "focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink",
           isDisabled
-            ? "cursor-not-allowed border-lf-hairline opacity-60"
-            : "border-lf-hairline hover:border-lf-taupe/70",
+            ? "cursor-not-allowed border-lot-line opacity-60"
+            : "border-lot-line hover:border-lot-stone/70",
         ].join(" ")}
       />
 
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-[3px] px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lf-taupe-soft disabled:text-lf-muted enabled:bg-lf-clay enabled:text-lf-primary-label enabled:hover:bg-lf-clay-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lf-clay-ink focus-visible:ring-offset-1"
+        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-control px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lot-stone-soft disabled:text-lot-stone enabled:bg-lot-orange enabled:text-lot-ink enabled:hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search
@@ -390,7 +390,7 @@ export default function AddressSearch({
           id="address-suggestions"
           role="listbox"
           aria-label="Address suggestions"
-          className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-none border border-lf-hairline bg-lf-card/95 shadow-none backdrop-blur-md"
+          className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-none border border-lot-line bg-lot-chalk shadow-none"
         >
           {suggestions.map((suggestion, index) => (
             <li
@@ -404,11 +404,11 @@ export default function AddressSearch({
                 void pickSuggestion(suggestion);
               }}
               onMouseEnter={() => setActiveIndex(index)}
-              className={`flex cursor-pointer items-center gap-2 px-3 py-3 text-sm text-lf-espresso ${
-                index === activeIndex ? "bg-lf-sand-2" : ""
+              className={`flex cursor-pointer items-center gap-2 px-3 py-3 text-sm text-lot-ink ${
+                index === activeIndex ? "bg-lot-surface" : ""
               }`}
             >
-              <MapPin size={13} className="shrink-0 text-lf-clay-ink" aria-hidden="true" />
+              <MapPin size={13} className="shrink-0 text-lot-orange-ink" aria-hidden="true" />
               <span className="truncate">{suggestion.text}</span>
             </li>
           ))}
@@ -418,7 +418,7 @@ export default function AddressSearch({
           {googleEnabled && (
             <li
               role="presentation"
-              className="flex items-center justify-end gap-1 border-t border-lf-hairline px-3 py-1.5 text-[10px] uppercase tracking-wide text-lf-muted"
+              className="flex items-center justify-end gap-1 border-t border-lot-line px-3 py-1.5 text-[10px] uppercase tracking-wide text-lot-stone"
             >
               Powered by Google
             </li>
@@ -429,7 +429,7 @@ export default function AddressSearch({
       {/* Pin icon on the right when Places is active and a value is entered */}
       {googleEnabled && inputValue && !onSubmitText && (
         <span
-          className="pointer-events-none absolute right-3 top-5.5 -translate-y-1/2 text-lf-clay-ink"
+          className="pointer-events-none absolute right-3 top-5.5 -translate-y-1/2 text-lot-orange-ink"
           aria-hidden="true"
         >
           <MapPin size={15} />
@@ -437,7 +437,7 @@ export default function AddressSearch({
       )}
 
       {!signedIn || (!loading && !hasPlacesKey) ? (
-        <p className="mt-1.5 text-xs text-lf-muted" role="note">
+        <p className="mt-1.5 text-xs text-lot-stone" role="note">
           Type a full address (street, city, state) and press Search.
         </p>
       ) : null}

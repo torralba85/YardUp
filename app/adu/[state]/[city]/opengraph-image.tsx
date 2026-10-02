@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 import { aduStaticParams, getCity } from "@/lib/adu/content";
+import { COLOR } from "@/lib/design-tokens";
+
 
 export const size = { width: 1200, height: 630 };
 
@@ -33,8 +35,8 @@ export default async function AduCityOgImage({
           flexDirection: "column",
           justifyContent: "center",
           padding: "80px",
-          background: "#F5F5F0",
-          color: "#161616",
+          background: COLOR["lot-chalk"],
+          color: COLOR["lot-ink"],
           fontFamily: "Arial, Helvetica, sans-serif",
         }}
       >
@@ -45,7 +47,7 @@ export default async function AduCityOgImage({
             fontSize: 28,
             letterSpacing: 4,
             textTransform: "uppercase",
-            color: "#65655F",
+            color: COLOR["lot-stone"],
           }}
         >
           LotFoundry · ADU Rules (2026)
@@ -73,7 +75,7 @@ export default async function AduCityOgImage({
               display: "flex",
               width: 240,
               height: 48,
-              background: "#FF5B24",
+              background: COLOR["lot-orange"],
             }}
           />
           <div
@@ -81,7 +83,7 @@ export default async function AduCityOgImage({
               display: "flex",
               fontSize: 32,
               marginLeft: 24,
-              color: "#65655F",
+              color: COLOR["lot-stone"],
             }}
           >
             Size, setbacks &amp; permits

@@ -1,11 +1,12 @@
+import { COLOR } from "../lib/design-tokens";
 export const LF = {
-  sand: "#F5F5F0",
-  sand2: "#EBEBE6",
-  card: "#F5F5F0",
-  taupe: "#B7B7AE",
-  clay: "#FF5B24",
-  mahogany: "#161616",
-  espresso: "#161616",
-  hairline: "#DADAD3",
-  forest: "#176B4C",
+  sand: COLOR["lot-chalk"],
+  sand2: COLOR["lot-surface"],
+  card: COLOR["lot-chalk"],
+  taupe: COLOR["lot-stone-on-dark"],
+  clay: COLOR["lot-orange"],
+  mahogany: COLOR["lot-ink"],
+  espresso: COLOR["lot-ink"],
+  hairline: COLOR["lot-line"],
+  forest: COLOR["status-eligible"],
 } as const;

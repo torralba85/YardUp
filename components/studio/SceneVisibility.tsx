@@ -20,6 +20,8 @@ import {
   useStudioEnhancements,
 } from "@/lib/studio-enhancements-store";
 import { exportOrthographicView } from "@/utils/canvas/exportOrthographicView";
+import { COLOR } from "@/lib/design-tokens";
+
 
 /**
  * Stops rendering when hidden and also hosts the lightweight client-side
@@ -148,7 +150,7 @@ export function SceneVisibility({ utilityMode = false }: { utilityMode?: boolean
       )}
 
       {aduOutline.length > 0 && (
-        <Line points={aduOutline} color="#A82D16" lineWidth={3} />
+        <Line points={aduOutline} color={COLOR["status-blocked"]} lineWidth={3} />
       )}
 
       {utilityMode && house?.pose && house.footprint.width && house.footprint.depth && (

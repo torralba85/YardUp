@@ -87,16 +87,16 @@ export default function StudioPage() {
   // ground so the landing's 520ms dawn ramp lands on a continuous surface.
   if (loading || (buildersAllowed && profile?.role === "builder") || (user && demoEntry === null)) {
     return (
-      <div role="status" className="flex h-[100dvh] items-center justify-center bg-lf-sand">
+      <div role="status" className="flex h-[100dvh] items-center justify-center bg-lot-chalk">
         <div className="px-6 text-center">
-          <p className="lf-kicker-dense text-lf-muted">
+          <p className="lf-kicker-dense text-lot-stone">
             Opening studio · typical supported markets
           </p>
-          <p data-money className="lf-money-lg mt-3 text-lf-money">
+          <p data-money className="lf-money-lg mt-3 text-lot-ink">
             {TYPICAL_MARKET.rentBand}
-            <span className="ml-1 font-sans text-sm font-normal text-lf-muted">/mo</span>
+            <span className="ml-1 font-sans text-sm font-normal text-lot-stone">/mo</span>
           </p>
-          <p className="lf-caption mt-3 text-lf-muted">Estimates, not guarantees.</p>
+          <p className="lf-caption mt-3 text-lot-stone">Estimates, not guarantees.</p>
         </div>
       </div>
     );
