@@ -75,6 +75,7 @@ ${cities}
 - [YouTube](${SOCIAL_LINKS.youtube})
 - [Instagram](${SOCIAL_LINKS.instagram})
 - [Facebook](${SOCIAL_LINKS.facebook})
+- [X](${SOCIAL_LINKS.x})
 
 ## Reference
 

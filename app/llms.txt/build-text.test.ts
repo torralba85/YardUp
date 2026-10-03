@@ -44,6 +44,7 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain(SOCIAL_LINKS.youtube);
     expect(text).toContain(SOCIAL_LINKS.instagram);
     expect(text).toContain(SOCIAL_LINKS.facebook);
+    expect(text).toContain(SOCIAL_LINKS.x);
   });
 
   it("states the planning-aid limitation, because this text is read verbatim by assistants", () => {
