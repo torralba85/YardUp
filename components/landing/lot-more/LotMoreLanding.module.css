@@ -1121,10 +1121,6 @@
 .socialIconLink:hover {
   color: var(--ink);
 }
-.socialIconLink:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
 .footerLegal {
   display: flex;
   gap: 24px;
