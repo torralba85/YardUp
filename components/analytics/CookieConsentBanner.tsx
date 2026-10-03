@@ -37,9 +37,9 @@ export function CookieConsentBanner() {
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-4 rounded-none border border-lot-line bg-lot-chalk p-5 shadow-none sm:flex-row sm:items-center sm:gap-6">
         <p className="lf-caption flex-1 text-lot-stone">
-          We&rsquo;d like to use Google Analytics to understand which parts of LotFoundry
-          people actually use. It sets cookies in your browser. We never send your address,
-          email, or feasibility results to Google. Read our{" "}
+          We&rsquo;d like to use Google Analytics and Google Ads conversion measurement to
+          understand how people find and use LotFoundry. These set cookies in your browser.
+          We never send your address, email, or feasibility results to Google. Read our{" "}
           <Link href="/privacy" className="font-medium text-lot-orange-ink underline">
             Privacy Policy
           </Link>

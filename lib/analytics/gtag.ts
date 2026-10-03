@@ -7,6 +7,7 @@
  */
 
 import { readConsent } from "./consent";
+import { GOOGLE_ADS_ID } from "./adsConversion";
 
 /** Arguments accepted by the global `gtag` command queue. */
 type GtagArgs =
@@ -92,6 +93,7 @@ export function disableAnalytics(): void {
   if (id) {
     (window as unknown as Record<string, boolean>)[`ga-disable-${id}`] = true;
   }
+  (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`] = true;
   clearAnalyticsCookies();
   try {
     window.sessionStorage.removeItem("lf:analytics-entry-source");
@@ -110,6 +112,7 @@ export function enableAnalytics(): void {
   if (id) {
     delete (window as unknown as Record<string, boolean>)[`ga-disable-${id}`];
   }
+  delete (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`];
 }
 
 /**
@@ -168,7 +171,7 @@ export function trackEvent(
 }
 
 /**
- * Delete the cookies GA4 sets on this host.
+ * Delete first-party GA4 and Google Ads measurement cookies on this host.
  *
  * Unmounting the tag stops new collection, but the `_ga` client-ID cookie
  * survives on its own two-year expiry — so withdrawing consent would still
@@ -186,7 +189,10 @@ export function clearAnalyticsCookies(): void {
   const names = document.cookie
     .split(";")
     .map((entry) => entry.split("=")[0]?.trim() ?? "")
-    .filter((name) => name === "_ga" || name.startsWith("_ga_") || name === "_gid");
+    .filter((name) =>
+      name === "_ga" || name.startsWith("_ga_") || name === "_gid" ||
+      name.startsWith("_gcl_") || name.startsWith("_gac_")
+    );
 
   const { hostname } = window.location;
   // e.g. "lotfoundry.net" -> ["lotfoundry.net", ".lotfoundry.net"]; on

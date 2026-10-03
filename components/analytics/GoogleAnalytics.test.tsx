@@ -104,14 +104,14 @@ describe("GoogleAnalytics", () => {
     expect(init.textContent).toContain("G-ABC1234567");
   });
 
-  it("denies advertising storage in the consent defaults", async () => {
+  it("grants advertising measurement only after the new disclosure is accepted", async () => {
     grantConsent();
 
     render(<GoogleAnalytics />);
 
     const init = await screen.findByTestId("lf-gtag-init");
-    // The privacy policy promises no advertising or personalization signals.
-    expect(init.textContent).toContain("ad_storage: 'denied'");
+    expect(init.textContent).toContain("ad_storage: 'granted'");
+    expect(init.textContent).toContain("ad_user_data: 'granted'");
     expect(init.textContent).toContain("ad_personalization: 'denied'");
     expect(init.textContent).toContain("analytics_storage: 'granted'");
   });
@@ -141,6 +141,6 @@ describe("GoogleAnalytics", () => {
     render(<GoogleAnalytics />);
 
     const init = await screen.findByTestId("lf-gtag-init");
-    expect(init.textContent).toContain("gtag('config', 'AW-18350405574')");
+    expect(init.textContent).toContain("gtag('config', 'AW-18350405574', { send_page_view: false })");
   });
 });

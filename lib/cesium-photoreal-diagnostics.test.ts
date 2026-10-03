@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { CONSENT_STORAGE_KEY, CONSENT_VERSION } from "./analytics/consent";
 import {
   MAX_SANITIZED_MESSAGE_LENGTH,
   PHOTOREAL_ERROR_EVENT,
@@ -153,8 +154,8 @@ describe("reportPhotorealError", () => {
     expect(gtag).not.toHaveBeenCalled();
 
     window.localStorage.setItem(
-      "lf-analytics-consent",
-      JSON.stringify({ decision: "granted", version: 1, decidedAt: new Date().toISOString() }),
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({ decision: "granted", version: CONSENT_VERSION, decidedAt: new Date().toISOString() }),
     );
     reportPhotorealError("google-direct", new Error(`403 denied for ${FAKE_KEY}`), [FAKE_KEY]);
 
@@ -169,8 +170,8 @@ describe("reportPhotorealError", () => {
 
   it("stays silent to analytics after opt-out, and survives a throwing tag", () => {
     window.localStorage.setItem(
-      "lf-analytics-consent",
-      JSON.stringify({ decision: "denied", version: 1, decidedAt: new Date().toISOString() }),
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({ decision: "denied", version: CONSENT_VERSION, decidedAt: new Date().toISOString() }),
     );
     window.gtag = () => {
       throw new Error("gtag down");

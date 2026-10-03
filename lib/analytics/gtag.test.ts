@@ -11,6 +11,7 @@ import {
   trackEvent,
 } from "./gtag";
 import { clearConsent, writeConsent } from "./consent";
+import { GOOGLE_ADS_ID } from "./adsConversion";
 
 describe("gtag helpers", () => {
   afterEach(() => {
@@ -18,6 +19,7 @@ describe("gtag helpers", () => {
     delete window.gtag;
     clearConsent();
     delete (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"];
+    delete (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`];
   });
 
   describe("configuration", () => {
@@ -147,6 +149,7 @@ describe("gtag helpers", () => {
       expect(
         (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"],
       ).toBe(true);
+      expect((window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`]).toBe(true);
       expect(document.cookie).not.toContain("_ga=");
     });
 
@@ -158,12 +161,13 @@ describe("gtag helpers", () => {
       expect(
         (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"],
       ).toBeUndefined();
+      expect((window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`]).toBeUndefined();
     });
   });
 
   describe("clearAnalyticsCookies", () => {
     beforeEach(() => {
-      for (const name of ["_ga", "_ga_ABC1234567", "_gid", "lf_keep"]) {
+      for (const name of ["_ga", "_ga_ABC1234567", "_gid", "_gcl_au", "_gcl_aw", "_gac_ABC", "lf_keep"]) {
         document.cookie = `${name}=value; path=/`;
       }
     });
@@ -174,6 +178,8 @@ describe("gtag helpers", () => {
       expect(document.cookie).not.toContain("_ga=");
       expect(document.cookie).not.toContain("_ga_ABC1234567=");
       expect(document.cookie).not.toContain("_gid=");
+      expect(document.cookie).not.toContain("_gcl_");
+      expect(document.cookie).not.toContain("_gac_");
     });
 
     it("leaves non-analytics cookies alone", () => {
