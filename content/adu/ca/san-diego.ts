@@ -18,7 +18,7 @@ export const sanDiego: JurisdictionContent = {
   asOf: "2026-09-18",
   metaTitle: "ADU Cost & Rules in San Diego (2026) | LotFoundry",
   metaDescription:
-    "What you can actually build in San Diego: size caps, the zero-setback rule, permit costs, and what an ADU rents for. Run the numbers on your own lot, free.",
+    "Plan a City of San Diego ADU: compare modeled build costs, review setbacks and coastal caveats, and find official permit steps. Try the free cost calculator.",
   h1: "ADU Cost and Rules in San Diego, California",
   coastalCallout:
     "The 2025 and 2026 amendments took effect outside the Coastal Zone only. If your property is inside it, you are still under the prior ordinance until the California Coastal Commission certifies the changes. Most ADU guides for San Diego miss this. Check whether your parcel is in the Coastal Zone before you rely on anything below.",
@@ -205,7 +205,7 @@ export const sanDiego: JurisdictionContent = {
     {
       question: "What does an ADU cost to build in San Diego?",
       answer:
-        "Typical build costs range from roughly $157K–$197K for a 400 sq ft unit to $390K–$500K for a 1,200 sq ft unit under LotFoundry's cost engine. Permit costs add roughly $26–28 per square foot, less for units under 500 square feet, plus $1,500–$2,500 for plan check.",
+        "Use the size-by-size modeled cost table on this page or the free ADU cost calculator to compare construction estimates. These use a national cost base, not a San Diego contractor quote, and already include a soft-cost allowance. Reconcile actual design and permit fees against that allowance, then price utilities and site work separately. The City's Information Bulletin 501 is the source for construction permit fees.",
     },
     {
       question: "Is an ADU worth it in San Diego?",

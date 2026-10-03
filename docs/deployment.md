@@ -99,10 +99,19 @@ CI also needs `FIREBASE_SERVICE_ACCOUNT` and the browser-safe public Firebase an
 Places configuration, plus `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the GA4 property's
 `G-XXXXXXXXXX` ID) if analytics should run in production. It is a browser-safe
 public value, not a secret, but it is still read from an Actions secret so the
-property can be rotated or switched off without a code change. Leaving the
-secret unset is a supported state: the build then ships with no tag and no
-cookie banner. The ID is baked in at build time, so changing it requires a
+property can be configured separately from application code. An unset ID in
+local/test builds produces no tag and no cookie banner; the production guard
+below prevents accidentally deploying that state. The ID is baked in at build time, so changing it requires a
 redeploy, not just a secret update.
+
+Production currently targets the lotfoundry.net **Website** stream
+`G-7C1LM7VPMT`. The legacy YardUp Web stream is not the production target.
+The deploy job runs `node scripts/ci/verify-analytics.mjs` after building and
+rejects missing, stale, or multiple GA4 IDs in the client chunks. Run that same
+check before a manual deployment. An intentional stream migration must update
+both the Actions secret and this versioned guard. After release, accept analytics
+in a browser and verify an event in the Website stream; bundle validation alone
+does not prove collection. Preserve the opt-in consent gate.
 
 Restrict the browser Places key by HTTP referrer. Keep server-side Maps keys
 server-safe rather than referrer-locked.
