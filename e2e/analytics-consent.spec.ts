@@ -94,6 +94,17 @@ test.describe("analytics consent", () => {
     await expect
       .poll(() => page.evaluate(() => typeof window.gtag))
       .toBe("function");
+    const initialConsent = await page.evaluate(() =>
+      (window.dataLayer ?? [])
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .find((entry) => entry[0] === "consent" && entry[1] === "default")?.[2],
+    );
+    expect(initialConsent).toMatchObject({
+      ad_storage: "granted",
+      ad_user_data: "granted",
+      ad_personalization: "denied",
+      analytics_storage: "granted",
+    });
   });
 
   test("the privacy page can turn analytics back off", async ({ page }) => {
@@ -103,10 +114,23 @@ test.describe("analytics consent", () => {
     await page.getByRole("button", { name: /^accept$/i }).click();
     await page.goto("/privacy");
 
-    await page.getByRole("button", { name: /turn off analytics/i }).click();
-    await expect(page.getByText(/analytics cookies are off/i)).toBeVisible();
+    await page.getByRole("button", { name: /turn off measurement/i }).click();
+    await expect(page.getByText(/analytics and ads measurement cookies are off/i)).toBeVisible();
+    const consentUpdates = await page.evaluate(() =>
+      (window.dataLayer ?? [])
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .filter((entry) => entry[0] === "consent" && entry[1] === "update")
+        .map((entry) => entry[2]),
+    );
+    expect(consentUpdates.at(-1)).toMatchObject({
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      analytics_storage: "denied",
+    });
+    expect(await page.evaluate(() => (window as unknown as Record<string, boolean>)["ga-disable-AW-18350405574"])).toBe(true);
     // Withdrawal must actually clear the identifier, not just stop new hits.
     const cookies = await page.context().cookies();
-    expect(cookies.filter((cookie) => cookie.name.startsWith("_ga"))).toEqual([]);
+    expect(cookies.filter((cookie) => cookie.name.startsWith("_ga") || cookie.name.startsWith("_gcl_") || cookie.name.startsWith("_gac_"))).toEqual([]);
   });
 });

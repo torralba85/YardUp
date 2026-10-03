@@ -6,8 +6,8 @@ import { clearAnalyticsCookies, isAnalyticsConfigured } from "@/lib/analytics/gt
 import { useConsent } from "@/lib/analytics/use-consent";
 
 const STATUS_LABEL: Record<string, string> = {
-  granted: "Analytics cookies are on.",
-  denied: "Analytics cookies are off.",
+  granted: "Analytics and ads measurement cookies are on.",
+  denied: "Analytics and ads measurement cookies are off.",
   unset: "You haven't chosen yet.",
 };
 
@@ -43,12 +43,12 @@ export function CookiePreferences() {
               writeConsent("denied");
             }}
           >
-            Turn off analytics
+            Turn off measurement
           </Button>
         )}
         {consent !== "granted" && (
           <Button variant="primary" size="sm" onClick={() => writeConsent("granted")}>
-            Turn on analytics
+            Turn on measurement
           </Button>
         )}
         {consent !== "unset" && (

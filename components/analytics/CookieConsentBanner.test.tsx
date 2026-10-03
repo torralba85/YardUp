@@ -27,6 +27,7 @@ describe("CookieConsentBanner", () => {
     expect(await screen.findByRole("region", { name: /cookie consent/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /decline/i })).toBeInTheDocument();
+    expect(screen.getByText(/Google Ads conversion measurement/i)).toBeInTheDocument();
   });
 
   it("renders nothing when no measurement ID is configured", () => {

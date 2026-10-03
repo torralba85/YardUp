@@ -69,8 +69,8 @@ export function GoogleAnalytics() {
           function gtag(){dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('consent', 'default', {
-            ad_storage: 'denied',
-            ad_user_data: 'denied',
+            ad_storage: 'granted',
+            ad_user_data: 'granted',
             ad_personalization: 'denied',
             analytics_storage: 'granted'
           });
@@ -79,7 +79,7 @@ export function GoogleAnalytics() {
             send_page_view: false,
             anonymize_ip: true
           });
-          gtag('config', '${GOOGLE_ADS_ID}');
+          gtag('config', '${GOOGLE_ADS_ID}', { send_page_view: false });
         `}
       </Script>
       <Suspense fallback={null}>

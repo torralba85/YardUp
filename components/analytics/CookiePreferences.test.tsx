@@ -34,7 +34,7 @@ describe("CookiePreferences", () => {
 
     render(<CookiePreferences />);
 
-    expect(await screen.findByText(/analytics cookies are on/i)).toBeInTheDocument();
+    expect(await screen.findByText(/analytics and ads measurement cookies are on/i)).toBeInTheDocument();
   });
 
   it("reports the current state to someone who declined", async () => {
@@ -42,7 +42,7 @@ describe("CookiePreferences", () => {
 
     render(<CookiePreferences />);
 
-    expect(await screen.findByText(/analytics cookies are off/i)).toBeInTheDocument();
+    expect(await screen.findByText(/analytics and ads measurement cookies are off/i)).toBeInTheDocument();
   });
 
   it("lets a consenting visitor withdraw consent", async () => {
@@ -53,7 +53,7 @@ describe("CookiePreferences", () => {
     const user = userEvent.setup();
 
     render(<CookiePreferences />);
-    await user.click(await screen.findByRole("button", { name: /turn off analytics/i }));
+    await user.click(await screen.findByRole("button", { name: /turn off measurement/i }));
 
     expect(readConsent()).toBe("denied");
     expect(document.cookie).not.toContain("_ga=");
@@ -64,7 +64,7 @@ describe("CookiePreferences", () => {
     const user = userEvent.setup();
 
     render(<CookiePreferences />);
-    await user.click(await screen.findByRole("button", { name: /turn on analytics/i }));
+    await user.click(await screen.findByRole("button", { name: /turn on measurement/i }));
 
     expect(readConsent()).toBe("granted");
   });
@@ -72,8 +72,8 @@ describe("CookiePreferences", () => {
   it("offers only the opt-in path to an undecided visitor", async () => {
     render(<CookiePreferences />);
 
-    expect(await screen.findByRole("button", { name: /turn on analytics/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /turn off analytics/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /turn on measurement/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /turn off measurement/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /ask me again/i })).not.toBeInTheDocument();
   });
 

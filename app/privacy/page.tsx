@@ -16,7 +16,7 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: September 17, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 3, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -101,8 +101,9 @@ export default function PrivacyPage() {
             API terms guarantee that user inputs are not used to train AI models.
           </li>
           <li>
-            <strong>Usage Analytics:</strong> <em>Google Analytics 4</em> is used to measure aggregate
-            product usage, strictly subject to your affirmative consent (see Section 7).
+            <strong>Usage and Conversion Measurement:</strong> <em>Google Analytics 4</em> and{" "}
+            <em>Google Ads</em> measure product usage and ad-driven purchases only with your
+            affirmative consent (see Section 7).
           </li>
           <li>
             <strong>Aggregate Traffic Measurement:</strong> <em>Cloudflare Web Analytics</em> counts
@@ -167,16 +168,18 @@ export default function PrivacyPage() {
       <LegalSection title="7. Cookies &amp; Local Storage">
         <p>
           We use strictly necessary session cookies and Firebase Authentication state to maintain your
-          login session and persist local studio preferences. We do not use third-party advertising
-          cookies or behavioral retargeting trackers.
+          login session and persist local studio preferences. We do not use behavioral retargeting.
+          Optional Google Ads conversion measurement may use advertising cookies after you opt in,
+          as described below.
         </p>
         <p>
-          <strong>Google Analytics 4 (Consent Gated):</strong> We use Google Analytics 4 only if you
-          affirmatively opt in. GA4 sets first-party cookies (<code>_ga</code> and <code>_ga_*</code>)
-          to collect pseudonymous interaction metrics, device models, and approximate geographic regions
-          derived from truncated IP addresses. Advertising personalization features are permanently
-          disabled. If you decline or take no action, Google Analytics remains completely disabled, no
-          Google scripts are loaded, and no <code>_ga</code> cookies are set.
+          <strong>Google Analytics 4 and Google Ads conversion measurement (Consent Gated):</strong>{" "}
+          We load these Google tags only if you affirmatively opt in. They use first-party measurement
+          cookies (including <code>_ga</code>, <code>_ga_*</code>, and <code>_gcl_*</code>) to measure
+          site usage, ad-driven visits, and purchases. Google Ads measurement receives a purchase value,
+          currency, and transaction identifier when a consented visitor completes a purchase. We do not
+          send your address, email, or feasibility results to Google. Advertising personalization stays
+          disabled. If you decline or take no action, no Google measurement scripts load or set cookies.
         </p>
         <p>
           <strong>Cloudflare Web Analytics (Not Consent Gated):</strong> Separately, we use Cloudflare
@@ -186,7 +189,7 @@ export default function PrivacyPage() {
           detail GA4 does. Consent gates exist to protect access to your device&rsquo;s storage, and
           this measurement never touches it.
         </p>
-        <p>You can modify your Google Analytics consent settings at any time below:</p>
+        <p>You can change your Google measurement consent at any time below:</p>
         <CookiePreferences />
       </LegalSection>
 

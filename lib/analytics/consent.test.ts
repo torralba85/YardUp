@@ -15,6 +15,7 @@ describe("analytics consent", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    delete window.gtag;
   });
 
   it("reports unset before any decision", () => {
@@ -46,6 +47,41 @@ describe("analytics consent", () => {
     // Re-asking is the point: consent to an older disclosure is not consent to
     // a new processor.
     expect(readConsent()).toBe("unset");
+  });
+
+  it("re-asks visitors who accepted the analytics-only disclosure", () => {
+    window.localStorage.setItem(
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({ decision: "granted", version: 1, decidedAt: "2026-10-01T00:00:00Z" }),
+    );
+    expect(readConsent()).toBe("unset");
+  });
+
+  it("updates all measurement consent states before notifying listeners", () => {
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    const listener = vi.fn(() => {
+      expect(gtag).toHaveBeenLastCalledWith("consent", "update", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "denied",
+      });
+    });
+
+    writeConsent("granted");
+    expect(gtag).toHaveBeenLastCalledWith("consent", "update", {
+      ad_storage: "granted",
+      ad_user_data: "granted",
+      ad_personalization: "denied",
+      analytics_storage: "granted",
+    });
+
+    const unsubscribe = subscribeToConsent(listener);
+    writeConsent("denied");
+    clearConsent();
+    expect(listener).toHaveBeenCalledTimes(2);
+    unsubscribe();
   });
 
   it("treats corrupt JSON as unset rather than throwing", () => {
