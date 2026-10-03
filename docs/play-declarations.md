@@ -13,7 +13,7 @@ keystore, or a service-account key in Play Console or this repository.
 | Free or paid | `Free` |
 | Package name | `com.lotfoundry.app` |
 | App category | `House & Home` |
-| Contact email | `support@lotfoundry.com` |
+| Contact email | `support@lotfoundry.net` |
 | Privacy policy URL | `https://lotfoundry.net/privacy` |
 | Account deletion URL | `https://lotfoundry.net/delete-account` |
 | Developer Program Policies declaration | `Acknowledge` |
@@ -21,7 +21,7 @@ keystore, or a service-account key in Play Console or this repository.
 
 ### Contact address
 
-Use `support@lotfoundry.com`. It is the canonical support address on the
+Use `support@lotfoundry.net`. It is the canonical support address on the
 implemented help, privacy, terms, and account-deletion surfaces. The Console
 listing must stay aligned with those user-facing routes.
 
@@ -50,7 +50,7 @@ Digital Asset Links statement. The currently served value is:
 | Short description | `See what your backyard can earn.` |
 | Full description | `Check your address for ADU rent, build cost, and payback estimates before you spend money on plans. Explore lot fit, compare assumptions, and save or share an early feasibility study. Estimates only; local review is still required before design, permitting, financing, or investment decisions.` |
 | Category | `House & Home` |
-| Email | `support@lotfoundry.com` |
+| Email | `support@lotfoundry.net` |
 | Privacy policy | `https://lotfoundry.net/privacy` |
 
 Upload current phone and tablet screenshots from the release candidate. Do not
@@ -120,9 +120,12 @@ Notes for the form:
   referrer, device/browser type, and an approximate location derived from a
   truncated IP. It is optional in Play's sense because the tag does not load at
   all until the visitor accepts the banner.
-- Do not declare advertising or personalization: `ad_storage`,
-  `ad_user_data`, and `ad_personalization` are set to `denied` in the tag
-  config, and there is no ads SDK.
+- Do not declare in-app advertising: Play Console "App content -> Ads" is `No`
+  (the app contains no third-party advertisements or ad display SDKs).
+- Google Ads conversion measurement operates under the same consent gate as GA4:
+  `ad_storage` and `ad_user_data` are granted only after affirmative user opt-in
+  via the cookie banner to measure purchase conversion values, while
+  `ad_personalization` remains permanently `denied`.
 - Nothing user-identifying is sent to Google — no address, email, saved
   scenario, or feasibility result — so this adds no PII category.
 
@@ -154,10 +157,12 @@ marketplace-sharing rows above.
 | Field | Value |
 |---|---|
 | Artifact | `native/android/app/build/outputs/bundle/release/app-release.aab` (or the GitHub Actions artifact `lotfoundry-android-release-aab`) |
-| Version name | `1.0.8` |
-| Version code | `9` |
+| Version name | Current semantic version (defined in `native/android/app/build.gradle` or release reservation) |
+| Version code | Monotonically incremented integer (must exceed highest code across all Play tracks) |
 | Release notes | `Updates LotFoundry for the latest feasibility studio experience and current Google Play Billing support.` |
 
-Before upload, confirm in Play Console that the highest accepted version code is
-less than `9`; Play rejects a duplicate or lower code. After upload, test on a
-physical device that the app opens full-screen without Chrome browser controls.
+Before upload, confirm in Play Console that the version code is strictly greater
+than the highest accepted version code across all release tracks (production,
+open, closed, or internal test); Play rejects a duplicate or lower code. After
+upload, test on a physical device that the app opens full-screen without Chrome
+browser controls.
