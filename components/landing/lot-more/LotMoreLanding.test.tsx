@@ -239,6 +239,10 @@ describe("landing address handoff", () => {
       "href",
       "https://www.facebook.com/lotfoundry",
     );
+    expect(screen.getByRole("link", { name: "X" })).toHaveAttribute(
+      "href",
+      "https://x.com/lot_foundry",
+    );
   });
 
   it("gives every single-choice group a checked option and one keyboard tab stop", () => {
