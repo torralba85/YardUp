@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
 import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { ADU_CITIES, cityUrl, hubUrl } from "@/lib/adu/content";
@@ -102,12 +103,11 @@ export default function AduCaliforniaHubPage() {
 
       <div className="lf-body space-y-4 text-lg leading-relaxed">
         <p>
-          California guarantees the right to build an ADU — but the rules you
-          actually build under are written by your city. Setbacks, height
-          limits, fees, design standards, and the permit counter all change at
-          the city boundary, and no single site keeps those local answers
-          current. These guides do: real ordinance sections, real process
-          steps, and an as-of date on every page.
+          Planning an accessory dwelling unit in California? Start with the
+          jurisdiction that reviews your property. State law sets a baseline,
+          while local standards, site conditions and overlays affect the plans
+          you can submit. These guides bring together source documents, permit
+          steps and a visible review date for five San Diego County cities.
         </p>
         <p>
           Start from the state floor below, pick your city, then check what
@@ -122,6 +122,19 @@ export default function AduCaliforniaHubPage() {
           .
         </p>
       </div>
+
+      <AduPlanningLinks current="/adu/ca" />
+
+      <section aria-labelledby="adu-start">
+        <h2 id="adu-start" className="lf-card-heading text-lot-ink">
+          Before you choose a floor plan
+        </h2>
+        <ol className="lf-body mt-4 list-decimal space-y-3 pl-6 text-lot-stone">
+          <li>Confirm your permitting jurisdiction. A San Diego mailing address does not by itself establish that City of San Diego rules apply. For unincorporated properties, start with the <a href="https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu.html" className="underline underline-offset-2 hover:text-lot-ink">County of San Diego ADU program</a>.</li>
+          <li>Read your city guide and check the linked official sources for coastal, fire and other site restrictions. The guide is a starting point, not a parcel approval.</li>
+          <li>Compare a smaller and larger ADU in the calculator, then ask a designer or builder to price site work, utilities and the fees that apply to your lot.</li>
+        </ol>
+      </section>
 
       <section aria-labelledby="adu-floor" className="mt-12">
         <h2 id="adu-floor" className="lf-card-heading text-lot-ink">

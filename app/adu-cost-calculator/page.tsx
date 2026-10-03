@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
 import { AduCostCalculator } from "@/components/adu/AduCostCalculator";
 import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
@@ -110,21 +111,44 @@ export default function AduCostCalculatorPage() {
       <div className="lf-body space-y-4 text-lg leading-relaxed">
         {sample600 ? (
           <p>
-            A 600 sq ft detached ADU in California costs roughly{" "}
+            For a 600 sq ft detached ADU, this planning model estimates{" "}
             {formatCurrency(sample600.costLow)} to {formatCurrency(sample600.costHigh)}{" "}
-            to build, including design and permit soft costs. At county HUD rents
-            it pays for itself in about {Math.min(...paybacks600).toFixed(0)} to{" "}
-            {Math.max(...paybacks600).toFixed(0)} years.
+            in build cost, including an allowance for design and permit soft
+            costs. Using county HUD rent assumptions, modeled simple payback
+            spans about {Math.min(...paybacks600).toFixed(0)} to{" "}
+            {Math.max(...paybacks600).toFixed(0)} years across the three counties.
+            These are estimates, not local contractor quotes or guaranteed returns.
           </p>
         ) : null}
         <p>
-          Change the county, size, finish, and rent assumption below to see how
-          the numbers move. Then check your own address for the estimate on your
-          actual lot.
+          Use the calculator free, without an account. Change the county, size,
+          finish and rent assumption to compare scenarios. Los Angeles, San Diego
+          and Santa Clara have separate rent anchors; construction uses the same
+          national cost base. Financing and unusual site work are excluded.
         </p>
       </div>
 
       <AduCostCalculator />
+
+      <section aria-labelledby="adu-compare-scenarios">
+        <h2 id="adu-compare-scenarios" className="lf-card-heading text-lot-ink">
+          Compare two sizes before you commit
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          Start with 600 sq ft and Conservative (HUD rent), then try 800 sq ft
+          in the same county. Both use a one-bedroom rent anchor, so a larger
+          footprint can raise cost without raising the modeled rent. Next,
+          change the rent assumption to see how much your payback depends on it.
+          Check current comparable rentals before relying on the higher scenarios.
+        </p>
+        <p className="lf-body mt-3 text-lot-stone">
+          Simple payback divides the modeled construction midpoint by annual
+          rent after operating expenses. It is not a mortgage cash-flow forecast:
+          loan payments, taxes on income and future rent changes need a separate review.
+        </p>
+      </section>
+
+      <AduPlanningLinks current="/adu-cost-calculator" />
 
       <section aria-labelledby="adu-cost-by-size">
         <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">

@@ -45,7 +45,7 @@ jobs:
       - name: Validate public repository hygiene
         run: node scripts/validate-public-repo.mjs
       - name: Test CI scope and release safeguards
-        run: node --test scripts/ci/scope.checks.mjs
+        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs
       - name: Determine verification and deployment scope
         id: scope
         run: node scripts/ci/scope.mjs
@@ -190,6 +190,8 @@ jobs:
       - name: Install functions dependencies
         run: npm ci --prefix functions
       - run: npm run build:firebase
+      - name: Verify production analytics stream in built client
+        run: node scripts/ci/verify-analytics.mjs
       - name: Install Firebase CLI
         # Match verify and pass user .env flags during function discovery so
         # conditional native-store secrets remain bound to apiStore.
