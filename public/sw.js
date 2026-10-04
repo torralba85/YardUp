@@ -6,11 +6,12 @@
 //   that URL, then the cached start URL ("/"), then the static offline page.
 // - Same-origin static assets (/_next/static, icons, fonts): cache-first, since
 //   Next.js fingerprints them and they are immutable.
+// - Firebase's reserved /__ namespace bypasses the worker entirely; its OAuth
+//   pages and helper scripts must never use our cache or navigation fallback.
 // - API and cross-origin requests are never cached.
 // Bump on any release that changes the app shell. `activate` deletes every
-// cache whose name does not match the current VERSION, so this is what forces
-// returning visitors off the previous shell. v6: project-wide A LOT MORE.
-const VERSION = "v6";
+// old LotFoundry cache. v7 removes previously cached Firebase Auth helpers.
+const VERSION = "v7";
 const PRECACHE = `lotfoundry-precache-${VERSION}`;
 const RUNTIME = `lotfoundry-runtime-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -85,7 +86,9 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => !keep.has(key)).map((key) => caches.delete(key))
+          keys
+            .filter((key) => /^lotfoundry-(?:precache|runtime)-/.test(key) && !keep.has(key))
+            .map((key) => caches.delete(key))
         )
       )
       .then(() => self.clients.claim())
@@ -120,6 +123,12 @@ async function handleNavigation(request, event) {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
+
+  // Firebase Hosting owns /__/auth/* (including handler.js and iframe.js).
+  // Check before both navigation and static caching, including while offline.
+  // https://firebase.google.com/docs/hosting/reserved-urls
+  const url = new URL(request.url);
+  if (url.pathname === "/__" || url.pathname.startsWith("/__/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(handleNavigation(request, event));
