@@ -1,63 +1,100 @@
 import { describe, expect, it } from "vitest";
 import {
+  ANDROID_APP_SESSION_KEY,
   detectPurchaseChannel,
   isNativeAppShell,
   requiresStoreBilling,
+  type PurchaseChannelWindow,
 } from "./purchase-channel";
+
+const PLAY_APP_REFERRER = "android-app://com.lotfoundry.app/";
+
+function memoryStorage() {
+  const values = new Map<string, string>();
+  return {
+    values,
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
+  };
+}
 
 describe("detectPurchaseChannel", () => {
   it("keeps ordinary browser tabs on web even when Digital Goods is exposed", () => {
     const win = {
       getDigitalGoodsService: () => Promise.reject(new DOMException("unsupported context", "OperationError")),
-      matchMedia: (query: string) => ({ matches: query === "(display-mode: browser)" }),
+      document: { referrer: "https://www.google.com/" },
+      sessionStorage: memoryStorage(),
     };
     expect(detectPurchaseChannel(win)).toBe("web");
     expect(isNativeAppShell(win)).toBe(false);
   });
 
-  it("keeps a Play TWA on store billing in standalone display mode", () => {
-    expect(detectPurchaseChannel({
+  it("keeps installed PWAs and fullscreen windows on web despite Digital Goods", () => {
+    // Neither reports display-mode browser, which is what #259 relied on; the
+    // detector no longer reads display mode, so both look like any other tab.
+    const win = {
       getDigitalGoodsService: () => undefined,
-      matchMedia: () => ({ matches: false }),
-    })).toBe("google-play");
+      document: { referrer: "" },
+      sessionStorage: memoryStorage(),
+    };
+    expect(detectPurchaseChannel(win)).toBe("web");
+    expect(isNativeAppShell(win)).toBe(false);
   });
 
-  it("preserves native bridge flags even when browser display mode is reported", () => {
-    for (const platform of ["ios", "android"] as const) {
-      expect(detectPurchaseChannel({
-        LotFoundryNative: { platform },
-        matchMedia: () => ({ matches: true }),
-      })).toBe(platform === "ios" ? "app-store" : "google-play");
-    }
+  it("detects the Play app from its launch referrer and remembers it for the tab", () => {
+    const sessionStorage = memoryStorage();
+    expect(detectPurchaseChannel({
+      document: { referrer: PLAY_APP_REFERRER },
+      getDigitalGoodsService: () => undefined,
+      sessionStorage,
+    })).toBe("google-play");
+    expect(sessionStorage.values.get(ANDROID_APP_SESSION_KEY)).toBe("1");
+
+    // After sign-out's location.replace("/") the referrer is the site itself.
+    expect(detectPurchaseChannel({
+      document: { referrer: "https://lotfoundry.net/studio" },
+      getDigitalGoodsService: () => undefined,
+      sessionStorage,
+    })).toBe("google-play");
   });
 
   it("keeps an Android app referral on Play billing even in Custom Tab fallback", () => {
     expect(detectPurchaseChannel({
-      document: { referrer: "android-app://com.lotfoundry.app/" },
-      matchMedia: () => ({ matches: true }),
+      document: { referrer: PLAY_APP_REFERRER },
     })).toBe("google-play");
   });
 
+  it("reads the launch referrer when session storage is blocked", () => {
+    const blocked = (referrer: string) => {
+      const win = { document: { referrer } };
+      Object.defineProperty(win, "sessionStorage", {
+        get() {
+          throw new DOMException("The operation is insecure.", "SecurityError");
+        },
+      });
+      return win as PurchaseChannelWindow;
+    };
+    expect(detectPurchaseChannel(blocked(PLAY_APP_REFERRER))).toBe("google-play");
+    expect(detectPurchaseChannel(blocked(""))).toBe("web");
+  });
+
   it("does not treat an unrelated Android referral as the LotFoundry app", () => {
+    const sessionStorage = memoryStorage();
     expect(detectPurchaseChannel({
       document: { referrer: "android-app://com.example.browser/" },
       getDigitalGoodsService: () => undefined,
-      matchMedia: () => ({ matches: true }),
+      sessionStorage,
     })).toBe("web");
+    expect(sessionStorage.values.size).toBe(0);
   });
 
   it("keeps StoreKit ahead of an exposed Digital Goods API", () => {
     expect(detectPurchaseChannel({
       webkit: { messageHandlers: { lotfoundryStore: {} } },
       getDigitalGoodsService: () => undefined,
-      matchMedia: () => ({ matches: true }),
     })).toBe("app-store");
-  });
-
-  it("detects Google Play via Digital Goods API", () => {
-    expect(detectPurchaseChannel({ getDigitalGoodsService: () => undefined })).toBe(
-      "google-play",
-    );
   });
 
   it("detects App Store via webkit message handler", () => {
@@ -88,7 +125,8 @@ describe("detectPurchaseChannel", () => {
 
 describe("isNativeAppShell", () => {
   it("is true only inside the Android or iOS shell", () => {
-    expect(isNativeAppShell({ getDigitalGoodsService: () => undefined })).toBe(true);
+    expect(isNativeAppShell({ document: { referrer: PLAY_APP_REFERRER } })).toBe(true);
+    expect(isNativeAppShell({ getDigitalGoodsService: () => undefined })).toBe(false);
     expect(isNativeAppShell({ LotFoundryNative: { platform: "ios" } })).toBe(true);
     expect(isNativeAppShell({})).toBe(false);
     expect(isNativeAppShell(null)).toBe(false);

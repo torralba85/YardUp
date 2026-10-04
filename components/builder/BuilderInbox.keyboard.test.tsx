@@ -77,6 +77,8 @@ const item: BuilderInboxItem = {
 
 afterEach(() => {
   Reflect.deleteProperty(window, "getDigitalGoodsService");
+  Reflect.deleteProperty(document, "referrer");
+  window.sessionStorage.clear();
   window.history.replaceState(null, "", "/");
 });
 
@@ -112,6 +114,10 @@ describe("BuilderInbox table view keyboard access", () => {
   });
 
   it("renders localized Google Play prices instead of the web catalog", async () => {
+    Object.defineProperty(document, "referrer", {
+      configurable: true,
+      value: "android-app://com.lotfoundry.app/",
+    });
     Object.defineProperty(window, "getDigitalGoodsService", {
       configurable: true,
       value: vi.fn(async () => ({

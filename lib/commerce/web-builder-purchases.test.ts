@@ -9,7 +9,7 @@ describe("web-only builder purchases", () => {
       const getDigitalGoodsService = vi.fn();
       const postMessage = vi.fn();
       for (const win of [
-        { getDigitalGoodsService },
+        { getDigitalGoodsService, document: { referrer: "android-app://com.lotfoundry.app/" } },
         { webkit: { messageHandlers: { lotfoundryStore: { postMessage } } } },
       ]) {
         const client = createPurchaseClient({ win });
