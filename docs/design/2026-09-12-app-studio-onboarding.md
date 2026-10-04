@@ -29,8 +29,10 @@ to their dashboard.
 
 - **Detection is the native shell, not screen width.** `isNativeAppShell()` in
   `lib/commerce/purchase-channel.ts` reuses the purchase-channel signals: the
-  Digital Goods API in the Play TWA, and the `LotFoundryNative` bridge flag or
-  StoreKit handler in iOS.
+  Play TWA's `android-app://com.lotfoundry.app` launch referrer (remembered for
+  the tab session), and the `LotFoundryNative` bridge flag or StoreKit handler
+  in iOS. The Digital Goods API is not a signal; browsers expose it outside the
+  app.
 - **Each screen writes a history entry**, keyed `lfAppOnboardingStep` with the
   step name only. The Android back gesture steps back through onboarding instead
   of leaving the app. Addresses never enter the URL or history.

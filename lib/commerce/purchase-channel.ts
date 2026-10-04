@@ -8,11 +8,21 @@
 
 export type PurchaseChannel = "web" | "app-store" | "google-play";
 
+/** Chrome sets this referrer on the document the Play app (TWA) launches into. */
+const ANDROID_APP_REFERRER = /^android-app:\/\/com\.lotfoundry\.app(?:\/|$)/;
+
+/**
+ * Session-storage key remembering that this tab is the Play app. The launch
+ * referrer is lost on the next full-page navigation (a reload, or sign-out's
+ * `location.replace`), so the launch document records it for the tab session.
+ */
+export const ANDROID_APP_SESSION_KEY = "lotfoundry:android-app";
+
 /** Minimal window surface used for channel detection (injectable in tests). */
 export interface PurchaseChannelWindow {
   getDigitalGoodsService?: (serviceProvider: string) => unknown;
-  matchMedia?: (query: string) => { matches: boolean };
   document?: { referrer: string };
+  sessionStorage?: Pick<Storage, "getItem" | "setItem"> | null;
   webkit?: {
     messageHandlers?: {
       lotfoundryStore?: unknown;
@@ -25,10 +35,36 @@ export interface PurchaseChannelWindow {
 }
 
 /**
+ * Whether this tab was launched by the LotFoundry Play app: its launch
+ * referrer, or the session marker an earlier document in the tab recorded.
+ * Blocked storage falls back to the current document's referrer alone.
+ */
+function isAndroidAppSession(win: PurchaseChannelWindow): boolean {
+  let storage: PurchaseChannelWindow["sessionStorage"];
+  try {
+    storage = win.sessionStorage;
+    if (storage?.getItem(ANDROID_APP_SESSION_KEY) === "1") return true;
+  } catch {
+    // Storage access can throw when site data is blocked.
+  }
+
+  if (!ANDROID_APP_REFERRER.test(win.document?.referrer ?? "")) return false;
+  try {
+    storage?.setItem(ANDROID_APP_SESSION_KEY, "1");
+  } catch {
+    // Same as above; this document still reads its own referrer.
+  }
+  return true;
+}
+
+/**
  * Detect which commerce channel should handle digital purchases.
  *
- * Order: native bridge/referral → ordinary browser → Digital Goods (Play) → web.
- * Digital Goods API exposure alone does not mean this tab is a store app.
+ * Order: native bridge flag → StoreKit handler → Play app session → web.
+ * Digital Goods API presence is not a signal: Edge/Chromium expose it in
+ * ordinary tabs, installed PWAs and fullscreen windows, where requesting Play
+ * Billing rejects with "unsupported context". Only the Play app's launch
+ * referrer identifies the TWA, including its Custom Tab fallback.
  */
 export function detectPurchaseChannel(
   win: PurchaseChannelWindow | null | undefined = typeof window !== "undefined"
@@ -45,20 +81,9 @@ export function detectPurchaseChannel(
     return "app-store";
   }
 
-  // A TWA can fall back to a Custom Tab when its origin cannot be verified.
-  // Keep that known Android shell on store billing even with browser chrome.
-  if (/^android-app:\/\/com\.lotfoundry\.app(?:\/|$)/.test(win.document?.referrer ?? "")) {
-    return "google-play";
-  }
-
-  // Edge/Chromium can expose Digital Goods in ordinary tabs, where requesting
-  // Play Billing rejects with "unsupported context". These visitors use Stripe.
-  // Do not infer an installed app from API presence or the screen width.
-  if (win.matchMedia?.("(display-mode: browser)").matches) {
-    return "web";
-  }
-
-  if (typeof win.getDigitalGoodsService === "function") {
+  // A Play-distributed app stays on Play Billing even in the Custom Tab
+  // fallback, where purchases fail visibly rather than offering Stripe.
+  if (isAndroidAppSession(win)) {
     return "google-play";
   }
 

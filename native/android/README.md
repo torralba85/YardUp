@@ -101,8 +101,13 @@ The Builder Dashboard launcher shortcut has been removed from source. Delivering
 that launcher change requires a newly versioned Android release. The web route
 guard also handles existing shortcuts after the web deployment.
 
-The web client detects `getDigitalGoodsService` and routes purchases through
-`POST /api/store/purchases/verify`.
+The web client recognises the app by the `android-app://com.lotfoundry.app`
+referrer Chrome sets on the TWA's launch document, remembers it in
+`sessionStorage` for the tab, and routes purchases through Play Billing and
+`POST /api/store/purchases/verify`. `getDigitalGoodsService` alone is not a
+signal: Edge and other Chromium browsers expose it in ordinary tabs, installed
+PWAs and fullscreen windows, where Play Billing rejects with "unsupported
+context". See `lib/commerce/purchase-channel.ts`.
 
 ## Build
 

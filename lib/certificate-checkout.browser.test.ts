@@ -11,9 +11,6 @@ it("starts Stripe certificate checkout in a browser that exposes an unusable sto
     throw new DOMException("unsupported context", "OperationError");
   });
   vi.stubGlobal("getDigitalGoodsService", getDigitalGoodsService);
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query === "(display-mode: browser)",
-  }));
   const fetchMock = vi.fn(async () =>
     new Response(JSON.stringify({ url: "https://checkout.stripe.com/test" }), { status: 200 }),
   );

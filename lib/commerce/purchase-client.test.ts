@@ -6,6 +6,9 @@ import {
   PurchaseClientError,
 } from "./purchase-client";
 
+/** The launch referrer Chrome gives the Play app's TWA document. */
+const playApp = { referrer: "android-app://com.lotfoundry.app/" };
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -123,7 +126,7 @@ describe("createPurchaseClient", () => {
       return new Response(JSON.stringify({ granted: true }), { status: 200 });
     });
     const client = createPurchaseClient({
-      win: { getDigitalGoodsService },
+      win: { getDigitalGoodsService, document: playApp },
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
@@ -155,7 +158,7 @@ describe("createPurchaseClient", () => {
       new Response(JSON.stringify({ error: "Invalid purchase" }), { status: 400 }),
     );
     const client = createPurchaseClient({
-      win: { getDigitalGoodsService },
+      win: { getDigitalGoodsService, document: playApp },
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
@@ -179,7 +182,7 @@ describe("createPurchaseClient", () => {
       new Response(JSON.stringify({ granted: true }), { status: 200 }),
     );
     const client = createPurchaseClient({
-      win: { getDigitalGoodsService },
+      win: { getDigitalGoodsService, document: playApp },
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
