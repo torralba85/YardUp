@@ -100,6 +100,35 @@ describe("service worker authentication isolation", () => {
     expect(worker.cache.put).toHaveBeenCalledOnce();
   });
 
+  it("ignores unrelated caches when loading an application script", async () => {
+    const worker = createWorker();
+    worker.caches.match.mockImplementation(async (_key, options) =>
+      options ? undefined : new Response("foreign stale application script"),
+    );
+    const { event, pending } = worker.request("/_next/static/chunks/app-123.js", "no-cors", "script");
+    const response = await event.respondWith.mock.calls[0][0] as Response;
+    await Promise.all(pending);
+
+    expect(await response.text()).toBe("fresh response");
+    expect(worker.fetch).toHaveBeenCalledOnce();
+  });
+
+  it("ignores unrelated pages and falls back to its own precached shell offline", async () => {
+    const worker = createWorker();
+    worker.fetch.mockRejectedValue(new TypeError("offline"));
+    worker.caches.match.mockImplementation(async (key, options) => {
+      if (!options) return new Response("foreign stale page");
+      if (key === "/" && (options as { cacheName: string }).cacheName === "lotfoundry-precache-v7") {
+        return new Response("current app shell");
+      }
+      return undefined;
+    });
+    const { event } = worker.request("/studio");
+    const response = await event.respondWith.mock.calls[0][0] as Response;
+
+    expect(await response.text()).toBe("current app shell");
+  });
+
   it("still falls back to the app shell when an ordinary navigation is offline", async () => {
     const worker = createWorker();
     worker.fetch.mockRejectedValue(new TypeError("offline"));

@@ -65,6 +65,13 @@ function cacheResponse(cacheName, request, response) {
     .catch(() => undefined);
 }
 
+async function matchAppCache(request) {
+  return (
+    (await caches.match(request, { cacheName: RUNTIME })) ||
+    (await caches.match(request, { cacheName: PRECACHE }))
+  );
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(PRECACHE).then(async (cache) => {
@@ -112,9 +119,9 @@ async function handleNavigation(request, event) {
     return response;
   } catch {
     return (
-      (await caches.match(request)) ||
-      (await caches.match(START_URL)) ||
-      (await caches.match(OFFLINE_URL)) ||
+      (await matchAppCache(request)) ||
+      (await matchAppCache(START_URL)) ||
+      (await matchAppCache(OFFLINE_URL)) ||
       Response.error()
     );
   }
@@ -137,7 +144,7 @@ self.addEventListener("fetch", (event) => {
 
   if (isCacheableAsset(request)) {
     event.respondWith(
-      caches.match(request).then(
+      matchAppCache(request).then(
         (cached) =>
           cached ||
           fetch(request).then((response) => {
