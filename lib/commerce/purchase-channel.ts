@@ -11,6 +11,8 @@ export type PurchaseChannel = "web" | "app-store" | "google-play";
 /** Minimal window surface used for channel detection (injectable in tests). */
 export interface PurchaseChannelWindow {
   getDigitalGoodsService?: (serviceProvider: string) => unknown;
+  matchMedia?: (query: string) => { matches: boolean };
+  document?: { referrer: string };
   webkit?: {
     messageHandlers?: {
       lotfoundryStore?: unknown;
@@ -25,7 +27,8 @@ export interface PurchaseChannelWindow {
 /**
  * Detect which commerce channel should handle digital purchases.
  *
- * Order: explicit native bridge → Digital Goods (Play) → StoreKit bridge → web.
+ * Order: native bridge/referral → ordinary browser → Digital Goods (Play) → web.
+ * Digital Goods API exposure alone does not mean this tab is a store app.
  */
 export function detectPurchaseChannel(
   win: PurchaseChannelWindow | null | undefined = typeof window !== "undefined"
@@ -38,12 +41,25 @@ export function detectPurchaseChannel(
   if (nativePlatform === "ios") return "app-store";
   if (nativePlatform === "android") return "google-play";
 
-  if (typeof win.getDigitalGoodsService === "function") {
+  if (win.webkit?.messageHandlers?.lotfoundryStore) {
+    return "app-store";
+  }
+
+  // A TWA can fall back to a Custom Tab when its origin cannot be verified.
+  // Keep that known Android shell on store billing even with browser chrome.
+  if (/^android-app:\/\/com\.lotfoundry\.app(?:\/|$)/.test(win.document?.referrer ?? "")) {
     return "google-play";
   }
 
-  if (win.webkit?.messageHandlers?.lotfoundryStore) {
-    return "app-store";
+  // Edge/Chromium can expose Digital Goods in ordinary tabs, where requesting
+  // Play Billing rejects with "unsupported context". These visitors use Stripe.
+  // Do not infer an installed app from API presence or the screen width.
+  if (win.matchMedia?.("(display-mode: browser)").matches) {
+    return "web";
+  }
+
+  if (typeof win.getDigitalGoodsService === "function") {
+    return "google-play";
   }
 
   return "web";
