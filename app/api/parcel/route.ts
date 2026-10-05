@@ -18,7 +18,7 @@ import {
   fetchCensusLocation,
 } from "@/lib/server/census-geocode";
 import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
-import { type StreetAddress, parseStreetAddress } from "@/lib/server/address-match";
+import { type StreetAddress, delimitStreetAddress, parseStreetAddress } from "@/lib/server/address-match";
 import {
   type AddressParcelResult,
   type CountyParcelResult,
@@ -57,13 +57,13 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  * without a bearer token start at the free county/statewide GIS step, so an
  * anonymous lookup costs nothing but still returns real parcel geometry.
  *
- * Where an official address-enriched layer is registered (King County today),
+ * Where an official address-enriched layer is registered (King County and California),
  * a full `address` is also checked against it. A point-hit parcel is served as
  * the searched property only if the layer publishes that street address for it;
  * if the layer contradicts it, or the point found no parcel, the layer is asked
  * which single parcel publishes the address (see `reconcileAddressParcel`), and
  * otherwise the response falls back to the estimate with the reason recorded.
- * Nowhere else is address data inferred.
+ * Other sources retain an explicit address-verification warning.
  *
  * The free US Census geocoder resolves state/ZIP/county alongside the chain
  * for every path, so financials key off the address's own geography even when
@@ -634,9 +634,8 @@ async function countyGisResponse(
 ): Promise<NextResponse> {
   const { identity, boundaryAttempt } = options;
   const lotArea = countyParcel.lotAreaSqft as number;
-  const { lotWidth, lotLength } =
-    orientedLotDimensions(countyParcel.polygon, lotArea) ??
-    estimateLotDimensions(lotArea);
+  const polygonDimensions = orientedLotDimensions(countyParcel.polygon, lotArea);
+  const { lotWidth, lotLength } = polygonDimensions ?? estimateLotDimensions(lotArea);
 
   // This is a real parcel at real coordinates, so it must never borrow the
   // nearest demo preset's street address: labelling a Fresno lot "1421 NW
@@ -673,7 +672,8 @@ async function countyGisResponse(
   // address up (point moved) or one the address layer could not confirm is not.
   const addressVerified = identity?.kind === "verified" || identity?.kind === "matched";
   const boundaryConfidence: DataEvidence["confidence"] =
-    identity?.kind === "matched" || identity?.kind === "unverified" ? "medium" : "high";
+    identity?.kind === "matched" || identity?.kind === "unverified" ||
+    (fullStreetAddress(requestedAddress) && !addressVerified) ? "medium" : "high";
   const boundaryWarnings =
     identity?.kind === "matched"
       ? [
@@ -687,7 +687,9 @@ async function countyGisResponse(
         ? [
             "The official address layer could not confirm that this parcel is the searched street address; verify the parcel against county records.",
           ]
-        : [];
+        : fullStreetAddress(requestedAddress) && !addressVerified
+          ? ["The parcel boundary contains the searched point, but no official address record confirmed its street address."]
+          : [];
   // Only a parcel whose official address was actually checked earns a
   // stronger address record than "the searched text"; the display value is
   // still the searched address, hence derived, not observed.
@@ -750,18 +752,21 @@ async function countyGisResponse(
                 ],
               }),
         lotArea: fieldEvidence({
-          status: "observed",
+          status: countyParcel.areaBasis === "geometry" ? "derived" : "observed",
           confidence: boundaryConfidence,
           source: parcelSource,
           retrievedAt,
-          warnings: boundaryWarnings,
+          warnings: [
+            ...boundaryWarnings,
+            ...(countyParcel.areaBasis === "geometry" ? ["Lot area is calculated from the published polygon, including holes; no area attribute was available for this part."] : []),
+          ],
         }),
         lotDimensions: fieldEvidence({
-          status: "derived",
+          status: polygonDimensions ? "derived" : "defaulted",
           confidence: "medium",
           source: parcelSource,
           retrievedAt,
-          warnings: ["Lot dimensions are derived from the parcel polygon."],
+          warnings: [polygonDimensions ? "Lot dimensions are an enclosing rectangle derived from the parcel polygon, not measured frontage." : "Lot dimensions are estimated from area; the polygon did not yield usable dimensions."],
         }),
         existingHouseSqft: fieldEvidence({
           status: structuresSqft === null ? "unavailable" : "observed",
@@ -865,10 +870,10 @@ async function presetFallbackResponse(
     lotArea: preset.lotArea,
     lotWidth: preset.lotWidth,
     lotLength: preset.lotLength,
-    existingHouseSqft: preset.existingHouseSqft,
+    existingHouseSqft: 0,
     maxLotCoveragePercent: preset.maxLotCoveragePercent,
     setbacks: preset.setbacks,
-    zoning: "R-1 (estimated)",
+    zoning: "Unknown",
     boundaryGeoJson: null,
     lat,
     lng,
@@ -907,11 +912,11 @@ async function presetFallbackResponse(
           warnings: ["Lot dimensions come from a demo preset, not this property."],
         }),
         existingHouseSqft: fieldEvidence({
-          status: "defaulted",
-          confidence: "low",
+          status: "unavailable",
+          confidence: "unknown",
           source: presetSource,
           retrievedAt,
-          warnings: ["Existing-building area comes from a demo preset, not this property."],
+          warnings: ["Existing building footprint is unknown; no property measurement was returned."],
         }),
         maxLotCoveragePercent: fieldEvidence({
           status: "defaulted",
@@ -1084,7 +1089,7 @@ function formatResolvedLocation(
     };
   }
 
-  const [street, ...rest] = requestedAddress
+  const [street, ...rest] = delimitStreetAddress(requestedAddress)
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);

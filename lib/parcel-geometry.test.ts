@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  modeledSetbackAreaSqft,
   distanceToPolygonFt,
   estimateLotDimensions,
   interiorPoint,
@@ -10,6 +11,27 @@ import {
 import type { GeoJsonPolygon } from "./parcel-types";
 
 const FT_PER_DEG_LAT = 364000;
+
+describe("modeledSetbackAreaSqft", () => {
+  const setbacks = { front: 20, rear: 20, side: 5 };
+  it("clips an L-shaped boundary rather than counting its missing corner", () => {
+    const ring = [[0, 0], [50, 0], [50, 50], [25, 50], [25, 100], [0, 100], [0, 0]];
+    const polygon: GeoJsonPolygon = { type: "Polygon", coordinates: [ring.map(([x, y]) => [x / FT_PER_DEG_LAT, y / FT_PER_DEG_LAT])] };
+    expect(modeledSetbackAreaSqft(polygon, setbacks)).toBeCloseTo(1800, 2);
+  });
+  it("subtracts holes in the clipped envelope", () => {
+    const polygon = rectPolygon(0, 0, 50, 100, 0);
+    polygon.coordinates.push([[-5, -5], [5, -5], [5, 5], [-5, 5], [-5, -5]].map(([x, y]) => [x / FT_PER_DEG_LAT, y / FT_PER_DEG_LAT]));
+    expect(modeledSetbackAreaSqft(polygon, setbacks)).toBeCloseTo(2300, 2);
+  });
+  it("uses the oriented axes for rotated rectangular parcels", () => {
+    expect(modeledSetbackAreaSqft(rectPolygon(0, 0, 50, 100, 37), setbacks)).toBeCloseTo(2400, 2);
+  });
+  it("returns zero when setbacks consume the lot, and null for malformed geometry", () => {
+    expect(modeledSetbackAreaSqft(rectPolygon(0, 0, 50, 30, 0), { ...setbacks, front: 100 })).toBe(0);
+    expect(modeledSetbackAreaSqft({ type: "Polygon", coordinates: [[[NaN, 0]]] }, setbacks)).toBeNull();
+  });
+});
 
 /**
  * Build a rectangular lot polygon centered at (lat, lng), `widthFt` in the

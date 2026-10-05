@@ -51,7 +51,7 @@ export function buildEstimatedParcel(input: {
     lotArea: base.lotArea,
     lotWidth: base.lotWidth,
     lotLength: base.lotLength,
-    existingHouseSqft: base.existingHouseSqft,
+    existingHouseSqft: 0,
     maxLotCoveragePercent: base.maxLotCoveragePercent,
     setbacks: { ...base.setbacks },
     lat: input.lat,

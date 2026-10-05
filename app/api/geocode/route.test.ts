@@ -56,6 +56,27 @@ afterEach(() => {
 });
 
 describe("GET /api/geocode", () => {
+  it("checks locality conflicts even when the user omits commas", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{ lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA", address: { house_number: "202", road: "C Street", city: "Chula Vista", state: "California", postcode: "92101" } }])));
+    const response = await GET(makeGuestRequest("202 C Street San Diego CA 92101"));
+    expect(response.status).toBe(200);
+    expect((await response.json()).match.evidence.confidence).toBe("low");
+  });
+  it.each([
+    { house_number: "203", road: "C Street", city: "San Diego", state: "California", postcode: "92101" },
+    { house_number: "202", road: "D Street", city: "San Diego", state: "California", postcode: "92101" },
+    { house_number: "202", road: "C Street", city: "San Diego", state: "California", postcode: "92102" },
+  ])("refuses a numbered address with contradictory street or ZIP components", async (address) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{ lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA", address }])));
+    expect((await GET(makeGuestRequest("202 C Street, San Diego, CA 92101"))).status).toBe(404);
+  });
+
+  it("retains a city conflict as low-confidence evidence for independent parcel checking", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{ lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA", address: { house_number: "202", road: "C Street", city: "Chula Vista", state: "California", postcode: "92101" } }])));
+    const response = await GET(makeGuestRequest("202 C Street, San Diego, CA 92101"));
+    expect(response.status).toBe(200);
+    expect((await response.json()).match.evidence).toMatchObject({ confidence: "low", warnings: [expect.stringContaining("city")] });
+  });
   it("400s when q is missing or blank", async () => {
     const res = await GET(makeRequest(null));
     expect(res.status).toBe(400);

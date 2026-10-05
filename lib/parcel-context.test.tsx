@@ -133,7 +133,7 @@ describe("ParcelProvider estimated mode", () => {
   });
 
   it("lets a guest resolve a real address with no ID token", async () => {
-    const formattedAddress = mockResolvedLookup();
+    mockResolvedLookup();
     const { result } = renderHook(() => useParcel(), { wrapper });
 
     await act(async () => {
@@ -147,7 +147,7 @@ describe("ParcelProvider estimated mode", () => {
       34.05,
       -118.25,
       undefined,
-      formattedAddress,
+      "100 Main Los Angeles",
     );
     expect(result.current.parcelMode).toBe("live");
     expect(result.current.parcelError).toBeNull();
@@ -251,7 +251,7 @@ describe("ParcelProvider estimated mode", () => {
     expect(mocks.geocodeAddress).toHaveBeenCalled();
   });
 
-  it("uses the geocoder formatted address for parcel lookup", async () => {
+  it("preserves the typed address for independent parcel identity checks", async () => {
     signIn();
     const formattedAddress = "100 Main St, Los Angeles, CA 90012, USA";
     const liveParcel: LiveParcelData = {
@@ -290,7 +290,7 @@ describe("ParcelProvider estimated mode", () => {
       34.05,
       -118.25,
       "token",
-      formattedAddress,
+      "100 Main Los Angeles",
     );
     expect(result.current.parcelMode).toBe("live");
     expect(result.current.parcel).toBe(liveParcel);

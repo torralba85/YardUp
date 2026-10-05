@@ -29,6 +29,11 @@ import { defaultAduConfig } from "./feasibility";
 import type { GeoJsonPolygon } from "./parcel-types";
 
 describe("buildExistingHouseFootprint — D1 area agreement", () => {
+  it("does not render the borrowed house in a legacy fallback parcel", () => {
+    const legacy = { ...demoPresets[0], source: "fallback" as const };
+    expect(buildExistingHouseFootprint(legacy).width).toBeNull();
+    expect(buildExistingHouseSceneModel(legacy).pose).toBeNull();
+  });
   it("gives the Seattle sample a balanced footprint without changing its area", () => {
     const seattle = demoPresets[0];
     const footprint = buildExistingHouseFootprint(seattle);

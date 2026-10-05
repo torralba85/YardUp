@@ -451,7 +451,7 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(res.status).toBe(200);
     const data = (await res.json()) as LiveParcelData;
     expect(data.source).toBe("fallback");
-    expect(data.zoning).toBe("R-1 (estimated)");
+    expect(data.zoning).toBe("Unknown");
   });
 
   it("returns a fallback when the Regrid fetch throws", async () => {
@@ -616,7 +616,7 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(res.status).toBe(200);
     const data = (await res.json()) as LiveParcelData;
     expect(data.source).toBe("fallback");
-    expect(data.zoning).toBe("R-1 (estimated)");
+    expect(data.zoning).toBe("Unknown");
   });
 });
 
@@ -847,7 +847,7 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
     const data = (await res.json()) as LiveParcelData;
 
     expect(data.source).toBe("fallback");
-    expect(data.zoning).toBe("R-1 (estimated)");
+    expect(data.zoning).toBe("Unknown");
   });
 
   it("identifies preset dimensions and regulations as defaults", async () => {
@@ -872,7 +872,8 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
 
     expect(data.source).toBe("fallback");
     expect(data.dataQuality?.fields.lotArea.status).toBe("defaulted");
-    expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("defaulted");
+    expect(data.existingHouseSqft).toBe(0);
+    expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("unavailable");
     expect(data.dataQuality?.fields.zoning.status).toBe("defaulted");
     expect(data.dataQuality?.fields.boundaryGeoJson.status).toBe("unavailable");
     expect(data.dataQuality?.providerAttempts).toEqual(

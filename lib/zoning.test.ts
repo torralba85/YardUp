@@ -3,6 +3,15 @@ import { calculateZoning } from "./zoning";
 import { defaultAduConfig, getParcelById, configForFootprint } from "./feasibility";
 
 describe("calculateZoning", () => {
+  it("does not calculate an overage warning from a borrowed house footprint", () => {
+    const parcel = { ...getParcelById("oak-street"), source: "fallback" as const, existingHouseSqft: 5000 };
+    const result = calculateZoning(parcel, defaultAduConfig);
+
+    expect(result.footprintKnown).toBe(false);
+    expect(result.warnings.some((warning) => /footprint is unknown/i.test(warning))).toBe(true);
+    expect(result.warnings.some((warning) => /Footprint exceeds/i.test(warning))).toBe(false);
+  });
+
   it("treats the default 600 sf concept as compliant on the typical lot", () => {
     const parcel = getParcelById("oak-street");
     const result = calculateZoning(parcel, defaultAduConfig);

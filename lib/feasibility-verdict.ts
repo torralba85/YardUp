@@ -24,6 +24,8 @@ import {
 import { type PlacementResult } from "./placement-validation";
 import { describePlacementWithEvidence } from "./placement-evidence";
 import { parcelConfidence } from "./parcel-confidence";
+import { modeledSetbackAreaSqft } from "./parcel-geometry";
+import type { GeoJsonPolygon } from "./parcel-types";
 
 export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
 
@@ -58,13 +60,18 @@ export interface FeasibilitySummary {
 }
 
 /** Usable lot area remaining after applying the recorded setbacks. */
-export function buildableArea(parcel: Parcel): number {
+export function buildableArea(parcel: Parcel & { boundaryGeoJson?: GeoJsonPolygon | null }): number {
   const usableWidth = Math.max(0, parcel.lotWidth - parcel.setbacks.side * 2);
   const usableDepth = Math.max(
     0,
     parcel.lotLength - parcel.setbacks.front - parcel.setbacks.rear,
   );
-  return Math.round(usableWidth * usableDepth);
+  const area = parcel.boundaryGeoJson
+    ? modeledSetbackAreaSqft(parcel.boundaryGeoJson, parcel.setbacks)
+    : usableWidth * usableDepth;
+  // An invalid polygon cannot establish usable land. Published lot area is a
+  // final upper bound because geometry and assessor area can differ.
+  return Math.max(0, Math.min(Math.round(area ?? 0), Math.floor(parcel.lotArea)));
 }
 
 /**
@@ -170,9 +177,9 @@ export function summarizeFeasibility(
     {
       id: "buildable",
       group: "Zoning & setbacks",
-      label: "Buildable area after setbacks",
-      detail: `${regulationsEstimated ? "Assumed setbacks: " : ""}${parcel.setbacks.side}′ side · ${parcel.setbacks.front}′ front · ${parcel.setbacks.rear}′ rear`,
-      status: envelopeFits && !regulationsEstimated ? "clear" : "review",
+      label: "Estimated area after modeled setbacks",
+      detail: `${regulationsEstimated ? "Assumed setbacks: " : ""}${parcel.setbacks.side}′ side · ${parcel.setbacks.front}′ front · ${parcel.setbacks.rear}′ rear${"source" in parcel ? ". Frontage and setback-axis alignment are unverified." : ""}`,
+      status: envelopeFits && !regulationsEstimated && !("source" in parcel) ? "clear" : "review",
       value: `${buildableSqft.toLocaleString()} sf`,
     },
     {

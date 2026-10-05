@@ -77,9 +77,20 @@ function convexHull(points: Pt[]): Pt[] {
  * rectangle has one side collinear with a hull edge, so testing each edge
  * orientation is exhaustive.
  */
-function minAreaRect(hull: Pt[]): { short: number; long: number } | null {
+interface RectFrame {
+  short: number;
+  long: number;
+  ux: number;
+  uy: number;
+  minU: number;
+  maxU: number;
+  minV: number;
+  maxV: number;
+}
+
+function minAreaRect(hull: Pt[]): RectFrame | null {
   if (hull.length < 3) return null;
-  let best: { short: number; long: number; area: number } | null = null;
+  let best: (RectFrame & { area: number }) | null = null;
   for (let i = 0; i < hull.length; i++) {
     const a = hull[i];
     const b = hull[(i + 1) % hull.length];
@@ -103,10 +114,69 @@ function minAreaRect(hull: Pt[]): { short: number; long: number } | null {
     const h = maxV - minV;
     const area = w * h;
     if (!best || area < best.area) {
-      best = { short: Math.min(w, h), long: Math.max(w, h), area };
+      // Store the short axis first so side/front/rear retain the scene's convention.
+      best = w <= h
+        ? { short: w, long: h, area, ux, uy, minU, maxU, minV, maxV }
+        : { short: h, long: w, area, ux: -uy, uy: ux, minU: minV, maxU: maxV, minV: -maxU, maxV: -minU };
     }
   }
-  return best ? { short: best.short, long: best.long } : null;
+  return best;
+}
+
+/**
+ * Intersect the actual parcel (including holes) with the modeled setback
+ * rectangle. Frontage is assumed along the long axis; this is an estimate,
+ * not a legal setback offset or proof of ADU placement.
+ */
+export function modeledSetbackAreaSqft(
+  polygon: GeoJsonPolygon,
+  setbacks: { front: number; rear: number; side: number },
+): number | null {
+  const rings = polygon?.coordinates;
+  if (!rings?.length || rings.some((ring) => ring.length < 4 || ring.some((p) =>
+    !Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1]),
+  ))) return null;
+  if (![setbacks.front, setbacks.rear, setbacks.side].every((n) => Number.isFinite(n) && n >= 0)) return null;
+  const [lng0, lat0] = rings[0][0];
+  const scale = FT_PER_DEG_LAT * Math.cos(lat0 * Math.PI / 180);
+  const projected = rings.map((ring) => ring.map(([lng, lat]) => ({ x: (lng - lng0) * scale, y: (lat - lat0) * FT_PER_DEG_LAT })));
+  const frame = minAreaRect(convexHull(projected[0]));
+  if (!frame || !Number.isFinite(frame.short * frame.long) || frame.short <= 0 || frame.long <= 0) return null;
+  const minX = frame.minU + setbacks.side;
+  const maxX = frame.maxU - setbacks.side;
+  const minY = frame.minV + setbacks.rear;
+  const maxY = frame.maxV - setbacks.front;
+  if (minX >= maxX || minY >= maxY) return 0;
+
+  const clip = (points: Pt[], axis: "x" | "y", bound: number, lower: boolean): Pt[] => {
+    const output: Pt[] = [];
+    if (!points.length) return output;
+    let prev = points[points.length - 1];
+    let prevInside = lower ? prev[axis] >= bound : prev[axis] <= bound;
+    for (const curr of points) {
+      const inside = lower ? curr[axis] >= bound : curr[axis] <= bound;
+      if (inside !== prevInside) {
+        const t = (bound - prev[axis]) / (curr[axis] - prev[axis]);
+        output.push({ x: prev.x + t * (curr.x - prev.x), y: prev.y + t * (curr.y - prev.y) });
+      }
+      if (inside) output.push(curr);
+      prev = curr;
+      prevInside = inside;
+    }
+    return output;
+  };
+  const areas = projected.map((ring) => {
+    let points = ring.map((p) => ({ x: p.x * frame.ux + p.y * frame.uy, y: -p.x * frame.uy + p.y * frame.ux }));
+    points = clip(clip(clip(clip(points, "x", minX, true), "x", maxX, false), "y", minY, true), "y", maxY, false);
+    let twiceArea = 0;
+    for (let i = 0; i < points.length; i++) {
+      const next = points[(i + 1) % points.length];
+      twiceArea += points[i].x * next.y - next.x * points[i].y;
+    }
+    return Math.abs(twiceArea) / 2;
+  });
+  const area = Math.max(0, areas[0] - areas.slice(1).reduce((sum, hole) => sum + hole, 0));
+  return Number.isFinite(area) ? area : null;
 }
 
 /**

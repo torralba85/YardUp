@@ -246,10 +246,36 @@ function pickDataQuality(value: unknown): Record<string, unknown> | undefined {
       })
     : [];
 
+  const geocode = value.geocode;
+  const match = isRecord(geocode) && isRecord(geocode.match) ? geocode.match : undefined;
+  const matchEvidence = match ? pickEvidence(match.evidence) : undefined;
+  const components: Record<string, string> = {};
+  if (match && isRecord(match.components)) {
+    for (const key of ["houseNumber", "road", "city", "state", "zip", "country"]) {
+      if (typeof match.components[key] === "string") components[key] = match.components[key];
+    }
+  }
+  const safeGeocode = isRecord(geocode) && match && matchEvidence &&
+    typeof geocode.requestedAddress === "string" && typeof geocode.formattedAddress === "string" &&
+    ["google", "nominatim"].includes(String(match.provider)) &&
+    ["rooftop", "range-interpolated", "address", "street", "locality", "unknown"].includes(String(match.precision)) &&
+    typeof match.matchType === "string" && typeof match.partialMatch === "boolean"
+    ? {
+        requestedAddress: geocode.requestedAddress,
+        formattedAddress: geocode.formattedAddress,
+        match: {
+          provider: match.provider, precision: match.precision,
+          matchType: match.matchType, partialMatch: match.partialMatch,
+          ...(typeof match.providerId === "string" ? { providerId: match.providerId } : {}),
+          components, evidence: matchEvidence,
+        },
+      }
+    : undefined;
   return {
     version: 1,
     fields,
     providerAttempts,
+    ...(safeGeocode ? { geocode: safeGeocode } : {}),
     warnings: Array.isArray(value.warnings)
       ? value.warnings.filter((warning): warning is string => typeof warning === "string")
       : [],

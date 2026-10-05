@@ -6,6 +6,8 @@ import type { ADUConfig, FeasibilityResult, Parcel } from "@/lib/feasibility";
 import { summarizeFeasibility, verdictTone, type VerdictLevel } from "@/lib/feasibility-verdict";
 import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
+import { parcelConfidence } from "@/lib/parcel-confidence";
+import ParcelDataNotice from "./ParcelDataNotice";
 import { Button } from "@/components/ui/Button";
 import MetricsSummary from "./MetricsSummary";
 
@@ -42,7 +44,8 @@ export default function FeasibilityVerdictBand({
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
         <div className="min-w-0">
           <h2 className="font-display text-xl font-medium tracking-tight">{parcel.address}</h2>
-          <p className="mt-1 text-xs text-lot-stone">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot</p>
+          <p className="mt-1 text-xs text-lot-stone">{eyebrow ? `${eyebrow} · ` : ""}{parcel.lotArea.toLocaleString()} sf lot{parcelConfidence(parcel).physicalEstimated ? " (assumed)" : ""}</p>
+          <ParcelDataNotice parcel={parcel} />
         </div>
         <div aria-live="polite" className="text-sm">
           <div className="flex items-center gap-2 font-semibold" style={{ color: tone.color }}>

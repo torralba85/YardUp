@@ -23,12 +23,15 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { FeasibilityResult } from "./types";
 import { trackReportExported, mapFeasibilityVerdict } from "@/lib/analytics/events";
+import type { Parcel } from "@/lib/parcel-types";
+import ParcelDataNotice from "./ParcelDataNotice";
 
 const FOCUSABLE_SELECTOR =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Props for {@link ReportPreview}. */
 export interface ReportPreviewProps {
+  parcel?: Parcel;
   /** Display name of the parcel shown in the report header. */
   parcelName: string;
   /** The feasibility result rendered into the report. */
@@ -71,6 +74,7 @@ export interface ReportPreviewProps {
  * is never clipped by the studio's flex layout or short viewports.
  */
 export default function ReportPreview({
+  parcel,
   parcelName,
   result,
   projectBrief,
@@ -320,6 +324,7 @@ export default function ReportPreview({
               </div>
 
               <div className="mt-6 border-t border-lot-line pt-5">
+                {parcel && <ParcelDataNotice parcel={parcel} />}
                 <h3 className="lf-dataprint text-lot-orange-ink">
                   Certificate includes
                 </h3>

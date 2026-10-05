@@ -77,10 +77,10 @@ afterEach(() => {
 });
 
 describe("registry", () => {
-  it("registers an address endpoint only for King County, with an exact field allowlist", () => {
+  it("registers verified address endpoints for King County and California", () => {
     expect(
       COUNTY_GIS_SOURCES.filter((source) => source.situs).map((source) => source.county),
-    ).toEqual(["King"]);
+    ).toEqual(["King", "California (statewide)"]);
     expect(SITUS_URL).toBe(
       "https://services.arcgis.com/Ej0PsM5Aw677QF1W/arcgis/rest/services/PARCEL_ADDRESS_PUB_AREA_3069/FeatureServer/0/query",
     );
@@ -92,6 +92,18 @@ describe("registry", () => {
       state: "STATE_ABBR",
       area: "Shape__Area",
     });
+  });
+
+  it("checks California situs identity without requesting owner attributes", async () => {
+    const point = { lat: 32.7174385, lng: -117.1633851 };
+    const polygon = lot(point.lat, point.lng, 50, 100);
+    const fetchMock = vi.fn().mockResolvedValue(featuresResponse([
+      feature(polygon, { PARCEL_APN: "123", SITE_ADDR: "202 C ST", SITE_CITY: "SAN DIEGO", SITE_STATE: "CA", SITE_ZIP: "92101" }),
+    ]));
+    vi.stubGlobal("fetch", fetchMock);
+    const check = await verifyParcelAddressAtPoint(point.lat, point.lng, parseStreetAddress("202 C Street, San Diego, CA 92101")!, Date.now() + 4000);
+    expect(check.verdict).toBe("verified");
+    expect(new URL(String(fetchMock.mock.calls[0][0])).searchParams.get("outFields")).toBe("PARCEL_APN,SITE_ADDR,SITE_CITY,SITE_ZIP,SITE_STATE");
   });
 
   it("keeps the geometry-only point layer as it was", () => {

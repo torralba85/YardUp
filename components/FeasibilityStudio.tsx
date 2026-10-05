@@ -51,6 +51,7 @@ import { consumeAddressQuery } from "@/lib/address-handoff";
 import { certificateKey } from "@/lib/certificate-key";
 import { Select } from "@/components/ui/Field";
 import type { LiveParcelData } from "@/lib/parcel-types";
+import ParcelDataNotice from "./studio/ParcelDataNotice";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StudioShell from "./studio/StudioShell";
@@ -1127,6 +1128,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     } else if (journeyStep === "earn") {
       stepContent = (
         <EarnStep
+          parcelNotice={<ParcelDataNotice parcel={activeParcel} />}
           parcelName={mobileParcelName}
           result={result}
           estimated={parcelMode !== "live"}
@@ -1254,6 +1256,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
         </FineTuneDrawer>
         {reportOpen && (
           <ReportPreview
+            parcel={activeParcel}
             parcelName={mobileParcelName}
             result={result}
             projectBrief={projectBrief}
@@ -1332,6 +1335,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
 
         {activeStep === "lot" ? (
           <LotStep
+            parcelNotice={<ParcelDataNotice parcel={activeParcel} />}
             parcelId={parcelId}
             onPresetChange={(id) => {
               setParcelId(id);
@@ -1438,6 +1442,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
 
       {reportOpen && (
         <ReportPreview
+          parcel={activeParcel}
           parcelName={parcelName}
           result={result}
           projectBrief={projectBrief}
@@ -1626,6 +1631,7 @@ function SceneViewToggle({
 
 /** Props for {@link LotStep}. */
 interface LotStepProps {
+  parcelNotice?: ReactNode;
   parcelId: string;
   onPresetChange: (id: string) => void;
   sceneNode: React.ReactNode;
@@ -1648,6 +1654,7 @@ interface LotStepProps {
  * one-tap path onward to Feasibility & Rules.
  */
 function LotStep({
+  parcelNotice,
   parcelId,
   onPresetChange,
   sceneNode,
@@ -1669,7 +1676,7 @@ function LotStep({
         <p className="lf-kicker text-lot-orange-ink">Step 1 · Your Lot</p>
         <h2 className="lf-section-heading mt-2 text-lot-ink">Start with your address.</h2>
         <p className="lf-body mt-2 max-w-[60ch] text-lot-stone">
-          We&rsquo;ll pull your parcel, local zoning, and market rents to show what an ADU could add to your property.
+          We&rsquo;ll check available parcel records and market rents. Local zoning and setbacks may need confirmation.
         </p>
         <div className="mt-5 max-w-xl">
           <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
@@ -1698,6 +1705,7 @@ function LotStep({
             </Select>
           </label>
         </details>
+        {parcelNotice}
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             {hasParcel && <div>
               <p className="lf-kicker-dense text-lot-stone">If built</p>

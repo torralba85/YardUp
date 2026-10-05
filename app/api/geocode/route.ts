@@ -6,6 +6,7 @@ import {
 import { stripUnitDesignators } from "@/lib/server/geocode-query";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { parseStreetAddress } from "@/lib/server/address-match";
 import type { DataEvidence } from "@/lib/data-evidence";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -198,6 +199,8 @@ async function geocodeWithGoogle(
       return null;
     }
     const components = googleComponents(first.address_components);
+    const addressWarnings = checkRequestedAddress(query, components);
+    if (addressWarnings === null) return null;
     const addressQuery = looksLikeStreetAddress(query);
     const publishedTypes = first.types ?? [];
     const addressType = publishedTypes.some((type) =>
@@ -233,10 +236,10 @@ async function geocodeWithGoogle(
             sourceUrl: "https://developers.google.com/maps/documentation/geocoding",
           },
           retrievedAt,
-          confidence: precision === "rooftop" ? "high" : precision === "unknown" ? "low" : "medium",
-          warnings: precision === "unknown"
+          confidence: addressWarnings.length ? "low" : precision === "rooftop" ? "high" : precision === "unknown" ? "low" : "medium",
+          warnings: [...addressWarnings, ...(precision === "unknown"
             ? ["The provider did not publish address-match precision."]
-            : [],
+            : [])],
         },
       },
     };
@@ -283,7 +286,8 @@ async function geocodeWithNominatim(
     const hits = (Array.isArray(json) ? json : []).flatMap((hit) => {
       const lat = Number.parseFloat(hit?.lat ?? "");
       const lng = Number.parseFloat(hit?.lon ?? "");
-      return Number.isNaN(lat) || Number.isNaN(lng) || !matchesRequestedState(query, hit.display_name)
+      return !Number.isFinite(lat) || !Number.isFinite(lng) || !matchesRequestedState(query, hit.display_name) ||
+        checkRequestedAddress(query, nominatimComponents(hit.address)) === null
         ? []
         : [{ ...hit, lat, lng }];
     });
@@ -310,6 +314,7 @@ async function geocodeWithNominatim(
     }
 
     const components = nominatimComponents(chosen.address);
+    const addressWarnings = checkRequestedAddress(query, components) ?? [];
     const providerId = chosen.osm_type && chosen.osm_id != null
       ? `${chosen.osm_type}/${chosen.osm_id}`
       : undefined;
@@ -345,10 +350,10 @@ async function geocodeWithNominatim(
             sourceUrl: "https://nominatim.org/release-docs/latest/api/Search/",
           },
           retrievedAt,
-          confidence: precision === "address" ? "medium" : "low",
-          warnings: precision === "address"
+          confidence: addressWarnings.length ? "low" : precision === "address" ? "medium" : "low",
+          warnings: [...addressWarnings, ...(precision === "address"
             ? []
-            : ["The result is not confirmed at a house-number address precision."],
+            : ["The result is not confirmed at a house-number address precision."])],
         },
       },
     };
@@ -382,6 +387,25 @@ interface GoogleAddressComponent {
 const STATE_CODES_BY_NAME = new Map(
   Object.entries(US_STATE_NAMES).map(([code, name]) => [name.toLowerCase(), code]),
 );
+
+/** Street/ZIP conflicts are unsafe points. City aliases require a parcel check. */
+function checkRequestedAddress(query: string, components: GeocodeMatch["components"]): string[] | null {
+  const requested = parseStreetAddress(query);
+  if (!requested) return [];
+  const published = components.houseNumber && components.road
+    ? parseStreetAddress(`${components.houseNumber} ${components.road}`)
+    : null;
+  if (published && requested.houseNumber !== published.houseNumber) return null;
+  // Incomplete free text may not distinguish street from locality.
+  if ((query.includes(",") || requested.city || requested.zip) && published && requested.street !== published.street) return null;
+  if (requested.zip && components.zip && requested.zip !== components.zip.slice(0, 5)) return null;
+  const state = requestedStateCode(query);
+  if (state && components.state && state !== components.state) return null;
+  if (requested.city && components.city && requested.city !== components.city.toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim()) {
+    return ["The geocoder's city differs from the requested city; the original address must be checked against county parcel records."];
+  }
+  return [];
+}
 
 function looksLikeStreetAddress(query: string): boolean {
   return /^\s*\d+[A-Za-z-]?\b/.test(stripUnitDesignators(query));

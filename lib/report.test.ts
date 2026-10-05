@@ -15,6 +15,18 @@ function makeInput() {
   return { parcel, config, result };
 }
 
+it("keeps legacy fallback dimensions and footprints qualified in every export", () => {
+  const parcel = { ...getParcelById("oak-street"), source: "fallback", zoning: "R-1 (estimated)" };
+  const config = defaultAduConfig;
+  const result = calculateFeasibility(parcel, config, defaultFinancialAssumptions);
+  for (const report of [buildReportText({ parcel, config, result }), buildReportHtml({ parcel, config, result }), buildReportCsv({ parcel, config, result })]) {
+    expect(report).toContain("Exact parcel data unavailable");
+    expect(report).toContain("Unknown");
+    expect(report).toContain("Review needed");
+    expect(report).not.toContain("39.6%");
+  }
+});
+
 it("keeps unknown county GIS coverage out of text, HTML, and CSV certificates", () => {
   const parcel = { ...getParcelById("oak-street"), source: "county-gis", zoning: "Unknown", existingHouseSqft: 0 };
   const config = defaultAduConfig;
@@ -73,7 +85,7 @@ describe("buildReportText", () => {
     expect(text).toMatch(/600 sf/);
     expect(text).toMatch(/Lot coverage/i);
     expect(text).toMatch(/Setbacks: 20 ft front, 25 ft rear, 5 ft side/i);
-    expect(text).toMatch(/Buildable area after setbacks/i);
+    expect(text).toMatch(/Estimated area after modeled setbacks/i);
     expect(text).toMatch(/Remaining coverage capacity/i);
     expect(text).toMatch(/Compliant/);
     expect(text).toMatch(/Estimated build cost/i);
@@ -127,7 +139,7 @@ describe("buildReportHtml", () => {
     expect(html).toContain("<style>");
     expect(html).toContain("Certificate of Feasibility");
     expect(html).toContain("Project Snapshot");
-    expect(html).toContain("Buildable area after setbacks");
+    expect(html).toContain("Estimated area after modeled setbacks");
     expect(html).toContain("Remaining coverage capacity");
     expect(html).toContain("Recommended Next Steps");
     expect(html).toContain("1234 Oak Street");
@@ -224,7 +236,7 @@ describe("buildReportCsv", () => {
     expect(csv).toMatch(/ADU Size \(sf\)/);
     expect(csv).toMatch(/Zoning Status/);
     expect(csv).toMatch(/Front Setback \(ft\)/);
-    expect(csv).toMatch(/Buildable Area After Setbacks \(sf\)/);
+    expect(csv).toMatch(/Estimated Area After Modeled Setbacks \(sf\)/);
     expect(csv).toMatch(/Remaining Coverage Capacity \(sf\)/);
     expect(csv).toMatch(/Build Cost Low/);
     expect(csv).toMatch(/Monthly Rent/);

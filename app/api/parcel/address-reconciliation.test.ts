@@ -229,7 +229,9 @@ function expectRefusedFallback(
 ) {
   expect(data.source).toBe("fallback");
   expect(data.boundaryGeoJson).toBeNull();
-  expect(data.zoning).toBe("R-1 (estimated)");
+  expect(data.zoning).toBe("Unknown");
+  expect(data.existingHouseSqft).toBe(0);
+  expect(data.dataQuality!.fields.existingHouseSqft.status).toBe("unavailable");
   // No coordinate shift without a verified match.
   expect(data.lat).toBe(point.lat);
   expect(data.lng).toBe(point.lng);
@@ -780,8 +782,8 @@ describe("GET /api/parcel — official street-address verification", () => {
     });
   });
 
-  describe("where no address layer is registered, behavior is unchanged", () => {
-    it("serves a point hit at high confidence without any address request (Portland)", async () => {
+  describe("where no address layer is registered, parcel identity remains unverified", () => {
+    it("serves a point hit at reduced confidence when no address check is available (Portland)", async () => {
       const fetchMock = stubProviders({
         multnomahPoint: featuresResponse([
           feature(lot(45.5138, -122.6293, 50, 100), { A_T_SQFT: 5000 }),
@@ -797,7 +799,7 @@ describe("GET /api/parcel — official street-address verification", () => {
       expect(data.source).toBe("county-gis");
       expect(data.lotArea).toBe(5000);
       expect(data.dataQuality!.fields.boundaryGeoJson).toMatchObject({
-        confidence: "high",
+        confidence: "medium",
         source: { provider: "ArcGIS", dataset: "Multnomah parcels" },
       });
       expect(data.dataQuality!.fields.boundaryGeoJson.source.recordId).toBeUndefined();
@@ -822,7 +824,7 @@ describe("GET /api/parcel — official street-address verification", () => {
       );
 
       expect(data.source).toBe("county-gis");
-      expect(data.dataQuality!.fields.boundaryGeoJson.confidence).toBe("high");
+      expect(data.dataQuality!.fields.boundaryGeoJson.confidence).toBe("medium");
       expect(data.dataQuality!.fields.boundaryGeoJson.source.recordId).toBeUndefined();
       expect(situsCalls(fetchMock)).toHaveLength(0);
     });

@@ -16,6 +16,7 @@ import {
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { Button } from "@/components/ui/Button";
 import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
+import ParcelDataNotice from "../../ParcelDataNotice";
 
 const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
   "Likely Feasible": CheckCircle2,
@@ -80,6 +81,7 @@ export default function CheckStep({
         </h1>
       </div>
       <p className="lf-body-sm mt-2 text-lot-stone">{VERDICT_COPY[summary.verdict]}</p>
+      <ParcelDataNotice parcel={parcel} />
 
       <FeasibilityBadge
         parcel={parcel}

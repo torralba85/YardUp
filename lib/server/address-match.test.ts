@@ -39,6 +39,14 @@ const SEARCH = parseStreetAddress("1421 NE 88th St, Seattle, WA 98115, USA");
 if (!SEARCH) throw new Error("fixture must parse");
 
 describe("parseStreetAddress", () => {
+  it("reads a complete address typed without commas", () => {
+    expect(parseStreetAddress("202 C Street San Diego CA 92101")).toEqual({ houseNumber: "202", street: "C ST", city: "SAN DIEGO", state: "CA", zip: "92101" });
+    expect(parseStreetAddress("1421 NE 88th St Seattle WA 98115")).toEqual(SEARCH);
+    expect(parseStreetAddress("123 Main Street North Bend WA 98045")?.city).toBe("NORTH BEND");
+  });
+  it("does not guess the street/city boundary when several suffixes could end the street", () => {
+    expect(parseStreetAddress("10 Old Court Road Somewhere WA 98115")?.city).toBeUndefined();
+  });
   it("reads a Google-style formatted address", () => {
     expect(SEARCH).toEqual({
       houseNumber: "1421",

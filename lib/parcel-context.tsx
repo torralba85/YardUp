@@ -174,8 +174,17 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
       try {
         const idToken = await user?.getIdToken();
-        const { lat, lng, formattedAddress } = await geocodeAddress(q, idToken);
-        const data = await fetchParcel(lat, lng, idToken, formattedAddress.trim() || q);
+        const geocode = await geocodeAddress(q, idToken);
+        // The geocoder may normalize the address to a different locality. The
+        // parcel service must check the user's original identity independently.
+        const data = await fetchParcel(geocode.lat, geocode.lng, idToken, q);
+        if (geocode.match && data.dataQuality) {
+          data.dataQuality.geocode = {
+            requestedAddress: q,
+            formattedAddress: geocode.formattedAddress,
+            match: geocode.match,
+          };
+        }
         // Spent only on a resolved lookup: an address we could not find, or a
         // parcel service that did not answer, must not burn the free try.
         if (!user) consumeGuestLookup();

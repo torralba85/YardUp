@@ -11,7 +11,7 @@ import type { Parcel } from "./parcel-types";
 import type { AIProjectBrief } from "./ai-types";
 import { buildableArea } from "./feasibility-verdict";
 import { getSiteFitCapacityStatus } from "./site-fit";
-import { parcelConfidence } from "./parcel-confidence";
+import { parcelConfidence, parcelDataNotice } from "./parcel-confidence";
 
 function coverageLabel(parcel: Parcel, result: FeasibilityResult): string {
   const { footprintKnown, regulationsEstimated } = parcelConfidence(parcel);
@@ -97,6 +97,7 @@ export function buildReportText({
     "",
     "Property",
     `Address: ${parcel.address}, ${parcel.city}`,
+    ...(parcelDataNotice(parcel) ? [`Parcel data: ${parcelDataNotice(parcel)}`] : []),
     "",
     "ADU Concept",
     `Size: ${result.aduSqft.toLocaleString()} sf`,
@@ -107,7 +108,7 @@ export function buildReportText({
     "Site Fit",
     `Lot coverage: ${coverageLabel(parcel, result)}`,
     `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
-    `Buildable area after setbacks: ${buildableArea(parcel).toLocaleString()} sf`,
+    `Estimated area after modeled setbacks: ${buildableArea(parcel).toLocaleString()} sf`,
     `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel).title}`,
     `Zoning status: ${result.zoningStatus}`,
     ...(result.warnings.length > 0
@@ -178,6 +179,7 @@ export function buildReportHtml({
 }: ReportInput): string {
   const rows: Array<[string, string]> = [
     ["Property", `${parcel.address}, ${parcel.city}`],
+    ...(parcelDataNotice(parcel) ? [["Parcel data", parcelDataNotice(parcel)!] as [string, string]] : []),
     ["ADU size", `${result.aduSqft.toLocaleString()} sf`],
     ["Roof", roofLabels[config.roof]],
     ["Exterior finish", finishLabels[config.finish]],
@@ -186,7 +188,7 @@ export function buildReportHtml({
       parcelConfidence(parcel).regulationsEstimated ? "Setbacks (assumed)" : "Setbacks",
       `${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
     ],
-    ["Buildable area after setbacks", `${buildableArea(parcel).toLocaleString()} sf`],
+    ["Estimated area after modeled setbacks", `${buildableArea(parcel).toLocaleString()} sf`],
     ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel).title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
@@ -715,6 +717,7 @@ export function buildReportCsv({
   const rows: Array<[string, string]> = [
     ["Field", "Value"],
     ["Address", `${parcel.address}, ${parcel.city}`],
+    ...(parcelDataNotice(parcel) ? [["Parcel data", parcelDataNotice(parcel)!] as [string, string]] : []),
     ["ADU Size (sf)", String(result.aduSqft)],
     ["Roof", roofLabels[config.roof]],
     ["Exterior Finish", finishLabels[config.finish]],
@@ -723,7 +726,7 @@ export function buildReportCsv({
     ["Front Setback (ft)", String(parcel.setbacks.front)],
     ["Rear Setback (ft)", String(parcel.setbacks.rear)],
     ["Side Setback (ft)", String(parcel.setbacks.side)],
-    ["Buildable Area After Setbacks (sf)", String(buildableArea(parcel))],
+    ["Estimated Area After Modeled Setbacks (sf)", String(buildableArea(parcel))],
     ["Remaining Coverage Capacity (sf)", parcelConfidence(parcel).footprintKnown ? String(result.remainingCapacity) : "Unknown"],
     ...(parcelConfidence(parcel).regulationsEstimated ? [["Regulatory assumptions", "Zoning, setbacks and maximum coverage unverified"] as [string, string]] : []),
     ["Zoning Status", result.zoningStatus],

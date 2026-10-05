@@ -146,6 +146,17 @@ export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
     queryUrl:
       "https://bz1uwWPKUInZBK94.svcs5.arcgis.com/bz1uwWPKUInZBK94/arcgis/rest/services/CA_Statewide_Parcels_Public_view/FeatureServer/0/query",
     countyField: "COUNTYNAME",
+    situs: {
+      queryUrl:
+        "https://bz1uwWPKUInZBK94.svcs5.arcgis.com/bz1uwWPKUInZBK94/arcgis/rest/services/CA_Statewide_Parcels_Public_view/FeatureServer/0/query",
+      fields: {
+        id: "PARCEL_APN",
+        line: "SITE_ADDR",
+        cities: ["SITE_CITY"],
+        zip: "SITE_ZIP",
+        state: "SITE_STATE",
+      },
+    },
   },
   {
     county: "Washington (statewide)",
@@ -227,6 +238,8 @@ export interface CountyParcelResult {
    * the lot that {@link polygon} actually describes.
    */
   lotAreaSqft: number | null;
+  /** Assessor/GIS attribute versus a calculation from the selected polygon. */
+  areaBasis?: "reported" | "geometry";
 }
 
 export interface CountyParcelLookup {
@@ -326,7 +339,7 @@ async function queryGisSource(
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let json: { features?: unknown } | null = null;
+    let json: { features?: unknown; error?: unknown; exceededTransferLimit?: boolean } | null = null;
     try {
       const res = await fetch(`${source.queryUrl}?${params.toString()}`, {
         signal: controller.signal,
@@ -344,9 +357,12 @@ async function queryGisSource(
       clearTimeout(timer);
     }
 
-    const features = Array.isArray(json?.features) ? json.features : [];
+    if (!Array.isArray(json?.features) || json.error || json.exceededTransferLimit) {
+      return { parcel: null, attempt: providerAttempt(source, "invalid-response", "The service returned an error, incomplete results, or no feature collection.") };
+    }
+    const features = json.features;
     const best = pickBestFeature(features, lat, lng);
-    if (!best) {
+    if (!best || !best.containsPoint) {
       return {
         parcel: null,
         attempt: providerAttempt(
@@ -420,7 +436,7 @@ function buildParcelResult(
     readCountyField(feature.attributes, source) ??
     source.county;
 
-  return { county, polygon, lotAreaSqft };
+  return { county, polygon, lotAreaSqft, areaBasis: partCount === 1 && providerArea !== null ? "reported" : "geometry" };
 }
 
 function providerAttempt(

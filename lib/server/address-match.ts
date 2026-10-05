@@ -173,16 +173,36 @@ function parseStreetLine(
 }
 
 /**
- * Parse a comma-separated US address such as
- * "1421 NE 88th St, Seattle, WA 98115, USA".
- *
+ * Add separators only when an explicit state and one street suffix give a
+ * unique street/city boundary. Ambiguous free text stays unparsed.
+ */
+export function delimitStreetAddress(text: string): string {
+  if (text.includes(",")) return text;
+  const cleaned = stripUnitDesignators(text).trim();
+  const tail = /\s+([A-Za-z]{2})(?:\s+(\d{5})(?:-\d{4})?)?(?:\s+(?:USA|United States))?$/i.exec(cleaned);
+  if (!tail || !STATE_CODES.has(tail[1].toUpperCase())) return text;
+  const tokens = cleaned.slice(0, tail.index).trim().split(/\s+/);
+  if (!/^\d+[A-Za-z]?$/.test(tokens[0])) return text;
+  const suffixes = new Set([...Object.keys(STREET_TYPES), ...Object.values(STREET_TYPES)]);
+  const ends = tokens.flatMap((word, i) => i >= 2 && suffixes.has(word.replace(/\./g, "").toUpperCase()) ? [i] : []);
+  if (ends.length !== 1) return text;
+  let streetEnd = ends[0];
+  const next = tokens[streetEnd + 1]?.toUpperCase();
+  if (next && Object.values(DIRECTIONALS).includes(next)) streetEnd += 1;
+  if (streetEnd >= tokens.length - 1) return text;
+  const line = tokens.slice(0, streetEnd + 1).join(" ");
+  const city = tokens.slice(streetEnd + 1).join(" ");
+  return `${line}, ${city}, ${tail[1].toUpperCase()}${tail[2] ? ` ${tail[2]}` : ""}`;
+}
+
+/**
+ * Parse a US address such as "1421 NE 88th St, Seattle, WA 98115, USA".
  * Returns null unless the first part is a "<number> <street>" line. City,
- * state and ZIP are read from the trailing parts when present; anything that
- * cannot be read is left undefined rather than guessed.
+ * state and ZIP are read when present; ambiguous parts remain undefined.
  */
 export function parseStreetAddress(text: string | undefined): StreetAddress | null {
   if (!text) return null;
-  const [line, ...rest] = text
+  const [line, ...rest] = delimitStreetAddress(text)
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
