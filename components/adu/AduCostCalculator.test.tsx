@@ -10,6 +10,13 @@ describe("AduCostCalculator", () => {
     expect(screen.getByText("13.3 years")).toBeInTheDocument();
   });
 
+  it("can start on another county, e.g. on a county cost page", () => {
+    render(<AduCostCalculator initialCounty="san-diego" />);
+    expect(screen.getByLabelText("County")).toHaveValue("san-diego");
+    expect(screen.getByText("$2,459")).toBeInTheDocument();
+    expect(screen.getByText("12.6 years")).toBeInTheDocument();
+  });
+
   it("recomputes when the county changes", () => {
     render(<AduCostCalculator />);
     fireEvent.change(screen.getByLabelText("County"), {

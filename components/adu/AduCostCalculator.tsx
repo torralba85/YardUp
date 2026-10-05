@@ -32,8 +32,13 @@ const RENT_SCENARIOS: { value: RentScenario; label: string }[] = [
  * tables, so the calculator and the static tables can never disagree.
  * Server-rendered with its defaults, so the first result is in the HTML.
  */
-export function AduCostCalculator() {
-  const [county, setCounty] = useState("los-angeles");
+export function AduCostCalculator({
+  initialCounty = "los-angeles",
+}: {
+  /** County slug from `CALCULATOR_COUNTIES` to start on, e.g. on a county cost page. */
+  initialCounty?: string;
+} = {}) {
+  const [county, setCounty] = useState(initialCounty);
   const [size, setSize] = useState(600);
   const [finish, setFinish] = useState<ExteriorFinish>("cedar");
   const [rentScenario, setRentScenario] = useState<RentScenario>("conservative");

@@ -13,11 +13,12 @@ import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { oceanside } from "@/content/adu/ca/oceanside";
 import { escondido } from "@/content/adu/ca/escondido";
 import { carlsbad } from "@/content/adu/ca/carlsbad";
+import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import {
   STATE_BASELINE_PARAGRAPHS,
   STATE_BASELINE_AS_OF,
 } from "@/content/adu/state-baseline";
-import type { JurisdictionContent } from "./types";
+import type { JurisdictionContent, JurisdictionCostContent } from "./types";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
@@ -31,9 +32,25 @@ export const ADU_CITIES: JurisdictionContent[] = [
   carlsbad,
 ];
 
+/**
+ * Cost pages (`/adu/{state}/{city}/cost`). Each needs a rules guide in
+ * {@link ADU_CITIES} and a market anchor in `lib/adu/market-aggregate.ts`.
+ */
+export const ADU_COST_PAGES: JurisdictionCostContent[] = [sanDiegoCost];
+
 /** Absolute canonical URL for a jurisdiction page. */
 export function cityUrl(content: JurisdictionContent): string {
   return `${BASE_URL}/adu/${content.state}/${content.slug}`;
+}
+
+/** Absolute canonical URL for a jurisdiction cost page. */
+export function costPageUrl(cost: JurisdictionCostContent): string {
+  return `${BASE_URL}/adu/${cost.state}/${cost.slug}/cost`;
+}
+
+/** Site-relative path for a jurisdiction cost page, for in-app links. */
+export function costPagePath(cost: JurisdictionCostContent): string {
+  return `/adu/${cost.state}/${cost.slug}/cost`;
 }
 
 /** Absolute canonical URL for the California hub page. */
@@ -61,6 +78,35 @@ export function getCity(
   city: string,
 ): JurisdictionContent | undefined {
   return ADU_CITIES.find((entry) => entry.state === state && entry.slug === city);
+}
+
+/** Static params for the `[state]/[city]/cost` route. */
+export function aduCostStaticParams(): { state: string; city: string }[] {
+  return ADU_COST_PAGES.map((entry) => ({ state: entry.state, city: entry.slug }));
+}
+
+/** Look up one cost page by route params. */
+export function getCostPage(
+  state: string,
+  city: string,
+): JurisdictionCostContent | undefined {
+  return ADU_COST_PAGES.find((entry) => entry.state === state && entry.slug === city);
+}
+
+/**
+ * The cost page whose figures cover a jurisdiction: its own, or a county
+ * neighbor's that lists it in `coveredCities` (rent anchors are countywide).
+ */
+export function getCoveringCostPage(
+  content: JurisdictionContent,
+): JurisdictionCostContent | undefined {
+  return (
+    getCostPage(content.state, content.slug) ??
+    ADU_COST_PAGES.find(
+      (entry) =>
+        entry.state === content.state && entry.coveredCities.includes(content.slug),
+    )
+  );
 }
 
 /** Resolve neighbor slugs to content, in declared order. */
@@ -100,6 +146,26 @@ export function buildCityMetadata(content: JurisdictionContent): Metadata {
         content.metaDescription ??
         `${content.city} ADU rules for 2026: sizes, setbacks, fees, and the permit process — then check what they mean for your lot.`,
       url: cityUrl(content),
+      type: "article",
+    },
+  };
+}
+
+/**
+ * Cost-page metadata: the same brand-only-if-it-fits rule as
+ * {@link buildCityMetadata}, with a self-referencing canonical.
+ */
+export function buildCostMetadata(cost: JurisdictionCostContent): Metadata {
+  const branded = `${cost.metaTitle} | LotFoundry`;
+  const title = branded.length <= 60 ? branded : cost.metaTitle;
+  return {
+    title,
+    description: cost.metaDescription,
+    alternates: { canonical: costPageUrl(cost) },
+    openGraph: {
+      title,
+      description: cost.metaDescription,
+      url: costPageUrl(cost),
       type: "article",
     },
   };

@@ -166,3 +166,42 @@ export interface JurisdictionContent {
   /** Municipal code and program sources cited on the page. */
   sources: AduSource[];
 }
+
+/**
+ * Content contract for a jurisdiction cost page (`/adu/{state}/{city}/cost`).
+ *
+ * The page answers cost searches ("how much does an ADU cost in San Diego")
+ * that the rules guide at `/adu/{state}/{city}` should not compete for. No
+ * build-cost, rent, or payback figure is typed here: the page computes every
+ * one at build time from `cityMarketAggregate`, so a cost page can only exist
+ * for a city with a market anchor, and its numbers can never drift from the
+ * calculator's.
+ */
+export interface JurisdictionCostContent {
+  /** URL state segment; must match a {@link JurisdictionContent}. */
+  state: string;
+  /** URL city segment; must match a {@link JurisdictionContent} and a market anchor. */
+  slug: string;
+  /** ISO date (`YYYY-MM-DD`) the fee and scope copy was last checked. */
+  asOf: string;
+  /** Page <title> and OpenGraph title, 60 characters or fewer. */
+  metaTitle: string;
+  /** Meta description, 70–160 characters. */
+  metaDescription: string;
+  /** H1 heading text. */
+  h1: string;
+  /** Lead paragraphs after the computed headline estimate. */
+  introAnswer: string[];
+  /** Rules-guide slugs in the same county whose fees differ but whose rent anchor is shared. */
+  coveredCities: string[];
+  /** Permit and impact fees. Figures only with a source, labeled when reported rather than official. */
+  fees: AduContentSection;
+  /** What the model leaves out for conversions and junior ADUs. No invented figures. */
+  conversions: AduContentSection;
+  /** What to ask a builder for, so quotes compare like for like. */
+  quoteChecklist: AduContentSection;
+  /** Plain-text FAQs. Questions that need a computed figure are built by the page. */
+  faqs: AduFaq[];
+  /** Sources cited on the page. */
+  sources: AduSource[];
+}

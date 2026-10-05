@@ -16,10 +16,10 @@ export const sanDiego: JurisdictionContent = {
   slug: "san-diego",
   county: "San Diego County",
   asOf: "2026-09-18",
-  metaTitle: "ADU Cost & Rules in San Diego (2026) | LotFoundry",
+  // Rules-first title and H1 come from the shared template, like the other
+  // guides. Cost moved to `san-diego-cost.ts` (`/adu/ca/san-diego/cost`).
   metaDescription:
-    "Plan a City of San Diego ADU: compare modeled build costs, review setbacks and coastal caveats, and find official permit steps. Try the free cost calculator.",
-  h1: "ADU Cost and Rules in San Diego, California",
+    "City of San Diego ADU rules for 2026: 150 to 1,200 sq ft, zero side and rear setbacks under 16 ft, parking exceptions, Coastal Zone caveats and permit steps.",
   coastalCallout:
     "The 2025 and 2026 amendments took effect outside the Coastal Zone only. If your property is inside it, you are still under the prior ordinance until the California Coastal Commission certifies the changes. Most ADU guides for San Diego miss this. Check whether your parcel is in the Coastal Zone before you rely on anything below.",
   setbackDiagram: {
@@ -125,14 +125,12 @@ export const sanDiego: JurisdictionContent = {
     },
   ],
   fees: {
-    heading: "What it costs",
+    heading: "Permit fees",
     paragraphs: [
-      "Build costs and permit costs below are estimates, not the City's fee schedule. San Diego publishes actual construction permit fees in Information Bulletin 501 — check it for your project.",
-      "Permit costs are commonly reported around $26–28 per square foot, with a reduced rate near $13 per square foot for units under 500 square feet — which is one reason small units pencil out better than their size suggests. Plan check typically lands in the $1,500–$2,500 range.",
+      "San Diego publishes its construction permit fees in Development Services Information Bulletin 501, which is the schedule to check for your project.",
+      "State law limits what the City can add on top: no impact fees for an ADU under 750 square feet, proportional fees above that, and no school fees under 500 square feet.",
     ],
     bullets: [
-      "Permit fees: commonly reported around $26–28 per square foot (reduced near $13/sq ft under 500 sq ft)",
-      "Plan check fees: typically $1,500–$2,500 depending on project complexity",
       "Development impact fees: none under 750 sq ft; proportional above",
       "School fees: exempt under 500 sq ft",
       "Official fee schedule: Information Bulletin 501 (Fee Schedule for Construction Permits - Structures)",
@@ -205,7 +203,7 @@ export const sanDiego: JurisdictionContent = {
     {
       question: "What does an ADU cost to build in San Diego?",
       answer:
-        "Use the size-by-size modeled cost table on this page or the free ADU cost calculator to compare construction estimates. These use a national cost base, not a San Diego contractor quote, and already include a soft-cost allowance. Reconcile actual design and permit fees against that allowance, then price utilities and site work separately. The City's Information Bulletin 501 is the source for construction permit fees.",
+        "LotFoundry's San Diego ADU cost guide has build cost, rent and payback estimates by unit size. They use a national construction cost base, not a San Diego contractor quote, and already include a soft-cost allowance. The City's Information Bulletin 501 is the source for construction permit fees.",
     },
     {
       question: "Is an ADU worth it in San Diego?",
