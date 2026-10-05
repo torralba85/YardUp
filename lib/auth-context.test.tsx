@@ -693,6 +693,9 @@ describe("AuthProvider social sign-in inside the Android app", () => {
       role: "builder",
       consented: true,
     });
+    // The redirect can return to the Firebase-free landing, which only mounts an
+    // auth island (and so finishes sign-in) for a browser carrying this hint.
+    expect(window.localStorage.getItem("lf:member-session")).toBe("1");
   });
 
   it("finishes registration with the stashed role and consent when the redirect returns", async () => {
@@ -730,5 +733,64 @@ describe("AuthProvider social sign-in inside the Android app", () => {
       { merge: true },
     );
     expect(window.sessionStorage.getItem(auth.SOCIAL_REDIRECT_KEY)).toBeNull();
+  });
+
+  it("signs out and says so when the returning redirect cannot record consent", async () => {
+    const user = { uid: "user-1", email: "builder@example.com", displayName: "Builder Person" };
+    firebaseMocks.auth.currentUser = user;
+    authMocks.getRedirectResult.mockResolvedValue({ user });
+    authMocks.signOut.mockImplementation(async () => {
+      firebaseMocks.auth.currentUser = null;
+    });
+    firestoreMocks.setDoc.mockRejectedValue({ code: "permission-denied" });
+    window.sessionStorage.setItem(
+      "lotfoundry:social-redirect",
+      JSON.stringify({ role: "user", consented: true }),
+    );
+    window.localStorage.setItem("lf:member-session", "1");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const auth = await import("./auth-context");
+    function Probe() {
+      const { user: current, loading } = auth.useAuth();
+      return <span>{loading ? "loading" : current?.uid ?? "signed-out"}</span>;
+    }
+
+    render(
+      <auth.AuthProvider>
+        <Probe />
+      </auth.AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText("signed-out")).toBeInTheDocument());
+    expect(authMocks.signOut).toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Signed in, but profile setup was blocked. Please try again.",
+    );
+    expect(window.localStorage.getItem("lf:member-session")).toBeNull();
+    consoleError.mockRestore();
+  });
+
+  it("drops the member hint when the visitor backs out of the provider page", async () => {
+    window.sessionStorage.setItem(
+      "lotfoundry:social-redirect",
+      JSON.stringify({ role: "user", consented: true }),
+    );
+    window.localStorage.setItem("lf:member-session", "1");
+    const auth = await import("./auth-context");
+    function Probe() {
+      const { user: current, loading } = auth.useAuth();
+      return <span>{loading ? "loading" : current?.uid ?? "signed-out"}</span>;
+    }
+
+    render(
+      <auth.AuthProvider>
+        <Probe />
+      </auth.AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText("signed-out")).toBeInTheDocument());
+    expect(firestoreMocks.setDoc).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(window.localStorage.getItem("lf:member-session")).toBeNull();
   });
 });

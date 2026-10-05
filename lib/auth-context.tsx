@@ -40,6 +40,7 @@ import {
   rememberMemberSession,
 } from "./member-session-hint";
 import { clearInitialParcel } from "./parcel-handoff";
+import { getAuthErrorCode, getAuthErrorMessage } from "./auth-errors";
 import { validateDisplayName, validateEmail, validatePassword } from "./account-settings";
 
 type UserRole = "user" | "builder";
@@ -112,9 +113,9 @@ interface PendingSocialRedirect {
 /**
  * Whether social sign-in must redirect in place instead of opening a popup.
  *
- * In the Android TWA a popup opens as a separate Custom Tab. When Google sends
- * it back to `lotfoundry.net/__/auth/handler`, Android's verified App Link
- * hands that URL to the app's own TWA window, which cannot read the popup's
+ * In the Android TWA a popup opens outside the app's own tab. When Google
+ * sends it back to `lotfoundry.net/__/auth/handler`, Android's verified App
+ * Link hands that URL to the app's TWA window, which cannot read the popup's
  * sessionStorage, and Firebase fails with "missing initial state". A redirect
  * keeps the whole round trip in the one TWA tab.
  */
@@ -129,6 +130,9 @@ function stashSocialRedirect(role: UserRole, legalConsent?: LegalConsent) {
     legalConsent?.adultConfirmed === true;
   const pending: PendingSocialRedirect = { role, consented };
   window.sessionStorage.setItem(SOCIAL_REDIRECT_KEY, JSON.stringify(pending));
+  // The redirect may return to the Firebase-free landing, which only mounts an
+  // auth island for a member hint. Without one, nothing would finish sign-in.
+  rememberMemberSession();
 }
 
 function takeSocialRedirect(): PendingSocialRedirect | null {
@@ -146,19 +150,24 @@ function takeSocialRedirect(): PendingSocialRedirect | null {
   }
 }
 
-let socialRedirectCompletion: Promise<void> | null = null;
+/** The in-flight redirect completion, shared until it settles. */
+let socialRedirectCompletion: Promise<string | null> | null = null;
 
-/** Finish a redirect sign-in: write its consent-bearing profile, or sign out. */
+/**
+ * Finish a redirect sign-in: write its consent-bearing profile, or sign out.
+ *
+ * @returns User-facing copy when the sign-in failed, otherwise `null`.
+ */
 async function completeSocialRedirect(
   pending: PendingSocialRedirect,
   ensureProfile: (
     u: User,
     options: { role?: UserRole; legalConsent?: LegalConsent },
   ) => Promise<boolean>,
-): Promise<void> {
+): Promise<string | null> {
   try {
     const cred = await getRedirectResult(auth);
-    if (!cred) return;
+    if (!cred) return null;
     try {
       await ensureProfile(cred.user, {
         role: pending.role,
@@ -168,8 +177,13 @@ async function completeSocialRedirect(
       await signOut(auth).catch(() => undefined);
       throw error;
     }
+    return null;
   } catch (error) {
     console.error("[LotFoundry] Social sign-in redirect failed:", error);
+    const code = getAuthErrorCode(error);
+    return code
+      ? getAuthErrorMessage(code)
+      : "Sign-in did not finish. Please try again.";
   }
 }
 
@@ -193,6 +207,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const profileRequestRef = useRef(0);
   const authEventRef = useRef(0);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+  // A redirect sign-in has no caller left to report to, so its failure shows here.
+  const [redirectError, setRedirectError] = useState<string | null>(null);
   // Tracks whether this tab has seen a signed-in user, so we only clear the
   // parcel stash on a real sign-out (authed -> null), never on the initial
   // guest/null state that fires before the studio's ParcelProvider mounts.
@@ -310,12 +326,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       socialRedirectCompletion = completeSocialRedirect(pendingRedirect, ensureProfile)
         .finally(() => {
           pendingAuthRoleRef.current = null;
+          // Later mounts have nothing to wait for; their listener resolves them.
+          socialRedirectCompletion = null;
         });
     }
     if (socialRedirectCompletion) {
       const event = ++authEventRef.current;
-      void socialRedirectCompletion.then(async () => {
+      void socialRedirectCompletion.then(async (failure) => {
         if (event !== authEventRef.current) return;
+        if (failure) setRedirectError(failure);
         const current = auth.currentUser;
         setUser(current);
         try {
@@ -323,6 +342,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             hadUserRef.current = true;
             rememberMemberSession();
             await ensureProfile(current);
+          } else {
+            // Cancelled or failed: drop the hint the redirect left behind.
+            forgetMemberSession();
           }
         } finally {
           if (event === authEventRef.current) setLoading(false);
@@ -340,6 +362,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (u) {
           hadUserRef.current = true;
+          setRedirectError(null);
           // Lets the Firebase-free landing know an auth island is worth loading
           // on the next visit, without it having to ask Firebase.
           rememberMemberSession();
@@ -615,9 +638,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      {logoutError && (
+      {(logoutError || redirectError) && (
         <div role="alert" className="fixed bottom-4 left-4 right-4 z-(--z-index-toast) border border-lot-ink bg-lot-chalk p-4 text-lot-ink">
-          {logoutError}
+          {logoutError || redirectError}
         </div>
       )}
     </AuthContext.Provider>

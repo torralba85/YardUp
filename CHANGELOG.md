@@ -129,6 +129,13 @@ All notable changes to LotFoundry are documented here. Format follows
   icon per design-audit findings (FINDING-001, FINDING-002).
 
 ### Fixed
+- Google and Apple sign-in in the Android app no longer stop on Firebase's
+  "Unable to process request due to missing initial state" page. A popup opened
+  outside the app's own tab, and Google's return to `/__/auth/handler` reopened
+  in the main app window, which could not read the popup's session storage.
+  Inside the app, social sign-in now redirects in place and the returning page
+  finishes registration with the stashed role and consent receipt. Browsers keep
+  the popup flow.
 - Applying an inspiration-gallery concept now keeps the design. Four of the six
   concepts have areas outside the 400/600/800/1000 footprint option list, and the
   apply handler routed them through `configForFootprint`, which snaps an unknown
