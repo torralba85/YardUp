@@ -1,13 +1,15 @@
 import {
   ADU_CITIES,
+  ADU_COST_PAGES,
   calculatorUrl,
   cityUrl,
+  costPageUrl,
   hubUrl,
   STATE_BASELINE_AS_OF,
 } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { SOCIAL_LINKS } from "@/lib/social-links";
-import type { JurisdictionContent } from "@/lib/adu/types";
+import type { JurisdictionContent, JurisdictionCostContent } from "@/lib/adu/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
 
@@ -29,6 +31,11 @@ function cityLine(content: JurisdictionContent): string {
   return `- [${content.city}, ${content.stateName}](${cityUrl(content)}): ${summary} (rules as of ${content.asOf})`;
 }
 
+/** One cost-page line, reusing the page's reviewed meta description. */
+function costLine(cost: JurisdictionCostContent): string {
+  return `- [${cost.h1}](${costPageUrl(cost)}): ${cost.metaDescription} (fees as of ${cost.asOf})`;
+}
+
 /**
  * Render `/llms.txt` — the plain-language summary AI search assistants read
  * when deciding what a site is and what it can answer.
@@ -38,7 +45,7 @@ function cityLine(content: JurisdictionContent): string {
  * the moment it ships, and a stale hand-written list is worse than none.
  */
 export function buildLlmsTxt(): string {
-  const cities = ADU_CITIES.map(cityLine).join("\n");
+  const cities = [...ADU_CITIES.map(cityLine), ...ADU_COST_PAGES.map(costLine)].join("\n");
 
   return `# LotFoundry
 

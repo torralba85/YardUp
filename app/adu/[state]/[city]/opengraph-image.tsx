@@ -1,18 +1,11 @@
-import { ImageResponse } from "next/og";
+import { renderAduOgImage } from "@/components/adu/AduOgImage";
 import { aduStaticParams, getCity } from "@/lib/adu/content";
-import { COLOR } from "@/lib/design-tokens";
-
 
 export const size = { width: 1200, height: 630 };
 
 export const contentType = "image/png";
 
-/**
- * Per-city OG image: city name over chalk with the signal-orange volume —
- * the lot-illustration idea reduced to what satori can render (flexbox and
- * flat shapes only, no grid, system fonts only so builds never depend on a
- * font fetch).
- */
+/** Per-city OG image for the rules guide; see `renderAduOgImage`. */
 export function generateStaticParams() {
   return aduStaticParams();
 }
@@ -24,73 +17,9 @@ export default async function AduCityOgImage({
 }) {
   const { state, city } = await params;
   const content = getCity(state, city);
-  const cityName = content?.city ?? "California";
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "80px",
-          background: COLOR["lot-chalk"],
-          color: COLOR["lot-ink"],
-          fontFamily: "Arial, Helvetica, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            fontSize: 28,
-            letterSpacing: 4,
-            textTransform: "uppercase",
-            color: COLOR["lot-stone"],
-          }}
-        >
-          LotFoundry · ADU Rules (2026)
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontSize: 96,
-            fontWeight: 700,
-            lineHeight: 1.05,
-            marginTop: 16,
-          }}
-        >
-          {cityName}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            marginTop: 32,
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              width: 240,
-              height: 48,
-              background: COLOR["lot-orange"],
-            }}
-          />
-          <div
-            style={{
-              display: "flex",
-              fontSize: 32,
-              marginLeft: 24,
-              color: COLOR["lot-stone"],
-            }}
-          >
-            Size, setbacks &amp; permits
-          </div>
-        </div>
-      </div>
-    ),
-    { ...size },
-  );
+  return renderAduOgImage({
+    kicker: "LotFoundry · ADU Rules (2026)",
+    title: content?.city ?? "California",
+    tagline: "Size, setbacks & permits",
+  });
 }

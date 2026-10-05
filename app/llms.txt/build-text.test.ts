@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buildLlmsTxt } from "./build-text";
-import { ADU_CITIES, calculatorUrl, cityUrl, hubUrl } from "@/lib/adu/content";
+import {
+  ADU_CITIES,
+  ADU_COST_PAGES,
+  calculatorUrl,
+  cityUrl,
+  costPageUrl,
+  hubUrl,
+} from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { SOCIAL_LINKS } from "@/lib/social-links";
 
@@ -12,6 +19,16 @@ describe("buildLlmsTxt", () => {
     for (const city of ADU_CITIES) {
       expect(text).toContain(cityUrl(city));
       expect(text).toContain(city.city);
+    }
+  });
+
+  it("lists every cost page with its fee as-of date", () => {
+    const text = buildLlmsTxt();
+
+    expect(ADU_COST_PAGES.length).toBeGreaterThan(0);
+    for (const cost of ADU_COST_PAGES) {
+      expect(text).toContain(costPageUrl(cost));
+      expect(text).toContain(`(fees as of ${cost.asOf})`);
     }
   });
 

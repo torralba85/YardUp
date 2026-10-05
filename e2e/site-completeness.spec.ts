@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/studio",
   "/adu/ca",
   "/adu/ca/san-diego",
+  "/adu/ca/san-diego/cost",
   "/adu/ca/chula-vista",
   "/adu/ca/oceanside",
   "/adu/ca/escondido",

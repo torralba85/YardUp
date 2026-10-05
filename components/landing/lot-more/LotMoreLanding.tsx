@@ -1042,7 +1042,7 @@ export function LotMoreLanding({
               </Link></WebBuilderOnly>
               <Link href="/about">About us</Link>
               <Link href="/adu/ca">ADU rules by city</Link>
-              <Link href="/adu/ca/san-diego">San Diego ADU costs</Link>
+              <Link href="/adu/ca/san-diego/cost">San Diego ADU costs</Link>
               <Link href="/adu-cost-calculator">ADU cost calculator</Link>
               <Link href="/help">Get in touch</Link>
               <a
