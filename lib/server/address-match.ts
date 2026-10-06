@@ -1,7 +1,7 @@
 /**
  * Structured US street-address parsing and comparison, used to reconcile a
  * searched address against the situs (property) address a public parcel layer
- * publishes. Pure and dependency-light; server-only by placement.
+ * publishes. Pure and dependency-light; also used by the client parcel handoff.
  *
  * Comparison is deliberately strict: house number, street name, directional and
  * street type must all agree after normalization, and a city, ZIP or state that
@@ -78,11 +78,23 @@ export interface SitusComparison {
   localityConfirmed: boolean;
 }
 
-const STATE_CODES = new Set(
-  (
-    "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO " +
-    "MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY"
-  ).split(" "),
+export const US_STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
+  CO: "Colorado", CT: "Connecticut", DE: "Delaware", DC: "District of Columbia",
+  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois",
+  IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana",
+  ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota",
+  MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada",
+  NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
+  NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma",
+  OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
+  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
+  VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
+};
+
+const STATE_CODES = new Set(Object.keys(US_STATE_NAMES));
+const STATE_NAMES_LONGEST_FIRST = Object.entries(US_STATE_NAMES).sort(
+  ([, a], [, b]) => b.length - a.length,
 );
 
 const DIRECTIONALS: Record<string, string> = {
@@ -172,80 +184,121 @@ function parseStreetLine(
   return { houseNumber: normalizeHouseNumber(match[1]), street };
 }
 
-/**
- * Add separators only when an explicit state and one street suffix give a
- * unique street/city boundary. Ambiguous free text stays unparsed.
- */
-export function delimitStreetAddress(text: string): string {
-  if (text.includes(",")) return text;
-  const cleaned = stripUnitDesignators(text).trim();
-  const tail = /\s+([A-Za-z]{2})(?:\s+(\d{5})(?:-\d{4})?)?(?:\s+(?:USA|United States))?$/i.exec(cleaned);
-  if (!tail || !STATE_CODES.has(tail[1].toUpperCase())) return text;
-  const tokens = cleaned.slice(0, tail.index).trim().split(/\s+/);
-  if (!/^\d+[A-Za-z]?$/.test(tokens[0])) return text;
+interface AddressParts {
+  line: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  streetReliable: boolean;
+}
+
+/** Remove trailing locality components before resolving the street/city boundary. */
+function splitAddressParts(text: string): AddressParts {
+  let body = stripUnitDesignators(text).trim()
+    .replace(/(?:,\s*|\s+)(?:usa?|united states(?: of america)?)$/i, "").trim();
+  const zipMatch = /(?:,\s*|\s+)(\d{5})(?:-\d{4})?$/.exec(body);
+  const zip = zipMatch?.[1];
+  if (zipMatch) body = body.slice(0, zipMatch.index).trim();
+
+  let state: string | undefined;
+  for (const [code, name] of STATE_NAMES_LONGEST_FIRST) {
+    const match = new RegExp(`(?:,\\s*|\\s+)(${name}|${code})$`, "i").exec(body);
+    if (!match) continue;
+    // A bare street ending in NE/NW/etc. has a postdirectional, not a state.
+    if (!zip && !body.includes(",") && Object.values(DIRECTIONALS).includes(match[1].toUpperCase())) {
+      const before = body.slice(0, match.index).trim();
+      if (Object.values(STREET_TYPES).includes(streetTokens(before).at(-1) ?? "")) break;
+    }
+    state = code;
+    body = body.slice(0, match.index).trim();
+    break;
+  }
+
+  const parts = body.split(",").map((part) => part.trim()).filter(Boolean);
+  const line = parts[0] ?? "";
+  if (parts.length > 1) {
+    return { line, city: parts.at(-1), state, zip, streetReliable: true };
+  }
+
+  const tokens = line.split(/\s+/);
   const suffixes = new Set([...Object.keys(STREET_TYPES), ...Object.values(STREET_TYPES)]);
   const ends = tokens.flatMap((word, i) => i >= 2 && suffixes.has(word.replace(/\./g, "").toUpperCase()) ? [i] : []);
-  if (ends.length !== 1) return text;
-  let streetEnd = ends[0];
-  const next = tokens[streetEnd + 1]?.toUpperCase();
-  if (next && Object.values(DIRECTIONALS).includes(next)) streetEnd += 1;
-  if (streetEnd >= tokens.length - 1) return text;
-  const line = tokens.slice(0, streetEnd + 1).join(" ");
-  const city = tokens.slice(streetEnd + 1).join(" ");
-  return `${line}, ${city}, ${tail[1].toUpperCase()}${tail[2] ? ` ${tail[2]}` : ""}`;
+  let streetEnd = ends.at(-1) ?? -1;
+  if (Object.values(DIRECTIONALS).includes(tokens[streetEnd + 1]?.toUpperCase())) streetEnd += 1;
+  if (streetEnd === tokens.length - 1 || tokens.length === 2) {
+    return { line, state, zip, streetReliable: true };
+  }
+  if (ends.length === 1 && (state || zip) && streetEnd < tokens.length - 1) {
+    return {
+      line: tokens.slice(0, streetEnd + 1).join(" "),
+      city: tokens.slice(streetEnd + 1).join(" "),
+      state, zip, streetReliable: true,
+    };
+  }
+  return { line, state, zip, streetReliable: false };
+}
+
+/** Normalize partial separators and state names only when the street boundary is reliable. */
+export function delimitStreetAddress(text: string): string {
+  const parts = splitAddressParts(text);
+  if (!parts.streetReliable) return text;
+  const country = /(?:,\s*|\s+)(usa?|united states(?: of america)?)\s*$/i.exec(text)?.[1];
+  return [parts.line, parts.city, [parts.state, parts.zip].filter(Boolean).join(" "), country]
+    .filter(Boolean).join(", ");
+}
+
+export interface StreetAddressParse {
+  address: StreetAddress;
+  /** True only for independently delimited or unambiguously parsed components. */
+  confidence: Record<keyof StreetAddress, boolean>;
+}
+
+export function parseStreetAddressWithConfidence(text: string | undefined): StreetAddressParse | null {
+  if (!text) return null;
+  const parts = splitAddressParts(text);
+  const street = parseStreetLine(parts.line);
+  if (!street) return null;
+  const city = parts.city ? normalizeCity(parts.city) : undefined;
+  return {
+    address: {
+      ...street,
+      ...(city ? { city } : {}),
+      ...(parts.state ? { state: parts.state } : {}),
+      ...(parts.zip ? { zip: parts.zip } : {}),
+    },
+    confidence: {
+      houseNumber: true, street: parts.streetReliable, city: Boolean(city),
+      state: Boolean(parts.state), zip: Boolean(parts.zip),
+    },
+  };
 }
 
 /**
  * Parse a US address such as "1421 NE 88th St, Seattle, WA 98115, USA".
- * Returns null unless the first part is a "<number> <street>" line. City,
- * state and ZIP are read when present; ambiguous parts remain undefined.
+ * Returns null unless the numbered street can be separated reliably from
+ * locality. Use the confidence-aware parser to inspect ambiguous free text.
  */
 export function parseStreetAddress(text: string | undefined): StreetAddress | null {
-  if (!text) return null;
-  const [line, ...rest] = delimitStreetAddress(text)
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (!line) return null;
-  const street = parseStreetLine(line);
-  if (!street) return null;
+  const parsed = parseStreetAddressWithConfidence(text);
+  return parsed?.confidence.street ? parsed.address : null;
+}
 
-  const parts = [...rest];
-  while (
-    parts.length > 0 &&
-    /^(?:usa?|united states(?: of america)?)$/i.test(parts[parts.length - 1])
-  ) {
-    parts.pop();
+/** Fill missing locality only after every reliably entered component agrees. */
+export function enrichStreetAddress(requestedText: string, providerText: string): string {
+  const requested = parseStreetAddressWithConfidence(requestedText);
+  const provider = parseStreetAddress(providerText);
+  if (!requested?.confidence.street || !provider) return requestedText;
+  for (const key of ["houseNumber", "street", "city", "state", "zip"] as const) {
+    if (requested.confidence[key] && requested.address[key] !== provider[key]) return requestedText;
   }
-
-  // "WA 98115", "98115", or "WA, 98115": at most a ZIP part then a state part.
-  let state: string | undefined;
-  let zip: string | undefined;
-  for (let pass = 0; pass < 2 && parts.length > 0; pass++) {
-    const tail = /^(?:([A-Za-z]{2})(?:\s+(\d{5})(?:-\d{4})?)?|(\d{5})(?:-\d{4})?)$/.exec(
-      parts[parts.length - 1],
-    );
-    if (!tail) break;
-    if (tail[1]) {
-      const code = tail[1].toUpperCase();
-      if (!STATE_CODES.has(code) || state) break;
-      state = code;
-      zip = zip ?? tail[2];
-    } else if (tail[3] && !zip) {
-      zip = tail[3];
-    } else {
-      break;
-    }
-    parts.pop();
-  }
-
-  const city = parts.length > 0 ? normalizeCity(parts[parts.length - 1]) : "";
-  return {
-    ...street,
-    ...(city ? { city } : {}),
-    ...(state ? { state } : {}),
-    ...(zip ? { zip } : {}),
-  };
+  const missing = ["city", "state", "zip"] as const;
+  if (!missing.some((key) => !requested.address[key] && provider[key])) return requestedText;
+  const entered = splitAddressParts(requestedText);
+  const published = splitAddressParts(providerText);
+  // Keep the entered street spelling; provider values supply only absent locality.
+  return [entered.line, entered.city ?? published.city,
+    [entered.state ?? published.state, entered.zip ?? published.zip].filter(Boolean).join(" ")]
+    .filter(Boolean).join(", ");
 }
 
 /**

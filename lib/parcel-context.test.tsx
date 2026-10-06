@@ -98,6 +98,25 @@ beforeEach(() => {
 });
 
 describe("ParcelProvider estimated mode", () => {
+  it("enriches missing locality only after agreement and preserves original input evidence", async () => {
+    const formattedAddress = "202 C Street, San Diego, CA 92101";
+    const match = { components: { houseNumber: "202", road: "C Street", city: "San Diego", state: "CA", zip: "92101" } };
+    mocks.geocodeAddress.mockResolvedValue({ lat: 32.7, lng: -117.1, formattedAddress, match });
+    const parcel = { ...liveParcelFixture, dataQuality: {} };
+    mocks.fetchParcel.mockResolvedValue(parcel);
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    await act(async () => { await result.current.searchByAddress("202 C Street"); });
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(32.7, -117.1, undefined, formattedAddress);
+    expect(parcel.dataQuality).toMatchObject({ geocode: { requestedAddress: "202 C Street", formattedAddress, match } });
+  });
+
+  it("retains an explicitly entered city when the provider disagrees", async () => {
+    mocks.geocodeAddress.mockResolvedValue({ lat: 32.7, lng: -117.1, formattedAddress: "202 C Street, Chula Vista, CA 92101" });
+    mocks.fetchParcel.mockResolvedValue({ ...liveParcelFixture });
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    await act(async () => { await result.current.searchByAddress("202 C Street, San Diego"); });
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(32.7, -117.1, undefined, "202 C Street, San Diego");
+  });
   it("starts in preset mode", () => {
     const { result } = renderHook(() => useParcel(), { wrapper });
     expect(result.current.parcelMode).toBe("preset");

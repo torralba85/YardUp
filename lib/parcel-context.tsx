@@ -18,6 +18,7 @@ import { geocodeAddress, GeocodeError } from "./geocode-api";
 import { canGuestLookup, consumeGuestLookup, resetGuestLookups } from "./guest-lookup";
 import { clearInitialParcel, peekInitialParcel } from "./parcel-handoff";
 import { startParcelLookupTracking } from "./analytics/events";
+import { enrichStreetAddress } from "./server/address-match";
 
 /**
  * Shown once an anonymous visitor has spent their free lookup. Names what they
@@ -175,9 +176,10 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       try {
         const idToken = await user?.getIdToken();
         const geocode = await geocodeAddress(q, idToken);
-        // The geocoder may normalize the address to a different locality. The
-        // parcel service must check the user's original identity independently.
-        const data = await fetchParcel(geocode.lat, geocode.lng, idToken, q);
+        // Explicit input wins. Provider locality can fill gaps only after all
+        // reliably entered components agree; the original remains in evidence.
+        const parcelAddress = enrichStreetAddress(q, geocode.formattedAddress);
+        const data = await fetchParcel(geocode.lat, geocode.lng, idToken, parcelAddress);
         if (geocode.match && data.dataQuality) {
           data.dataQuality.geocode = {
             requestedAddress: q,

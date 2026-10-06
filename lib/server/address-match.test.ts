@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   type SitusFieldNames,
   compareSitus,
+  delimitStreetAddress,
+  enrichStreetAddress,
   normalizeCity,
   parseStreetAddress,
+  parseStreetAddressWithConfidence,
   readSitusRecord,
   situsOutFields,
 } from "./address-match";
@@ -39,6 +42,38 @@ const SEARCH = parseStreetAddress("1421 NE 88th St, Seattle, WA 98115, USA");
 if (!SEARCH) throw new Error("fixture must parse");
 
 describe("parseStreetAddress", () => {
+  it("retains reliable house/state/ZIP components without guessing an ambiguous street boundary", () => {
+    const parsed = parseStreetAddressWithConfidence("10 Old Court Road Somewhere, California 92101");
+    expect(parsed?.confidence).toEqual({ houseNumber: true, street: false, city: false, state: true, zip: true });
+    expect(parsed?.address).toMatchObject({ houseNumber: "10", state: "CA", zip: "92101" });
+    expect(parseStreetAddress("10 Old Court Road Somewhere, California 92101")).toBeNull();
+  });
+
+  it("preserves a bare street's postdirectional rather than reading NE as Nebraska", () => {
+    expect(parseStreetAddress("123 Main St NE")).toEqual({ houseNumber: "123", street: "MAIN ST NE" });
+  });
+
+  it("normalizes multiword states and separately entered ZIP/country components", () => {
+    expect(parseStreetAddress("12 Oak St, Charleston West Virginia, 25301, United States")).toEqual({
+      houseNumber: "12", street: "OAK ST", city: "CHARLESTON", state: "WV", zip: "25301",
+    });
+    expect(delimitStreetAddress("202 C Street, San Diego California 92101, USA"))
+      .toBe("202 C Street, San Diego, CA 92101, USA");
+  });
+  it.each([
+    "202 C Street San Diego, CA 92101",
+    "202 C Street, San Diego CA 92101",
+    "202 C Street, San Diego, California 92101",
+    "202 C Street San Diego California 92101",
+  ])("normalizes partially separated components in %s", (input) => {
+    const parsed = parseStreetAddress(input);
+    expect(parsed).toEqual({
+      houseNumber: "202", street: "C ST", city: "SAN DIEGO", state: "CA", zip: "92101",
+    });
+    expect(compareSitus(parsed!, {
+      line: "202 C ST", cities: ["San Diego"], state: "CA", zip: "92101",
+    })).toEqual({ verdict: "match", localityConfirmed: true });
+  });
   it("reads a complete address typed without commas", () => {
     expect(parseStreetAddress("202 C Street San Diego CA 92101")).toEqual({ houseNumber: "202", street: "C ST", city: "SAN DIEGO", state: "CA", zip: "92101" });
     expect(parseStreetAddress("1421 NE 88th St Seattle WA 98115")).toEqual(SEARCH);
@@ -93,6 +128,20 @@ describe("parseStreetAddress", () => {
     expect(parseStreetAddress("Oak Street, Seattle, WA")).toBeNull();
     expect(parseStreetAddress("   ")).toBeNull();
     expect(parseStreetAddress(undefined)).toBeNull();
+  });
+});
+
+describe("enrichStreetAddress", () => {
+  const provider = "202 C Street, San Diego, CA 92101";
+  it("fills only missing components after agreement with the entered street and locality", () => {
+    expect(enrichStreetAddress("202 C St, California", provider)).toBe("202 C St, San Diego, CA 92101");
+    expect(enrichStreetAddress("202 C Street, San Diego, CA 92101", provider)).toBe(provider);
+  });
+  it.each([
+    "203 C Street", "202 D Street", "202 C Street, Chula Vista",
+    "202 C Street, Nevada", "202 C Street, 92102", "202 C San Diego",
+  ])("keeps conflicting or ambiguous input unchanged: %s", (input) => {
+    expect(enrichStreetAddress(input, provider)).toBe(input);
   });
 });
 

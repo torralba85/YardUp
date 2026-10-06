@@ -6,7 +6,7 @@ import {
 import { stripUnitDesignators } from "@/lib/server/geocode-query";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
-import { parseStreetAddress } from "@/lib/server/address-match";
+import { normalizeCity, parseStreetAddressWithConfidence, US_STATE_NAMES } from "@/lib/server/address-match";
 import type { DataEvidence } from "@/lib/data-evidence";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -14,59 +14,6 @@ const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
 const TIMEOUT_MS = 5000;
 const MAX_QUERY_LEN = 200;
 const PICKER_CANDIDATE_LIMIT = 5;
-const US_STATE_NAMES: Record<string, string> = {
-  AL: "Alabama",
-  AK: "Alaska",
-  AZ: "Arizona",
-  AR: "Arkansas",
-  CA: "California",
-  CO: "Colorado",
-  CT: "Connecticut",
-  DE: "Delaware",
-  DC: "District of Columbia",
-  FL: "Florida",
-  GA: "Georgia",
-  HI: "Hawaii",
-  ID: "Idaho",
-  IL: "Illinois",
-  IN: "Indiana",
-  IA: "Iowa",
-  KS: "Kansas",
-  KY: "Kentucky",
-  LA: "Louisiana",
-  ME: "Maine",
-  MD: "Maryland",
-  MA: "Massachusetts",
-  MI: "Michigan",
-  MN: "Minnesota",
-  MS: "Mississippi",
-  MO: "Missouri",
-  MT: "Montana",
-  NE: "Nebraska",
-  NV: "Nevada",
-  NH: "New Hampshire",
-  NJ: "New Jersey",
-  NM: "New Mexico",
-  NY: "New York",
-  NC: "North Carolina",
-  ND: "North Dakota",
-  OH: "Ohio",
-  OK: "Oklahoma",
-  OR: "Oregon",
-  PA: "Pennsylvania",
-  RI: "Rhode Island",
-  SC: "South Carolina",
-  SD: "South Dakota",
-  TN: "Tennessee",
-  TX: "Texas",
-  UT: "Utah",
-  VT: "Vermont",
-  VA: "Virginia",
-  WA: "Washington",
-  WV: "West Virginia",
-  WI: "Wisconsin",
-  WY: "Wyoming",
-};
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -390,19 +337,24 @@ const STATE_CODES_BY_NAME = new Map(
 
 /** Street/ZIP conflicts are unsafe points. City aliases require a parcel check. */
 function checkRequestedAddress(query: string, components: GeocodeMatch["components"]): string[] | null {
-  const requested = parseStreetAddress(query);
-  if (!requested) return [];
+  const parsed = parseStreetAddressWithConfidence(query);
+  if (!parsed) return [];
+  const { address: requested, confidence } = parsed;
+  // Provider components already delimit the road; an uncommon street type
+  // need not be inferable from free text to compare the published street.
   const published = components.houseNumber && components.road
-    ? parseStreetAddress(`${components.houseNumber} ${components.road}`)
+    ? parseStreetAddressWithConfidence(`${components.houseNumber} ${components.road}`)?.address
     : null;
   if (published && requested.houseNumber !== published.houseNumber) return null;
-  // Incomplete free text may not distinguish street from locality.
-  if ((query.includes(",") || requested.city || requested.zip) && published && requested.street !== published.street) return null;
+  if (confidence.street && published && requested.street !== published.street) return null;
   if (requested.zip && components.zip && requested.zip !== components.zip.slice(0, 5)) return null;
   const state = requestedStateCode(query);
   if (state && components.state && state !== components.state) return null;
-  if (requested.city && components.city && requested.city !== components.city.toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim()) {
+  if (confidence.city && requested.city && components.city && requested.city !== normalizeCity(components.city)) {
     return ["The geocoder's city differs from the requested city; the original address must be checked against county parcel records."];
+  }
+  if (!confidence.street) {
+    return ["The entered street and city could not be independently parsed; confirm the address with explicit separators before verifying parcel identity."];
   }
   return [];
 }
@@ -536,6 +488,8 @@ const STATE_NAMES_LONGEST_FIRST = Array.from(STATE_CODES_BY_NAME).sort(
  * Indiana whenever no state followed, and threw the correct result away.
  */
 function requestedStateCode(query: string): string | null {
+  const parsed = parseStreetAddressWithConfidence(query);
+  if (parsed) return parsed.address.state ?? null;
   const components = query
     .split(",")
     .map((part) => part.trim())
