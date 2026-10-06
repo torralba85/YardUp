@@ -204,8 +204,9 @@ function splitAddressParts(text: string): AddressParts {
   for (const [code, name] of STATE_NAMES_LONGEST_FIRST) {
     const match = new RegExp(`(?:,\\s*|\\s+)(${name}|${code})$`, "i").exec(body);
     if (!match) continue;
-    // A bare street ending in NE/NW/etc. has a postdirectional, not a state.
-    if (!zip && !body.includes(",") && Object.values(DIRECTIONALS).includes(match[1].toUpperCase())) {
+    // A street ending in NE has a postdirectional unless an explicit locality
+    // boundary identifies a state. A trailing ZIP alone is not that boundary.
+    if (!body.includes(",") && Object.values(DIRECTIONALS).includes(match[1].toUpperCase())) {
       const before = body.slice(0, match.index).trim();
       if (Object.values(STREET_TYPES).includes(streetTokens(before).at(-1) ?? "")) break;
     }
