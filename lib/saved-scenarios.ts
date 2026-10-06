@@ -76,7 +76,13 @@ function isFiniteNumber(value: unknown): value is number {
 
 function isValidGeoJsonPolygon(value: unknown): boolean {
   if (!isRecord(value)) return false;
-  return value.type === "Polygon" && Array.isArray(value.coordinates);
+  // Keep legacy empty boundaries readable, but validate every stored position
+  // before geometry consumers or the Firestore encoder destructure it.
+  return value.type === "Polygon" && Array.isArray(value.coordinates) &&
+    value.coordinates.every((ring: unknown) => Array.isArray(ring) &&
+      ring.every((point: unknown) => Array.isArray(point) && point.length >= 2 &&
+        isFiniteNumber(point[0]) && point[0] >= -180 && point[0] <= 180 &&
+        isFiniteNumber(point[1]) && point[1] >= -90 && point[1] <= 90));
 }
 
 /**
@@ -496,20 +502,18 @@ export function migrateSavedScenario(value: unknown): SavedScenario | null {
     if (!normalized) return null;
     liveParcel = normalized;
   }
-  let projectBrief: AIProjectBrief | undefined;
-  if (value.projectBrief !== undefined) {
-    const normalizedBrief = normalizeProjectBrief(value.projectBrief);
-    if (normalizedBrief) projectBrief = normalizedBrief;
-  }
-  let styleMatchConcept: SavedScenarioStyleMatch | undefined;
-  if (value.styleMatchConcept !== undefined) {
-    const normalizedConcept = normalizeStyleMatchConcept(value.styleMatchConcept);
-    if (normalizedConcept) styleMatchConcept = normalizedConcept;
-  }
+  const projectBrief = normalizeProjectBrief(value.projectBrief);
+  const styleMatchConcept = normalizeStyleMatchConcept(value.styleMatchConcept);
   const design = migrateDesign(value, liveParcel);
   if (!design) return null;
+  // Pick the core fields so rejected optional snapshots cannot leak back in
+  // through the original record and invalidate an otherwise usable design.
   const migrated = {
-    ...value,
+    id: value.id,
+    name: value.name,
+    createdAt: value.createdAt,
+    parcelId: value.parcelId,
+    assumptions: value.assumptions,
     ...design,
     ...(liveParcel ? { liveParcel } : {}),
     ...(projectBrief ? { projectBrief } : {}),
