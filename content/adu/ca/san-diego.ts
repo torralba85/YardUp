@@ -128,11 +128,11 @@ export const sanDiego: JurisdictionContent = {
     heading: "Permit fees",
     paragraphs: [
       "San Diego publishes its construction permit fees in Development Services Information Bulletin 501, which is the schedule to check for your project.",
-      "State law limits what the City can add on top: no impact fees for an ADU under 750 square feet, proportional fees above that, and no school fees under 500 square feet.",
+      "State law exempts ADUs with 750 square feet of interior livable space or less from local impact fees; larger units are charged proportionately to the primary dwelling. School fees and utility connection charges follow separate rules; confirm your project's assessment with the district and providers.",
     ],
     bullets: [
-      "Development impact fees: none under 750 sq ft; proportional above",
-      "School fees: exempt under 500 sq ft",
+      "Local impact fees: exempt at 750 sq ft of interior livable space or less; proportional above",
+      "School fees: confirm the applicable assessment with your school district",
       "Official fee schedule: Information Bulletin 501 (Fee Schedule for Construction Permits - Structures)",
     ],
   },

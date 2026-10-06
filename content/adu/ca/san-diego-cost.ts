@@ -8,10 +8,9 @@
  * page from `cityMarketAggregate("san-diego")`; nothing numeric about them is
  * typed here.
  *
- * The fee copy moved here unchanged from `san-diego.ts`, which was verified
- * against Information Bulletins 400 and 501 on 2026-09-18 — hence that as-of
- * date. The per-square-foot permit figures are commonly reported ranges and
- * stay labeled as such; Bulletin 501 is the authority.
+ * Fee guidance checked against City Information Bulletins 400 and 501 and
+ * the March 2026 HCD handbook on 2026-10-06. Project-specific plan-check and
+ * inspection fees must come from Bulletin 501, not unsourced typical ranges.
  *
  * @module adu/ca/san-diego-cost
  */
@@ -20,7 +19,7 @@ import type { JurisdictionCostContent } from "@/lib/adu/types";
 export const sanDiegoCost: JurisdictionCostContent = {
   state: "ca",
   slug: "san-diego",
-  asOf: "2026-09-18",
+  asOf: "2026-10-06",
   metaTitle: "ADU Cost in San Diego (2026): Build, Rent & Payback",
   metaDescription:
     "What a San Diego ADU costs to build, rents for and takes to pay back, by size from 400 to 1,200 sq ft, plus City permit fees and a free calculator.",
@@ -32,15 +31,15 @@ export const sanDiegoCost: JurisdictionCostContent = {
   fees: {
     heading: "City of San Diego permit and impact fees",
     paragraphs: [
-      "Inside City of San Diego limits, construction permit fees come from Development Services Information Bulletin 501. The figures below are commonly reported ranges, not the City's fee schedule, so check Bulletin 501 for your project.",
-      "State law limits what the City can add: no impact fees under 750 square feet, proportional fees above that, and no school fees under 500 square feet. That is one reason a smaller unit can pencil out better than its size suggests.",
+      "Inside City of San Diego limits, use Development Services Information Bulletin 501 to price plan review and inspection for your project. The schedule distinguishes detached ADUs up to 500 square feet from larger detached units, and attached units have separate size categories. There is no single permit price per square foot for every ADU.",
+      "California's March 2026 ADU Handbook says ADUs with 750 square feet of interior livable space or less are exempt from local impact fees; larger units are charged proportionately to the primary dwelling. School fees and utility connection charges have separate rules, so request an itemized assessment.",
       "The model's soft-cost allowance already covers design, engineering and permits. Reconcile your actual fees against it rather than adding them twice.",
     ],
     bullets: [
-      "Permit fees: commonly reported around $26–28 per square foot (reduced near $13/sq ft under 500 sq ft)",
-      "Plan check fees: typically $1,500–$2,500 depending on project complexity",
-      "Development impact fees: none under 750 sq ft; proportional above",
-      "School fees: exempt under 500 sq ft",
+      "Plan review and inspection: use the applicable project category in Bulletin 501",
+      "Local impact fees: exempt at 750 sq ft of interior livable space or less; proportional above",
+      "School fees: confirm the applicable assessment with your school district",
+      "Utility connections and capacity charges: request provider-specific estimates",
       "Official fee schedule: Information Bulletin 501 (Fee Schedule for Construction Permits - Structures)",
     ],
   },
