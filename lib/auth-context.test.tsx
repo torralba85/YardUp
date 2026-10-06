@@ -16,6 +16,8 @@ const authMocks = vi.hoisted(() => ({
   sendPasswordResetEmail: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   signInWithPopup: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  getRedirectResult: vi.fn(),
   signOut: vi.fn(),
   updateProfile: vi.fn(),
 }));
@@ -31,9 +33,13 @@ const parcelHandoffMocks = vi.hoisted(() => ({
   clearInitialParcel: vi.fn(),
 }));
 
+const firebaseMocks = vi.hoisted(() => ({
+  auth: { currentUser: null as null | { uid: string; email: string; displayName: string } },
+}));
+
 vi.mock("@/lib/firebase", () => ({
   app: {},
-  auth: {},
+  auth: firebaseMocks.auth,
   db: {},
 }));
 
@@ -68,6 +74,8 @@ vi.mock("firebase/auth", () => ({
   sendPasswordResetEmail: authMocks.sendPasswordResetEmail,
   signInWithEmailAndPassword: authMocks.signInWithEmailAndPassword,
   signInWithPopup: authMocks.signInWithPopup,
+  signInWithRedirect: authMocks.signInWithRedirect,
+  getRedirectResult: authMocks.getRedirectResult,
   signOut: authMocks.signOut,
   updateProfile: authMocks.updateProfile,
   sendEmailVerification: vi.fn(),
@@ -638,5 +646,151 @@ describe("AuthProvider profile creation", () => {
     expect(oauthProvider.instances[0]?.scopes).toEqual(
       expect.arrayContaining(["email", "name"]),
     );
+  });
+});
+
+describe("AuthProvider social sign-in inside the Android app", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    firebaseMocks.auth.currentUser = null;
+    authMocks.onAuthStateChanged.mockReturnValue(() => {});
+    authMocks.signInWithRedirect.mockResolvedValue(undefined);
+    authMocks.getRedirectResult.mockResolvedValue(null);
+    firestoreMocks.doc.mockReturnValue({ path: "users/user-1" });
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => false,
+      data: () => ({}),
+    });
+    firestoreMocks.serverTimestamp.mockReturnValue("server-time");
+  });
+
+  it("redirects in place instead of opening a popup the TWA would split off", async () => {
+    // The Play app session marker purchase-channel detection reads.
+    window.sessionStorage.setItem("lotfoundry:android-app", "1");
+    const auth = await import("./auth-context");
+    function Button() {
+      const { signInWithGoogle } = auth.useAuth();
+      return (
+        <button type="button" onClick={() => void signInWithGoogle("builder", auth.CURRENT_LEGAL_CONSENT)}>
+          Continue with Google
+        </button>
+      );
+    }
+
+    render(
+      <auth.AuthProvider>
+        <Button />
+      </auth.AuthProvider>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() => expect(authMocks.signInWithRedirect).toHaveBeenCalledTimes(1));
+    expect(authMocks.signInWithPopup).not.toHaveBeenCalled();
+    expect(JSON.parse(window.sessionStorage.getItem(auth.SOCIAL_REDIRECT_KEY) ?? "null")).toEqual({
+      role: "builder",
+      consented: true,
+    });
+    // The redirect can return to the Firebase-free landing, which only mounts an
+    // auth island (and so finishes sign-in) for a browser carrying this hint.
+    expect(window.localStorage.getItem("lf:member-session")).toBe("1");
+  });
+
+  it("finishes registration with the stashed role and consent when the redirect returns", async () => {
+    const user = { uid: "user-1", email: "builder@example.com", displayName: "Builder Person" };
+    firebaseMocks.auth.currentUser = user;
+    authMocks.getRedirectResult.mockResolvedValue({ user });
+    window.sessionStorage.setItem(
+      "lotfoundry:social-redirect",
+      JSON.stringify({ role: "builder", consented: true }),
+    );
+    const auth = await import("./auth-context");
+    function Probe() {
+      const { user: current, loading } = auth.useAuth();
+      return <span>{loading ? "loading" : current?.uid ?? "signed-out"}</span>;
+    }
+
+    render(
+      <auth.AuthProvider>
+        <Probe />
+      </auth.AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText("user-1")).toBeInTheDocument());
+    expect(firestoreMocks.setDoc).toHaveBeenCalledWith(
+      { path: "users/user-1" },
+      expect.objectContaining({
+        role: "builder",
+        legalConsent: expect.objectContaining({
+          termsVersion: auth.CURRENT_LEGAL_CONSENT.termsVersion,
+          privacyVersion: auth.CURRENT_LEGAL_CONSENT.privacyVersion,
+          adultConfirmed: true,
+          acceptedAt: "server-time",
+        }),
+      }),
+      { merge: true },
+    );
+    expect(window.sessionStorage.getItem(auth.SOCIAL_REDIRECT_KEY)).toBeNull();
+  });
+
+  it("signs out and says so when the returning redirect cannot record consent", async () => {
+    const user = { uid: "user-1", email: "builder@example.com", displayName: "Builder Person" };
+    firebaseMocks.auth.currentUser = user;
+    authMocks.getRedirectResult.mockResolvedValue({ user });
+    authMocks.signOut.mockImplementation(async () => {
+      firebaseMocks.auth.currentUser = null;
+    });
+    firestoreMocks.setDoc.mockRejectedValue({ code: "permission-denied" });
+    window.sessionStorage.setItem(
+      "lotfoundry:social-redirect",
+      JSON.stringify({ role: "user", consented: true }),
+    );
+    window.localStorage.setItem("lf:member-session", "1");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const auth = await import("./auth-context");
+    function Probe() {
+      const { user: current, loading } = auth.useAuth();
+      return <span>{loading ? "loading" : current?.uid ?? "signed-out"}</span>;
+    }
+
+    render(
+      <auth.AuthProvider>
+        <Probe />
+      </auth.AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText("signed-out")).toBeInTheDocument());
+    expect(authMocks.signOut).toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Signed in, but profile setup was blocked. Please try again.",
+    );
+    expect(window.localStorage.getItem("lf:member-session")).toBeNull();
+    consoleError.mockRestore();
+  });
+
+  it("drops the member hint when the visitor backs out of the provider page", async () => {
+    window.sessionStorage.setItem(
+      "lotfoundry:social-redirect",
+      JSON.stringify({ role: "user", consented: true }),
+    );
+    window.localStorage.setItem("lf:member-session", "1");
+    const auth = await import("./auth-context");
+    function Probe() {
+      const { user: current, loading } = auth.useAuth();
+      return <span>{loading ? "loading" : current?.uid ?? "signed-out"}</span>;
+    }
+
+    render(
+      <auth.AuthProvider>
+        <Probe />
+      </auth.AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText("signed-out")).toBeInTheDocument());
+    expect(firestoreMocks.setDoc).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(window.localStorage.getItem("lf:member-session")).toBeNull();
   });
 });

@@ -15,6 +15,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   OAuthProvider,
   deleteUser,
@@ -26,16 +28,19 @@ import {
   reauthenticateWithCredential,
   updatePassword,
   verifyBeforeUpdateEmail,
+  type AuthProvider as FirebaseAuthProvider,
   type UserCredential,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import { type LegalConsent } from "./legal-consent";
+import { detectPurchaseChannel } from "./commerce/purchase-channel";
+import { CURRENT_LEGAL_CONSENT, type LegalConsent } from "./legal-consent";
 import {
   forgetMemberSession,
   rememberMemberSession,
 } from "./member-session-hint";
 import { clearInitialParcel } from "./parcel-handoff";
+import { getAuthErrorCode, getAuthErrorMessage } from "./auth-errors";
 import { validateDisplayName, validateEmail, validatePassword } from "./account-settings";
 
 type UserRole = "user" | "builder";
@@ -95,6 +100,94 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const pendingAuthRoleRef: { current: UserRole | null } = { current: null };
 
 /**
+ * Session-storage key carrying a social sign-in's role and consent across the
+ * full-page redirect, so the returning document can finish registration.
+ */
+export const SOCIAL_REDIRECT_KEY = "lotfoundry:social-redirect";
+
+interface PendingSocialRedirect {
+  role: UserRole;
+  consented: boolean;
+}
+
+/**
+ * Whether social sign-in must redirect in place instead of opening a popup.
+ *
+ * In the Android TWA a popup opens outside the app's own tab. When Google
+ * sends it back to `lotfoundry.net/__/auth/handler`, Android's verified App
+ * Link hands that URL to the app's TWA window, which cannot read the popup's
+ * sessionStorage, and Firebase fails with "missing initial state". A redirect
+ * keeps the whole round trip in the one TWA tab.
+ */
+function prefersRedirectSignIn(): boolean {
+  return detectPurchaseChannel() === "google-play";
+}
+
+function stashSocialRedirect(role: UserRole, legalConsent?: LegalConsent) {
+  const consented = Boolean(legalConsent) &&
+    legalConsent?.termsVersion === CURRENT_LEGAL_CONSENT.termsVersion &&
+    legalConsent?.privacyVersion === CURRENT_LEGAL_CONSENT.privacyVersion &&
+    legalConsent?.adultConfirmed === true;
+  const pending: PendingSocialRedirect = { role, consented };
+  window.sessionStorage.setItem(SOCIAL_REDIRECT_KEY, JSON.stringify(pending));
+  // The redirect may return to the Firebase-free landing, which only mounts an
+  // auth island for a member hint. Without one, nothing would finish sign-in.
+  rememberMemberSession();
+}
+
+function takeSocialRedirect(): PendingSocialRedirect | null {
+  try {
+    const raw = window.sessionStorage.getItem(SOCIAL_REDIRECT_KEY);
+    window.sessionStorage.removeItem(SOCIAL_REDIRECT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PendingSocialRedirect>;
+    return {
+      role: parsed.role === "builder" ? "builder" : "user",
+      consented: parsed.consented === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** The in-flight redirect completion, shared until it settles. */
+let socialRedirectCompletion: Promise<string | null> | null = null;
+
+/**
+ * Finish a redirect sign-in: write its consent-bearing profile, or sign out.
+ *
+ * @returns User-facing copy when the sign-in failed, otherwise `null`.
+ */
+async function completeSocialRedirect(
+  pending: PendingSocialRedirect,
+  ensureProfile: (
+    u: User,
+    options: { role?: UserRole; legalConsent?: LegalConsent },
+  ) => Promise<boolean>,
+): Promise<string | null> {
+  try {
+    const cred = await getRedirectResult(auth);
+    if (!cred) return null;
+    try {
+      await ensureProfile(cred.user, {
+        role: pending.role,
+        legalConsent: pending.consented ? CURRENT_LEGAL_CONSENT : undefined,
+      });
+    } catch (error) {
+      await signOut(auth).catch(() => undefined);
+      throw error;
+    }
+    return null;
+  } catch (error) {
+    console.error("[LotFoundry] Social sign-in redirect failed:", error);
+    const code = getAuthErrorCode(error);
+    return code
+      ? getAuthErrorMessage(code)
+      : "Sign-in did not finish. Please try again.";
+  }
+}
+
+/**
  * Provide Firebase Authentication state and actions to the app.
  *
  * Subscribes to auth state changes, and on sign-in ensures a matching
@@ -114,6 +207,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const profileRequestRef = useRef(0);
   const authEventRef = useRef(0);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+  // A redirect sign-in has no caller left to report to, so its failure shows here.
+  const [redirectError, setRedirectError] = useState<string | null>(null);
   // Tracks whether this tab has seen a signed-in user, so we only clear the
   // parcel stash on a real sign-out (authed -> null), never on the initial
   // guest/null state that fires before the studio's ParcelProvider mounts.
@@ -221,6 +316,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ++profileRequestRef.current;
       ++authEventRef.current;
     };
+    // A social sign-in that left by redirect resumes here. Hold the listener
+    // off (as a popup sign-in does) until its role and consent are written.
+    // The completion is shared so every auth island, and a Strict Mode
+    // remount, waits on the one getRedirectResult call.
+    const pendingRedirect = takeSocialRedirect();
+    if (pendingRedirect && !socialRedirectCompletion) {
+      pendingAuthRoleRef.current = pendingRedirect.role;
+      socialRedirectCompletion = completeSocialRedirect(pendingRedirect, ensureProfile)
+        .finally(() => {
+          pendingAuthRoleRef.current = null;
+          // Later mounts have nothing to wait for; their listener resolves them.
+          socialRedirectCompletion = null;
+        });
+    }
+    if (socialRedirectCompletion) {
+      const event = ++authEventRef.current;
+      void socialRedirectCompletion.then(async (failure) => {
+        if (event !== authEventRef.current) return;
+        if (failure) setRedirectError(failure);
+        const current = auth.currentUser;
+        setUser(current);
+        try {
+          if (current) {
+            hadUserRef.current = true;
+            rememberMemberSession();
+            await ensureProfile(current);
+          } else {
+            // Cancelled or failed: drop the hint the redirect left behind.
+            forgetMemberSession();
+          }
+        } finally {
+          if (event === authEventRef.current) setLoading(false);
+        }
+      });
+    }
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       // Registration owns publication until its role and consent write succeeds.
       // Otherwise a gate can navigate on this event before signup finishes.
@@ -232,6 +362,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (u) {
           hadUserRef.current = true;
+          setRedirectError(null);
           // Lets the Firebase-free landing know an auth island is worth loading
           // on the next visit, without it having to ask Firebase.
           rememberMemberSession();
@@ -299,12 +430,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Leave for the provider in this tab. The page navigates away, so the
+   * returned promise never settles; the AuthProvider mount effect completes the
+   * sign-in when the provider sends the user back.
+   */
+  const redirectSignIn = async (
+    provider: FirebaseAuthProvider,
+    role: UserRole,
+    legalConsent?: LegalConsent,
+  ): Promise<SocialSignInResult> => {
+    stashSocialRedirect(role, legalConsent);
+    try {
+      await signInWithRedirect(auth, provider);
+    } catch (error) {
+      window.sessionStorage.removeItem(SOCIAL_REDIRECT_KEY);
+      throw error;
+    }
+    return new Promise<never>(() => undefined);
+  };
+
   const signInWithGoogle = async (
     role: UserRole = "user",
     legalConsent?: LegalConsent,
   ): Promise<SocialSignInResult> => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
+    if (prefersRedirectSignIn()) return redirectSignIn(provider, role, legalConsent);
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
@@ -330,6 +482,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
+    if (prefersRedirectSignIn()) return redirectSignIn(provider, role, legalConsent);
     pendingAuthRoleRef.current = role;
     try {
       const cred = await signInWithPopup(auth, provider);
@@ -485,9 +638,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      {logoutError && (
+      {(logoutError || redirectError) && (
         <div role="alert" className="fixed bottom-4 left-4 right-4 z-(--z-index-toast) border border-lot-ink bg-lot-chalk p-4 text-lot-ink">
-          {logoutError}
+          {logoutError || redirectError}
         </div>
       )}
     </AuthContext.Provider>
