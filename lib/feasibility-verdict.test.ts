@@ -68,6 +68,13 @@ function baseResult(overrides: Partial<FeasibilityResult> = {}): FeasibilityResu
 }
 
 describe("buildableArea", () => {
+  it("never reports the bounding rectangle as land outside an irregular parcel", () => {
+    const feet = 364000;
+    const ring = [[0, 0], [50, 0], [50, 50], [25, 50], [25, 100], [0, 100], [0, 0]];
+    const parcel = { ...preset, lotArea: 3750, lotWidth: 50, lotLength: 100, setbacks: { front: 20, rear: 20, side: 5 }, boundaryGeoJson: { type: "Polygon" as const, coordinates: [ring.map(([x, y]) => [x / feet, y / feet])] } };
+    expect(buildableArea(parcel)).toBe(1800);
+    expect(buildableArea({ ...parcel, lotArea: 1700 })).toBe(1700);
+  });
   it("applies setbacks to the lot envelope", () => {
     // (40 - 2*5) * (125 - 20 - 25) = 30 * 80
     expect(buildableArea(preset)).toBe(2400);
@@ -75,6 +82,12 @@ describe("buildableArea", () => {
 });
 
 describe("summarizeFeasibility", () => {
+  it("requires frontage review for live land even when setback values are recorded", () => {
+    const live = { ...preset, source: "regrid", zoning: "R-1" };
+    const summary = summarizeFeasibility(live, baseResult(), defaultAduConfig);
+    expect(summary.constraints.find((item) => item.id === "buildable")?.status).toBe("review");
+    expect(summary.constraints.find((item) => item.id === "buildable")?.detail).toContain("Frontage");
+  });
   const fittedPlacement: PlacementResult = {
     status: "fits", envelopeStatus: "fits", houseStatus: "clear",
     envelopeClearanceFt: 5, houseClearanceFt: 15, roofClearanceFt: 12,

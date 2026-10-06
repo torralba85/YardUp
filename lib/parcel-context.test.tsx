@@ -98,6 +98,25 @@ beforeEach(() => {
 });
 
 describe("ParcelProvider estimated mode", () => {
+  it("enriches missing locality only after agreement and preserves original input evidence", async () => {
+    const formattedAddress = "202 C Street, San Diego, CA 92101";
+    const match = { components: { houseNumber: "202", road: "C Street", city: "San Diego", state: "CA", zip: "92101" } };
+    mocks.geocodeAddress.mockResolvedValue({ lat: 32.7, lng: -117.1, formattedAddress, match });
+    const parcel = { ...liveParcelFixture, dataQuality: {} };
+    mocks.fetchParcel.mockResolvedValue(parcel);
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    await act(async () => { await result.current.searchByAddress("202 C Street"); });
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(32.7, -117.1, undefined, formattedAddress);
+    expect(parcel.dataQuality).toMatchObject({ geocode: { requestedAddress: "202 C Street", formattedAddress, match } });
+  });
+
+  it("retains an explicitly entered city when the provider disagrees", async () => {
+    mocks.geocodeAddress.mockResolvedValue({ lat: 32.7, lng: -117.1, formattedAddress: "202 C Street, Chula Vista, CA 92101" });
+    mocks.fetchParcel.mockResolvedValue({ ...liveParcelFixture });
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    await act(async () => { await result.current.searchByAddress("202 C Street, San Diego"); });
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(32.7, -117.1, undefined, "202 C Street, San Diego");
+  });
   it("starts in preset mode", () => {
     const { result } = renderHook(() => useParcel(), { wrapper });
     expect(result.current.parcelMode).toBe("preset");
@@ -133,7 +152,7 @@ describe("ParcelProvider estimated mode", () => {
   });
 
   it("lets a guest resolve a real address with no ID token", async () => {
-    const formattedAddress = mockResolvedLookup();
+    mockResolvedLookup();
     const { result } = renderHook(() => useParcel(), { wrapper });
 
     await act(async () => {
@@ -147,7 +166,7 @@ describe("ParcelProvider estimated mode", () => {
       34.05,
       -118.25,
       undefined,
-      formattedAddress,
+      "100 Main Los Angeles",
     );
     expect(result.current.parcelMode).toBe("live");
     expect(result.current.parcelError).toBeNull();
@@ -251,7 +270,7 @@ describe("ParcelProvider estimated mode", () => {
     expect(mocks.geocodeAddress).toHaveBeenCalled();
   });
 
-  it("uses the geocoder formatted address for parcel lookup", async () => {
+  it("preserves the typed address for independent parcel identity checks", async () => {
     signIn();
     const formattedAddress = "100 Main St, Los Angeles, CA 90012, USA";
     const liveParcel: LiveParcelData = {
@@ -290,7 +309,7 @@ describe("ParcelProvider estimated mode", () => {
       34.05,
       -118.25,
       "token",
-      formattedAddress,
+      "100 Main Los Angeles",
     );
     expect(result.current.parcelMode).toBe("live");
     expect(result.current.parcel).toBe(liveParcel);

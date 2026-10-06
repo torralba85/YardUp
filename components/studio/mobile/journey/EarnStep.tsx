@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
@@ -10,6 +10,7 @@ import { haptic } from "@/lib/haptics";
 
 /** Props for {@link EarnStep}. */
 export interface EarnStepProps {
+  parcelNotice?: ReactNode;
   /** "Address, City" line for the reveal. */
   parcelName: string;
   /** The feasibility result carrying the money figures + market provenance. */
@@ -25,7 +26,7 @@ export interface EarnStepProps {
  * resolution: estimated monthly and annual rent potential, followed by a
  * simple confidence teaser (the market basis line). One primary action.
  */
-export default function EarnStep({ parcelName, result, estimated, onContinue }: EarnStepProps) {
+export default function EarnStep({ parcelName, result, estimated, onContinue, parcelNotice }: EarnStepProps) {
   const annualGross = result.monthlyRent * 12;
   const unverified =
     !result.market.verified &&
@@ -84,6 +85,7 @@ export default function EarnStep({ parcelName, result, estimated, onContinue }: 
           Demo figures — search your address for your own number.
         </p>
       )}
+      {parcelNotice}
 
       <div className="mt-auto pt-8">
         <Button

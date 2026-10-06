@@ -14,6 +14,10 @@ const KING_POINT = { lat: 47.6806478, lng: -122.3250591 };
 const MULTNOMAH_POINT = { lat: 45.5137964, lng: -122.6293264 };
 const TRAVIS_POINT = { lat: 30.2531976, lng: -97.7679659 };
 
+function polygonAt(point: { lat: number; lng: number }) {
+  return { ...SEATTLE_POLYGON, coordinates: SEATTLE_POLYGON.coordinates.map((ring) => ring.map(([lng, lat]) => [lng + point.lng - KING_POINT.lng, lat + point.lat - KING_POINT.lat])) };
+}
+
 /** A ~50x100 ft lot around the verified King County residential fixture. */
 const SEATTLE_POLYGON = {
   type: "Polygon",
@@ -107,7 +111,9 @@ describe("fetchCountyParcel — routing", () => {
   });
 
   it("routes a Portland point to Multnomah and an Austin point to Travis", async () => {
-    const fetchSpy = vi.fn().mockResolvedValue(geojsonResponse(SEATTLE_POLYGON));
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce(geojsonResponse(polygonAt(MULTNOMAH_POINT)))
+      .mockResolvedValueOnce(geojsonResponse(polygonAt(TRAVIS_POINT)));
     vi.stubGlobal("fetch", fetchSpy);
     expect((await fetchCountyParcel(MULTNOMAH_POINT.lat, MULTNOMAH_POINT.lng))!.county).toBe(
       "Multnomah",
@@ -150,6 +156,14 @@ describe("fetchCountyParcel — routing", () => {
 });
 
 describe("fetchCountyParcel — response parsing", () => {
+  it("refuses a neighbor polygon that does not contain the requested point", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(FAR_PART)));
+    expect(await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng)).toBeNull();
+  });
+  it("refuses a point inside a polygon's hole", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse({ ...SEATTLE_POLYGON, coordinates: [...SEATTLE_POLYGON.coordinates, CCW_HOLE] })));
+    expect(await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng)).toBeNull();
+  });
   it("returns the polygon and computes area from geometry when no area field", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(SEATTLE_POLYGON)));
     const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
@@ -163,8 +177,8 @@ describe("fetchCountyParcel — response parsing", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON, { Shape__Area: 4051.87 }))
-      .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON, { A_T_SQFT: 5000 }))
-      .mockResolvedValueOnce(geojsonResponse(SEATTLE_POLYGON, { GIS_acres: 0.134816 }));
+      .mockResolvedValueOnce(geojsonResponse(polygonAt(MULTNOMAH_POINT), { A_T_SQFT: 5000 }))
+      .mockResolvedValueOnce(geojsonResponse(polygonAt(TRAVIS_POINT), { GIS_acres: 0.134816 }));
     vi.stubGlobal("fetch", fetchSpy);
 
     expect((await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng))!.lotAreaSqft).toBe(4052);
@@ -243,7 +257,7 @@ describe("fetchCountyParcel — response parsing", () => {
     // Hole listed before its shell — order must not matter.
     const esriGeometry = { rings: [CCW_HOLE, cwOuter] };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
-    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    const result = await fetchCountyParcel(47.68053, KING_POINT.lng);
     expect(result!.polygon.coordinates).toEqual([cwOuter, CCW_HOLE]);
     expect(result!.lotAreaSqft).toBeGreaterThan(3400);
     expect(result!.lotAreaSqft).toBeLessThan(4600);
@@ -255,7 +269,7 @@ describe("fetchCountyParcel — response parsing", () => {
     const sloppyOuter = SEATTLE_POLYGON.coordinates[0];
     const esriGeometry = { rings: [CCW_HOLE, sloppyOuter] };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
-    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    const result = await fetchCountyParcel(47.68053, KING_POINT.lng);
     expect(result!.polygon.coordinates).toEqual([sloppyOuter, CCW_HOLE]);
     expect(result!.lotAreaSqft).toBeGreaterThan(3400);
     expect(result!.lotAreaSqft).toBeLessThan(4600);
@@ -335,7 +349,7 @@ describe("fetchCountyParcel — response parsing", () => {
     const cwOuter = [...SEATTLE_POLYGON.coordinates[0]].reverse();
     const esriGeometry = { rings: [cwOuter, CCW_HOLE] };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(esriGeometry)));
-    const result = await fetchCountyParcel(KING_POINT.lat, KING_POINT.lng);
+    const result = await fetchCountyParcel(47.68053, KING_POINT.lng);
     expect(result!.polygon.coordinates).toEqual([cwOuter, CCW_HOLE]);
     // ~4,900 sq ft outer minus ~850 sq ft hole.
     expect(result!.lotAreaSqft).toBeGreaterThan(3400);

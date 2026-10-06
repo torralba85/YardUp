@@ -56,7 +56,7 @@ export default function FindStep({
         Start with your address.
       </h1>
       <p className="lf-body-sm mt-2 text-lot-stone">
-        We&rsquo;ll pull your parcel, local zoning, and your area&rsquo;s market rents.
+        We&rsquo;ll check available parcel records and market rents. Local zoning and setbacks may need confirmation.
       </p>
 
       <div className="mt-5">

@@ -146,6 +146,16 @@ describe("createSavedScenarioStore", () => {
         ].map((field) => [field, evidence])),
         providerAttempts: [{ provider: "Regrid", dataset: "Parcel API v2", outcome: "matched" }],
         warnings: ["Verify zoning locally."],
+        geocode: {
+          requestedAddress: "202 C Street, San Diego, CA 92101",
+          formattedAddress: "202 C Street, Chula Vista, CA 92101",
+          match: {
+            provider: "nominatim", precision: "address", matchType: "building", partialMatch: false,
+            components: { city: "Chula Vista", vendorDebug: "drop me" },
+            evidence: { ...evidence, confidence: "low", warnings: ["City conflict"] },
+            vendorDebug: "drop me",
+          },
+        },
         vendorDebug: "drop me",
       },
       marketData: {
@@ -165,6 +175,10 @@ describe("createSavedScenarioStore", () => {
 
     expect(normalized?.dataQuality?.warnings).toEqual(["Verify zoning locally."]);
     expect(normalized?.dataQuality).not.toHaveProperty("vendorDebug");
+    expect(normalized?.dataQuality?.geocode?.requestedAddress).toBe("202 C Street, San Diego, CA 92101");
+    expect(normalized?.dataQuality?.geocode?.match.evidence.warnings).toEqual(["City conflict"]);
+    expect(normalized?.dataQuality?.geocode?.match.components).toEqual({ city: "Chula Vista" });
+    expect(normalized?.dataQuality?.geocode?.match).not.toHaveProperty("vendorDebug");
     expect(normalized?.marketData?.components?.rent.source.provider).toBe("HUD");
     expect(normalized?.marketData?.components).not.toHaveProperty("vendorDebug");
   });

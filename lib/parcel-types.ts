@@ -9,6 +9,7 @@
 
 import type { MarketData } from "@/lib/market/market-types";
 import type { DataEvidence, ProviderAttempt } from "@/lib/data-evidence";
+import type { GeocodeMatch } from "./geocode-api";
 
 export type ParcelEvidenceField =
   | "address"
@@ -26,6 +27,11 @@ export interface ParcelDataQuality {
   fields: Record<ParcelEvidenceField, DataEvidence>;
   providerAttempts: ProviderAttempt[];
   warnings: string[];
+  geocode?: {
+    requestedAddress: string;
+    formattedAddress: string;
+    match: GeocodeMatch;
+  };
 }
 
 export interface Parcel {

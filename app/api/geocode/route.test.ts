@@ -56,6 +56,88 @@ afterEach(() => {
 });
 
 describe("GET /api/geocode", () => {
+  it.each([
+    ["202", "C Esplanade", 200],
+    ["203", "C Esplanade", 404],
+    ["202", "D Esplanade", 404],
+  ])("checks structured provider components for an uncommon street type: %s %s", async (houseNumber, road, status) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{
+      lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA",
+      address: { house_number: houseNumber, road, city: "San Diego", state: "California", postcode: "92101" },
+    }])));
+    expect((await GET(makeGuestRequest("202 C Esplanade, San Diego, CA 92101"))).status).toBe(status);
+  });
+
+  it("does not mistake a bare street's NE postdirectional for a state request", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{
+      lat: "47.6", lon: "-122.3", display_name: "Washington, USA",
+      address: { house_number: "123", road: "Main Street NE", city: "Seattle", state: "Washington", postcode: "98115" },
+    }])));
+    expect((await GET(makeGuestRequest("123 Main St NE"))).status).toBe(200);
+  });
+  it.each([
+    "203 C Street San Diego, CA 92101",
+    "202 D Street, San Diego CA 92101",
+    "202 C Street, San Diego, California 92102",
+    "202 C Street San Diego, Nevada 92101",
+    "11 Old Court Road Somewhere, CA 92101",
+    "10 Old Court Road Somewhere, CA 92102",
+  ])("still rejects reliably parsed contradictory components in %s", async (query) => {
+    const ambiguous = query.includes("Old Court");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{
+      lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA",
+      address: {
+        house_number: ambiguous ? "10" : "202", road: ambiguous ? "Old Court Road" : "C Street",
+        city: ambiguous ? "Somewhere" : "San Diego", state: "California", postcode: "92101",
+      },
+    }])));
+    expect((await GET(makeGuestRequest(query))).status).toBe(404);
+  });
+  it.each([
+    "202 C Street San Diego, CA 92101",
+    "202 C Street, San Diego CA 92101",
+    "202 C Street, San Diego, California 92101",
+    "10 Old Court Road Somewhere, CA 92101",
+  ])("accepts a correct provider hit without a false component conflict for %s", async (query) => {
+    const ambiguous = query.startsWith("10 ");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{
+      lat: "32.7174385", lon: "-117.1633851", type: "house", class: "building",
+      display_name: "California, USA",
+      address: {
+        house_number: ambiguous ? "10" : "202", road: ambiguous ? "Old Court Road" : "C Street",
+        city: ambiguous ? "Somewhere" : "San Diego", state: "California", postcode: "92101",
+      },
+    }])));
+    const response = await GET(makeGuestRequest(query));
+    expect(response.status).toBe(200);
+    const evidence = (await response.json()).match.evidence;
+    if (ambiguous) {
+      expect(evidence).toMatchObject({ confidence: "low", warnings: [expect.stringContaining("independently parsed")] });
+    } else {
+      expect(evidence.confidence).not.toBe("low");
+    }
+  });
+  it("checks locality conflicts even when the user omits commas", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{ lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA", address: { house_number: "202", road: "C Street", city: "Chula Vista", state: "California", postcode: "92101" } }])));
+    const response = await GET(makeGuestRequest("202 C Street San Diego CA 92101"));
+    expect(response.status).toBe(200);
+    expect((await response.json()).match.evidence.confidence).toBe("low");
+  });
+  it.each([
+    { house_number: "203", road: "C Street", city: "San Diego", state: "California", postcode: "92101" },
+    { house_number: "202", road: "D Street", city: "San Diego", state: "California", postcode: "92101" },
+    { house_number: "202", road: "C Street", city: "San Diego", state: "California", postcode: "92102" },
+  ])("refuses a numbered address with contradictory street or ZIP components", async (address) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{ lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA", address }])));
+    expect((await GET(makeGuestRequest("202 C Street, San Diego, CA 92101"))).status).toBe(404);
+  });
+
+  it("retains a city conflict as low-confidence evidence for independent parcel checking", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{ lat: "32.7174385", lon: "-117.1633851", display_name: "California, USA", address: { house_number: "202", road: "C Street", city: "Chula Vista", state: "California", postcode: "92101" } }])));
+    const response = await GET(makeGuestRequest("202 C Street, San Diego, CA 92101"));
+    expect(response.status).toBe(200);
+    expect((await response.json()).match.evidence).toMatchObject({ confidence: "low", warnings: [expect.stringContaining("city")] });
+  });
   it("400s when q is missing or blank", async () => {
     const res = await GET(makeRequest(null));
     expect(res.status).toBe(400);

@@ -56,6 +56,18 @@ function parcel(dataQuality: ParcelDataQuality): LiveParcelData {
 }
 
 describe("parcelConfidence", () => {
+  it.each(["fallback", "estimated"] as const)("never treats a borrowed house in a legacy %s parcel as measured", (source) => {
+    const fallback = { ...parcel(quality("observed")), source };
+    delete fallback.dataQuality;
+    expect(parcelConfidence(fallback).footprintKnown).toBe(false);
+    expect(parcelConfidence(fallback).physicalEstimated).toBe(true);
+  });
+
+  it.each(["defaulted", "derived", "unavailable"] as const)("rejects %s building area as a measured footprint", (status) => {
+    const data = parcel(quality("observed"));
+    data.dataQuality!.fields.existingHouseSqft.status = status;
+    expect(parcelConfidence(data).footprintKnown).toBe(false);
+  });
   it("marks a Regrid parcel's regulatory values estimated when evidence says they are defaults", () => {
     expect(parcelConfidence(parcel(quality("defaulted"))).regulationsEstimated).toBe(true);
   });

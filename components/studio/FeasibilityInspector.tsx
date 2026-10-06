@@ -15,6 +15,7 @@ import {
 } from "@/lib/feasibility";
 import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
+import ParcelDataNotice from "./ParcelDataNotice";
 import { Button } from "@/components/ui/Button";
 import { Segmented, Select, Slider } from "@/components/ui/Field";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
@@ -122,7 +123,7 @@ export default function FeasibilityInspector({
 
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
   const displayParcel = parcelMode === "live" ? parcel : presetParcel;
-  const { footprintKnown, regulationsEstimated } = parcelConfidence(displayParcel);
+  const { footprintKnown, regulationsEstimated, physicalEstimated } = parcelConfidence(displayParcel);
 
   const selectedOption = footprintOptions.find(
     (item) =>
@@ -323,8 +324,8 @@ export default function FeasibilityInspector({
               )}
 
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <Fact label="Lot Area" value={`${displayParcel.lotArea.toLocaleString()} sf`} />
-                <Fact label="Lot Dimensions" value={`${displayParcel.lotWidth}' x ${displayParcel.lotLength}'`} />
+                <Fact label="Lot Area" value={`${displayParcel.lotArea.toLocaleString()} sf${physicalEstimated ? " (assumed)" : ""}`} />
+                <Fact label="Lot Dimensions" value={`${displayParcel.lotWidth}' x ${displayParcel.lotLength}'${"source" in displayParcel ? " (modeled)" : ""}`} />
                 <Fact label="Existing Footprint" value={footprintKnown ? `${displayParcel.existingHouseSqft.toLocaleString()} sf` : "Unknown"} />
                 <Fact label="Max Coverage" value={`${displayParcel.maxLotCoveragePercent}%${regulationsEstimated ? " (assumed)" : ""}`} />
                 {"zoning" in displayParcel && (
@@ -335,6 +336,7 @@ export default function FeasibilityInspector({
                   value={`${displayParcel.setbacks.front}/${displayParcel.setbacks.side}/${displayParcel.setbacks.rear} ft`}
                 />
               </div>
+              <ParcelDataNotice parcel={displayParcel} />
 
               <Button
                 type="button"

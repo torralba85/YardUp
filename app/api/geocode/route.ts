@@ -6,6 +6,7 @@ import {
 import { stripUnitDesignators } from "@/lib/server/geocode-query";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { normalizeCity, parseStreetAddressWithConfidence, US_STATE_NAMES } from "@/lib/server/address-match";
 import type { DataEvidence } from "@/lib/data-evidence";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -13,59 +14,6 @@ const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
 const TIMEOUT_MS = 5000;
 const MAX_QUERY_LEN = 200;
 const PICKER_CANDIDATE_LIMIT = 5;
-const US_STATE_NAMES: Record<string, string> = {
-  AL: "Alabama",
-  AK: "Alaska",
-  AZ: "Arizona",
-  AR: "Arkansas",
-  CA: "California",
-  CO: "Colorado",
-  CT: "Connecticut",
-  DE: "Delaware",
-  DC: "District of Columbia",
-  FL: "Florida",
-  GA: "Georgia",
-  HI: "Hawaii",
-  ID: "Idaho",
-  IL: "Illinois",
-  IN: "Indiana",
-  IA: "Iowa",
-  KS: "Kansas",
-  KY: "Kentucky",
-  LA: "Louisiana",
-  ME: "Maine",
-  MD: "Maryland",
-  MA: "Massachusetts",
-  MI: "Michigan",
-  MN: "Minnesota",
-  MS: "Mississippi",
-  MO: "Missouri",
-  MT: "Montana",
-  NE: "Nebraska",
-  NV: "Nevada",
-  NH: "New Hampshire",
-  NJ: "New Jersey",
-  NM: "New Mexico",
-  NY: "New York",
-  NC: "North Carolina",
-  ND: "North Dakota",
-  OH: "Ohio",
-  OK: "Oklahoma",
-  OR: "Oregon",
-  PA: "Pennsylvania",
-  RI: "Rhode Island",
-  SC: "South Carolina",
-  SD: "South Dakota",
-  TN: "Tennessee",
-  TX: "Texas",
-  UT: "Utah",
-  VT: "Vermont",
-  VA: "Virginia",
-  WA: "Washington",
-  WV: "West Virginia",
-  WI: "Wisconsin",
-  WY: "Wyoming",
-};
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -198,6 +146,8 @@ async function geocodeWithGoogle(
       return null;
     }
     const components = googleComponents(first.address_components);
+    const addressWarnings = checkRequestedAddress(query, components);
+    if (addressWarnings === null) return null;
     const addressQuery = looksLikeStreetAddress(query);
     const publishedTypes = first.types ?? [];
     const addressType = publishedTypes.some((type) =>
@@ -233,10 +183,10 @@ async function geocodeWithGoogle(
             sourceUrl: "https://developers.google.com/maps/documentation/geocoding",
           },
           retrievedAt,
-          confidence: precision === "rooftop" ? "high" : precision === "unknown" ? "low" : "medium",
-          warnings: precision === "unknown"
+          confidence: addressWarnings.length ? "low" : precision === "rooftop" ? "high" : precision === "unknown" ? "low" : "medium",
+          warnings: [...addressWarnings, ...(precision === "unknown"
             ? ["The provider did not publish address-match precision."]
-            : [],
+            : [])],
         },
       },
     };
@@ -283,7 +233,8 @@ async function geocodeWithNominatim(
     const hits = (Array.isArray(json) ? json : []).flatMap((hit) => {
       const lat = Number.parseFloat(hit?.lat ?? "");
       const lng = Number.parseFloat(hit?.lon ?? "");
-      return Number.isNaN(lat) || Number.isNaN(lng) || !matchesRequestedState(query, hit.display_name)
+      return !Number.isFinite(lat) || !Number.isFinite(lng) || !matchesRequestedState(query, hit.display_name) ||
+        checkRequestedAddress(query, nominatimComponents(hit.address)) === null
         ? []
         : [{ ...hit, lat, lng }];
     });
@@ -310,6 +261,7 @@ async function geocodeWithNominatim(
     }
 
     const components = nominatimComponents(chosen.address);
+    const addressWarnings = checkRequestedAddress(query, components) ?? [];
     const providerId = chosen.osm_type && chosen.osm_id != null
       ? `${chosen.osm_type}/${chosen.osm_id}`
       : undefined;
@@ -345,10 +297,10 @@ async function geocodeWithNominatim(
             sourceUrl: "https://nominatim.org/release-docs/latest/api/Search/",
           },
           retrievedAt,
-          confidence: precision === "address" ? "medium" : "low",
-          warnings: precision === "address"
+          confidence: addressWarnings.length ? "low" : precision === "address" ? "medium" : "low",
+          warnings: [...addressWarnings, ...(precision === "address"
             ? []
-            : ["The result is not confirmed at a house-number address precision."],
+            : ["The result is not confirmed at a house-number address precision."])],
         },
       },
     };
@@ -382,6 +334,30 @@ interface GoogleAddressComponent {
 const STATE_CODES_BY_NAME = new Map(
   Object.entries(US_STATE_NAMES).map(([code, name]) => [name.toLowerCase(), code]),
 );
+
+/** Street/ZIP conflicts are unsafe points. City aliases require a parcel check. */
+function checkRequestedAddress(query: string, components: GeocodeMatch["components"]): string[] | null {
+  const parsed = parseStreetAddressWithConfidence(query);
+  if (!parsed) return [];
+  const { address: requested, confidence } = parsed;
+  // Provider components already delimit the road; an uncommon street type
+  // need not be inferable from free text to compare the published street.
+  const published = components.houseNumber && components.road
+    ? parseStreetAddressWithConfidence(`${components.houseNumber} ${components.road}`)?.address
+    : null;
+  if (published && requested.houseNumber !== published.houseNumber) return null;
+  if (confidence.street && published && requested.street !== published.street) return null;
+  if (requested.zip && components.zip && requested.zip !== components.zip.slice(0, 5)) return null;
+  const state = requestedStateCode(query);
+  if (state && components.state && state !== components.state) return null;
+  if (confidence.city && requested.city && components.city && requested.city !== normalizeCity(components.city)) {
+    return ["The geocoder's city differs from the requested city; the original address must be checked against county parcel records."];
+  }
+  if (!confidence.street) {
+    return ["The entered street and city could not be independently parsed; confirm the address with explicit separators before verifying parcel identity."];
+  }
+  return [];
+}
 
 function looksLikeStreetAddress(query: string): boolean {
   return /^\s*\d+[A-Za-z-]?\b/.test(stripUnitDesignators(query));
@@ -512,6 +488,8 @@ const STATE_NAMES_LONGEST_FIRST = Array.from(STATE_CODES_BY_NAME).sort(
  * Indiana whenever no state followed, and threw the correct result away.
  */
 function requestedStateCode(query: string): string | null {
+  const parsed = parseStreetAddressWithConfidence(query);
+  if (parsed) return parsed.address.state ?? null;
   const components = query
     .split(",")
     .map((part) => part.trim())

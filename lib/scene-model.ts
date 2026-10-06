@@ -23,7 +23,7 @@
  */
 
 import type { ADUConfig, RoofStyle } from "./feasibility";
-import type { GeoJsonPolygon, Parcel } from "./parcel-types";
+import type { GeoJsonPolygon, Parcel, LiveParcelData } from "./parcel-types";
 import { FT_PER_DEG_LAT } from "./parcel-geometry";
 
 function isFiniteNumber(n: unknown): n is number {
@@ -222,10 +222,13 @@ const MAX_HOUSE_WIDTH_FT = 55;
  * negative, or not finite — callers must not substitute a default footprint.
  */
 export function buildExistingHouseFootprint(
-  parcel: Pick<Parcel, "lotWidth" | "existingHouseSqft" | "setbacks">,
+  parcel: Pick<Parcel, "lotWidth" | "existingHouseSqft" | "setbacks"> & { source?: LiveParcelData["source"] | "estimated"; dataQuality?: LiveParcelData["dataQuality"] },
   areaBasis: ExistingAreaBasis = "unknown",
 ): Footprint {
   const { existingHouseSqft, lotWidth, setbacks } = parcel;
+  if (parcel.source === "fallback" || parcel.source === "estimated" || (parcel.dataQuality && parcel.dataQuality.fields.existingHouseSqft.status !== "observed")) {
+    return { ...UNKNOWN_FOOTPRINT, areaBasis: "unknown" };
+  }
   const lotInputsValid =
     isFiniteNumber(lotWidth) &&
     lotWidth > 0 &&

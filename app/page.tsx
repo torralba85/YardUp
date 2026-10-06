@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 };
 const description =
   "Discover what your backyard could become. Explore space for an ADU, estimated build costs, and rental potential with LotFoundry.";
-export const canonicalUrl = "https://lotfoundry.net/";
+const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
   description,

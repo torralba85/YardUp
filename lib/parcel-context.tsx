@@ -18,6 +18,7 @@ import { geocodeAddress, GeocodeError } from "./geocode-api";
 import { canGuestLookup, consumeGuestLookup, resetGuestLookups } from "./guest-lookup";
 import { clearInitialParcel, peekInitialParcel } from "./parcel-handoff";
 import { startParcelLookupTracking } from "./analytics/events";
+import { enrichStreetAddress } from "./server/address-match";
 
 /**
  * Shown once an anonymous visitor has spent their free lookup. Names what they
@@ -174,8 +175,18 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
       try {
         const idToken = await user?.getIdToken();
-        const { lat, lng, formattedAddress } = await geocodeAddress(q, idToken);
-        const data = await fetchParcel(lat, lng, idToken, formattedAddress.trim() || q);
+        const geocode = await geocodeAddress(q, idToken);
+        // Explicit input wins. Provider locality can fill gaps only after all
+        // reliably entered components agree; the original remains in evidence.
+        const parcelAddress = enrichStreetAddress(q, geocode.formattedAddress);
+        const data = await fetchParcel(geocode.lat, geocode.lng, idToken, parcelAddress);
+        if (geocode.match && data.dataQuality) {
+          data.dataQuality.geocode = {
+            requestedAddress: q,
+            formattedAddress: geocode.formattedAddress,
+            match: geocode.match,
+          };
+        }
         // Spent only on a resolved lookup: an address we could not find, or a
         // parcel service that did not answer, must not burn the free try.
         if (!user) consumeGuestLookup();

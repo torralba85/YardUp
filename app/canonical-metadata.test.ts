@@ -4,7 +4,7 @@ vi.mock("next/font/google", () => ({
   Space_Grotesk: () => ({ variable: "mock-space-grotesk" }),
   Manrope: () => ({ variable: "mock-manrope" }),
 }));
-import { canonicalUrl, metadata as homeMetadata } from "./page";
+import { metadata as homeMetadata } from "./page";
 import { metadata as studioMetadata } from "./(firebase)/studio/layout";
 import { metadata as aboutMetadata } from "./about/page";
 import { metadata as helpMetadata } from "./help/page";
@@ -45,7 +45,7 @@ describe("canonical metadata", () => {
   }
 
   it("uses the slash-form apex for the homepage canonical", () => {
-    expect(canonicalUrl).toBe("https://lotfoundry.net/");
+    expect(homeMetadata.alternates?.canonical).toBe("https://lotfoundry.net/");
     expect(homeMetadata.openGraph?.url).toBe("https://lotfoundry.net/");
   });
 });

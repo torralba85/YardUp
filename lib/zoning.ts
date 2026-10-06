@@ -42,7 +42,7 @@ export function calculateZoning(parcel: Parcel, config: ADUConfig): ZoningResult
     warnings.push("Zoning, setbacks, and maximum coverage are unverified assumptions. Confirm local planning rules.");
   }
 
-  if (remainingCapacity < 0) {
+  if (footprintKnown && remainingCapacity < 0) {
     warnings.push(`Footprint exceeds ${regulationsEstimated ? "assumed" : "local"} coverage allowance by ${Math.abs(remainingCapacity).toLocaleString()} sf.`);
   }
 
