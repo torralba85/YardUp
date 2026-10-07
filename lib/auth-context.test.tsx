@@ -706,7 +706,7 @@ describe("AuthProvider social sign-in inside the Android app", () => {
       );
       try {
         const auth = await import("./auth-context");
-        function Button() {
+        const Button = () => {
           const actions = auth.useAuth();
           const signIn = provider === "google" ? actions.signInWithGoogle : actions.signInWithApple;
           return (
@@ -714,7 +714,7 @@ describe("AuthProvider social sign-in inside the Android app", () => {
               Continue
             </button>
           );
-        }
+        };
 
         render(<auth.AuthProvider><Button /></auth.AuthProvider>);
         await userEvent.click(screen.getByRole("button", { name: "Continue" }));
