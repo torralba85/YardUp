@@ -22,6 +22,24 @@ import BillingLedger from "./BillingLedger";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { reconcilePendingLeadUnlock } from "@/lib/analytics/lead-unlock-tracking";
+import {
+  type BuilderCheckoutReturn,
+  hasBuilderCheckoutReturnMarkers,
+  isBuilderCheckoutConfirmed,
+  readBuilderCheckoutReturn,
+  stripBuilderCheckoutReturnMarkers,
+} from "@/lib/builder-checkout-return";
+import { clearCreditPackCheckoutAttempts } from "@/lib/credit-pack-checkout";
+import { CheckCircle2, Clock } from "lucide-react";
+
+/** How often, and how many times, to re-read the dashboard after a Stripe return. */
+const CHECKOUT_CONFIRM_INTERVAL_MS = 2000;
+const CHECKOUT_CONFIRM_ATTEMPTS = 6;
+
+type CheckoutReturnState = {
+  target: BuilderCheckoutReturn;
+  status: "confirming" | "confirmed" | "delayed";
+};
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -49,6 +67,7 @@ export default function BuilderDashboard({
   const [activeView, setActiveView] = useState<"inbox" | "billing">("inbox");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [checkoutReturn, setCheckoutReturn] = useState<CheckoutReturnState | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +84,7 @@ export default function BuilderDashboard({
           setLedger(loadedLedger);
           setLoadError(null);
           reconcilePendingLeadUnlock(loadedItems);
+          consumeCheckoutReturn(loadedItems, loadedLedger);
         }
       } catch {
         if (!cancelled) {
@@ -75,11 +95,81 @@ export default function BuilderDashboard({
       }
     }
 
+    // A Stripe success redirect lands here before the webhook may have written
+    // the grant. Strip the one-shot markers so a reload never re-arms this,
+    // then wait for the grant when the first read does not show it yet.
+    function consumeCheckoutReturn(
+      loadedItems: BuilderInboxItem[],
+      loadedLedger: BuilderLedgerEntry[],
+    ) {
+      const search = window.location.search;
+      if (!hasBuilderCheckoutReturnMarkers(search)) return;
+      const target = readBuilderCheckoutReturn(search);
+      if (new URLSearchParams(search).has("credits_added")) {
+        clearCreditPackCheckoutAttempts([5, 10]);
+      }
+      const next = stripBuilderCheckoutReturnMarkers(search);
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`,
+      );
+      if (!target) return;
+      setCheckoutReturn({
+        target,
+        status: isBuilderCheckoutConfirmed(target, loadedItems, loadedLedger)
+          ? "confirmed"
+          : "confirming",
+      });
+    }
+
     load();
     return () => {
       cancelled = true;
     };
   }, [uid]);
+
+  useEffect(() => {
+    if (checkoutReturn?.status !== "confirming") return;
+    const { target } = checkoutReturn;
+    let cancelled = false;
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function poll() {
+      attempts += 1;
+      try {
+        const [loadedProfile, loadedItems, loadedLedger] = await Promise.all([
+          fetchBuilderProfile(uid),
+          fetchBuilderInbox(uid),
+          fetchBuilderLedger(uid),
+        ]);
+        if (cancelled) return;
+        if (loadedProfile) setProfile(loadedProfile);
+        setItems(loadedItems);
+        setLedger(loadedLedger);
+        if (isBuilderCheckoutConfirmed(target, loadedItems, loadedLedger)) {
+          reconcilePendingLeadUnlock(loadedItems);
+          setCheckoutReturn({ target, status: "confirmed" });
+          return;
+        }
+      } catch {
+        // A transient read failure just spends one attempt.
+        if (cancelled) return;
+      }
+      if (attempts >= CHECKOUT_CONFIRM_ATTEMPTS) {
+        setCheckoutReturn({ target, status: "delayed" });
+        return;
+      }
+      timer = setTimeout(poll, CHECKOUT_CONFIRM_INTERVAL_MS);
+    }
+
+    timer = setTimeout(poll, CHECKOUT_CONFIRM_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [checkoutReturn, uid]);
 
   if (loading) {
     return (
@@ -153,6 +243,7 @@ export default function BuilderDashboard({
             {loadError}
           </div>
         )}
+          {checkoutReturn && <CheckoutReturnNotice state={checkoutReturn} />}
           {!profile ? (
             <BuilderProfileForm
               defaults={{ companyName: displayName || "", contactEmail: email }}
@@ -241,5 +332,48 @@ function BuilderHeader({
         </div>
       </div>
     </header>
+  );
+}
+
+const CHECKOUT_RETURN_COPY: Record<
+  BuilderCheckoutReturn["kind"],
+  Record<CheckoutReturnState["status"], string>
+> = {
+  lead_unlock: {
+    confirming: "Payment received. Confirming your unlock with Stripe…",
+    confirmed: "Payment confirmed. The lead is unlocked and the owner contact is visible.",
+    delayed:
+      "Stripe has your payment, but the unlock has not reached your dashboard yet. Refresh in a minute, or select Unlock on the lead again. You will not be charged twice.",
+  },
+  credit_pack: {
+    confirming: "Payment received. Adding your credits…",
+    confirmed: "Payment confirmed. Your credits have been added.",
+    delayed:
+      "Stripe has your payment, but the credits have not reached your dashboard yet. Refresh in a minute. You will not be charged again.",
+  },
+};
+
+/**
+ * The status line shown after a Stripe success redirect while the webhook's
+ * grant is confirmed. Status is always carried by an icon and words, never by
+ * colour alone.
+ */
+function CheckoutReturnNotice({ state }: { state: CheckoutReturnState }) {
+  const message = CHECKOUT_RETURN_COPY[state.target.kind][state.status];
+  const tone =
+    state.status === "confirmed"
+      ? "border-status-eligible/30 bg-status-eligible-soft text-status-eligible"
+      : state.status === "delayed"
+        ? "border-status-review/30 bg-status-review-soft text-status-review"
+        : "border-lot-line bg-lot-surface text-lot-ink";
+  const Icon = state.status === "confirmed" ? CheckCircle2 : Clock;
+  return (
+    <p
+      role="status"
+      className={`mt-4 flex items-start gap-2 rounded-none border p-3 text-sm ${tone}`}
+    >
+      <Icon size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <span>{message}</span>
+    </p>
   );
 }

@@ -91,6 +91,13 @@ export default function BuilderInbox({
   const { tab, setTab, viewMode, setViewMode, selectedItemId, setSelectedItemId, page, setPage } = useBuilderInboxView();
 
   const [credits, setCredits] = useState(profile.credits ?? 0);
+  // A re-read profile (e.g. after a credit pack lands from Stripe) replaces
+  // the in-session balance; in-session spends update `credits` directly.
+  const [syncedProfileCredits, setSyncedProfileCredits] = useState(profile.credits ?? 0);
+  if ((profile.credits ?? 0) !== syncedProfileCredits) {
+    setSyncedProfileCredits(profile.credits ?? 0);
+    setCredits(profile.credits ?? 0);
+  }
   const [sessionLedger, setSessionLedger] = useState<BuilderLedgerEntry[]>([]);
   const ledger = useMemo(() => [...initialLedger, ...sessionLedger], [initialLedger, sessionLedger]);
   const [access, setAccess] = useState<Record<string, LeadAccess>>({});
