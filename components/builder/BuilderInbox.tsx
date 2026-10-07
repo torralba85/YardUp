@@ -9,6 +9,8 @@ import { useStorePrice } from "@/lib/commerce/store-price";
 import { fetchUnlockedContact } from "@/lib/marketplace-firestore";
 import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
 import { LEAD_UNLOCK_PRICE_CENTS } from "@/lib/lead-unlock-pricing";
+import { startCreditPackCheckout } from "@/lib/credit-pack-checkout";
+import type { CreditPackSize } from "@/lib/credit-packs";
 import {
   trackBuilderLeadPreviewViewed,
   trackBuilderUnlockCheckoutStarted,
@@ -1018,7 +1020,7 @@ function CreditShop() {
     },
   } as const;
 
-  async function buyPack(pack: number) {
+  async function buyPack(pack: CreditPackSize) {
     if (!user) return;
     setLoading(pack);
     setError(null);
@@ -1041,21 +1043,10 @@ function CreditShop() {
         return;
       }
 
-      const res = await fetch("/api/stripe/checkout-credits", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ pack }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to initiate checkout");
-      }
-      if (data.url) {
-        window.location.assign(data.url);
-      } else if (data.demo) {
+      const outcome = await startCreditPackCheckout(pack, token);
+      if (outcome.kind === "redirect") {
+        window.location.assign(outcome.url);
+      } else {
         // Reload to show the new credits and ledger
         window.location.reload();
       }
