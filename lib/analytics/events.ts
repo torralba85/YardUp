@@ -563,6 +563,40 @@ export function trackCertificateCheckoutStarted(params: {
   trackEvent("certificate_checkout_started", p);
 }
 
+/**
+ * 10a. certificate_checkout_redirected — the checkout API returned a Stripe
+ * Checkout URL and the browser is about to navigate to it. Unlike
+ * `certificate_checkout_started`, this proves the buyer actually reached Stripe.
+ */
+export function trackCertificateCheckoutRedirected(params: {
+  value?: number;
+  currency?: string;
+  purchase_channel: AnalyticsPurchaseChannel;
+  feasibility_status: FeasibilityStatus;
+}): void {
+  const p: Record<string, unknown> = {
+    purchase_channel: params.purchase_channel,
+    feasibility_status: params.feasibility_status,
+  };
+  if (params.value != null && Number.isFinite(params.value)) {
+    p.value = params.value;
+    p.currency = params.currency ?? "USD";
+  }
+  trackEvent("certificate_checkout_redirected", p);
+}
+
+/**
+ * 10b. certificate_checkout_cancelled — the buyer left Stripe Checkout through
+ * its back/cancel link and returned with the server-stamped cancellation marker.
+ */
+export function trackCertificateCheckoutCancelled(params: {
+  purchase_channel: AnalyticsPurchaseChannel;
+}): void {
+  trackEvent("certificate_checkout_cancelled", {
+    purchase_channel: params.purchase_channel,
+  });
+}
+
 /** 11. purchase (GA4 Recommended Ecommerce Event) */
 export function trackCertificatePurchase(params: {
   transaction_id: string;

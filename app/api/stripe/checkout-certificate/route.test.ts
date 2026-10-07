@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
+  auth: { uid: "user-1" } as { uid: string; email?: string; emailVerified?: boolean },
   purchased: false,
   stripe: null as null | {
     checkout: {
@@ -28,7 +29,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/server/api-auth", () => ({
-  requireApiAuth: async () => ({ uid: "user-1" }),
+  requireApiAuth: async () => mocks.auth,
 }));
 
 vi.mock("@/lib/server/certificate-purchases", () => ({
@@ -128,6 +129,7 @@ function postRequest(body: unknown): NextRequest {
 }
 
 beforeEach(() => {
+  mocks.auth = { uid: "user-1" };
   mocks.purchased = false;
   mocks.stripe = null;
   mocks.grant.mockClear();
@@ -462,5 +464,129 @@ describe("POST /api/stripe/checkout-certificate", () => {
     );
 
     expect(create.mock.calls[0][0].adaptive_pricing).toEqual({ enabled: false });
+  });
+
+  describe("conversion presentation", () => {
+    async function createSession(body: Record<string, unknown> = {}) {
+      const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+      mocks.stripe = { checkout: { sessions: { create } } };
+      const res = await POST(
+        postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1", ...body }),
+      );
+      return { res, args: create.mock.calls[0][0] };
+    }
+
+    it("prefills Checkout with the verified email from the Firebase token", async () => {
+      mocks.auth = { uid: "user-1", email: "owner@example.com", emailVerified: true };
+
+      const { res, args } = await createSession();
+
+      expect(res.status).toBe(200);
+      expect(args.customer_email).toBe("owner@example.com");
+      // Prefill only; no persistent Customer is created for it.
+      expect(args).not.toHaveProperty("customer");
+      expect(args).not.toHaveProperty("customer_creation");
+    });
+
+    it("still creates Checkout when the token carries no email", async () => {
+      mocks.auth = { uid: "user-1" };
+
+      const { res, args } = await createSession();
+
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ url: "https://stripe.test/cert" });
+      expect(args).not.toHaveProperty("customer_email");
+    });
+
+    it("does not lock an unverified email into Checkout", async () => {
+      // Stripe makes a customer_email prefill read-only, so an unverified
+      // (possibly mistyped) address would trap the receipt.
+      mocks.auth = { uid: "user-1", email: "typo@example.con", emailVerified: false };
+
+      const { res, args } = await createSession();
+
+      expect(res.status).toBe(200);
+      expect(args).not.toHaveProperty("customer_email");
+    });
+
+    it("ignores an email supplied in the request body", async () => {
+      mocks.auth = { uid: "user-1", email: "owner@example.com", emailVerified: true };
+
+      const { args } = await createSession({
+        email: "attacker@example.com",
+        customer_email: "attacker@example.com",
+      });
+
+      expect(args.customer_email).toBe("owner@example.com");
+      expect(JSON.stringify(args)).not.toContain("attacker@example.com");
+    });
+
+    it("never prefills a body-supplied email when the token has none", async () => {
+      mocks.auth = { uid: "user-1" };
+
+      const { args } = await createSession({ customer_email: "attacker@example.com" });
+
+      expect(args).not.toHaveProperty("customer_email");
+    });
+
+    it("describes what the certificate includes without changing price or fulfilment", async () => {
+      const { args } = await createSession({ parcelName: "123 Main Street" });
+
+      const [lineItem] = args.line_items;
+      expect(lineItem.quantity).toBe(1);
+      expect(lineItem.price_data.currency).toBe("usd");
+      expect(lineItem.price_data.unit_amount).toBe(2900);
+      expect(lineItem.price_data.product_data.name).toBe(
+        "LotFoundry Certificate of Feasibility — 123 Main Street",
+      );
+      const description: string = lineItem.price_data.product_data.description;
+      expect(description).toMatch(/property-specific/i);
+      expect(description).toMatch(/approval-path guidance/i);
+      expect(description).toMatch(/next steps/i);
+      // Stripe Checkout truncates long product descriptions; keep it scannable.
+      expect(description.length).toBeLessThanOrEqual(160);
+      // No regulatory or professional-service claims.
+      expect(description).not.toMatch(/permit approval|guarantee|certified|appraisal|engineer/i);
+      expect(args).not.toHaveProperty("payment_method_types");
+      expect(args.integration_identifier).toBe("lotfoundry_certificate_wndqkplz");
+      expect(args.metadata).toEqual({
+        purchaseType: "certificate",
+        uid: "user-1",
+        certKey: "parcel-1",
+        parcelName: "123 Main Street",
+      });
+    });
+
+    it("returns a cancelled checkout to the certificate step with a server-stamped marker", async () => {
+      const { args } = await createSession({ returnSearch: "?v=2&parcel=abc&size=600" });
+
+      const cancel = new URL(args.cancel_url);
+      expect(cancel.origin).toBe("http://localhost");
+      expect(cancel.pathname).toBe("/studio");
+      expect(cancel.searchParams.get("v")).toBe("2");
+      expect(cancel.searchParams.get("parcel")).toBe("abc");
+      expect(cancel.searchParams.get("size")).toBe("600");
+      expect(cancel.searchParams.get("step")).toBe("certificate");
+      expect(cancel.searchParams.get("checkout")).toBe("cancelled");
+      expect(cancel.searchParams.has("cert")).toBe(false);
+    });
+
+    it("keeps the cancellation marker and step out of client control", async () => {
+      const { args } = await createSession({
+        returnSearch: "?parcel=abc&checkout=paid&checkout=cancelled&step=lot&cert=evil",
+      });
+
+      const cancel = new URL(args.cancel_url);
+      expect(cancel.searchParams.getAll("checkout")).toEqual(["cancelled"]);
+      expect(cancel.searchParams.getAll("step")).toEqual(["certificate"]);
+      expect(cancel.searchParams.has("cert")).toBe(false);
+
+      const success = new URL(args.success_url);
+      expect(success.searchParams.getAll("cert")).toEqual(["parcel-1"]);
+      expect(success.searchParams.get("parcel")).toBe("abc");
+      // A paid return must never look like a cancellation.
+      expect(success.searchParams.has("checkout")).toBe(false);
+      expect(success.searchParams.has("step")).toBe(false);
+    });
   });
 });

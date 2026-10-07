@@ -1,9 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
-import type { AIProjectBrief, AIProjectBriefResponse } from "@/lib/ai-types";
+import type {
+  AIProjectBrief,
+  AIProjectBriefPreview,
+  AIProjectBriefResponse,
+} from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -12,12 +16,15 @@ import { trackPurchase } from "@/lib/analytics/adsConversion";
 import {
   mapFeasibilityVerdict,
   mapPurchaseChannel,
+  trackCertificateCheckoutCancelled,
+  trackCertificateCheckoutRedirected,
   trackCertificateCheckoutStarted,
   trackCertificatePaywallViewed,
   trackCertificatePurchase,
 } from "@/lib/analytics/events";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
 import { useCertificateAccess } from "@/lib/certificate-access";
@@ -30,15 +37,60 @@ import { stashInitialParcel } from "@/lib/parcel-handoff";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 
-/** What the complete certificate includes — the paid deliverable's contents. */
-const CERTIFICATE_INCLUDES = [
-  "Property-specific feasibility record",
-  "Modeled site-fit flags and assumptions",
-  "Cost, rent, NOI, and payback summary",
-  "AI property notes and approval path, when available",
-  "Recommended next steps",
-  "Print, CSV, and shareable scenario link",
-] as const;
+/** One locked row of the paywall's "Included in your certificate" preview. */
+interface IncludedSection {
+  title: string;
+  detail: string;
+}
+
+/** "1 ranked risk" / "4 ranked risks". */
+function countNoun(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+/**
+ * What the complete certificate adds beyond the free estimate, in the order a
+ * buyer weighs it: what could stop the project, what happens next, then the
+ * record itself. Counts come only from an already generated brief preview,
+ * whose server-side counts are honest; without one every row stays descriptive.
+ */
+function includedSections(preview: AIProjectBriefPreview | null | undefined): IncludedSection[] {
+  const locked = preview?.locked;
+  return [
+    {
+      title: "Property-specific risk review",
+      detail:
+        locked && locked.riskCount > 0
+          ? `${countNoun(locked.riskCount, "ranked risk")} to verify`
+          : "Findings ranked for this lot, with what to verify",
+    },
+    {
+      title: "Typical local approval path",
+      detail:
+        locked && locked.stageCount > 0
+          ? `${locked.stageCount}-stage permit path`
+          : "Permit track and the review stages to expect",
+    },
+    {
+      title: "Approval timeline",
+      detail:
+        preview && preview.totalEstWeeksHigh > 0
+          ? `${preview.totalEstWeeksLow}–${preview.totalEstWeeksHigh} week typical approval timeline`
+          : "Typical week ranges for each review stage",
+    },
+    {
+      title: "Recommended next actions",
+      detail:
+        locked && locked.nextStepCount > 0
+          ? countNoun(locked.nextStepCount, "recorded next step")
+          : "What to do next, in order",
+    },
+    {
+      title: "Printable, shareable property record",
+      detail: "Print, export CSV, share a link, or connect with builders",
+    },
+  ];
+}
 
 /** Props for {@link CertificatePanel}. */
 export interface CertificatePanelProps {
@@ -54,6 +106,8 @@ export interface CertificatePanelProps {
   onOpenCertificate: (projectBriefError?: string) => void;
   /** Unified AI interpretation recorded in the certificate when available. */
   projectBrief: AIProjectBrief | null;
+  /** The free preview tier of the brief, when one was generated for this concept. */
+  projectBriefPreview?: AIProjectBriefPreview | null;
   projectBriefLoading: boolean;
   projectBriefError: string | null;
   /** Generate the parcel + timeline brief with the signed-in user's token. */
@@ -75,6 +129,7 @@ export default function CertificatePanel({
   eyebrow = "Step 4 · Certificate",
   onOpenCertificate,
   projectBrief,
+  projectBriefPreview,
   projectBriefLoading,
   projectBriefError,
   onGenerateProjectBrief,
@@ -86,6 +141,8 @@ export default function CertificatePanel({
   const [error, setError] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [preparingBrief, setPreparingBrief] = useState(false);
+  const [checkoutCancelled, setCheckoutCancelled] = useState(false);
+  const includedHeadingId = useId();
   const openedOnUnlock = useRef(false);
   const sawSettledUnpurchased = useRef(false);
   const returnedFromCheckout = useRef(false);
@@ -179,6 +236,30 @@ export default function CertificatePanel({
     return () => window.clearInterval(timer);
   }, [refresh, purchased, certKey]);
 
+  // Stripe's cancel URL carries a server-stamped marker. Report it once and
+  // strip it so a reload cannot report it again. Leaving Checkout is not a
+  // payment failure, so the buyer gets a calm notice rather than an error.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get(CHECKOUT_RETURN_PARAM) !== CHECKOUT_CANCELLED) return;
+    params.delete(CHECKOUT_RETURN_PARAM);
+    const next = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${next ? `?${next}` : ""}`,
+    );
+    // Only the channel: the scenario has not been restored from the URL yet
+    // when this first runs, so a feasibility status here would be the default's.
+    trackCertificateCheckoutCancelled({
+      purchase_channel: mapPurchaseChannel(detectPurchaseChannel()),
+    });
+    setCheckoutCancelled(true);
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Open the artifact once when a purchase resolves in this session — a demo
   // or webhook grant observed after a settled unpurchased read, or a Stripe
   // checkout return. A grant read passively on a fresh visit must not
@@ -237,6 +318,7 @@ export default function CertificatePanel({
     }
     setBusy(true);
     setError(null);
+    setCheckoutCancelled(false);
 
     const channel = mapPurchaseChannel(detectPurchaseChannel());
     const status = mapFeasibilityVerdict(result.zoningStatus);
@@ -267,6 +349,13 @@ export default function CertificatePanel({
         parcelData: isLive ? (parcel as unknown as Record<string, unknown>) : undefined,
       });
       if (outcome.kind === "redirect") {
+        // Only a returned Checkout URL proves the buyer reaches Stripe.
+        trackCertificateCheckoutRedirected({
+          value: CERTIFICATE_PRICE_CENTS / 100,
+          currency: "USD",
+          purchase_channel: channel,
+          feasibility_status: status,
+        });
         window.location.assign(outcome.url);
         return; // navigating away
       }
@@ -297,8 +386,13 @@ export default function CertificatePanel({
     : !user
       ? "Sign in to generate your certificate"
       : certPrice.exact
-        ? `Unlock complete certificate — ${price}`
-        : "Unlock complete certificate";
+        ? `Unlock property certificate — ${price}`
+        : "Unlock property certificate";
+  // Purchase terms beside the decision. Every channel sells a one-time,
+  // per-property unlock; the amount is named only where it is the one billed.
+  const ctaNote = purchased
+    ? undefined
+    : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Unlocks this property permanently`;
 
   return (
     // Centered artifact layout; the estimate and the unlock offer are its content.
@@ -312,12 +406,22 @@ export default function CertificatePanel({
         </p>
       </div>
 
+      {checkoutCancelled && !purchased && (
+        <p
+          role="status"
+          className="rounded-none border border-lot-line bg-lot-surface px-4 py-3 text-sm leading-5 text-lot-ink"
+        >
+          Checkout cancelled. Your property analysis is still here whenever you&apos;re ready.
+        </p>
+      )}
+
       <EstimateSummaryPanel
         parcelName={parcelName}
         result={result}
         onGenerateReport={handleCta}
         reportCtaLabel={ctaLabel}
         reportCtaBusy={reportBusy}
+        reportCtaNote={ctaNote}
         error={!purchased ? error : null}
       />
 
@@ -391,8 +495,9 @@ export default function CertificatePanel({
               </h3>
             </div>
             <p className="lf-body-sm mt-1 text-lot-stone">
-              The estimate above is free. The certificate turns this scenario into a
-              decision record you can review with builders, lenders, and local professionals.
+              The estimate above is free. The certificate adds what it leaves out: what could
+              stop this project, what to verify, and what happens next, recorded for this
+              property so you can take it to builders, lenders, and local professionals.
             </p>
             <div
               className={`mt-4 flex items-start gap-3 rounded-none border px-4 py-3 ${
@@ -425,14 +530,29 @@ export default function CertificatePanel({
                 </p>
               </div>
             </div>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {CERTIFICATE_INCLUDES.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-lot-stone">
-                  <CheckCircle2 size={15} className="shrink-0 text-status-eligible" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <div className="mt-4 rounded-none border border-lot-line bg-lot-chalk">
+              <p
+                id={includedHeadingId}
+                className="lf-dataprint border-b border-lot-line px-4 py-2.5 text-lot-orange-ink"
+              >
+                Included in your certificate
+              </p>
+              <ul aria-labelledby={includedHeadingId} className="divide-y divide-lot-line">
+                {includedSections(projectBriefPreview).map((section) => (
+                  <li key={section.title} className="flex items-start gap-3 px-4 py-3">
+                    <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-semibold text-lot-ink">{section.title}</h4>
+                      <p className="mt-0.5 text-xs leading-5 text-lot-stone">{section.detail}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="lf-caption border-t border-lot-line px-4 py-2.5 text-lot-stone">
+                The risk review, approval path, and timeline are AI-assisted planning estimates
+                for this property.
+              </p>
+            </div>
             <p className="mt-4 rounded-none border border-lot-line bg-lot-chalk px-3 py-2 text-xs leading-5 text-lot-ink">
               <strong>One purchase unlocks this property.</strong> Revise the ADU concept and
               regenerate its certificate without paying again.

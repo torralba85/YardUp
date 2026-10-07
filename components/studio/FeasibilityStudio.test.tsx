@@ -526,6 +526,31 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByRole("button", { name: /Print \/ Save/i })).not.toBeInTheDocument();
   });
 
+  it("returns a cancelled Stripe checkout to the certificate step without a payment error", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/studio?v=2&parcel=oak-street&step=certificate&checkout=cancelled",
+    );
+
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    expect(stepButton(/Certificate/)).toHaveAttribute("aria-current", "step");
+    expect(
+      await screen.findByText(
+        "Checkout cancelled. Your property analysis is still here whenever you're ready.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Payment Issue")).not.toBeInTheDocument();
+    // The scenario survives; the one-shot marker and step hint do not.
+    await waitFor(() => {
+      const params = new URLSearchParams(window.location.search);
+      expect(params.get("parcel")).toBe("oak-street");
+      expect(params.has("checkout")).toBe(false);
+      expect(params.has("step")).toBe(false);
+    });
+  });
+
   it("navigates among the steps via the rail", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });

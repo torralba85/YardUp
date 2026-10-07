@@ -10,6 +10,7 @@ import {
   hasCertificate,
 } from "@/lib/server/certificate-purchases";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
@@ -26,16 +27,34 @@ const MAX_CERT_KEY_LEN = 200;
 /** Cap on the client-supplied return query echoed into Stripe redirect URLs. */
 const MAX_RETURN_SEARCH_LEN = 500;
 
+/** What the buyer receives, shown under the line item on the Checkout page. */
+const CERTIFICATE_PRODUCT_DESCRIPTION =
+  "Property-specific feasibility record with site-fit findings, approval-path guidance, cost and income assumptions, and recommended next steps.";
+
 /**
  * Rebuild a client-supplied return query through URLSearchParams so only
- * well-formed pairs survive. `cert` is always stamped by the server and can
- * never be overridden; anything malformed is dropped and the result is
- * re-encoded before it lands in a Stripe redirect URL.
+ * well-formed pairs survive. `cert`, the checkout-return marker and the step
+ * hint are always stamped by the server and can never be overridden; anything
+ * malformed is dropped and the result is re-encoded before it lands in a
+ * Stripe redirect URL.
  */
 function sanitizeReturnQuery(raw: string | undefined): string {
   if (!raw) return "";
   const params = new URLSearchParams(raw.replace(/^\?/, ""));
   params.delete("cert");
+  params.delete(CHECKOUT_RETURN_PARAM);
+  params.delete("step");
+  return params.toString();
+}
+
+/**
+ * The Stripe cancel URL: the buyer's scenario, reopened on the certificate step,
+ * with the bounded cancellation marker the panel reports once and strips.
+ */
+function cancelReturnQuery(returnQuery: string): string {
+  const params = new URLSearchParams(returnQuery);
+  params.set("step", "certificate");
+  params.set(CHECKOUT_RETURN_PARAM, CHECKOUT_CANCELLED);
   return params.toString();
 }
 
@@ -51,6 +70,9 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
   const uid = auth.uid;
+  // Checkout locks a customer_email prefill, so only a verified address from
+  // the ID token is used; the request body can never supply one.
+  const verifiedEmail = auth.emailVerified && auth.email ? auth.email : undefined;
 
   const body = await request.json().catch(() => null);
   const certKey = typeof body?.certKey === "string" ? body.certKey.trim() : "";
@@ -271,6 +293,7 @@ export async function POST(request: NextRequest) {
           adaptive_pricing: { enabled: false },
           integration_identifier: "lotfoundry_certificate_wndqkplz",
           payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
+          ...(verifiedEmail ? { customer_email: verifiedEmail } : {}),
           line_items: [
             {
               quantity: 1,
@@ -281,6 +304,7 @@ export async function POST(request: NextRequest) {
                   name: reservedParcelName
                     ? `LotFoundry Certificate of Feasibility — ${reservedParcelName}`
                     : "LotFoundry Certificate of Feasibility",
+                  description: CERTIFICATE_PRODUCT_DESCRIPTION,
                 },
               },
             },
@@ -301,7 +325,7 @@ export async function POST(request: NextRequest) {
           // Stamp which certificate was bought so the return only unlocks the
           // panel whose key matches (the studio may rehydrate a different parcel).
           success_url: `${reservedOrigin}/studio?cert=${encodeURIComponent(certKey)}${returnQuery ? `&${returnQuery}` : ""}`,
-          cancel_url: `${reservedOrigin}/studio${returnQuery ? `?${returnQuery}` : ""}`,
+          cancel_url: `${reservedOrigin}/studio?${cancelReturnQuery(returnQuery)}`,
         },
         {
           idempotencyKey: createStripeIdempotencyKey(
