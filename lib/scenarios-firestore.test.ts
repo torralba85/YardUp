@@ -56,6 +56,43 @@ describe("saved scenario Firestore helpers", () => {
     firestoreMocks.serverTimestamp.mockReturnValue("server-time");
   });
 
+  it("filters a malformed encoded boundary without losing valid scenarios", async () => {
+    const data = {
+      name: "Backyard suite",
+      parcelId: "oak-street",
+      createdAt: "2026-10-02T00:00:00.000Z",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+      liveParcel,
+    };
+    firestoreMocks.getDocs.mockResolvedValue({ docs: [
+      { id: "valid", data: () => data },
+      { id: "invalid", data: () => ({
+        ...data,
+        liveParcel: { ...liveParcel, boundaryGeoJson: {
+          type: "Polygon",
+          coordinates: [{ points: [{ lng: "invalid", lat: 37.33 }] }],
+        } },
+      }) },
+    ] });
+
+    expect((await fetchSavedScenarios("user-1")).map(({ id }) => id)).toEqual(["valid"]);
+  });
+
+  it("rejects malformed boundaries before attempting a Firestore write", async () => {
+    await expect(saveSavedScenario("user-1", {
+      name: "Broken boundary",
+      parcelId: "oak-street",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+      liveParcel: { ...liveParcel, boundaryGeoJson: {
+        type: "Polygon",
+        coordinates: [[[-121.89]]],
+      } },
+    })).rejects.toThrow("Scenario is missing required fields.");
+    expect(firestoreMocks.addDoc).not.toHaveBeenCalled();
+  });
+
   it("queries the rules-backed savedScenarios subcollection", async () => {
     firestoreMocks.getDocs.mockResolvedValue({
       docs: [

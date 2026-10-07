@@ -68,12 +68,12 @@ describe("GET /api/geocode", () => {
     expect((await GET(makeGuestRequest("202 C Esplanade, San Diego, CA 92101"))).status).toBe(status);
   });
 
-  it("does not mistake a bare street's NE postdirectional for a state request", async () => {
+  it.each(["123 Main St NE", "123 Main St NE, 98115", "123 Main St NE 98115"])("does not mistake the NE postdirectional in %s for a state request", async (query) => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(nominatimResponse([{
       lat: "47.6", lon: "-122.3", display_name: "Washington, USA",
       address: { house_number: "123", road: "Main Street NE", city: "Seattle", state: "Washington", postcode: "98115" },
     }])));
-    expect((await GET(makeGuestRequest("123 Main St NE"))).status).toBe(200);
+    expect((await GET(makeGuestRequest(query))).status).toBe(200);
   });
   it.each([
     "203 C Street San Diego, CA 92101",

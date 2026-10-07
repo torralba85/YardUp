@@ -1,4 +1,11 @@
-import { ADU_CITIES, calculatorUrl, cityUrl, hubUrl } from "@/lib/adu/content";
+import {
+  ADU_CITIES,
+  ADU_COST_PAGES,
+  calculatorUrl,
+  cityUrl,
+  costPageUrl,
+  hubUrl,
+} from "@/lib/adu/content";
 
 /** XML-escape a sitemap value. */
 function escapeXml(value: string): string {
@@ -11,7 +18,8 @@ function escapeXml(value: string): string {
 
 /**
  * Render the segmented ADU sitemap body: the California hub, the cost
- * calculator, and one URL per jurisdiction page, with `lastmod` wired to each page's as-of date.
+ * calculator, one URL per jurisdiction page, and one per jurisdiction cost
+ * page, with `lastmod` wired to each page's as-of date.
  * Kept out of `route.ts` because route modules may only export HTTP
  * handlers and route config.
  */
@@ -22,6 +30,12 @@ export function buildAduSitemapXml(): string {
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
       lastmod: city.asOf,
+      changefreq: "monthly",
+      priority: "0.7",
+    })),
+    ...ADU_COST_PAGES.map((cost) => ({
+      loc: costPageUrl(cost),
+      lastmod: cost.asOf,
       changefreq: "monthly",
       priority: "0.7",
     })),

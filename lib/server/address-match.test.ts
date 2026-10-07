@@ -53,6 +53,16 @@ describe("parseStreetAddress", () => {
     expect(parseStreetAddress("123 Main St NE")).toEqual({ houseNumber: "123", street: "MAIN ST NE" });
   });
 
+  it.each(["123 Main St NE, 98115", "123 Main St NE 98115", "123 Main St NE 98115-1234"])(
+    "preserves a postdirectional before a ZIP in %s", (query) => {
+      expect(parseStreetAddress(query)).toEqual({ houseNumber: "123", street: "MAIN ST NE", zip: "98115" });
+    },
+  );
+
+  it("keeps an explicitly separated Nebraska state with a ZIP", () => {
+    expect(parseStreetAddress("123 Main St, NE 68508")).toEqual({ houseNumber: "123", street: "MAIN ST", state: "NE", zip: "68508" });
+  });
+
   it("normalizes multiword states and separately entered ZIP/country components", () => {
     expect(parseStreetAddress("12 Oak St, Charleston West Virginia, 25301, United States")).toEqual({
       houseNumber: "12", street: "OAK ST", city: "CHARLESTON", state: "WV", zip: "25301",

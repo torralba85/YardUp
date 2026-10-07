@@ -6,8 +6,23 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- A dedicated San Diego ADU cost page with size-based build estimates, county rent,
+  payback, a local calculator preset, and official fee guidance. The existing guide
+  now focuses on rules and links to the cost page.
+
+### Fixed
+
+- Street postdirectionals such as NE remain part of the street when followed by
+  a ZIP code, avoiding a false Nebraska mismatch on valid Washington addresses.
+- Saved studies remain recoverable when optional AI snapshots are invalid; malformed
+  parcel coordinates are rejected before geometry processing or Firestore writes.
+
 ### Changed
 
+- Reserve Android version 1.0.14/code 15 after the code-14 production draft upload.
+  This metadata change does not submit or roll out the Play draft.
 - Mobile journey progress now keeps all five labels visible with at least 44px
   touch targets. Moving to another step resets scroll and focuses its named main
   region, while changes within the same step preserve scroll.

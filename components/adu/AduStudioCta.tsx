@@ -26,10 +26,13 @@ export function AduStudioCta({
   city,
   slug,
   placement,
+  heading = "These are the rules. Here is what they mean for your lot.",
 }: {
   city: string;
   slug: string;
   placement: AduCtaPlacement;
+  /** Overrides the rules-page heading, e.g. on a cost page. */
+  heading?: string;
 }) {
   const router = useRouter();
   const [address, setAddress] = useState("");
@@ -47,7 +50,7 @@ export function AduStudioCta({
       className="rounded-none bg-lot-ink px-6 py-8 text-lot-chalk sm:px-10"
     >
       <h2 className="font-display text-2xl font-medium tracking-tight">
-        These are the rules. Here is what they mean for your lot.
+        {heading}
       </h2>
       <p className="mt-2 max-w-prose text-sm leading-relaxed text-lot-stone-on-dark">
         Enter your {city} address to see rent, build-cost, and payback

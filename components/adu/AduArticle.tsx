@@ -4,7 +4,13 @@ import {
   STATE_BASELINE_SOURCES,
 } from "@/content/adu/state-baseline";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
-import { cityUrl, getNeighbors, hubUrl } from "@/lib/adu/content";
+import {
+  cityUrl,
+  costPagePath,
+  getCoveringCostPage,
+  getNeighbors,
+  hubUrl,
+} from "@/lib/adu/content";
 import type { JurisdictionContent } from "@/lib/adu/types";
 import { AduStudioCta } from "./AduStudioCta";
 import { AduPlanningLinks } from "./AduPlanningLinks";
@@ -24,9 +30,14 @@ import { SetbackDiagram } from "./SetbackDiagram";
  */
 export function AduArticle({ content }: { content: JurisdictionContent }) {
   const neighbors = getNeighbors(content);
+  // A city with its own cost page shows its figures there, not here; any
+  // guide its county cost page covers links to it from the fees section.
+  const costPage = getCoveringCostPage(content);
+  const ownCostPage = costPage?.slug === content.slug;
   // Citywide engine figures exist only for anchored cities; without an
   // anchor the cost/rent sections (and their headings) render nothing.
-  const hasMarketFigures = cityMarketAggregate(content.slug) !== undefined;
+  const hasMarketFigures =
+    !ownCostPage && cityMarketAggregate(content.slug) !== undefined;
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -102,7 +113,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             permitting authority before using these rules for a specific lot.
           </p>
           <nav aria-label="On this San Diego guide" className="flex flex-wrap gap-x-5 gap-y-2">
-            {[["adu-glance", "Rules at a glance"], ["adu-fees", "Cost and fees"], ["adu-process", "Permit steps"], ["adu-sources", "Official sources"]].map(([id, label]) => (
+            {[["adu-glance", "Rules at a glance"], ["adu-fees", "Permit fees"], ["adu-process", "Permit steps"], ["adu-sources", "Official sources"]].map(([id, label]) => (
               <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
             ))}
           </nav>
@@ -230,12 +241,19 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             <CostBands content={content} />
           </div>
         ) : null}
-        {content.slug === "san-diego" ? (
-          <div className="lf-body mt-6 space-y-3 text-lot-stone">
-            <h3 className="font-semibold text-lot-ink">What to ask for in a San Diego ADU quote</h3>
-            <p>Ask the builder to separate construction, design and engineering, City fees, utility connections, and site work. Identify which items are allowances and which are excluded, so two quotes cover the same scope.</p>
-            <p>The model includes a soft-cost allowance. Reconcile actual permit and design quotes against that allowance instead of automatically adding the same costs twice. Use the calculator to compare sizes; use the City&apos;s current fee schedule and a site-specific quote for your budget.</p>
-          </div>
+        {costPage ? (
+          <p className="lf-body mt-6 text-lot-stone">
+            {ownCostPage
+              ? "Build cost, rent and payback estimates by unit size: "
+              : "Countywide build cost, rent and payback estimates, which apply here too: "}
+            <Link
+              href={costPagePath(costPage)}
+              className="font-semibold text-lot-ink underline underline-offset-2"
+            >
+              {costPage.h1}
+            </Link>
+            .
+          </p>
         ) : null}
       </section>
 
