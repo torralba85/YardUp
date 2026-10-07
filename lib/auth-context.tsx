@@ -113,14 +113,14 @@ interface PendingSocialRedirect {
 /**
  * Whether social sign-in must redirect in place instead of opening a popup.
  *
- * In the Android TWA a popup opens outside the app's own tab. When Google
- * sends it back to `lotfoundry.net/__/auth/handler`, Android's verified App
- * Link hands that URL to the app's TWA window, which cannot read the popup's
- * sessionStorage, and Firebase fails with "missing initial state". A redirect
- * keeps the whole round trip in the one TWA tab.
+ * Android can hand the popup's return URL to the installed app or a different
+ * Custom Tab, which cannot read the popup's sessionStorage. This also affects
+ * ordinary Chrome tabs, even though their purchases correctly use Stripe.
+ * Keep Android sign-in in the initiating tab independently of billing channel.
  */
 function prefersRedirectSignIn(): boolean {
-  return detectPurchaseChannel() === "google-play";
+  return detectPurchaseChannel() === "google-play" ||
+    (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent));
 }
 
 function stashSocialRedirect(role: UserRole, legalConsent?: LegalConsent) {

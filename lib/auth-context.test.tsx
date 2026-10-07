@@ -698,6 +698,40 @@ describe("AuthProvider social sign-in inside the Android app", () => {
     expect(window.localStorage.getItem("lf:member-session")).toBe("1");
   });
 
+  it.each(["google", "apple"] as const)(
+    "redirects %s sign-in in Android Chrome without a Play app marker",
+    async (provider) => {
+      const userAgent = vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+        "Mozilla/5.0 (Linux; Android 17; Pixel 11 Pro) AppleWebKit/537.36 Chrome/145.0.0.0 Mobile Safari/537.36",
+      );
+      try {
+        const auth = await import("./auth-context");
+        const Button = () => {
+          const actions = auth.useAuth();
+          const signIn = provider === "google" ? actions.signInWithGoogle : actions.signInWithApple;
+          return (
+            <button type="button" onClick={() => void signIn("builder", auth.CURRENT_LEGAL_CONSENT)}>
+              Continue
+            </button>
+          );
+        };
+
+        render(<auth.AuthProvider><Button /></auth.AuthProvider>);
+        await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+        await waitFor(() => expect(authMocks.signInWithRedirect).toHaveBeenCalledTimes(1));
+        expect(authMocks.signInWithPopup).not.toHaveBeenCalled();
+        expect(window.sessionStorage.getItem("lotfoundry:android-app")).toBeNull();
+        expect(JSON.parse(window.sessionStorage.getItem(auth.SOCIAL_REDIRECT_KEY) ?? "null")).toEqual({
+          role: "builder",
+          consented: true,
+        });
+      } finally {
+        userAgent.mockRestore();
+      }
+    },
+  );
+
   it("finishes registration with the stashed role and consent when the redirect returns", async () => {
     const user = { uid: "user-1", email: "builder@example.com", displayName: "Builder Person" };
     firebaseMocks.auth.currentUser = user;
