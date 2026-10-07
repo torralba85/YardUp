@@ -467,6 +467,39 @@ Parameters:
 Owner:
 components/studio/CertificatePanel.tsx.
 
+### 10a. certificate_checkout_redirected
+
+Business meaning:
+The checkout API returned a Stripe Checkout URL and the browser is navigating to it. Unlike certificate_checkout_started, this proves the buyer reached Stripe.
+
+Fire:
+Immediately before `window.location.assign` to the returned Checkout URL. Never on API errors, store-billing grants, demo grants or already-purchased grants.
+
+Parameters:
+- value
+- currency
+- purchase_channel
+- feasibility_status
+
+Owner:
+components/studio/CertificatePanel.tsx.
+
+### 10b. certificate_checkout_cancelled
+
+Business meaning:
+The buyer left Stripe Checkout through its back/cancel link. Leaving Checkout is not a payment failure.
+
+Fire:
+Once, when the studio loads with the server-stamped `checkout=cancelled` marker from the certificate Checkout `cancel_url`. The panel strips the marker with `history.replaceState`, so a reload does not fire it again.
+
+Parameters:
+- purchase_channel
+
+feasibility_status is deliberately omitted: the event fires before the studio restores the scenario from the URL, so the status would describe the default lot.
+
+Owner:
+components/studio/CertificatePanel.tsx.
+
 ### 11. purchase
 
 Business meaning:
@@ -719,6 +752,7 @@ Show:
 - purchases by channel
 - consented same-session certificate revenue per activated feasibility session, separate from authoritative total revenue
 - certificate paywall → checkout conversion
+- certificate checkout started → Stripe redirect → purchase, with Stripe cancellations reported separately
 - matched-lead unlock rate from first-party records; preview impressions reported separately
 
 ### View 4 — Marketplace liquidity

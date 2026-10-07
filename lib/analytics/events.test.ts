@@ -21,6 +21,8 @@ import {
   trackBuilderLeadUnlocked,
   trackBuilderMatchesViewed,
   trackBuilderUnlockCheckoutStarted,
+  trackCertificateCheckoutCancelled,
+  trackCertificateCheckoutRedirected,
   trackCertificateCheckoutStarted,
   trackCertificatePaywallViewed,
   trackCertificatePurchase,
@@ -275,6 +277,47 @@ describe("analytics events module", () => {
         currency: "USD",
         purchase_channel: "web_stripe",
         feasibility_status: "review_needed",
+      });
+    });
+
+    it("emits certificate_checkout_redirected with bounded parameters only", () => {
+      trackCertificateCheckoutRedirected({
+        value: 29,
+        currency: "USD",
+        purchase_channel: "web_stripe",
+        feasibility_status: "eligible",
+        // A caller smuggling identifiers past the type must not reach GA4.
+        ...({ email: "buyer@example.com", certKey: "lot-1" } as object),
+      });
+
+      expect(trackEventSpy).toHaveBeenCalledWith("certificate_checkout_redirected", {
+        value: 29,
+        currency: "USD",
+        purchase_channel: "web_stripe",
+        feasibility_status: "eligible",
+      });
+    });
+
+    it("omits value and currency from certificate_checkout_redirected when the value is unknown", () => {
+      trackCertificateCheckoutRedirected({
+        purchase_channel: "web_stripe",
+        feasibility_status: "unknown",
+      });
+
+      expect(trackEventSpy).toHaveBeenCalledWith("certificate_checkout_redirected", {
+        purchase_channel: "web_stripe",
+        feasibility_status: "unknown",
+      });
+    });
+
+    it("emits certificate_checkout_cancelled with bounded parameters only", () => {
+      trackCertificateCheckoutCancelled({
+        purchase_channel: "web_stripe",
+        ...({ address: "123 Main St", stripeSessionId: "cs_123" } as object),
+      });
+
+      expect(trackEventSpy).toHaveBeenCalledWith("certificate_checkout_cancelled", {
+        purchase_channel: "web_stripe",
       });
     });
 

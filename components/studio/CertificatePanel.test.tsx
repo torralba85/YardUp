@@ -1,12 +1,14 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StrictMode } from "react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   calculateFeasibility,
   defaultAduConfig,
   defaultFinancialAssumptions,
   parcelPresets,
 } from "@/lib/feasibility";
-import type { AIProjectBrief } from "@/lib/ai-types";
+import type { AIProjectBrief, AIProjectBriefPreview } from "@/lib/ai-types";
+import type { StorePriceDisplay } from "@/lib/commerce/store-price";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { CertificateCheckoutError } from "@/lib/certificate-checkout";
@@ -30,12 +32,28 @@ const mocks = vi.hoisted(() => ({
 const analyticsEvents = vi.hoisted(() => ({
   trackCertificatePaywallViewed: vi.fn(),
   trackCertificateCheckoutStarted: vi.fn(),
+  trackCertificateCheckoutRedirected: vi.fn(),
+  trackCertificateCheckoutCancelled: vi.fn(),
   trackCertificatePurchase: vi.fn(),
   mapPurchaseChannel: vi.fn(() => "web_stripe"),
   mapFeasibilityVerdict: vi.fn(() => "eligible"),
 }));
 
 vi.mock("@/lib/analytics/events", () => analyticsEvents);
+
+/** Forces a store-channel quote; `null` keeps the real web catalog price. */
+const storePrice = vi.hoisted(() => ({ override: null as StorePriceDisplay | null }));
+
+vi.mock("@/lib/commerce/store-price", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/commerce/store-price")>();
+  return {
+    ...actual,
+    useStorePrice: (...args: Parameters<typeof actual.useStorePrice>) => {
+      const real = actual.useStorePrice(...args);
+      return storePrice.override ?? real;
+    },
+  };
+});
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({ user: mocks.auth.user }),
@@ -119,6 +137,45 @@ function renderWithUnlock(props: CertificatePanelProps) {
   return view;
 }
 
+const briefPreview: AIProjectBriefPreview = {
+  headline: "A workable backyard concept",
+  summary: "The concept fits the recorded assumptions.",
+  permitTrack: { name: "Ministerial review", type: "ministerial" },
+  totalEstWeeksLow: 12,
+  totalEstWeeksHigh: 18,
+  firstRisk: { label: "Rear setback", level: "medium", explanation: "Confirm the rear line." },
+  locked: { riskCount: 4, stageCount: 6, nextStepCount: 3 },
+  disclaimer: "Planning estimate only.",
+};
+
+/** The only parameter keys any certificate funnel event may carry. */
+const BOUNDED_ANALYTICS_KEYS = new Set([
+  "auth_state",
+  "currency",
+  "feasibility_status",
+  "purchase_channel",
+  "transaction_id",
+  "value",
+]);
+
+const originalLocation = window.location;
+
+/** Replace `window.location` so `assign` can be observed instead of navigating. */
+function stubLocationAssign() {
+  const assign = vi.fn();
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    writable: true,
+    value: {
+      ...originalLocation,
+      assign,
+      search: originalLocation.search,
+      pathname: originalLocation.pathname,
+    },
+  });
+  return assign;
+}
+
 describe("CertificatePanel", () => {
   beforeEach(() => {
     mocks.getIdToken.mockReset().mockResolvedValue("test-token");
@@ -128,7 +185,17 @@ describe("CertificatePanel", () => {
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
+    storePrice.override = null;
+    for (const fn of Object.values(analyticsEvents)) fn.mockClear();
     window.history.replaceState(null, "", "/");
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: originalLocation,
+    });
   });
 
   it("uses a contextual eyebrow without changing the desktop step label by default", () => {
@@ -159,8 +226,268 @@ describe("CertificatePanel", () => {
       screen.getByText(/reduce the adu footprint by at least 380 sf/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/one purchase unlocks this property/i)).toBeInTheDocument();
-    expect(screen.getByText("Recommended next steps")).toBeInTheDocument();
+    expect(screen.getByText("Recommended next actions")).toBeInTheDocument();
     expect(screen.queryByText(/site plan and 3d view/i)).not.toBeInTheDocument();
+  });
+
+  describe("paywall offer", () => {
+    beforeEach(() => {
+      mocks.access.purchased = false;
+    });
+
+    function includedRows() {
+      const list = screen.getByRole("list", { name: "Included in your certificate" });
+      return within(list).getAllByRole("listitem");
+    }
+
+    it("leads with new property analysis, keeping export as the last convenience", () => {
+      render(<CertificatePanel {...createProps()} />);
+
+      const titles = includedRows().map(
+        (row) => within(row).getByRole("heading", { level: 4 }).textContent,
+      );
+      expect(titles).toEqual([
+        "Property-specific risk review",
+        "Typical local approval path",
+        "Approval timeline",
+        "Recommended next actions",
+        "Printable, shareable property record",
+      ]);
+      // Free-estimate figures are no longer the pitch.
+      expect(screen.queryByText(/cost, rent, noi, and payback summary/i)).not.toBeInTheDocument();
+    });
+
+    it("previews locked sections without fabricating counts before a brief exists", () => {
+      render(<CertificatePanel {...createProps()} />);
+
+      for (const row of includedRows().slice(0, 4)) {
+        expect(row.textContent).not.toMatch(/\d/);
+      }
+      expect(screen.getByText("Findings ranked for this lot, with what to verify")).toBeInTheDocument();
+    });
+
+    it("shows honest counts from an already generated brief preview", () => {
+      render(<CertificatePanel {...createProps({ projectBriefPreview: briefPreview })} />);
+
+      expect(screen.getByText("4 ranked risks to verify")).toBeInTheDocument();
+      expect(screen.getByText("6-stage permit path")).toBeInTheDocument();
+      expect(screen.getByText("12–18 week typical approval timeline")).toBeInTheDocument();
+      expect(screen.getByText("3 recorded next steps")).toBeInTheDocument();
+      // The locked detail itself stays locked.
+      expect(screen.queryByText("Rear setback")).not.toBeInTheDocument();
+    });
+
+    it("falls back to descriptive rows when a preview count is zero", () => {
+      const empty = { ...briefPreview, locked: { riskCount: 0, stageCount: 0, nextStepCount: 0 } };
+      render(<CertificatePanel {...createProps({ projectBriefPreview: empty })} />);
+
+      expect(screen.queryByText(/^0 /)).not.toBeInTheDocument();
+      expect(screen.getByText("Findings ranked for this lot, with what to verify")).toBeInTheDocument();
+    });
+
+    it("names the exact web price, one-time purchase and permanent unlock at the CTA", () => {
+      render(<CertificatePanel {...createProps()} />);
+
+      expect(
+        screen.getByRole("button", { name: "Unlock property certificate — $29" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("One-time $29 · No subscription · Unlocks this property permanently"),
+      ).toBeInTheDocument();
+      // Planning disclaimer is preserved.
+      expect(screen.getByText(/not a permit, appraisal/i)).toBeInTheDocument();
+    });
+
+    it("quotes the Play-billed amount instead of the Stripe price in the Android app", () => {
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
+      render(<CertificatePanel {...createProps()} />);
+
+      expect(
+        screen.getByRole("button", { name: "Unlock property certificate — $28.99" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("One-time $28.99 · No subscription · Unlocks this property permanently"),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/\$29\b/)).not.toBeInTheDocument();
+    });
+
+    it("names no price where the store quotes its own sheet", async () => {
+      storePrice.override = {
+        channel: "app-store",
+        amount: "At checkout",
+        amountCompact: "At checkout",
+        unitAmount: "At checkout",
+        exact: false,
+        loading: false,
+        error: null,
+      };
+      mocks.startCertificateCheckout.mockResolvedValueOnce({ kind: "granted", demo: false });
+      render(<CertificatePanel {...createProps()} />);
+
+      expect(
+        screen.getByText("One-time purchase · No subscription · Unlocks this property permanently"),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Unlock property certificate" }));
+
+      await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+      expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
+    });
+
+    it("keeps the purchased state free of the offer and reassurance", () => {
+      mocks.access.purchased = true;
+      render(<CertificatePanel {...createProps()} />);
+
+      expect(screen.getByText(/certificate unlocked/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "View complete certificate" })).toBeInTheDocument();
+      expect(screen.queryByRole("list", { name: "Included in your certificate" })).not.toBeInTheDocument();
+      expect(screen.queryByText(/no subscription/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("checkout funnel analytics", () => {
+    beforeEach(() => {
+      mocks.access.purchased = false;
+    });
+
+    it("records the CTA, then the Stripe redirect immediately before navigating", async () => {
+      const assign = stubLocationAssign();
+      mocks.startCertificateCheckout.mockResolvedValueOnce({
+        kind: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_live_123",
+      });
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+      expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
+      await waitFor(() =>
+        expect(assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/cs_live_123"),
+      );
+      const redirected = analyticsEvents.trackCertificateCheckoutRedirected;
+      expect(redirected).toHaveBeenCalledTimes(1);
+      expect(redirected).toHaveBeenCalledWith({
+        value: CERTIFICATE_PRICE_CENTS / 100,
+        currency: "USD",
+        purchase_channel: "web_stripe",
+        feasibility_status: "eligible",
+      });
+      expect(redirected.mock.invocationCallOrder[0]).toBeGreaterThan(
+        mocks.startCertificateCheckout.mock.invocationCallOrder[0],
+      );
+      expect(redirected.mock.invocationCallOrder[0]).toBeLessThan(
+        assign.mock.invocationCallOrder[0],
+      );
+    });
+
+    it("does not record a redirect when the checkout API fails", async () => {
+      mocks.startCertificateCheckout.mockRejectedValueOnce(
+        new CertificateCheckoutError("Payments are temporarily unavailable."),
+      );
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+      expect(await screen.findByText("Payments are temporarily unavailable.")).toBeInTheDocument();
+      expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
+      expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
+    });
+
+    it("does not record a redirect for a demo or already-purchased grant", async () => {
+      mocks.startCertificateCheckout.mockResolvedValueOnce({ kind: "granted", demo: true });
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+      await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+      expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
+    });
+
+    it("records a Stripe cancellation once, strips the marker and reassures without an error", async () => {
+      window.history.replaceState(null, "", "/studio?v=2&parcel=abc&checkout=cancelled");
+
+      const view = render(
+        <StrictMode>
+          <CertificatePanel {...createProps()} />
+        </StrictMode>,
+      );
+
+      expect(
+        await screen.findByText(
+          "Checkout cancelled. Your property analysis is still here whenever you're ready.",
+        ),
+      ).toBeInTheDocument();
+      expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledTimes(1);
+      expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledWith({
+        purchase_channel: "web_stripe",
+      });
+      expect(window.location.search).toBe("?v=2&parcel=abc");
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(screen.queryByText("Payment Issue")).not.toBeInTheDocument();
+
+      // A reload after processing carries no marker, so nothing fires again.
+      view.unmount();
+      render(<CertificatePanel {...createProps()} />);
+      expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores checkout markers other than the cancellation stamp", () => {
+      window.history.replaceState(null, "", "/studio?checkout=paid");
+
+      render(<CertificatePanel {...createProps()} />);
+
+      expect(analyticsEvents.trackCertificateCheckoutCancelled).not.toHaveBeenCalled();
+      expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument();
+    });
+
+    it("clears the cancellation notice when the buyer tries again", async () => {
+      window.history.replaceState(null, "", "/studio?checkout=cancelled");
+      mocks.startCertificateCheckout.mockResolvedValueOnce({ kind: "granted", demo: true });
+      render(<CertificatePanel {...createProps()} />);
+      expect(await screen.findByText(/checkout cancelled/i)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+      await waitFor(() => expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument());
+    });
+
+    it("sends only bounded parameters on every certificate funnel event", async () => {
+      window.history.replaceState(null, "", "/studio?checkout=cancelled");
+      const assign = stubLocationAssign();
+      mocks.startCertificateCheckout.mockResolvedValueOnce({
+        kind: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_live_123",
+      });
+      render(<CertificatePanel {...createProps({ projectBriefPreview: briefPreview })} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      await waitFor(() => expect(assign).toHaveBeenCalled());
+
+      const calls = [
+        ...analyticsEvents.trackCertificatePaywallViewed.mock.calls,
+        ...analyticsEvents.trackCertificateCheckoutStarted.mock.calls,
+        ...analyticsEvents.trackCertificateCheckoutRedirected.mock.calls,
+        ...analyticsEvents.trackCertificateCheckoutCancelled.mock.calls,
+      ] as unknown as Array<[Record<string, unknown>]>;
+      expect(calls.length).toBeGreaterThanOrEqual(3);
+      for (const [params] of calls) {
+        for (const key of Object.keys(params)) {
+          expect(BOUNDED_ANALYTICS_KEYS).toContain(key);
+        }
+        const serialized = JSON.stringify(params);
+        expect(serialized).not.toContain(parcel.address);
+        expect(serialized).not.toContain("owner-1");
+        expect(serialized).not.toContain("cs_live_123");
+        expect(serialized).not.toContain(certificateKey(parcel));
+      }
+    });
   });
 
   it("prepares the combined AI brief before automatically opening a newly unlocked certificate", async () => {
@@ -342,7 +669,7 @@ describe("CertificatePanel", () => {
     const props = createProps();
     render(<CertificatePanel {...props} />);
 
-    const button = screen.getByRole("button", { name: /unlock complete certificate/i });
+    const button = screen.getByRole("button", { name: /unlock property certificate/i });
     fireEvent.click(button);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(

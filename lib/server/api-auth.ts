@@ -4,6 +4,10 @@ import { getAuth } from "firebase-admin/auth";
 
 interface AuthResult {
   uid: string;
+  /** The account email from the verified ID token, never from the request body. */
+  email?: string;
+  /** Whether Firebase has verified that the account owns {@link email}. */
+  emailVerified?: boolean;
 }
 
 function getAdminAuth() {
@@ -33,7 +37,8 @@ function getAdminAuth() {
  * from the `Authorization` header and verifies it with the Firebase Admin SDK.
  *
  * @param request - The incoming Next.js request.
- * @returns `{ uid }` on success, or a 401 {@link NextResponse} the route should
+ * @returns `{ uid, email?, emailVerified? }` on success (email fields only when
+ *   the token carries an email), or a 401 {@link NextResponse} the route should
  *   return as-is when authentication is missing or invalid.
  */
 export async function requireApiAuth(
@@ -57,7 +62,14 @@ export async function requireApiAuth(
 
   try {
     const decoded = await getAdminAuth().verifyIdToken(match[1]);
-    return { uid: decoded.uid };
+    if (typeof decoded.email !== "string" || !decoded.email) {
+      return { uid: decoded.uid };
+    }
+    return {
+      uid: decoded.uid,
+      email: decoded.email,
+      emailVerified: decoded.email_verified === true,
+    };
   } catch (err) {
     console.warn("[api-auth] Firebase ID token verification failed:", err);
     return NextResponse.json(

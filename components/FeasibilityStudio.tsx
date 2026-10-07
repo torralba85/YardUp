@@ -49,6 +49,7 @@ import {
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
 import { certificateKey } from "@/lib/certificate-key";
+import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { Select } from "@/components/ui/Field";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import ParcelDataNotice from "./studio/ParcelDataNotice";
@@ -403,6 +404,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   // the preview tier exists solely to sell that unlock in the rail panel.
   const projectBrief =
     projectBriefResponse?.tier === "full" ? projectBriefResponse.brief : null;
+  const projectBriefPreview =
+    projectBriefResponse?.tier === "preview" ? projectBriefResponse.preview : null;
   const projectBriefLoading =
     projectBriefState?.key === projectBriefKey ? projectBriefState.loading : false;
   const projectBriefError =
@@ -613,7 +616,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
     const currentParams = new URLSearchParams(window.location.search);
     const certParam = currentParams.get("cert");
-    const nextQuery = certParam ? `${serialized}&cert=${encodeURIComponent(certParam)}` : serialized;
+    // Keep the one-shot Stripe return markers until CertificatePanel consumes them.
+    const checkoutCancelled = currentParams.get(CHECKOUT_RETURN_PARAM) === CHECKOUT_CANCELLED;
+    const nextQuery = [
+      serialized,
+      ...(certParam ? [`cert=${encodeURIComponent(certParam)}`] : []),
+      ...(checkoutCancelled ? [`${CHECKOUT_RETURN_PARAM}=${CHECKOUT_CANCELLED}`] : []),
+    ].join("&");
     const next = `${window.location.pathname}?${nextQuery}`;
     // Preserve the current entry's state — never pass `null` here. This
     // effect only means to rewrite the URL; a null state would also erase
@@ -1202,6 +1211,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
               eyebrow="Certificate of Feasibility"
               onOpenCertificate={handleGenerateReport}
               projectBrief={projectBrief}
+              projectBriefPreview={projectBriefPreview}
               projectBriefLoading={projectBriefLoading}
               projectBriefError={projectBriefError}
               onGenerateProjectBrief={handleGenerateProjectBrief}
@@ -1427,6 +1437,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
             parcelName={parcelName}
             onOpenCertificate={handleGenerateReport}
             projectBrief={projectBrief}
+            projectBriefPreview={projectBriefPreview}
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
             onGenerateProjectBrief={handleGenerateProjectBrief}
