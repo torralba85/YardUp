@@ -58,6 +58,16 @@ export function hubUrl(): string {
   return `${BASE_URL}/adu/ca`;
 }
 
+/** Site-relative path for the statewide California ADU cost guide. */
+export function stateCostPath(): string {
+  return "/adu/ca/cost";
+}
+
+/** Absolute canonical URL for the statewide California ADU cost guide. */
+export function stateCostUrl(): string {
+  return `${BASE_URL}${stateCostPath()}`;
+}
+
 /** Absolute canonical URL for the California ADU cost calculator. */
 export function calculatorUrl(): string {
   return `${BASE_URL}/adu-cost-calculator`;

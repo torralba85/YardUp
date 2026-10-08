@@ -82,5 +82,9 @@ describe("AduArticle after the San Diego cost split", () => {
       "href",
       "/adu/ca/san-diego/cost",
     );
+    expect(screen.getByRole("link", { name: "California ADU cost guide" })).toHaveAttribute(
+      "href",
+      "/adu/ca/cost",
+    );
   });
 });

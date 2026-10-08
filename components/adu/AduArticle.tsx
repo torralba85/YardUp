@@ -10,6 +10,7 @@ import {
   getCoveringCostPage,
   getNeighbors,
   hubUrl,
+  stateCostPath,
 } from "@/lib/adu/content";
 import type { JurisdictionContent } from "@/lib/adu/types";
 import { AduStudioCta } from "./AduStudioCta";
@@ -255,6 +256,17 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             .
           </p>
         ) : null}
+        <p className="lf-body mt-4 text-lot-stone">
+          For a statewide budget framework, permit-fee context, and a quote
+          checklist, read the{" "}
+          <Link
+            href={stateCostPath()}
+            className="font-semibold text-lot-ink underline underline-offset-2"
+          >
+            California ADU cost guide
+          </Link>
+          .
+        </p>
       </section>
 
       <section aria-labelledby="adu-process" className="mt-12">

@@ -111,13 +111,20 @@ export default function AduCaliforniaHubPage() {
         </p>
         <p>
           Start from the state floor below, pick your city, then check what
-          the rules mean for your specific lot in the Studio. To see what an
-          ADU costs, rents for, and takes to pay back, use the{" "}
+          the rules mean for your specific lot in the Studio. Build a budget
+          with the{" "}
+          <Link
+            href="/adu/ca/cost"
+            className="underline underline-offset-2 hover:text-lot-ink"
+          >
+            California ADU cost guide
+          </Link>
+          , then compare rent and payback scenarios in the{" "}
           <Link
             href="/adu-cost-calculator"
             className="underline underline-offset-2 hover:text-lot-ink"
           >
-            California ADU cost calculator
+            free ADU cost calculator
           </Link>
           .
         </p>

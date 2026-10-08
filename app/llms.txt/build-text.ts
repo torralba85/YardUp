@@ -5,6 +5,7 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  stateCostUrl,
   STATE_BASELINE_AS_OF,
 } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
@@ -68,6 +69,7 @@ should be confirmed with the jurisdiction and a licensed builder.
 State law baseline verified ${STATE_BASELINE_AS_OF}.
 
 - [California ADU rules](${hubUrl()}): the state floor every California city builds on, and how the five largest San Diego County cities differ from it.
+- [California ADU cost guide](${stateCostUrl()}): modeled build cost by unit size, cost-per-square-foot context, permit-fee rules, scope exclusions, and contractor quote guidance.
 ${cities}
 
 ## Tools
