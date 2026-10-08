@@ -11,6 +11,8 @@ import {
   getCostPage,
   getCoveringCostPage,
   hubUrl,
+  stateCostPath,
+  stateCostUrl,
 } from "./content";
 import { cityMarketAggregate } from "./market-aggregate";
 import { aduCtaEvent } from "./types";
@@ -36,6 +38,8 @@ describe("adu content helpers", () => {
       );
     }
     expect(hubUrl()).toBe("https://lotfoundry.net/adu/ca");
+    expect(stateCostPath()).toBe("/adu/ca/cost");
+    expect(stateCostUrl()).toBe("https://lotfoundry.net/adu/ca/cost");
   });
 
   it("instruments mid-page and end-of-page CTAs as separate events", () => {

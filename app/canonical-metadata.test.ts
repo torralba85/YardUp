@@ -15,6 +15,7 @@ import { metadata as loginMetadata } from "./(firebase)/login/page";
 import { metadata as signupMetadata } from "./(firebase)/signup/layout";
 import { metadata as certificatesMetadata } from "./(firebase)/certificates/page";
 import { metadata as aduCaMetadata } from "./adu/ca/page";
+import { metadata as aduCaCostMetadata } from "./adu/ca/cost/page";
 import { metadata as aduCostCalculatorMetadata } from "./adu-cost-calculator/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { buildCityMetadata } from "@/lib/adu/content";
@@ -31,6 +32,11 @@ describe("canonical metadata", () => {
     { name: "/signup", metadata: signupMetadata, expectedCanonical: "/signup" },
     { name: "/certificates", metadata: certificatesMetadata, expectedCanonical: "/certificates" },
     { name: "/adu/ca", metadata: aduCaMetadata, expectedCanonical: "https://lotfoundry.net/adu/ca" },
+    {
+      name: "/adu/ca/cost",
+      metadata: aduCaCostMetadata,
+      expectedCanonical: "https://lotfoundry.net/adu/ca/cost",
+    },
     {
       name: "/adu-cost-calculator",
       metadata: aduCostCalculatorMetadata,
@@ -56,6 +62,7 @@ describe("SEO audit metadata constraints", () => {
     { name: "/feedback", metadata: feedbackMetadata },
     { name: "/privacy", metadata: privacyMetadata },
     { name: "/terms", metadata: termsMetadata },
+    { name: "/adu/ca/cost", metadata: aduCaCostMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
   ];
 
@@ -70,6 +77,7 @@ describe("SEO audit metadata constraints", () => {
 
   for (const { name, metadata } of [
     { name: "/adu/ca", metadata: aduCaMetadata },
+    { name: "/adu/ca/cost", metadata: aduCaCostMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
   ]) {
     it(`keeps the ${name} title at 60 characters or fewer`, () => {

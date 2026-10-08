@@ -160,11 +160,16 @@ export default function AduCostCalculatorPage() {
 
       <section aria-labelledby="adu-cost-by-size">
         <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">
-          How much does an ADU cost in California?
+          Modeled build cost by unit size
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Build cost by size, cedar finish and shed roof. Build cost uses the
           same national cost base in every county, so one table covers all three.
+          For permit-fee context, scope exclusions, and bid guidance, read the{" "}
+          <Link href="/adu/ca/cost" className="underline underline-offset-2 hover:text-lot-ink">
+            California ADU cost guide
+          </Link>
+          .
         </p>
         {sample600 && aggregates[0] ? (
           <div className="mt-4 overflow-x-auto">

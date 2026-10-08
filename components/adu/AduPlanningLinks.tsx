@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const resources = [
   { href: "/adu/ca", label: "California ADU rules by city", detail: "Find the right jurisdiction and its source documents." },
+  { href: "/adu/ca/cost", label: "California ADU cost guide", detail: "Budget by unit size, understand fees, and compare complete quotes." },
   { href: "/adu/ca/san-diego", label: "San Diego ADU rules and permit guide", detail: "Check city rules, overlays, fees and permit steps." },
   { href: "/adu/ca/san-diego/cost", label: "San Diego ADU cost, rent and payback", detail: "See build cost and rent by unit size for San Diego County." },
   { href: "/adu-cost-calculator", label: "Free ADU cost, rent and payback calculator", detail: "Compare sizes and assumptions before checking your lot." },

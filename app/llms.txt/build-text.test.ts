@@ -7,6 +7,7 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  stateCostUrl,
 } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { SOCIAL_LINKS } from "@/lib/social-links";
@@ -54,6 +55,7 @@ describe("buildLlmsTxt", () => {
     const text = buildLlmsTxt();
 
     expect(text).toContain(hubUrl());
+    expect(text).toContain(stateCostUrl());
     expect(text).toContain(calculatorUrl());
     expect(text).toContain("https://lotfoundry.net/studio");
     expect(text).toContain("https://lotfoundry.net/studio?parcel=oak-street");
