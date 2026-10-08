@@ -93,6 +93,20 @@ test.describe("web certificate checkout", () => {
     await expect(unlockButton(page)).toBeEnabled();
   });
 
+  test("an invalid Checkout URL stays on the paywall instead of navigating", async ({ page }) => {
+    await signIn(page);
+    await page.route(CERTIFICATE_ROUTE, (route) =>
+      route.fulfill({ json: { url: "not-a-checkout-url" } }),
+    );
+
+    await openCertificateStep(page);
+    await unlockButton(page).click();
+
+    await expect(page.getByText("Could not start checkout. Please try again.").first()).toBeVisible();
+    await expect(page).toHaveURL(/\/studio\?/);
+    await expect(unlockButton(page)).toBeEnabled();
+  });
+
   test("a network failure reaching the checkout API is reported", async ({ page }) => {
     await signIn(page);
     await page.route(CERTIFICATE_ROUTE, (route) => route.abort("connectionrefused"));

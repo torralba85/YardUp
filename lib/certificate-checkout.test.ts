@@ -68,6 +68,26 @@ describe("startCertificateCheckout", () => {
     expect(out).toEqual({ kind: "redirect", url: "https://checkout.stripe.com/x" });
   });
 
+  it.each([
+    { url: "not-a-url" },
+    { url: "javascript:alert(1)" },
+    { url: "http://checkout.stripe.com/x" },
+    { url: 123 },
+    { url: "" },
+    {},
+    null,
+  ])("rejects an invalid Checkout response %j", async (json) => {
+    mockFetch({ ok: true, json });
+    await expect(startCertificateCheckout({ certKey: "k", parcelName: "x" }))
+      .rejects.toBeInstanceOf(CertificateCheckoutError);
+  });
+
+  it("accepts the configured custom Stripe Checkout domain", async () => {
+    mockFetch({ ok: true, json: { url: "https://pay.lotfoundry.net/c/pay/test" } });
+    expect(await startCertificateCheckout({ certKey: "k", parcelName: "x" }))
+      .toEqual({ kind: "redirect", url: "https://pay.lotfoundry.net/c/pay/test" });
+  });
+
   it("returns granted for the demo path", async () => {
     mockFetch({ ok: true, json: { status: "granted", demo: true } });
     const out = await startCertificateCheckout({ certKey: "k", parcelName: "x" });
@@ -84,7 +104,7 @@ describe("startCertificateCheckout", () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({ url: "u" }),
+      json: async () => ({ url: "https://checkout.stripe.com/test" }),
     });
     vi.stubGlobal("fetch", fetchMock);
     await startCertificateCheckout({ certKey: "k", parcelName: "x", idToken: "TOKEN" });
@@ -101,7 +121,7 @@ describe("startCertificateCheckout", () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({ url: "u" }),
+      json: async () => ({ url: "https://checkout.stripe.com/test" }),
     });
     vi.stubGlobal("fetch", fetchMock);
 

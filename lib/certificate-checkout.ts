@@ -124,8 +124,20 @@ export async function startCertificateCheckout(
     throw new CertificateCheckoutError(data?.error ?? `Checkout failed (${res.status}).`);
   }
 
-  const data = (await res.json()) as { url?: string; demo?: boolean };
-  if (data.url) return { kind: "redirect", url: data.url };
+  const data = (await res.json()) as { url?: unknown; status?: string; demo?: boolean } | null;
+  if (data?.url) {
+    try {
+      if (typeof data.url === "string" && new URL(data.url).protocol === "https:") {
+        return { kind: "redirect", url: data.url };
+      }
+    } catch {
+      // An invalid URL must never be counted as a Stripe redirect or a grant.
+    }
+    throw new CertificateCheckoutError("Could not start checkout. Please try again.");
+  }
+  if (data?.status !== "granted") {
+    throw new CertificateCheckoutError("Could not start checkout. Please try again.");
+  }
   clearCheckoutAttemptId("certificate", input.certKey);
   return { kind: "granted", demo: Boolean(data.demo) };
 }

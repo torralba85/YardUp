@@ -470,7 +470,7 @@ components/studio/CertificatePanel.tsx.
 ### 10a. certificate_checkout_redirected
 
 Business meaning:
-The checkout API returned a Stripe Checkout URL and the browser is navigating to it. Unlike certificate_checkout_started, this proves the buyer reached Stripe.
+The checkout API returned a valid HTTPS Checkout URL and the browser is about to navigate to it. Unlike certificate_checkout_started, this confirms the handoff was initiated. It does not prove that Stripe finished loading in the buyer's browser.
 
 Fire:
 Immediately before `window.location.assign` to the returned Checkout URL. Never on API errors, store-billing grants, demo grants or already-purchased grants.
