@@ -40,7 +40,7 @@ const jsonLd = {
   description:
     "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
   url: appRootUrl,
-  applicationCategory: "BusinessApplication",
+  applicationCategory: "HomeApplication",
   operatingSystem: ["Web", "Android"],
   installUrl: GOOGLE_PLAY_URL,
   // "What does it cost?" is one of the questions an assistant is actually
@@ -69,6 +69,7 @@ const jsonLd = {
   publisher: {
     "@type": "Organization",
     name: "LotFoundry",
+    alternateName: ["Lot Foundry"],
     legalName: "Veri-share",
     url: appRootUrl,
     logo: `${appUrl}/icon-512-transparent.png`,

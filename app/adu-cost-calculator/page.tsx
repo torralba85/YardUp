@@ -20,7 +20,7 @@ import { marketProvenanceLine } from "@/lib/market/market-basis";
 // Kept to 60 characters or fewer so Google shows the whole title.
 const TITLE = "California ADU Cost Calculator (2026) | LotFoundry";
 const DESCRIPTION =
-  "Free California ADU cost calculator. Estimate build cost, monthly rent, and payback for a 400–1,200 sq ft ADU in Los Angeles, San Diego, or Santa Clara County.";
+  "Free California ADU cost calculator: build cost, monthly rent and payback for a 400–1,200 sq ft ADU in Los Angeles, San Diego or Santa Clara County.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -30,6 +30,14 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: calculatorUrl(),
+    images: [
+      {
+        url: "/lotfoundry-og.png",
+        width: 1200,
+        height: 630,
+        alt: "LotFoundry — ADU planning for homeowners",
+      },
+    ],
     type: "website",
   },
 };
