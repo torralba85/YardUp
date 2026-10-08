@@ -53,16 +53,10 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: "https://lotfoundry.net/" },
-      { "@type": "ListItem", position: 2, name: "ADU Rules", item: hubUrl() },
+      { "@type": "ListItem", position: 2, name: `${content.stateName} ADU rules`, item: hubUrl() },
       {
         "@type": "ListItem",
         position: 3,
-        name: content.stateName,
-        item: hubUrl(),
-      },
-      {
-        "@type": "ListItem",
-        position: 4,
         name: content.city,
         item: cityUrl(content),
       },

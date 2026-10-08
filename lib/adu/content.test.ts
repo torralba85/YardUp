@@ -106,4 +106,14 @@ describe("adu cost pages", () => {
     expect(sanDiego?.h1).toBeUndefined();
     expect(String(sanDiego?.metaDescription).length).toBeLessThanOrEqual(160);
   });
+
+  it("states the San Diego height threshold as the City does: over 16 feet, not 16 feet or taller", () => {
+    const sanDiego = getCity("ca", "san-diego");
+    expect(JSON.stringify(sanDiego)).not.toMatch(/16 (ft|feet) or taller/i);
+    expect(sanDiego?.setbackDiagram?.shortLabel).toBe("Up to 16 ft tall");
+    expect(sanDiego?.setbackDiagram?.tallLabel).toBe("Over 16 ft tall");
+    const answer = sanDiego?.faqs.find((faq) => faq.question.includes("property line"))?.answer;
+    expect(answer).toContain("no taller than 16 feet");
+    expect(answer).toContain("Over 16 feet");
+  });
 });

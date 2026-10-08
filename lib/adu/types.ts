@@ -145,16 +145,16 @@ export interface JurisdictionContent {
   coastalCallout?: string;
   /**
    * Data for the setback diagram: the short-ADU rule versus the tall-ADU
-   * rule, e.g. "Under 16 ft: 0 ft side/rear" vs "16 ft and over: 4 ft".
+   * rule, e.g. "Up to 16 ft: 0 ft side/rear" vs "Over 16 ft: 4 ft".
    * Omit when the jurisdiction's setback structure has no such split — the
    * diagram renders nothing without it.
    */
   setbackDiagram?: {
-    /** Label for the low/short side, e.g. "Under 16 ft tall". */
+    /** Label for the low/short side, e.g. "Up to 16 ft tall". */
     shortLabel: string;
     /** Rule text for the short side, e.g. "0 ft — build to the line". */
     shortRule: string;
-    /** Label for the tall side, e.g. "16 ft or taller". */
+    /** Label for the tall side, e.g. "Over 16 ft tall". */
     tallLabel: string;
     /** Rule text for the tall side, e.g. "4 ft side and rear". */
     tallRule: string;

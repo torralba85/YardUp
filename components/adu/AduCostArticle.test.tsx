@@ -88,3 +88,18 @@ describe("AduArticle after the San Diego cost split", () => {
     );
   });
 });
+
+describe("AduArticle breadcrumb markup", () => {
+  it("lists the hub once, so no two steps point at the same page", () => {
+    const { container } = render(<AduArticle content={sanDiego} />);
+    const breadcrumb = Array.from(
+      container.querySelectorAll('script[type="application/ld+json"]'),
+    )
+      .map((node) => JSON.parse(node.textContent ?? "{}"))
+      .find((entry) => entry["@type"] === "BreadcrumbList");
+    const items = breadcrumb.itemListElement as { position: number; name: string; item: string }[];
+    expect(items.map((entry) => entry.position)).toEqual([1, 2, 3]);
+    expect(items.map((entry) => entry.name)).toEqual(["Home", "California ADU rules", "San Diego"]);
+    expect(new Set(items.map((entry) => entry.item)).size).toBe(items.length);
+  });
+});

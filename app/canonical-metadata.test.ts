@@ -92,3 +92,14 @@ describe("SEO audit metadata constraints", () => {
     expect((title as string).length).toBeLessThanOrEqual(60);
   });
 });
+
+describe("share previews", () => {
+  for (const { name, metadata } of [
+    { name: "/adu/ca", metadata: aduCaMetadata },
+    { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
+  ]) {
+    it(`gives ${name} an Open Graph image, because its own openGraph block replaces the layout's`, () => {
+      expect(metadata.openGraph?.images).toBeTruthy();
+    });
+  }
+});
