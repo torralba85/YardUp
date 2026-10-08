@@ -76,4 +76,12 @@ describe("buildLlmsTxt", () => {
     expect(lines[0]).toBe("# LotFoundry");
     expect(lines[2].startsWith("> ")).toBe(true);
   });
+
+  it("gives assistants a contact route and the second spelling of the name", () => {
+    const text = buildLlmsTxt();
+
+    expect(text).toContain("support@lotfoundry.net");
+    expect(text).toContain("privacy@lotfoundry.net");
+    expect(text).toContain('"Lot Foundry"');
+  });
 });

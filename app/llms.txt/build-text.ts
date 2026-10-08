@@ -92,8 +92,13 @@ ${cities}
 - [Privacy policy](${baseUrl}/privacy)
 - [Terms](${baseUrl}/terms)
 
+## Contact
+
+- Support: support@lotfoundry.net
+- Privacy requests: privacy@lotfoundry.net
+
 ## About
 
-LotFoundry is operated by Veri-share.
+LotFoundry is operated by Veri-share. The name is also written "Lot Foundry" (two words) on its social profiles.
 `;
 }

@@ -14,13 +14,21 @@ export const metadata: Metadata = {
   // Kept under ~160 characters: past that Google truncates mid-sentence and
   // the cut lands inside the city list rather than after a complete thought.
   description:
-    "ADU rules change at the city line. Start from the California state floor, then read local setbacks, fees, and permit steps for five San Diego County cities.",
+    "ADU rules change at the city line. Start with the California state floor, then read local setbacks, fees and permit steps for five San Diego County cities.",
   alternates: { canonical: hubUrl() },
   openGraph: {
     title: "California ADU Laws and Rules by City (2026) | LotFoundry",
     description:
       "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County's five largest cities.",
     url: hubUrl(),
+    images: [
+      {
+        url: "/lotfoundry-og.png",
+        width: 1200,
+        height: 630,
+        alt: "LotFoundry — ADU planning for homeowners",
+      },
+    ],
     type: "website",
   },
 };

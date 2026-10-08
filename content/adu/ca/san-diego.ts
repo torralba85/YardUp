@@ -19,18 +19,18 @@ export const sanDiego: JurisdictionContent = {
   // Rules-first title and H1 come from the shared template, like the other
   // guides. Cost moved to `san-diego-cost.ts` (`/adu/ca/san-diego/cost`).
   metaDescription:
-    "City of San Diego ADU rules for 2026: 150 to 1,200 sq ft, zero side and rear setbacks under 16 ft, parking exceptions, Coastal Zone caveats and permit steps.",
+    "City of San Diego ADU rules for 2026: 150 to 1,200 sq ft, zero side and rear setbacks up to 16 ft tall, parking exceptions, Coastal Zone caveats, permits.",
   coastalCallout:
     "The 2025 and 2026 amendments took effect outside the Coastal Zone only. If your property is inside it, you are still under the prior ordinance until the California Coastal Commission certifies the changes. Most ADU guides for San Diego miss this. Check whether your parcel is in the Coastal Zone before you rely on anything below.",
   setbackDiagram: {
-    shortLabel: "Under 16 ft tall",
+    shortLabel: "Up to 16 ft tall",
     shortRule: "0 ft side and rear — build to the line",
-    tallLabel: "16 ft or taller",
+    tallLabel: "Over 16 ft tall",
     tallRule: "4 ft side and rear",
   },
   introAnswer: [
     "Enter your San Diego address and see what fits on your lot — buildable area, setbacks, a placed ADU in 3D, and what it costs against what it rents for.",
-    "San Diego is one of the more permissive ADU jurisdictions in California, with detached and attached ADUs from 150 to 1,200 sq ft, junior ADUs up to 500 sq ft, and a zero side-and-rear setback rule for units under 16 feet tall outside fire hazard zones.",
+    "San Diego is one of the more permissive ADU jurisdictions in California, with detached and attached ADUs from 150 to 1,200 sq ft, junior ADUs up to 500 sq ft, and a zero side-and-rear setback rule for units up to 16 feet tall outside fire hazard zones.",
   ],
   metaSizeNote: "150 to 1,200 sq ft",
   metaSetbackNote: "the zero-setback rule",
@@ -58,8 +58,8 @@ export const sanDiego: JurisdictionContent = {
     },
     {
       label: "Rear and side setbacks",
-      value: "0 ft under 16 ft tall; 4 ft at 16 ft or taller",
-      note: "4 ft minimum applies in Very High Fire Hazard Severity Zones at any height",
+      value: "0 ft up to 16 ft tall; over 16 ft next to residential: 4 ft, or the base-zone minimum if smaller",
+      note: "4 ft minimum applies in Very High Fire Hazard Severity Zones at any height. The base-zone option applies outside the Coastal Zone only.",
     },
     {
       label: "Front setback",
@@ -101,10 +101,10 @@ export const sanDiego: JurisdictionContent = {
       heading: "Setbacks: the rule that decides your lot",
       paragraphs: [
         "This is the single most valuable thing to understand about building in San Diego, and it hinges entirely on one number: sixteen feet.",
-        "Keep your ADU under 16 feet tall and you need no side or rear setback at all. You can build to the property line. Outside a Very High Fire Hazard Severity Zone, that is the rule.",
-        "Go to 16 feet or taller next to a residential zone and you owe a 4-foot setback on the sides and rear. Same 4 feet applies anywhere in a Very High Fire Hazard Severity Zone, at any height.",
+        "Keep your ADU no taller than 16 feet and you need no side or rear setback at all. You can build to the property line. Outside a Very High Fire Hazard Severity Zone, that is the rule.",
+        "Go over 16 feet next to a residential zone and you owe a 4-foot setback on the sides and rear, or your base zone's setback if that is smaller (outside the Coastal Zone). Same 4 feet applies anywhere in a Very High Fire Hazard Severity Zone, at any height.",
         "Front setbacks follow your base zone, and an ADU cannot go in a front yard.",
-        "The practical consequence: on a narrow lot, a single-story ADU under 16 feet may yield more usable square footage than a taller two-story design, because the short one can hug the line and the tall one gives up four feet on three sides. That tradeoff is worth modeling before you talk to a designer — the Studio does it live.",
+        "The practical consequence: on a narrow lot, a single-story ADU of 16 feet or less may yield more usable square footage than a taller two-story design, because the short one can hug the line and the tall one gives up four feet on three sides. That tradeoff is worth modeling before you talk to a designer — the Studio does it live.",
       ],
     },
     {
@@ -173,7 +173,7 @@ export const sanDiego: JurisdictionContent = {
     {
       question: "Can I build an ADU to my property line in San Diego?",
       answer:
-        "Yes, if it stays under 16 feet tall and you are not in a Very High Fire Hazard Severity Zone. Side and rear setbacks drop to zero. At 16 feet or taller next to a residential zone, you owe 4 feet.",
+        "Yes, if it is no taller than 16 feet and you are not in a Very High Fire Hazard Severity Zone. Side and rear setbacks drop to zero. Over 16 feet next to a residential zone, you owe 4 feet, or your base zone's setback if that is smaller (outside the Coastal Zone).",
     },
     {
       question: "How many ADUs can I put on a single-family lot in San Diego?",
