@@ -4,7 +4,12 @@ import { NextRequest } from "next/server";
 const mocks = vi.hoisted(() => ({
   profileExists: true,
   stripe: null as null | {
-    checkout: { sessions: { create: ReturnType<typeof vi.fn> } };
+    checkout: {
+      sessions: {
+        create: ReturnType<typeof vi.fn>;
+        retrieve?: ReturnType<typeof vi.fn>;
+      };
+    };
   },
   runTransaction: vi.fn(),
 }));
@@ -138,6 +143,76 @@ describe("POST /api/stripe/checkout-credits", () => {
       .idempotencyKey;
     expect(firstKey).not.toBe(secondKey);
   });
+
+  it("returns to the dashboard with the Session id so the purchase can be confirmed", async () => {
+    mocks.stripe = {
+      checkout: {
+        sessions: {
+          create: vi.fn().mockResolvedValue({
+            id: "cs_test_new",
+            url: "https://stripe.test/credits",
+            created: Math.floor(Date.now() / 1000),
+          }),
+          retrieve: vi.fn(),
+        },
+      },
+    };
+
+    const res = await POST(postRequest({ pack: 5, checkoutAttemptId: "attempt-5" }));
+
+    expect(await res.json()).toEqual({ url: "https://stripe.test/credits" });
+    expect(mocks.stripe.checkout.sessions.create.mock.calls[0][0].success_url).toBe(
+      "http://localhost/builder?credits_added=1&session_id={CHECKOUT_SESSION_ID}",
+    );
+    // A freshly minted Session needs no second round trip.
+    expect(mocks.stripe.checkout.sessions.retrieve).not.toHaveBeenCalled();
+  });
+
+  it("resumes a replayed Session that is still open", async () => {
+    mocks.stripe = {
+      checkout: {
+        sessions: {
+          create: vi.fn().mockResolvedValue({
+            id: "cs_test_open",
+            url: "https://stripe.test/open",
+            created: Math.floor(Date.now() / 1000) - 600,
+          }),
+          retrieve: vi.fn().mockResolvedValue({ id: "cs_test_open", status: "open" }),
+        },
+      },
+    };
+
+    const res = await POST(postRequest({ pack: 5, checkoutAttemptId: "attempt-5" }));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ url: "https://stripe.test/open" });
+    expect(mocks.stripe.checkout.sessions.retrieve).toHaveBeenCalledWith("cs_test_open");
+  });
+
+  it.each(["complete", "expired"])(
+    "asks the client to rotate its attempt when the replayed Session is %s",
+    async (status) => {
+      mocks.stripe = {
+        checkout: {
+          sessions: {
+            create: vi.fn().mockResolvedValue({
+              id: "cs_test_done",
+              url: "https://stripe.test/done",
+              created: Math.floor(Date.now() / 1000) - 3600,
+            }),
+            retrieve: vi.fn().mockResolvedValue({ id: "cs_test_done", status }),
+          },
+        },
+      };
+
+      const res = await POST(postRequest({ pack: 5, checkoutAttemptId: "attempt-5" }));
+
+      expect(res.status).toBe(409);
+      expect(await res.json()).toEqual(
+        expect.objectContaining({ retryWithNewAttempt: true }),
+      );
+    },
+  );
 
   it("fails closed in production when Stripe is unavailable", async () => {
     vi.stubEnv("NODE_ENV", "production");

@@ -10,6 +10,12 @@ import { describeStripeError } from "@/lib/server/stripe-errors";
 
 export const runtime = "nodejs";
 
+/**
+ * A Session older than this when `create` returns it was not minted by this
+ * request: Stripe replayed an earlier response for the same idempotency key.
+ */
+const REPLAYED_SESSION_AGE_MS = 60_000;
+
 export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
@@ -131,7 +137,9 @@ export async function POST(request: NextRequest) {
           purchaseType: "credit_pack",
           creditsToGrant: String(pack),
         },
-        success_url: `${origin}/builder?credits_added=1`,
+        // Stripe fills in the Session id, so the dashboard can confirm this
+        // exact purchase in the ledger rather than guessing from a balance.
+        success_url: `${origin}/builder?credits_added=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/builder`,
       },
       {
@@ -144,6 +152,27 @@ export async function POST(request: NextRequest) {
       },
     );
 
+    // Credit packs are bought again and again, so the browser keeps one
+    // attempt id per pack until that purchase finishes. A replayed response
+    // for a Session that has since been paid or has expired is not payable;
+    // tell the client to rotate its attempt id instead of sending the buyer to
+    // a dead Checkout page.
+    if (session.created * 1000 < Date.now() - REPLAYED_SESSION_AGE_MS) {
+      const live = await stripe.checkout.sessions.retrieve(session.id);
+      if (live.status !== "open") {
+        return NextResponse.json(
+          {
+            error: "That checkout has already finished. Please try again.",
+            retryWithNewAttempt: true,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    if (!session.url) {
+      throw new Error("Stripe returned a Checkout Session without a URL");
+    }
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error(

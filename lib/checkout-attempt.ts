@@ -9,7 +9,7 @@
 
 export const CHECKOUT_ATTEMPT_TTL_MS = 24 * 60 * 60 * 1000;
 
-type CheckoutKind = "certificate" | "lead_unlock";
+type CheckoutKind = "certificate" | "lead_unlock" | "credit_pack";
 
 interface StoredCheckoutAttempt {
   id: string;
@@ -71,7 +71,7 @@ function saveAttempt(key: string, attempt: StoredCheckoutAttempt): void {
   memoryFallback.set(key, attempt);
 }
 
-/** Return the retry-stable token for one certificate or lead entitlement. */
+/** Return the retry-stable token for one certificate, lead, or credit-pack purchase. */
 export function getCheckoutAttemptId(
   kind: CheckoutKind,
   purchaseId: string,

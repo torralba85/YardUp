@@ -1,0 +1,137 @@
+import { expect, test, type Page, type Request } from "@playwright/test";
+import { mockTestOwnerAuth } from "./fixtures/studio-auth";
+
+// Browser-side audit of the web certificate checkout. The Stripe API and the
+// hosted Checkout page are both stubbed: no key, no Session, and no charge ever
+// leaves the test. Server-side Session creation, the webhook, and fulfilment
+// are covered by the Vitest route suites under app/api/stripe/.
+
+const STRIPE_CHECKOUT_URL = "https://checkout.stripe.com/c/pay/cs_test_e2e_fixture";
+const CERTIFICATE_ROUTE = "**/api/stripe/checkout-certificate";
+
+async function signIn(page: Page) {
+  await mockTestOwnerAuth(page);
+  await page.goto("/login?next=/studio");
+  await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
+  await page.locator('button[type="submit"]').click();
+  await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible();
+}
+
+function unlockButton(page: Page) {
+  return page.getByRole("button", { name: /Unlock property certificate/ }).filter({ visible: true }).first();
+}
+
+async function openCertificateStep(page: Page, query = "parcel=oak-street&step=certificate") {
+  await page.goto(`/studio?${query}`);
+  await expect(unlockButton(page)).toBeVisible();
+}
+
+test.describe("web certificate checkout", () => {
+  test("a signed-in buyer is sent to Stripe with a well-formed checkout request", async ({ page }) => {
+    await signIn(page);
+
+    let checkoutRequest: Request | null = null;
+    await page.route(CERTIFICATE_ROUTE, async (route) => {
+      checkoutRequest = route.request();
+      await route.fulfill({ json: { url: STRIPE_CHECKOUT_URL } });
+    });
+    await page.route("https://checkout.stripe.com/**", (route) =>
+      route.fulfill({ contentType: "text/html", body: "<title>Stripe Checkout (stub)</title><h1>Stub checkout</h1>" }),
+    );
+
+    await openCertificateStep(page);
+    await unlockButton(page).click();
+
+    await page.waitForURL(STRIPE_CHECKOUT_URL);
+    await expect(page.getByRole("heading", { name: "Stub checkout" })).toBeVisible();
+
+    expect(checkoutRequest).not.toBeNull();
+    const request = checkoutRequest as unknown as Request;
+    expect(request.method()).toBe("POST");
+    expect(request.headers()["authorization"]).toMatch(/^Bearer .+/);
+    const body = request.postDataJSON() as Record<string, unknown>;
+    expect(typeof body.certKey).toBe("string");
+    expect((body.certKey as string).length).toBeGreaterThan(0);
+    expect(typeof body.parcelName).toBe("string");
+    // A stable attempt id is what keeps a double click from minting two Sessions.
+    expect(typeof body.checkoutAttemptId).toBe("string");
+    expect((body.checkoutAttemptId as string).length).toBeGreaterThan(0);
+    // The scenario query rides along so Stripe returns the buyer to the same lot.
+    expect(body.returnSearch).toEqual(expect.stringContaining("parcel=oak-street"));
+  });
+
+  test("a retried checkout reuses the same attempt id", async ({ page }) => {
+    await signIn(page);
+
+    const attemptIds: string[] = [];
+    await page.route(CERTIFICATE_ROUTE, async (route) => {
+      attemptIds.push(String(route.request().postDataJSON()?.checkoutAttemptId));
+      await route.fulfill({ status: 502, json: { error: "Could not start checkout. Please try again." } });
+    });
+
+    await openCertificateStep(page);
+    await unlockButton(page).click();
+    await expect(page.getByText("Could not start checkout. Please try again.").first()).toBeVisible();
+    await expect(unlockButton(page)).toBeEnabled();
+    await unlockButton(page).click();
+    await expect.poll(() => attemptIds.length).toBe(2);
+    expect(attemptIds[0]).toBe(attemptIds[1]);
+  });
+
+  test("a checkout failure is reported and leaves the buyer on the paywall", async ({ page }) => {
+    await signIn(page);
+    await page.route(CERTIFICATE_ROUTE, (route) =>
+      route.fulfill({ status: 503, json: { error: "Payments are not available." } }),
+    );
+
+    await openCertificateStep(page);
+    await unlockButton(page).click();
+
+    await expect(page.getByText("Payments are not available.").first()).toBeVisible();
+    await expect(page).toHaveURL(/\/studio\?/);
+    await expect(unlockButton(page)).toBeEnabled();
+  });
+
+  test("a network failure reaching the checkout API is reported", async ({ page }) => {
+    await signIn(page);
+    await page.route(CERTIFICATE_ROUTE, (route) => route.abort("connectionrefused"));
+
+    await openCertificateStep(page);
+    await unlockButton(page).click();
+
+    await expect(
+      page.getByText("Could not reach the payment service. Check your connection and try again.").first(),
+    ).toBeVisible();
+    await expect(unlockButton(page)).toBeEnabled();
+  });
+
+  test("returning from a cancelled Stripe checkout shows a calm notice once", async ({ page }) => {
+    await signIn(page);
+    await openCertificateStep(page, "parcel=oak-street&step=certificate&checkout=cancelled");
+
+    const notice = page.getByText("Checkout cancelled. Your property analysis is still here whenever you're ready.");
+    await expect(notice.first()).toBeVisible();
+    // The one-shot marker is stripped so a reload never re-reports it.
+    await expect(page).not.toHaveURL(/checkout=cancelled/);
+    await page.reload();
+    await expect(page.getByRole("navigation", { name: /Studio steps|Journey progress/ }).first()).toBeVisible();
+    await expect(page).not.toHaveURL(/checkout=cancelled/);
+    await expect(notice).toHaveCount(0);
+  });
+
+  test("a guest is asked to sign in before any checkout request", async ({ page }) => {
+    let checkoutCalls = 0;
+    await page.route(CERTIFICATE_ROUTE, async (route) => {
+      checkoutCalls += 1;
+      await route.fulfill({ status: 401, json: { error: "unauthorized" } });
+    });
+
+    await page.goto("/studio?parcel=oak-street&step=certificate");
+    const cta = page.getByRole("button", { name: "Sign in to generate your certificate" }).filter({ visible: true }).first();
+    await expect(cta).toBeVisible();
+    await cta.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(checkoutCalls).toBe(0);
+  });
+});

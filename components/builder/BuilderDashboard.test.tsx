@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import BuilderDashboard from "./BuilderDashboard";
 import type { BuilderInboxItem, BuilderProfile } from "@/lib/marketplace-types";
 
@@ -287,5 +287,122 @@ describe("BuilderDashboard", () => {
     expect(spendCell).toHaveTextContent("$300");
     expect(spendCell).toHaveTextContent("2 unlocks");
     expect(spendCell).not.toHaveTextContent("$98");
+  });
+});
+
+describe("BuilderDashboard Stripe return", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    firestore.fetchBuilderLedger.mockResolvedValue([]);
+    firestore.fetchUnlockedContact.mockResolvedValue(null);
+    firestore.fetchBuilderProfile.mockResolvedValue(profile);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    window.history.replaceState(null, "", "/builder");
+  });
+
+  it("waits for a late webhook grant and then confirms the lead unlock", async () => {
+    window.history.replaceState(null, "", "/builder?lead=request-1&unlocked=1");
+    firestore.fetchBuilderInbox
+      .mockResolvedValueOnce([item])
+      .mockResolvedValueOnce([item])
+      .mockResolvedValue([{ ...item, unlocked: true }]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    expect(
+      await screen.findByText("Payment received. Confirming your unlock with Stripe…"),
+    ).toBeInTheDocument();
+    // The one-shot marker is gone; the lead selection is view state and stays.
+    expect(window.location.search).toBe("?lead=request-1");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+
+    expect(
+      await screen.findByText(
+        "Payment confirmed. The lead is unlocked and the owner contact is visible.",
+      ),
+    ).toBeInTheDocument();
+    expect(firestore.fetchBuilderInbox).toHaveBeenCalledTimes(3);
+  });
+
+  it("confirms immediately when the grant is already there", async () => {
+    window.history.replaceState(null, "", "/builder?lead=request-1&unlocked=1");
+    firestore.fetchBuilderInbox.mockResolvedValue([{ ...item, unlocked: true }]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    expect(
+      await screen.findByText(
+        "Payment confirmed. The lead is unlocked and the owner contact is visible.",
+      ),
+    ).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(firestore.fetchBuilderInbox).toHaveBeenCalledTimes(1);
+  });
+
+  it("confirms a credit pack by its ledger entry and shows the new balance", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/builder?credits_added=1&session_id=cs_test_pack",
+    );
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+    firestore.fetchBuilderProfile
+      .mockResolvedValueOnce(profile)
+      .mockResolvedValue({ ...profile, credits: 5 });
+    firestore.fetchBuilderLedger.mockResolvedValueOnce([]).mockResolvedValue([
+      {
+        id: "builder-1_cs_test_pack",
+        builderId: "builder-1",
+        type: "purchase",
+        creditsChange: 5,
+        amountPaid: 175,
+        referenceId: "cs_test_pack",
+        description: "",
+        createdAt: "2026-10-07T00:00:00.000Z",
+      },
+    ]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    expect(await screen.findByText("Payment received. Adding your credits…")).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+
+    expect(
+      await screen.findByText("Payment confirmed. Your credits have been added."),
+    ).toBeInTheDocument();
+    // The inbox picks up the re-read balance: the unlock offer now spends a credit.
+    expect(screen.getByRole("button", { name: /Unlock with 1 Credit/i })).toBeInTheDocument();
+  });
+
+  it("tells the builder what to do when the grant still has not arrived", async () => {
+    window.history.replaceState(null, "", "/builder?lead=request-1&unlocked=1");
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+
+    await screen.findByText("Payment received. Confirming your unlock with Stripe…");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(12_000);
+    });
+
+    expect(
+      await screen.findByText(/Stripe has your payment, but the unlock has not reached your dashboard yet/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/You will not be charged twice/)).toBeInTheDocument();
+    // First load plus six re-reads, then it stops.
+    expect(firestore.fetchBuilderInbox).toHaveBeenCalledTimes(7);
   });
 });
