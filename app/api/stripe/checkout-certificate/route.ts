@@ -173,6 +173,8 @@ export async function POST(request: NextRequest) {
     attemptId: checkoutAttemptId,
     parameters: {
       origin,
+      // An empty string pins the absence of email as well as a verified value.
+      customerEmail: verifiedEmail ?? "",
       parcelName: parcelName ?? "",
       returnSearch: returnSearch ?? "",
       address: address ?? "",
@@ -283,6 +285,8 @@ export async function POST(request: NextRequest) {
       const reservedZip = reservation.parameters.zip;
       const reservedLat = reservation.parameters.lat;
       const reservedLng = reservation.parameters.lng;
+      // Older reservations predate email pinning; keep their existing behavior.
+      const reservedEmail = reservation.parameters.customerEmail ?? verifiedEmail;
 
       const returnQuery = sanitizeReturnQuery(reservedReturnSearch);
 
@@ -293,7 +297,7 @@ export async function POST(request: NextRequest) {
           adaptive_pricing: { enabled: false },
           integration_identifier: "lotfoundry_certificate_wndqkplz",
           payment_intent_data: { statement_descriptor_suffix: "LOTFOUNDRY" },
-          ...(verifiedEmail ? { customer_email: verifiedEmail } : {}),
+          ...(reservedEmail ? { customer_email: reservedEmail } : {}),
           line_items: [
             {
               quantity: 1,

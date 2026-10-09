@@ -152,6 +152,24 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(create.mock.calls[1]).toEqual(create.mock.calls[0]);
   });
 
+  it.each([
+    [{ uid: "user-1", email: "first@example.test", emailVerified: true }, { uid: "user-1", email: "changed@example.test", emailVerified: true }],
+    [{ uid: "user-1" }, { uid: "user-1", email: "new@example.test", emailVerified: true }],
+    [{ uid: "user-1", email: "owner@example.test", emailVerified: false }, { uid: "user-1", email: "owner@example.test", emailVerified: true }],
+  ])("keeps email parameters identical after uncertain creation despite auth changes", async (originalAuth, refreshedAuth) => {
+    mocks.auth = originalAuth;
+    const create = vi.fn()
+      .mockRejectedValueOnce(new Error("Connection lost after Stripe accepted creation"))
+      .mockResolvedValueOnce({ id: "cs_retry", url: "https://checkout.stripe.com/retry" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    expect((await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }))).status).toBe(502);
+    mocks.auth = refreshedAuth;
+    expect((await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-2" }))).status).toBe(200);
+
+    expect(create.mock.calls[1]).toEqual(create.mock.calls[0]);
+  });
+
   it("400s without a valid certKey", async () => {
     expect((await POST(postRequest({}))).status).toBe(400);
     expect((await POST(postRequest({ certKey: "x".repeat(201) }))).status).toBe(

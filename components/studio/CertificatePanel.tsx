@@ -349,7 +349,7 @@ export default function CertificatePanel({
         parcelData: isLive ? (parcel as unknown as Record<string, unknown>) : undefined,
       });
       if (outcome.kind === "redirect") {
-        // Only a returned Checkout URL proves the buyer reaches Stripe.
+        // Record the successful URL handoff, immediately before navigation.
         trackCertificateCheckoutRedirected({
           value: CERTIFICATE_PRICE_CENTS / 100,
           currency: "USD",

@@ -566,7 +566,8 @@ export function trackCertificateCheckoutStarted(params: {
 /**
  * 10a. certificate_checkout_redirected — the checkout API returned a Stripe
  * Checkout URL and the browser is about to navigate to it. Unlike
- * `certificate_checkout_started`, this proves the buyer actually reached Stripe.
+ * `certificate_checkout_started`, this confirms the handoff was initiated, not
+ * that Stripe finished loading in the buyer's browser.
  */
 export function trackCertificateCheckoutRedirected(params: {
   value?: number;

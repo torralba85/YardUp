@@ -400,6 +400,26 @@ describe("CertificatePanel", () => {
       expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
     });
 
+    it("does not report a redirect or grant for a malformed successful API response", async () => {
+      const assign = stubLocationAssign();
+      const actual = await vi.importActual<typeof import("@/lib/certificate-checkout")>("@/lib/certificate-checkout");
+      mocks.startCertificateCheckout.mockImplementationOnce(actual.startCertificateCheckout);
+      const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+        new Response(JSON.stringify({ url: "not-a-checkout-url" }), { status: 200 }),
+      );
+      try {
+        render(<CertificatePanel {...createProps()} />);
+        fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+        expect(await screen.findByText("Could not start checkout. Please try again.")).toBeInTheDocument();
+        expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
+        expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
+        expect(assign).not.toHaveBeenCalled();
+        expect(mocks.refresh).not.toHaveBeenCalled();
+      } finally {
+        fetch.mockRestore();
+      }
+    });
+
     it("does not record a redirect for a demo or already-purchased grant", async () => {
       mocks.startCertificateCheckout.mockResolvedValueOnce({ kind: "granted", demo: true });
       render(<CertificatePanel {...createProps()} />);
