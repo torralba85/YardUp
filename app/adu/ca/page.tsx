@@ -44,7 +44,7 @@ const CITY_BLURBS: Record<string, string> = {
   escondido:
     "The handbook city: plain-English handout numbers and a literal submittal checklist, no coastal zone, and an Article 70 update moving through 2026.",
   carlsbad:
-    "The specific-standards city: named Coaster stations for parking and height relief, soils reports over 500 sq ft, and 2025–26 coastal-program amendments.",
+    "The specific-standards city: named Coaster stations for 18-foot height relief, a parking waiver that reaches bus stops, and a coastal permit for most ADUs in the Coastal Zone.",
 };
 
 /**

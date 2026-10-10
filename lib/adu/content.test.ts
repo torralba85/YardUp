@@ -116,4 +116,21 @@ describe("adu cost pages", () => {
     expect(answer).toContain("no taller than 16 feet");
     expect(answer).toContain("Over 16 feet");
   });
+
+  it("states Carlsbad's rules and permit steps from the City's IB-111 bulletin", () => {
+    const carlsbad = getCity("ca", "carlsbad");
+    const text = JSON.stringify(carlsbad);
+    // §21.58.030 governs permit expiration; the ADU section is §21.10.030.
+    expect(text).not.toContain("21.58.030");
+    expect(text).toContain("§21.10.030");
+    // The City's B-75 checklist exempts small single-story detached units from a soils report.
+    expect(text).not.toMatch(/soils report (is )?required (above|over) 500/i);
+    expect(carlsbad?.permitPortal.url).toBe(
+      "https://www.carlsbadca.gov/departments/community-development/building/accessory-dwelling-units",
+    );
+    const steps = carlsbad?.processSteps.map((step) => step.detail).join(" ");
+    expect(steps).toContain("Form B-1");
+    expect(steps).toContain("Form P-6");
+    expect(carlsbad?.processIntro).toContain("15 business days");
+  });
 });
