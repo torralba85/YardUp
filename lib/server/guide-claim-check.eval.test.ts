@@ -278,10 +278,22 @@ describe.skipIf(!live || !sourcesDir)("guide claim check labeled cases", () => {
         text: testCase.text,
       };
       const result = await judge(claim, "San Diego, California", index, new Map());
-      const verdict = result.judgment ? verdictFor(result.judgment).verdict : "unanswered";
-      return { ...testCase, verdict, ok: testCase.accept.includes(verdict) };
+      const { verdict, evidence } = result.judgment
+        ? verdictFor(result.judgment)
+        : { verdict: "unanswered" as const, evidence: [] };
+      // A miss prints the passages behind it, so it can be read, not guessed at.
+      const why = evidence.map((i) => {
+        const relation = result.judgment!.passages[i].relation!;
+        const passage = result.passages[i];
+        return `    ${passage.label} p. ${passage.page} (supports ${relation.supports.toFixed(2)}, ` +
+          `contradicts ${relation.contradicts.toFixed(2)}): ${passage.text.replace(/\s+/g, " ").slice(0, 240)}`;
+      });
+      return { ...testCase, verdict, why, ok: testCase.accept.includes(verdict) };
     });
-    for (const row of rows) console.log(`${row.ok ? "ok  " : "MISS"} ${row.verdict.padEnd(20)} ${row.text}`);
+    for (const row of rows) {
+      console.log(`${row.ok ? "ok  " : "MISS"} ${row.verdict.padEnd(20)} ${row.text}`);
+      if (!row.ok) console.log(row.why.join("\n"));
+    }
     console.log(`Labeled: ${rows.filter((row) => row.ok).length} of ${rows.length} in an accepted verdict`);
 
     const wrongDirection = rows.filter(

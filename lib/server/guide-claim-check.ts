@@ -40,9 +40,9 @@ export interface GuideClaim {
   text: string;
 }
 
-const ABBREVIATION_END = /\b(?:e\.g|i\.e|etc|vs|approx|No|St|Ch|Art|Div|Sec)\.$/;
+const ABBREVIATION_END = /\b(?:e\.g|i\.e|etc|vs|approx|min|max|No|St|Ch|Art|Div|Sec)\.$/;
 
-/** Splits copy into sentences, keeping "e.g." and "Ch." mid-sentence. */
+/** Splits copy into sentences, keeping "e.g.", "min." and "Ch." mid-sentence. */
 export function splitSentences(text: string): string[] {
   const parts = text.split(/(?<=[.!?])\s+(?=["“(]?[A-Z0-9§$])/);
   const sentences: string[] = [];

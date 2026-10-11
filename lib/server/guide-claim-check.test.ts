@@ -57,6 +57,12 @@ describe("splitSentences", () => {
     ]);
   });
 
+  it("keeps min. and max. inside a sentence", () => {
+    expect(splitSentences("Up to 50% of the house (min. 850–1,000 sq ft guaranteed)")).toEqual([
+      "Up to 50% of the house (min. 850–1,000 sq ft guaranteed)",
+    ]);
+  });
+
   it("keeps a trailing fragment without punctuation", () => {
     expect(splitSentences("150 to 1,200 sq ft")).toEqual(["150 to 1,200 sq ft"]);
   });

@@ -109,6 +109,50 @@ same author as the prompt, so they are a regression set, not accuracy
 evidence. The one hard floor is that a claim a source contradicts must never
 come back "supported".
 
+## First live run (October 11, 2026)
+
+There were two runs on master `6eb7550` content. The second reran only the
+sentences changed by a sentence-splitter fix (it was breaking "min.").
+
+- 460 sentences, 0 failed requests, `jev-1.13.0`, 1.19 million input tokens
+  (about $0.05).
+- San Diego: 3 contradicted, 2 sources disagree, 21 supported but leaves out a
+  condition, 13 review, 7 no source, 20 supported, 23 not a rule.
+- Labeled cases: 11 of 12, then 12 of 12. Two cases moved between verdicts on
+  identical input, so expect plus or minus a case per run. No contradicted
+  claim ever came back "supported".
+
+All 20 "contradicted" sentences were read against the documents by hand.
+
+- **Worth fixing.**
+  - San Diego says "an ADU cannot go in a front yard" in two places. IB-400 and
+    HCD allow one ADU of 800 sq ft or less into the front setback.
+  - San Diego's "no setback up to 16 ft" sentence leaves out that SDMC also
+    requires 4 ft in High fire zones, not only Very High.
+  - Chula Vista and Escondido call 850 to 1,000 sq ft "minimums". State law
+    makes those the size a city must allow, not a minimum.
+  - Carlsbad says an attached ADU is "never limited to less than 800 sq ft".
+    HCD gives 850 to 1,000 sq ft as the floor for percentage caps.
+- **Leads to verify.**
+  - Oceanside's four sentences on units over 1,000 sq ft taking the district's
+    setbacks. HCD says side and rear setbacks of no more than 4 ft apply to
+    any ADU (Gov. Code § 66314(d)(7)), with a Coastal Zone exception. Jev
+    judged these against the 800 sq ft unit passage instead, so this is a
+    lead, not proof.
+  - Carlsbad's replacement-parking note (state law bars replacement outside
+    Coastal Zone rules).
+  - Carlsbad's "at least 30 days" (HCD says "longer than 30 days").
+- **False positives.**
+  - The California hub's 850/1,000 sq ft sentence, which matches HCD.
+  - Carlsbad's meta description and Escondido's JADU sentence. Jev applied the
+    800 sq ft unit rule (66323) to general rules.
+  - Oceanside's coastal-track sentences.
+
+The `omits` Noul separates on-topic from off-topic passages (median 0.63 when
+a passage supports the claim, 0.18 when it says nothing). It still crosses 0.8
+on 132 of 595 supporting passages, so "leaves out a condition" is the noisiest
+queue; read it last.
+
 ## Reading the report
 
 Work top-down: contradicted, sources disagree, leaves out a condition, then
