@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
- * infrastructure (Firebase, Regrid, Census, USA Structures, OpenAI, Stripe, GA4).
+ * infrastructure (Firebase, Regrid, Census, USA Structures, OpenAI, TypeSafe, Stripe, GA4).
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 3, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 11, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -99,6 +99,15 @@ export default function PrivacyPage() {
             (2) parcel metrics, zoning constraints, and feasibility parameters to synthesize the
             narrative AI Project Brief and risk breakdown included with Certificates. OpenAI’s commercial
             API terms guarantee that user inputs are not used to train AI models.
+          </li>
+          <li>
+            <strong>Address &amp; Zoning Interpretation (TypeSafe):</strong> We use <em>TypeSafe</em>{" "}
+            for narrow multiple-choice judgments, not generated text. When you search for an address,
+            the text you typed and the candidate matches returned by our geocoding provider may be
+            sent to TypeSafe to pick the address you meant. For signed-in parcel lookups that return
+            zoning data, the zoning designation and description, with the parcel&rsquo;s city, county,
+            and state (not its street address), may be sent to TypeSafe to check how we classify the
+            zoning district. Neither request includes your name, email, or account details.
           </li>
           <li>
             <strong>Usage and Conversion Measurement:</strong> <em>Google Analytics 4</em> and{" "}
