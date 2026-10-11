@@ -16,7 +16,7 @@ export const chulaVista: JurisdictionContent = {
   city: "Chula Vista",
   slug: "chula-vista",
   county: "San Diego County",
-  asOf: "2026-09-17",
+  asOf: "2026-10-10",
   metaTitle: "Chula Vista ADU Rules (2026): Size, Setbacks & Permits",
   metaDescription:
     "Chula Vista ADU rules: 850–1,000 sq ft minimums, 4 ft side and rear setbacks, and preapproved plans that cut review to a flat fee. Check your lot, free.",
@@ -61,14 +61,14 @@ export const chulaVista: JurisdictionContent = {
   fees: {
     heading: "Cost and fees in Chula Vista",
     paragraphs: [
-      "Chula Vista follows the state fee caps — no impact fees under 750 square feet, proportional fees above, no school fees under 500 square feet — and adds its most homeowner-friendly feature on top: a flat building-permit review fee for preapproved standard plans. A standard-plan unit under 750 square feet is close to the minimum fee exposure California law allows anywhere.",
+      "Chula Vista follows the state fee caps — no development impact fees at 750 square feet or less of interior livable space, proportional fees above, no school fees under 500 square feet (school and utility fees remain separate) — and adds its most homeowner-friendly feature on top: a flat building-permit review fee for preapproved standard plans. A standard-plan unit of 750 square feet or less is close to the minimum fee exposure California law allows anywhere.",
       "Custom designs pay standard hourly or valuation-based plan-check rates instead of the flat fee, which is one more reason to at least price the standard plans before commissioning custom drawings. Hillside lots should separately budget for geotechnical work, which is a consultant cost, not a city fee, and often exceeds the permit fees themselves.",
     ],
     bullets: [
       "Standard-plan building review: flat fee per the Master Fee Schedule (confirm current figure with Development Services)",
       "Custom-plan review: standard plan-check rates",
-      "Development impact fees: none under 750 sq ft; proportional above",
-      "School fees: exempt under 500 sq ft",
+      "Development impact fees: exempt at 750 sq ft or less; proportional above",
+      "School fees: exempt under 500 sq ft; district fees apply above",
       "Utility connections: confirm capacity and connection charges with the serving providers",
     ],
   },

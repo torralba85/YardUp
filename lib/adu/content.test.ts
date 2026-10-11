@@ -42,9 +42,10 @@ describe("adu content helpers", () => {
     expect(stateCostUrl()).toBe("https://lotfoundry.net/adu/ca/cost");
   });
 
-  it("instruments mid-page and end-of-page CTAs as separate events", () => {
+  it("instruments mid-page, end-of-page, and calculator CTAs as separate events", () => {
     expect(aduCtaEvent("mid")).toBe("adu_cta_mid");
     expect(aduCtaEvent("end")).toBe("adu_cta_end");
+    expect(aduCtaEvent("calculator")).toBe("adu_cta_calculator");
   });
 
   it("leads metadata with the answer and a self-referencing canonical", () => {

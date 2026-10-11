@@ -16,12 +16,12 @@ export const oceanside: JurisdictionContent = {
   city: "Oceanside",
   slug: "oceanside",
   county: "San Diego County",
-  asOf: "2026-09-17",
+  asOf: "2026-10-10",
   metaDescription:
-    "Oceanside charges no ADU impact fees and allows 850–1,000 sq ft at 4 ft setbacks, with extra coastal review near the beach. See what fits your lot, free.",
+    "Oceanside ADU rules: ordinance impact-fee relief, 850–1,000 sq ft at 4 ft setbacks, coastal review near the beach. See what fits your lot, free.",
   introAnswer: [
     "Yes — Oceanside allows at least one detached ADU plus one junior ADU on virtually every single-family lot, with state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
-    "Oceanside is unusually explicit in writing about fees: the zoning ordinance states the city shall not impose impact fees on ADU development, and review runs on the state's 60-day ministerial clock for complete applications.",
+    "Oceanside’s fee rules have an important dual layer: the city's zoning ordinance states that the city shall not impose impact fees on ADU development, while state law independently guarantees an impact-fee exemption at 750 square feet or less of interior livable space and authorizes proportional impact fees for larger units. Confirm with Planning how larger units are currently assessed before budgeting.",
     "The defining local question is the coast. A large share of Oceanside sits in the coastal zone, the city's coastal ADU rules have awaited Coastal Commission certification, and coastal parcels can need a coastal development permit on top of the standard approval — confirm your parcel's status before designing.",
   ],
   metaSizeNote: "850–1,000+ sq ft by bedroom count; larger detached units allowed",
@@ -45,7 +45,7 @@ export const oceanside: JurisdictionContent = {
       paragraphs: [
         "Oceanside regulates ADUs through its Comprehensive Zoning Ordinance, in the part covering regulations that apply across districts, rather than through a standalone ADU chapter. In practice that means your ADU answers come from two places: the ADU-specific provisions (sizes, setbacks, ministerial review) and the underlying district rules for your street (front setbacks, height context, design expectations). Read both before settling on placement.",
         "The coastal zone dominates Oceanside ADU planning more than in any other North County city. The city's own zoning text notes that Coastal Commission certification of a local coastal program amendment for coastal-zone properties has been pending — meaning the exact interface between state ADU rights and coastal review on coastal parcels has been a moving target. The practical consequence is stable even while the paperwork moves: if your parcel is in the coastal zone, budget for a possible coastal development permit and an extended timeline, and get a written read from Planning on which rules apply to your address before spending on drawings.",
-        "One genuinely homeowner-friendly provision is stated plainly in the ordinance: the city shall not impose impact fees on ADU development. Combined with the statewide exemption from school fees under 500 square feet, a small Oceanside ADU carries about the lightest municipal fee load the law allows. Larger units can still trigger proportional fees and school district fees, so the 500 and 750 square-foot thresholds matter here exactly as they do statewide.",
+        "The fee picture in Oceanside sits at the intersection between local code language and state statute. Oceanside’s zoning ordinance states that the city shall not impose impact fees on ADU development. At the state level, California independently exempts ADUs of 750 square feet of interior livable space or less from local development impact fees and exempts units under 500 square feet from school fees, while authorizing proportional impact fees for larger units. How the city harmonizes its ordinance text with state proportional fee rules in practice is a question for Planning before you budget a larger unit — do not assume zero impact fees for units over 750 square feet without written confirmation from the city, and remember school district and utility connection fees remain separate.",
       ],
     },
     {
@@ -60,11 +60,11 @@ export const oceanside: JurisdictionContent = {
   fees: {
     heading: "Cost and fees in Oceanside",
     paragraphs: [
-      "Oceanside's headline fee feature is the ordinance-level statement against ADU impact fees, and state law adds the under-750-square-foot impact-fee exemption and the under-500-square-foot school-fee exemption on top. Small units therefore face mostly building-permit, plan-check, and utility-connection costs.",
+      "Oceanside's zoning ordinance states that the city shall not impose impact fees on ADU development, while state law independently guarantees that ADUs of 750 square feet or less of interior livable space are exempt from local development impact fees (and under 500 square feet from school fees). For units larger than 750 square feet, state law authorizes proportional impact fees; confirm with Planning how the city currently assesses impact fees on larger ADUs rather than assuming zero fees. Small units face primarily building-permit, plan-check, and utility-connection costs.",
       "This page does not print permit totals because the city's fee schedule is revised regularly and totals swing with unit size. Confirm current figures with Planning before budgeting, and treat builder-published cost ranges as what they are — construction estimates, not the city's fee table.",
     ],
     bullets: [
-      "Development impact fees: city ordinance states none shall be imposed on ADU development (confirm current text with Planning)",
+      "Development impact fees: exempt at 750 sq ft or less under state law; local ordinance contains broad no-impact-fee language (confirm current application for larger units with Planning)",
       "School fees: exempt under 500 sq ft; district fees can apply above",
       "Building permit + plan check: per the current city fee schedule",
       "Utility connections: confirm capacity and connection charges with serving providers",
@@ -111,9 +111,9 @@ export const oceanside: JurisdictionContent = {
         "Yes, on virtually every single-family lot: at least one detached ADU plus one junior ADU, approved ministerially. The one systematic exception is the coastal zone, where a coastal development permit can apply on top of the standard approval.",
     },
     {
-      question: "Does Oceanside charge impact fees on a granny flat?",
+      question: "Does Oceanside charge impact fees on an ADU?",
       answer:
-        "The zoning ordinance states the city shall not impose impact fees on ADU development, and state law independently exempts units under 750 square feet. Confirm the current ordinance text with Planning, since fee provisions are the most-amended part of any ADU code.",
+        "For units of 750 square feet or less of interior livable space, state law exempts ADUs from local development impact fees. While Oceanside's zoning ordinance contains language stating the city shall not impose impact fees on ADU development, state law authorizes proportional impact fees above 750 square feet. Homeowners planning larger units should verify with Planning how the city currently applies impact fees in practice, and remember school district and utility connection fees remain separate.",
     },
     {
       question: "What are the setback rules for a casita in Oceanside?",
