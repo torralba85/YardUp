@@ -16,7 +16,10 @@ it("announces a reset failure and focuses the success confirmation after retry",
   await screen.findByRole("alert");
   expect(email).toHaveFocus();
   expect(email).toHaveAttribute("aria-describedby", "reset-email-error");
-  await userEvent.click(screen.getByRole("button", { name: "Send reset link" }));
+  // The error can render before React finishes the async transition.
+  const retry = await screen.findByRole("button", { name: "Send reset link" });
+  expect(retry).toBeEnabled();
+  await userEvent.click(retry);
   const confirmation = await screen.findByRole("status");
   expect(confirmation).toHaveFocus();
   expect(confirmation).toHaveTextContent("owner@example.test");
