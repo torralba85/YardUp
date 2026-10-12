@@ -65,13 +65,13 @@ export const carlsbad: JurisdictionContent = {
     heading: "Cost and fees in Carlsbad",
     paragraphs: [
       "The city estimates permit fees for most ADUs at about $2,000 to $4,000, depending on square footage, under its Master Fee Schedule. Plan check and inspection fees apply to every ADU, and plan check does not start until the review fees are paid.",
-      "Impact fees follow state law: none for an ADU under 750 square feet or for any junior ADU, and proportional above that. A 1,000 square foot ADU beside a 2,000 square foot house pays 50% of the house-equivalent fee. School districts and other agencies can still charge their own fees. A new utility connection may carry connection and capacity charges, but conversions within the existing home, including expansions of up to 150 square feet, need no new connection.",
-      "The city also says its free permit-ready plans save three to six months and roughly $8,000 to $16,000 in design fees. When checked on October 10, 2026, the program page listed those plans as unavailable while they are updated to the 2025 California Building Codes.",
+      "Impact fees follow state law: none for an ADU of 750 square feet or less of interior livable space or for any junior ADU, and proportional above that. A 1,000 square foot ADU beside a 2,000 square foot house pays 50% of the house-equivalent fee. School districts and other agencies can still charge their own fees. A new utility connection may carry connection and capacity charges, but conversions within the existing home, including expansions of up to 150 square feet, need no new connection.",
+      "The city provides free permit-ready plans designed to eliminate custom architectural fees and streamline plan check. When checked on October 10, 2026, the program page listed those plans as temporarily unavailable while they are updated to the 2025 California Building Codes.",
     ],
     bullets: [
       "Permit fees: about $2,000–$4,000 for most ADUs, per the city's estimate from its Master Fee Schedule",
       "Plan check and inspection fees: apply to every ADU; plan check starts after review fees are paid",
-      "Impact fees: none under 750 sq ft or for any JADU; proportional above",
+      "Impact fees: exempt at 750 sq ft or less or for any JADU; proportional above",
       "School and special-district fees: confirm with the district",
       "Utility connections: possible charges for a new connection; none for conversions within the home",
       "Coastal Zone: budget for the Minor Coastal Development Permit application",
@@ -144,7 +144,7 @@ export const carlsbad: JurisdictionContent = {
     {
       question: "How much are ADU permit fees in Carlsbad?",
       answer:
-        "The city estimates about $2,000 to $4,000 for most ADUs, depending on size, under its Master Fee Schedule. ADUs under 750 square feet and all junior ADUs pay no impact fees, though school districts and other agencies may charge their own.",
+        "The city estimates about $2,000 to $4,000 for most ADUs, depending on size, under its Master Fee Schedule. ADUs of 750 square feet or less of interior livable space and all junior ADUs pay no development impact fees, though school districts and other agencies may charge their own.",
     },
     {
       question: "Do I need a coastal permit for an in-law unit in Carlsbad?",

@@ -42,9 +42,10 @@ describe("adu content helpers", () => {
     expect(stateCostUrl()).toBe("https://lotfoundry.net/adu/ca/cost");
   });
 
-  it("instruments mid-page and end-of-page CTAs as separate events", () => {
+  it("instruments mid-page, end-of-page, and calculator CTAs as separate events", () => {
     expect(aduCtaEvent("mid")).toBe("adu_cta_mid");
     expect(aduCtaEvent("end")).toBe("adu_cta_end");
+    expect(aduCtaEvent("calculator")).toBe("adu_cta_calculator");
   });
 
   it("leads metadata with the answer and a self-referencing canonical", () => {
@@ -105,6 +106,12 @@ describe("adu cost pages", () => {
     expect(title).toBe("ADU Rules in San Diego, CA (2026): Size, Setbacks & Permits");
     expect(sanDiego?.h1).toBeUndefined();
     expect(String(sanDiego?.metaDescription).length).toBeLessThanOrEqual(160);
+  });
+
+  it("scopes the San Diego fire-zone setback to High and Very High zones, as SDMC 141.0302(b)(9) does", () => {
+    const sanDiego = getCity("ca", "san-diego");
+    expect(JSON.stringify(sanDiego)).not.toMatch(/(?<!High (?:and|or) )(?<!High\/)Very High/);
+    expect(sanDiego?.metaDescription).toContain("outside High/Very High fire zones");
   });
 
   it("states the San Diego height threshold as the City does: over 16 feet, not 16 feet or taller", () => {

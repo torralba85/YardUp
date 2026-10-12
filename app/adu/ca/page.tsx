@@ -40,7 +40,7 @@ const CITY_BLURBS: Record<string, string> = {
   "chula-vista":
     "The predictable-permit city: preapproved standard plans with flat-fee review, a 30-day minimum rental rule, and hillside soils review in the east.",
   oceanside:
-    "The no-impact-fee ordinance city, with a coastal development permit layer over much of town while coastal ADU rules await certification.",
+    "The ordinance impact-fee relief city, with a coastal development permit layer over much of town while coastal ADU rules await certification.",
   escondido:
     "The handbook city: plain-English handout numbers and a literal submittal checklist, no coastal zone, and an Article 70 update moving through 2026.",
   carlsbad:

@@ -323,10 +323,11 @@ export default function AduCostCalculatorPage() {
           State rules that change your budget
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
-          California caps what a city can charge and require. No impact fees
-          apply under 750 sq ft, a city can require at most one parking space,
-          and converting a garage or other existing space needs no new
-          setbacks. The{" "}
+          California caps what a city can charge and require. ADUs of 750 sq ft
+          or less of interior livable space are exempt from local development
+          impact fees (school fees and utility connections remain separate), a
+          city can require at most one parking space, and converting a garage
+          or other existing space needs no new setbacks. The{" "}
           <Link
             href="/adu/ca"
             className="underline underline-offset-2 hover:text-lot-ink"

@@ -34,12 +34,13 @@ export interface AduSource {
 export type AduConfidence = "primary" | "secondary" | "unverified";
 
 /** Where on a jurisdiction page a Studio CTA sits. */
-export type AduCtaPlacement = "mid" | "end";
+export type AduCtaPlacement = "mid" | "end" | "calculator";
 
 /**
  * Analytics event for a Studio CTA submission, separated by placement so
- * mid-page and end-of-page conversion can be told apart. Lives here (not
- * in content.ts) so the client CTA island doesn't bundle all city content.
+ * mid-page, end-of-page, and calculator conversion can be told apart. Lives
+ * here (not in content.ts) so the client CTA island doesn't bundle all city
+ * content.
  */
 export function aduCtaEvent(placement: AduCtaPlacement): string {
   return `adu_cta_${placement}`;
