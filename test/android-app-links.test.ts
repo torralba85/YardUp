@@ -30,8 +30,8 @@ describe("Android browser auth and checkout handoffs", () => {
 
   it("does not register implicit website links in future builds on any Android version", () => {
     expect(manifest.querySelector("parsererror")).toBeNull();
-    for (const filter of manifest.querySelectorAll("intent-filter")) {
-      const schemes = [...filter.querySelectorAll("data")]
+    for (const filter of Array.from(manifest.querySelectorAll("intent-filter"))) {
+      const schemes = Array.from(filter.querySelectorAll("data"))
         .map((data) => android(data, "scheme"));
       expect(schemes).not.toContain("https");
       expect(schemes).not.toContain("http");
@@ -39,20 +39,20 @@ describe("Android browser auth and checkout handoffs", () => {
   });
 
   it("preserves launcher entry, studio launch URL and Play Billing", () => {
-    const launcher = [...manifest.querySelectorAll("activity")]
+    const launcher = Array.from(manifest.querySelectorAll("activity"))
       .find((activity) => android(activity, "name") === "LauncherActivity");
     expect(launcher).toBeDefined();
-    const filters = [...launcher!.querySelectorAll("intent-filter")];
+    const filters = Array.from(launcher!.querySelectorAll("intent-filter"));
     expect(filters.some((filter) =>
-      [...filter.querySelectorAll("action")].some((action) =>
+      Array.from(filter.querySelectorAll("action")).some((action) =>
         android(action, "name") === "android.intent.action.MAIN") &&
-      [...filter.querySelectorAll("category")].some((category) =>
+      Array.from(filter.querySelectorAll("category")).some((category) =>
         android(category, "name") === "android.intent.category.LAUNCHER"),
     )).toBe(true);
     const twa = JSON.parse(readFileSync("native/android/twa-manifest.json", "utf8"));
     expect(twa.startUrl).toBe("/studio");
     expect(twa.features.playBilling.enabled).toBe(true);
-    expect([...manifest.querySelectorAll("action")].some((action) =>
+    expect(Array.from(manifest.querySelectorAll("action")).some((action) =>
       android(action, "name") === "org.chromium.intent.action.PAY")).toBe(true);
   });
 });
