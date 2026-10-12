@@ -113,6 +113,13 @@ Notes for the form:
   the planning narrative for Certificates of Feasibility. OpenAI acts as a
   service provider processing on our behalf under commercial API terms (no
   model training on API inputs), matching `app/privacy/page.tsx`.
+- The address disambiguation and zoning shadow feature forwards candidate
+  address strings and zoning district labels to TypeSafe to pick the best match
+  and evaluate zoning classifications (`app/privacy/page.tsx` § Third-Party
+  Subprocessors). Neither query transmits user names, emails, account IDs, or
+  street addresses. TypeSafe processes data strictly as a service provider on our
+  behalf under contract; under Play policy, this does not constitute third-party
+  sharing.
 - No crash/analytics SDK ships in the app bundle, so **Crash logs** and
   **Diagnostics** under App info and performance stay undeclared.
 - **App activity -> App interactions** must be declared: Collected, Not shared,
@@ -132,7 +139,7 @@ Notes for the form:
 For every collected data type: `Encrypted in transit: Yes`. Do not declare ads
 or third-party advertising. Firebase, Google Maps/Places/Geocoding, Regrid,
 the US Census geocoder, public county/state parcel GIS services, USA Structures,
-OpenAI, Stripe, and store billing process data for LotFoundry; the builder
+OpenAI, TypeSafe, Stripe, and store billing process data for LotFoundry; the builder
 marketplace disclosure above is the only third-party sharing claim.
 
 ## Content rating
