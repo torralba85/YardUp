@@ -42,9 +42,12 @@ export interface GuideClaim {
 
 const ABBREVIATION_END = /\b(?:e\.g|i\.e|etc|vs|approx|min|max|No|St|Ch|Art|Div|Sec)\.$/;
 
-/** Splits copy into sentences, keeping "e.g.", "min." and "Ch." mid-sentence. */
+/**
+ * Splits copy into sentences, keeping "e.g.", "min." and "Ch." mid-sentence.
+ * A sentence may end inside a closing quote or bracket: `says “four feet.” Parking`.
+ */
 export function splitSentences(text: string): string[] {
-  const parts = text.split(/(?<=[.!?])\s+(?=["“(]?[A-Z0-9§$])/);
+  const parts = text.split(/(?<=[.!?]["”’)]*)\s+(?=["“‘(]?[A-Z0-9§$])/);
   const sentences: string[] = [];
   for (const part of parts) {
     const last = sentences.length - 1;
@@ -63,12 +66,16 @@ class ClaimCollector {
 
   constructor(private readonly guide: string) {}
 
-  /** Adds each sentence of `text`, with the previous sentence as context. */
+  /**
+   * Adds each sentence of `text`, with the previous sentence as context. A
+   * repeat is dropped only when its context repeats too: "That limit applies
+   * in all zones." can be true after one sentence and false after another.
+   */
   add(location: string, section: string, text: string | undefined, context?: string) {
     if (!text) return;
     let previous = context;
     splitSentences(text).forEach((sentence, index, all) => {
-      const key = sentence.toLowerCase();
+      const key = `${sentence}\u0000${previous ?? ""}`.toLowerCase();
       if (!this.seen.has(key)) {
         this.seen.add(key);
         this.claims.push({
@@ -252,6 +259,9 @@ export interface ClaimJudgment {
   inputTokens?: number;
 }
 
+/** Rounding slack when checking that a Choice distribution sums to 1. */
+const PROBABILITY_SUM_TOLERANCE = 0.02;
+
 function probability(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1
     ? value
@@ -273,6 +283,9 @@ export function readClaimAnswers(
     if (answer?.type !== "choice" || !answer.probabilities) return null;
     const read = RELATIONS.map((key) => probability(answer.probabilities[key]));
     if (read.some((value) => value === null)) return null;
+    // The three options are the whole distribution; anything else is malformed.
+    const total = read.reduce<number>((sum, value) => sum + value!, 0);
+    if (Math.abs(total - 1) > PROBABILITY_SUM_TOLERANCE) return null;
     return { supports: read[0]!, contradicts: read[1]!, says_nothing: read[2]! };
   };
   return {
@@ -364,7 +377,9 @@ export function verdictFor(
   if (judgment.checkable === null) return { verdict: "unanswered", evidence: [] };
   if (judgment.checkable < policy.checkableMin) return { verdict: "not_a_rule", evidence: [] };
   if (judgment.passages.length === 0) return { verdict: "no_source", evidence: [] };
-  if (judgment.passages.every((passage) => passage.relation === null)) {
+  // Any missing answer could be the contradiction or omitted condition that
+  // changes the verdict, so a partial judgment is never read as a full one.
+  if (judgment.passages.some((passage) => passage.relation === null || passage.omits === null)) {
     return { verdict: "unanswered", evidence: [] };
   }
 

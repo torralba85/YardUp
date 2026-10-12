@@ -7,7 +7,7 @@
  */
 
 const TYPESAFE_SYSTEMONE_API = "https://api.typesafe.ai/v1/systemone";
-const DEFAULT_MODEL = "jev-latest";
+export const DEFAULT_MODEL = "jev-latest";
 
 /** A Choice question: pick one key of `criteria`, each described by its value. */
 export interface TypeSafeChoiceQuestion {

@@ -29,6 +29,7 @@ import {
   sourcesForGuide,
   VAULT_DOCUMENTS,
 } from "./guide-claim-sources";
+import { DEFAULT_MODEL } from "./typesafe";
 
 /**
  * Opt-in runner for the guide claim check, kept out of normal CI and npm test
@@ -47,7 +48,9 @@ import {
  */
 const sourcesDir = process.env.GUIDE_CHECK_SOURCES ?? "";
 const dryRun = process.env.GUIDE_CHECK_DRY_RUN === "true";
-const live = process.env.RUN_TYPESAFE_EVAL === "true" && Boolean(process.env.TYPESAFE_API_KEY);
+// A dry run never spends, even when the live runner's variables are also set.
+const live =
+  !dryRun && process.env.RUN_TYPESAFE_EVAL === "true" && Boolean(process.env.TYPESAFE_API_KEY);
 const enabled = Boolean(sourcesDir) && (dryRun || live);
 const reportDir =
   process.env.GUIDE_CHECK_REPORT_DIR ?? join(tmpdir(), "lotfoundry-guide-claim-check");
@@ -130,13 +133,19 @@ async function judge(
 ): Promise<ClaimResult> {
   const passages = index.search(`${claim.section} ${claim.text}`, PASSAGES_PER_CLAIM);
   if (!live) return { claim, passages, judgment: null };
+  // The exact body askTypeSafe sends, model included. `jev-latest` is an
+  // alias, so delete judgments.jsonl when the report shows a new model.
   const key = createHash("sha256")
-    .update(JSON.stringify(buildClaimRequest(claim, jurisdiction, passages)))
+    .update(JSON.stringify({ model: DEFAULT_MODEL, ...buildClaimRequest(claim, jurisdiction, passages) }))
     .digest("hex");
   const cached = cache.get(key);
-  if (cached) return { claim, passages, judgment: cached };
+  if (cached && verdictFor(cached).verdict !== "unanswered") return { claim, passages, judgment: cached };
   try {
     const judgment = await checkClaim(claim, jurisdiction, passages);
+    // A malformed answer is a failure: never cached, and counted by the gate.
+    if (verdictFor(judgment).verdict === "unanswered") {
+      return { claim, passages, judgment, error: "unanswered" };
+    }
     cache.set(key, judgment);
     appendFileSync(cacheFile, `${JSON.stringify({ key, judgment })}\n`);
     return { claim, passages, judgment };
@@ -187,7 +196,9 @@ describe.skipIf(!enabled)("guide claim check over the published guides", () => {
     console.log(`Guide claim check: ${results.length} sentences -> ${join(reportDir, `${name}.md`)}`);
 
     const failed = results.filter((result) => result.error).length;
-    expect(failed, `${failed} requests failed`).toBeLessThanOrEqual(results.length * 0.05);
+    expect(failed, `${failed} requests failed or came back malformed`).toBeLessThanOrEqual(
+      results.length * 0.05,
+    );
   });
 });
 
@@ -295,6 +306,11 @@ describe.skipIf(!live || !sourcesDir)("guide claim check labeled cases", () => {
       if (!row.ok) console.log(row.why.join("\n"));
     }
     console.log(`Labeled: ${rows.filter((row) => row.ok).length} of ${rows.length} in an accepted verdict`);
+
+    // Usable answers first: an empty or malformed response must not pass the
+    // safety check below by never saying "supported".
+    const unanswered = rows.filter((row) => row.verdict === "unanswered");
+    expect(unanswered.map((row) => row.text)).toEqual([]);
 
     const wrongDirection = rows.filter(
       (row) => SHOULD_NOT_PASS.has(row.text) && row.verdict === "supported",

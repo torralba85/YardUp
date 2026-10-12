@@ -65,38 +65,48 @@ export function hasLocalSources(guide: string): boolean {
 const DEFAULT_MAX_CHARS = 900;
 
 /** Digits masked, so "Ch. Art. Div. 14 1 3 5" and "... 14 1 3 6" count as one footer. */
-function furnitureKey(line: string): string {
+function maskDigits(line: string): string {
   return line.replace(/\d+/g, "#");
 }
 
+/** Lines this close to a page's top or bottom can be a running header or footer. */
+const MARGIN_LINES = 3;
+
 /**
- * Drops running headers and footers: a line that repeats (page numbers
- * aside) on at least three pages and on a fifth of them is page furniture,
- * not code text.
+ * Drops running headers and footers. A short line that repeats exactly on at
+ * least three pages and a fifth of them is page furniture. So is one that
+ * repeats with only its numbers changed ("Ch. Art. Div. 14 1 3 5"), but only
+ * at a page's top or bottom: in the body, lines differing only in numbers are
+ * content, such as fee amounts in a schedule.
  */
 function contentLines(text: string): { line: string; page: number }[] {
   const pages = text.split("\f");
-  const pageCount = new Map<string, number>();
+  const exactCount = new Map<string, number>();
+  const maskedCount = new Map<string, number>();
   const perPage = pages.map((page) => {
     const lines = page
       .split(/\r?\n/)
       .map((line) => line.replace(/\s+/g, " ").trim())
       .filter((line) => line !== "");
-    new Set(lines.map(furnitureKey)).forEach((key) =>
-      pageCount.set(key, (pageCount.get(key) ?? 0) + 1),
+    new Set(lines).forEach((line) => exactCount.set(line, (exactCount.get(line) ?? 0) + 1));
+    new Set(lines.map(maskDigits)).forEach((key) =>
+      maskedCount.set(key, (maskedCount.get(key) ?? 0) + 1),
     );
     return lines;
   });
+  const repeats = (count: number) => count >= 3 && count >= pages.length / 5;
   // Headers and footers are short; a long repeated line is real text.
-  const furniture = (line: string) => {
-    const count = pageCount.get(furnitureKey(line)) ?? 0;
-    return (
-      (line.length <= 80 && count >= 3 && count >= pages.length / 5) ||
-      /^(page )?\d+( of \d+)?$/i.test(line)
-    );
+  const furniture = (line: string, index: number, pageLength: number) => {
+    if (/^(page )?\d+( of \d+)?$/i.test(line)) return true;
+    if (line.length > 80) return false;
+    if (repeats(exactCount.get(line) ?? 0)) return true;
+    const atMargin = index < MARGIN_LINES || index >= pageLength - MARGIN_LINES;
+    return atMargin && repeats(maskedCount.get(maskDigits(line)) ?? 0);
   };
-  return perPage.flatMap((lines, index) =>
-    lines.filter((line) => !furniture(line)).map((line) => ({ line, page: index + 1 })),
+  return perPage.flatMap((lines, pageIndex) =>
+    lines
+      .filter((line, index) => !furniture(line, index, lines.length))
+      .map((line) => ({ line, page: pageIndex + 1 })),
   );
 }
 

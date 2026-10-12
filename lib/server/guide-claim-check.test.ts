@@ -66,6 +66,18 @@ describe("splitSentences", () => {
   it("keeps a trailing fragment without punctuation", () => {
     expect(splitSentences("150 to 1,200 sq ft")).toEqual(["150 to 1,200 sq ft"]);
   });
+
+  it("splits after a sentence that ends inside closing quotes or brackets", () => {
+    expect(splitSentences("The rule says “four feet.” Parking is waived.")).toEqual([
+      "The rule says “four feet.”",
+      "Parking is waived.",
+    ]);
+    expect(splitSentences('It reads "16 feet." (See IB-400.) Fees apply.')).toEqual([
+      'It reads "16 feet."',
+      "(See IB-400.)",
+      "Fees apply.",
+    ]);
+  });
 });
 
 describe("claim extraction", () => {
@@ -109,6 +121,21 @@ describe("claim extraction", () => {
       processIntro: "Same sentence.",
     } satisfies JurisdictionContent;
     expect(claimsFromGuide(content).filter((claim) => claim.text === "Same sentence.")).toHaveLength(1);
+  });
+
+  it("keeps a repeated sentence whose meaning depends on a different context", () => {
+    const content = {
+      ...sanDiego,
+      cityDiffers: [
+        { heading: "Detached", paragraphs: ["Detached ADUs may be 16 feet tall. That limit applies in all zones."] },
+        { heading: "Attached", paragraphs: ["Attached ADUs may be 25 feet tall. That limit applies in all zones."] },
+      ],
+    } satisfies JurisdictionContent;
+    const repeats = claimsFromGuide(content).filter((claim) => claim.text === "That limit applies in all zones.");
+    expect(repeats.map((claim) => claim.context)).toEqual([
+      "Detached ADUs may be 16 feet tall.",
+      "Attached ADUs may be 25 feet tall.",
+    ]);
   });
 
   it("keys the cost page and state hub as their own guides", () => {
@@ -215,6 +242,26 @@ describe("readClaimAnswers", () => {
       { relation: null, omits: null },
     ]);
   });
+
+  it("rejects a Choice distribution that does not sum to 1", () => {
+    const read = readClaimAnswers(
+      {
+        answers: {
+          checkable: { type: "noul", noul: 0.9 },
+          relation_0: {
+            type: "choice",
+            choice: "supports",
+            confidence: 0.9,
+            probabilities: { supports: 0.9, contradicts: 0.1, says_nothing: 0.9 },
+          },
+          omits_0: { type: "noul", noul: 0.1 },
+        },
+      },
+      1,
+    );
+    expect(read.passages[0].relation).toBeNull();
+    expect(verdictFor(read).verdict).toBe("unanswered");
+  });
 });
 
 describe("verdictFor", () => {
@@ -260,6 +307,24 @@ describe("verdictFor", () => {
   it("never guesses from missing answers", () => {
     expect(verdictFor({ checkable: null, passages: [] }).verdict).toBe("unanswered");
     expect(verdictFor(judgment([{ relation: null, omits: null }])).verdict).toBe("unanswered");
+  });
+
+  it("treats a partial answer as unanswered, not as the verdict of the passages that did answer", () => {
+    // One passage supports, but another's relation is missing: it might contradict.
+    expect(
+      verdictFor(judgment([
+        { relation: relation(0.9, 0.05), omits: 0.1 },
+        { relation: null, omits: 0.1 },
+      ])).verdict,
+    ).toBe("unanswered");
+    // Supported, but the omitted-condition answer is missing: it might have flagged one.
+    expect(verdictFor(judgment([{ relation: relation(0.9, 0.05), omits: null }])).verdict).toBe(
+      "unanswered",
+    );
+  });
+
+  it("still calls a non-rule copy even when passage answers are missing", () => {
+    expect(verdictFor(judgment([{ relation: null, omits: null }], 0.1)).verdict).toBe("not_a_rule");
   });
 
   it("applies a caller's policy", () => {

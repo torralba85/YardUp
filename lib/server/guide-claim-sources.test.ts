@@ -41,6 +41,16 @@ describe("buildPassages", () => {
     expect(text).toContain("Parking is waived.");
   });
 
+  it("keeps body lines that differ only in numbers, such as fee amounts", () => {
+    const pages = ["$737.00", "$1,466.11", "$4,566.31", "$1,570.80"].map(
+      (fee, n) => `Header line\nIntro text ${"x".repeat(n)}\nSchedule row\n${fee}\nMore body text\nNotes\nClosing\nFooter line`,
+    );
+    const text = buildPassages({ id: "d", label: "D", text: pages.join("\f") })
+      .map((passage) => passage.text)
+      .join("\n");
+    for (const fee of ["$737.00", "$1,466.11", "$4,566.31", "$1,570.80"]) expect(text).toContain(fee);
+  });
+
   it("records the page of each passage's first line", () => {
     const passages = buildPassages(SDMC, 120);
     const parking = passages.find((passage) => passage.text.startsWith("(10) Parking."));
