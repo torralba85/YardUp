@@ -274,13 +274,11 @@ export function AduCostCalculator({
         </p>
       ) : null}
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-12">
-        {/* Itemized budget breakdown column */}
-        <div
-          className={
-            showAddressCheck ? "lg:col-span-7 space-y-4" : "lg:col-span-12 space-y-4"
-          }
-        >
+      {/* Stacked at every width: the calculator sits in a ~36rem article
+          column, too narrow to split the breakdown and the address check. */}
+      <div className="mt-8 grid gap-8">
+        {/* Itemized budget breakdown */}
+        <div className="space-y-4">
           <div className="border border-lot-line bg-lot-chalk p-5 sm:p-6">
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="font-display text-lg font-semibold text-lot-ink">
@@ -464,9 +462,9 @@ export function AduCostCalculator({
           </div>
         </div>
 
-        {/* Free address check beside the result */}
+        {/* Free address check below the breakdown */}
         {showAddressCheck ? (
-          <div className="lg:col-span-5 flex flex-col justify-between border border-lot-line bg-lot-chalk p-5 sm:p-6">
+          <div className="border border-lot-line bg-lot-chalk p-5 sm:p-6">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-stone">
                 Parcel-Specific Check
