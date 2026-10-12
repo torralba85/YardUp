@@ -54,6 +54,59 @@ describe("Certificate Recovery", () => {
     expect(result.current.access.purchased).toBe(true);
   });
 
+  it("binds selection after URL hydration while still waiting for authentication", async () => {
+    mocks.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ uid: "owner" }) });
+    const { result, rerender } = renderHook(
+      ({ activeKey, selectionVersion, hydrated, ready }) => useCertificateRecovery({
+        uid: "owner", certKey: activeKey, selectionVersion, hydrated, ready,
+      }),
+      { initialProps: { activeKey: "initial-preset", selectionVersion: 0, hydrated: false, ready: false } },
+    );
+    rerender({ activeKey: "lot-a", selectionVersion: 1, hydrated: true, ready: false });
+    expect(result.current.intent?.kind).toBe("checkout");
+    expect(mocks.getDoc).not.toHaveBeenCalled();
+    rerender({ activeKey: "lot-a", selectionVersion: 1, hydrated: true, ready: true });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(result.current.access.purchased).toBe(true);
+  });
+
+  it("abandons a new selection while signed out before Grant observation begins", async () => {
+    mocks.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ uid: "owner" }) });
+    const onRestore = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ uid, selectionVersion }) => useCertificateRecovery({
+        uid, certKey: "preset", selectionVersion, ready: true, onRestore,
+      }),
+      { initialProps: { uid: null as string | null, selectionVersion: 0 } },
+    );
+    rerender({ uid: null, selectionVersion: 1 });
+    expect(result.current.intent).toBeNull();
+    rerender({ uid: "owner", selectionVersion: 1 });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(mocks.getDoc).toHaveBeenCalledWith("owner_preset");
+    expect(onRestore).not.toHaveBeenCalled();
+  });
+
+  it("acknowledges one cancellation across auth changes and retires its notice on retry", async () => {
+    window.history.replaceState(null, "", "/studio?checkout=cancelled");
+    mocks.getDoc.mockResolvedValue({ exists: () => false });
+    const { result, rerender } = renderHook(
+      ({ uid }) => useCertificateRecovery({ uid, certKey: "lot-a", ready: true }),
+      { initialProps: { uid: null as string | null } },
+    );
+    expect(result.current.consumeCancellation()).toBe(true);
+    rerender({ uid: "owner" });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(result.current.consumeCancellation()).toBe(false);
+    expect(result.current.intent?.kind).toBe("cancel");
+    act(() => { result.current.acknowledgeCancellation(); });
+    expect(result.current.intent).toBeNull();
+    rerender({ uid: "another-owner" });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(result.current.intent).toBeNull();
+    expect(result.current.consumeCancellation()).toBe(false);
+  });
+
   it("preserves return intent through cold Live Parcel restoration and consumes unlock signals once", async () => {
     const key = certificateKey(SAMPLE_LIVE_PARCEL);
     window.history.replaceState(null, "", `/studio?cert=${key}&checkout=returned`);

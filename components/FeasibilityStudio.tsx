@@ -549,6 +549,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     uid: user?.uid,
     certKey: certificateKey(activeParcel),
     ready: hydratedFromUrl && !authLoading,
+    hydrated: hydratedFromUrl,
     onRestore: restoreCertificateParcel,
     selectionVersion,
   });

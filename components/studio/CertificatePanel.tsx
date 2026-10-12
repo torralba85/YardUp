@@ -145,13 +145,12 @@ export default function CertificatePanel({
   const [error, setError] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [preparingBrief, setPreparingBrief] = useState(false);
-  const [checkoutCancelled, setCheckoutCancelled] = useState(false);
+  const checkoutCancelled = recovery.intent?.kind === "cancel";
   const includedHeadingId = useId();
   const openedOnUnlock = useRef(false);
   const sawSettledUnpurchased = useRef(false);
   const adsConversionFiredFor = useRef<string | null>(null);
   const paywallViewedFor = useRef<string | null>(null);
-  const cancellationDisplayed = useRef(false);
 
   // A parcel switch is a new purchase context — never carry unlock history
   // from one certificate key to another.
@@ -211,9 +210,7 @@ export default function CertificatePanel({
 
   // Return recovery owns marker consumption and acknowledgement across panel remounts.
   useEffect(() => {
-    if (recovery.intent?.kind !== "cancel" || cancellationDisplayed.current) return;
-    cancellationDisplayed.current = true;
-    setCheckoutCancelled(true);
+    if (recovery.intent?.kind !== "cancel") return;
     if (recovery.consumeCancellation()) {
       trackCertificateCheckoutCancelled({
         purchase_channel: mapPurchaseChannel(detectPurchaseChannel()),
@@ -283,7 +280,7 @@ export default function CertificatePanel({
     }
     setBusy(true);
     setError(null);
-    setCheckoutCancelled(false);
+    recovery.acknowledgeCancellation();
 
     const channel = mapPurchaseChannel(detectPurchaseChannel());
     const status = mapFeasibilityVerdict(result.zoningStatus);

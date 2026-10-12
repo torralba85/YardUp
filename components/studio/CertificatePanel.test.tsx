@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   consumeOpen: vi.fn(),
   consumePurchase: vi.fn(),
   consumeCancellation: vi.fn(),
+  acknowledgeCancellation: vi.fn(),
   access: {
     purchased: true,
     loading: false,
@@ -125,6 +126,7 @@ function createProps(
       consumeOpen: mocks.consumeOpen,
       consumePurchase: mocks.consumePurchase,
       consumeCancellation: mocks.consumeCancellation,
+      acknowledgeCancellation: mocks.acknowledgeCancellation,
     },
     parcel,
     result,
@@ -198,6 +200,7 @@ describe("CertificatePanel", () => {
     mocks.consumeOpen.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
     mocks.consumePurchase.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
     mocks.consumeCancellation.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
+    mocks.acknowledgeCancellation.mockReset().mockImplementation(() => { mocks.intent = null; });
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
@@ -508,6 +511,20 @@ describe("CertificatePanel", () => {
       fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
 
       await waitFor(() => expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument());
+      expect(mocks.acknowledgeCancellation).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a retried cancellation cleared when the Certificate panel remounts", async () => {
+      mocks.intent = { kind: "cancel", certKey: null };
+      mocks.startCertificateCheckout.mockRejectedValueOnce(new Error("Fixture failure"));
+      const view = render(<CertificatePanel {...createProps()} />);
+      expect(await screen.findByText(/checkout cancelled/i)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      await screen.findByText("Could not start checkout. Please try again.");
+      view.unmount();
+      render(<CertificatePanel {...createProps()} />);
+      expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument();
+      expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledTimes(1);
     });
 
     it("sends only bounded parameters on every certificate funnel event", async () => {
