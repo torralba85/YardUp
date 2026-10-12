@@ -8,10 +8,11 @@ import { LogOut, Search } from "lucide-react";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import { useAuth } from "@/lib/auth-context";
 import { consumeAddressQuery } from "@/lib/address-handoff";
-import { geocodeAddress, GeocodeError } from "@/lib/geocode-api";
-import { fetchParcel, ParcelFetchError } from "@/lib/parcel-api";
+import { GeocodeError } from "@/lib/geocode-api";
+import { ParcelFetchError } from "@/lib/parcel-api";
+import { acquireLiveParcel } from "@/lib/live-parcel-acquisition";
+import type { LiveParcelData } from "@/lib/parcel-types";
 import { peekInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
-import { startParcelLookupTracking } from "@/lib/analytics/events";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 
 /**
@@ -28,7 +29,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
   const [lookupError, setLookupError] = useState<string | null>(null);
   const handoffStarted = useRef(false);
 
-  const openWithParcel = useCallback((parcel: Awaited<ReturnType<typeof fetchParcel>>) => {
+  const openWithParcel = useCallback((parcel: LiveParcelData) => {
     if (!stashInitialParcel(parcel)) {
       setLookupError("Could not open your workspace in this browser. Check storage permissions and try again.");
       return;
@@ -41,14 +42,10 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       if (lookupLoading) return;
       setLookupLoading(true);
       setLookupError(null);
-      const tracker = startParcelLookupTracking("signed_in");
       try {
-        const idToken = await user.getIdToken();
-        const parcel = await fetchParcel(lat, lng, idToken, address);
-        tracker.settle({ ok: true, parcel });
+        const parcel = await acquireLiveParcel({ kind: "coords", lat, lng, address }, user);
         openWithParcel(parcel);
       } catch (error) {
-        tracker.settle({ ok: false, error });
         setLookupError(getLookupError(error));
       } finally {
         setLookupLoading(false);
@@ -63,15 +60,10 @@ export default function SignedInStudioGate({ user }: { user: User }) {
       if (!trimmed || lookupLoading) return;
       setLookupLoading(true);
       setLookupError(null);
-      const tracker = startParcelLookupTracking("signed_in");
       try {
-        const idToken = await user.getIdToken();
-        const { lat, lng, formattedAddress } = await geocodeAddress(trimmed, idToken);
-        const parcel = await fetchParcel(lat, lng, idToken, formattedAddress.trim() || trimmed);
-        tracker.settle({ ok: true, parcel });
+        const parcel = await acquireLiveParcel({ kind: "address", query: trimmed }, user);
         openWithParcel(parcel);
       } catch (error) {
-        tracker.settle({ ok: false, error });
         setLookupError(getLookupError(error));
       } finally {
         setLookupLoading(false);

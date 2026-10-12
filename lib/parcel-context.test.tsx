@@ -5,7 +5,7 @@ import type { LiveParcelData } from "./parcel-types";
 
 const mocks = vi.hoisted(() => ({
   authState: {
-    user: null as null | { getIdToken: () => Promise<string> },
+    user: null as null | { uid?: string; getIdToken: () => Promise<string> },
   },
   geocodeAddress: vi.fn(),
   fetchParcel: vi.fn(),
@@ -98,6 +98,63 @@ beforeEach(() => {
 });
 
 describe("ParcelProvider estimated mode", () => {
+  it("rejects a recovery snapshot immediately after a new lookup starts", async () => {
+    signIn();
+    let finish!: (parcel: LiveParcelData) => void;
+    mocks.fetchParcel.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    const originalSelection = result.current.selectionVersion;
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchParcel(34.05, -118.25, "New Address");
+      result.current.restoreLiveParcel({ ...liveParcelFixture, address: "Old recovery Address" }, originalSelection);
+      await Promise.resolve();
+    });
+    expect(result.current.parcelMode).toBe("preset");
+    await act(async () => { finish({ ...liveParcelFixture, address: "New Address" }); await pending; });
+    expect(result.current.parcel.address).toBe("New Address");
+  });
+
+  it("keeps a later Address selection when a recovery lookup completes last", async () => {
+    signIn();
+    let finishRecovery!: (parcel: LiveParcelData) => void;
+    mocks.geocodeAddress.mockImplementation(async (address: string) => ({
+      lat: 34.05, lng: -118.25, formattedAddress: address,
+    }));
+    mocks.fetchParcel.mockImplementation(async (_lat, _lng, _token, address) => address === "10 First Street"
+      ? new Promise<LiveParcelData>((resolve) => { finishRecovery = resolve; })
+      : { ...liveParcelFixture, address: "20 Second Street" });
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchByAddress("10 First Street");
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => { await result.current.searchByAddress("20 Second Street"); });
+    await act(async () => {
+      finishRecovery({ ...liveParcelFixture, address: "10 First Street" });
+      await pending;
+    });
+    expect(result.current.parcel.address).toBe("20 Second Street");
+  });
+
+  it("ignores an old account's lookup after the signed-in identity changes", async () => {
+    mocks.authState.user = { uid: "owner-a", getIdToken: async () => "token-a" };
+    let finish!: (parcel: LiveParcelData) => void;
+    mocks.fetchParcel.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const { result, rerender } = renderHook(() => useParcel(), { wrapper });
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchParcel(34.05, -118.25, "Old owner's Address");
+      await Promise.resolve();
+    });
+    mocks.authState.user = { uid: "owner-b", getIdToken: async () => "token-b" };
+    rerender();
+    await act(async () => { finish(liveParcelFixture); await pending; });
+    expect(result.current.parcelMode).toBe("preset");
+    expect(result.current.parcel.address).not.toBe(liveParcelFixture.address);
+  });
   it("enriches missing locality only after agreement and preserves original input evidence", async () => {
     const formattedAddress = "202 C Street, San Diego, CA 92101";
     const match = { components: { houseNumber: "202", road: "C Street", city: "San Diego", state: "CA", zip: "92101" } };

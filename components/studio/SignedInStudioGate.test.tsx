@@ -148,6 +148,23 @@ describe("SignedInStudioGate", () => {
     expect(mocks.fetchParcel).not.toHaveBeenCalled();
   });
 
+  it("keeps the entered Address and match evidence when the geocoder disagrees", async () => {
+    const requestedAddress = "202 C Street, San Diego";
+    const formattedAddress = "202 C Street, Chula Vista, CA 92101";
+    const match = { components: { houseNumber: "202", road: "C Street", city: "Chula Vista" } };
+    mocks.consumeAddressQuery.mockReturnValue(requestedAddress);
+    mocks.geocodeAddress.mockResolvedValue({ lat: parcel.lat, lng: parcel.lng, formattedAddress, match });
+    mocks.fetchParcel.mockResolvedValue({ ...parcel, dataQuality: {} });
+
+    render(<SignedInStudioGate user={user} />);
+
+    expect(await screen.findByText("Real Parcel Studio")).toBeInTheDocument();
+    expect(mocks.fetchParcel).toHaveBeenCalledWith(parcel.lat, parcel.lng, "token", requestedAddress);
+    expect(mocks.stashInitialParcel).toHaveBeenCalledWith(expect.objectContaining({
+      dataQuality: { geocode: { requestedAddress, formattedAddress, match } },
+    }));
+  });
+
   it("uses a session handoff before reopening a stashed parcel", async () => {
     mocks.consumeAddressQuery.mockReturnValue("456 Oak Ave");
     mocks.peekInitialParcel.mockReturnValue(parcel);

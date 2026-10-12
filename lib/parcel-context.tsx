@@ -13,12 +13,11 @@ import { useAuth } from "./auth-context";
 import type { LiveParcelData } from "./parcel-types";
 import type { ParcelPreset } from "./feasibility";
 import type { EstimatedParcel } from "./estimated-parcel";
-import { fetchParcel, ParcelFetchError } from "./parcel-api";
-import { geocodeAddress, GeocodeError } from "./geocode-api";
+import { ParcelFetchError } from "./parcel-api";
+import { GeocodeError } from "./geocode-api";
+import { acquireLiveParcel } from "./live-parcel-acquisition";
 import { canGuestLookup, consumeGuestLookup, resetGuestLookups } from "./guest-lookup";
 import { clearInitialParcel, peekInitialParcel } from "./parcel-handoff";
-import { startParcelLookupTracking } from "./analytics/events";
-import { enrichStreetAddress } from "./server/address-match";
 
 /**
  * Shown once an anonymous visitor has spent their free lookup. Names what they
@@ -40,6 +39,8 @@ interface ParcelContextValue {
   parcelMode: ParcelMode;
   parcelLoading: boolean;
   parcelError: string | null;
+  /** Changes when a Homeowner chooses a new Parcel, before a lookup finishes. */
+  selectionVersion: number;
   /** True when a guest lookup is blocked until account creation/sign-in. */
   authRequired: boolean;
   /** Dismiss the account-required state without changing the active parcel. */
@@ -47,9 +48,9 @@ interface ParcelContextValue {
   /** Search an address by lat/lng — switches to live mode. */
   searchParcel: (lat: number, lng: number, address?: string) => Promise<void>;
   /** Geocode a free-text address, then look up its parcel and switch to live mode. */
-  searchByAddress: (query: string) => Promise<void>;
+  searchByAddress: (query: string, expectedSelectionVersion?: number) => Promise<void>;
   /** Restore a previously saved live parcel without making a network request. */
-  restoreLiveParcel: (parcel: LiveParcelData) => void;
+  restoreLiveParcel: (parcel: LiveParcelData, expectedSelectionVersion?: number) => void;
   /** Return to demo preset mode and clear live parcel data. */
   resetToPreset: (preset: ParcelPreset) => void;
   /** Apply an anonymous estimated parcel (wizard flow) — switches to estimated mode. */
@@ -104,6 +105,20 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   const [parcelLoading, setParcelLoading] = useState(false);
   const [parcelError, setParcelError] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
+  const lookupGeneration = useRef(0);
+  const selectionRef = useRef(0);
+  const [selectionVersion, setSelectionVersion] = useState(0);
+  const markSelection = useCallback(() => {
+    selectionRef.current += 1;
+    setSelectionVersion(selectionRef.current);
+  }, []);
+  const identityRef = useRef(user?.uid);
+  useEffect(() => {
+    if (identityRef.current === user?.uid) return;
+    identityRef.current = user?.uid;
+    lookupGeneration.current += 1;
+    setParcelLoading(false);
+  }, [user?.uid]);
   const pendingLookupRef = useRef<
     | { kind: "coords"; lat: number; lng: number; address?: string }
     | { kind: "address"; query: string }
@@ -129,20 +144,20 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         return;
       }
       setAuthRequired(false);
+      markSelection();
       setParcelLoading(true);
       setParcelError(null);
-      const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
+      const generation = ++lookupGeneration.current;
       try {
-        const idToken = await user?.getIdToken();
-        const data = await fetchParcel(lat, lng, idToken, address);
+        const data = await acquireLiveParcel({ kind: "coords", lat, lng, address }, user);
+        if (generation !== lookupGeneration.current) return;
         // Spent only on a resolved lookup: a failed fetch must not burn the
         // visitor's single try.
         if (!user) consumeGuestLookup();
-        tracker.settle({ ok: true, parcel: data });
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
-        tracker.settle({ ok: false, error: err });
+        if (generation !== lookupGeneration.current) return;
         if (err instanceof ParcelFetchError) {
           setParcelError(err.userMessage);
         } else {
@@ -150,16 +165,17 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         }
         // Keep current parcel / mode on error
       } finally {
-        setParcelLoading(false);
+        if (generation === lookupGeneration.current) setParcelLoading(false);
       }
     },
-    [user],
+    [user, markSelection],
   );
 
   const searchByAddress = useCallback(
-    async (query: string) => {
+    async (query: string, expectedSelectionVersion?: number) => {
       const q = query.trim();
       if (!q) return;
+      if (expectedSelectionVersion !== undefined && expectedSelectionVersion !== selectionRef.current) return;
       // An anonymous visitor gets a real lookup before the account ask. Both
       // routes put a tokenless caller on the keyless provider chain, so this
       // costs no metered quota.
@@ -170,31 +186,20 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         return;
       }
       setAuthRequired(false);
+      if (expectedSelectionVersion === undefined) markSelection();
       setParcelLoading(true);
       setParcelError(null);
-      const tracker = startParcelLookupTracking(user ? "signed_in" : "guest");
+      const generation = ++lookupGeneration.current;
       try {
-        const idToken = await user?.getIdToken();
-        const geocode = await geocodeAddress(q, idToken);
-        // Explicit input wins. Provider locality can fill gaps only after all
-        // reliably entered components agree; the original remains in evidence.
-        const parcelAddress = enrichStreetAddress(q, geocode.formattedAddress);
-        const data = await fetchParcel(geocode.lat, geocode.lng, idToken, parcelAddress);
-        if (geocode.match && data.dataQuality) {
-          data.dataQuality.geocode = {
-            requestedAddress: q,
-            formattedAddress: geocode.formattedAddress,
-            match: geocode.match,
-          };
-        }
+        const data = await acquireLiveParcel({ kind: "address", query: q }, user);
+        if (generation !== lookupGeneration.current) return;
         // Spent only on a resolved lookup: an address we could not find, or a
         // parcel service that did not answer, must not burn the free try.
         if (!user) consumeGuestLookup();
-        tracker.settle({ ok: true, parcel: data });
         setParcel(data);
         setParcelMode("live");
       } catch (err) {
-        tracker.settle({ ok: false, error: err });
+        if (generation !== lookupGeneration.current) return;
         if (err instanceof GeocodeError || err instanceof ParcelFetchError) {
           setParcelError(err.userMessage);
         } else {
@@ -202,10 +207,10 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         }
         // Keep current parcel / mode on error
       } finally {
-        setParcelLoading(false);
+        if (generation === lookupGeneration.current) setParcelLoading(false);
       }
     },
-    [user],
+    [user, markSelection],
   );
 
   useEffect(() => {
@@ -227,29 +232,39 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     setAuthRequired(false);
   }, []);
 
-  const restoreLiveParcel = useCallback((nextParcel: LiveParcelData) => {
+  const restoreLiveParcel = useCallback((nextParcel: LiveParcelData, expectedSelectionVersion?: number) => {
+    if (expectedSelectionVersion !== undefined && expectedSelectionVersion !== selectionRef.current) return;
+    if (expectedSelectionVersion === undefined) markSelection();
+    lookupGeneration.current += 1;
+    setParcelLoading(false);
     setParcel(nextParcel);
     setParcelMode("live");
     setParcelError(null);
     setAuthRequired(false);
     pendingLookupRef.current = null;
-  }, []);
+  }, [markSelection]);
 
   const setEstimatedParcel = useCallback((estimated: EstimatedParcel) => {
+    markSelection();
+    lookupGeneration.current += 1;
+    setParcelLoading(false);
     setParcel(estimated);
     setParcelMode("estimated");
     setParcelError(null);
     setAuthRequired(false);
     pendingLookupRef.current = null;
-  }, []);
+  }, [markSelection]);
 
   const resetToPreset = useCallback((preset: ParcelPreset) => {
+    markSelection();
+    lookupGeneration.current += 1;
+    setParcelLoading(false);
     setParcel(preset);
     setParcelMode("preset");
     setParcelError(null);
     setAuthRequired(false);
     pendingLookupRef.current = null;
-  }, []);
+  }, [markSelection]);
 
   return (
     <ParcelContext.Provider
@@ -258,6 +273,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         parcelMode,
         parcelLoading,
         parcelError,
+        selectionVersion,
         authRequired,
         clearAuthRequired,
         searchParcel,
