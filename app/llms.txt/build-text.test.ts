@@ -86,4 +86,11 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain("privacy@lotfoundry.net");
     expect(text).toContain('"Lot Foundry"');
   });
+
+  it("names the operator exactly as the IRS EIN notice does", () => {
+    const text = buildLlmsTxt();
+
+    expect(text).toContain("operated by VeriShare.");
+    expect(text).not.toMatch(/Veri-share/i);
+  });
 });

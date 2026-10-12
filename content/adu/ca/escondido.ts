@@ -16,7 +16,7 @@ export const escondido: JurisdictionContent = {
   city: "Escondido",
   slug: "escondido",
   county: "San Diego County",
-  asOf: "2026-09-17",
+  asOf: "2026-10-10",
   metaDescription:
     "Escondido ADU rules: 850–1,000 sq ft minimums, an 800 sq ft unit exempt from FAR and lot coverage, and 4 ft setbacks. Run the numbers on your lot, free.",
   introAnswer: [
@@ -60,13 +60,13 @@ export const escondido: JurisdictionContent = {
   fees: {
     heading: "Cost and fees in Escondido",
     paragraphs: [
-      "Escondido applies the standard municipal stack under the state caps: no impact fees under 750 square feet, proportional fees above, no school fees under 500 square feet. The city's published handout and checklist keep the process predictable, but neither fixes dollar figures — those live in the fee schedule and move with it.",
+      "Escondido applies the standard municipal stack under the state caps: no development impact fees at 750 square feet or less of interior livable space, proportional fees above, and no school fees under 500 square feet (school and utility fees remain separate). The city's published handout and checklist keep the process predictable, but neither fixes dollar figures — those live in the fee schedule and move with it.",
       "Because this page cannot verify a current city-published fee total, it prints none: confirm building-permit, plan-check, school, and utility-connection figures with Planning before budgeting. Size discipline around the 500 and 750 square-foot thresholds is the highest-leverage fee decision on any Escondido ADU.",
     ],
     bullets: [
       "Building permit + plan check: per the current city fee schedule",
-      "Development impact fees: none under 750 sq ft; proportional above",
-      "School fees: exempt under 500 sq ft",
+      "Development impact fees: exempt at 750 sq ft or less; proportional above",
+      "School fees: exempt under 500 sq ft; district fees apply above",
       "Utility connections: show water/sewer connection points on the site plan per the submittal checklist; confirm capacity charges",
       "No coastal-review costs: Escondido has no coastal zone",
     ],
