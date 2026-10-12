@@ -101,28 +101,36 @@ Options:
 
 Each run writes `guide-claim-check.md` (the review queue) and
 `guide-claim-check.jsonl` (every sentence, its passages, raw probabilities and
-verdict). Judgments are cached in `judgments.jsonl` by request hash, so a rerun
-pays only for sentences or passages that changed.
+verdict). Judgments are cached in `judgments.jsonl` by a hash of the exact
+request, so a rerun pays only for sentences or passages that changed.
+Malformed answers are never cached and count as failures. The request names
+`jev-latest`, an alias, so delete the cache when the report shows a new model
+version.
 
 The live run also checks 12 labeled San Diego claims. They were written by the
 same author as the prompt, so they are a regression set, not accuracy
 evidence. The one hard floor is that a claim a source contradicts must never
 come back "supported".
 
-## First live run (October 11, 2026)
+## First live runs (October 11, 2026)
 
-There were two runs on master `6eb7550` content. The second reran only the
-sentences changed by a sentence-splitter fix (it was breaking "min.").
+There were three runs on master `6eb7550` content. The last full run came
+after the fixes from a Codex review, which restored IB-501's fee amounts that
+footer removal had been dropping.
 
-- 460 sentences, 0 failed requests, `jev-1.13.0`, 1.19 million input tokens
-  (about $0.05).
-- San Diego: 3 contradicted, 2 sources disagree, 21 supported but leaves out a
-  condition, 13 review, 7 no source, 20 supported, 23 not a rule.
-- Labeled cases: 11 of 12, then 12 of 12. Two cases moved between verdicts on
-  identical input, so expect plus or minus a case per run. No contradicted
+- 461 sentences, 0 failed or malformed requests, `jev-1.13.0`, 1.19 million
+  input tokens (about $0.05).
+- San Diego: 4 contradicted, 2 sources disagree, 22 supported but leaves out a
+  condition, 11 review, 8 no source, 20 supported, 23 not a rule.
+- Labeled cases: 11 of 12, then 12 of 12 twice. Cases moved between verdicts
+  on identical input, so expect plus or minus a case per run. No contradicted
   claim ever came back "supported".
+- Between the last two full runs, 35 of 461 verdicts changed. Most were
+  answers near the 0.8 threshold moving, which is why the cache keeps one
+  run's judgments stable for review.
 
-All 20 "contradicted" sentences were read against the documents by hand.
+All "contradicted" sentences were read against the documents by hand (20 in
+the first run, 19 in the last; the San Diego timeline item below is new).
 
 - **Worth fixing.**
   - San Diego says "an ADU cannot go in a front yard" in two places. IB-400 and
@@ -142,6 +150,10 @@ All 20 "contradicted" sentences were read against the documents by hand.
   - Carlsbad's replacement-parking note (state law bars replacement outside
     Coastal Zone rules).
   - Carlsbad's "at least 30 days" (HCD says "longer than 30 days").
+  - San Diego's "5 to 7 months inside the Coastal Zone". HCD says the coastal
+    permit is decided concurrently with the ADU application, within 60 days,
+    where a certified coastal program covers ADUs. The row is marked as a
+    secondary-source estimate.
 - **False positives.**
   - The California hub's 850/1,000 sq ft sentence, which matches HCD.
   - Carlsbad's meta description and Escondido's JADU sentence. Jev applied the
