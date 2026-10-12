@@ -70,7 +70,8 @@ const jsonLd = {
     "@type": "Organization",
     name: "LotFoundry",
     alternateName: ["Lot Foundry"],
-    legalName: "Veri-share",
+    // As printed on the IRS EIN notice (CP575G): one word, no hyphen.
+    legalName: "VeriShare",
     url: appRootUrl,
     logo: `${appUrl}/icon-512-transparent.png`,
     // `sameAs` is how Google resolves scattered profiles into one entity, so
