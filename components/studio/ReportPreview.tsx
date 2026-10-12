@@ -38,6 +38,7 @@ export interface ReportPreviewProps {
   result: FeasibilityResult;
   /** Unified AI parcel interpretation and permit timeline. */
   projectBrief?: AIProjectBrief | null;
+  projectBriefSavedAt?: string | null;
   projectBriefLoading?: boolean;
   projectBriefError?: string | null;
   /** Optional style-matched ADU concept. */
@@ -78,6 +79,7 @@ export default function ReportPreview({
   parcelName,
   result,
   projectBrief,
+  projectBriefSavedAt,
   projectBriefLoading = false,
   projectBriefError = null,
   styleMatchConcept,
@@ -359,6 +361,11 @@ export default function ReportPreview({
                 <CertificateStyleMatchSection concept={styleMatchConcept} />
               )}
 
+              {projectBrief && projectBriefSavedAt && (
+                <p className="text-xs leading-5 text-lot-stone">
+                  Saved Brief snapshot. Verify these historical notes against current guidance.
+                </p>
+              )}
               <CertificateBriefSection
                 brief={projectBrief ?? null}
                 loading={projectBriefLoading}

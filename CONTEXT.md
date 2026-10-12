@@ -18,6 +18,9 @@ _Avoid_: lot, site
 A Parcel resolved at runtime for a real address, from whichever provider answered.
 _Avoid_: real parcel
 
+**Live Parcel Acquisition**:
+An accepted Address or coordinate lookup that resolves a Live Parcel while preserving the entered Address and provider evidence.
+
 **Preset**:
 A built-in curated Parcel used for demos and as an estimation base.
 _Avoid_: demo parcel, demo preset
@@ -38,6 +41,9 @@ _Avoid_: scenario
 **Scenario**:
 A saved Design for one address, with financial assumptions, viewable later.
 _Avoid_: design
+
+**Scenario Restoration**:
+Reopening a Scenario as its saved study, including only its own saved Project Brief and matched concept.
 
 **Feasibility**:
 The engine calculation turning parcel, design, and assumptions into coverage compliance and economics.
@@ -72,6 +78,9 @@ _Avoid_: result, score
 The AI-generated narrative for a Lot — parcel interpretation, ADU concept, and permit timeline — viewable after purchase.
 _Avoid_: AI brief
 
+**Saved Brief**:
+A Project Brief recorded in a Scenario, reused as a historical snapshot until its Feasibility inputs change.
+
 **Report**:
 A rendered document combining parcel, design, result, and brief.
 _Avoid_: certificate
@@ -83,6 +92,9 @@ _Avoid_: report
 **Checkout**:
 The payment flow that starts a purchase: Stripe on the website, Google Play billing on mobile.
 _Avoid_: paywall, purchase
+
+**Certificate Recovery**:
+Verifying a Homeowner's Grant after Checkout or when reopening a Certificate, including restoring its Parcel; a return link alone does not prove a Purchase.
 
 **Purchase**:
 A completed payment for a certificate or lead unlock.

@@ -7,12 +7,25 @@ import { clearInitialParcel } from "@/lib/parcel-handoff";
 import { JOURNEY_STEP_STATE_KEY } from "@/lib/use-journey-history";
 import type { ReactNode } from "react";
 import { defaultAduConfig, defaultFinancialAssumptions } from "@/lib/feasibility";
+import { getDoc } from "firebase/firestore";
+import type { AIProjectBrief } from "@/lib/ai-types";
+import { buildStudioUrlForCertificate } from "@/lib/purchased-certificates";
+import { certificateKey } from "@/lib/certificate-key";
+import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
+import * as adsConversion from "@/lib/analytics/adsConversion";
 
-const savedMocks = vi.hoisted(() => ({ fetch: vi.fn(), remove: vi.fn() }));
+const briefFixture: AIProjectBrief = {
+  headline: "Recorded garden studio study", summary: "Saved planning snapshot", bestFit: "Detached ADU",
+  risks: [], permitTrack: { name: "Local review", type: "ministerial", basis: "Verify locally" },
+  stages: [], totalEstWeeksLow: 4, totalEstWeeksHigh: 8,
+  recommendedNextSteps: ["Verify with the city"], disclaimer: "Planning estimate",
+};
+
+const savedMocks = vi.hoisted(() => ({ fetch: vi.fn(), remove: vi.fn(), save: vi.fn() }));
 vi.mock("@/lib/scenarios-firestore", () => ({
   fetchSavedScenarios: savedMocks.fetch,
   deleteSavedScenario: savedMocks.remove,
-  saveSavedScenario: vi.fn(),
+  saveSavedScenario: savedMocks.save,
 }));
 
 /** The matchMedia stub the mobile-journey tests use to force the mobile layout. */
@@ -140,8 +153,10 @@ function stepButton(label: RegExp) {
 
 describe("FeasibilityStudio (guided spine)", () => {
   beforeEach(() => {
+    vi.mocked(getDoc).mockReset();
     savedMocks.fetch.mockResolvedValue([]);
     savedMocks.remove.mockReset().mockResolvedValue(undefined);
+    savedMocks.save.mockReset();
     window.history.replaceState(null, "", "/");
     window.localStorage.clear();
     clearInitialParcel();
@@ -184,6 +199,94 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(remove);
     await waitFor(() => expect(savedMocks.remove).toHaveBeenCalledWith("owner-1", "saved-1"));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Garden home" })).not.toBeInTheDocument());
+  });
+
+  it("shows the saved Brief when its Scenario is reopened without generating a new one", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ uid: "owner-1", role: "homeowner" }),
+    } as never);
+    savedMocks.fetch.mockResolvedValueOnce([{
+      id: "saved-brief", name: "Saved study", createdAt: "2026-09-13T00:00:00Z",
+      parcelId: "oak-street", config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+      projectBrief: briefFixture,
+    }]);
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByText("Saved Concepts");
+    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Saved study" }));
+    fireEvent.click(stepButton(/Certificate/));
+
+    expect(await screen.findByText("Recorded garden studio study")).toBeInTheDocument();
+    expect(fetchSpy.mock.calls.some(([url]) => String(url).includes("/api/ai/project-brief"))).toBe(false);
+  });
+
+  it("does not attach a previous Scenario's matched image when saving a Scenario without one", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    vi.mocked(getDoc).mockResolvedValue({ exists: () => true, data: () => ({ uid: "owner-1", role: "homeowner" }) } as never);
+    const base = { createdAt: "2026-09-13T00:00:00Z", parcelId: "oak-street", config: defaultAduConfig, assumptions: defaultFinancialAssumptions };
+    savedMocks.fetch.mockResolvedValueOnce([
+      { ...base, id: "a", name: "Matched study", projectBrief: briefFixture, styleMatchConcept: { styleName: "Modern", matchPercentage: 90, traits: [], conceptUrl: "https://example.test/old-concept.webp" } },
+      { ...base, id: "b", name: "Plain study" },
+    ]);
+    savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: base.createdAt }));
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByText("Saved Concepts");
+    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Matched study" }));
+    fireEvent.click(screen.getByRole("button", { name: "Plain study" }));
+    fireEvent.click(stepButton(/Design/));
+    fireEvent.click(screen.getByRole("button", { name: "Save this design" }));
+    await waitFor(() => expect(savedMocks.save).toHaveBeenCalled());
+    expect(savedMocks.save.mock.calls[0][1]).not.toHaveProperty("styleMatchConcept");
+    expect(savedMocks.save.mock.calls[0][1]).not.toHaveProperty("projectBrief");
+  });
+
+  it("finishes a generated Brief instead of leaving its loading state stuck", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    vi.mocked(getDoc).mockResolvedValue({ exists: () => true, data: () => ({ uid: "owner-1", role: "homeowner" }) } as never);
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ tier: "full", brief: briefFixture }), { status: 200 }));
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    fireEvent.click(stepButton(/Certificate/));
+    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }));
+    expect((await screen.findAllByText(briefFixture.headline)).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Adding property notes and timeline")).not.toBeInTheDocument();
+  });
+
+  it("finishes a failed Brief request and shows its error with the deterministic Report", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    vi.mocked(getDoc).mockResolvedValue({ exists: () => true, data: () => ({ uid: "owner-1", role: "homeowner" }) } as never);
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ error: "Brief temporarily unavailable" }), { status: 503 }));
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    fireEvent.click(stepButton(/Certificate/));
+    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }));
+    expect((await screen.findAllByText(/Brief temporarily unavailable/)).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Adding property notes and timeline")).not.toBeInTheDocument();
+  });
+
+  it("keeps a restored Saved Brief when an older generation request resolves afterward", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    vi.mocked(getDoc).mockResolvedValue({ exists: () => true, data: () => ({ uid: "owner-1", role: "homeowner" }) } as never);
+    savedMocks.fetch.mockResolvedValueOnce([{
+      id: "saved-brief", name: "Saved study", createdAt: "2026-09-13T00:00:00Z",
+      parcelId: "oak-street", config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+      projectBrief: briefFixture,
+    }]);
+    let finish!: (response: Response) => void;
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    fireEvent.click(stepButton(/Certificate/));
+    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }));
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Saved study" }));
+    await act(async () => {
+      finish(new Response(JSON.stringify({ tier: "full", brief: { ...briefFixture, headline: "Late outdated generation" } }), { status: 200 }));
+    });
+    expect((await screen.findAllByText(briefFixture.headline)).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Late outdated generation")).not.toBeInTheDocument();
   });
 
   it("presents a single spine navigation with the Rules & Fit step active", () => {
@@ -524,6 +627,33 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(screen.getByRole("button", { name: /Sign in to generate your certificate/i }));
     expect(screen.queryByText(/recorded concept for this lot/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Print \/ Save/i })).not.toBeInTheDocument();
+  });
+
+  it("opens an existing Certificate from its Address-only handoff without another Purchase", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    const key = certificateKey(SAMPLE_LIVE_PARCEL);
+    const url = buildStudioUrlForCertificate({
+      id: `owner-1_${key}`, certKey: key, uid: "owner-1", stripeSessionId: "old-session",
+      amount: 2900, status: "granted", demo: false, createdAt: null, address: SAMPLE_LIVE_PARCEL.address,
+    });
+    window.history.replaceState(null, "", url);
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ uid: "owner-1", role: "homeowner", address: SAMPLE_LIVE_PARCEL.address, analyticsOrderId: "old-order" }),
+    } as never);
+    const purchase = vi.spyOn(adsConversion, "trackPurchase");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = String(input);
+      const body = request.includes("/api/geocode")
+        ? { lat: SAMPLE_LIVE_PARCEL.lat, lng: SAMPLE_LIVE_PARCEL.lng, formattedAddress: SAMPLE_LIVE_PARCEL.address }
+        : request.includes("/api/parcel") ? SAMPLE_LIVE_PARCEL : { tier: "full", brief: briefFixture };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await waitFor(() => expect(fetchSpy.mock.calls.some(([input]) => String(input).includes("/api/parcel"))).toBe(true));
+    expect((await screen.findAllByRole("heading", { name: "Certificate of Feasibility" }, { timeout: 5000 })).length).toBeGreaterThan(0);
+    expect(fetchSpy.mock.calls.filter(([input]) => String(input).includes("/api/ai/project-brief"))).toHaveLength(1);
+    expect(purchase).not.toHaveBeenCalled();
   });
 
   it("returns a cancelled Stripe checkout to the certificate step without a payment error", async () => {

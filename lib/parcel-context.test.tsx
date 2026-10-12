@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
+import { useEffect, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ReactNode } from "react";
 import type { LiveParcelData } from "./parcel-types";
 
 const mocks = vi.hoisted(() => ({
   authState: {
-    user: null as null | { getIdToken: () => Promise<string> },
+    user: null as null | { uid?: string; getIdToken: () => Promise<string> },
   },
   geocodeAddress: vi.fn(),
   fetchParcel: vi.fn(),
@@ -49,6 +49,7 @@ import { ParcelProvider, useParcel } from "./parcel-context";
 import { GUEST_LOOKUP_LIMIT, resetGuestLookups } from "./guest-lookup";
 import { parcelPresets } from "./feasibility";
 import { buildEstimatedParcel } from "./estimated-parcel";
+import { ParcelFetchError } from "./parcel-api";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <ParcelProvider initialPreset={parcelPresets[0]}>{children}</ParcelProvider>
@@ -98,6 +99,204 @@ beforeEach(() => {
 });
 
 describe("ParcelProvider estimated mode", () => {
+  it("rejects a recovery snapshot immediately after a new lookup starts", async () => {
+    signIn();
+    let finish!: (parcel: LiveParcelData) => void;
+    mocks.fetchParcel.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    const originalSelection = result.current.selectionVersion;
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchParcel(34.05, -118.25, "New Address");
+      result.current.restoreLiveParcel({ ...liveParcelFixture, address: "Old recovery Address" }, originalSelection);
+      await Promise.resolve();
+    });
+    expect(result.current.parcelMode).toBe("preset");
+    await act(async () => { finish({ ...liveParcelFixture, address: "New Address" }); await pending; });
+    expect(result.current.parcel.address).toBe("New Address");
+  });
+
+  it("keeps a later Address selection when a recovery lookup completes last", async () => {
+    signIn();
+    let finishRecovery!: (parcel: LiveParcelData) => void;
+    mocks.geocodeAddress.mockImplementation(async (address: string) => ({
+      lat: 34.05, lng: -118.25, formattedAddress: address,
+    }));
+    mocks.fetchParcel.mockImplementation(async (_lat, _lng, _token, address) => address === "10 First Street"
+      ? new Promise<LiveParcelData>((resolve) => { finishRecovery = resolve; })
+      : { ...liveParcelFixture, address: "20 Second Street" });
+    const { result } = renderHook(() => useParcel(), { wrapper });
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchByAddress("10 First Street");
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => { await result.current.searchByAddress("20 Second Street"); });
+    await act(async () => {
+      finishRecovery({ ...liveParcelFixture, address: "10 First Street" });
+      await pending;
+    });
+    expect(result.current.parcel.address).toBe("20 Second Street");
+  });
+
+  it("ignores an old account's lookup after the signed-in identity changes", async () => {
+    mocks.authState.user = { uid: "owner-a", getIdToken: async () => "token-a" };
+    let finish!: (parcel: LiveParcelData) => void;
+    mocks.fetchParcel.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const { result, rerender } = renderHook(() => useParcel(), { wrapper });
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchParcel(34.05, -118.25, "Old owner's Address");
+      await Promise.resolve();
+    });
+    mocks.authState.user = { uid: "owner-b", getIdToken: async () => "token-b" };
+    rerender();
+    await act(async () => { finish(liveParcelFixture); await pending; });
+    expect(result.current.parcelMode).toBe("preset");
+    expect(result.current.parcel.address).not.toBe(liveParcelFixture.address);
+    expect(result.current.parcelLoading).toBe(false);
+    expect(result.current.parcelError).toBeNull();
+  });
+
+  it("keeps a new-account lookup started by a child effect", async () => {
+    mockResolvedLookup("200 New Street");
+    const { result, rerender } = renderHook(() => {
+      const parcel = useParcel();
+      const { searchByAddress } = parcel;
+      useEffect(() => {
+        if (mocks.authState.user) void searchByAddress("200 New Street");
+      }, [searchByAddress]);
+      return parcel;
+    }, { wrapper });
+    mocks.authState.user = { uid: "owner", getIdToken: async () => "test-token" };
+    await act(async () => { rerender(); });
+    expect(mocks.fetchParcel).toHaveBeenCalled();
+    expect(result.current.parcelMode).toBe("live");
+    expect(result.current.parcelLoading).toBe(false);
+    expect(result.current.parcelError).toBeNull();
+  });
+
+  it("prevents an old account's error from setting error or affecting loading after identity change", async () => {
+    mocks.authState.user = { uid: "owner-a", getIdToken: async () => "token-a" };
+    let failOldLookup!: (error: Error) => void;
+    mocks.fetchParcel.mockImplementation(() => new Promise((_resolve, reject) => { failOldLookup = reject; }));
+    const { result, rerender } = renderHook(() => useParcel(), { wrapper });
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.searchParcel(34.05, -118.25, "Old owner's Address");
+      await Promise.resolve();
+    });
+    expect(result.current.parcelLoading).toBe(true);
+
+    mocks.authState.user = { uid: "owner-b", getIdToken: async () => "token-b" };
+    rerender();
+    expect(result.current.parcelLoading).toBe(false);
+
+    await act(async () => {
+      failOldLookup(new ParcelFetchError("fetch_failed", "Failed to fetch parcel for old user"));
+      await pending;
+    });
+
+    expect(result.current.parcelError).toBeNull();
+    expect(result.current.parcelLoading).toBe(false);
+    expect(result.current.parcelMode).toBe("preset");
+  });
+
+  it("preserves new-account child-effect lookup when previous account had an in-flight lookup that fails", async () => {
+    mocks.authState.user = { uid: "owner-a", getIdToken: async () => "token-a" };
+    let failOldLookup!: (error: Error) => void;
+    let finishNewLookup!: (parcel: LiveParcelData) => void;
+    mocks.fetchParcel.mockImplementation(async (_lat, _lng, _token, address) => {
+      if (address === "Old owner's Address") {
+        return new Promise<LiveParcelData>((_resolve, reject) => { failOldLookup = reject; });
+      }
+      return new Promise<LiveParcelData>((resolve) => { finishNewLookup = resolve; });
+    });
+    mocks.geocodeAddress.mockImplementation(async (query: string) => ({
+      lat: 34.05,
+      lng: -118.25,
+      formattedAddress: query,
+    }));
+
+    const { result, rerender } = renderHook(() => {
+      const parcel = useParcel();
+      const { searchByAddress } = parcel;
+      useEffect(() => {
+        if (mocks.authState.user?.uid === "owner-b") {
+          void searchByAddress("New Owner Address");
+        }
+      }, [searchByAddress]);
+      return parcel;
+    }, { wrapper });
+
+    let pendingOld!: Promise<void>;
+    await act(async () => {
+      pendingOld = result.current.searchParcel(34.05, -118.25, "Old owner's Address");
+      await Promise.resolve();
+    });
+    expect(result.current.parcelLoading).toBe(true);
+
+    mocks.authState.user = { uid: "owner-b", getIdToken: async () => "token-b" };
+    await act(async () => { rerender(); });
+    // User B started a new lookup in child effect, so parcelLoading stays true
+    expect(result.current.parcelLoading).toBe(true);
+
+    // Old lookup fails
+    await act(async () => {
+      failOldLookup(new ParcelFetchError("fetch_failed", "Failed to fetch parcel for old user"));
+      await pendingOld;
+    });
+
+    // Old lookup error must not set parcelError or clear loading for user B
+    expect(result.current.parcelError).toBeNull();
+    expect(result.current.parcelLoading).toBe(true);
+
+    // New lookup finishes
+    await act(async () => {
+      finishNewLookup({ ...liveParcelFixture, address: "New Owner Address" });
+    });
+
+    expect(result.current.parcelMode).toBe("live");
+    expect(result.current.parcel.address).toBe("New Owner Address");
+    expect(result.current.parcelLoading).toBe(false);
+    expect(result.current.parcelError).toBeNull();
+  });
+
+  it("ignores an in-flight guest lookup after signing in and clears loading", async () => {
+    let finishGuest!: (parcel: LiveParcelData) => void;
+    mocks.fetchParcel.mockImplementation(() => new Promise((resolve) => { finishGuest = resolve; }));
+    mocks.geocodeAddress.mockResolvedValue({
+      lat: 34.05,
+      lng: -118.25,
+      formattedAddress: "Guest Address",
+    });
+
+    const { result, rerender } = renderHook(() => useParcel(), { wrapper });
+    let pendingGuest!: Promise<void>;
+    await act(async () => {
+      pendingGuest = result.current.searchByAddress("Guest Address");
+      await Promise.resolve();
+    });
+    expect(result.current.parcelLoading).toBe(true);
+
+    // User signs in
+    signIn();
+    mocks.authState.user = { uid: "member", getIdToken: async () => "token-member" };
+    rerender();
+    expect(result.current.parcelLoading).toBe(false);
+
+    // Late guest response arrives
+    await act(async () => {
+      finishGuest({ ...liveParcelFixture, address: "Guest Address" });
+      await pendingGuest;
+    });
+
+    expect(result.current.parcelMode).toBe("preset");
+    expect(result.current.parcel.address).not.toBe("Guest Address");
+    expect(result.current.parcelLoading).toBe(false);
+    expect(result.current.parcelError).toBeNull();
+  });
   it("enriches missing locality only after agreement and preserves original input evidence", async () => {
     const formattedAddress = "202 C Street, San Diego, CA 92101";
     const match = { components: { houseNumber: "202", road: "C Street", city: "San Diego", state: "CA", zip: "92101" } };

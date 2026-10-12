@@ -115,7 +115,7 @@ describe("purchased-certificates helpers", () => {
       };
 
       const url = buildStudioUrlForCertificate(cert);
-      expect(url).toBe("/studio?cert=ca-san-jose-141-n-almaden-blvd");
+      expect(url).toBe("/studio?cert=ca-san-jose-141-n-almaden-blvd&checkout=open");
     });
   });
 });

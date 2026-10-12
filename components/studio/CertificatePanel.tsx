@@ -24,10 +24,10 @@ import {
 } from "@/lib/analytics/events";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
-import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
-import { useCertificateAccess } from "@/lib/certificate-access";
+import type { CertificateRecovery } from "@/lib/certificate-recovery";
+import Link from "next/link";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
 import {
   CertificateCheckoutError,
@@ -94,6 +94,7 @@ function includedSections(preview: AIProjectBriefPreview | null | undefined): In
 
 /** Props for {@link CertificatePanel}. */
 export interface CertificatePanelProps {
+  recovery: CertificateRecovery;
   /** The active parcel (its identity keys the purchase). */
   parcel: Parcel;
   /** The feasibility result summarized on the certificate. */
@@ -106,6 +107,7 @@ export interface CertificatePanelProps {
   onOpenCertificate: (projectBriefError?: string) => void;
   /** Unified AI interpretation recorded in the certificate when available. */
   projectBrief: AIProjectBrief | null;
+  projectBriefSavedAt?: string | null;
   /** The free preview tier of the brief, when one was generated for this concept. */
   projectBriefPreview?: AIProjectBriefPreview | null;
   projectBriefLoading: boolean;
@@ -123,12 +125,14 @@ export interface CertificatePanelProps {
  * webhook-written grant.
  */
 export default function CertificatePanel({
+  recovery,
   parcel,
   result,
   parcelName,
   eyebrow = "Step 4 · Certificate",
   onOpenCertificate,
   projectBrief,
+  projectBriefSavedAt,
   projectBriefPreview,
   projectBriefLoading,
   projectBriefError,
@@ -136,16 +140,15 @@ export default function CertificatePanel({
 }: CertificatePanelProps) {
   const { user } = useAuth();
   const certKey = certificateKey(parcel);
-  const { purchased, loading, refresh, analyticsOrderId, amount } = useCertificateAccess(user?.uid, certKey);
+  const { purchased, loading, refresh, analyticsOrderId, amount } = recovery.access;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [preparingBrief, setPreparingBrief] = useState(false);
-  const [checkoutCancelled, setCheckoutCancelled] = useState(false);
+  const checkoutCancelled = recovery.intent?.kind === "cancel";
   const includedHeadingId = useId();
   const openedOnUnlock = useRef(false);
   const sawSettledUnpurchased = useRef(false);
-  const returnedFromCheckout = useRef(false);
   const adsConversionFiredFor = useRef<string | null>(null);
   const paywallViewedFor = useRef<string | null>(null);
 
@@ -154,7 +157,6 @@ export default function CertificatePanel({
   useEffect(() => {
     openedOnUnlock.current = false;
     sawSettledUnpurchased.current = false;
-    returnedFromCheckout.current = false;
     adsConversionFiredFor.current = null;
     paywallViewedFor.current = null;
   }, [certKey]);
@@ -162,6 +164,7 @@ export default function CertificatePanel({
   // Track certificate paywall view once per lot context for unpurchased visitors.
   useEffect(() => {
     if (loading || purchased) return;
+    if (recovery.intent && recovery.intent.kind !== "cancel") return;
     if (paywallViewedFor.current === certKey) return;
     paywallViewedFor.current = certKey;
     const channel = mapPurchaseChannel(detectPurchaseChannel());
@@ -171,7 +174,7 @@ export default function CertificatePanel({
       feasibility_status: status,
       purchase_channel: channel,
     });
-  }, [loading, purchased, certKey, user, result.zoningStatus]);
+  }, [loading, purchased, certKey, user, result.zoningStatus, recovery]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -205,60 +208,15 @@ export default function CertificatePanel({
     }
   }, [onGenerateProjectBrief, onOpenCertificate, projectBrief, user]);
 
-  // Reconcile the Stripe return. The webhook writes the grant asynchronously, so
-  // poll a few times after landing on ?cert=<certKey>, then strip the param.
+  // Return recovery owns marker consumption and acknowledgement across panel remounts.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const returned = params.get("cert");
-    if (!returned) return;
-    // The success URL stamps which certificate was bought; only treat the
-    // return as this panel's unlock when the keys match. "1" is the legacy
-    // stamp from sessions created before the key was included.
-    const matchesThisPanel = returned === certKey || returned === "1";
-    if (matchesThisPanel) returnedFromCheckout.current = true;
-    // Always strip the marker — leaving it in place would re-arm the unlock
-    // on every reload once the grant exists.
-    params.delete("cert");
-    const next = params.toString();
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${window.location.pathname}${next ? `?${next}` : ""}`,
-    );
-    if (!matchesThisPanel || purchased) return;
-    let tries = 0;
-    const timer = window.setInterval(() => {
-      tries += 1;
-      refresh();
-      if (tries >= 5) window.clearInterval(timer);
-    }, 1500);
-    return () => window.clearInterval(timer);
-  }, [refresh, purchased, certKey]);
-
-  // Stripe's cancel URL carries a server-stamped marker. Report it once and
-  // strip it so a reload cannot report it again. Leaving Checkout is not a
-  // payment failure, so the buyer gets a calm notice rather than an error.
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get(CHECKOUT_RETURN_PARAM) !== CHECKOUT_CANCELLED) return;
-    params.delete(CHECKOUT_RETURN_PARAM);
-    const next = params.toString();
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${window.location.pathname}${next ? `?${next}` : ""}`,
-    );
-    // Only the channel: the scenario has not been restored from the URL yet
-    // when this first runs, so a feasibility status here would be the default's.
-    trackCertificateCheckoutCancelled({
-      purchase_channel: mapPurchaseChannel(detectPurchaseChannel()),
-    });
-    setCheckoutCancelled(true);
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
+    if (recovery.intent?.kind !== "cancel") return;
+    if (recovery.consumeCancellation()) {
+      trackCertificateCheckoutCancelled({
+        purchase_channel: mapPurchaseChannel(detectPurchaseChannel()),
+      });
+    }
+  }, [recovery]);
 
   // Open the artifact once when a purchase resolves in this session — a demo
   // or webhook grant observed after a settled unpurchased read, or a Stripe
@@ -266,9 +224,12 @@ export default function CertificatePanel({
   // regenerate the AI brief or pop the certificate; the CTA covers that path.
   useEffect(() => {
     const unlockedThisSession =
-      sawSettledUnpurchased.current || returnedFromCheckout.current;
+      sawSettledUnpurchased.current || (recovery.status === "granted" && recovery.intent?.kind !== "cancel" && Boolean(recovery.intent));
     if (purchased && user && unlockedThisSession && !openedOnUnlock.current) {
+      if (recovery.intent && recovery.intent.kind !== "cancel" && !recovery.consumeOpen()) return;
       openedOnUnlock.current = true;
+      // Preparing the Report follows an externally verified Grant transition.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void prepareAndOpenCertificate();
     }
     // Only a signed-in read counts as "settled unpurchased": before Firebase
@@ -279,16 +240,16 @@ export default function CertificatePanel({
       sawSettledUnpurchased.current = true;
       openedOnUnlock.current = false;
     }
-  }, [loading, prepareAndOpenCertificate, purchased, user]);
+  }, [loading, prepareAndOpenCertificate, purchased, user, recovery]);
 
   // Report the GA4 purchase event and Google Ads conversion exactly once per Stripe
   // checkout return using the safe, opaque analyticsOrderId.
   // Suppresses emission if analyticsOrderId is absent to guarantee zero PII transmission.
   useEffect(() => {
     if (!purchased || !user) return;
-    if (!returnedFromCheckout.current) return;
+    if (recovery.intent?.kind !== "checkout") return;
     if (adsConversionFiredFor.current === certKey) return;
-    if (!analyticsOrderId) return;
+    if (!analyticsOrderId || !recovery.consumePurchase()) return;
     adsConversionFiredFor.current = certKey;
 
     const valueDollars = amount ? amount / 100 : CERTIFICATE_PRICE_CENTS / 100;
@@ -305,9 +266,10 @@ export default function CertificatePanel({
       value: valueDollars,
       transactionId: analyticsOrderId,
     });
-  }, [purchased, user, certKey, analyticsOrderId, amount]);
+  }, [purchased, user, certKey, analyticsOrderId, amount, recovery]);
 
   async function handleCta() {
+    if (recovery.intent && recovery.intent.kind !== "cancel" && !purchased && user) return;
     if (purchased) {
       await prepareAndOpenCertificate();
       return;
@@ -318,7 +280,7 @@ export default function CertificatePanel({
     }
     setBusy(true);
     setError(null);
-    setCheckoutCancelled(false);
+    recovery.acknowledgeCancellation();
 
     const channel = mapPurchaseChannel(detectPurchaseChannel());
     const status = mapFeasibilityVerdict(result.zoningStatus);
@@ -376,8 +338,14 @@ export default function CertificatePanel({
   const certPrice = useStorePrice("certificate");
   const price = certPrice.amountCompact;
   const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel);
-  const reportBusy = busy || loading || preparingBrief || projectBriefLoading;
-  const ctaLabel = reportBusy
+  const recoveryPending = !purchased && Boolean(recovery.intent && recovery.intent.kind !== "cancel");
+  const reportBusy = busy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
+
+  const ctaLabel = recoveryPending
+    ? user
+      ? recovery.status === "unverified" ? "Certificate access unverified" : "Checking certificate access"
+      : "Sign in to verify certificate access"
+    : reportBusy
     ? purchased
       ? "Preparing complete certificate"
       : "Preparing certificate"
@@ -390,7 +358,7 @@ export default function CertificatePanel({
         : "Unlock property certificate";
   // Purchase terms beside the decision. Every channel sells a one-time,
   // per-property unlock; the amount is named only where it is the one billed.
-  const ctaNote = purchased
+  const ctaNote = purchased || recoveryPending
     ? undefined
     : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Unlocks this property permanently`;
 
@@ -415,6 +383,22 @@ export default function CertificatePanel({
         </p>
       )}
 
+      {recoveryPending && (
+        <div className="border border-lot-line bg-lot-surface px-4 py-3 text-sm leading-5 text-lot-ink" role="status">
+          <p>{!user ? "Sign in to verify your Certificate access." : recovery.status === "checking"
+            ? "Checking certificate access. Your access record may still be arriving."
+            : "We could not verify Certificate access yet. This does not mean your payment failed."}</p>
+          {user && recovery.status === "unverified" && (
+            <button type="button" className="mt-3 min-h-11 text-sm font-semibold text-lot-orange-ink underline" onClick={recovery.retry}>
+              Check again
+            </button>
+          )}
+          <Link className="ml-4 inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline" href="/certificates">
+            My Certificates
+          </Link>
+        </div>
+      )}
+
       <EstimateSummaryPanel
         parcelName={parcelName}
         result={result}
@@ -425,7 +409,7 @@ export default function CertificatePanel({
         error={!purchased ? error : null}
       />
 
-      <div className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">
+      <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">
         {purchased ? (
           <div className="flex items-start gap-3">
             <ShieldCheck size={20} className="mt-0.5 shrink-0 text-status-eligible" />
@@ -453,6 +437,11 @@ export default function CertificatePanel({
                     <p className="mt-1 text-xs font-semibold text-lot-ink">
                       {projectBrief.headline}
                     </p>
+                    {projectBriefSavedAt && (
+                      <p className="mt-1 text-xs leading-5 text-lot-stone">
+                        Saved Brief snapshot. Verify these historical notes against current guidance.
+                      </p>
+                    )}
                     <p className="mt-0.5 text-[11px] leading-4 text-lot-stone">
                       Parcel assessment + {projectBrief.totalEstWeeksLow}&ndash;
                       {projectBrief.totalEstWeeksHigh} week approval timeline

@@ -12,6 +12,7 @@ import type { StorePriceDisplay } from "@/lib/commerce/store-price";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { CertificateCheckoutError } from "@/lib/certificate-checkout";
+import type { CertificateReturnIntent, CertificateRecovery } from "@/lib/certificate-recovery";
 import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
 
 const mocks = vi.hoisted(() => ({
@@ -19,6 +20,12 @@ const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   trackPurchase: vi.fn(),
   startCertificateCheckout: vi.fn(),
+  intent: null as CertificateReturnIntent | null,
+  recoveryStatus: "idle" as CertificateRecovery["status"],
+  consumeOpen: vi.fn(),
+  consumePurchase: vi.fn(),
+  consumeCancellation: vi.fn(),
+  acknowledgeCancellation: vi.fn(),
   access: {
     purchased: true,
     loading: false,
@@ -57,10 +64,6 @@ vi.mock("@/lib/commerce/store-price", async (importOriginal) => {
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({ user: mocks.auth.user }),
-}));
-
-vi.mock("@/lib/certificate-access", () => ({
-  useCertificateAccess: () => ({ ...mocks.access, refresh: mocks.refresh }),
 }));
 
 vi.mock("@/lib/analytics/adsConversion", () => ({
@@ -115,6 +118,16 @@ function createProps(
   overrides: Partial<CertificatePanelProps> = {},
 ): CertificatePanelProps {
   return {
+    recovery: {
+      get access() { return { ...mocks.access, refresh: mocks.refresh }; },
+      get intent() { return mocks.intent; },
+      get status() { return mocks.access.purchased ? "granted" : mocks.recoveryStatus; },
+      retry: mocks.refresh,
+      consumeOpen: mocks.consumeOpen,
+      consumePurchase: mocks.consumePurchase,
+      consumeCancellation: mocks.consumeCancellation,
+      acknowledgeCancellation: mocks.acknowledgeCancellation,
+    },
     parcel,
     result,
     parcelName: `${parcel.address}, ${parcel.city}`,
@@ -182,6 +195,12 @@ describe("CertificatePanel", () => {
     mocks.refresh.mockReset();
     mocks.trackPurchase.mockReset();
     mocks.startCertificateCheckout.mockReset();
+    mocks.intent = null;
+    mocks.recoveryStatus = "idle";
+    mocks.consumeOpen.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
+    mocks.consumePurchase.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
+    mocks.consumeCancellation.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
+    mocks.acknowledgeCancellation.mockReset().mockImplementation(() => { mocks.intent = null; });
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
@@ -208,6 +227,21 @@ describe("CertificatePanel", () => {
 
     expect(screen.getByText("Certificate of Feasibility")).toBeInTheDocument();
     expect(screen.queryByText("Step 4 · Certificate")).not.toBeInTheDocument();
+  });
+
+  it("offers access retry instead of another Purchase after recovery remains unverified", () => {
+    mocks.access.purchased = false;
+    mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
+    mocks.recoveryStatus = "unverified";
+    render(<CertificatePanel {...createProps()} />);
+    expect(screen.getByText(/This does not mean your payment failed/)).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Unlock property certificate/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Certificate access unverified" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Check again" }));
+    expect(mocks.refresh).toHaveBeenCalled();
+    expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+    expect(analyticsEvents.trackCertificatePaywallViewed).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "My Certificates" })).toHaveAttribute("href", "/certificates");
   });
 
   it("explains the current site-fit issue and reusable property value before purchase", () => {
@@ -430,8 +464,8 @@ describe("CertificatePanel", () => {
       expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
     });
 
-    it("records a Stripe cancellation once, strips the marker and reassures without an error", async () => {
-      window.history.replaceState(null, "", "/studio?v=2&parcel=abc&checkout=cancelled");
+    it("records a verified cancellation intent once and reassures without an error", async () => {
+      mocks.intent = { kind: "cancel", certKey: null };
 
       const view = render(
         <StrictMode>
@@ -448,12 +482,13 @@ describe("CertificatePanel", () => {
       expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledWith({
         purchase_channel: "web_stripe",
       });
-      expect(window.location.search).toBe("?v=2&parcel=abc");
+
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
       expect(screen.queryByText("Payment Issue")).not.toBeInTheDocument();
 
       // A reload after processing carries no marker, so nothing fires again.
       view.unmount();
+      mocks.intent = null;
       render(<CertificatePanel {...createProps()} />);
       expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledTimes(1);
     });
@@ -468,7 +503,7 @@ describe("CertificatePanel", () => {
     });
 
     it("clears the cancellation notice when the buyer tries again", async () => {
-      window.history.replaceState(null, "", "/studio?checkout=cancelled");
+      mocks.intent = { kind: "cancel", certKey: null };
       mocks.startCertificateCheckout.mockResolvedValueOnce({ kind: "granted", demo: true });
       render(<CertificatePanel {...createProps()} />);
       expect(await screen.findByText(/checkout cancelled/i)).toBeInTheDocument();
@@ -476,10 +511,24 @@ describe("CertificatePanel", () => {
       fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
 
       await waitFor(() => expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument());
+      expect(mocks.acknowledgeCancellation).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a retried cancellation cleared when the Certificate panel remounts", async () => {
+      mocks.intent = { kind: "cancel", certKey: null };
+      mocks.startCertificateCheckout.mockRejectedValueOnce(new Error("Fixture failure"));
+      const view = render(<CertificatePanel {...createProps()} />);
+      expect(await screen.findByText(/checkout cancelled/i)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      await screen.findByText("Could not start checkout. Please try again.");
+      view.unmount();
+      render(<CertificatePanel {...createProps()} />);
+      expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument();
+      expect(analyticsEvents.trackCertificateCheckoutCancelled).toHaveBeenCalledTimes(1);
     });
 
     it("sends only bounded parameters on every certificate funnel event", async () => {
-      window.history.replaceState(null, "", "/studio?checkout=cancelled");
+      mocks.intent = { kind: "cancel", certKey: null };
       const assign = stubLocationAssign();
       mocks.startCertificateCheckout.mockResolvedValueOnce({
         kind: "redirect",
@@ -537,7 +586,7 @@ describe("CertificatePanel", () => {
   });
 
   it("auto-opens once when returning from Stripe checkout with the grant already written", async () => {
-    window.history.replaceState(null, "", `/?cert=${certificateKey(parcel)}`);
+    mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();
     const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
@@ -547,32 +596,34 @@ describe("CertificatePanel", () => {
     await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
     expect(onGenerateProjectBrief).toHaveBeenCalledTimes(1);
     // The marker must be stripped so a reload cannot re-arm the unlock.
-    expect(window.location.search).toBe("");
+
   });
 
-  it("accepts the legacy cert=1 checkout marker", async () => {
-    window.history.replaceState(null, "", "/?cert=1");
+  it("opens a verified existing Certificate without treating it as a new Purchase", async () => {
+    mocks.intent = { kind: "open", certKey: certificateKey(parcel) };
     const onOpenCertificate = vi.fn();
     const props = createProps({ projectBrief: brief, onOpenCertificate });
 
     render(<CertificatePanel {...props} />);
 
     await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
-    expect(window.location.search).toBe("");
+
   });
 
-  it("ignores a checkout marker stamped for a different parcel", async () => {
-    window.history.replaceState(null, "", "/?cert=some-other-lot");
+  it("does not open a Certificate while recovery is unverified for the active Parcel", async () => {
+    mocks.intent = { kind: "open", certKey: "some-other-lot" };
+    mocks.access.purchased = false;
+    mocks.recoveryStatus = "checking";
     const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
     const onOpenCertificate = vi.fn();
     const props = createProps({ onGenerateProjectBrief, onOpenCertificate });
 
     render(<CertificatePanel {...props} />);
 
-    expect(await screen.findByText(/certificate unlocked/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Your access record may still be arriving/)).toBeInTheDocument();
     expect(onOpenCertificate).not.toHaveBeenCalled();
     expect(onGenerateProjectBrief).not.toHaveBeenCalled();
-    expect(window.location.search).toBe("");
+
   });
 
   it("does not treat pre-auth renders as an in-session unlock", async () => {
@@ -634,7 +685,7 @@ describe("CertificatePanel", () => {
   });
 
   it("reports the Ads conversion and GA4 purchase once when returning from Stripe checkout", async () => {
-    window.history.replaceState(null, "", `/?cert=${certificateKey(parcel)}`);
+    mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
     const props = createProps({ projectBrief: brief });
 
     render(<CertificatePanel {...props} />);
@@ -664,7 +715,7 @@ describe("CertificatePanel", () => {
   });
 
   it("reports the conversion only once across a loading refresh flicker", async () => {
-    window.history.replaceState(null, "", `/?cert=${certificateKey(parcel)}`);
+    mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
     const props = createProps({ projectBrief: brief });
     const { rerender } = render(<CertificatePanel {...props} />);
 

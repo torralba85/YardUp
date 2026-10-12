@@ -8,6 +8,7 @@ import { certificateKey } from "./certificate-key";
 import type { LiveParcelData } from "./parcel-types";
 import { stashInitialParcel } from "./parcel-handoff";
 import { stashAddressQuery } from "./address-handoff";
+import { CERTIFICATE_OPEN, CHECKOUT_RETURN_PARAM } from "./checkout-return";
 
 /**
  * A purchased feasibility certificate recorded in `certificatePurchases`.
@@ -154,7 +155,7 @@ export function buildStudioUrlForCertificate(cert: PurchasedCertificate): string
   } else if (cert.address) {
     stashAddressQuery(cert.address);
   }
-  return `/studio?cert=${encodeURIComponent(cert.certKey)}`;
+  return `/studio?cert=${encodeURIComponent(cert.certKey)}&${CHECKOUT_RETURN_PARAM}=${CERTIFICATE_OPEN}`;
 }
 
 /**

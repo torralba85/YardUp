@@ -28,6 +28,20 @@ async function openCertificateStep(page: Page, query = "parcel=oak-street&step=c
 }
 
 test.describe("web certificate checkout", () => {
+  test("an unresolved Checkout return offers recovery instead of another purchase", async ({ page }, testInfo) => {
+    test.setTimeout(60000);
+    await signIn(page);
+    await page.goto("/studio?parcel=oak-street&cert=oak-street&checkout=returned");
+    await expect(page.getByText("Checking certificate access. Your access record may still be arriving.").filter({ visible: true }).first()).toBeVisible();
+    await expect(unlockButton(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Check again" }).filter({ visible: true }).first()).toBeVisible({ timeout: 40000 });
+    await expect(page.getByText(/This does not mean your payment failed/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "My Certificates" }).filter({ visible: true }).first()).toHaveAttribute("href", "/certificates");
+    await page.screenshot({ path: testInfo.outputPath("certificate-access-unverified.png"), fullPage: true });
+    await page.getByRole("button", { name: "Check again" }).filter({ visible: true }).first().click();
+    await expect(page.getByText("Checking certificate access. Your access record may still be arriving.").filter({ visible: true }).first()).toBeVisible();
+    await expect(unlockButton(page)).toHaveCount(0);
+  });
   test("a signed-in buyer is sent to Stripe with a well-formed checkout request", async ({ page }) => {
     await signIn(page);
 
@@ -131,6 +145,24 @@ test.describe("web certificate checkout", () => {
     await page.reload();
     await expect(page.getByRole("navigation", { name: /Studio steps|Journey progress/ }).first()).toBeVisible();
     await expect(page).not.toHaveURL(/checkout=cancelled/);
+    await expect(notice).toHaveCount(0);
+  });
+
+  test("retrying checkout keeps the old cancellation cleared across responsive remounts", async ({ page }) => {
+    await signIn(page);
+    await page.route(CERTIFICATE_ROUTE, (route) =>
+      route.fulfill({ status: 502, json: { error: "Could not start checkout. Please try again." } }),
+    );
+    await openCertificateStep(page, "parcel=oak-street&step=certificate&checkout=cancelled");
+    const notice = page.getByText("Checkout cancelled. Your property analysis is still here whenever you're ready.");
+    await expect(notice.first()).toBeVisible();
+    await unlockButton(page).click();
+    await expect(page.getByText("Could not start checkout. Please try again.").first()).toBeVisible();
+    await expect(notice).toHaveCount(0);
+
+    const desktop = (page.viewportSize()?.width ?? 0) >= 1024;
+    await page.setViewportSize(desktop ? { width: 390, height: 844 } : { width: 1440, height: 900 });
+    await expect(unlockButton(page)).toBeVisible();
     await expect(notice).toHaveCount(0);
   });
 

@@ -39,6 +39,7 @@ export interface ReportInput {
   recordedAt?: Date;
   /** Optional generated parcel interpretation and permit timeline. */
   projectBrief?: AIProjectBrief;
+  projectBriefSavedAt?: string | null;
   /** Optional style-matched concept generated from reference photo. */
   styleMatchConcept?: ReportStyleMatchConcept | null;
 }
@@ -80,6 +81,7 @@ export function buildReportText({
   result,
   recordedAt,
   projectBrief,
+  projectBriefSavedAt,
   styleMatchConcept,
 }: ReportInput): string {
   const briefRisks = Array.isArray(projectBrief?.risks) ? projectBrief.risks : [];
@@ -135,6 +137,7 @@ export function buildReportText({
     ...(projectBrief
       ? [
           "Property & Permit Brief",
+          ...(projectBriefSavedAt ? ["Saved Brief snapshot. Verify these historical notes against current guidance."] : []),
           projectBrief.headline,
           projectBrief.summary,
           `Best fit: ${projectBrief.bestFit}`,
@@ -175,6 +178,7 @@ export function buildReportHtml({
   result,
   recordedAt,
   projectBrief,
+  projectBriefSavedAt,
   styleMatchConcept,
 }: ReportInput): string {
   const rows: Array<[string, string]> = [
@@ -486,6 +490,7 @@ export function buildReportHtml({
 
         ${styleMatchConcept ? buildStyleMatchConceptHtml(styleMatchConcept) : ""}
 
+        ${projectBrief && projectBriefSavedAt ? "<p>Saved Brief snapshot. Verify these historical notes against current guidance.</p>" : ""}
         ${projectBrief ? buildProjectBriefHtml(projectBrief) : ""}
 
         <h2>Recommended Next Steps</h2>
@@ -659,6 +664,7 @@ export function buildReportCsv({
   config,
   result,
   projectBrief,
+  projectBriefSavedAt,
   styleMatchConcept,
 }: ReportInput): string {
   const risks = Array.isArray(projectBrief?.risks) ? projectBrief.risks : [];
@@ -667,6 +673,9 @@ export function buildReportCsv({
     ? projectBrief.recommendedNextSteps
     : [];
   const aiRows: Array<[string, string]> = [];
+  if (projectBrief && projectBriefSavedAt) {
+    aiRows.push(["Brief provenance", "Saved historical snapshot"], ["Scenario saved at", projectBriefSavedAt]);
+  }
   if (styleMatchConcept) {
     aiRows.push(
       ["AI Style Match Name", styleMatchConcept.styleName],

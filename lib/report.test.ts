@@ -15,6 +15,14 @@ function makeInput() {
   return { parcel, config, result };
 }
 
+it("labels historical Saved Brief snapshots in every exported Report", () => {
+  const input = { ...makeInput(), projectBrief: makeProjectBrief(), projectBriefSavedAt: "2026-09-13T00:00:00Z" };
+  expect(buildReportText(input)).toContain("Saved Brief snapshot");
+  expect(buildReportHtml(input)).toContain("Saved Brief snapshot");
+  expect(buildReportCsv(input)).toContain("Brief provenance,Saved historical snapshot");
+  expect(buildReportCsv(input)).toContain("Scenario saved at,2026-09-13T00:00:00Z");
+});
+
 it("keeps legacy fallback dimensions and footprints qualified in every export", () => {
   const parcel = { ...getParcelById("oak-street"), source: "fallback", zoning: "R-1 (estimated)" };
   const config = defaultAduConfig;
