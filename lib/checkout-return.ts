@@ -5,5 +5,9 @@
  */
 export const CHECKOUT_RETURN_PARAM = "checkout";
 
-/** The only {@link CHECKOUT_RETURN_PARAM} value the server ever stamps. */
+/** A cancelled Checkout, distinct from a verified Grant or a successful payment. */
 export const CHECKOUT_CANCELLED = "cancelled";
+
+/** Distinguish a new Checkout return from opening a previously bought Certificate. */
+export const CHECKOUT_RETURNED = "returned";
+export const CERTIFICATE_OPEN = "open";

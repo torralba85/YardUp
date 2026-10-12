@@ -10,7 +10,7 @@ import {
   hasCertificate,
 } from "@/lib/server/certificate-purchases";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
-import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
+import { CHECKOUT_CANCELLED, CHECKOUT_RETURNED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
@@ -328,7 +328,7 @@ export async function POST(request: NextRequest) {
           },
           // Stamp which certificate was bought so the return only unlocks the
           // panel whose key matches (the studio may rehydrate a different parcel).
-          success_url: `${reservedOrigin}/studio?cert=${encodeURIComponent(certKey)}${returnQuery ? `&${returnQuery}` : ""}`,
+          success_url: `${reservedOrigin}/studio?cert=${encodeURIComponent(certKey)}&${CHECKOUT_RETURN_PARAM}=${CHECKOUT_RETURNED}${returnQuery ? `&${returnQuery}` : ""}`,
           cancel_url: `${reservedOrigin}/studio?${cancelReturnQuery(returnQuery)}`,
         },
         {

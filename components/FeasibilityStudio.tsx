@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  calculateFeasibility,
   defaultAduConfig,
   defaultFinancialAssumptions,
   getParcelById,
@@ -31,8 +30,8 @@ import {
   isValidFinancialAssumptions,
   isValidPose,
 } from "@/lib/scenario-design";
-import { getScenePlacement } from "@/lib/site-fit";
-import { buildAduHeightModel, type Pose2D } from "@/lib/scene-model";
+import type { Pose2D } from "@/lib/scene-model";
+import { calculateScenarioFeasibility, restoreScenario, type ProjectBriefState } from "@/lib/scenario-restoration";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal, type AuthModalCloseReason } from "@/components/auth/AuthModal";
@@ -51,10 +50,8 @@ import { consumeAddressQuery } from "@/lib/address-handoff";
 import { certificateKey } from "@/lib/certificate-key";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { Select } from "@/components/ui/Field";
-import type { LiveParcelData } from "@/lib/parcel-types";
 import ParcelDataNotice from "./studio/ParcelDataNotice";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useCertificateRecovery, type CertificateGrant } from "@/lib/certificate-recovery";
 import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
@@ -140,13 +137,6 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
   ),
 });
 
-interface ProjectBriefState {
-  key: string;
-  data: AIProjectBriefResponse | null;
-  loading: boolean;
-  error: string | null;
-}
-
 /**
  * Top-level studio orchestrator. Owns the active parcel/config/assumptions
  * state, keeps it in sync with the shareable URL ({@link parseScenarioParams} /
@@ -174,6 +164,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     parcelMode,
     parcelError,
     parcelLoading,
+    selectionVersion,
     authRequired,
     clearAuthRequired,
     searchParcel,
@@ -376,17 +367,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       ? userCalibration.transform
       : splatScene.transform
     : undefined;
-  const expectedRent = "expectedRent" in activeParcel ? activeParcel.expectedRent : undefined;
   const result = useMemo(
-    () => {
-      const base=calculateFeasibility(activeParcel, config, assumptions, expectedRent);
-      const placement=getScenePlacement(activeParcel,config,pose);
-      const totalHeight=buildAduHeightModel(config)?.totalHeight;
-      return {...base,placement,placementPose:pose,warnings:[...base.warnings,
-        ...(placement.status!=="fits" ? placement.reasons.map(reason=>reason.message) : []),
-        ...(totalHeight && totalHeight>16 && config.height<=16 ? [`Modeled total roof height is ${totalHeight.toFixed(1)} ft; verify the local height limit.`] : [])]};
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () => calculateScenarioFeasibility(activeParcel, config, assumptions, pose),
     [assumptions, config, activeParcel, pose],
   );
   const isCompliant = result.zoningStatus === "Compliant";
@@ -404,6 +386,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   // the preview tier exists solely to sell that unlock in the rail panel.
   const projectBrief =
     projectBriefResponse?.tier === "full" ? projectBriefResponse.brief : null;
+  const projectBriefSavedAt = projectBrief ? projectBriefState?.savedAt ?? null : null;
   const projectBriefPreview =
     projectBriefResponse?.tier === "preview" ? projectBriefResponse.preview : null;
   const projectBriefLoading =
@@ -511,7 +494,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       incomingAddressRef.current = consumeAddressQuery() ?? params.get("q")?.trim() ?? null;
     }
     const incomingAddress = incomingAddressRef.current;
-    if (incomingAddress) {
+    // Certificate Recovery owns its Address handoff after observing the Grant.
+    // Starting an ordinary lookup here would abandon that return as a new selection.
+    if (incomingAddress && !incomingCertRef.current) {
       setPendingAddressQuery(incomingAddress);
     }
     // A restored or shared non-default scenario proves the find decision was
@@ -555,53 +540,18 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   }, [authLoading, pendingAddressQuery, searchByAddress]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Recover parcel state for a purchased certificate if arriving cold with ?cert=...
-  // and no parcel has been handed off via sessionStorage.
-  useEffect(() => {
-    if (authLoading || !user || typeof window === "undefined") return;
-    const certParam = incomingCertRef.current ?? new URLSearchParams(window.location.search).get("cert");
-    if (!certParam || parcelMode !== "preset") return;
-    const isPreset = parcelPresets.some(
-      (p) => certificateKey(p) === certParam || p.id === certParam,
-    );
-    if (isPreset) return;
-
-    let cancelled = false;
-    let timerId: ReturnType<typeof setTimeout> | null = null;
-    let attempts = 0;
-    const maxAttempts = 5;
-
-    const pollCertificate = async () => {
-      try {
-        const snap = await getDoc(doc(db, "certificatePurchases", `${user.uid}_${certParam}`));
-        if (cancelled) return;
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.parcelData) {
-            restoreLiveParcel(data.parcelData as LiveParcelData);
-          } else if (typeof data.address === "string" && data.address) {
-            void searchByAddress(data.address);
-          }
-          return;
-        }
-        if (attempts < maxAttempts) {
-          attempts += 1;
-          timerId = setTimeout(() => {
-            void pollCertificate();
-          }, 1500);
-        }
-      } catch (err) {
-        console.error("Failed to recover parcel for certificate:", err);
-      }
-    };
-
-    void pollCertificate();
-
-    return () => {
-      cancelled = true;
-      if (timerId) clearTimeout(timerId);
-    };
-  }, [authLoading, user, parcelMode, restoreLiveParcel, searchByAddress]);
+  const restoreCertificateParcel = useCallback(async (grant: CertificateGrant, expectedSelectionVersion: number) => {
+    if (parcelMode !== "preset") return;
+    if (grant.parcelData) restoreLiveParcel(grant.parcelData, expectedSelectionVersion);
+    else if (grant.address) await searchByAddress(grant.address, expectedSelectionVersion);
+  }, [parcelMode, restoreLiveParcel, searchByAddress]);
+  const certificateRecovery = useCertificateRecovery({
+    uid: user?.uid,
+    certKey: certificateKey(activeParcel),
+    ready: hydratedFromUrl && !authLoading,
+    onRestore: restoreCertificateParcel,
+    selectionVersion,
+  });
 
   useEffect(() => {
     if (!hydratedFromUrl || typeof window === "undefined") return;
@@ -616,7 +566,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
     const currentParams = new URLSearchParams(window.location.search);
     const certParam = currentParams.get("cert");
-    // Keep the one-shot Stripe return markers until CertificatePanel consumes them.
+    // Certificate Recovery consumes the one-shot return markers after capture.
     const checkoutCancelled = currentParams.get(CHECKOUT_RETURN_PARAM) === CHECKOUT_CANCELLED;
     const nextQuery = [
       serialized,
@@ -732,7 +682,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
     trackReportOpened({
       feasibility_status: mapFeasibilityVerdict(summary.verdict),
-      has_ai_brief: Boolean(projectBriefState?.data),
+      has_ai_brief: Boolean(projectBrief),
       auth_state: user ? "signed_in" : "guest",
     });
     setReportOpen(true);
@@ -747,16 +697,16 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       const requestKey = projectBriefKey;
       const requestInput = projectBriefInput;
       const existingData = projectBriefState?.key === requestKey ? projectBriefState.data : null;
-      setProjectBriefState({ key: requestKey, data: existingData, loading: true, error: null });
+      const savedAt = projectBriefState?.key === requestKey ? projectBriefState.savedAt : undefined;
+      setProjectBriefState({ key: requestKey, data: existingData, loading: true, error: null, savedAt });
 
       const requestId = Symbol("project-brief-request");
       const promise = requestProjectBrief(requestInput, idToken)
         .then((data) => {
-          setProjectBriefState((current) =>
-            current?.key === requestKey
-              ? { key: requestKey, data, loading: false, error: null }
-              : current,
-          );
+          if (projectBriefRequestRef.current?.id === requestId) {
+            setProjectBriefState((current) => current?.key === requestKey
+              ? { key: requestKey, data, loading: false, error: null } : current);
+          }
           return data;
         })
         .catch((err: unknown) => {
@@ -764,11 +714,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
             err instanceof AIRequestError
               ? err.userMessage
               : "Property notes are unavailable right now. Please try again.";
-          setProjectBriefState((current) =>
-            current?.key === requestKey
-              ? { key: requestKey, data: existingData, loading: false, error: message }
-              : current,
-          );
+          if (projectBriefRequestRef.current?.id === requestId) {
+            setProjectBriefState((current) => current?.key === requestKey
+              ? { key: requestKey, data: existingData, loading: false, error: message, savedAt } : current);
+          }
           throw err;
         })
         .finally(() => {
@@ -881,62 +830,19 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     if (!user) return;
     const scenario = savedScenarios.find((s) => s.id === id);
     if (!scenario) return;
-    if (scenario.liveParcel) {
-      restoreLiveParcel(scenario.liveParcel);
-    } else {
-      const preset = getParcelById(scenario.parcelId);
-      resetToPreset(preset);
-    }
-    setParcelId(scenario.parcelId);
-    setConfig(scenario.config);
-    setPoseState({
-      key: scenario.liveParcel
-        ? `${scenario.liveParcel.address}|${scenario.liveParcel.city}`
-        : scenario.parcelId,
-      pose:
-        scenario.pose ??
-        defaultPose(
-          scenario.liveParcel ?? getParcelById(scenario.parcelId),
-          scenario.config,
-        ),
-    });
-    setAssumptions(scenario.assumptions);
-    if (scenario.projectBrief) {
-      setProjectBriefState({
-        key: scenario.liveParcel
-          ? `${scenario.liveParcel.address}|${scenario.liveParcel.city}`
-          : scenario.parcelId,
-        data: { tier: "full", brief: scenario.projectBrief },
-        loading: false,
-        error: null,
-      });
-    }
-    if (scenario.styleMatchConcept) {
-      const restoredConcept: InspirationItem = {
-        id: `style-match-${scenario.id}`,
-        title: `Matched ${scenario.styleMatchConcept.styleName} Concept`,
-        style: scenario.styleMatchConcept.styleName,
-        sqft: scenario.config.footprint,
-        width: scenario.config.width,
-        length: scenario.config.length,
-        roof: scenario.config.roof,
-        finish: scenario.config.finish,
-        tags: ["style-matched", scenario.styleMatchConcept.styleName.toLowerCase()],
-        summary: `A custom ADU concept style-matched to your home (${scenario.styleMatchConcept.matchPercentage}% match).`,
-        budgetBand: "$250k - $400k",
-        imagePath: scenario.styleMatchConcept.conceptUrl,
-        isStyleMatched: true,
-        photoUrl: scenario.styleMatchConcept.photoUrl,
-        matchPercentage: scenario.styleMatchConcept.matchPercentage,
-        traits: scenario.styleMatchConcept.traits,
-        isAttached: false,
-      };
-      setGeneratedConcepts((prev) => {
-        const filtered = prev.filter((c) => c.id !== restoredConcept.id);
-        return [restoredConcept, ...filtered];
-      });
-      setActiveConcept(restoredConcept);
-    }
+    const restored = restoreScenario(scenario);
+    // A request started for the previous study cannot overwrite this saved snapshot.
+    projectBriefRequestRef.current = null;
+    if (restored.liveParcel) restoreLiveParcel(restored.liveParcel);
+    else resetToPreset(restored.preset);
+    setParcelId(restored.parcelId);
+    setConfig(restored.config);
+    setPoseState({ key: restored.poseKey, pose: restored.pose });
+    setAssumptions(restored.assumptions);
+    setProjectBriefState(restored.briefState);
+    setGeneratedConcepts(restored.concept ? [restored.concept] : []);
+    setActiveConcept(restored.concept);
+    setIsBoardOpen(false);
   }
 
   async function handleDeleteScenario(id: string) {
@@ -1004,6 +910,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       config,
       result,
       projectBrief: projectBrief ?? undefined,
+      projectBriefSavedAt,
       styleMatchConcept: activeStyleMatchConcept,
     });
     downloadBlob("lotfoundry-certificate-of-feasibility.html", html, "text/html");
@@ -1015,6 +922,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       config,
       result,
       projectBrief: projectBrief ?? undefined,
+      projectBriefSavedAt,
       styleMatchConcept: activeStyleMatchConcept,
     });
     downloadBlob("lotfoundry-concept-feasibility-report.csv", csv, "text/csv");
@@ -1205,12 +1113,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcelName={mobileParcelName}
           certificate={
             <CertificatePanel
+              recovery={certificateRecovery}
               parcel={activeParcel}
               result={result}
               parcelName={mobileParcelName}
               eyebrow="Certificate of Feasibility"
               onOpenCertificate={handleGenerateReport}
               projectBrief={projectBrief}
+              projectBriefSavedAt={projectBriefSavedAt}
               projectBriefPreview={projectBriefPreview}
               projectBriefLoading={projectBriefLoading}
               projectBriefError={projectBriefError}
@@ -1270,6 +1180,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
             parcelName={mobileParcelName}
             result={result}
             projectBrief={projectBrief}
+              projectBriefSavedAt={projectBriefSavedAt}
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
             styleMatchConcept={activeStyleMatchConcept}
@@ -1432,11 +1343,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           </>
         ) : activeStep === "certificate" ? (
           <CertificatePanel
+              recovery={certificateRecovery}
             parcel={activeParcel}
             result={result}
             parcelName={parcelName}
             onOpenCertificate={handleGenerateReport}
             projectBrief={projectBrief}
+              projectBriefSavedAt={projectBriefSavedAt}
             projectBriefPreview={projectBriefPreview}
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
@@ -1457,6 +1370,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcelName={parcelName}
           result={result}
           projectBrief={projectBrief}
+              projectBriefSavedAt={projectBriefSavedAt}
           projectBriefLoading={projectBriefLoading}
           projectBriefError={projectBriefError}
           styleMatchConcept={activeStyleMatchConcept}

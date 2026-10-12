@@ -28,6 +28,20 @@ async function openCertificateStep(page: Page, query = "parcel=oak-street&step=c
 }
 
 test.describe("web certificate checkout", () => {
+  test("an unresolved Checkout return offers recovery instead of another purchase", async ({ page }, testInfo) => {
+    test.setTimeout(60000);
+    await signIn(page);
+    await page.goto("/studio?parcel=oak-street&cert=oak-street&checkout=returned");
+    await expect(page.getByText("Checking certificate access. Your access record may still be arriving.").filter({ visible: true }).first()).toBeVisible();
+    await expect(unlockButton(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Check again" }).filter({ visible: true }).first()).toBeVisible({ timeout: 40000 });
+    await expect(page.getByText(/This does not mean your payment failed/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "My Certificates" }).filter({ visible: true }).first()).toHaveAttribute("href", "/certificates");
+    await page.screenshot({ path: testInfo.outputPath("certificate-access-unverified.png"), fullPage: true });
+    await page.getByRole("button", { name: "Check again" }).filter({ visible: true }).first().click();
+    await expect(page.getByText("Checking certificate access. Your access record may still be arriving.").filter({ visible: true }).first()).toBeVisible();
+    await expect(unlockButton(page)).toHaveCount(0);
+  });
   test("a signed-in buyer is sent to Stripe with a well-formed checkout request", async ({ page }) => {
     await signIn(page);
 

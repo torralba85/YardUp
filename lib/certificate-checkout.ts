@@ -77,7 +77,7 @@ export async function startCertificateCheckout(
         getIdToken: async () => input.idToken,
       });
       // Pass certKey so server verify writes certificatePurchases/{uid}_{certKey}
-      // — the same doc useCertificateAccess reads for the unlock.
+      // — the same Grant the Certificate Recovery module reads for the unlock.
       await client.purchase(STORE_PRODUCTS.certificate.id, {
         certKey: input.certKey,
       });

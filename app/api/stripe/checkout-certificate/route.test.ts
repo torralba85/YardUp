@@ -603,7 +603,7 @@ describe("POST /api/stripe/checkout-certificate", () => {
       expect(success.searchParams.getAll("cert")).toEqual(["parcel-1"]);
       expect(success.searchParams.get("parcel")).toBe("abc");
       // A paid return must never look like a cancellation.
-      expect(success.searchParams.has("checkout")).toBe(false);
+      expect(success.searchParams.get("checkout")).toBe("returned");
       expect(success.searchParams.has("step")).toBe(false);
     });
   });

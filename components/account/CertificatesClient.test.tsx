@@ -126,7 +126,7 @@ describe("CertificatesClient", () => {
     fireEvent.click(openButton);
 
     expect(routerMock.push).toHaveBeenCalledWith(
-      "/studio?cert=ca-san-jose-141-n-almaden-blvd-95110",
+      "/studio?cert=ca-san-jose-141-n-almaden-blvd-95110&checkout=open",
     );
   });
 });
