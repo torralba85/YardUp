@@ -108,6 +108,12 @@ describe("adu cost pages", () => {
     expect(String(sanDiego?.metaDescription).length).toBeLessThanOrEqual(160);
   });
 
+  it("scopes the San Diego fire-zone setback to High and Very High zones, as SDMC 141.0302(b)(9) does", () => {
+    const sanDiego = getCity("ca", "san-diego");
+    expect(JSON.stringify(sanDiego)).not.toMatch(/(?<!High (?:and|or) )(?<!High\/)Very High/);
+    expect(sanDiego?.metaDescription).toContain("outside High/Very High fire zones");
+  });
+
   it("states the San Diego height threshold as the City does: over 16 feet, not 16 feet or taller", () => {
     const sanDiego = getCity("ca", "san-diego");
     expect(JSON.stringify(sanDiego)).not.toMatch(/16 (ft|feet) or taller/i);

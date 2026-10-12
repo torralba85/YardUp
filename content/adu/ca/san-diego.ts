@@ -19,7 +19,7 @@ export const sanDiego: JurisdictionContent = {
   // Rules-first title and H1 come from the shared template, like the other
   // guides. Cost moved to `san-diego-cost.ts` (`/adu/ca/san-diego/cost`).
   metaDescription:
-    "City of San Diego ADU rules for 2026: 150 to 1,200 sq ft, zero side and rear setbacks up to 16 ft tall, parking exceptions, Coastal Zone caveats, permits.",
+    "City of San Diego ADU rules for 2026: 150 to 1,200 sq ft, no side or rear setback up to 16 ft outside High/Very High fire zones, coastal caveats, permits.",
   coastalCallout:
     "The 2025 and 2026 amendments took effect outside the Coastal Zone only. If your property is inside it, you are still under the prior ordinance until the California Coastal Commission certifies the changes. Most ADU guides for San Diego miss this. Check whether your parcel is in the Coastal Zone before you rely on anything below.",
   setbackDiagram: {
