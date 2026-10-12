@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 
 // Runs one opt-in live eval file: the geocode picker's by default, or the file
 // named as the first argument (npm run test:jev-zoning-eval).
@@ -13,13 +15,15 @@ if (!process.env.TYPESAFE_API_KEY) {
   process.exit(1);
 }
 
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+// Run vitest's entry point with this Node rather than through `npm exec`:
+// Node refuses to spawn `npm.cmd` without a shell on Windows (EINVAL).
+const require = createRequire(import.meta.url);
+const vitestPackage = require.resolve("vitest/package.json");
+const vitestEntry = join(dirname(vitestPackage), require(vitestPackage).bin.vitest);
 const result = spawnSync(
-  npmCommand,
+  process.execPath,
   [
-    "exec",
-    "--",
-    "vitest",
+    vitestEntry,
     "run",
     evalFile,
     "--reporter=verbose",
