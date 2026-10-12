@@ -74,6 +74,25 @@ expect(
 );
 
 const rawFingerprints = statement?.target?.sha256_cert_fingerprints;
+const linkRules = statement?.relation_extensions?.[HANDLE_ALL_URLS_RELATION]
+  ?.dynamic_app_link_components;
+expect(
+  Array.isArray(linkRules) && linkRules.length === 1 &&
+    linkRules[0]?.["/"] === "*" && linkRules[0]?.exclude === true &&
+    Object.keys(linkRules[0]).length === 2,
+  "Dynamic App Links must exclude all website URLs to preserve browser auth and checkout sessions.",
+);
+try {
+  const androidManifest = readFileSync(
+    pathFromRoot("native/android/app/src/main/AndroidManifest.xml"), "utf8",
+  ).replace(/<!--[\s\S]*?-->/g, "");
+  expect(
+    !/<data\b[^>]*android:scheme\s*=\s*["']https?["']/i.test(androidManifest),
+    "Android must not capture implicit website links. Remove HTTP(S) intent filters after Bubblewrap regeneration.",
+  );
+} catch (error) {
+  errors.push(`Could not read AndroidManifest.xml: ${error.message}`);
+}
 const rawTwaFingerprints = twa.fingerprints;
 const uploadKeyFingerprint = process.env.LOTFOUNDRY_UPLOAD_KEY_SHA256;
 expect(
