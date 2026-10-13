@@ -2,18 +2,11 @@ import { cn } from "@/lib/utils";
 import { COLOR } from "@/lib/design-tokens";
 
 
-export function ParcelMark({ className, arrowClassName, strokeWidth = 4 }: { className?: string; arrowClassName?: string; strokeWidth?: number }) {
+export function ParcelMark({ className, strokeWidth = 4 }: { className?: string; strokeWidth?: number }) {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true" className={className}>
       <path
-        d="M27 9H9v30h30V21"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-      />
-      <path
-        className={arrowClassName}
-        d="M24 24 39 9M28 9h11v11"
+        d="M27 9H9v30h30V21M24 24 39 9M28 9h11v11"
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
