@@ -41,6 +41,8 @@ Landing-local variables reference those globals. Non-CSS renderers import `COLOR
 | `--stone` | `#65655F` | Muted/secondary text **on chalk only**. |
 | `--line` | `#DADAD3` | Drafting hairline. Decorative dividers and frames. |
 
+Screen surfaces never use pure white. The single exception is `lot-print-paper` `#FFFFFF`, used only by `@media print` and generated reports (`lib/report.ts`), where paper white is the physical medium.
+
 Supporting tokens: `lot-surface` `#EBEBE6` is the recessed well on chalk (table heads, inactive chips,
 secondary hover). `lot-ink-hover` `#33332F` is the carbon hover (§2.4).
 
@@ -102,6 +104,8 @@ grounds. Always paired with a label and an icon.
 | Eligible / verified / complete | `#176B4C` | 5.92 | `#5FBF93` | 8.07 |
 | Review needed / permit risk / unverified | `#8A5300` | 5.79 | `#E0A33C` | 8.16 |
 | Blocked / error / invalid | `#A82D16` | 6.29 | `#F0705A` | 6.18 |
+
+Blocked rust (hue 9°) deliberately sits inside the accent orange hue family (15°): a burgundy or purple shift was rejected on 2026-10-12 because the system bans purple and a true red still reads as the same family at small sizes. Blocked is therefore never carried by colour alone — it always ships with a label and an icon (§2.3 rule 5), and it never appears as a link or focus colour, which are the orange-ink roles. Links and focus are text/outline treatments; blocked is a filled or bordered status surface.
 
 ### 2.6 Money is typographic, not chromatic
 
@@ -416,3 +420,4 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 | 2026-10-01 | One executable palette; no new legacy aliases or unreviewed raw colors | Andrew requested a whole-project drift audit and prevention. Generated CSS and shared renderer values, contrast/platform checks and per-file literal budgets now run through lint/CI. |
 | 2026-10-01 | Signal orange belongs to the main task action; orange ink belongs to links/focus | Save and sidebar sign-in become neutral secondary actions in Studio. This removes the second rust-colored action theme and competing primary emphasis. |
 | 2026-10-01 | Neutral money/categories, stone field boundaries and opaque reading surfaces | Remove the forest money API/underlines, status-colored ledger categories and image-dependent HUD blur. Physical finishes, external imagery and provider marks retain their own colors. |
+| 2026-10-12 | Store feature graphic rebuilt in A LOT MORE; blocked rust kept as a labelled status, not a hue apart (Andrew) | The Play feature graphic still carried the retired Warm Earth palette and fonts; it now uses chalk/carbon/signal orange with Space Grotesk/Manrope, and a guard test requires every literal in it to be a canonical palette value. The dark address placeholder rose from 3.79:1 to full stone-on-dark (7.97:1), and the password-reset confirmation icon moved from accent orange to eligible green/soft (4.97:1 on its tint). |

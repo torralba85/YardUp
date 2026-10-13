@@ -386,19 +386,16 @@
       }
     },
     "native/android/store-listing/feature-graphic.html": {
-      "reason": "Standalone asset/platform format cannot import app CSS; palette copies are guarded and require separate release.",
+      "reason": "Standalone Play store asset cannot import app CSS; every literal is a canonical A LOT MORE palette value and checks.mjs enforces that.",
       "colors": {
-        "#f2e5d5": 1,
-        "#f8f0e4": 1,
-        "#fbf6ee": 2,
-        "#bfa58e": 4,
-        "#8c5b3f": 3,
-        "#6f3f28": 1,
-        "#592a0f": 1,
-        "#261307": 1,
-        "#6b5b4d": 1,
-        "#e0cdb4": 1,
-        "#2f4a38": 8
+        "#f5f5f0": 1,
+        "#fdfdf9": 2,
+        "#ebebe6": 2,
+        "#dadad3": 3,
+        "#ff5b24": 3,
+        "#c43708": 5,
+        "#161616": 2,
+        "#65655f": 3
       }
     },
     "native/android/twa-manifest.json": {

@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthLayout title="Check your email" subtitle="Password reset instructions sent.">
         <div ref={confirmationRef} tabIndex={-1} role="status" aria-label="Password reset instructions sent" className="flex flex-col items-center gap-4 py-4 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lot-orange-soft text-lot-orange-ink">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-eligible-soft text-status-eligible">
             <CheckCircle className="h-6 w-6" />
           </div>
           <p className="lf-body-sm text-lot-stone">
