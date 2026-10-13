@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   nativeApp: false,
   pendingAddress: null as string | null,
   pendingParcel: null as object | null,
+  analyticsOrder: [] as string[],
+  trackStudioOpened: vi.fn(),
   authState: {
     loading: false,
     user: null as null | { uid: string },
@@ -18,7 +20,15 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/components/FeasibilityStudio", () => ({
   default: function MockFeasibilityStudio({ demoChosen }: { demoChosen?: boolean }) {
+    mocks.analyticsOrder.push("feasibility");
     return <div>Feasibility Studio Mock{demoChosen && <span>Demo selected</span>}</div>;
+  },
+}));
+
+vi.mock("@/lib/analytics/events", () => ({
+  trackStudioOpened: (...args: unknown[]) => {
+    mocks.analyticsOrder.push("studio");
+    mocks.trackStudioOpened(...args);
   },
 }));
 
@@ -66,7 +76,16 @@ describe("StudioPage", () => {
     mocks.nativeApp = false;
     mocks.pendingAddress = null;
     mocks.pendingParcel = null;
+    mocks.analyticsOrder.length = 0;
+    mocks.trackStudioOpened.mockReset();
     window.history.replaceState(null, "", "/studio");
+  });
+
+  it("records Studio entry before mounting a result-producing workspace", () => {
+    render(<StudioPage />);
+
+    expect(mocks.analyticsOrder.slice(0, 2)).toEqual(["studio", "feasibility"]);
+    expect(mocks.trackStudioOpened).toHaveBeenCalledTimes(1);
   });
 
   it("runs the app onboarding for guests and members only inside the native app", () => {

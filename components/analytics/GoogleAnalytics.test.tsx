@@ -53,6 +53,8 @@ describe("GoogleAnalytics", () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    Reflect.deleteProperty(navigator, "webdriver");
   });
 
   it("loads no tag before the visitor decides", () => {
@@ -80,6 +82,16 @@ describe("GoogleAnalytics", () => {
     const { container } = render(<GoogleAnalytics />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("loads no measurement tags in an automated browser", () => {
+    grantConsent();
+    Object.defineProperty(navigator, "webdriver", { configurable: true, value: true });
+
+    const { container } = render(<GoogleAnalytics />);
+
+    expect(container).toBeEmptyDOMElement();
+    expect(pageview).not.toHaveBeenCalled();
   });
 
   it("loads gtag.js for the configured property once consent is granted", async () => {

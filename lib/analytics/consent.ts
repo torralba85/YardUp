@@ -24,6 +24,24 @@ export const CONSENT_VERSION = 2;
 /** Fired on `window` when the decision changes in this tab. */
 export const CONSENT_CHANGE_EVENT = "lf:analytics-consent-change";
 
+/** Session-only opt-out used by internal QA; carries no identity or free text. */
+export const INTERNAL_ANALYTICS_MARKER = "lf:analytics-internal";
+
+/**
+ * Keep automated checks and explicitly marked QA sessions out of production
+ * measurement. The marker is bounded and session-scoped; no account, address,
+ * device, or network identifier is collected to make this decision.
+ */
+export function isAnalyticsSuppressed(): boolean {
+  if (typeof window === "undefined") return false;
+  if (typeof navigator !== "undefined" && navigator.webdriver === true) return true;
+  try {
+    return window.sessionStorage.getItem(INTERNAL_ANALYTICS_MARKER) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** What the visitor chose. */
 export type ConsentDecision = "granted" | "denied";
 

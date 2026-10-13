@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CONSENT_STORAGE_KEY,
   CONSENT_VERSION,
+  INTERNAL_ANALYTICS_MARKER,
   clearConsent,
+  isAnalyticsSuppressed,
   readConsent,
   subscribeToConsent,
   writeConsent,
@@ -11,15 +13,29 @@ import {
 describe("analytics consent", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    Reflect.deleteProperty(navigator, "webdriver");
     delete window.gtag;
   });
 
   it("reports unset before any decision", () => {
     expect(readConsent()).toBe("unset");
+  });
+
+  it("suppresses automated browser traffic without storing an identifier", () => {
+    Object.defineProperty(navigator, "webdriver", { configurable: true, value: true });
+
+    expect(isAnalyticsSuppressed()).toBe(true);
+  });
+
+  it("supports a bounded session-only marker for internal QA", () => {
+    window.sessionStorage.setItem(INTERNAL_ANALYTICS_MARKER, "1");
+
+    expect(isAnalyticsSuppressed()).toBe(true);
   });
 
   it("round-trips a granted decision", () => {

@@ -106,6 +106,7 @@ describe("reportPhotorealError", () => {
     delete window.gtag;
     window.localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it("dispatches the sanitized report to the override reporter", () => {
@@ -146,6 +147,8 @@ describe("reportPhotorealError", () => {
   });
 
   it("sends the consent-gated analytics event only after opt-in", () => {
+    // Custom events are sent only when the build has a GA4 measurement ID.
+    vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
     const gtag = vi.fn();
     window.gtag = gtag;
 

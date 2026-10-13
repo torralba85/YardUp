@@ -10,13 +10,14 @@ import {
   sanitizeReferrer,
   trackEvent,
 } from "./gtag";
-import { clearConsent, writeConsent } from "./consent";
+import { INTERNAL_ANALYTICS_MARKER, clearConsent, writeConsent } from "./consent";
 import { GOOGLE_ADS_ID } from "./adsConversion";
 
 describe("gtag helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    window.sessionStorage.clear();
     clearConsent();
     delete (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"];
     delete (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`];
@@ -133,7 +134,53 @@ describe("gtag helpers", () => {
 
       expect(gtag).toHaveBeenCalledWith("event", "report_generated", {
         market: "seattle",
+        page_location: expect.stringMatching(/\/$/),
+        page_path: "/",
+        send_to: "G-ABC1234567",
       });
+    });
+
+    it("scopes custom events to GA4 and strips the active Studio query", () => {
+      writeConsent("granted");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.history.replaceState(null, "", "/studio?q=123+Main+St&lat=47.6");
+
+      trackEvent("certificate_paywall_viewed", {
+        auth_state: "guest",
+        page_location: "https://example.test/studio?q=unsafe",
+        send_to: "AW-UNSAFE",
+      });
+
+      expect(gtag).toHaveBeenCalledWith("event", "certificate_paywall_viewed", {
+        auth_state: "guest",
+        page_location: expect.stringMatching(/\/studio$/),
+        page_path: "/studio",
+        send_to: "G-ABC1234567",
+      });
+      window.history.replaceState(null, "", "/");
+    });
+
+    it("does not send custom events when no measurement ID is configured", () => {
+      writeConsent("granted");
+      vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+
+      trackEvent("report_generated", { market: "seattle" });
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("does not send custom events for an internal QA session", () => {
+      writeConsent("granted");
+      window.sessionStorage.setItem(INTERNAL_ANALYTICS_MARKER, "1");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+
+      trackEvent("certificate_paywall_viewed", { auth_state: "guest" });
+
+      expect(gtag).not.toHaveBeenCalled();
     });
   });
 

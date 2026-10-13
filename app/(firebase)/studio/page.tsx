@@ -31,6 +31,7 @@ export default function StudioPage() {
   const buildersAllowed = useWebBuilderAccess();
   const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
   const [demoEntry, setDemoEntry] = useState<boolean | null>(null);
+  const [studioEntryRecorded, setStudioEntryRecorded] = useState(false);
   const initialDemoEntry = useRef<boolean | null>(null);
   const studioOpenedSent = useRef(false);
 
@@ -50,7 +51,7 @@ export default function StudioPage() {
   }, []);
 
   useEffect(() => {
-    if (loading || studioOpenedSent.current) return;
+    if (loading || demoEntry === null || studioOpenedSent.current) return;
     studioOpenedSent.current = true;
     const entrySource = consumeEntrySource();
     const deviceMode =
@@ -63,6 +64,7 @@ export default function StudioPage() {
       entry_source: entrySource,
       parcel_mode: demoEntry ? "preset" : undefined,
     });
+    setStudioEntryRecorded(true);
   }, [loading, user, demoEntry]);
 
   useEffect(() => {
@@ -77,7 +79,7 @@ export default function StudioPage() {
   // it stays mounted. Builder accounts also use the homeowner Studio in the app.
   const [authSettled, setAuthSettled] = useState(false);
   if (!loading && !authSettled) setAuthSettled(true);
-  if (inNativeApp && authSettled) {
+  if (inNativeApp && authSettled && studioEntryRecorded) {
     return <AppStudioOnboarding user={user} />;
   }
 
@@ -85,7 +87,12 @@ export default function StudioPage() {
   // sees after the ramp, so it must keep the money moment alive (DESIGN.md
   // seam rule: money-green figure within 3s, no spinner-on-white). Parchment
   // ground so the landing's 520ms dawn ramp lands on a continuous surface.
-  if (loading || (buildersAllowed && profile?.role === "builder") || (user && demoEntry === null)) {
+  if (
+    loading ||
+    !studioEntryRecorded ||
+    (buildersAllowed && profile?.role === "builder") ||
+    (user && demoEntry === null)
+  ) {
     return (
       <div role="status" className="flex h-[100dvh] items-center justify-center bg-lot-chalk">
         <div className="px-6 text-center">

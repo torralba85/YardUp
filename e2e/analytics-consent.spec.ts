@@ -45,6 +45,18 @@ async function analyticsConfigured(page: import("@playwright/test").Page) {
 }
 
 test.describe("analytics consent", () => {
+  // Production suppresses all measurement in WebDriver sessions so canaries and
+  // agent checks stay out of GA4. These specs test the visitor path, so they
+  // present as an ordinary browser.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, "webdriver", {
+        configurable: true,
+        get: () => false,
+      });
+    });
+  });
+
   test("sends nothing to Google before the visitor decides", async ({ page }) => {
     const googleRequests: string[] = [];
     page.on("request", (request) => {

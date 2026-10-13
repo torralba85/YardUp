@@ -105,6 +105,7 @@ describe("analytics events module", () => {
 
     it("maps feasibility verdict to status", () => {
       expect(mapFeasibilityVerdict("Likely Feasible")).toBe("eligible");
+      expect(mapFeasibilityVerdict("Compliant")).toBe("eligible");
       expect(mapFeasibilityVerdict("Needs Review")).toBe("review_needed");
       expect(mapFeasibilityVerdict("Unlikely")).toBe("blocked");
       expect(mapFeasibilityVerdict(undefined)).toBe("unknown");

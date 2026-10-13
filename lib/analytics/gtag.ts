@@ -6,7 +6,7 @@
  * Nothing in this module loads a script or writes a cookie on its own.
  */
 
-import { readConsent } from "./consent";
+import { isAnalyticsSuppressed, readConsent } from "./consent";
 import { GOOGLE_ADS_ID } from "./adsConversion";
 
 /** Arguments accepted by the global `gtag` command queue. */
@@ -133,6 +133,7 @@ export function enableAnalytics(): void {
  */
 export function pageview(url: string): void {
   if (typeof window === "undefined" || !window.gtag) return;
+  if (isAnalyticsSuppressed()) return;
   if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
   const id = getMeasurementId();
   if (!id) return;
@@ -166,8 +167,26 @@ export function trackEvent(
   params: Record<string, unknown> = {},
 ): void {
   if (typeof window === "undefined" || !window.gtag) return;
-  if (readConsent() !== "granted") return;
-  window.gtag("event", name, params);
+  if (isAnalyticsSuppressed()) return;
+  if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
+  const id = getMeasurementId();
+  if (!id) return;
+
+  const sanitized = sanitizePath(window.location.href);
+  const safeParams = { ...params };
+  delete safeParams.page_location;
+  delete safeParams.page_path;
+  delete safeParams.page_referrer;
+  delete safeParams.send_to;
+
+  const referrer = sanitizeReferrer(document.referrer);
+  window.gtag("event", name, {
+    ...safeParams,
+    page_path: sanitized,
+    page_location: `${window.location.origin}${sanitized}`,
+    ...(referrer ? { page_referrer: referrer } : {}),
+    send_to: id,
+  });
 }
 
 /**

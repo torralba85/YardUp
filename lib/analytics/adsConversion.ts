@@ -21,7 +21,7 @@ export const GOOGLE_ADS_PURCHASE_SEND_TO =
 // `["event", string, Record<string, unknown>?]` overload covers the
 // conversion call below — do not redeclare it here (TS2717).
 
-import { readConsent } from "./consent";
+import { isAnalyticsSuppressed, readConsent } from "./consent";
 
 /** Input for {@link trackPurchase}. */
 export interface TrackPurchaseInput {
@@ -45,6 +45,7 @@ export interface TrackPurchaseInput {
  */
 export function trackPurchase(opts: TrackPurchaseInput): void {
   if (typeof window === "undefined" || !window.gtag) return;
+  if (isAnalyticsSuppressed()) return;
   if (readConsent() !== "granted") return;
   const transactionId = opts.transactionId.trim();
   if (!transactionId) return;

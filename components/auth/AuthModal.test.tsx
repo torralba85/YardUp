@@ -85,6 +85,7 @@ describe("AuthModal focus restore", () => {
     ["guest_limit", /That was your free address lookup/],
     ["post_result", /save this lot and come back/],
     ["save_scenario", /save this lot and come back/],
+    ["certificate_purchase", /continue to checkout/],
     ["account_control", /save ADU estimates, reports, and builder-ready snapshots/],
   ] as const)("names what a free account gives when opened from %s", (source, blurb) => {
     render(

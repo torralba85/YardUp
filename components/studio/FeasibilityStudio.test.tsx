@@ -606,7 +606,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(monthlyRentSection).toHaveTextContent("$2,350");
   });
 
-  it("paywalls the complete certificate behind a purchase (guest sees sign-in)", async () => {
+  it("paywalls the complete certificate behind a purchase (guest sees the checkout CTA)", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
@@ -623,8 +623,11 @@ describe("FeasibilityStudio (guided spine)", () => {
       }),
     ).toBeInTheDocument();
 
-    // A guest is asked to sign in, and the paid report does not open.
-    await user.click(screen.getByRole("button", { name: /Sign in to generate your certificate/i }));
+    // A guest sees the price on the purchase CTA (the account step comes
+    // after), and the paid report does not open.
+    await user.click(
+      screen.getByRole("button", { name: /Continue to secure checkout — \$29/i }),
+    );
     expect(screen.queryByText(/recorded concept for this lot/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Print \/ Save/i })).not.toBeInTheDocument();
   });

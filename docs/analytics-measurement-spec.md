@@ -629,6 +629,12 @@ Add these only after the core funnel is stable.
 - style_match_failed
 - builder_triage_changed
 
+Certificate purchase authentication uses the bounded `auth_source=certificate_purchase`.
+The ordinary guest purchase prompt opens in sign-up mode; a Checkout-return recovery prompt
+opens in sign-in mode. Successful guest authentication resumes the same certificate Checkout
+intent, while recovery authentication only resumes Grant verification and never creates a
+duplicate Checkout Session.
+
 Do not delay Phase 1 to instrument these.
 
 ## Existing events to preserve
@@ -685,6 +691,8 @@ Recommended event-scoped custom dimensions:
 
 - app_surface
 - auth_state
+- auth_source
+- auth_mode
 - device_mode
 - parcel_mode
 - parcel_source
@@ -881,10 +889,16 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 
 ### P0 — Privacy and QA
 
+- [x] suppress the Google tag, product events, and Ads conversions in WebDriver sessions
+  and sessions carrying the bounded `lf:analytics-internal=1` sessionStorage marker
 - [ ] tests prove no address/coordinate/contact fields are sent
 - [ ] update analytics documentation with the no-PII contract
 - [ ] verify consent withdrawal and regrant satisfy the corrected contract
 - [ ] verify GA4 parameter cardinality is bounded
+
+This client-side suppression removes automated canary and agent-browser traffic after deployment.
+It does not remove historical events, identify manual founder sessions, or replace a GA4 Admin
+internal-traffic definition when a stable non-PII rule is available.
 
 ### P1 — Reporting setup
 
