@@ -372,6 +372,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     [assumptions, config, activeParcel, pose],
   );
   const isCompliant = result.zoningStatus === "Compliant";
+  // Analytics report the verdict the visitor sees, not the narrower zoning
+  // status: a zoning-compliant lot can still render Needs Review or Unlikely.
+  const feasibilityStatus = useMemo(
+    () => mapFeasibilityVerdict(summarizeFeasibility(activeParcel, result, config, result.placement).verdict),
+    [activeParcel, config, result],
+  );
   const projectBriefInput = useMemo(
     () => buildAIProjectBriefInput({ parcel: activeParcel, result, config }),
     [activeParcel, config, result],
@@ -1117,6 +1123,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
               recovery={certificateRecovery}
               parcel={activeParcel}
               result={result}
+              feasibilityStatus={feasibilityStatus}
               parcelName={mobileParcelName}
               eyebrow="Certificate of Feasibility"
               onOpenCertificate={handleGenerateReport}
@@ -1180,6 +1187,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
             parcel={activeParcel}
             parcelName={mobileParcelName}
             result={result}
+            feasibilityStatus={feasibilityStatus}
             projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
             projectBriefLoading={projectBriefLoading}
@@ -1347,6 +1355,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
               recovery={certificateRecovery}
             parcel={activeParcel}
             result={result}
+            feasibilityStatus={feasibilityStatus}
             parcelName={parcelName}
             onOpenCertificate={handleGenerateReport}
             projectBrief={projectBrief}
@@ -1359,7 +1368,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
         ) : (
           <BuildersPanel
             parcelCity={activeParcel.city}
-            feasibilityStatus={mapFeasibilityVerdict(result.zoningStatus)}
+            feasibilityStatus={feasibilityStatus}
             onConnect={() => setBuilderLeadOpen(true)}
           />
         )}
@@ -1370,6 +1379,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcel={activeParcel}
           parcelName={parcelName}
           result={result}
+          feasibilityStatus={feasibilityStatus}
           projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
           projectBriefLoading={projectBriefLoading}

@@ -105,7 +105,8 @@ describe("analytics events module", () => {
 
     it("maps feasibility verdict to status", () => {
       expect(mapFeasibilityVerdict("Likely Feasible")).toBe("eligible");
-      expect(mapFeasibilityVerdict("Compliant")).toBe("eligible");
+      // Raw zoning status is not a rendered verdict: callers pass summarizeFeasibility().verdict.
+      expect(mapFeasibilityVerdict("Compliant")).toBe("unknown");
       expect(mapFeasibilityVerdict("Needs Review")).toBe("review_needed");
       expect(mapFeasibilityVerdict("Unlikely")).toBe("blocked");
       expect(mapFeasibilityVerdict(undefined)).toBe("unknown");

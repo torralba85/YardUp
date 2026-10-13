@@ -162,6 +162,7 @@ function createProps(
     },
     parcel,
     result,
+    feasibilityStatus: "eligible",
     parcelName: `${parcel.address}, ${parcel.city}`,
     onOpenCertificate: vi.fn(),
     projectBrief: null,
@@ -365,6 +366,22 @@ describe("CertificatePanel", () => {
       ).toBeInTheDocument();
       // Planning disclaimer is preserved.
       expect(screen.getByText(/not a permit, appraisal/i)).toBeInTheDocument();
+    });
+
+    it("reports the rendered verdict, not the raw zoning status, on paywall analytics", () => {
+      mocks.access.purchased = false;
+      render(
+        <CertificatePanel
+          {...createProps({
+            result: { ...result, zoningStatus: "Compliant" },
+            feasibilityStatus: "review_needed",
+          })}
+        />,
+      );
+
+      expect(analyticsEvents.trackCertificatePaywallViewed).toHaveBeenCalledWith(
+        expect.objectContaining({ feasibility_status: "review_needed" }),
+      );
     });
 
     it("makes the guest transaction explicit and opens certificate sign-up first", () => {

@@ -15,13 +15,13 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { trackPurchase } from "@/lib/analytics/adsConversion";
 import {
-  mapFeasibilityVerdict,
   mapPurchaseChannel,
   trackCertificateCheckoutCancelled,
   trackCertificateCheckoutRedirected,
   trackCertificateCheckoutStarted,
   trackCertificatePaywallViewed,
   trackCertificatePurchase,
+  type FeasibilityStatus,
 } from "@/lib/analytics/events";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
@@ -100,6 +100,8 @@ export interface CertificatePanelProps {
   parcel: Parcel;
   /** The feasibility result summarized on the certificate. */
   result: FeasibilityResult;
+  /** Analytics status of the rendered verdict (not the raw zoning status). */
+  feasibilityStatus: FeasibilityStatus;
   /** Display name of the lot. */
   parcelName: string;
   /** Context-specific label above the certificate artifact. */
@@ -129,6 +131,7 @@ export default function CertificatePanel({
   recovery,
   parcel,
   result,
+  feasibilityStatus,
   parcelName,
   eyebrow = "Step 4 · Certificate",
   onOpenCertificate,
@@ -169,13 +172,12 @@ export default function CertificatePanel({
     if (paywallViewedFor.current === certKey) return;
     paywallViewedFor.current = certKey;
     const channel = mapPurchaseChannel(detectPurchaseChannel());
-    const status = mapFeasibilityVerdict(result.zoningStatus);
     trackCertificatePaywallViewed({
       auth_state: user ? "signed_in" : "guest",
-      feasibility_status: status,
+      feasibility_status: feasibilityStatus,
       purchase_channel: channel,
     });
-  }, [loading, purchased, certKey, user, result.zoningStatus, recovery]);
+  }, [loading, purchased, certKey, user, feasibilityStatus, recovery]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -275,7 +277,6 @@ export default function CertificatePanel({
     recovery.acknowledgeCancellation();
 
     const channel = mapPurchaseChannel(detectPurchaseChannel());
-    const status = mapFeasibilityVerdict(result.zoningStatus);
 
     try {
       const idToken = await authenticatedUser.getIdToken();
@@ -287,7 +288,7 @@ export default function CertificatePanel({
         value: CERTIFICATE_PRICE_CENTS / 100,
         currency: "USD",
         purchase_channel: channel,
-        feasibility_status: status,
+        feasibility_status: feasibilityStatus,
       });
       const outcome = await startCertificateCheckout({
         certKey,
@@ -308,7 +309,7 @@ export default function CertificatePanel({
           value: CERTIFICATE_PRICE_CENTS / 100,
           currency: "USD",
           purchase_channel: channel,
-          feasibility_status: status,
+          feasibility_status: feasibilityStatus,
         });
         window.location.assign(outcome.url);
         return; // navigating away
@@ -323,7 +324,7 @@ export default function CertificatePanel({
     } finally {
       setBusy(false);
     }
-  }, [certKey, parcel, parcelName, recovery, refresh, result.zoningStatus]);
+  }, [certKey, feasibilityStatus, parcel, parcelName, recovery, refresh]);
 
   // A guest's purchase click survives the account step. Checkout resumes only
   // once the new session's profile and access reads have settled: builder

@@ -22,7 +22,7 @@ import { formatCurrency } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { FeasibilityResult } from "./types";
-import { trackReportExported, mapFeasibilityVerdict } from "@/lib/analytics/events";
+import { trackReportExported, type FeasibilityStatus } from "@/lib/analytics/events";
 import type { Parcel } from "@/lib/parcel-types";
 import ParcelDataNotice from "./ParcelDataNotice";
 
@@ -36,6 +36,8 @@ export interface ReportPreviewProps {
   parcelName: string;
   /** The feasibility result rendered into the report. */
   result: FeasibilityResult;
+  /** Analytics status of the rendered verdict (not the raw zoning status). */
+  feasibilityStatus: FeasibilityStatus;
   /** Unified AI parcel interpretation and permit timeline. */
   projectBrief?: AIProjectBrief | null;
   projectBriefSavedAt?: string | null;
@@ -78,6 +80,7 @@ export default function ReportPreview({
   parcel,
   parcelName,
   result,
+  feasibilityStatus,
   projectBrief,
   projectBriefSavedAt,
   projectBriefLoading = false,
@@ -205,7 +208,7 @@ export default function ReportPreview({
               onClick={() => {
                 trackReportExported({
                   report_format: "print",
-                  feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                  feasibility_status: feasibilityStatus,
                 });
                 window.print();
               }}
@@ -221,7 +224,7 @@ export default function ReportPreview({
               onClick={() => {
                 trackReportExported({
                   report_format: "html",
-                  feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                  feasibility_status: feasibilityStatus,
                 });
                 onDownload();
               }}
@@ -238,7 +241,7 @@ export default function ReportPreview({
                 onClick={() => {
                   trackReportExported({
                     report_format: "csv",
-                    feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                    feasibility_status: feasibilityStatus,
                   });
                   onExportCsv();
                 }}
@@ -256,7 +259,7 @@ export default function ReportPreview({
                 onClick={() => {
                   trackReportExported({
                     report_format: "share",
-                    feasibility_status: mapFeasibilityVerdict(result.zoningStatus),
+                    feasibility_status: feasibilityStatus,
                   });
                   onShare();
                 }}
