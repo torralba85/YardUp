@@ -11,6 +11,7 @@ import {
   pageview,
 } from "@/lib/analytics/gtag";
 import { GOOGLE_ADS_ID } from "@/lib/analytics/adsConversion";
+import { isAnalyticsSuppressed } from "@/lib/analytics/consent";
 import { useConsent } from "@/lib/analytics/use-consent";
 
 /**
@@ -45,16 +46,18 @@ function PageViewTracker() {
 export function GoogleAnalytics() {
   const consent = useConsent();
   const measurementId = getMeasurementId();
+  const suppressed = isAnalyticsSuppressed();
 
   useEffect(() => {
-    if (consent === "granted") {
+    if (consent === "granted" && !suppressed) {
       enableAnalytics();
     } else {
       disableAnalytics();
     }
-  }, [consent]);
+  }, [consent, suppressed]);
 
   if (!isAnalyticsConfigured()) return null;
+  if (suppressed) return null;
   if (consent !== "granted") return null;
 
   return (

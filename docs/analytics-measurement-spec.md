@@ -889,10 +889,16 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 
 ### P0 — Privacy and QA
 
+- [x] suppress the Google tag, product events, and Ads conversions in WebDriver sessions
+  and sessions carrying the bounded `lf:analytics-internal=1` sessionStorage marker
 - [ ] tests prove no address/coordinate/contact fields are sent
 - [ ] update analytics documentation with the no-PII contract
 - [ ] verify consent withdrawal and regrant satisfy the corrected contract
 - [ ] verify GA4 parameter cardinality is bounded
+
+This client-side suppression removes automated canary and agent-browser traffic after deployment.
+It does not remove historical events, identify manual founder sessions, or replace a GA4 Admin
+internal-traffic definition when a stable non-PII rule is available.
 
 ### P1 — Reporting setup
 

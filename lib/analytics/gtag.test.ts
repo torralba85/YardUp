@@ -10,13 +10,14 @@ import {
   sanitizeReferrer,
   trackEvent,
 } from "./gtag";
-import { clearConsent, writeConsent } from "./consent";
+import { INTERNAL_ANALYTICS_MARKER, clearConsent, writeConsent } from "./consent";
 import { GOOGLE_ADS_ID } from "./adsConversion";
 
 describe("gtag helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    window.sessionStorage.clear();
     clearConsent();
     delete (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"];
     delete (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`];
@@ -167,6 +168,17 @@ describe("gtag helpers", () => {
       window.gtag = gtag;
 
       trackEvent("report_generated", { market: "seattle" });
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("does not send custom events for an internal QA session", () => {
+      writeConsent("granted");
+      window.sessionStorage.setItem(INTERNAL_ANALYTICS_MARKER, "1");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+
+      trackEvent("certificate_paywall_viewed", { auth_state: "guest" });
 
       expect(gtag).not.toHaveBeenCalled();
     });

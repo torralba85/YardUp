@@ -4,7 +4,7 @@ import {
   GOOGLE_ADS_PURCHASE_SEND_TO,
   trackPurchase,
 } from "./adsConversion";
-import { clearConsent, writeConsent } from "./consent";
+import { INTERNAL_ANALYTICS_MARKER, clearConsent, writeConsent } from "./consent";
 
 describe("adsConversion", () => {
   beforeEach(() => {
@@ -15,6 +15,7 @@ describe("adsConversion", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    window.sessionStorage.clear();
     clearConsent();
   });
 
@@ -38,6 +39,16 @@ describe("adsConversion", () => {
     window.gtag = gtag;
 
     trackPurchase({ value: 29, transactionId: "owner-1_abc" });
+
+    expect(gtag).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for an internal QA session", () => {
+    window.sessionStorage.setItem(INTERNAL_ANALYTICS_MARKER, "1");
+    const gtag = vi.fn();
+    window.gtag = gtag;
+
+    trackPurchase({ value: 29, transactionId: "safe-order" });
 
     expect(gtag).not.toHaveBeenCalled();
   });
