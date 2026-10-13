@@ -6,6 +6,58 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-12
+
+### Added
+
+- A California ADU cost guide at `/adu/ca/cost`, built on the existing cost engine,
+  with HCD, HUD and CSLB sources, structured data and an Open Graph image (#269).
+- The ADU cost calculator itemizes its budget: construction plus an 18% design and
+  permits allowance (the total is unchanged), site work and financing shown as
+  unpriced, quote replacements, and a free address check beside the result (#275).
+- Certificate checkout analytics separate the paywall CTA, the Stripe redirect and
+  Stripe cancellations (`certificate_checkout_started`, `_redirected`, `_cancelled`)
+  (#265).
+- Desktop and mobile end-to-end coverage of the web certificate checkout
+  (`e2e/stripe-checkout.spec.ts`) (#267).
+- A Jev claim check that compares each ADU guide sentence with the Regulatory Vault
+  documents and produces a review queue. It runs by hand, outside CI and the
+  deploy, and never edits a page (`docs/jev-guide-claim-check.md`) (#273).
+- An IndexNow key and `npm run seo:indexnow` (#275).
+
+### Fixed
+
+- Studio entry paths share one live parcel acquisition. Reopening a saved scenario
+  restores its own brief and image, and a certificate return waits up to 30 seconds
+  for the grant before offering a retry. A cancelled checkout can no longer replay
+  after an account or parcel change (#276).
+- Paid builder purchases no longer look failed while the Stripe webhook grant is
+  pending, and credit packs keep one checkout attempt id, so a double click or a
+  second tab cannot open a second payable session (#267).
+- Certificate checkout retries keep the verified email under the same idempotency
+  key, and a malformed checkout response stays on the paywall with a retryable error
+  (#270).
+- Android Chrome and Custom Tabs social sign-in stays in the initiating tab (#266).
+- The San Diego guide applies the 4 ft side and rear setback in High and Very High
+  fire zones (SDMC §141.0302(b)(9)) and states the 16 ft height rule as IB-400 does
+  (#268, #275).
+- The impact-fee threshold reads "750 sq ft or less of interior livable space" on
+  the California hub, the calculator and every city guide (#275).
+- The Carlsbad guide and its permit steps are rewritten from IB-111 and cite
+  §21.10.030 for ADU rules (#271).
+- The operator's legal name is "VeriShare" in the Organization JSON-LD and
+  `/llms.txt` (#277).
+- The landing closing mark's arrow reads on the orange ground (#278).
+- The dark address placeholder meets 7.97:1 contrast, and the password-reset success
+  icon uses eligible green (#280).
+
+### Changed
+
+- The Play feature graphic is rebuilt in A LOT MORE (#280). The store listing
+  image is uploaded separately in Play Console.
+- The privacy policy names TypeSafe as a subprocessor (#272); Terms, Privacy and
+  the Play declarations are aligned with TypeSafe and A LOT MORE (#279).
+
 ### Added
 
 - A dedicated San Diego ADU cost page with size-based build estimates, county rent,
