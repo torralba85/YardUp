@@ -1028,16 +1028,15 @@
 }
 .closingMark {
   position: absolute;
+  color: var(--chalk);
   width: 250px;
   height: 250px;
   right: 9%;
   top: 24%;
 }
 .closingMark circle {
-  /* A chalk accent stays visible on orange; its ink edge keeps the tip defined. */
-  fill: var(--chalk);
-  stroke: var(--ink);
-  stroke-width: 0.75;
+  /* Keep the accent distinct from both the white mark and orange ground. */
+  fill: var(--ink);
 }
 .closingSerial {
   position: absolute;
