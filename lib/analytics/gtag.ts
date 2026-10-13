@@ -166,9 +166,8 @@ export function trackEvent(
   name: string,
   params: Record<string, unknown> = {},
 ): void {
-  if (typeof window === "undefined" || !window.gtag) return;
-  if (isAnalyticsSuppressed()) return;
-  if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
+  if (typeof window === "undefined") return;
+  if (!canMeasure()) return;
   const id = getMeasurementId();
   if (!id) return;
 
@@ -180,13 +179,50 @@ export function trackEvent(
   delete safeParams.send_to;
 
   const referrer = sanitizeReferrer(document.referrer);
-  window.gtag("event", name, {
+  const payload = {
     ...safeParams,
     page_path: sanitized,
     page_location: `${window.location.origin}${sanitized}`,
     ...(referrer ? { page_referrer: referrer } : {}),
     send_to: id,
-  });
+  };
+  if (window.gtag) {
+    window.gtag("event", name, payload);
+    return;
+  }
+
+  // On a hard load a route can emit before the afterInteractive tag defines
+  // `window.gtag` (e.g. `studio_opened`). Consent is already granted, so hold
+  // the event in memory and send it when the tag's init script announces itself.
+  if (pendingEvents.length < MAX_PENDING_EVENTS) pendingEvents.push({ name, params: payload });
+  if (!flushListenerAttached) {
+    flushListenerAttached = true;
+    window.addEventListener(GTAG_READY_EVENT, flushPendingEvents, { once: true });
+  }
+}
+
+/**
+ * Fired on `window` by the tag's inline init script once `window.gtag` exists.
+ * See `components/analytics/GoogleAnalytics.tsx`.
+ */
+export const GTAG_READY_EVENT = "lf:gtag-ready";
+
+/** Upper bound on events held before the tag initializes. */
+const MAX_PENDING_EVENTS = 20;
+let pendingEvents: { name: string; params: Record<string, unknown> }[] = [];
+let flushListenerAttached = false;
+
+function canMeasure(): boolean {
+  return !isAnalyticsSuppressed() && isAnalyticsConfigured() && readConsent() === "granted";
+}
+
+/** Send held events, re-checking consent and suppression at send time. */
+function flushPendingEvents(): void {
+  flushListenerAttached = false;
+  const held = pendingEvents;
+  pendingEvents = [];
+  if (typeof window === "undefined" || !window.gtag || !canMeasure()) return;
+  for (const { name, params } of held) window.gtag("event", name, params);
 }
 
 /**

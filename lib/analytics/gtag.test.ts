@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  GTAG_READY_EVENT,
   clearAnalyticsCookies,
   disableAnalytics,
   enableAnalytics,
@@ -17,6 +18,8 @@ describe("gtag helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    // Drain any event a test left held for an uninitialized tag.
+    window.dispatchEvent(new Event(GTAG_READY_EVENT));
     window.sessionStorage.clear();
     clearConsent();
     delete (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"];
@@ -179,6 +182,67 @@ describe("gtag helpers", () => {
       window.gtag = gtag;
 
       trackEvent("certificate_paywall_viewed", { auth_state: "guest" });
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("holds a consented event sent before the tag initializes and sends it when the tag is ready", () => {
+      writeConsent("granted");
+      window.history.replaceState(null, "", "/studio?q=123+Main+St");
+
+      trackEvent("studio_opened", { auth_state: "guest" });
+      window.history.replaceState(null, "", "/");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).toHaveBeenCalledTimes(1);
+      expect(gtag).toHaveBeenCalledWith("event", "studio_opened", {
+        auth_state: "guest",
+        page_location: expect.stringMatching(/\/studio$/),
+        page_path: "/studio",
+        send_to: "G-ABC1234567",
+      });
+
+      // Sent once: a later ready signal does not replay it.
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+      expect(gtag).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps held events in their original order", () => {
+      writeConsent("granted");
+
+      trackEvent("studio_opened", { auth_state: "guest" });
+      trackEvent("feasibility_result_viewed", { feasibility_status: "eligible" });
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag.mock.calls.map((call) => call[1])).toEqual([
+        "studio_opened",
+        "feasibility_result_viewed",
+      ]);
+    });
+
+    it("drops held events if consent is withdrawn before the tag is ready", () => {
+      writeConsent("granted");
+      trackEvent("studio_opened", { auth_state: "guest" });
+
+      writeConsent("denied");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("holds nothing without consent", () => {
+      trackEvent("studio_opened", { auth_state: "guest" });
+
+      writeConsent("granted");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
 
       expect(gtag).not.toHaveBeenCalled();
     });

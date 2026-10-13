@@ -155,4 +155,14 @@ describe("GoogleAnalytics", () => {
     const init = await screen.findByTestId("lf-gtag-init");
     expect(init.textContent).toContain("gtag('config', 'AW-18350405574', { send_page_view: false })");
   });
+
+  it("announces readiness after configuring, so events held before init are sent", async () => {
+    grantConsent();
+
+    render(<GoogleAnalytics />);
+
+    const text = (await screen.findByTestId("lf-gtag-init")).textContent ?? "";
+    const ready = text.indexOf("window.dispatchEvent(new Event('lf:gtag-ready'))");
+    expect(ready).toBeGreaterThan(text.lastIndexOf("gtag('config'"));
+  });
 });
