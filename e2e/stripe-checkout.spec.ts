@@ -166,7 +166,7 @@ test.describe("web certificate checkout", () => {
     await expect(notice).toHaveCount(0);
   });
 
-  test("a guest is asked to sign in before any checkout request", async ({ page }) => {
+  test("a guest sees the price, then creates an account before any checkout request", async ({ page }) => {
     let checkoutCalls = 0;
     await page.route(CERTIFICATE_ROUTE, async (route) => {
       checkoutCalls += 1;
@@ -174,10 +174,13 @@ test.describe("web certificate checkout", () => {
     });
 
     await page.goto("/studio?parcel=oak-street&step=certificate");
-    const cta = page.getByRole("button", { name: "Sign in to generate your certificate" }).filter({ visible: true }).first();
+    const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
     await cta.click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    // Purchase intent opens the account step in sign-up mode, not "Welcome back".
+    await expect(dialog.getByText("Save your property")).toBeVisible();
     expect(checkoutCalls).toBe(0);
   });
 });
