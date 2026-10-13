@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import type { User as FirebaseUser } from "firebase/auth";
 import { AlertTriangle, CheckCircle2, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
 import type {
@@ -268,35 +269,26 @@ export default function CertificatePanel({
     });
   }, [purchased, user, certKey, analyticsOrderId, amount, recovery]);
 
-  async function handleCta() {
-    if (recovery.intent && recovery.intent.kind !== "cancel" && !purchased && user) return;
-    if (purchased) {
-      await prepareAndOpenCertificate();
-      return;
-    }
-    if (!user) {
-      setAuthOpen(true);
-      return;
-    }
+  async function beginCheckout(authenticatedUser: FirebaseUser) {
     setBusy(true);
     setError(null);
     recovery.acknowledgeCancellation();
 
     const channel = mapPurchaseChannel(detectPurchaseChannel());
     const status = mapFeasibilityVerdict(result.zoningStatus);
-    trackCertificateCheckoutStarted({
-      value: CERTIFICATE_PRICE_CENTS / 100,
-      currency: "USD",
-      purchase_channel: channel,
-      feasibility_status: status,
-    });
 
     try {
-      const idToken = await user.getIdToken();
+      const idToken = await authenticatedUser.getIdToken();
       const isLive = "source" in parcel && Boolean(parcel.source);
       if (isLive) {
         stashInitialParcel(parcel as unknown as LiveParcelData);
       }
+      trackCertificateCheckoutStarted({
+        value: CERTIFICATE_PRICE_CENTS / 100,
+        currency: "USD",
+        purchase_channel: channel,
+        feasibility_status: status,
+      });
       const outcome = await startCertificateCheckout({
         certKey,
         parcelName,
@@ -333,10 +325,26 @@ export default function CertificatePanel({
     }
   }
 
+  async function handleCta() {
+    if (recovery.intent && recovery.intent.kind !== "cancel" && !purchased && user) return;
+    if (purchased) {
+      await prepareAndOpenCertificate();
+      return;
+    }
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    await beginCheckout(user);
+  }
+
   // A store shell is charged the store's own localized amount, so the paywall
   // names a price only when it is the one that will actually be billed.
   const certPrice = useStorePrice("certificate");
   const price = certPrice.amountCompact;
+  const guestPurchaseAction = certPrice.channel === "web"
+    ? "Continue to secure checkout"
+    : "Continue to purchase";
   const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel);
   const recoveryPending = !purchased && Boolean(recovery.intent && recovery.intent.kind !== "cancel");
   const reportBusy = busy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
@@ -352,7 +360,9 @@ export default function CertificatePanel({
     : purchased
     ? "View complete certificate"
     : !user
-      ? "Sign in to generate your certificate"
+      ? certPrice.exact
+        ? `${guestPurchaseAction} — ${price}`
+        : guestPurchaseAction
       : certPrice.exact
         ? `Unlock property certificate — ${price}`
         : "Unlock property certificate";
@@ -553,7 +563,18 @@ export default function CertificatePanel({
         )}
       </div>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal
+        isOpen={authOpen}
+        initialMode={recoveryPending ? "sign-in" : "sign-up"}
+        analyticsSurface="studio"
+        analyticsSource="certificate_purchase"
+        onAuthenticated={(authenticatedUser) => {
+          setAuthOpen(false);
+          if (purchased || recoveryPending) return;
+          void beginCheckout(authenticatedUser);
+        }}
+        onClose={() => setAuthOpen(false)}
+      />
     </div>
   );
 }

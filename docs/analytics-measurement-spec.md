@@ -629,6 +629,12 @@ Add these only after the core funnel is stable.
 - style_match_failed
 - builder_triage_changed
 
+Certificate purchase authentication uses the bounded `auth_source=certificate_purchase`.
+The ordinary guest purchase prompt opens in sign-up mode; a Checkout-return recovery prompt
+opens in sign-in mode. Successful guest authentication resumes the same certificate Checkout
+intent, while recovery authentication only resumes Grant verification and never creates a
+duplicate Checkout Session.
+
 Do not delay Phase 1 to instrument these.
 
 ## Existing events to preserve
@@ -685,6 +691,8 @@ Recommended event-scoped custom dimensions:
 
 - app_surface
 - auth_state
+- auth_source
+- auth_mode
 - device_mode
 - parcel_mode
 - parcel_source

@@ -13,6 +13,7 @@ import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { CertificateCheckoutError } from "@/lib/certificate-checkout";
 import type { CertificateReturnIntent, CertificateRecovery } from "@/lib/certificate-recovery";
+import type { AuthModalProps } from "@/components/auth/AuthModal";
 import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
 
 const mocks = vi.hoisted(() => ({
@@ -34,6 +35,10 @@ const mocks = vi.hoisted(() => ({
   auth: {
     user: null as { uid: string; getIdToken: () => Promise<string> } | null,
   },
+}));
+
+const authModal = vi.hoisted(() => ({
+  props: null as AuthModalProps | null,
 }));
 
 const analyticsEvents = vi.hoisted(() => ({
@@ -71,7 +76,26 @@ vi.mock("@/lib/analytics/adsConversion", () => ({
 }));
 
 vi.mock("@/components/auth/AuthModal", () => ({
-  AuthModal: () => null,
+  AuthModal: (props: AuthModalProps) => {
+    authModal.props = props;
+    if (!props.isOpen) return null;
+    return (
+      <div role="dialog" data-mode={props.initialMode} data-source={props.analyticsSource}>
+        <button
+          type="button"
+          onClick={() => {
+            props.onAuthenticated?.({
+              uid: "new-owner",
+              getIdToken: mocks.getIdToken,
+            } as unknown as Parameters<NonNullable<AuthModalProps["onAuthenticated"]>>[0]);
+            props.onClose("signed-in");
+          }}
+        >
+          Complete authentication
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock("@/lib/certificate-checkout", async (importOriginal) => {
@@ -204,6 +228,7 @@ describe("CertificatePanel", () => {
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
+    authModal.props = null;
     storePrice.override = null;
     for (const fn of Object.values(analyticsEvents)) fn.mockClear();
     window.history.replaceState(null, "", "/");
@@ -332,6 +357,21 @@ describe("CertificatePanel", () => {
       expect(screen.getByText(/not a permit, appraisal/i)).toBeInTheDocument();
     });
 
+    it("makes the guest transaction explicit and opens certificate sign-up first", () => {
+      mocks.auth.user = null;
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Continue to secure checkout — $29" }),
+      );
+
+      expect(screen.getByRole("dialog")).toHaveAttribute("data-mode", "sign-up");
+      expect(screen.getByRole("dialog")).toHaveAttribute(
+        "data-source",
+        "certificate_purchase",
+      );
+    });
+
     it("quotes the Play-billed amount instead of the Stripe price in the Android app", () => {
       storePrice.override = {
         channel: "google-play",
@@ -401,9 +441,13 @@ describe("CertificatePanel", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
 
-      expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
       await waitFor(() =>
         expect(assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/cs_live_123"),
+      );
+      const started = analyticsEvents.trackCertificateCheckoutStarted;
+      expect(started).toHaveBeenCalledTimes(1);
+      expect(started.mock.invocationCallOrder[0]).toBeLessThan(
+        mocks.startCertificateCheckout.mock.invocationCallOrder[0],
       );
       const redirected = analyticsEvents.trackCertificateCheckoutRedirected;
       expect(redirected).toHaveBeenCalledTimes(1);
@@ -421,6 +465,46 @@ describe("CertificatePanel", () => {
       );
     });
 
+    it("continues the pending guest purchase after authentication", async () => {
+      mocks.auth.user = null;
+      const assign = stubLocationAssign();
+      mocks.startCertificateCheckout.mockResolvedValueOnce({
+        kind: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_live_after_auth",
+      });
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
+
+      await waitFor(() =>
+        expect(assign).toHaveBeenCalledWith(
+          "https://checkout.stripe.com/c/pay/cs_live_after_auth",
+        ),
+      );
+      expect(mocks.getIdToken).toHaveBeenCalledTimes(1);
+      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
+      expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
+      expect(analyticsEvents.trackCertificateCheckoutRedirected).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not start a duplicate checkout after auth for a recovery intent", async () => {
+      mocks.auth.user = null;
+      mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
+      mocks.recoveryStatus = "checking";
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Sign in to verify certificate access" }),
+      );
+      expect(screen.getByRole("dialog")).toHaveAttribute("data-mode", "sign-in");
+      fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+      expect(analyticsEvents.trackCertificateCheckoutStarted).not.toHaveBeenCalled();
+    });
+
     it("does not record a redirect when the checkout API fails", async () => {
       mocks.startCertificateCheckout.mockRejectedValueOnce(
         new CertificateCheckoutError("Payments are temporarily unavailable."),
@@ -431,6 +515,18 @@ describe("CertificatePanel", () => {
 
       expect(await screen.findByText("Payments are temporarily unavailable.")).toBeInTheDocument();
       expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
+      expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
+    });
+
+    it("does not count checkout as started when session verification fails", async () => {
+      mocks.getIdToken.mockRejectedValueOnce(new Error("auth unavailable"));
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+      expect(await screen.findByText("Could not start checkout. Please try again.")).toBeInTheDocument();
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+      expect(analyticsEvents.trackCertificateCheckoutStarted).not.toHaveBeenCalled();
       expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
     });
 

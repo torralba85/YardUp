@@ -78,6 +78,7 @@ export type AuthMode = "sign_in" | "sign_up";
 export type AuthSurface = "landing" | "studio" | "signup_page" | "builder" | "native";
 export type AuthPromptSource =
   | "account_control"
+  | "certificate_purchase"
   | "save_scenario"
   | "guest_limit"
   | "post_result"
