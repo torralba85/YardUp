@@ -1034,8 +1034,10 @@
   top: 24%;
 }
 .closingMark circle {
-  /* On orange, expose the arrow tip instead of masking it with the accent. */
-  display: none;
+  /* A chalk accent stays visible on orange; its ink edge keeps the tip defined. */
+  fill: var(--chalk);
+  stroke: var(--ink);
+  stroke-width: 0.75;
 }
 .closingSerial {
   position: absolute;
