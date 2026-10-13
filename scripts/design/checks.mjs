@@ -25,12 +25,22 @@ test("palette aliases resolve and approved text / focus pairs meet their contras
     ["lot-orange-ink", "lot-chalk", 4.5], ["lot-orange-edge", "lot-chalk", 3],
     ["lot-chalk", "lot-ink", 4.5], ["lot-stone-on-dark", "lot-ink", 4.5],
     ["lot-stone-on-dark", "lot-surface-dark", 4.5], ["lot-stone", "lot-surface", 4.5],
+    ["lot-orange-ink", "lot-surface", 4.5], ["lot-orange-ink", "lot-paper", 4.5],
+    ["lot-stone", "lot-paper", 4.5], ["lot-chalk", "lot-surface-dark", 4.5],
   ];
   for (const status of ["eligible", "review", "blocked"]) {
-    pairs.push([`status-${status}`, "lot-chalk", 4.5], [`status-${status}-on-dark`, "lot-ink", 4.5]);
+    pairs.push([`status-${status}`, "lot-chalk", 4.5], [`status-${status}-on-dark`, "lot-ink", 4.5],
+      [`status-${status}-on-dark`, "lot-surface-dark", 4.5]);
     const foreground = rgb(colors[`status-${status}`]);
     const tint = rgb(colors["lot-chalk"]).map((v, i) => v * 0.88 + foreground[i] * 0.12);
     assert.ok(contrast(foreground, tint) >= 4.5, `${status} on its 12% chip tint`);
+  }
+  // Text colors that render on their own 12% soft tint over chalk.
+  for (const [fgName, softName] of [["lot-stone", "lot-stone-soft"], ["status-eligible", "status-eligible-soft"]]) {
+    const foreground = rgb(colors[fgName]);
+    const soft = colors[softName].match(/rgb\((\d+) (\d+) (\d+) \/ (\d+)%\)/).slice(1, 4).map(Number);
+    const tint = rgb(colors["lot-chalk"]).map((v, i) => v * 0.88 + soft[i] * 0.12);
+    assert.ok(contrast(foreground, tint) >= 4.5, `${fgName} on ${softName}: ${contrast(foreground, tint).toFixed(2)} < 4.5`);
   }
   for (const [fg, bg, min] of pairs) {
     const ratio = contrast(rgb(colors[fg]), rgb(colors[bg]));
@@ -80,6 +90,17 @@ test("literal budgets cannot be traded between files or between colors", () => {
   assert.equal(literalGrowth({ "scene.tsx": { "#123456": 3 } }, exceptions).length, 1);
   assert.equal(literalGrowth({ "new.tsx": { "#123456": 1 } }, exceptions).length, 1);
   assert.equal(literalGrowth({ "scene.tsx": { "#abcdef": 1 } }, exceptions).length, 1);
+});
+
+test("store feature graphic uses only canonical palette colors and current typefaces", () => {
+  const graphic = read("native/android/store-listing/feature-graphic.html");
+  const palette = new Set(Object.values(colors).map((v) => v.toLowerCase()));
+  for (const color of Object.keys(inspect("native/android/store-listing/feature-graphic.html", graphic, names).raw)) {
+    assert.ok(palette.has(color), `feature graphic: ${color} is not a canonical palette value`);
+  }
+  assert.doesNotMatch(graphic, /DM Mono|Libre Franklin|Instrument Sans|Warm Earth/);
+  assert.match(graphic, /Space Grotesk/);
+  assert.match(graphic, /Manrope/);
 });
 
 test("money and transaction categories keep neutral meaning", () => {

@@ -47,9 +47,9 @@ try {
   await page.evaluate(async () => {
     await document.fonts.ready;
     const requiredFonts = [
-      { family: "Libre Franklin", weight: "700", text: "LotFoundry" },
-      { family: "Instrument Sans", weight: "400", text: "backyard" },
-      { family: "DM Mono", weight: "500", text: "ADU" },
+      { family: "Space Grotesk", weight: "600", text: "LotFoundry" },
+      { family: "Manrope", weight: "400", text: "backyard" },
+      { family: "Manrope", weight: "600", text: "ADU" },
     ];
     const missing = requiredFonts.filter(
       ({ family, weight, text }) =>
