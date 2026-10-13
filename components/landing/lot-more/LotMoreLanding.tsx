@@ -1003,7 +1003,10 @@ export function LotMoreLanding({
             className={styles.closing}
             aria-labelledby="closing-title"
           >
-            <ParcelMark className={styles.closingMark} />
+            <ParcelMark
+              className={styles.closingMark}
+              arrowClassName={styles.closingMarkArrow}
+            />
             <div>
               <p className={styles.closingKicker}>
                 A LITTLE LAND. A LOT OF POSSIBILITY.
