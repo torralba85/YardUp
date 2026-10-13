@@ -139,7 +139,7 @@ export default function CertificatePanel({
   projectBriefError,
   onGenerateProjectBrief,
 }: CertificatePanelProps) {
-  const { user } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const certKey = certificateKey(parcel);
   const { purchased, loading, refresh, analyticsOrderId, amount } = recovery.access;
   const [busy, setBusy] = useState(false);
@@ -269,7 +269,7 @@ export default function CertificatePanel({
     });
   }, [purchased, user, certKey, analyticsOrderId, amount, recovery]);
 
-  async function beginCheckout(authenticatedUser: FirebaseUser) {
+  const beginCheckout = useCallback(async (authenticatedUser: FirebaseUser) => {
     setBusy(true);
     setError(null);
     recovery.acknowledgeCancellation();
@@ -323,7 +323,24 @@ export default function CertificatePanel({
     } finally {
       setBusy(false);
     }
-  }
+  }, [certKey, parcel, parcelName, recovery, refresh, result.zoningStatus]);
+
+  // A guest's purchase click survives the account step. Checkout resumes only
+  // once the new session's profile and access reads have settled: builder
+  // accounts work from /builder, so they are never routed into homeowner
+  // Checkout, and an account that already owns this certificate is not sent
+  // back to Stripe.
+  const [resumeCheckoutFor, setResumeCheckoutFor] = useState<string | null>(null);
+  const resumedCheckoutFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!resumeCheckoutFor || resumedCheckoutFor.current === resumeCheckoutFor) return;
+    if (authLoading || loading || !user || user.uid !== resumeCheckoutFor) return;
+    resumedCheckoutFor.current = resumeCheckoutFor;
+    if (profile?.role === "builder" || purchased) return;
+    // Resuming follows an explicit purchase click and a completed sign-in.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void beginCheckout(user);
+  }, [authLoading, beginCheckout, loading, profile, purchased, resumeCheckoutFor, user]);
 
   async function handleCta() {
     if (recovery.intent && recovery.intent.kind !== "cancel" && !purchased && user) return;
@@ -571,7 +588,7 @@ export default function CertificatePanel({
         onAuthenticated={(authenticatedUser) => {
           setAuthOpen(false);
           if (purchased || recoveryPending) return;
-          void beginCheckout(authenticatedUser);
+          setResumeCheckoutFor(authenticatedUser.uid);
         }}
         onClose={() => setAuthOpen(false)}
       />

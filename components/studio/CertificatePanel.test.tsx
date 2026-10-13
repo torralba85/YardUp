@@ -34,6 +34,8 @@ const mocks = vi.hoisted(() => ({
   },
   auth: {
     user: null as { uid: string; getIdToken: () => Promise<string> } | null,
+    profile: null as { role: "user" | "builder" } | null,
+    loading: false,
   },
 }));
 
@@ -68,7 +70,11 @@ vi.mock("@/lib/commerce/store-price", async (importOriginal) => {
 });
 
 vi.mock("@/lib/auth-context", () => ({
-  useAuth: () => ({ user: mocks.auth.user }),
+  useAuth: () => ({
+    user: mocks.auth.user,
+    profile: mocks.auth.profile,
+    loading: mocks.auth.loading,
+  }),
 }));
 
 vi.mock("@/lib/analytics/adsConversion", () => ({
@@ -84,10 +90,12 @@ vi.mock("@/components/auth/AuthModal", () => ({
         <button
           type="button"
           onClick={() => {
-            props.onAuthenticated?.({
-              uid: "new-owner",
-              getIdToken: mocks.getIdToken,
-            } as unknown as Parameters<NonNullable<AuthModalProps["onAuthenticated"]>>[0]);
+            // The auth context publishes the session before the modal reports it.
+            const signedIn = { uid: "new-owner", getIdToken: mocks.getIdToken };
+            mocks.auth.user = signedIn;
+            props.onAuthenticated?.(
+              signedIn as unknown as Parameters<NonNullable<AuthModalProps["onAuthenticated"]>>[0],
+            );
             props.onClose("signed-in");
           }}
         >
@@ -228,6 +236,8 @@ describe("CertificatePanel", () => {
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
+    mocks.auth.profile = null;
+    mocks.auth.loading = false;
     authModal.props = null;
     storePrice.override = null;
     for (const fn of Object.values(analyticsEvents)) fn.mockClear();
@@ -486,6 +496,48 @@ describe("CertificatePanel", () => {
       expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
       expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
       expect(analyticsEvents.trackCertificateCheckoutRedirected).toHaveBeenCalledTimes(1);
+    });
+
+    it("never routes a builder account from the purchase prompt into homeowner checkout", async () => {
+      mocks.auth.user = null;
+      mocks.auth.profile = { role: "builder" };
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(mocks.getIdToken).not.toHaveBeenCalled();
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+      expect(analyticsEvents.trackCertificateCheckoutStarted).not.toHaveBeenCalled();
+    });
+
+    it("waits for the new session's profile before resuming checkout", async () => {
+      mocks.auth.user = null;
+      const assign = stubLocationAssign();
+      mocks.startCertificateCheckout.mockResolvedValueOnce({
+        kind: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_live_after_profile",
+      });
+      const { rerender } = render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      mocks.auth.loading = true;
+      fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+
+      mocks.auth.loading = false;
+      mocks.auth.profile = { role: "user" };
+      rerender(<CertificatePanel {...createProps()} />);
+
+      await waitFor(() =>
+        expect(assign).toHaveBeenCalledWith(
+          "https://checkout.stripe.com/c/pay/cs_live_after_profile",
+        ),
+      );
+      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
     });
 
     it("does not start a duplicate checkout after auth for a recovery intent", async () => {
