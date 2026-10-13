@@ -166,8 +166,25 @@ export function trackEvent(
   params: Record<string, unknown> = {},
 ): void {
   if (typeof window === "undefined" || !window.gtag) return;
-  if (readConsent() !== "granted") return;
-  window.gtag("event", name, params);
+  if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
+  const id = getMeasurementId();
+  if (!id) return;
+
+  const sanitized = sanitizePath(window.location.href);
+  const safeParams = { ...params };
+  delete safeParams.page_location;
+  delete safeParams.page_path;
+  delete safeParams.page_referrer;
+  delete safeParams.send_to;
+
+  const referrer = sanitizeReferrer(document.referrer);
+  window.gtag("event", name, {
+    ...safeParams,
+    page_path: sanitized,
+    page_location: `${window.location.origin}${sanitized}`,
+    ...(referrer ? { page_referrer: referrer } : {}),
+    send_to: id,
+  });
 }
 
 /**

@@ -181,7 +181,7 @@ export function getProjectValueBucket(
 /**
  * Map `summarizeFeasibility().verdict` or `zoningStatus` to the bounded analytics status.
  *
- * "Likely Feasible" / "Eligible"     -> "eligible"
+ * "Likely Feasible" / "Eligible" / "Compliant" -> "eligible"
  * "Needs Review" / "Review Needed"   -> "review_needed"
  * "Unlikely" / "Blocked"             -> "blocked"
  */
@@ -190,7 +190,9 @@ export function mapFeasibilityVerdict(
 ): FeasibilityStatus {
   if (!verdict) return "unknown";
   const v = verdict.toLowerCase().trim();
-  if (v === "likely feasible" || v === "eligible") return "eligible";
+  if (v === "likely feasible" || v === "eligible" || v === "compliant") {
+    return "eligible";
+  }
   if (v === "needs review" || v === "review needed") return "review_needed";
   if (v === "unlikely" || v === "blocked" || v === "not allowed") return "blocked";
   return "unknown";
