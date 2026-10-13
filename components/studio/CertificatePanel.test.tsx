@@ -15,6 +15,10 @@ import { CertificateCheckoutError } from "@/lib/certificate-checkout";
 import type { CertificateReturnIntent, CertificateRecovery } from "@/lib/certificate-recovery";
 import type { AuthModalProps } from "@/components/auth/AuthModal";
 import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
+import {
+  clearCertificatePurchaseIntent,
+  hasCertificatePurchaseIntent,
+} from "@/lib/certificate-purchase-intent";
 
 const mocks = vi.hoisted(() => ({
   getIdToken: vi.fn(),
@@ -100,6 +104,9 @@ vi.mock("@/components/auth/AuthModal", () => ({
           }}
         >
           Complete authentication
+        </button>
+        <button type="button" onClick={() => props.onClose("dismissed")}>
+          Dismiss authentication
         </button>
       </div>
     );
@@ -224,6 +231,8 @@ function stubLocationAssign() {
 
 describe("CertificatePanel", () => {
   beforeEach(() => {
+    clearCertificatePurchaseIntent();
+    window.sessionStorage.clear();
     mocks.getIdToken.mockReset().mockResolvedValue("test-token");
     mocks.refresh.mockReset();
     mocks.trackPurchase.mockReset();
@@ -515,6 +524,50 @@ describe("CertificatePanel", () => {
       expect(analyticsEvents.trackCertificateCheckoutRedirected).toHaveBeenCalledTimes(1);
     });
 
+    it("resumes the purchase when sign-in remounts the Studio for a real address", async () => {
+      mocks.auth.user = null;
+      const assign = stubLocationAssign();
+      mocks.startCertificateCheckout.mockResolvedValueOnce({
+        kind: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_live_after_remount",
+      });
+      const livePanel = render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      // Signing in swaps the Studio for SignedInStudioGate: this panel unmounts
+      // before the session publishes, and a fresh one mounts afterwards.
+      livePanel.unmount();
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+      expect(hasCertificatePurchaseIntent(certificateKey(parcel))).toBe(true);
+
+      mocks.auth.user = { uid: "new-owner", getIdToken: mocks.getIdToken };
+      mocks.auth.profile = { role: "user" };
+      render(<CertificatePanel {...createProps()} />);
+
+      await waitFor(() =>
+        expect(assign).toHaveBeenCalledWith(
+          "https://checkout.stripe.com/c/pay/cs_live_after_remount",
+        ),
+      );
+      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
+      expect(hasCertificatePurchaseIntent()).toBe(false);
+    });
+
+    it("forgets the purchase when the account step is dismissed", async () => {
+      mocks.auth.user = null;
+      const { rerender } = render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: "Dismiss authentication" }));
+      expect(hasCertificatePurchaseIntent()).toBe(false);
+
+      // A later sign-in from elsewhere (e.g. the header) must not start Checkout.
+      mocks.auth.user = { uid: "new-owner", getIdToken: mocks.getIdToken };
+      rerender(<CertificatePanel {...createProps()} />);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+    });
+
     it("never routes a builder account from the purchase prompt into homeowner checkout", async () => {
       mocks.auth.user = null;
       mocks.auth.profile = { role: "builder" };
@@ -525,6 +578,7 @@ describe("CertificatePanel", () => {
 
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
       await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(hasCertificatePurchaseIntent()).toBe(false);
       expect(mocks.getIdToken).not.toHaveBeenCalled();
       expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
       expect(analyticsEvents.trackCertificateCheckoutStarted).not.toHaveBeenCalled();
