@@ -144,15 +144,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https"
-                    android:host="@string/hostName"
-                
-                />
-            </intent-filter>
+            <!-- Website links stay in the browser that initiated them. A host-wide
+                 VIEW filter would move Firebase Auth and Stripe callbacks into a
+                 new TWA session. The app icon and explicit New Study shortcut
+                 still launch the TWA; Digital Asset Links still establish trust.
+                 Preserve this policy when regenerating with Bubblewrap. -->
 
             
 

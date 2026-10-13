@@ -110,6 +110,36 @@ signal: Edge and other Chromium browsers expose it in ordinary tabs, installed
 PWAs and fullscreen windows, where Play Billing rejects with "unsupported
 context". See `lib/commerce/purchase-channel.ts`.
 
+## Website links and sign-in continuity
+
+Website links stay in the initiating browser. Do not restore Bubblewrap's
+host-wide `VIEW`/`BROWSABLE` intent filter: it can move Firebase's
+`/__/auth/handler` into a new TWA/Custom Tab without the original session storage,
+producing "missing initial state", and capture Stripe's return to `/studio`.
+This also applies to ordinary URLs used as the final sign-in return page.
+
+The app icon and explicit New Study shortcut still launch `/studio`. The
+Digital Asset Links relation and signing fingerprints remain in place for TWA
+trust; removing implicit website intents does not remove the launcher or billing
+service. `android:validate` and `test/android-app-links.test.ts` guard this policy.
+Reapply it after any Bubblewrap regeneration.
+
+`public/.well-known/assetlinks.json` also excludes all paths through Dynamic App
+Links for **existing Android 15+ installs with Google services**, once the hosted
+file is deployed and refreshed by the device. Older Android versions ignore
+dynamic rules and require the updated app. A Firebase deployment alone does not
+update an installed Android manifest. Until the app update arrives, affected
+users can turn off LotFoundry's **Open supported links** in Android app settings,
+then start a fresh sign-in from the browser (do not reload the failed callback).
+
+Before release, test browser Google sign-in and Stripe checkout/cancel with the
+Play app installed, then separately test app-icon launch, sign-in and Play
+Billing. Stop before payment unless an actual test purchase is authorized.
+Configuration tests are not evidence of a successful physical-device OAuth flow.
+
+References: [Android dynamic rules](https://developer.android.com/training/app-links/configure-assetlinks)
+and [TWA Digital Asset Links](https://developer.chrome.com/docs/android/trusted-web-activity/quick-start).
+
 ## Build
 
 ```bash
