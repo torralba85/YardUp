@@ -158,9 +158,9 @@ test("verification-only workflow edits do not hide deployment/header changes", (
   assert.match(deploymentDefinition(actual), /Record production deployment outcome/);
 });
 
-test("production build pins Firebase Auth to the canonical first-party host", () => {
+test("production build pins Firebase Auth to the same-site auth subdomain", () => {
   const workflow = readFileSync(new URL("../../.github/workflows/ci.yml", import.meta.url), "utf8");
-  assert.match(workflow, /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="lotfoundry\.net"/);
+  assert.match(workflow, /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="auth\.lotfoundry\.net"/);
   assert.doesNotMatch(
     workflow,
     /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="\$\{\{\s*secrets\.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN\s*\}\}"/,

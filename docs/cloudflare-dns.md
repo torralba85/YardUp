@@ -36,6 +36,34 @@ TLS is valid (no `-k` needed), so the Firebase certificate has issued —
 `/sitemap.xml` advertises `lotfoundry.net`, and `/.well-known/assetlinks.json`
 returns 200. Blocker 1 of that handoff is resolved **for the apex only**.
 
+## `auth.lotfoundry.net` (Firebase Auth handler)
+
+Firebase Auth's `authDomain` is `auth.lotfoundry.net` (`lib/firebase.ts`, the
+production env in `.github/workflows/ci.yml`). It must not be the apex: the
+Android app (`native/android`) claims every `https://lotfoundry.net` URL as a
+verified app link, so Google's or Apple's return to the apex's
+`/__/auth/handler` can open outside the tab that started sign-in and fail with
+"missing initial state". It must not be `yardup-2026.firebaseapp.com` either:
+that is cross-site, so Chrome partitions the helper iframe's storage. A
+lotfoundry.net subdomain is same-site and unclaimed.
+
+Setup, all required before a build with this `authDomain` ships:
+
+1. Firebase Console -> Hosting -> `yardup-2026` -> Add custom domain
+   `auth.lotfoundry.net` (no redirect). Add the records it gives in Cloudflare
+   as **DNS only** (grey cloud) and wait for the certificate.
+2. Firebase Console -> Authentication -> Settings -> Authorized domains: add
+   `auth.lotfoundry.net`.
+3. Google Cloud Console -> APIs & Services -> Credentials -> the web OAuth
+   client: add `https://auth.lotfoundry.net/__/auth/handler` to Authorized
+   redirect URIs (and `https://auth.lotfoundry.net` to JavaScript origins).
+4. Apple Developer -> the Sign in with Apple Services ID: add
+   `auth.lotfoundry.net` to Domains and
+   `https://auth.lotfoundry.net/__/auth/handler` to Return URLs.
+
+Verify: `curl -sSI https://auth.lotfoundry.net/__/auth/handler` answers 200
+from `Google Frontend`. Other paths on the host 301 to the apex (`proxy.ts`).
+
 ## Open issue: `www` is still proxied and still redirects off-domain
 
 Three separate things are wrong, and fixing the DNS alone does not fix all of
