@@ -56,6 +56,7 @@ describe("ReportPreview", () => {
       <ReportPreview
         parcelName={`${parcel.address}, ${parcel.city}`}
         result={result}
+        feasibilityStatus="eligible"
         onClose={vi.fn()}
         onDownload={vi.fn()}
       />,
@@ -83,6 +84,7 @@ describe("ReportPreview", () => {
       <ReportPreview
         parcelName={`${parcel.address}, ${parcel.city}`}
         result={result}
+        feasibilityStatus="eligible"
         projectBrief={brief}
         onClose={vi.fn()}
         onDownload={vi.fn()}
@@ -111,6 +113,7 @@ describe("ReportPreview", () => {
       <ReportPreview
         parcelName={`${parcel.address}, ${parcel.city}`}
         result={result}
+        feasibilityStatus="eligible"
         projectBriefError="AI returned an unreadable brief. Please try again."
         onRetryProjectBrief={handleRetry}
         onClose={vi.fn()}
@@ -140,6 +143,7 @@ describe("ReportPreview", () => {
       <ReportPreview
         parcelName={`${parcel.address}, ${parcel.city}`}
         result={result}
+        feasibilityStatus="eligible"
         styleMatchConcept={{
           styleName: "Mid-Century Modern",
           matchPercentage: 91,

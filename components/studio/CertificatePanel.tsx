@@ -10,18 +10,18 @@ import type {
   AIProjectBriefResponse,
 } from "@/lib/ai-types";
 import { useAuth } from "@/lib/auth-context";
-import { AuthModal } from "@/components/auth/AuthModal";
+import { AuthModal, type AuthModalCloseReason } from "@/components/auth/AuthModal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { trackPurchase } from "@/lib/analytics/adsConversion";
 import {
-  mapFeasibilityVerdict,
   mapPurchaseChannel,
   trackCertificateCheckoutCancelled,
   trackCertificateCheckoutRedirected,
   trackCertificateCheckoutStarted,
   trackCertificatePaywallViewed,
   trackCertificatePurchase,
+  type FeasibilityStatus,
 } from "@/lib/analytics/events";
 import { certificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
@@ -34,7 +34,12 @@ import {
   CertificateCheckoutError,
   startCertificateCheckout,
 } from "@/lib/certificate-checkout";
-import { stashInitialParcel } from "@/lib/parcel-handoff";
+import { clearInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
+import {
+  clearCertificatePurchaseIntent,
+  hasCertificatePurchaseIntent,
+  rememberCertificatePurchaseIntent,
+} from "@/lib/certificate-purchase-intent";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 
@@ -100,6 +105,8 @@ export interface CertificatePanelProps {
   parcel: Parcel;
   /** The feasibility result summarized on the certificate. */
   result: FeasibilityResult;
+  /** Analytics status of the rendered verdict (not the raw zoning status). */
+  feasibilityStatus: FeasibilityStatus;
   /** Display name of the lot. */
   parcelName: string;
   /** Context-specific label above the certificate artifact. */
@@ -129,6 +136,7 @@ export default function CertificatePanel({
   recovery,
   parcel,
   result,
+  feasibilityStatus,
   parcelName,
   eyebrow = "Step 4 · Certificate",
   onOpenCertificate,
@@ -169,13 +177,12 @@ export default function CertificatePanel({
     if (paywallViewedFor.current === certKey) return;
     paywallViewedFor.current = certKey;
     const channel = mapPurchaseChannel(detectPurchaseChannel());
-    const status = mapFeasibilityVerdict(result.zoningStatus);
     trackCertificatePaywallViewed({
       auth_state: user ? "signed_in" : "guest",
-      feasibility_status: status,
+      feasibility_status: feasibilityStatus,
       purchase_channel: channel,
     });
-  }, [loading, purchased, certKey, user, result.zoningStatus, recovery]);
+  }, [loading, purchased, certKey, user, feasibilityStatus, recovery]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -275,7 +282,6 @@ export default function CertificatePanel({
     recovery.acknowledgeCancellation();
 
     const channel = mapPurchaseChannel(detectPurchaseChannel());
-    const status = mapFeasibilityVerdict(result.zoningStatus);
 
     try {
       const idToken = await authenticatedUser.getIdToken();
@@ -287,7 +293,7 @@ export default function CertificatePanel({
         value: CERTIFICATE_PRICE_CENTS / 100,
         currency: "USD",
         purchase_channel: channel,
-        feasibility_status: status,
+        feasibility_status: feasibilityStatus,
       });
       const outcome = await startCertificateCheckout({
         certKey,
@@ -308,7 +314,7 @@ export default function CertificatePanel({
           value: CERTIFICATE_PRICE_CENTS / 100,
           currency: "USD",
           purchase_channel: channel,
-          feasibility_status: status,
+          feasibility_status: feasibilityStatus,
         });
         window.location.assign(outcome.url);
         return; // navigating away
@@ -323,36 +329,58 @@ export default function CertificatePanel({
     } finally {
       setBusy(false);
     }
-  }, [certKey, parcel, parcelName, recovery, refresh, result.zoningStatus]);
+  }, [certKey, feasibilityStatus, parcel, parcelName, recovery, refresh]);
 
-  // A guest's purchase click survives the account step. Checkout resumes only
-  // once the new session's profile and access reads have settled: builder
+  // A guest's purchase click survives the account step, including the Studio
+  // remount a real-address sign-in causes and a redirect-based social sign-in
+  // (the intent is persisted, not held in this component). Checkout resumes
+  // only once the new session's profile and access reads have settled: builder
   // accounts work from /builder, so they are never routed into homeowner
   // Checkout, and an account that already owns this certificate is not sent
   // back to Stripe.
-  const [resumeCheckoutFor, setResumeCheckoutFor] = useState<string | null>(null);
-  const resumedCheckoutFor = useRef<string | null>(null);
+  const stashedForPurchase = useRef(false);
   useEffect(() => {
-    if (!resumeCheckoutFor || resumedCheckoutFor.current === resumeCheckoutFor) return;
-    if (authLoading || loading || !user || user.uid !== resumeCheckoutFor) return;
-    resumedCheckoutFor.current = resumeCheckoutFor;
+    if (!user || authLoading || loading) return;
+    if (recovery.intent && recovery.intent.kind !== "cancel") return;
+    if (!hasCertificatePurchaseIntent(certKey)) return;
+    clearCertificatePurchaseIntent();
     if (profile?.role === "builder" || purchased) return;
     // Resuming follows an explicit purchase click and a completed sign-in.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void beginCheckout(user);
-  }, [authLoading, beginCheckout, loading, profile, purchased, resumeCheckoutFor, user]);
+  }, [authLoading, beginCheckout, certKey, loading, profile, purchased, recovery, user]);
 
   async function handleCta() {
-    if (recovery.intent && recovery.intent.kind !== "cancel" && !purchased && user) return;
+    const recoveryActive = Boolean(recovery.intent && recovery.intent.kind !== "cancel");
+    if (recoveryActive && !purchased && user) return;
     if (purchased) {
       await prepareAndOpenCertificate();
       return;
     }
     if (!user) {
+      if (!recoveryActive) {
+        // Signing in remounts the Studio for a real address, so keep the lot
+        // and the purchase click where the next mount can find them.
+        if ("source" in parcel && Boolean(parcel.source)) {
+          stashedForPurchase.current = stashInitialParcel(parcel as unknown as LiveParcelData);
+        }
+        rememberCertificatePurchaseIntent(certKey);
+      }
       setAuthOpen(true);
       return;
     }
     await beginCheckout(user);
+  }
+
+  function handleAuthClose(reason: AuthModalCloseReason) {
+    setAuthOpen(false);
+    if (reason === "signed-in") return;
+    // Dismissed without an account: never start this purchase on a later sign-in.
+    clearCertificatePurchaseIntent();
+    if (stashedForPurchase.current) {
+      clearInitialParcel();
+      stashedForPurchase.current = false;
+    }
   }
 
   // A store shell is charged the store's own localized amount, so the paywall
@@ -585,12 +613,7 @@ export default function CertificatePanel({
         initialMode={recoveryPending ? "sign-in" : "sign-up"}
         analyticsSurface="studio"
         analyticsSource="certificate_purchase"
-        onAuthenticated={(authenticatedUser) => {
-          setAuthOpen(false);
-          if (purchased || recoveryPending) return;
-          setResumeCheckoutFor(authenticatedUser.uid);
-        }}
-        onClose={() => setAuthOpen(false)}
+        onClose={handleAuthClose}
       />
     </div>
   );

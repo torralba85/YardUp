@@ -93,6 +93,7 @@ import { Skeleton } from "./ui/Skeleton";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { ArrowRight, ImageOff, Search } from "lucide-react";
 import { summarizeFeasibility } from "@/lib/feasibility-verdict";
+import { hasCertificatePurchaseIntent } from "@/lib/certificate-purchase-intent";
 import {
   trackFeasibilityResultViewed,
   trackAduDesignCommitted,
@@ -186,7 +187,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   const [activeStep, setActiveStep] = useState<StudioStep>(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search);
-      if (p.has("cert") || p.get("step") === "certificate") return "certificate";
+      if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent()) {
+        return "certificate";
+      }
     }
     return "feasibility";
   });
@@ -372,6 +375,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     [assumptions, config, activeParcel, pose],
   );
   const isCompliant = result.zoningStatus === "Compliant";
+  // Analytics report the verdict the visitor sees, not the narrower zoning
+  // status: a zoning-compliant lot can still render Needs Review or Unlikely.
+  const feasibilityStatus = useMemo(
+    () => mapFeasibilityVerdict(summarizeFeasibility(activeParcel, result, config, result.placement).verdict),
+    [activeParcel, config, result],
+  );
   const projectBriefInput = useMemo(
     () => buildAIProjectBriefInput({ parcel: activeParcel, result, config }),
     [activeParcel, config, result],
@@ -413,7 +422,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search);
-      if (p.has("cert") || p.get("step") === "certificate") return "act";
+      if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent()) return "act";
     }
     return parcelMode !== "preset" || demoChosen ? "earn" : "find";
   });
@@ -510,7 +519,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
 
     const certParam = incomingCertRef.current ?? params.get("cert");
     const stepParam = params.get("step");
-    if (certParam || stepParam === "certificate") {
+    // A purchase click that went through sign-in reopens the Certificate step,
+    // where the panel resumes Checkout.
+    if (certParam || stepParam === "certificate" || hasCertificatePurchaseIntent()) {
       setActiveStep("certificate");
       setDemoCommitted(true);
       setJourneyStep("act");
@@ -1117,6 +1128,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
               recovery={certificateRecovery}
               parcel={activeParcel}
               result={result}
+              feasibilityStatus={feasibilityStatus}
               parcelName={mobileParcelName}
               eyebrow="Certificate of Feasibility"
               onOpenCertificate={handleGenerateReport}
@@ -1180,6 +1192,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
             parcel={activeParcel}
             parcelName={mobileParcelName}
             result={result}
+            feasibilityStatus={feasibilityStatus}
             projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
             projectBriefLoading={projectBriefLoading}
@@ -1347,6 +1360,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
               recovery={certificateRecovery}
             parcel={activeParcel}
             result={result}
+            feasibilityStatus={feasibilityStatus}
             parcelName={parcelName}
             onOpenCertificate={handleGenerateReport}
             projectBrief={projectBrief}
@@ -1359,7 +1373,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
         ) : (
           <BuildersPanel
             parcelCity={activeParcel.city}
-            feasibilityStatus={mapFeasibilityVerdict(result.zoningStatus)}
+            feasibilityStatus={feasibilityStatus}
             onConnect={() => setBuilderLeadOpen(true)}
           />
         )}
@@ -1370,6 +1384,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcel={activeParcel}
           parcelName={parcelName}
           result={result}
+          feasibilityStatus={feasibilityStatus}
           projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
           projectBriefLoading={projectBriefLoading}

@@ -9,6 +9,7 @@ import {
   getMeasurementId,
   isAnalyticsConfigured,
   pageview,
+  GTAG_READY_EVENT,
 } from "@/lib/analytics/gtag";
 import { GOOGLE_ADS_ID } from "@/lib/analytics/adsConversion";
 import { isAnalyticsSuppressed } from "@/lib/analytics/consent";
@@ -83,6 +84,7 @@ export function GoogleAnalytics() {
             anonymize_ip: true
           });
           gtag('config', '${GOOGLE_ADS_ID}', { send_page_view: false });
+          window.dispatchEvent(new Event('${GTAG_READY_EVENT}'));
         `}
       </Script>
       <Suspense fallback={null}>

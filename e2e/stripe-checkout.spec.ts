@@ -183,4 +183,49 @@ test.describe("web certificate checkout", () => {
     await expect(dialog.getByText("Save your property")).toBeVisible();
     expect(checkoutCalls).toBe(0);
   });
+
+  test("a guest who buys on a real address lands in Checkout after signing in", async ({ page }) => {
+    // Public synthetic lot. Signing in swaps /studio to the signed-in gate,
+    // remounting the Studio; the purchase must survive that remount.
+    const lot = {
+      address: "1421 NE 88th St", city: "Seattle, WA 98115", state: "WA", zip: "98115",
+      lat: 47.69217, lng: -122.31232, source: "fallback", zoning: "R-1 (estimated)",
+      boundaryGeoJson: null, lotArea: 5000, lotWidth: 40, lotLength: 125,
+      existingHouseSqft: 0, maxLotCoveragePercent: 40,
+      setbacks: { front: 20, rear: 20, side: 5 },
+    };
+    await mockTestOwnerAuth(page);
+    await page.route("**/api/geocode?**", (route) =>
+      route.fulfill({ json: { lat: lot.lat, lng: lot.lng, formattedAddress: "1421 NE 88th St, Seattle, WA 98115" } }),
+    );
+    await page.route("**/api/parcel?**", (route) => route.fulfill({ json: lot }));
+    const checkoutBodies: Record<string, unknown>[] = [];
+    await page.route(CERTIFICATE_ROUTE, async (route) => {
+      checkoutBodies.push(route.request().postDataJSON() as Record<string, unknown>);
+      await route.fulfill({ json: { url: STRIPE_CHECKOUT_URL } });
+    });
+    await page.route("https://checkout.stripe.com/**", (route) =>
+      route.fulfill({ contentType: "text/html", body: "<title>Stripe Checkout (stub)</title><h1>Stub checkout</h1>" }),
+    );
+
+    // The landing's address handoff, as a guest.
+    await page.goto("/privacy");
+    await page.evaluate(() => window.sessionStorage.setItem("lf:pending-address", "1421 NE 88th St, Seattle, WA"));
+    await page.goto("/studio?step=certificate");
+    const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
+    await expect(cta).toBeVisible();
+    await expect(page.getByText("1421 NE 88th St").first()).toBeVisible();
+    await cta.click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: "Already have an account? Sign in" }).click();
+    await dialog.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
+    await dialog.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
+    await dialog.locator('button[type="submit"]').click();
+
+    await page.waitForURL(STRIPE_CHECKOUT_URL);
+    await expect(page.getByRole("heading", { name: "Stub checkout" })).toBeVisible();
+    expect(checkoutBodies).toHaveLength(1);
+    expect(checkoutBodies[0].certKey).toBe("1421-ne-88th-st-seattle-wa-98115");
+  });
 });

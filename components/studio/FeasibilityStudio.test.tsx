@@ -3,7 +3,12 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
-import { clearInitialParcel } from "@/lib/parcel-handoff";
+import { clearInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
+import {
+  clearCertificatePurchaseIntent,
+  hasCertificatePurchaseIntent,
+  rememberCertificatePurchaseIntent,
+} from "@/lib/certificate-purchase-intent";
 import { JOURNEY_STEP_STATE_KEY } from "@/lib/use-journey-history";
 import type { ReactNode } from "react";
 import { defaultAduConfig, defaultFinancialAssumptions } from "@/lib/feasibility";
@@ -160,6 +165,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     window.history.replaceState(null, "", "/");
     window.localStorage.clear();
     clearInitialParcel();
+    clearCertificatePurchaseIntent();
     authMocks.user = null;
     // Simulate reduced motion so useCountUp snaps synchronously to its final
     // value, keeping assertions on count-up figures deterministic.
@@ -682,6 +688,37 @@ describe("FeasibilityStudio (guided spine)", () => {
       expect(params.has("checkout")).toBe(false);
       expect(params.has("step")).toBe(false);
     });
+  });
+
+  it("reopens the Certificate step and resumes Checkout after a real-address sign-in remount", async () => {
+    // State a guest's purchase click leaves behind before SignedInStudioGate
+    // remounts the Studio with their lot.
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    stashInitialParcel(SAMPLE_LIVE_PARCEL);
+    rememberCertificatePurchaseIntent(certificateKey(SAMPLE_LIVE_PARCEL));
+    vi.mocked(getDoc).mockResolvedValue({ exists: () => false, data: () => undefined } as never);
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, assign, search: "", pathname: "/studio", href: "http://localhost/studio" });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = String(input);
+      const body = request.includes("/api/stripe/checkout-certificate")
+        ? { url: "https://checkout.stripe.com/c/pay/cs_test_resumed" }
+        : request.includes("/api/parcel") ? SAMPLE_LIVE_PARCEL : { tier: "full", brief: briefFixture };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    expect(stepButton(/Certificate/)).toHaveAttribute("aria-current", "step");
+    await waitFor(() =>
+      expect(assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/cs_test_resumed"),
+    );
+    const checkoutCalls = fetchSpy.mock.calls.filter(([input]) =>
+      String(input).includes("/api/stripe/checkout-certificate"),
+    );
+    expect(checkoutCalls).toHaveLength(1);
+    expect(JSON.parse(String(checkoutCalls[0][1]?.body)).certKey).toBe(certificateKey(SAMPLE_LIVE_PARCEL));
+    expect(hasCertificatePurchaseIntent()).toBe(false);
   });
 
   it("navigates among the steps via the rail", async () => {
