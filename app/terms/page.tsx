@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  */
 export default function TermsPage() {
   return (
-    <LegalPageShell title="Terms & Conditions" kicker="Last updated: September 17, 2026">
+    <LegalPageShell title="Terms & Conditions" kicker="Last updated: October 12, 2026">
       <LegalSection title="1. Acceptance &amp; Contracting Entity">
         <p>
           These Terms &amp; Conditions (“Terms”) constitute a legally binding agreement between you
@@ -171,8 +171,9 @@ export default function TermsPage() {
           Parcel lot boundaries, zoning overlays, satellite imagery, building footprints, and rental
           benchmarks are aggregated from third parties (including Regrid, Google Maps, US Census Bureau,
           USA Structures, and municipal GIS services). Third-party data may be outdated, inaccurate, or
-          misaligned. LotFoundry assumes no responsibility for spatial inaccuracies, unrecorded
-          easements, private covenants, HOA restrictions, or utility access limitations.
+          misaligned. Algorithmic address candidate matching and zoning classification heuristics (including TypeSafe)
+          are automated software interpretations. LotFoundry assumes no responsibility for spatial inaccuracies,
+          unrecorded easements, private covenants, HOA restrictions, or utility access limitations.
         </p>
       </LegalSection>
 
@@ -272,7 +273,14 @@ export default function TermsPage() {
           <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
             support@lotfoundry.net
           </a>
+          , or for privacy inquiries at:{" "}
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
+            privacy@lotfoundry.net
+          </a>
           .
+        </p>
+        <p className="lf-caption text-lot-stone mt-2">
+          LotFoundry LLC · Legal &amp; Compliance
         </p>
       </LegalSection>
     </LegalPageShell>

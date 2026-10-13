@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "./SiteFooter";
 
 /**
- * Shared Golden Hour chrome for legal and support pages: brand header, prose
+ * Shared A LOT MORE chrome for legal and support pages: brand header, prose
  * main, and {@link SiteFooter}.
  */
 export function LegalPageShell({
