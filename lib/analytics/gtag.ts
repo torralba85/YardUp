@@ -89,6 +89,11 @@ export function sanitizeReferrer(referrer: string): string {
  */
 export function disableAnalytics(): void {
   if (typeof window === "undefined") return;
+  // A withdrawal discards events held for a tag that has not initialized, so
+  // a later re-grant cannot upload them. The guard keeps a consented visitor's
+  // held events when this runs during hydration, before the stored decision
+  // reaches the consent hook.
+  if (!canMeasure()) pendingEvents = [];
   const id = getMeasurementId();
   if (id) {
     (window as unknown as Record<string, boolean>)[`ga-disable-${id}`] = true;

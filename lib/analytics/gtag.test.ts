@@ -236,6 +236,33 @@ describe("gtag helpers", () => {
       expect(gtag).not.toHaveBeenCalled();
     });
 
+    it("discards held events when consent is withdrawn, even if it is granted again", () => {
+      writeConsent("granted");
+      trackEvent("studio_opened", { auth_state: "guest" });
+
+      writeConsent("denied");
+      disableAnalytics();
+      writeConsent("granted");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("keeps held events when the tag is disabled while consent is still granted", () => {
+      writeConsent("granted");
+      trackEvent("studio_opened", { auth_state: "guest" });
+
+      // e.g. the consent hook's first, pre-hydration render
+      disableAnalytics();
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).toHaveBeenCalledWith("event", "studio_opened", expect.anything());
+    });
+
     it("holds nothing without consent", () => {
       trackEvent("studio_opened", { auth_state: "guest" });
 
