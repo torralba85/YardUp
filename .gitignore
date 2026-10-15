@@ -38,6 +38,7 @@ firestore-debug.log
 # Local agent / terminal state
 .codex/
 .grok/
+.superdesign/
 terminals/
 
 # OS and editor noise
