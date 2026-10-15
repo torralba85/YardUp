@@ -20,9 +20,7 @@ jobs:
           import json, time, urllib.request, urllib.error, urllib.parse
           base = "https://lotfoundry.net"
           queries = [
-              ("/api/geocode", {"q": "1515 goldrush way oceanside ca"}),
-              ("/api/geocode", {"q": "1515 Goldrush Way, Oceanside, CA"}),
-              ("/api/suggest", {"q": "1515 Goldrush Way Oceanside"}),
+              ("/api/parcel", {"lat": "33.250447", "lng": "-117.262426", "address": "1515 Goldrush Way, Oceanside, CA 92057"}),
           ]
           for path, params in queries:
               url = base + path + "?" + urllib.parse.urlencode(params)
