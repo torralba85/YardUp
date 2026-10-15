@@ -65,38 +65,44 @@ function clamp(value: number, min: number, max: number) {
 /** Width/length fields and sliders move in the same half-foot step. */
 const DIMENSION_STEP_FT = 0.5;
 
-/** Drops float noise (26.3 - 26 = 0.3000000000000007) before it reaches a min/max attribute. */
-const roundFt = (ft: number) => Math.round(ft * 1e6) / 1e6;
-
-/**
- * Where a value sits on the half-foot grid (0.3 for 26.3 ft). Browsers count a
- * control's steps from `min`, so both bounds sit on the value's own grid: a
- * saved off-step span stays natively valid and every step stays reversible.
- */
-function stepOffset(value: number) {
-  return roundFt(value - Math.floor(roundFt(value / DIMENSION_STEP_FT)) * DIMENSION_STEP_FT);
+/** Decimal places that hold both `value` and the half-foot step exactly (at most 12). */
+function decimalPlaces(value: number) {
+  return Math.min(12, Math.max(1, (String(value).split(".")[1] ?? "").length));
 }
 
 /**
- * The longest span (≤ 80 ft) on `currentSpan`'s half-foot grid that keeps the
- * footprint within the 2,000 sf model cap beside `otherSpan`. A saved span that
- * already fits is never below the maximum, so it is never clamped on blur.
+ * Field and slider bounds on `value`'s own half-foot grid. Browsers count a
+ * control's steps from `min`, so a saved off-step span (26.3 ft) stays natively
+ * valid and every slider step is reversible. The math runs in integer units of
+ * the value's decimal places, so no float noise reaches the attributes.
+ * `min` is `floor` (or a smaller saved value) moved down onto the grid; `max` is
+ * the longest span on the grid within `limit`.
  */
-function spanWithinAreaCap(otherSpan: number, currentSpan: number) {
+function gridBounds(value: number, floor: number, limit: number) {
+  const places = decimalPlaces(value);
+  const unit = 10 ** places;
+  const units = Math.round(value * unit);
+  const step = Math.round(DIMENSION_STEP_FT * unit);
+  const offset = units % step;
+  const onGrid = (bound: number) => Math.floor((bound - offset) / step) * step + offset;
+  const toFt = (gridUnits: number) => Number((gridUnits / unit).toFixed(places));
+  return {
+    min: toFt(onGrid(Math.min(Math.round(floor * unit), units))),
+    max: toFt(onGrid(Math.floor(limit * unit))),
+  };
+}
+
+/** Width/length bounds: {@link gridBounds} under the 80 ft and 2,000 sf model caps beside `otherSpan`. */
+function spanBounds(value: number, floor: number, otherSpan: number) {
   const other = Math.max(1, otherSpan);
-  const offset = stepOffset(currentSpan);
-  const steps = Math.floor(roundFt((Math.min(80, 2000 / other) - offset) / DIMENSION_STEP_FT));
-  let span = roundFt(steps * DIMENSION_STEP_FT + offset);
-  // Rounding away float noise must never lift the footprint past the cap.
-  if (span * other > 2000) span = roundFt(span - DIMENSION_STEP_FT);
-  return currentSpan * other <= 2000 ? Math.max(span, currentSpan) : span;
-}
-
-/** The control minimum: `floor`, or a smaller saved value, moved down onto the value's own grid. */
-function stepAlignedMin(floor: number, value: number) {
-  const offset = stepOffset(value);
-  const steps = Math.floor(roundFt((Math.min(floor, value) - offset) / DIMENSION_STEP_FT));
-  return roundFt(steps * DIMENSION_STEP_FT + offset);
+  const bounds = gridBounds(value, floor, Math.min(80, 2000 / other));
+  // Float noise in the cap must never lift the footprint past 2,000 sf…
+  if (bounds.max * other > 2000) {
+    bounds.max = Number((bounds.max - DIMENSION_STEP_FT).toFixed(decimalPlaces(value)));
+  }
+  // …and a saved span that already fits is never above the maximum, so blur never clamps it.
+  if (value <= 80 && value * other <= 2000) bounds.max = Math.max(bounds.max, value);
+  return bounds;
 }
 
 /** Props for {@link FeasibilityInspector}. */
@@ -451,10 +457,8 @@ export default function FeasibilityInspector({
                   {(() => {
                     // One bound per dimension, shared by field and slider. A narrower
                     // or off-step saved design moves the minimum so it still shows as entered.
-                    const minWidth = stepAlignedMin(12, config.width);
-                    const maxWidth = spanWithinAreaCap(config.length, config.width);
-                    const minLength = stepAlignedMin(16, config.length);
-                    const maxLength = spanWithinAreaCap(config.width, config.length);
+                    const { min: minWidth, max: maxWidth } = spanBounds(config.width, 12, config.length);
+                    const { min: minLength, max: maxLength } = spanBounds(config.length, 16, config.width);
                     return (
                       <>
                         <div className="grid grid-cols-3 items-end gap-2">
@@ -481,7 +485,7 @@ export default function FeasibilityInspector({
                           <NumericField
                             label="Wall height (ft)"
                             value={config.height}
-                            min={stepAlignedMin(8, config.height)}
+                            min={gridBounds(config.height, 8, 30).min}
                             max={30}
                             step={DIMENSION_STEP_FT}
                             onChange={(height) => onConfigChange({ ...config, height })}

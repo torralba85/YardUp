@@ -128,6 +128,19 @@ it("keeps off-step saved dimensions natively valid in the fields and sliders", a
   expect(dimensionControls("Width").field).toBeValid();
 });
 
+it("keeps a long-decimal saved span on its own exact grid", async () => {
+  const user = userEvent.setup();
+  render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 26.3333333, length: 75, footprint: 26.3333333 * 75 }} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  const { field, slider } = dimensionControls("Width");
+  expect(field).toBeValid();
+  expect(field.min).toBe("11.8333333");
+  expect(slider.value).toBe("26.3333333");
+  fireEvent.change(slider, { target: { value: "25.8333333" } });
+  fireEvent.change(dimensionControls("Width").slider, { target: { value: "26.3333333" } });
+  expect(dimensionControls("Width").field.value).toBe("26.3333333");
+});
+
 it("shows a half-foot design narrower than the usual minimum in both controls", async () => {
   const user = userEvent.setup();
   render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 10.5, length: 30, footprint: 315 }} />);
