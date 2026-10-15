@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, BookmarkPlus, Check, ChevronDown, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { BookmarkPlus, Check, ChevronDown, DoorOpen, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import { NumericField } from "./NumericField";
 import { FootprintDiagram, RoofProfile } from "./DesignDiagrams";
 import { useEffect, useId, useState } from "react";
@@ -17,6 +17,7 @@ import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import ParcelDataNotice from "./ParcelDataNotice";
 import { Button } from "@/components/ui/Button";
+import { PanelHeader } from "@/components/ui/Panel";
 import { Segmented, Select, Slider } from "@/components/ui/Field";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
@@ -52,13 +53,28 @@ const journeySteps = [
 ] as const;
 
 const nextActionByStep = {
-  1: "Search an address or keep the sample lot, then move to ADU fit.",
+  1: "Search an address or keep the sample lot, then move to backyard home fit.",
   2: "Pick a footprint and finish that still works on the parcel.",
   3: "Choose the rent scenario you trust, then create the report.",
 } as const;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+/** Width/length fields and sliders move in the same half-foot step. */
+const DIMENSION_STEP_FT = 0.5;
+
+/**
+ * The longest span (≤ 80 ft) that keeps the footprint within the 2,000 sf model
+ * cap beside `otherSpan`, floored to the half-foot step. A saved off-step span
+ * that already fits stays the maximum, so it is never clamped just by opening
+ * the inspector.
+ */
+function spanWithinAreaCap(otherSpan: number, currentSpan: number) {
+  const cap = 2000 / Math.max(1, otherSpan);
+  const stepped = Math.floor(cap / DIMENSION_STEP_FT) * DIMENSION_STEP_FT;
+  return Math.min(80, currentSpan <= cap ? Math.max(stepped, currentSpan) : stepped);
 }
 
 /** Props for {@link FeasibilityInspector}. */
@@ -205,27 +221,29 @@ export default function FeasibilityInspector({
       <div className="flex min-h-full flex-col">
 
         {/* Panel header */}
-        <div className="flex items-center justify-between border-b border-lot-line px-6 py-5">
-          <div>
-            <h2
-              id="feasibility-heading"
-              className="font-display text-2xl font-medium tracking-tight text-lot-ink"
-            >
-              {designOnly ? "Design your ADU" : "Feasibility Studio"}
-            </h2>
-            <p className="mt-1 text-sm text-lot-stone">
-              {designOnly ? "Try a size. See how it sits on your lot." : "Confirm the lot, shape the ADU, then test the income case."}
-            </p>
-          </div>
-          {!designOnly && <button
-            type="button"
-            onClick={handleReset}
-            className="flex h-11 items-center gap-2 rounded-control px-4 text-sm font-medium text-lot-stone motion-safe:transition hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
-          >
-            <RefreshCcw size={15} />
-            Reset
-          </button>}
-        </div>
+        <PanelHeader
+          id="feasibility-heading"
+          title={designOnly ? "Design your ADU" : "Feasibility Studio"}
+          sub={
+            designOnly
+              ? "Try a size. See how it sits on your lot."
+              : "Confirm the lot, shape the backyard home, then test the income case."
+          }
+          actions={
+            !designOnly ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleReset}
+                leftIcon={<RefreshCcw size={15} />}
+                className="text-lot-stone hover:text-lot-ink"
+              >
+                Reset
+              </Button>
+            ) : undefined
+          }
+        />
 
         {!designOnly && <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />}
 
@@ -250,13 +268,13 @@ export default function FeasibilityInspector({
                       onClick={handleResetToPreset}
                       className="relative flex min-h-11 items-center gap-1 text-xs font-medium text-lot-orange-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 before:absolute before:-inset-x-2 before:-inset-y-3"
                     >
-                      <RefreshCcw size={12} />
+                      <RefreshCcw size={12} aria-hidden="true" />
                       Demo mode
                     </button>
                   </div>
 
                   <div className="flex items-start gap-2 rounded-none border border-lot-line bg-lot-chalk p-3">
-                    <MapPin size={15} className="mt-0.5 shrink-0 text-lot-orange-ink" />
+                    <MapPin size={15} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-lot-ink">
                         {displayParcel.address}
@@ -270,7 +288,7 @@ export default function FeasibilityInspector({
                       role="note"
                       className="flex items-start gap-2 rounded-none border border-status-review/35 bg-status-review-soft p-3 text-xs text-status-review"
                     >
-                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-status-review" />
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0 text-status-review" aria-hidden="true" />
                       Exact data unavailable for this address — using typical estimates. Double-check with your local planning department.
                     </div>
                   )}
@@ -280,7 +298,7 @@ export default function FeasibilityInspector({
                       role="alert"
                       className="flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
                     >
-                      <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                      <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
                       {parcelError}
                     </div>
                   )}
@@ -308,7 +326,7 @@ export default function FeasibilityInspector({
                         role="alert"
                         className="flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
                       >
-                        <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                        <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
                         {parcelError}
                       </div>
                     )}
@@ -317,7 +335,7 @@ export default function FeasibilityInspector({
               )}
 
               {parcelLoading && (
-                <div className="flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
+                <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
                   <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
                   Looking up property data…
                 </div>
@@ -379,7 +397,7 @@ export default function FeasibilityInspector({
                         aria-label={option.label}
                         aria-describedby={`${footprintDescriptionId}-${option.value}`}
                         {...getFootprintRadioProps(optionKey)}
-                        className={`relative flex min-h-28 flex-col items-start rounded-control border px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
+                        className={`relative flex min-h-28 flex-col items-start rounded-control border px-3 py-2 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isChecked ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
                         }`}
                       >
@@ -405,34 +423,70 @@ export default function FeasibilityInspector({
               <details open={!designOnly} className="group/dimensions border-y border-lot-line">
                 <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Fine-tune dimensions
-                  <ChevronDown size={16} aria-hidden="true" className="group-open/dimensions:rotate-180" />
+                  <ChevronDown size={16} aria-hidden="true" className="motion-safe:transition-transform group-open/dimensions:rotate-180" />
                 </summary>
-                <div className="space-y-4 pb-4">
-                <div className="grid grid-cols-3 items-end gap-2">
-                  <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
-                  <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
-                  <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
-                </div>
-                <DimensionSlider
-                  label="Width"
-                  value={config.width}
-                  min={16}
-                  max={32}
-                  suffix="ft"
-                  onChange={(value) =>
-                    onConfigChange({ ...config, width: value, footprint: value * config.length })
-                  }
-                />
-                <DimensionSlider
-                  label="Length"
-                  value={config.length}
-                  min={20}
-                  max={44}
-                  suffix="ft"
-                  onChange={(value) =>
-                    onConfigChange({ ...config, length: value, footprint: config.width * value })
-                  }
-                />
+                <div className="space-y-4 pb-4 pt-1">
+                  {(() => {
+                    // One bound per dimension, shared by field and slider. A narrower
+                    // saved design lowers the minimum so it still shows as entered.
+                    const minWidth = Math.min(12, config.width);
+                    const maxWidth = spanWithinAreaCap(config.length, config.width);
+                    const minLength = Math.min(16, config.length);
+                    const maxLength = spanWithinAreaCap(config.width, config.length);
+                    return (
+                      <>
+                        <div className="grid grid-cols-3 items-end gap-2">
+                          <NumericField
+                            label="Width (ft)"
+                            value={config.width}
+                            min={minWidth}
+                            max={maxWidth}
+                            step={DIMENSION_STEP_FT}
+                            onChange={(width) =>
+                              onConfigChange({ ...config, width, footprint: width * config.length })
+                            }
+                          />
+                          <NumericField
+                            label="Length (ft)"
+                            value={config.length}
+                            min={minLength}
+                            max={maxLength}
+                            step={DIMENSION_STEP_FT}
+                            onChange={(length) =>
+                              onConfigChange({ ...config, length, footprint: config.width * length })
+                            }
+                          />
+                          <NumericField
+                            label="Wall height (ft)"
+                            value={config.height}
+                            min={Math.min(8, config.height)}
+                            max={30}
+                            onChange={(height) => onConfigChange({ ...config, height })}
+                          />
+                        </div>
+                        <DimensionSlider
+                          label="Width"
+                          value={config.width}
+                          min={minWidth}
+                          max={maxWidth}
+                          suffix="ft"
+                          onChange={(value) =>
+                            onConfigChange({ ...config, width: value, footprint: value * config.length })
+                          }
+                        />
+                        <DimensionSlider
+                          label="Length"
+                          value={config.length}
+                          min={minLength}
+                          max={maxLength}
+                          suffix="ft"
+                          onChange={(value) =>
+                            onConfigChange({ ...config, length: value, footprint: config.width * value })
+                          }
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
               </details>
 
@@ -495,7 +549,7 @@ export default function FeasibilityInspector({
                 fullWidth
                 onClick={() => onConfigChange({ ...config, includeOpenings: !config.includeOpenings })}
                 aria-pressed={config.includeOpenings}
-                leftIcon={<Bookmark size={16} />}
+                leftIcon={<DoorOpen size={16} />}
               >
                 {config.includeOpenings ? "Remove Entry & Windows" : "Add Entry & Windows"}
               </Button>
@@ -547,7 +601,7 @@ export default function FeasibilityInspector({
                   className="rounded-none border border-status-review/35 bg-status-review-soft p-3 text-sm text-status-review"
                 >
                   <div className="flex items-start gap-2">
-                    <TriangleAlert className="mt-0.5 shrink-0" size={17} />
+                    <TriangleAlert className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
                     <div>
                       <div className="font-semibold">Review needed</div>
                       <p className="mt-1 text-xs leading-5">{result.warnings[0]}</p>
@@ -625,7 +679,7 @@ function JourneyProgress({
           return (
             <li key={step} className="grid grid-cols-[auto_1fr] gap-x-3">
               <span
-                className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
+                className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${
                   isActive
                     ? "bg-lot-orange text-lot-ink"
                     : isDone
@@ -633,7 +687,7 @@ function JourneyProgress({
                     : "bg-lot-chalk text-lot-stone ring-1 ring-lot-line"
                 }`}
               >
-                {isDone ? <Check size={12} /> : step}
+                {isDone ? <Check size={12} aria-hidden="true" /> : step}
               </span>
               <div className="min-w-0">
                 <div
@@ -683,7 +737,7 @@ function AccordionStep({
         className="flex w-full items-center gap-3 px-6 py-4 text-left motion-safe:transition hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink"
       >
         <span
-          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold motion-safe:transition ${
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums motion-safe:transition ${
             isOpen
               ? "bg-lot-orange text-lot-ink"
               : isComplete
@@ -691,13 +745,14 @@ function AccordionStep({
               : "bg-lot-surface text-lot-stone"
           }`}
         >
-          {isComplete && !isOpen ? <Check size={12} /> : step}
+          {isComplete && !isOpen ? <Check size={12} aria-hidden="true" /> : step}
         </span>
         <span className={`flex-1 text-sm font-semibold ${isOpen ? "text-lot-ink" : "text-lot-stone"}`}>
           {title}
         </span>
         <ChevronDown
           size={16}
+          aria-hidden="true"
           className={`shrink-0 text-lot-stone motion-safe:transition-transform duration-(--duration-disclosure) ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
@@ -770,7 +825,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs text-lot-stone">{label}</div>
-      <div className="mt-0.5 font-sans text-xs font-medium text-lot-ink">{value}</div>
+      <div className="mt-0.5 font-sans text-xs font-medium tabular-nums text-lot-ink">{value}</div>
     </div>
   );
 }
@@ -798,6 +853,7 @@ function DimensionSlider({
       valueText={`${value} ${suffix}`}
       min={min}
       max={max}
+      step={DIMENSION_STEP_FT}
       value={value}
       onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
     />

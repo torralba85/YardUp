@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TriangleAlert } from "lucide-react";
+import { RefreshCw, TriangleAlert } from "lucide-react";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import type { Pose2D } from "@/lib/scene-model";
@@ -144,10 +144,18 @@ export default function AerialView({
         </>
       ) : (
         <div
-          className="absolute inset-0 bg-lot-ink"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-lot-ink"
           aria-label={aerialError ? "Aerial image unavailable" : "Loading aerial image"}
           role="status"
-        />
+          aria-live="polite"
+        >
+          {!aerialError && (
+            <>
+              <RefreshCw size={20} className="motion-safe:animate-spin text-lot-orange-ink" aria-hidden="true" />
+              <p className="text-xs font-medium text-lot-chalk">Loading satellite context…</p>
+            </>
+          )}
+        </div>
       )}
 
       {/* Address coordinates cannot establish building placement or bearing. */}

@@ -7,6 +7,7 @@
  * Replaces the old 5-item sidebar nav AND the 3-item StudioTabBar.
  */
 
+import { useRef } from "react";
 import { PLATES, type PlateTick, type StudioPlate } from "@/lib/studio-plates";
 
 const TICK_META: Record<PlateTick, { glyph: string; label: string; className: string }> = {
@@ -17,6 +18,23 @@ const TICK_META: Record<PlateTick, { glyph: string; label: string; className: st
   pending: { glyph: "·", label: "not started", className: "text-lot-stone-on-dark" },
   ready: { glyph: "◦", label: "ready to record", className: "text-lot-chalk" },
 };
+
+/** Arrow-key roving focus across the four surveyor plates. */
+function useArrowNav(plates: readonly { id: StudioPlate }[]) {
+  const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  function handleKeyDown(event: React.KeyboardEvent, index: number) {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    event.preventDefault();
+    const direction = event.key === "ArrowDown" ? 1 : -1;
+    const nextIndex = index + direction;
+    if (nextIndex >= 0 && nextIndex < plates.length) {
+      refs.current[plates[nextIndex].id]?.focus();
+    }
+  }
+
+  return { refs, handleKeyDown };
+}
 
 export interface FieldBookIndexProps {
   active: StudioPlate;
@@ -31,6 +49,7 @@ export default function FieldBookIndex({
   statuses,
   subject,
 }: FieldBookIndexProps) {
+  const { refs, handleKeyDown } = useArrowNav(PLATES);
   return (
     <div>
       <div className="px-2 pb-4">
@@ -50,14 +69,18 @@ export default function FieldBookIndex({
       </div>
 
       <nav aria-label="Studio sections" className="space-y-0.5 border-t border-lot-stone/25 pt-2">
-        {PLATES.map((plate) => {
+        {PLATES.map((plate, index) => {
           const isActive = active === plate.id;
           const tick = TICK_META[statuses[plate.id]];
           return (
             <button
               key={plate.id}
+              ref={(el) => {
+                refs.current[plate.id] = el;
+              }}
               type="button"
               onClick={() => onNavigate(plate.id)}
+              onKeyDown={(event) => handleKeyDown(event, index)}
               aria-current={isActive ? "page" : undefined}
               className={`relative flex w-full min-h-11 items-center gap-3 rounded-control py-2 pl-3 pr-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset ${
                 isActive ? "bg-lot-ink/45 ring-1 ring-lot-stone/20" : "hover:bg-lot-chalk/5"

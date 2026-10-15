@@ -1,8 +1,25 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import FeasibilityInspector from "./FeasibilityInspector";
-import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets } from "@/lib/feasibility";
+import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets, type ADUConfig } from "@/lib/feasibility";
+
+function StatefulDesign({ initialConfig = defaultAduConfig }: { initialConfig?: ADUConfig }) {
+  const [config, setConfig] = useState(initialConfig);
+  return <FeasibilityInspector designOnly parcelId={parcelPresets[0].id}
+    config={config} assumptions={defaultFinancialAssumptions}
+    result={calculateFeasibility(parcelPresets[0], config, defaultFinancialAssumptions)}
+    onParcelChange={vi.fn()} onConfigChange={setConfig} onAssumptionsChange={vi.fn()}
+    onReset={vi.fn()} onGenerateReport={vi.fn()} />;
+}
+
+function dimensionControls(name: "Width" | "Length") {
+  return {
+    field: screen.getByLabelText(`${name} (ft)`) as HTMLInputElement,
+    slider: screen.getByRole("slider", { name }) as HTMLInputElement,
+  };
+}
 
 vi.mock("./AddressSearch", () => ({ default: () => null }));
 vi.mock("@/lib/parcel-context", () => ({
@@ -54,4 +71,47 @@ it("announces fine-tune slider values with their units", async () => {
   await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
   expect(screen.getByRole("slider", { name: "Width" })).toHaveAttribute("aria-valuetext", `${defaultAduConfig.width} ft`);
   expect(screen.getByRole("slider", { name: "Length" })).toHaveAttribute("aria-valuetext", `${defaultAduConfig.length} ft`);
+});
+
+it("keeps sliders and fields on one 2,000 sf bound when both sliders hit their ends", async () => {
+  const user = userEvent.setup();
+  render(<StatefulDesign />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  // End on Width, then End on Length (the reviewed 600 sf reproduction).
+  for (const name of ["Width", "Length"] as const) {
+    const { slider } = dimensionControls(name);
+    fireEvent.change(slider, { target: { value: slider.max } });
+  }
+  const width = dimensionControls("Width");
+  const length = dimensionControls("Length");
+  expect(Number(width.field.value) * Number(length.field.value)).toBeLessThanOrEqual(2000);
+  for (const { field, slider } of [width, length]) {
+    expect(field).toBeValid();
+    expect(slider.max).toBe(field.max);
+    expect(slider.min).toBe(field.min);
+    expect(slider.value).toBe(field.value);
+  }
+});
+
+it("keeps a valid off-step saved span as entered instead of clamping it on blur", async () => {
+  const user = userEvent.setup();
+  // 26.3 × 76 ft = 1,998.8 sf: valid under the scenario contract, but not on the half-foot step.
+  render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 26.3, length: 76, footprint: 26.3 * 76 }} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  const { field, slider } = dimensionControls("Width");
+  expect(field.validity.rangeOverflow).toBe(false);
+  expect(slider.max).toBe(field.max);
+  await user.click(field);
+  await user.tab();
+  expect(dimensionControls("Width").field.value).toBe("26.3");
+});
+
+it("shows a half-foot design narrower than the usual minimum in both controls", async () => {
+  const user = userEvent.setup();
+  render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 10.5, length: 30, footprint: 315 }} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  const { field, slider } = dimensionControls("Width");
+  expect(field).toBeValid();
+  expect(field.value).toBe("10.5");
+  expect(slider.value).toBe("10.5");
 });

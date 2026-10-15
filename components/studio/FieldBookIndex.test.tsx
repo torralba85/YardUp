@@ -46,4 +46,32 @@ describe("FieldBookIndex", () => {
     await user.click(screen.getByRole("button", { name: /The Return/ }));
     expect(onNavigate).toHaveBeenCalledWith("return");
   });
+
+  it("moves focus between plates using ArrowDown and ArrowUp", async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldBookIndex
+        active="lot"
+        onNavigate={vi.fn()}
+        statuses={statuses}
+        subject={{ address: "1411 Elm St" }}
+      />,
+    );
+
+    const first = screen.getByRole("button", { name: /The Lot/ });
+    const second = screen.getByRole("button", { name: /The Build/ });
+    const third = screen.getByRole("button", { name: /The Return/ });
+
+    first.focus();
+    expect(document.activeElement).toBe(first);
+
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(second);
+
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(third);
+
+    await user.keyboard("{ArrowUp}");
+    expect(document.activeElement).toBe(second);
+  });
 });
