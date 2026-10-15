@@ -1,0 +1,26 @@
+name: Census Coverage Diagnostic
+on:
+  push:
+    branches: [codex/lotfoundry-outage-20261015]
+    paths: [.github/workflows/census-diagnostics.yml]
+permissions:
+  contents: read
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check free Census address coverage
+        run: |
+          python3 <<'PY'
+          import json, urllib.request, urllib.parse
+          for address in ["1515 goldrush way oceanside ca", "1515 Goldrush Way, Oceanside, CA 92057"]:
+              params = {"address": address, "benchmark": "Public_AR_Current", "format": "json"}
+              url = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?" + urllib.parse.urlencode(params)
+              try:
+                  with urllib.request.urlopen(url, timeout=20) as response:
+                      body=json.load(response)
+                      print(json.dumps({"query":address,"status":response.status,"matches":body.get("result",{}).get("addressMatches")}))
+              except Exception as error:
+                  print(json.dumps({"query":address,"error":str(error)}))
+          PY
