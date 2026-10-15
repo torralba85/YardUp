@@ -38,14 +38,20 @@ returns 200. Blocker 1 of that handoff is resolved **for the apex only**.
 
 ## `auth.lotfoundry.net` (Firebase Auth handler)
 
-Firebase Auth's `authDomain` is `auth.lotfoundry.net` (`lib/firebase.ts`, the
-production env in `.github/workflows/ci.yml`). It must not be the apex: the
-Android app (`native/android`) claims every `https://lotfoundry.net` URL as a
-verified app link, so Google's or Apple's return to the apex's
-`/__/auth/handler` can open outside the tab that started sign-in and fail with
-"missing initial state". It must not be `yardup-2026.firebaseapp.com` either:
-that is cross-site, so Chrome partitions the helper iframe's storage. A
-lotfoundry.net subdomain is same-site and unclaimed.
+Production uses the verified `lotfoundry.net` auth helper (`lib/firebase.ts`
+and `.github/workflows/ci.yml`). On 2026-10-15, the newly published
+`auth.lotfoundry.net` setting failed DNS resolution; restore the apex until
+all of the setup below is complete. CI checks both auth helper URLs before
+building and publishing production.
+
+The dedicated auth subdomain is still the intended destination: the Android
+app (`native/android`) claims every `https://lotfoundry.net` URL as a verified
+app link, so Google's or Apple's return to the apex's `/__/auth/handler`
+can open outside the tab that started sign-in and fail with "missing initial
+state". This Android limitation remains while the apex is the fallback.
+`yardup-2026.firebaseapp.com` is cross-site, so Chrome partitions the helper
+iframe's storage. A provisioned lotfoundry.net subdomain is same-site and
+unclaimed.
 
 Setup, all required before a build with this `authDomain` ships:
 

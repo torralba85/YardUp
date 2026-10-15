@@ -14,14 +14,13 @@ const firebaseConfig = {
   apiKey:
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() ||
     "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
-  // A subdomain, not the apex: the Android app claims every lotfoundry.net
-  // URL as a verified app link, so Google's return to the apex's
-  // /__/auth/handler can open outside the signing-in tab and lose Firebase's
-  // sessionStorage. auth.lotfoundry.net is unclaimed but still same-site, so
-  // the helper iframe is not storage-partitioned.
+  // Use the verified same-site helper. Switch to auth.lotfoundry.net only
+  // after its DNS, Hosting certificate and OAuth redirects are provisioned
+  // (docs/cloudflare-dns.md). Publishing the subdomain before that makes
+  // social sign-in unreachable. Android app-link isolation remains pending.
   authDomain:
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ||
-    "auth.lotfoundry.net",
+    "lotfoundry.net",
   projectId:
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || "yardup-2026",
   storageBucket:

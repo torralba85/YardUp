@@ -146,6 +146,8 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       needs.scope.outputs.deploy == 'true'
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: lotfoundry.net
     permissions:
       contents: read
       deployments: write
@@ -175,10 +177,9 @@ jobs:
           EOF
           cat > .env.production.local <<EOF
           NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
-          # Keep the OAuth helper same-site (not firebaseapp.com, whose iframe is
-          # storage-partitioned) but off the apex, which the Android app claims
-          # as an app link and can steal Google's return to /__/auth/handler.
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="auth.lotfoundry.net"
+          # Keep the verified same-site helper until the auth subdomain's DNS,
+          # Hosting certificate and OAuth provider redirects are provisioned.
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}"
           NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}"
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}"
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}"
@@ -189,6 +190,13 @@ jobs:
           EOF
       - name: Install functions dependencies
         run: npm ci --prefix functions
+      - name: Verify production Firebase auth helpers
+        run: |
+          for helper in handler iframe; do
+            curl --fail --silent --show-error --output /dev/null \
+              --connect-timeout 10 --max-time 30 \
+              "https://${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}/__/auth/${helper}"
+          done
       - run: npm run build:firebase
       - name: Verify production analytics stream in built client
         run: node scripts/ci/verify-analytics.mjs
