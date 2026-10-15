@@ -147,6 +147,11 @@ describe("enrichStreetAddress", () => {
     expect(enrichStreetAddress("202 C St, California", provider)).toBe("202 C St, San Diego, CA 92101");
     expect(enrichStreetAddress("202 C Street, San Diego, CA 92101", provider)).toBe(provider);
   });
+  it("fills locality when the provider only splits a compound street name differently", () => {
+    expect(enrichStreetAddress("1515 Goldrush Way, Oceanside", "1515 Gold Rush Way, Oceanside, CA 92057")).toBe(
+      "1515 Goldrush Way, Oceanside, CA 92057",
+    );
+  });
   it.each([
     "203 C Street", "202 D Street", "202 C Street, Chula Vista",
     "202 C Street, Nevada", "202 C Street, 92102", "202 C San Diego",
@@ -258,6 +263,18 @@ describe("compareSitus", () => {
     expect(compareSitus(SEARCH, situs({ ADDR_FULL: "1421 NE 88 ST" })).verdict).toBe("match");
     expect(compareSitus(SEARCH, situs({ ADDR_FULL: "1421 NE 88TH ST #B" })).verdict).toBe(
       "match",
+    );
+  });
+
+  it("treats a compound street name split differently by two sources as one street", () => {
+    // San Diego County publishes GOLDRUSH WAY; OSM and the Census publish GOLD RUSH WAY.
+    const searched = parseStreetAddress("1515 Gold Rush Way, Oceanside, CA 92057")!;
+    expect(compareSitus(searched, { line: "1515 GOLDRUSH WAY", cities: ["OCEANSIDE"], zip: "92057" })).toEqual({
+      verdict: "match",
+      localityConfirmed: true,
+    });
+    expect(compareSitus(searched, { line: "1515 GOLDEN RUSH WAY", cities: [] }).verdict).toBe(
+      "different-address",
     );
   });
 

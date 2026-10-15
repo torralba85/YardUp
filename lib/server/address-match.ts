@@ -284,13 +284,26 @@ export function parseStreetAddress(text: string | undefined): StreetAddress | nu
   return parsed?.confidence.street ? parsed.address : null;
 }
 
+/**
+ * Whether two normalized street names are the same street. Sources split
+ * compound names differently - San Diego County publishes GOLDRUSH WAY where
+ * OSM and the Census publish GOLD RUSH WAY - so spacing alone never makes two
+ * streets different.
+ */
+export function sameStreet(a: string, b: string): boolean {
+  return a === b || a.replace(/ /g, "") === b.replace(/ /g, "");
+}
+
 /** Fill missing locality only after every reliably entered component agrees. */
 export function enrichStreetAddress(requestedText: string, providerText: string): string {
   const requested = parseStreetAddressWithConfidence(requestedText);
   const provider = parseStreetAddress(providerText);
   if (!requested?.confidence.street || !provider) return requestedText;
   for (const key of ["houseNumber", "street", "city", "state", "zip"] as const) {
-    if (requested.confidence[key] && requested.address[key] !== provider[key]) return requestedText;
+    const agrees = key === "street"
+      ? sameStreet(requested.address.street, provider.street)
+      : requested.address[key] === provider[key];
+    if (requested.confidence[key] && !agrees) return requestedText;
   }
   const missing = ["city", "state", "zip"] as const;
   if (!missing.some((key) => !requested.address[key] && provider[key])) return requestedText;
@@ -399,7 +412,7 @@ export function compareSitus(
   if (
     !published ||
     published.houseNumber !== requested.houseNumber ||
-    published.street !== requested.street
+    !sameStreet(published.street, requested.street)
   ) {
     return { verdict: "different-address", localityConfirmed: false };
   }
