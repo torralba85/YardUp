@@ -121,6 +121,11 @@ it("keeps off-step saved dimensions natively valid in the fields and sliders", a
   expect(dimensionControls("Width").field.value).toBe("25.8");
   expect(dimensionControls("Width").field).toBeValid();
   expect(dimensionControls("Width").slider.value).toBe("25.8");
+  // …and the maximum stays on the same grid, so the step back up to 26.3 is reachable.
+  expect(dimensionControls("Width").slider.max).toBe("26.3");
+  fireEvent.change(dimensionControls("Width").slider, { target: { value: "26.3" } });
+  expect(dimensionControls("Width").field.value).toBe("26.3");
+  expect(dimensionControls("Width").field).toBeValid();
 });
 
 it("shows a half-foot design narrower than the usual minimum in both controls", async () => {
