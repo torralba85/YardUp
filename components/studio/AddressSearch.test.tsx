@@ -239,6 +239,40 @@ describe("AddressSearch", () => {
     expect(onSubmitText).toHaveBeenCalledWith("123 Maple St, Seattle, WA, USA");
   });
 
+  it("does not accept a suggestion from an edited query before the list refreshes", async () => {
+    signIn();
+    const user = userEvent.setup();
+    const onSubmitText = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ suggestions: ["123 Maple St, Seattle, WA, USA"] }),
+      }),
+    );
+
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={onSubmitText} />);
+    const input = screen.getByLabelText("Search property address");
+    await user.type(input, "Maple");
+    await screen.findByRole("option", { name: /123 Maple St/i }, { timeout: 2000 });
+    await user.keyboard("{ArrowDown}");
+
+    // Edit the query and leave before the 300 ms refresh: the highlighted
+    // suggestion belongs to "Maple", so it must not replace "Maple Ave".
+    await user.type(input, " Ave");
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{Tab}");
+    expect(onSubmitText).not.toHaveBeenCalled();
+    expect(input).toHaveValue("Maple Ave");
+
+    // Enter on the stale list searches the edited text instead.
+    input.focus();
+    await user.keyboard("{Enter}");
+    expect(onSubmitText).toHaveBeenCalledTimes(1);
+    expect(onSubmitText).toHaveBeenCalledWith("Maple Ave");
+  });
+
   it("automatically picks top suggestion on submit when onSubmitText is omitted", async () => {
     signIn();
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_PLACES_KEY", `AIza${"B".repeat(35)}`);

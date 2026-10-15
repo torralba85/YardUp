@@ -93,6 +93,19 @@ it("keeps sliders and fields on one 2,000 sf bound when both sliders hit their e
   }
 });
 
+it("keeps a valid off-step saved span as entered instead of clamping it on blur", async () => {
+  const user = userEvent.setup();
+  // 26.3 × 76 ft = 1,998.8 sf: valid under the scenario contract, but not on the half-foot step.
+  render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 26.3, length: 76, footprint: 26.3 * 76 }} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  const { field, slider } = dimensionControls("Width");
+  expect(field.validity.rangeOverflow).toBe(false);
+  expect(slider.max).toBe(field.max);
+  await user.click(field);
+  await user.tab();
+  expect(dimensionControls("Width").field.value).toBe("26.3");
+});
+
 it("shows a half-foot design narrower than the usual minimum in both controls", async () => {
   const user = userEvent.setup();
   render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 10.5, length: 30, footprint: 315 }} />);

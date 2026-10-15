@@ -67,12 +67,14 @@ const DIMENSION_STEP_FT = 0.5;
 
 /**
  * The longest span (≤ 80 ft) that keeps the footprint within the 2,000 sf model
- * cap beside `otherSpan`, floored to the half-foot step so any committed value
- * within the cap stays valid in both the field and the slider.
+ * cap beside `otherSpan`, floored to the half-foot step. A saved off-step span
+ * that already fits stays the maximum, so it is never clamped just by opening
+ * the inspector.
  */
-function spanWithinAreaCap(otherSpan: number) {
-  const span = Math.floor(2000 / Math.max(1, otherSpan) / DIMENSION_STEP_FT) * DIMENSION_STEP_FT;
-  return Math.min(80, span);
+function spanWithinAreaCap(otherSpan: number, currentSpan: number) {
+  const cap = 2000 / Math.max(1, otherSpan);
+  const stepped = Math.floor(cap / DIMENSION_STEP_FT) * DIMENSION_STEP_FT;
+  return Math.min(80, currentSpan <= cap ? Math.max(stepped, currentSpan) : stepped);
 }
 
 /** Props for {@link FeasibilityInspector}. */
@@ -428,9 +430,9 @@ export default function FeasibilityInspector({
                     // One bound per dimension, shared by field and slider. A narrower
                     // saved design lowers the minimum so it still shows as entered.
                     const minWidth = Math.min(12, config.width);
-                    const maxWidth = spanWithinAreaCap(config.length);
+                    const maxWidth = spanWithinAreaCap(config.length, config.width);
                     const minLength = Math.min(16, config.length);
-                    const maxLength = spanWithinAreaCap(config.width);
+                    const maxLength = spanWithinAreaCap(config.width, config.length);
                     return (
                       <>
                         <div className="grid grid-cols-3 items-end gap-2">

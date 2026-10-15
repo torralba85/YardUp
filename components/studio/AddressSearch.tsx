@@ -110,6 +110,9 @@ export default function AddressSearch({
   const [googleFailed, setGoogleFailed] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  // The query the shown suggestions were fetched for; they stay visible while
+  // the next debounced fetch runs, but keyboard picks only accept a current list.
+  const [suggestionsFor, setSuggestionsFor] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
@@ -220,6 +223,7 @@ export default function AddressSearch({
 
         if (!active) return;
         setSuggestions(next);
+        setSuggestionsFor(query);
         setSuggestionsOpen(next.length > 0);
         setActiveIndex(-1);
       } catch {
@@ -285,6 +289,8 @@ export default function AddressSearch({
     onSubmitText?.(suggestion.text);
   }
 
+  const suggestionsCurrent = suggestions.length > 0 && suggestionsFor === inputValue.trim();
+
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (!suggestionsOpen || suggestions.length === 0) return;
     if (event.key === "ArrowDown") {
@@ -294,15 +300,15 @@ export default function AddressSearch({
       event.preventDefault();
       setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
     } else if (event.key === "Enter") {
-      if (activeIndex >= 0) {
+      if (activeIndex >= 0 && suggestionsCurrent) {
         event.preventDefault();
         void pickSuggestion(suggestions[activeIndex]);
-      } else if (!onSubmitText && suggestions.length > 0) {
+      } else if (!onSubmitText && suggestionsCurrent) {
         event.preventDefault();
         void pickSuggestion(suggestions[0]);
       }
     } else if (event.key === "Tab") {
-      if (activeIndex >= 0) {
+      if (activeIndex >= 0 && suggestionsCurrent) {
         void pickSuggestion(suggestions[activeIndex]);
       }
     } else if (event.key === "Escape") {
@@ -318,7 +324,7 @@ export default function AddressSearch({
     const query = inputValue.trim();
     if (!query) return;
 
-    if (!onSubmitText && suggestions.length > 0) {
+    if (!onSubmitText && suggestionsCurrent) {
       const targetSuggestion = activeIndex >= 0 ? suggestions[activeIndex] : suggestions[0];
       setSuggestionsOpen(false);
       setActiveIndex(-1);
@@ -367,7 +373,10 @@ export default function AddressSearch({
         type="search"
         autoComplete="off"
         value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          setActiveIndex(-1);
+        }}
         onKeyDown={handleKeyDown}
         onBlur={() => {
           setSuggestionsOpen(false);
