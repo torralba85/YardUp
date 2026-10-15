@@ -1,0 +1,66 @@
+name: Production Outage Diagnostics
+
+on:
+  push:
+    branches: [codex/lotfoundry-outage-20261015]
+    paths: [.github/workflows/outage-diagnostics.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check public DNS and HTTPS responses
+        shell: bash
+        run: |
+          set -u
+          for host in lotfoundry.net www.lotfoundry.net auth.lotfoundry.net yardup-2026.web.app; do
+            echo "::group::DNS $host"
+            getent ahostsv4 "$host" || true
+            echo "::endgroup::"
+          done
+          for url in \
+            https://lotfoundry.net/ \
+            https://lotfoundry.net/studio \
+            https://lotfoundry.net/robots.txt \
+            https://www.lotfoundry.net/ \
+            https://auth.lotfoundry.net/__/auth/handler \
+            https://yardup-2026.web.app/ \
+            https://app-b3izab6d4q-uc.a.run.app/; do
+            echo "::group::$url"
+            body="$(mktemp)"
+            curl -sS --connect-timeout 8 --max-time 30 -D - -o "$body" \
+              -w '\nhttp_status=%{http_code} remote_ip=%{remote_ip} total_seconds=%{time_total}\n' "$url" || true
+            python3 - "$body" <<'PY'
+          import pathlib, re, sys
+          text = pathlib.Path(sys.argv[1]).read_text(errors="replace")
+          titles = re.findall(r"<title[^>]*>(.*?)</title>", text, re.I | re.S)
+          print("title=" + repr(titles[:1]))
+          print("body_bytes=" + str(len(text.encode())))
+          if not titles or "error" in " ".join(titles).lower():
+              print("body_prefix=" + repr(text[:1200]))
+          PY
+            rm -f "$body"
+            echo "::endgroup::"
+          done
+      - name: Authenticate for read-only Firebase diagnostics
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
+        with:
+          credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+      - name: Read app function state
+        shell: bash
+        run: |
+          gcloud functions describe app --gen2 --region=us-central1 \
+            --project=yardup-2026 \
+            --format='json(name,state,stateMessages,updateTime,buildConfig.runtime,serviceConfig.availableMemory,serviceConfig.timeoutSeconds,serviceConfig.uri)'
+      - name: Read recent app server errors
+        if: always()
+        shell: bash
+        run: |
+          gcloud logging read \
+            'resource.type="cloud_run_revision" AND resource.labels.service_name="app" AND severity>=ERROR' \
+            --project=yardup-2026 --freshness=6h --limit=25 \
+            --format='json(timestamp,severity,textPayload,jsonPayload.message,jsonPayload.stack)'
