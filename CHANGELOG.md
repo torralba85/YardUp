@@ -66,6 +66,12 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Fixed
 
+- Google and Apple sign-in on Android no longer stop on Firebase's "missing
+  initial state" page. The auth handler lived on `lotfoundry.net`, which the
+  Android app claims as a verified app link, so the provider's return to
+  `/__/auth/handler` could open in the app or another tab without the
+  signing-in tab's session storage. Firebase Auth now uses
+  `auth.lotfoundry.net`, which is same-site but unclaimed.
 - Street postdirectionals such as NE remain part of the street when followed by
   a ZIP code, avoiding a false Nebraska mismatch on valid Washington addresses.
 - Saved studies remain recoverable when optional AI snapshots are invalid; malformed

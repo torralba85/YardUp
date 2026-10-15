@@ -29,6 +29,12 @@ describe("proxy duplicate-host redirect", () => {
     expect(response.headers.get("location")).toBe("https://lotfoundry.net/");
   });
 
+  it("301s the auth subdomain's pages, which exists only for /__/auth/*", () => {
+    const response = proxy(request("/studio", { "x-fh-requested-host": "auth.lotfoundry.net" }));
+    expect(response.status).toBe(301);
+    expect(response.headers.get("location")).toBe("https://lotfoundry.net/studio");
+  });
+
   it("falls back to x-forwarded-host, ignoring port and case", () => {
     const response = proxy(
       request("/help", { host: "internal", "x-forwarded-host": "YardUp-2026.web.app:443" }),

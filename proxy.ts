@@ -12,6 +12,8 @@ const CANONICAL_ORIGIN = "https://lotfoundry.net";
 const DUPLICATE_HOSTS = new Set([
   "yardup-2026.web.app",
   "yardup-2026.firebaseapp.com",
+  // Exists only to serve Firebase's /__/auth/* handler (see lib/firebase.ts).
+  "auth.lotfoundry.net",
 ]);
 
 /**
