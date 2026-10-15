@@ -77,6 +77,20 @@ function spanWithinAreaCap(otherSpan: number, currentSpan: number) {
   return Math.min(80, currentSpan <= cap ? Math.max(stepped, currentSpan) : stepped);
 }
 
+/** Drops float noise (26.3 - 26 = 0.3000000000000007) before it reaches a min attribute. */
+const roundFt = (ft: number) => Math.round(ft * 1e6) / 1e6;
+
+/**
+ * The control minimum: `floor`, or a smaller saved value, moved down onto the
+ * value's own half-foot grid. Browsers count steps from `min`, so a saved
+ * off-step span (26.3 ft) stays natively valid and the slider keeps its offset.
+ */
+function stepAlignedMin(floor: number, value: number) {
+  const offset = roundFt(value - Math.floor(roundFt(value / DIMENSION_STEP_FT)) * DIMENSION_STEP_FT);
+  const steps = Math.floor(roundFt((Math.min(floor, value) - offset) / DIMENSION_STEP_FT));
+  return roundFt(steps * DIMENSION_STEP_FT + offset);
+}
+
 /** Props for {@link FeasibilityInspector}. */
 export interface FeasibilityInspectorProps {
   /** Desktop Design already has a project journey; show only design controls. */
@@ -428,10 +442,10 @@ export default function FeasibilityInspector({
                 <div className="space-y-4 pb-4 pt-1">
                   {(() => {
                     // One bound per dimension, shared by field and slider. A narrower
-                    // saved design lowers the minimum so it still shows as entered.
-                    const minWidth = Math.min(12, config.width);
+                    // or off-step saved design moves the minimum so it still shows as entered.
+                    const minWidth = stepAlignedMin(12, config.width);
                     const maxWidth = spanWithinAreaCap(config.length, config.width);
-                    const minLength = Math.min(16, config.length);
+                    const minLength = stepAlignedMin(16, config.length);
                     const maxLength = spanWithinAreaCap(config.width, config.length);
                     return (
                       <>
@@ -459,8 +473,9 @@ export default function FeasibilityInspector({
                           <NumericField
                             label="Wall height (ft)"
                             value={config.height}
-                            min={Math.min(8, config.height)}
+                            min={stepAlignedMin(8, config.height)}
                             max={30}
+                            step={DIMENSION_STEP_FT}
                             onChange={(height) => onConfigChange({ ...config, height })}
                           />
                         </div>

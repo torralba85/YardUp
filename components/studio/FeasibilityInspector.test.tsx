@@ -106,6 +106,23 @@ it("keeps a valid off-step saved span as entered instead of clamping it on blur"
   expect(dimensionControls("Width").field.value).toBe("26.3");
 });
 
+it("keeps off-step saved dimensions natively valid in the fields and sliders", async () => {
+  const user = userEvent.setup();
+  render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 26.3, length: 76, height: 12.3, footprint: 26.3 * 76 }} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  const { field, slider } = dimensionControls("Width");
+  // The browser counts steps from `min`; a 26.3 ft span must sit on that grid.
+  expect(field.validity.stepMismatch).toBe(false);
+  expect(field).toBeValid();
+  expect(slider.value).toBe("26.3");
+  expect(screen.getByLabelText("Wall height (ft)")).toBeValid();
+  // Stepping the slider keeps the saved offset instead of snapping it away.
+  fireEvent.change(slider, { target: { value: "25.8" } });
+  expect(dimensionControls("Width").field.value).toBe("25.8");
+  expect(dimensionControls("Width").field).toBeValid();
+  expect(dimensionControls("Width").slider.value).toBe("25.8");
+});
+
 it("shows a half-foot design narrower than the usual minimum in both controls", async () => {
   const user = userEvent.setup();
   render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 10.5, length: 30, footprint: 315 }} />);
