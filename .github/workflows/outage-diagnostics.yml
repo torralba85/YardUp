@@ -11,81 +11,44 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 6
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: e870b94b16079b0a50e6cb5b21d9b5524ba7db26
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: 22
-          cache: npm
-      - name: Install existing browser test dependencies
+      - name: Reproduce address lookup responses
+        shell: bash
         run: |
-          npm ci
-          npx playwright install --with-deps chromium
-      - uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
+          python3 <<'PY'
+          import json, time, urllib.request, urllib.error, urllib.parse
+          base = "https://lotfoundry.net"
+          queries = [
+              ("/api/geocode", {"q": "1515 goldrush way oceanside ca"}),
+              ("/api/geocode", {"q": "1515 Goldrush Way, Oceanside, CA 92057"}),
+          
+          ]
+          for path, params in queries:
+              url = base + path + "?" + urllib.parse.urlencode(params)
+              started = time.time()
+              try:
+                  with urllib.request.urlopen(url, timeout=40) as res:
+                      body = res.read().decode()
+                      print(json.dumps({"url": url, "status": res.status, "seconds": round(time.time()-started,2), "body": body[:6500]}))
+              except urllib.error.HTTPError as err:
+                  print(json.dumps({"url": url, "status": err.code, "seconds": round(time.time()-started,2), "body": err.read().decode()[:2000]}))
+              except Exception as err:
+                  print(json.dumps({"url":url,"error":str(err),"seconds":round(time.time()-started,2)}))
+          PY
+      - name: Authenticate for read-only Firebase diagnostics
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
         with:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
-      - name: Reproduce signed-in search with a disposable canary account
-        env:
-          FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN: ${{ secrets.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN }}
+      - name: Read API function state
         run: |
-          node <<'JS'
-          const { chromium } = require("@playwright/test");
-          const { initializeApp, applicationDefault, deleteApp } = require("firebase-admin/app");
-          const { getAuth } = require("firebase-admin/auth");
-          const { getFirestore, FieldValue } = require("firebase-admin/firestore");
-          const { randomUUID } = require("node:crypto");
-          (async () => {
-            const admin = initializeApp({ projectId: "yardup-2026", credential: applicationDefault() });
-            const auth = getAuth(admin), db = getFirestore(admin);
-            const uid = "outage-canary-" + randomUUID();
-            const email = uid + "@example.com", password = "Lf!" + randomUUID();
-            let created = false, browser;
-            try {
-              await auth.createUser({ uid, email, password, emailVerified: true, displayName: "Outage Canary" });
-              created = true;
-              await db.doc("users/" + uid).set({ uid, email, displayName: "Outage Canary", role: "user", createdAt: FieldValue.serverTimestamp() });
-              browser = await chromium.launch({ headless: true });
-              const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-              await context.addInitScript(token => { window.FIREBASE_APPCHECK_DEBUG_TOKEN = token; }, process.env.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN);
-              const page = await context.newPage();
-              const events = [], pending = [];
-              page.on("pageerror", err => events.push({ pageError: err.message.slice(0, 400) }));
-              page.on("console", msg => { if (msg.type() === "error") events.push({ consoleError: msg.text().replace(/AIza[\w-]+/g, "[public-key]").slice(0, 500) }); });
-              page.on("requestfailed", req => { const u = new URL(req.url()); events.push({ failed: u.origin + u.pathname, reason: req.failure()?.errorText }); });
-              page.on("response", res => {
-                const u = new URL(res.url());
-                if (u.origin === "https://lotfoundry.net" && /^\/api\/(geocode|suggest|parcel)$/.test(u.pathname)) {
-                  pending.push((async () => { const body = await res.json().catch(() => null); events.push({ api: u.pathname, status: res.status(), result: body && { error: body.error, address: body.address ?? body.formattedAddress, source: body.source, lotArea: body.lotArea, suggestions: body.suggestions, provider: body.match?.provider } }); })());
-                }
-              });
-              await page.goto("https://lotfoundry.net/login");
-              await page.getByLabel("Email", { exact: true }).fill(email);
-              await page.getByLabel("Password", { exact: true }).fill(password);
-              await page.getByRole("button", { name: "Sign in", exact: true }).click();
-              await page.waitForTimeout(8000);
-              console.log(JSON.stringify({ stage: "after_login", url: new URL(page.url()).pathname, body: (await page.locator("body").innerText()).slice(0, 1000), events }));
-              await page.goto("https://lotfoundry.net/studio");
-              await page.waitForTimeout(4000);
-              const input = page.getByLabel("Search property address", { exact: true }).first();
-              await input.fill("1515 goldrush way oceanside ca");
-              await page.waitForTimeout(5000);
-              console.log(JSON.stringify({ stage: "typed_address", inputRole: await input.getAttribute("role"), options: await page.getByRole("option").allTextContents(), events }));
-              await input.press("Enter");
-              await page.waitForTimeout(15000);
-              await Promise.allSettled(pending);
-              console.log(JSON.stringify({ stage: "after_search", headings: await page.locator("h1,h2").allTextContents(), body: (await page.locator("body").innerText()).slice(0, 4500), events }));
-            } finally {
-              if (browser) await browser.close();
-              if (created) {
-                await db.recursiveDelete(db.doc("users/" + uid));
-                await auth.deleteUser(uid);
-                console.log("Disposable canary account and data cleaned up.");
-              }
-              await deleteApp(admin);
-            }
-          })().catch(err => { console.error(err.message); process.exit(1); });
-          JS
+          gcloud functions describe api --gen2 --region=us-central1 \
+            --project=yardup-2026 \
+            --format='json(name,state,stateMessages,updateTime,buildConfig.runtime,serviceConfig.availableMemory,serviceConfig.timeoutSeconds)'
+      - name: Read search service errors
+        if: always()
+        run: |
+          gcloud logging read \
+            'resource.type="cloud_run_revision" AND resource.labels.service_name="api" AND httpRequest.requestUrl:"1515"' \
+            --project=yardup-2026 --freshness=6h --limit=25 \
+            --format='json(timestamp,httpRequest.requestMethod,httpRequest.status,httpRequest.requestUrl,httpRequest.latency,httpRequest.userAgent,textPayload,jsonPayload.message)'
