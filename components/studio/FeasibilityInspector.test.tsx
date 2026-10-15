@@ -141,6 +141,20 @@ it("keeps a long-decimal saved span on its own exact grid", async () => {
   expect(dimensionControls("Width").field.value).toBe("26.3333333");
 });
 
+it("accepts a saved span with more precision than the step grid can hold", async () => {
+  const user = userEvent.setup();
+  render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 26.3333333333333, length: 75, footprint: 26.3333333333333 * 75 }} />);
+  await user.click(screen.getByText("Fine-tune dimensions", { exact: true }));
+  const { field, slider } = dimensionControls("Width");
+  expect(field).toBeValid();
+  expect(field.value).toBe("26.3333333333333");
+  expect(slider.value).toBe("26.3333333333333");
+  // Back on a normal half-foot value, the controls return to the 0.5 ft grid.
+  fireEvent.change(slider, { target: { value: "20" } });
+  expect(dimensionControls("Width").field.step).toBe("0.5");
+  expect(dimensionControls("Width").field).toBeValid();
+});
+
 it("shows a half-foot design narrower than the usual minimum in both controls", async () => {
   const user = userEvent.setup();
   render(<StatefulDesign initialConfig={{ ...defaultAduConfig, width: 10.5, length: 30, footprint: 315 }} />);

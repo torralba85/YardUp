@@ -2,7 +2,7 @@
 import { useId, useState } from "react";
 /** Keep incomplete typing local; commit a finite bounded value on blur or Enter. */
 export function NumericField({label,value,min,max,step=0.5,onChange}: {
-  label:string;value:number;min:number;max:number;step?:number;onChange(value:number):void;
+  label:string;value:number;min:number;max:number;step?:number|"any";onChange(value:number):void;
 }) {
   const id=useId();
   const [previous,setPrevious]=useState(value),[draft,setDraft]=useState(String(value));

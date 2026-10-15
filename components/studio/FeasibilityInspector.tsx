@@ -65,10 +65,13 @@ function clamp(value: number, min: number, max: number) {
 /** Width/length fields and sliders move in the same half-foot step. */
 const DIMENSION_STEP_FT = 0.5;
 
-/** Decimal places that hold both `value` and the half-foot step exactly (at most 12). */
+/** Decimal places in `value`, at least the half-foot step's one. */
 function decimalPlaces(value: number) {
-  return Math.min(12, Math.max(1, (String(value).split(".")[1] ?? "").length));
+  return Math.max(1, (String(value).split(".")[1] ?? "").length);
 }
+
+/** Integer units stay exact up to 12 places (80 ft × 10¹² ≪ 2⁵³). */
+const MAX_GRID_PLACES = 12;
 
 /**
  * Field and slider bounds on `value`'s own half-foot grid. Browsers count a
@@ -76,10 +79,14 @@ function decimalPlaces(value: number) {
  * valid and every slider step is reversible. The math runs in integer units of
  * the value's decimal places, so no float noise reaches the attributes.
  * `min` is `floor` (or a smaller saved value) moved down onto the grid; `max` is
- * the longest span on the grid within `limit`.
+ * the longest span on the grid within `limit`. A value finer than the grid can
+ * hold exactly gets `step: "any"`, so it is still never natively invalid.
  */
 function gridBounds(value: number, floor: number, limit: number) {
   const places = decimalPlaces(value);
+  if (places > MAX_GRID_PLACES) {
+    return { min: Math.min(floor, value), max: limit, step: "any" as const };
+  }
   const unit = 10 ** places;
   const units = Math.round(value * unit);
   const step = Math.round(DIMENSION_STEP_FT * unit);
@@ -89,6 +96,7 @@ function gridBounds(value: number, floor: number, limit: number) {
   return {
     min: toFt(onGrid(Math.min(Math.round(floor * unit), units))),
     max: toFt(onGrid(Math.floor(limit * unit))),
+    step: DIMENSION_STEP_FT,
   };
 }
 
@@ -98,7 +106,8 @@ function spanBounds(value: number, floor: number, otherSpan: number) {
   const bounds = gridBounds(value, floor, Math.min(80, 2000 / other));
   // Float noise in the cap must never lift the footprint past 2,000 sf…
   if (bounds.max * other > 2000) {
-    bounds.max = Number((bounds.max - DIMENSION_STEP_FT).toFixed(decimalPlaces(value)));
+    const lower = bounds.step === "any" ? (2000 - 1e-9) / other : bounds.max - DIMENSION_STEP_FT;
+    bounds.max = Number(lower.toFixed(decimalPlaces(value)));
   }
   // …and a saved span that already fits is never above the maximum, so blur never clamps it.
   if (value <= 80 && value * other <= 2000) bounds.max = Math.max(bounds.max, value);
@@ -457,8 +466,9 @@ export default function FeasibilityInspector({
                   {(() => {
                     // One bound per dimension, shared by field and slider. A narrower
                     // or off-step saved design moves the minimum so it still shows as entered.
-                    const { min: minWidth, max: maxWidth } = spanBounds(config.width, 12, config.length);
-                    const { min: minLength, max: maxLength } = spanBounds(config.length, 16, config.width);
+                    const { min: minWidth, max: maxWidth, step: widthStep } = spanBounds(config.width, 12, config.length);
+                    const { min: minLength, max: maxLength, step: lengthStep } = spanBounds(config.length, 16, config.width);
+                    const heightBounds = gridBounds(config.height, 8, 30);
                     return (
                       <>
                         <div className="grid grid-cols-3 items-end gap-2">
@@ -467,7 +477,7 @@ export default function FeasibilityInspector({
                             value={config.width}
                             min={minWidth}
                             max={maxWidth}
-                            step={DIMENSION_STEP_FT}
+                            step={widthStep}
                             onChange={(width) =>
                               onConfigChange({ ...config, width, footprint: width * config.length })
                             }
@@ -477,7 +487,7 @@ export default function FeasibilityInspector({
                             value={config.length}
                             min={minLength}
                             max={maxLength}
-                            step={DIMENSION_STEP_FT}
+                            step={lengthStep}
                             onChange={(length) =>
                               onConfigChange({ ...config, length, footprint: config.width * length })
                             }
@@ -485,9 +495,9 @@ export default function FeasibilityInspector({
                           <NumericField
                             label="Wall height (ft)"
                             value={config.height}
-                            min={gridBounds(config.height, 8, 30).min}
+                            min={heightBounds.min}
                             max={30}
-                            step={DIMENSION_STEP_FT}
+                            step={heightBounds.step}
                             onChange={(height) => onConfigChange({ ...config, height })}
                           />
                         </div>
@@ -496,6 +506,7 @@ export default function FeasibilityInspector({
                           value={config.width}
                           min={minWidth}
                           max={maxWidth}
+                          step={widthStep}
                           suffix="ft"
                           onChange={(value) =>
                             onConfigChange({ ...config, width: value, footprint: value * config.length })
@@ -506,6 +517,7 @@ export default function FeasibilityInspector({
                           value={config.length}
                           min={minLength}
                           max={maxLength}
+                          step={lengthStep}
                           suffix="ft"
                           onChange={(value) =>
                             onConfigChange({ ...config, length: value, footprint: config.width * value })
@@ -863,6 +875,7 @@ function DimensionSlider({
   value,
   min,
   max,
+  step,
   suffix,
   onChange,
 }: {
@@ -870,6 +883,7 @@ function DimensionSlider({
   value: number;
   min: number;
   max: number;
+  step: number | "any";
   suffix: string;
   onChange: (value: number) => void;
 }) {
@@ -880,7 +894,7 @@ function DimensionSlider({
       valueText={`${value} ${suffix}`}
       min={min}
       max={max}
-      step={DIMENSION_STEP_FT}
+      step={step}
       value={value}
       onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
     />
