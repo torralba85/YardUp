@@ -210,4 +210,81 @@ describe("AddressSearch", () => {
       expect.anything(),
     );
   });
+
+  it("selects active suggestion when Tab is pressed", async () => {
+    signIn();
+    const user = userEvent.setup();
+    const onSubmitText = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          suggestions: ["123 Maple St, Seattle, WA, USA", "456 Pine St, Denver, CO, USA"],
+        }),
+      }),
+    );
+
+    render(<AddressSearch onSelect={vi.fn()} onSubmitText={onSubmitText} />);
+    const input = screen.getByLabelText("Search property address");
+    await user.type(input, "Maple");
+
+    await screen.findByRole("option", { name: /123 Maple St/i }, { timeout: 2000 });
+
+    // Navigate to the first suggestion and press Tab
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{Tab}");
+
+    expect(onSubmitText).toHaveBeenCalledWith("123 Maple St, Seattle, WA, USA");
+  });
+
+  it("automatically picks top suggestion on submit when onSubmitText is omitted", async () => {
+    signIn();
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_PLACES_KEY", `AIza${"B".repeat(35)}`);
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const fetchFieldsMock = vi.fn().mockResolvedValue(undefined);
+    const placeMock = {
+      location: {
+        lat: () => 32.7157,
+        lng: () => -117.1611,
+      },
+      formattedAddress: "555 Elm St, San Diego, CA, USA",
+      fetchFields: fetchFieldsMock,
+    };
+    const placePredictionMock = {
+      text: { text: "555 Elm St, San Diego, CA, USA" },
+      toPlace: () => placeMock,
+    };
+    (globalThis as unknown as { google: unknown }).google = {
+      maps: {
+        places: {
+          AutocompleteSessionToken: vi.fn(),
+          AutocompleteSuggestion: {
+            fetchAutocompleteSuggestions: vi.fn().mockResolvedValue({
+              suggestions: [{ placePrediction: placePredictionMock }],
+            }),
+          },
+        },
+      },
+    };
+    vi.mocked(importLibrary).mockResolvedValue(undefined as never);
+
+    render(<AddressSearch onSelect={onSelect} />);
+    const input = screen.getByLabelText("Search property address");
+    await user.type(input, "555 Elm");
+
+    await screen.findByRole("option", { name: /555 Elm St/i }, { timeout: 2000 });
+
+    // Click search button without pressing ArrowDown (activeIndex === -1)
+    await user.click(screen.getByRole("button", { name: /search/i }));
+
+    expect(fetchFieldsMock).toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledWith({
+      lat: 32.7157,
+      lng: -117.1611,
+      formattedAddress: "555 Elm St, San Diego, CA, USA",
+    });
+  });
 });

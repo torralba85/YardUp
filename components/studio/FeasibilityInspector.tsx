@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, BookmarkPlus, Check, ChevronDown, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { BookmarkPlus, Check, ChevronDown, DoorOpen, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import { NumericField } from "./NumericField";
 import { FootprintDiagram, RoofProfile } from "./DesignDiagrams";
 import { useEffect, useId, useState } from "react";
@@ -17,6 +17,7 @@ import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import ParcelDataNotice from "./ParcelDataNotice";
 import { Button } from "@/components/ui/Button";
+import { PanelHeader } from "@/components/ui/Panel";
 import { Segmented, Select, Slider } from "@/components/ui/Field";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
@@ -205,27 +206,27 @@ export default function FeasibilityInspector({
       <div className="flex min-h-full flex-col">
 
         {/* Panel header */}
-        <div className="flex items-center justify-between border-b border-lot-line px-6 py-5">
-          <div>
-            <h2
-              id="feasibility-heading"
-              className="font-display text-2xl font-medium tracking-tight text-lot-ink"
-            >
-              {designOnly ? "Design your ADU" : "Feasibility Studio"}
-            </h2>
-            <p className="mt-1 text-sm text-lot-stone">
-              {designOnly ? "Try a size. See how it sits on your lot." : "Confirm the lot, shape the ADU, then test the income case."}
-            </p>
-          </div>
-          {!designOnly && <button
-            type="button"
-            onClick={handleReset}
-            className="flex h-11 items-center gap-2 rounded-control px-4 text-sm font-medium text-lot-stone motion-safe:transition hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
-          >
-            <RefreshCcw size={15} />
-            Reset
-          </button>}
-        </div>
+        <PanelHeader
+          id="feasibility-heading"
+          title={designOnly ? "Design your ADU" : "Feasibility Studio"}
+          sub={
+            designOnly
+              ? "Try a size. See how it sits on your lot."
+              : "Confirm the lot, shape the backyard home, then test the income case."
+          }
+          actions={
+            !designOnly ? (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex h-11 items-center gap-2 rounded-control px-4 text-sm font-medium text-lot-stone motion-safe:transition hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+              >
+                <RefreshCcw size={15} />
+                Reset
+              </button>
+            ) : undefined
+          }
+        />
 
         {!designOnly && <JourneyProgress activeStep={openStep} completedSteps={completedSteps} />}
 
@@ -408,31 +409,63 @@ export default function FeasibilityInspector({
                   <ChevronDown size={16} aria-hidden="true" className="group-open/dimensions:rotate-180" />
                 </summary>
                 <div className="space-y-4 pb-4">
-                <div className="grid grid-cols-3 items-end gap-2">
-                  <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
-                  <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
-                  <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
-                </div>
-                <DimensionSlider
-                  label="Width"
-                  value={config.width}
-                  min={16}
-                  max={32}
-                  suffix="ft"
-                  onChange={(value) =>
-                    onConfigChange({ ...config, width: value, footprint: value * config.length })
-                  }
-                />
-                <DimensionSlider
-                  label="Length"
-                  value={config.length}
-                  min={20}
-                  max={44}
-                  suffix="ft"
-                  onChange={(value) =>
-                    onConfigChange({ ...config, length: value, footprint: config.width * value })
-                  }
-                />
+                  {(() => {
+                    const minWidth = 12;
+                    const maxWidth = Math.max(32, Math.min(80, Math.floor(2000 / config.length)));
+                    const minLength = 16;
+                    const maxLength = Math.max(44, Math.min(80, Math.floor(2000 / config.width)));
+                    return (
+                      <>
+                        <div className="grid grid-cols-3 items-end gap-2">
+                          <NumericField
+                            label="Width (ft)"
+                            value={config.width}
+                            min={minWidth}
+                            max={maxWidth}
+                            onChange={(width) =>
+                              onConfigChange({ ...config, width, footprint: width * config.length })
+                            }
+                          />
+                          <NumericField
+                            label="Length (ft)"
+                            value={config.length}
+                            min={minLength}
+                            max={maxLength}
+                            onChange={(length) =>
+                              onConfigChange({ ...config, length, footprint: config.width * length })
+                            }
+                          />
+                          <NumericField
+                            label="Wall height (ft)"
+                            value={config.height}
+                            min={8}
+                            max={30}
+                            onChange={(height) => onConfigChange({ ...config, height })}
+                          />
+                        </div>
+                        <DimensionSlider
+                          label="Width"
+                          value={config.width}
+                          min={minWidth}
+                          max={maxWidth}
+                          suffix="ft"
+                          onChange={(value) =>
+                            onConfigChange({ ...config, width: value, footprint: value * config.length })
+                          }
+                        />
+                        <DimensionSlider
+                          label="Length"
+                          value={config.length}
+                          min={minLength}
+                          max={maxLength}
+                          suffix="ft"
+                          onChange={(value) =>
+                            onConfigChange({ ...config, length: value, footprint: config.width * value })
+                          }
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
               </details>
 
@@ -495,7 +528,7 @@ export default function FeasibilityInspector({
                 fullWidth
                 onClick={() => onConfigChange({ ...config, includeOpenings: !config.includeOpenings })}
                 aria-pressed={config.includeOpenings}
-                leftIcon={<Bookmark size={16} />}
+                leftIcon={<DoorOpen size={16} />}
               >
                 {config.includeOpenings ? "Remove Entry & Windows" : "Add Entry & Windows"}
               </Button>

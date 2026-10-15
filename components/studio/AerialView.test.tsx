@@ -80,4 +80,10 @@ describe("aerial context honesty", () => {
     expect(image).toHaveClass("object-contain");
     expect(image).not.toHaveClass("object-cover");
   });
+
+  it("renders a visible spinner and loading label while aerial imagery is loading", () => {
+    vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
+    draw();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading satellite context…");
+  });
 });

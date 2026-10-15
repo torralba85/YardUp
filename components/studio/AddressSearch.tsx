@@ -293,9 +293,18 @@ export default function AddressSearch({
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
-    } else if (event.key === "Enter" && activeIndex >= 0) {
-      event.preventDefault();
-      void pickSuggestion(suggestions[activeIndex]);
+    } else if (event.key === "Enter") {
+      if (activeIndex >= 0) {
+        event.preventDefault();
+        void pickSuggestion(suggestions[activeIndex]);
+      } else if (!onSubmitText && suggestions.length > 0) {
+        event.preventDefault();
+        void pickSuggestion(suggestions[0]);
+      }
+    } else if (event.key === "Tab") {
+      if (activeIndex >= 0) {
+        void pickSuggestion(suggestions[activeIndex]);
+      }
     } else if (event.key === "Escape") {
       setSuggestionsOpen(false);
       setActiveIndex(-1);
@@ -306,13 +315,23 @@ export default function AddressSearch({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    const query = inputValue.trim();
+    if (!query) return;
+
+    if (!onSubmitText && suggestions.length > 0) {
+      const targetSuggestion = activeIndex >= 0 ? suggestions[activeIndex] : suggestions[0];
+      setSuggestionsOpen(false);
+      setActiveIndex(-1);
+      void pickSuggestion(targetSuggestion);
+      return;
+    }
+
     setSuggestionsOpen(false);
     setActiveIndex(-1);
-    const query = inputValue.trim();
     // Skip re-submitting only a fully resolved Google pick. Server picks and
     // failed Google resolves stay retryable so a flaky lookup can be retried.
-    if (query && query === resolvedValueRef.current) return;
-    if (query && onSubmitText) {
+    if (query === resolvedValueRef.current) return;
+    if (onSubmitText) {
       recordAddressSearchSubmission("free_text", user ? "signed_in" : "guest");
       onSubmitText(query);
     }
@@ -412,28 +431,14 @@ export default function AddressSearch({
               <span className="truncate">{suggestion.text}</span>
             </li>
           ))}
-          {/* Google Maps Platform requires visible attribution when Places
-              predictions are shown outside a Google map (the legacy widget
-              supplied this automatically). Only the Google-sourced list needs it. */}
-          {googleEnabled && (
-            <li
-              role="presentation"
-              className="flex items-center justify-end gap-1 border-t border-lot-line px-3 py-1.5 text-[10px] uppercase tracking-wide text-lot-stone"
-            >
-              Powered by Google
-            </li>
-          )}
+          <li
+            role="presentation"
+            className="flex items-center justify-between border-t border-lot-line px-3 py-1.5 text-[10px] uppercase tracking-wide text-lot-stone"
+          >
+            <span>↑↓ to select · Tab/Enter to choose</span>
+            {googleEnabled && <span>Powered by Google</span>}
+          </li>
         </ul>
-      )}
-
-      {/* Pin icon on the right when Places is active and a value is entered */}
-      {googleEnabled && inputValue && !onSubmitText && (
-        <span
-          className="pointer-events-none absolute right-3 top-5.5 -translate-y-1/2 text-lot-orange-ink"
-          aria-hidden="true"
-        >
-          <MapPin size={15} />
-        </span>
       )}
 
       {!signedIn || (!loading && !hasPlacesKey) ? (

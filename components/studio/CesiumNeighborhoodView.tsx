@@ -769,7 +769,7 @@ export default function CesiumNeighborhoodView({
             </p>
             {status === "ready" && !cameraControlsReady && (
               <p className="mt-0.5 text-[11px] leading-tight text-lot-stone" data-testid="cesium-camera-controls-waiting">
-                Camera buttons wait for a ground reading. Drag to move.
+                Camera buttons wait for a ground reading. Drag to move · Pinch to zoom.
               </p>
             )}
           </div>
@@ -834,7 +834,9 @@ export default function CesiumNeighborhoodView({
         role="group"
         aria-label="Camera controls"
         data-testid="cesium-camera-controls"
-        className="pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk p-1 shadow-card"
+        className={`pointer-events-auto absolute top-3 right-3 z-(--z-index-scene) flex flex-col border border-lot-line bg-lot-chalk p-1 shadow-card motion-safe:transition-opacity ${
+          status === "ready" && !cameraControlsReady ? "motion-safe:animate-pulse opacity-70" : ""
+        }`}
       >
         {CAMERA_CONTROL_GROUPS.map((group) => (
           <div key={group[0].control} className="flex flex-col border-t border-lot-line first:border-t-0">

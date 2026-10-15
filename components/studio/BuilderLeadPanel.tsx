@@ -11,7 +11,7 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 import { Button } from "@/components/ui/Button";
-import { Input, Textarea } from "@/components/ui/Field";
+import { FieldLabel, Input, Textarea } from "@/components/ui/Field";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -133,62 +133,62 @@ export default function BuilderLeadPanel({
             {success}
           </div>
         )}
-        <label htmlFor="builder-lead-name" className="text-sm font-medium text-lot-ink">
-          Name
+        <div>
+          <FieldLabel htmlFor="builder-lead-name">Name</FieldLabel>
           <Input
             id="builder-lead-name"
             type="text"
             autoComplete="name"
-            className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
+            className="mt-1"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-        </label>
-        <label htmlFor="builder-lead-email" className="text-sm font-medium text-lot-ink">
-          Email
+        </div>
+        <div>
+          <FieldLabel htmlFor="builder-lead-email">Email</FieldLabel>
           <Input
             id="builder-lead-email"
             type="email"
             autoComplete="email"
-            className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
+            className="mt-1"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-        </label>
-        <label htmlFor="builder-lead-phone" className="text-sm font-medium text-lot-ink">
-          Phone optional
+        </div>
+        <div>
+          <FieldLabel htmlFor="builder-lead-phone">Phone optional</FieldLabel>
           <Input
             id="builder-lead-phone"
             type="tel"
             autoComplete="tel"
-            className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
+            className="mt-1"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
           />
-        </label>
-        <label
-          htmlFor="builder-lead-message"
-          className="text-sm font-medium text-lot-ink md:col-span-2"
-        >
-          Message optional
+        </div>
+        <div className="md:col-span-2">
+          <FieldLabel htmlFor="builder-lead-message">Message optional</FieldLabel>
           <Textarea
             id="builder-lead-message"
-            className="mt-1 min-h-20 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
+            className="mt-1 min-h-20"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
           />
-        </label>
+        </div>
         <label
           htmlFor="builder-lead-consent"
-          className="flex gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
+          className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
         >
           <input
             id="builder-lead-consent"
             type="checkbox"
             checked={consent}
             onChange={(event) => setConsent(event.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 rounded-none accent-lot-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           />
-          I agree to share my name, email, optional phone and message, exact property address, and ADU snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project.
+          <span>
+            I agree to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project.
+          </span>
         </label>
         <Button type="submit" variant="primary" size="md" loading={isPending}>
           {isPending ? "Submitting…" : "Submit snapshot"}

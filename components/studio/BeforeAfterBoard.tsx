@@ -246,35 +246,30 @@ export default function BeforeAfterBoard({
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-8 pt-6 border-t border-lot-line">
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
+            <Button
               type="button"
+              variant={isAttached ? "selected" : "secondary"}
+              size="sm"
               onClick={onToggleAttach}
-              className={`flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold motion-safe:transition select-none rounded-control cursor-pointer focus:outline-none focus:ring-2 focus:ring-lot-orange-ink ${
-                isAttached
-                  ? "bg-status-eligible text-lot-chalk hover:bg-status-eligible-hover"
-                  : "border-[1.5px] border-lot-orange bg-lot-chalk text-lot-ink hover:bg-lot-surface"
-              }`}
-            >
-              {isAttached ? (
-                <>
+              leftIcon={
+                isAttached ? (
                   <Check size={16} aria-hidden="true" />
-                  Applied
-                </>
-              ) : (
-                <>
+                ) : (
                   <Layers size={16} aria-hidden="true" />
-                  Add to certificate
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={onRecast}
-              className="flex min-h-11 items-center justify-center gap-2 border border-lot-line bg-lot-chalk px-5 py-2 text-sm font-semibold text-lot-ink motion-safe:transition hover:border-lot-orange hover:bg-lot-surface rounded-control cursor-pointer focus:outline-none focus:ring-2 focus:ring-lot-orange-ink"
+                )
+              }
             >
-              <RefreshCcw size={16} aria-hidden="true" />
+              {isAttached ? "Applied" : "Add to certificate"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={onRecast}
+              leftIcon={<RefreshCcw size={16} aria-hidden="true" />}
+            >
               Cast another
-            </button>
+            </Button>
           </div>
           <Button
             type="button"

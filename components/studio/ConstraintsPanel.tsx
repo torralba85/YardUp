@@ -25,6 +25,7 @@ import { type ADUConfig, type FeasibilityResult, type FinancialAssumptions, type
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Segmented } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
+import { PanelHeader } from "@/components/ui/Panel";
 import { StatusChip } from "@/components/ui/StatusChip";
 import {
   summarizeFeasibility,
@@ -105,7 +106,7 @@ export default function ConstraintsPanel({
       aria-label="Property constraints"
       className="flex w-full shrink-0 flex-col border-t border-lot-line bg-lot-chalk text-lot-ink lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
     >
-      <div className="border-b border-lot-line px-[22px] pb-3.5 pt-[18px]">
+      <div className="border-b border-lot-line px-6 pb-4 pt-5">
         <p className="pb-2 lf-kicker text-lot-stone">
           Your property
         </p>
@@ -127,16 +128,9 @@ export default function ConstraintsPanel({
         )}
       </div>
 
-      <div className="border-b border-lot-line px-[22px] pb-3.5 pt-[18px]">
-        <p className="lf-kicker text-lot-stone">
-          Property constraints
-        </p>
-        <h2 className="mt-1 font-display text-2xl font-medium leading-[1.15] text-lot-ink">
-          What this lot allows
-        </h2>
-      </div>
+      <PanelHeader eyebrow="Property constraints" title="What this lot allows" />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] pb-[18px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">
         {GROUP_ORDER.map((group) => {
           const rows = summary.constraints.filter((c) => c.group === group);
           if (rows.length === 0) return null;
@@ -189,7 +183,7 @@ export default function ConstraintsPanel({
 
       {/* Verdict-reason strip */}
       <div
-        className="flex items-start gap-3 border-t border-lot-line bg-lot-surface px-[22px] py-3.5"
+        className="flex items-start gap-3 border-t border-lot-line bg-lot-surface px-6 py-4"
         style={{ borderLeft: `3px solid ${tone.color}` }}
       >
         <p className="text-[13px] leading-[1.5] text-lot-ink">
@@ -199,7 +193,7 @@ export default function ConstraintsPanel({
           Utility capacity and easements aren&rsquo;t in this estimate.
         </p>
       </div>
-      <div className="px-[22px] pb-4">
+      <div className="px-6 pb-5">
         <Button
           type="button"
           variant="primary"
