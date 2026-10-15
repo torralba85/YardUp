@@ -65,16 +65,53 @@ function clamp(value: number, min: number, max: number) {
 /** Width/length fields and sliders move in the same half-foot step. */
 const DIMENSION_STEP_FT = 0.5;
 
+/** Decimal places in `value`, at least the half-foot step's one. */
+function decimalPlaces(value: number) {
+  return Math.max(1, (String(value).split(".")[1] ?? "").length);
+}
+
+/** Integer units stay exact up to 12 places (80 ft × 10¹² ≪ 2⁵³). */
+const MAX_GRID_PLACES = 12;
+
 /**
- * The longest span (≤ 80 ft) that keeps the footprint within the 2,000 sf model
- * cap beside `otherSpan`, floored to the half-foot step. A saved off-step span
- * that already fits stays the maximum, so it is never clamped just by opening
- * the inspector.
+ * Field and slider bounds on `value`'s own half-foot grid. Browsers count a
+ * control's steps from `min`, so a saved off-step span (26.3 ft) stays natively
+ * valid and every slider step is reversible. The math runs in integer units of
+ * the value's decimal places, so no float noise reaches the attributes.
+ * `min` is `floor` (or a smaller saved value) moved down onto the grid; `max` is
+ * the longest span on the grid within `limit`. A value finer than the grid can
+ * hold exactly gets `step: "any"`, so it is still never natively invalid.
  */
-function spanWithinAreaCap(otherSpan: number, currentSpan: number) {
-  const cap = 2000 / Math.max(1, otherSpan);
-  const stepped = Math.floor(cap / DIMENSION_STEP_FT) * DIMENSION_STEP_FT;
-  return Math.min(80, currentSpan <= cap ? Math.max(stepped, currentSpan) : stepped);
+function gridBounds(value: number, floor: number, limit: number) {
+  const places = decimalPlaces(value);
+  if (places > MAX_GRID_PLACES) {
+    return { min: Math.min(floor, value), max: limit, step: "any" as const };
+  }
+  const unit = 10 ** places;
+  const units = Math.round(value * unit);
+  const step = Math.round(DIMENSION_STEP_FT * unit);
+  const offset = units % step;
+  const onGrid = (bound: number) => Math.floor((bound - offset) / step) * step + offset;
+  const toFt = (gridUnits: number) => Number((gridUnits / unit).toFixed(places));
+  return {
+    min: toFt(onGrid(Math.min(Math.round(floor * unit), units))),
+    max: toFt(onGrid(Math.floor(limit * unit))),
+    step: DIMENSION_STEP_FT,
+  };
+}
+
+/** Width/length bounds: {@link gridBounds} under the 80 ft and 2,000 sf model caps beside `otherSpan`. */
+function spanBounds(value: number, floor: number, otherSpan: number) {
+  const other = Math.max(1, otherSpan);
+  const bounds = gridBounds(value, floor, Math.min(80, 2000 / other));
+  // Float noise in the cap must never lift the footprint past 2,000 sf…
+  if (bounds.max * other > 2000) {
+    const lower = bounds.step === "any" ? (2000 - 1e-9) / other : bounds.max - DIMENSION_STEP_FT;
+    bounds.max = Number(lower.toFixed(decimalPlaces(value)));
+  }
+  // …and a saved span that already fits is never above the maximum, so blur never clamps it.
+  if (value <= 80 && value * other <= 2000) bounds.max = Math.max(bounds.max, value);
+  return bounds;
 }
 
 /** Props for {@link FeasibilityInspector}. */
@@ -428,11 +465,10 @@ export default function FeasibilityInspector({
                 <div className="space-y-4 pb-4 pt-1">
                   {(() => {
                     // One bound per dimension, shared by field and slider. A narrower
-                    // saved design lowers the minimum so it still shows as entered.
-                    const minWidth = Math.min(12, config.width);
-                    const maxWidth = spanWithinAreaCap(config.length, config.width);
-                    const minLength = Math.min(16, config.length);
-                    const maxLength = spanWithinAreaCap(config.width, config.length);
+                    // or off-step saved design moves the minimum so it still shows as entered.
+                    const { min: minWidth, max: maxWidth, step: widthStep } = spanBounds(config.width, 12, config.length);
+                    const { min: minLength, max: maxLength, step: lengthStep } = spanBounds(config.length, 16, config.width);
+                    const heightBounds = gridBounds(config.height, 8, 30);
                     return (
                       <>
                         <div className="grid grid-cols-3 items-end gap-2">
@@ -441,7 +477,7 @@ export default function FeasibilityInspector({
                             value={config.width}
                             min={minWidth}
                             max={maxWidth}
-                            step={DIMENSION_STEP_FT}
+                            step={widthStep}
                             onChange={(width) =>
                               onConfigChange({ ...config, width, footprint: width * config.length })
                             }
@@ -451,7 +487,7 @@ export default function FeasibilityInspector({
                             value={config.length}
                             min={minLength}
                             max={maxLength}
-                            step={DIMENSION_STEP_FT}
+                            step={lengthStep}
                             onChange={(length) =>
                               onConfigChange({ ...config, length, footprint: config.width * length })
                             }
@@ -459,8 +495,9 @@ export default function FeasibilityInspector({
                           <NumericField
                             label="Wall height (ft)"
                             value={config.height}
-                            min={Math.min(8, config.height)}
+                            min={heightBounds.min}
                             max={30}
+                            step={heightBounds.step}
                             onChange={(height) => onConfigChange({ ...config, height })}
                           />
                         </div>
@@ -469,6 +506,7 @@ export default function FeasibilityInspector({
                           value={config.width}
                           min={minWidth}
                           max={maxWidth}
+                          step={widthStep}
                           suffix="ft"
                           onChange={(value) =>
                             onConfigChange({ ...config, width: value, footprint: value * config.length })
@@ -479,6 +517,7 @@ export default function FeasibilityInspector({
                           value={config.length}
                           min={minLength}
                           max={maxLength}
+                          step={lengthStep}
                           suffix="ft"
                           onChange={(value) =>
                             onConfigChange({ ...config, length: value, footprint: config.width * value })
@@ -836,6 +875,7 @@ function DimensionSlider({
   value,
   min,
   max,
+  step,
   suffix,
   onChange,
 }: {
@@ -843,6 +883,7 @@ function DimensionSlider({
   value: number;
   min: number;
   max: number;
+  step: number | "any";
   suffix: string;
   onChange: (value: number) => void;
 }) {
@@ -853,7 +894,7 @@ function DimensionSlider({
       valueText={`${value} ${suffix}`}
       min={min}
       max={max}
-      step={DIMENSION_STEP_FT}
+      step={step}
       value={value}
       onChange={(event) => onChange(clamp(Number(event.target.value), min, max))}
     />
