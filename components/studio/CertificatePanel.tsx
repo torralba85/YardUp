@@ -439,25 +439,27 @@ export default function CertificatePanel({
       )}
 
       {recoveryPending && (
-        <div className="border border-lot-line bg-lot-surface px-4 py-3 text-sm leading-5 text-lot-ink" role="status">
+        <div className="rounded-none border border-lot-line bg-lot-surface px-4 py-3 text-sm leading-5 text-lot-ink" role="status">
           <p>{!user ? "Sign in to verify your Certificate access." : recovery.status === "checking"
             ? "Checking certificate access. Your access record may still be arriving."
             : "We could not verify Certificate access yet. This does not mean your payment failed."}</p>
-          {user && recovery.status === "unverified" && (
-            <button type="button" className="mt-3 min-h-11 text-sm font-semibold text-lot-orange-ink underline" onClick={recovery.retry}>
-              Check again
-            </button>
-          )}
-          <Link className="ml-4 inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline" href="/certificates">
-            My Certificates
-          </Link>
+          <div className="mt-2 flex flex-wrap items-center gap-4">
+            {user && recovery.status === "unverified" && (
+              <button type="button" className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" onClick={recovery.retry}>
+                Check again
+              </button>
+            )}
+            <Link className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" href="/certificates">
+              My Certificates
+            </Link>
+          </div>
         </div>
       )}
 
       {!purchased && (
         <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">
           <div className="flex items-center gap-2">
-            <Lock size={16} className="shrink-0 text-lot-orange-ink" />
+            <Lock size={16} className="shrink-0 text-lot-orange-ink" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-lot-ink">
               Unlock the complete record for {parcel.address}
               {certPrice.exact ? ` — one-time ${price}` : " — one-time purchase"}
@@ -535,6 +537,7 @@ export default function CertificatePanel({
       <EstimateSummaryPanel
         parcelName={parcelName}
         result={result}
+        feasibilityStatus={feasibilityStatus}
         onGenerateReport={handleCta}
         reportCtaLabel={ctaLabel}
         reportCtaBusy={reportBusy}
@@ -545,7 +548,7 @@ export default function CertificatePanel({
       {purchased && (
         <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">
           <div className="flex items-start gap-3">
-            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-status-eligible" />
+            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-status-eligible" aria-hidden="true" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-lot-ink">Certificate unlocked</h3>
