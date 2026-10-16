@@ -6,11 +6,12 @@ import {
 import { stripUnitDesignators } from "@/lib/server/geocode-query";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
-import { normalizeCity, parseStreetAddressWithConfidence, US_STATE_NAMES } from "@/lib/server/address-match";
+import { normalizeCity, parseStreetAddressWithConfidence, sameStreet, US_STATE_NAMES } from "@/lib/server/address-match";
 import type { DataEvidence } from "@/lib/data-evidence";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
+const CENSUS_GEOCODE_API = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress";
 const TIMEOUT_MS = 5000;
 const MAX_QUERY_LEN = 200;
 const PICKER_CANDIDATE_LIMIT = 5;
@@ -31,7 +32,7 @@ export interface GeocodeResult {
 }
 
 export interface GeocodeMatch {
-  provider: "google" | "nominatim";
+  provider: "google" | "nominatim" | "census";
   providerId?: string;
   matchType: string;
   precision:
@@ -59,9 +60,12 @@ export interface GeocodeMatch {
  * Resolves a free-text US address to coordinates so the studio can look up a
  * parcel without the client-side Google Places widget. Prefers Google
  * Geocoding when the server-side Maps key is configured; otherwise (and as a
- * fallback if Google returns nothing) uses keyless Nominatim. Requests without
- * a bearer token skip Google entirely and resolve through Nominatim, so an
- * anonymous lookup costs nothing. Returns 404 when no provider can resolve it.
+ * fallback if Google returns nothing) uses keyless Nominatim, then the keyless
+ * US Census geocoder for street addresses Nominatim misses (OSM often spells a
+ * street differently from the county, e.g. "Gold Rush Way" vs "Goldrush Way").
+ * Requests without a bearer token skip Google entirely and resolve through the
+ * keyless providers, so an anonymous lookup costs nothing. Returns 404 when no
+ * provider can resolve it.
  */
 export async function GET(request: NextRequest) {
   // Anonymous visitors resolve through keyless Nominatim only. The landing
@@ -99,6 +103,9 @@ export async function GET(request: NextRequest) {
   }
   if (!result) {
     result = await geocodeWithNominatim(query);
+  }
+  if (!result) {
+    result = await geocodeWithCensus(query);
   }
 
   if (!result) {
@@ -310,6 +317,129 @@ async function geocodeWithNominatim(
   }
 }
 
+/**
+ * Keyless last resort for street addresses. The Census matches against TIGER
+ * address ranges and tolerates spelling and spacing variants Nominatim does
+ * not, but its point is interpolated along the block, so it ranks below a
+ * building-level Nominatim hit and is labelled range-interpolated.
+ */
+async function geocodeWithCensus(query: string): Promise<GeocodeResult | null> {
+  if (!looksLikeStreetAddress(query)) return null;
+  try {
+    const url = new URL(CENSUS_GEOCODE_API);
+    url.searchParams.set("address", stripUnitDesignators(query));
+    url.searchParams.set("benchmark", "Public_AR_Current");
+    url.searchParams.set("format", "json");
+
+    const json = (await fetchJson(url.toString())) as {
+      result?: {
+        addressMatches?: Array<{
+          matchedAddress?: string;
+          coordinates?: { x?: number; y?: number };
+          tigerLine?: { tigerLineId?: string };
+          addressComponents?: CensusAddressComponents;
+        }>;
+      };
+    };
+    const first = json?.result?.addressMatches?.[0];
+    const lng = first?.coordinates?.x;
+    const lat = first?.coordinates?.y;
+    if (!first || typeof lat !== "number" || typeof lng !== "number") return null;
+
+    const components = censusComponents(first.matchedAddress, first.addressComponents);
+    if (!components.houseNumber || !components.road) return null;
+    const addressWarnings = checkRequestedAddress(query, components);
+    if (addressWarnings === null) return null;
+
+    const providerId = first.tigerLine?.tigerLineId
+      ? `tiger/${first.tigerLine.tigerLineId}`
+      : undefined;
+    const locality = [components.city, [components.state, components.zip].filter(Boolean).join(" ")]
+      .filter(Boolean);
+    return {
+      lat,
+      lng,
+      formattedAddress: [`${components.houseNumber} ${components.road}`, ...locality].join(", "),
+      match: {
+        provider: "census",
+        ...(providerId ? { providerId } : {}),
+        matchType: "address-range",
+        precision: "range-interpolated",
+        partialMatch: false,
+        components,
+        evidence: {
+          status: "observed",
+          source: {
+            provider: "US Census Bureau",
+            dataset: "Census Geocoder (TIGER address ranges)",
+            ...(providerId ? { recordId: providerId } : {}),
+            sourceUrl: "https://geocoding.geo.census.gov/geocoder/",
+          },
+          retrievedAt: new Date().toISOString(),
+          confidence: addressWarnings.length ? "low" : "medium",
+          warnings: [
+            ...addressWarnings,
+            "The point is interpolated along the street's address range, not placed on the building.",
+          ],
+        },
+      },
+    };
+  } catch (err) {
+    console.error("[/api/geocode] Census geocode failed:", err);
+    return null;
+  }
+}
+
+/** The subset of the Census `addressComponents` record this route reads. */
+interface CensusAddressComponents {
+  preDirection?: string;
+  preType?: string;
+  streetName?: string;
+  suffixType?: string;
+  suffixDirection?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}
+
+const DIRECTIONALS = new Set(["N", "S", "E", "W", "NE", "NW", "SE", "SW"]);
+
+/** Census fields are upper case; show them the way a mailing label would. */
+function titleCaseAddressPart(value: string): string {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => DIRECTIONALS.has(word.toUpperCase())
+      ? word.toUpperCase()
+      : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function censusComponents(
+  matchedAddress: string | undefined,
+  address: CensusAddressComponents | undefined,
+): GeocodeMatch["components"] {
+  // The house number is only published as the lead of the matched line.
+  const houseNumber = /^\s*(\d+[A-Za-z]?)\s/.exec(matchedAddress ?? "")?.[1];
+  const road = titleCaseAddressPart(
+    [address?.preDirection, address?.preType, address?.streetName, address?.suffixType, address?.suffixDirection]
+      .filter(Boolean)
+      .join(" "),
+  );
+  const city = address?.city ? titleCaseAddressPart(address.city) : "";
+  const state = address?.state?.trim().toUpperCase() ?? "";
+  const zip = address?.zip?.trim() ?? "";
+  return {
+    ...(houseNumber ? { houseNumber } : {}),
+    ...(road ? { road } : {}),
+    ...(city ? { city } : {}),
+    ...(state ? { state } : {}),
+    ...(zip ? { zip } : {}),
+    country: "US",
+  };
+}
+
 /** The subset of Nominatim's `addressdetails` response this route reads. */
 interface NominatimAddress {
   house_number?: string;
@@ -346,7 +476,7 @@ function checkRequestedAddress(query: string, components: GeocodeMatch["componen
     ? parseStreetAddressWithConfidence(`${components.houseNumber} ${components.road}`)?.address
     : null;
   if (published && requested.houseNumber !== published.houseNumber) return null;
-  if (confidence.street && published && requested.street !== published.street) return null;
+  if (confidence.street && published && !sameStreet(requested.street, published.street)) return null;
   if (requested.zip && components.zip && requested.zip !== components.zip.slice(0, 5)) return null;
   const state = requestedStateCode(query);
   if (state && components.state && state !== components.state) return null;

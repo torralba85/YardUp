@@ -263,7 +263,7 @@ function pickDataQuality(value: unknown): Record<string, unknown> | undefined {
   }
   const safeGeocode = isRecord(geocode) && match && matchEvidence &&
     typeof geocode.requestedAddress === "string" && typeof geocode.formattedAddress === "string" &&
-    ["google", "nominatim"].includes(String(match.provider)) &&
+    ["google", "nominatim", "census"].includes(String(match.provider)) &&
     ["rooftop", "range-interpolated", "address", "street", "locality", "unknown"].includes(String(match.precision)) &&
     typeof match.matchType === "string" && typeof match.partialMatch === "boolean"
     ? {

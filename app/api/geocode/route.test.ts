@@ -787,3 +787,84 @@ describe("GET /api/geocode — secondary unit designators", () => {
     expect(sent.searchParams.get("q")).toBe("100 Pine St, San Francisco");
   });
 });
+
+function censusResponse(addressMatches: unknown[]) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({ result: { addressMatches } }),
+  };
+}
+
+const GOLD_RUSH_CENSUS_MATCH = {
+  matchedAddress: "1515 GOLD RUSH WAY, OCEANSIDE, CA, 92057",
+  coordinates: { x: -117.262469883771, y: 33.250582455181 },
+  tigerLine: { side: "R", tigerLineId: "195700137" },
+  addressComponents: {
+    zip: "92057", streetName: "GOLD RUSH", preType: "", city: "OCEANSIDE", preDirection: "",
+    suffixDirection: "", state: "CA", suffixType: "WAY", suffixQualifier: "", preQualifier: "",
+  },
+};
+
+describe("GET /api/geocode — Census address-range fallback", () => {
+  it("resolves a street address Nominatim misses through the keyless Census geocoder", async () => {
+    // OSM spells it "Gold Rush Way", so Nominatim finds nothing for "goldrush".
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes("geocoding.geo.census.gov")
+        ? censusResponse([GOLD_RUSH_CENSUS_MATCH])
+        : nominatimResponse([]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeGuestRequest("1515 goldrush way oceanside"));
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toMatchObject({
+      lat: 33.250582455181,
+      lng: -117.262469883771,
+      formattedAddress: "1515 Gold Rush Way, Oceanside, CA 92057",
+      match: {
+        provider: "census",
+        precision: "range-interpolated",
+        components: { houseNumber: "1515", road: "Gold Rush Way", city: "Oceanside", state: "CA", zip: "92057" },
+      },
+    });
+    const calledHosts = fetchMock.mock.calls.map(([url]) => String(url));
+    expect(calledHosts.some((url) => url.includes("googleapis"))).toBe(false);
+  });
+
+  it("accepts the Census spelling when the entered street only splits differently", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) =>
+      url.includes("geocoding.geo.census.gov")
+        ? censusResponse([GOLD_RUSH_CENSUS_MATCH])
+        : nominatimResponse([]),
+    ));
+
+    const res = await GET(makeGuestRequest("1515 Goldrush Way, Oceanside, CA"));
+
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects a Census match on a different street or house number", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) =>
+      url.includes("geocoding.geo.census.gov")
+        ? censusResponse([{ ...GOLD_RUSH_CENSUS_MATCH, matchedAddress: "1517 GOLD RUSH WAY, OCEANSIDE, CA, 92057" }])
+        : nominatimResponse([]),
+    ));
+
+    const res = await GET(makeGuestRequest("1515 Gold Rush Way, Oceanside, CA"));
+
+    expect(res.status).toBe(404);
+  });
+
+  it("does not ask the Census to resolve a query that is not a street address", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(nominatimResponse([]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeGuestRequest("Oceanside"));
+
+    expect(res.status).toBe(404);
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("census"))).toBe(false);
+  });
+});
