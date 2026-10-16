@@ -5,6 +5,7 @@ vi.mock("next/font/google", () => ({
   Manrope: () => ({ variable: "mock-manrope" }),
 }));
 import { metadata as homeMetadata } from "./page";
+import { metadata as rootMetadata } from "./layout";
 import { metadata as studioMetadata } from "./(firebase)/studio/layout";
 import { metadata as aboutMetadata } from "./about/page";
 import { metadata as helpMetadata } from "./help/page";
@@ -21,6 +22,10 @@ import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { buildCityMetadata } from "@/lib/adu/content";
 
 describe("canonical metadata", () => {
+  it("pins the metadata base and supplies a pathname-relative fallback", () => {
+    expect(rootMetadata.metadataBase?.toString()).toBe("https://lotfoundry.net/");
+    expect(rootMetadata.alternates?.canonical).toBe("./");
+  });
   const routes = [
     { name: "/studio", metadata: studioMetadata, expectedCanonical: "/studio" },
     { name: "/about", metadata: aboutMetadata, expectedCanonical: "/about" },

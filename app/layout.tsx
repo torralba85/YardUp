@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
@@ -22,7 +23,7 @@ const manrope = Manrope({
   variable: "--font-lot-body",
 });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
+const appUrl = CANONICAL_ORIGIN;
 const appRootUrl = `${appUrl.replace(/\/+$/, "")}/`;
 
 /**
@@ -93,7 +94,10 @@ export const metadata: Metadata = {
   description:
     "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
   manifest: "/manifest.json",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net"),
+  metadataBase: new URL(CANONICAL_ORIGIN),
+  // Resolve against each route's pathname, not the homepage. Page-specific
+  // canonicals (including the slash-form homepage) continue to override this.
+  alternates: { canonical: "./" },
   appleWebApp: {
     // Run as a standalone iOS PWA (no Safari chrome) with a translucent status
     // bar so the espresso studio header reaches the top edge under the notch.

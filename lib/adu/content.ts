@@ -8,6 +8,7 @@
  * @module adu/content
  */
 import type { Metadata } from "next";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { sanDiego } from "@/content/adu/ca/san-diego";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { oceanside } from "@/content/adu/ca/oceanside";
@@ -20,8 +21,7 @@ import {
 } from "@/content/adu/state-baseline";
 import type { JurisdictionContent, JurisdictionCostContent } from "./types";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
+const BASE_URL = CANONICAL_ORIGIN;
 
 /** Batch-one jurisdictions: the five largest cities in San Diego County. */
 export const ADU_CITIES: JurisdictionContent[] = [

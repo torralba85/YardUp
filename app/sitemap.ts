@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 
-const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net").replace(/\/+$/, "");
+const baseUrl = CANONICAL_ORIGIN;
 
 /**
  * Only URLs we actually want shown in search.

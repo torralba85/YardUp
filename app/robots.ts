@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://lotfoundry.net";
+const baseUrl = CANONICAL_ORIGIN;
 
 /** Crawl rules: public marketing + legal; disallow member dashboards. */
 export default function robots(): MetadataRoute.Robots {
