@@ -45,7 +45,7 @@ jobs:
       - name: Validate public repository hygiene
         run: node scripts/validate-public-repo.mjs
       - name: Test CI scope and release safeguards
-        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs
+        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/google-sign-in.checks.mjs
       - name: Determine verification and deployment scope
         id: scope
         run: node scripts/ci/scope.mjs

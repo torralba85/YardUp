@@ -6,6 +6,15 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- The Signup Canary now fails when Google sign-in is broken, not only email
+  and password. After each production deploy it checks that the Firebase
+  `authDomain` resolves, that its `/__/auth/handler` and `init.json` answer 200
+  over valid TLS, and that Google accepts its handler as an OAuth redirect URI
+  (`npm run smoke:google-sign-in`). The 2026-10-15 Google sign-in outage would
+  have turned it red.
+
 ### Changed
 
 - Login, signup and the auth modal no longer offer Apple sign-in. The

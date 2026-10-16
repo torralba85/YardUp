@@ -157,6 +157,43 @@ replace the `verify` run created by the commit under review.
 See [CI efficiency and validation](ci-efficiency.md) for scope rules, deployment
 record recovery, forced releases, and safe branch experiments.
 
+### Signup Canary
+
+`.github/workflows/signup-canary.yml` runs against production after each master
+CI run whose deploy succeeded, and on manual dispatch. Each of its two checks
+runs even if the other fails, and either failure turns the run red:
+
+1. `npm run smoke:signup` creates a disposable email/password account through
+   Identity Toolkit (with an App Check debug token), writes and reads its
+   Firestore profile, signs back in, then deletes the account with Firebase
+   Admin. It never touches the Firebase `authDomain`.
+2. `npm run smoke:google-sign-in` (`scripts/ci/google-sign-in.mjs`) checks the
+   Google sign-in path for the production `authDomain`, read the way
+   `lib/firebase.ts` reads it (`NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, default
+   `auth.lotfoundry.net`). It fails when:
+   - the host does not resolve in DNS (NXDOMAIN);
+   - `https://<authDomain>/__/auth/handler` or `/__/firebase/init.json` does
+     not answer 200 itself (a redirect does not count) over verified TLS, or
+     `init.json` is not the `yardup-2026` config;
+   - Google's OAuth endpoint, asked to authorize the web client with
+     `redirect_uri=https://<authDomain>/__/auth/handler`, redirects to its error
+     page with an `authError` (decoded, e.g. `redirect_uri_mismatch`).
+
+   Each check is tried three times, 5 seconds apart, so one transient answer
+   cannot fail the run. It needs no secrets or dependencies and runs locally
+   the same way.
+
+The second check exists because the first stayed green for about 20 hours
+(2026-10-15 08:33 UTC to 2026-10-16 04:22 UTC) while Google sign-in was down:
+#282 moved the `authDomain` to `auth.lotfoundry.net` before its DNS record,
+Hosting custom domain, certificate and OAuth redirect URI existed (setup in
+[Cloudflare DNS](cloudflare-dns.md#authlotfoundrynet-firebase-auth-handler)).
+It does not complete a Google sign-in, which needs a real Google account, so a
+missing Firebase Auth authorized domain or a disabled Google provider still
+gets past it. It also does not call Identity Toolkit's `createAuthUri`: App
+Check is enforced, so that call returns 401 without the SDK's App Check token.
+Apple sign-in is hidden (`NEXT_PUBLIC_APPLE_SIGN_IN`) and not checked.
+
 ## Release verification
 
 Before a production deploy, run the release gate from a clean worktree:
