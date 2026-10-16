@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useEffect, useState } from "react";
 import { AuthModal } from "./AuthModal";
@@ -61,6 +61,9 @@ function Host() {
 describe("AuthModal focus restore", () => {
   beforeEach(() => {
     mocks.auth.user = null;
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("opens directly in sign-up mode when requested", async () => {
@@ -125,7 +128,35 @@ describe("AuthModal focus restore", () => {
     );
   });
 
+  it("hides Apple and names only Google in both modes by default", () => {
+    render(<AuthModal isOpen onClose={() => {}} />);
+
+    expect(screen.queryByRole("button", { name: "Continue with Apple" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /18 or older/i })).toHaveAccessibleName(/required for Google\.$/);
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription(
+      "Check the age, Terms and Privacy confirmation above to enable Google sign-in.",
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription("Google sign-in is ready.");
+
+    fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));
+    expect(screen.queryByRole("button", { name: "Continue with Apple" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /18 or older/i })).toHaveAccessibleName(
+      /required for email or Google account creation\.$/,
+    );
+    // Consent carries over from sign-in mode.
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription(
+      "Google account creation is ready.",
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription(
+      "Check the confirmation above to enable Google account creation.",
+    );
+    expect(screen.queryByText(/Apple/)).not.toBeInTheDocument();
+  });
+
   it("gates social auth in both modes while leaving returning email sign-in available", () => {
+    vi.stubEnv("NEXT_PUBLIC_APPLE_SIGN_IN", "true");
     render(<AuthModal isOpen onClose={() => {}} />);
 
     const checkbox = screen.getByRole("checkbox", { name: /18 or older/i });

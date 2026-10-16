@@ -23,24 +23,42 @@ beforeEach(() => {
   mocks.user = null; mocks.profile = null;
   mocks.params = new URLSearchParams("role=builder");
 });
-afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks(); });
 
 describe("builder auth in store shells", () => {
   it.each([
     ["signup", SignupPage],
     ["login", LoginForm],
-  ])("explains required social consent on %s", (_surface, Surface) => {
+  ])("hides Apple and names only Google by default on %s", (_surface, Surface) => {
+    render(<Surface />);
+    expect(screen.queryByRole("button", { name: "Apple" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Apple/)).not.toBeInTheDocument();
+    const agreement = screen.getByRole("checkbox");
+    expect(agreement).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Google" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription(/confirmation above to enable Google (sign-in|account creation)\.$/i);
+    fireEvent.click(agreement);
+    expect(screen.getByRole("button", { name: "Google" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Google" })).toHaveAccessibleDescription(/^Google (sign-in|account creation) is ready\.$/);
+    expect(mocks.google).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["signup", SignupPage],
+    ["login", LoginForm],
+  ])("explains required social consent for both providers on %s when Apple is enabled", (_surface, Surface) => {
+    vi.stubEnv("NEXT_PUBLIC_APPLE_SIGN_IN", "true");
     render(<Surface />);
     const agreement = screen.getByRole("checkbox");
     expect(agreement).not.toBeChecked();
     for (const provider of ["Google", "Apple"]) {
       expect(screen.getByRole("button", { name: provider })).toBeDisabled();
-      expect(screen.getByRole("button", { name: provider })).toHaveAccessibleDescription(/confirmation above/i);
+      expect(screen.getByRole("button", { name: provider })).toHaveAccessibleDescription(/confirmation above to enable Google or Apple/i);
     }
     fireEvent.click(agreement);
     for (const provider of ["Google", "Apple"]) {
       expect(screen.getByRole("button", { name: provider })).toBeEnabled();
-      expect(screen.getByRole("button", { name: provider })).toHaveAccessibleDescription(/ready/i);
+      expect(screen.getByRole("button", { name: provider })).toHaveAccessibleDescription(/^Google and Apple .* are ready\.$/);
     }
     expect(mocks.google).not.toHaveBeenCalled();
     expect(mocks.apple).not.toHaveBeenCalled();
@@ -48,6 +66,7 @@ describe("builder auth in store shells", () => {
 
   it.each(["email", "Google", "Apple"])("ignores the builder query for %s signup", async (method) => {
     vi.stubGlobal("LotFoundryNative", { platform: "android" });
+    vi.stubEnv("NEXT_PUBLIC_APPLE_SIGN_IN", "true");
     render(<SignupPage />);
     expect(screen.queryByRole("radio", { name: /Builder/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox"));

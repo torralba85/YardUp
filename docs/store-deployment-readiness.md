@@ -70,7 +70,9 @@ The following web and product gaps from the earlier audit are resolved in code:
   while retaining only intentional redacted/ledger records; counsel must still
   confirm the marketplace retention policy before launch.
 - Apple sign-in code and purchase-channel routing exist. Production provider
-  configuration and sandbox validation are still required.
+  configuration and sandbox validation are still required. Until then the
+  web hides Apple sign-in; set `NEXT_PUBLIC_APPLE_SIGN_IN=true` once the
+  `apple.com` provider is enabled in Firebase Auth.
 
 The remaining minimum-functionality risk is native quality, not absent web
 screens. The iOS submission needs the promised native value: StoreKit, share,

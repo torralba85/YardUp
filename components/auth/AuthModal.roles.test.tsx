@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthModal } from "./AuthModal";
 
 const mocks = vi.hoisted(() => ({ signUp: vi.fn(), google: vi.fn(), apple: vi.fn() }));
@@ -9,7 +9,8 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 describe("builder registration in the auth modal", () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("NEXT_PUBLIC_APPLE_SIGN_IN", "true"); });
+  afterEach(() => { vi.unstubAllEnvs(); });
   function openBuilderSignup() {
     render(<AuthModal isOpen onClose={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: /don't have an account/i }));

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthModal } from "./AuthModal";
 
 const mocks = vi.hoisted(() => ({
@@ -27,6 +27,10 @@ vi.mock("@/lib/analytics/events", async (importOriginal) => ({
 describe("OAuth sign-up conversion tracking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_APPLE_SIGN_IN", "true");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   function resolveSignIn(profileCreated: boolean) {

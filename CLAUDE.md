@@ -140,6 +140,7 @@ NEXT_PUBLIC_GOOGLE_PLACES_KEY=<browser-safe Places Autocomplete key>
 NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY=<browser key with Map Tiles API enabled; Neighborhood 3D photoreal tiles>
 NEXT_PUBLIC_CESIUM_ION_TOKEN=<optional ion assets:read token; dev-only fallback, Community plan is non-commercial>
 NEXT_PUBLIC_SCAN_CALIBRATION=<"true" shows the internal Scan calibration panel; leave unset in production>
+NEXT_PUBLIC_APPLE_SIGN_IN=<"true" offers Apple on login, signup and the auth modal; leave unset until the apple.com provider is configured in Firebase Auth (needs a paid Apple Developer membership)>
 REGRID_API_KEY=<server-side Regrid Parcel API key>
 OPENAI_API_KEY=<server-side OpenAI API key>
 OPENAI_TEXT_MODEL=<text model, defaults to gpt-5.6-sol>

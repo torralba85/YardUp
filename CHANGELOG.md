@@ -6,6 +6,14 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Login, signup and the auth modal no longer offer Apple sign-in. The
+  `apple.com` provider was never configured in Firebase Auth (it needs a paid
+  Apple Developer membership), so the button could only fail. It returns when a
+  build sets `NEXT_PUBLIC_APPLE_SIGN_IN=true`, and the consent and help copy
+  name only the providers on offer.
+
 ## [1.0.2] - 2026-10-12
 
 ### Added
