@@ -6,12 +6,14 @@ import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
+import { isAppleSignInEnabled } from "@/lib/auth-providers";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { Input } from "@/components/ui/Field";
 
-/** Email/password, Google, and Apple sign-in with a validated redirect. */
+/** Email/password, Google, and (when enabled) Apple sign-in with a validated redirect. */
 export default function LoginForm() {
   const { signIn, signInWithGoogle, signInWithApple, user, profile } = useAuth();
+  const appleEnabled = isAppleSignInEnabled();
   const router = useRouter();
   const buildersAllowed = useWebBuilderAccess();
   const searchParams = useSearchParams();
@@ -166,7 +168,7 @@ export default function LoginForm() {
           className="mt-0.5 h-5 w-5 shrink-0 accent-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         />
         <span>
-          For Google or Apple, I confirm I am 18 or older, agree to the{" "}
+          {appleEnabled ? "For Google or Apple" : "For Google"}, I confirm I am 18 or older, agree to the{" "}
           <Link href="/terms" className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
             Terms &amp; Conditions
           </Link>
@@ -214,21 +216,29 @@ export default function LoginForm() {
         </svg>
         Google
       </button>
-      <button
-        type="button"
-        onClick={handleApple}
-        aria-describedby="login-social-consent-help"
-        disabled={isPending || !socialConsent}
-        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
-        </svg>
-        Apple
-      </button>
+      {appleEnabled && (
+        <button
+          type="button"
+          onClick={handleApple}
+          aria-describedby="login-social-consent-help"
+          disabled={isPending || !socialConsent}
+          className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
+          </svg>
+          Apple
+        </button>
+      )}
 
       <p id="login-social-consent-help" className="mt-3 text-xs leading-5 text-lot-stone" aria-live="polite">
-        {socialConsent ? "Google and Apple sign-in are ready." : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."}
+        {appleEnabled
+          ? socialConsent
+            ? "Google and Apple sign-in are ready."
+            : "Check the age, Terms and Privacy confirmation above to enable Google or Apple sign-in."
+          : socialConsent
+            ? "Google sign-in is ready."
+            : "Check the age, Terms and Privacy confirmation above to enable Google sign-in."}
       </p>
       <div className="mt-6 flex flex-col space-y-2">
         <p className="lf-body-sm text-center text-lot-stone">

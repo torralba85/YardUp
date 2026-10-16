@@ -59,7 +59,9 @@ Setup, all required before a build with this `authDomain` ships:
    redirect URIs (and `https://auth.lotfoundry.net` to JavaScript origins).
 4. Apple Developer -> the Sign in with Apple Services ID: add
    `auth.lotfoundry.net` to Domains and
-   `https://auth.lotfoundry.net/__/auth/handler` to Return URLs.
+   `https://auth.lotfoundry.net/__/auth/handler` to Return URLs. (Not done yet:
+   no Apple Developer membership, so the web hides Apple sign-in until
+   `NEXT_PUBLIC_APPLE_SIGN_IN=true`.)
 
 Verify: `curl -sSI https://auth.lotfoundry.net/__/auth/handler` answers 200
 from `Google Frontend`. Other paths on the host 301 to the apex (`proxy.ts`).
