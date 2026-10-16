@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+// Match the first public hostname, allowing a forwarded port and proxy chain.
+const firebaseHost = "[^,:\\s]+\\.(?:web\\.app|firebaseapp\\.com)(?::[0-9]+)?(?:,.*)?";
+const noindexHeaders = [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
@@ -15,6 +19,28 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // Mirror proxy.ts host priority. Never let an internal Host override a
+      // canonical public hostname. Firebase's reserved handlers are untouched.
+      {
+        source: "/((?!__(?:/|$)).*)",
+        has: [{ type: "header", key: "x-fh-requested-host", value: firebaseHost }],
+        headers: noindexHeaders,
+      },
+      {
+        source: "/((?!__(?:/|$)).*)",
+        has: [{ type: "header", key: "x-forwarded-host", value: firebaseHost }],
+        missing: [{ type: "header", key: "x-fh-requested-host" }],
+        headers: noindexHeaders,
+      },
+      {
+        source: "/((?!__(?:/|$)).*)",
+        has: [{ type: "host", value: firebaseHost }],
+        missing: [
+          { type: "header", key: "x-fh-requested-host" },
+          { type: "header", key: "x-forwarded-host" },
+        ],
+        headers: noindexHeaders,
+      },
       {
         source: "/:path*",
         headers: [

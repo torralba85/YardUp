@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-
-const CANONICAL_ORIGIN = "https://lotfoundry.net";
+import { CANONICAL_ORIGIN } from "./lib/canonical-origin";
 
 /**
- * Firebase's default hosts for the `yardup-2026` Hosting site. Both serve the
+ * Firebase's default hosts and the www alias can serve the
  * full app, so without a redirect each is a crawlable duplicate of
  * lotfoundry.net competing with it in search. Listed exactly rather than by
  * suffix so Hosting preview channels (`yardup-2026--<channel>.web.app`) and
@@ -12,6 +11,7 @@ const CANONICAL_ORIGIN = "https://lotfoundry.net";
 const DUPLICATE_HOSTS = new Set([
   "yardup-2026.web.app",
   "yardup-2026.firebaseapp.com",
+  "www.lotfoundry.net",
   // Exists only to serve Firebase's /__/auth/* handler (see lib/firebase.ts).
   "auth.lotfoundry.net",
 ]);
@@ -38,11 +38,23 @@ export function requestedHost(request: NextRequest): string {
  */
 export function proxy(request: NextRequest) {
   const isRead = request.method === "GET" || request.method === "HEAD";
-  if (!isRead || !DUPLICATE_HOSTS.has(requestedHost(request))) {
+  if (!isRead) {
     return NextResponse.next();
   }
-  const { pathname, search } = request.nextUrl;
-  return NextResponse.redirect(new URL(`${pathname}${search}`, CANONICAL_ORIGIN), 301);
+  const host = requestedHost(request);
+  if (DUPLICATE_HOSTS.has(host)) {
+    const destination = new URL(CANONICAL_ORIGIN);
+    destination.pathname = request.nextUrl.pathname;
+    destination.search = request.nextUrl.search;
+    return NextResponse.redirect(destination, 301);
+  }
+  const response = NextResponse.next();
+  const isLocal = host === "localhost" || host.endsWith(".localhost") ||
+    host === "127.0.0.1" || host === "[::1]";
+  if (host && host !== "lotfoundry.net" && !isLocal) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+  return response;
 }
 
 export const config = {
@@ -50,5 +62,7 @@ export const config = {
   // registered against a Firebase host and do not follow redirects), Next
   // assets, Firebase's reserved `/__/` auth handler on the authDomain, or
   // `/.well-known/` (Digital Asset Links must resolve on every host).
-  matcher: ["/((?!api/|_next/|__/|\\.well-known/).*)"],
+  // Keep assets on their existing serving/cache path, including GLTF buffers,
+  // textures and Draco decoders. robots.txt and sitemaps remain eligible.
+  matcher: ["/((?!api(?:/|$)|_next(?:/|$)|__(?:/|$)|\\.well-known(?:/|$)|draco(?:/|$)|.*\\.(?:glb|gltf|bin|drc|wasm|ktx2?|hdr|exr|js|mjs|css|map|json|webmanifest|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf|mp4|webm|mp3|wav|pdf)$).*)"],
 };
