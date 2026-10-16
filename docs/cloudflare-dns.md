@@ -65,6 +65,9 @@ Setup, all required before a build with this `authDomain` ships:
 
 Verify: `curl -sSI https://auth.lotfoundry.net/__/auth/handler` answers 200
 from `Google Frontend`. Other paths on the host 301 to the apex (`proxy.ts`).
+`npm run smoke:google-sign-in` checks DNS, the handler, `init.json` and the
+Google OAuth redirect URI together; the Signup Canary runs it after every
+production deploy (`docs/deployment.md`).
 
 ## Open issue: `www` is still proxied and still redirects off-domain
 
