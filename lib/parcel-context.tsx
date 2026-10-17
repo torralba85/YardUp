@@ -106,6 +106,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   const [parcelError, setParcelError] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
   const lookupGeneration = useRef(0);
+  const activeLookupRef = useRef<{ generation: number; uid: string | undefined } | null>(null);
   const selectionRef = useRef(0);
   const [selectionVersion, setSelectionVersion] = useState(0);
   const markSelection = useCallback(() => {
@@ -116,7 +117,11 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   useEffect(() => {
     if (identityRef.current === user?.uid) return;
     identityRef.current = user?.uid;
+    if (activeLookupRef.current && activeLookupRef.current.uid === user?.uid) {
+      return;
+    }
     lookupGeneration.current += 1;
+    activeLookupRef.current = null;
     setParcelLoading(false);
   }, [user?.uid]);
   const pendingLookupRef = useRef<
@@ -148,6 +153,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       setParcelLoading(true);
       setParcelError(null);
       const generation = ++lookupGeneration.current;
+      activeLookupRef.current = { generation, uid: user?.uid };
       try {
         const data = await acquireLiveParcel({ kind: "coords", lat, lng, address }, user);
         if (generation !== lookupGeneration.current) return;
@@ -165,7 +171,10 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         }
         // Keep current parcel / mode on error
       } finally {
-        if (generation === lookupGeneration.current) setParcelLoading(false);
+        if (generation === lookupGeneration.current) {
+          activeLookupRef.current = null;
+          setParcelLoading(false);
+        }
       }
     },
     [user, markSelection],
@@ -190,6 +199,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       setParcelLoading(true);
       setParcelError(null);
       const generation = ++lookupGeneration.current;
+      activeLookupRef.current = { generation, uid: user?.uid };
       try {
         const data = await acquireLiveParcel({ kind: "address", query: q }, user);
         if (generation !== lookupGeneration.current) return;
@@ -207,7 +217,10 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
         }
         // Keep current parcel / mode on error
       } finally {
-        if (generation === lookupGeneration.current) setParcelLoading(false);
+        if (generation === lookupGeneration.current) {
+          activeLookupRef.current = null;
+          setParcelLoading(false);
+        }
       }
     },
     [user, markSelection],
@@ -236,6 +249,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
     if (expectedSelectionVersion !== undefined && expectedSelectionVersion !== selectionRef.current) return;
     if (expectedSelectionVersion === undefined) markSelection();
     lookupGeneration.current += 1;
+    activeLookupRef.current = null;
     setParcelLoading(false);
     setParcel(nextParcel);
     setParcelMode("live");
@@ -247,6 +261,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   const setEstimatedParcel = useCallback((estimated: EstimatedParcel) => {
     markSelection();
     lookupGeneration.current += 1;
+    activeLookupRef.current = null;
     setParcelLoading(false);
     setParcel(estimated);
     setParcelMode("estimated");
@@ -258,6 +273,7 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
   const resetToPreset = useCallback((preset: ParcelPreset) => {
     markSelection();
     lookupGeneration.current += 1;
+    activeLookupRef.current = null;
     setParcelLoading(false);
     setParcel(preset);
     setParcelMode("preset");
