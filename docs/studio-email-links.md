@@ -2,11 +2,15 @@
 
 The free inline card appears after a real parcel resolves, on desktop Feasibility, mobile Earn, and beside the Certificate estimate. It is hidden for demo/estimated parcels and addresses already saved or purchased by the current user. A separate unchecked marketing option is independent of the requested transactional email and analytics consent.
 
-## Delivery queue
+## Delivery queue and Resend transport
 
-The repository has no active email provider or Firebase Trigger Email extension configuration. `POST /api/studio/email-scenario-link` therefore saves an Admin-only `studioScenarioLeads` document with `emailDeliveryStatus: queued_firestore` and an `emailPayload` containing `{ to: [email], message: { subject, text, html } }`. The response is `{ ok: true, delivery: "queued", scenarioUrl }`. The UI says **saved and queued**, never sent. No provider key is needed to capture a lead. Firestore failure returns a retryable error.
+`POST /api/studio/email-scenario-link` validates the request, generates an unguessable 192-bit layout token, persists an Admin-only `studioScenarioLeads` document in Firestore, and only then dispatches the transactional email via Resend from `support@lotfoundry.net`, so an emailed link never points at an unsaved layout. A failed snapshot write returns 503 and sends nothing.
 
-The existing domain uses Google Workspace, and Andrew selected support@lotfoundry.net as the sender. An authenticated outbound transport is still required to deliver the queue. No mail worker or scheduled marketing automation is deployed by this change. When configuring a provider or Firebase Trigger Email, consume only queued records, submit `emailPayload`, and update `emailDeliveryStatus` to `sent` only after acceptance. Use the lead document ID as the worker's idempotency key; implement retry/claim handling before automatic replay. Do not copy marketing-opt-out records into marketing lists. The transaction email contains an opt-in withdrawal contact; any future bulk marketing sender must also implement its unsubscribe requirements.
+- **Domain:** `lotfoundry.net` verified on Resend (us-east-1). DNS records in Cloudflare: DKIM (`resend._domainkey`), SPF (`send.lotfoundry.net`), and CNAME (`rsend.lotfoundry.net` unproxied). Google Workspace MX records on the apex remain untouched.
+- **Outbound Sender:** `LotFoundry <support@lotfoundry.net>`, with reply-to `support@lotfoundry.net`.
+- **Secret:** `RESEND_API_KEY` (restricted sending-only API key stored in Google Cloud Secret Manager for `yardup-2026` and `.env.local`, bound to `exports.api` in `functions/index.js`).
+- **Delivery status:** The record is created with `emailDeliveryStatus: "queued_firestore"`. When Resend accepts the message, the route updates it to `emailDeliveryStatus: "sent_resend"` with the `resendId`; if only that follow-up update fails, the request still succeeds because the email went out and the snapshot is saved. If the provider is unavailable, unconfigured, or errors, the record stays `queued_firestore` and the route returns `{ ok: true, delivery: "queued", scenarioUrl }` with a copy link fallback.
+- **UI:** In `EmailScenarioLinkCard.tsx`, `delivery === "sent"` renders "Sent! Check your inbox for your 3D lot link (plus a quick-copy link button below)."
 
 ## Snapshot and privacy
 

@@ -1,6 +1,7 @@
 import { calculateFeasibility, formatCurrency } from "@/lib/feasibility";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { COLOR } from "@/lib/design-tokens";
+import { Resend } from "resend";
 
 export function scenarioHeadlineNumbers(scenario: SavedScenario) {
   if (!scenario.liveParcel) throw new Error("A real address is required.");
@@ -42,4 +43,54 @@ export function renderScenarioEmail(scenario: SavedScenario, scenarioUrl: string
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+}
+
+export interface SendScenarioEmailResult {
+  delivery: "sent" | "queued";
+  resendId?: string;
+  error?: string;
+}
+
+export async function dispatchScenarioEmail(
+  toEmail: string,
+  scenario: SavedScenario,
+  scenarioUrl: string,
+  marketingOptIn: boolean,
+  idempotencyToken?: string,
+): Promise<SendScenarioEmailResult> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return { delivery: "queued" };
+  }
+
+  const message = renderScenarioEmail(scenario, scenarioUrl, marketingOptIn);
+  try {
+    const resend = new Resend(apiKey);
+    const { data, error } = await resend.emails.send({
+      from: "LotFoundry <support@lotfoundry.net>",
+      to: [toEmail],
+      replyTo: "support@lotfoundry.net",
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+      headers: idempotencyToken ? { "X-Entity-Ref-ID": idempotencyToken } : undefined,
+    });
+
+    if (error) {
+      console.error("[dispatchScenarioEmail] Resend error:", error);
+      return { delivery: "queued", error: error.message };
+    }
+
+    if (data?.id) {
+      return { delivery: "sent", resendId: data.id };
+    }
+
+    return { delivery: "queued" };
+  } catch (err) {
+    console.error("[dispatchScenarioEmail] Unexpected error:", err);
+    return {
+      delivery: "queued",
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }
