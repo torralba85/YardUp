@@ -64,6 +64,8 @@ describe("proxy duplicate-host redirect", () => {
 
   it.each([
     "/api/stripe/webhook",
+    "/api/studio/email-scenario-link",
+    "/api/studio/scenario-link/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "/api/store/rtdn/google",
     "/_next/static/chunks/app.js",
     "/__/auth/handler",

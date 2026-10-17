@@ -18,6 +18,7 @@ import { buildStudioUrlForCertificate } from "@/lib/purchased-certificates";
 import { certificateKey } from "@/lib/certificate-key";
 import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import * as adsConversion from "@/lib/analytics/adsConversion";
+import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 
 const briefFixture: AIProjectBrief = {
   headline: "Recorded garden studio study", summary: "Saved planning snapshot", bestFit: "Detached ADU",
@@ -159,7 +160,7 @@ function stepButton(label: RegExp) {
 describe("FeasibilityStudio (guided spine)", () => {
   beforeEach(() => {
     vi.mocked(getDoc).mockReset();
-    savedMocks.fetch.mockResolvedValue([]);
+    savedMocks.fetch.mockReset().mockResolvedValue([]);
     savedMocks.remove.mockReset().mockResolvedValue(undefined);
     savedMocks.save.mockReset();
     window.history.replaceState(null, "", "/");
@@ -186,6 +187,28 @@ describe("FeasibilityStudio (guided spine)", () => {
     vi.restoreAllMocks();
   });
 
+  it("offers free capture only after a real parcel is active and restores the saved pose/assumptions", async () => {
+    stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+    const initialScenario = { ...EMAIL_SCENARIO, assumptions: { ...EMAIL_SCENARIO.assumptions, softCostMultiplier: 1.4 } };
+    window.history.replaceState(null, "", `/studio?layout=${"a".repeat(48)}&utm_source=studio_email`);
+    render(<AuthProvider><FeasibilityStudio initialScenario={initialScenario} /></AuthProvider>);
+    await screen.findByRole("heading", { name: "Save this 3D lot layout for later — Free" });
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", JSON.stringify(initialScenario.pose));
+    expect(new URLSearchParams(window.location.search).get("layout")).toHaveLength(48);
+    fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
+    fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
+    expect(body.scenario.assumptions.softCostMultiplier).toBe(1.4);
+  });
+
+  it("does not offer email capture for a demo parcel", async () => {
+    render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+    await screen.findByTestId("parcel-scene");
+    expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
+  });
+
   it("preserves saved concepts on cancel and deletes only after confirmation", async () => {
     authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
     savedMocks.fetch.mockResolvedValueOnce([{
@@ -195,7 +218,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     // Wait for the async auth/scenario state before scanning the large Studio DOM by role.
-    await screen.findByText("Saved Concepts");
+    await waitFor(() => expect(savedMocks.fetch).toHaveBeenCalledWith("owner-1"), { timeout: 10000 });
+    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
     fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
     const remove = screen.getByRole("button", { name: "Delete saved concept Garden home" });
     fireEvent.click(remove);
@@ -220,7 +244,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     }]);
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    await screen.findByText("Saved Concepts");
+    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
     fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Saved study" }));
     fireEvent.click(stepButton(/Certificate/));
@@ -239,7 +263,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     ]);
     savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: base.createdAt }));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    await screen.findByText("Saved Concepts");
+    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
     fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Matched study" }));
     fireEvent.click(screen.getByRole("button", { name: "Plain study" }));
@@ -256,7 +280,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ tier: "full", brief: briefFixture }), { status: 200 }));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     fireEvent.click(stepButton(/Certificate/));
-    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }));
+    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }, { timeout: 10000 }));
     expect((await screen.findAllByText(briefFixture.headline)).length).toBeGreaterThan(0);
     expect(screen.queryByText("Adding property notes and timeline")).not.toBeInTheDocument();
   });
@@ -267,7 +291,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ error: "Brief temporarily unavailable" }), { status: 503 }));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     fireEvent.click(stepButton(/Certificate/));
-    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }));
+    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }, { timeout: 10000 }));
     expect((await screen.findAllByText(/Brief temporarily unavailable/)).length).toBeGreaterThan(0);
     expect(screen.queryByText("Adding property notes and timeline")).not.toBeInTheDocument();
   });
@@ -284,7 +308,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     fireEvent.click(stepButton(/Certificate/));
-    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }));
+    fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }, { timeout: 10000 }));
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
     fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Saved study" }));

@@ -4,9 +4,19 @@ import {
   clearCertificatePurchaseIntent,
   hasCertificatePurchaseIntent,
   rememberCertificatePurchaseIntent,
+  rememberCapturedEmail,
+  readCapturedEmail,
 } from "./certificate-purchase-intent";
 
 describe("certificate purchase intent", () => {
+  it("normalizes the captured email without creating or consuming purchase intent", () => {
+    rememberCapturedEmail(" Owner@Example.COM ");
+    expect(readCapturedEmail()).toBe("owner@example.com");
+    expect(hasCertificatePurchaseIntent()).toBe(false);
+    rememberCertificatePurchaseIntent("my-lot");
+    clearCertificatePurchaseIntent();
+    expect(readCapturedEmail()).toBe("owner@example.com");
+  });
   afterEach(() => {
     clearCertificatePurchaseIntent();
     window.sessionStorage.clear();

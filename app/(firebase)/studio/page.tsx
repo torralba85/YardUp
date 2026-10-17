@@ -13,6 +13,8 @@ import { parseScenarioParams } from "@/lib/scenario-url";
 import { peekAddressQuery } from "@/lib/address-handoff";
 import { peekInitialParcel } from "@/lib/parcel-handoff";
 import { trackStudioOpened } from "@/lib/analytics/events";
+import EmailedScenarioEntry from "@/components/studio/EmailedScenarioEntry";
+import { validLayoutToken } from "@/lib/scenario-share-url";
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 // The native shell is fixed for the life of the page; there is nothing to observe.
@@ -32,6 +34,7 @@ export default function StudioPage() {
   const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
   const [demoEntry, setDemoEntry] = useState<boolean | null>(null);
   const [studioEntryRecorded, setStudioEntryRecorded] = useState(false);
+  const [layoutToken, setLayoutToken] = useState<string | null>(null);
   const initialDemoEntry = useRef<boolean | null>(null);
   const studioOpenedSent = useRef(false);
 
@@ -42,9 +45,13 @@ export default function StudioPage() {
     if (initialDemoEntry.current === null) {
       const search = new URLSearchParams(window.location.search);
       const isCert = search.has("cert");
+      const token = search.get("layout");
+      // Freeze the external URL at hydration; later Studio URL edits must not remount the study.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (token && validLayoutToken(token)) setLayoutToken(token);
       const scenario = parseScenarioParams(search);
       initialDemoEntry.current = Boolean(
-        isCert || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel()),
+        isCert || (token && validLayoutToken(token)) || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel()),
       );
     }
     setDemoEntry(initialDemoEntry.current);
@@ -79,6 +86,10 @@ export default function StudioPage() {
   // it stays mounted. Builder accounts also use the homeowner Studio in the app.
   const [authSettled, setAuthSettled] = useState(false);
   if (!loading && !authSettled) setAuthSettled(true);
+  // Keep the restored study mounted during auth/token updates, including any edits made since opening it.
+  if (layoutToken && authSettled && studioEntryRecorded && !(buildersAllowed && profile?.role === "builder")) {
+    return <EmailedScenarioEntry token={layoutToken} />;
+  }
   if (inNativeApp && authSettled && studioEntryRecorded) {
     return <AppStudioOnboarding user={user} />;
   }

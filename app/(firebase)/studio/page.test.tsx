@@ -38,6 +38,13 @@ vi.mock("@/components/studio/SignedInStudioGate", () => ({
   },
 }));
 
+vi.mock("@/components/studio/EmailedScenarioEntry", () => ({
+  default: function MockEmailedScenarioEntry({ token }: { token: string }) {
+    const [mountId] = useState(() => Math.random().toString(36));
+    return <div>Emailed layout {token}<span data-testid="emailed-mount">{mountId}</span></div>;
+  },
+}));
+
 vi.mock("@/components/studio/AppStudioOnboarding", () => ({
   default: function MockAppStudioOnboarding({ user }: { user: { uid: string } | null }) {
     const [mountId] = useState(() => Math.random().toString(36));
@@ -112,6 +119,23 @@ describe("StudioPage", () => {
     rerender(<StudioPage />);
 
     expect(screen.getByTestId("onboarding-mount").textContent).toBe(mountId);
+  });
+
+  it("keeps an emailed study mounted through URL edits and sign-in token updates", () => {
+    const token = "a".repeat(48);
+    window.history.replaceState(null, "", `/studio?layout=${token}`);
+    const { rerender } = render(<StudioPage />);
+    const mountId = screen.getByTestId("emailed-mount").textContent;
+    window.history.replaceState(null, "", `/studio?layout=${token}&width=24`);
+    mocks.authState.loading = true;
+    rerender(<StudioPage />);
+    expect(screen.getByTestId("emailed-mount").textContent).toBe(mountId);
+    mocks.authState.loading = false;
+    mocks.authState.user = { uid: "user-1" };
+    mocks.authState.profile = { role: "user" };
+    rerender(<StudioPage />);
+    expect(screen.getByTestId("emailed-mount").textContent).toBe(mountId);
+    expect(screen.queryByText("Signed-in Blank Slate Mock")).not.toBeInTheDocument();
   });
 
   it("opens homeowner onboarding for existing builders inside the native app", () => {
