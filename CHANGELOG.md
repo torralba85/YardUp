@@ -33,6 +33,14 @@ All notable changes to LotFoundry are documented here. Format follows
   to confirm the fire hazard and Coastal Zone maps. The plan view, 3D setback
   lines, placement check, verdict, certificate and AI brief share one rule
   (`lib/adu-setbacks.ts`). Lots outside California are unchanged.
+- A lot-coverage limit no longer blocks a California backyard home of up to
+  800 sq ft. State law bars coverage, floor-area, open-space, front-setback and
+  minimum-lot-size limits that would prevent one (Gov. Code § 66321(b)(3)), but
+  the Studio flagged, for example, a 600 sq ft unit beside a 2,350 sq ft house
+  on a 7,297 sq ft lot as 31 sf over its assumed 40% coverage. When coverage
+  leaves less than 800 sq ft, the room is now measured against 800 sq ft
+  (`capacityBasis: "california-800"`). The site-fit status, verdict rows and
+  certificate say so, and anything above 800 sq ft is still flagged.
 
 ## [1.0.2] - 2026-10-12
 

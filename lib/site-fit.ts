@@ -8,6 +8,7 @@ import {
 import { buildSetbackEnvelope, REVIEW_SEPARATION_FT, validatePlacement, type PlacementResult } from "./placement-validation";
 import { parcelConfidence } from "./parcel-confidence";
 import { aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks";
+import type { CapacityBasis } from "./zoning";
 
 /**
  * Validates a pose against the ADU's setbacks (`lib/adu-setbacks.ts`) and the modeled house.
@@ -134,10 +135,15 @@ function placementBounds(
   };
 }
 
-/** Human-readable modeled coverage capacity for the Studio and certificate. */
+/**
+ * Human-readable modeled coverage capacity for the Studio and certificate.
+ * Pass the result's `capacityBasis` so room that comes from California's
+ * 800 sq ft protection isn't called coverage.
+ */
 export function getSiteFitCapacityStatus(
   remainingCapacity: number,
   parcel?: Parcel,
+  capacityBasis: CapacityBasis = "coverage",
 ): SiteFitCapacityStatus {
   const confidence = parcel ? parcelConfidence(parcel) : undefined;
   if (confidence?.footprintKnown === false) {
@@ -145,6 +151,20 @@ export function getSiteFitCapacityStatus(
   }
 
   const squareFeet = Math.round(Math.abs(remainingCapacity)).toLocaleString();
+  if (capacityBasis === "california-800") {
+    const protection = `California doesn't let lot coverage block an ADU up to 800 sf (Gov. Code § 66321(b)(3)), and this lot's ${confidence?.regulationsEstimated ? "assumed " : ""}coverage limit leaves less than that.`;
+    return remainingCapacity < 0
+      ? {
+          title: `${squareFeet} sf over California's 800 sf ADU protection`,
+          action: `${protection} Reduce the footprint by at least ${squareFeet} sf, or confirm the local coverage limit.`,
+          tone: "warn",
+        }
+      : {
+          title: `${Math.round(remainingCapacity).toLocaleString()} sf of room under California's 800 sf ADU protection`,
+          action: `${protection} Confirm with your city.`,
+          tone: confidence?.regulationsEstimated ? "warn" : "ok",
+        };
+  }
   if (remainingCapacity < 0) {
     return {
       title: `${squareFeet} sf over ${confidence?.regulationsEstimated ? "assumed" : "modeled"} coverage allowance`,

@@ -161,6 +161,9 @@ export function summarizeFeasibility(
   const coverageUnverified = !footprintKnown || regulationsEstimated;
   const compliant = result.zoningStatus === "Compliant";
   const hasCapacity = result.remainingCapacity >= 0;
+  // Room set by California's 800 sq ft protection, not the coverage limit.
+  const stateFloor = result.capacityBasis === "california-800";
+  const overCoverageButProtected = stateFloor && hasCapacity && result.coveragePercent > result.maxCoveragePercent;
   // remainingCapacity is the engine's canonical coverage signal and also
   // drives zoningStatus. Reuse it everywhere so the verdict and rows cannot
   // disagree because allowedFootprint is rounded while coveragePercent is not.
@@ -198,6 +201,7 @@ export function summarizeFeasibility(
       group: "Zoning & setbacks",
       label: "Remaining build capacity",
       detail: !footprintKnown ? "Existing building footprint is unknown"
+        : stateFloor ? (hasCapacity ? "Room up to the 800 sf California protects from lot-coverage limits" : "Over the 800 sf California protects from lot-coverage limits")
         : regulationsEstimated ? "Estimate using an unverified coverage limit"
         : hasCapacity
         ? "Headroom under the lot-coverage allowance"
@@ -210,6 +214,7 @@ export function summarizeFeasibility(
       group: "Zoning & setbacks",
       label: "Lot coverage vs. max",
       detail: !footprintKnown ? "Existing building footprint is unknown"
+        : overCoverageButProtected ? `Over the ${regulationsEstimated ? "assumed " : ""}limit, but California doesn't let coverage block an ADU up to 800 sf (Gov. Code § 66321(b)(3))`
         : regulationsEstimated ? "Maximum coverage is assumed — verify locally"
         : "Existing house plus the proposed ADU",
       status: coverageUnverified ? "review" : coverageOk ? "clear" : "blocked",

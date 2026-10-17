@@ -129,7 +129,7 @@ export function buildReportText({
     `Lot coverage: ${coverageLabel(parcel, result)}`,
     `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${setbacksLabel(parcel, config)}`,
     `Estimated area after modeled setbacks: ${buildableArea(parcel, config).toLocaleString()} sf`,
-    `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel).title}`,
+    `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title}`,
     `Zoning status: ${result.zoningStatus}`,
     ...(result.warnings.length > 0
       ? result.warnings.map((warning, index) => `Review note ${index + 1}: ${warning}`)
@@ -211,7 +211,7 @@ export function buildReportHtml({
       setbacksLabel(parcel, config),
     ],
     ["Estimated area after modeled setbacks", `${buildableArea(parcel, config).toLocaleString()} sf`],
-    ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel).title],
+    ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],

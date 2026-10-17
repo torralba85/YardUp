@@ -10,6 +10,7 @@ import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition, LIGHTING_PRESETS, type LightingPresetId } from "@/lib/scene-lighting";
 import { getDefaultAduPose, getScenePlacement } from "@/lib/site-fit";
 import { aduSetbacks } from "@/lib/adu-setbacks";
+import type { CapacityBasis } from "@/lib/zoning";
 import { describePlacement } from "@/lib/placement-validation";
 import {
   buildAduSceneModel,
@@ -64,6 +65,8 @@ interface ParcelSceneProps {
   config: ADUConfig;
   isCompliant: boolean;
   remainingCapacity: number;
+  /** What sets the ADU's room: the coverage limit or California's 800 sq ft protection. */
+  capacityBasis?: CapacityBasis;
   /**
    * The committed ADU pose. Optional so the dev measurement harness and the
    * 2D fallback can mount the scene without owning scenario state; when it is
@@ -778,6 +781,7 @@ export default function ParcelScene({
   config,
   isCompliant,
   remainingCapacity,
+  capacityBasis,
   pose,
   onPoseCommit,
   measurement,
@@ -1062,6 +1066,7 @@ export default function ParcelScene({
         config={config}
         isCompliant={isCompliant}
         remainingCapacity={remainingCapacity}
+        capacityBasis={capacityBasis}
         pose={activePose}
         flowLayout={flowLayout}
       />
@@ -1275,6 +1280,7 @@ export default function ParcelScene({
         parcel={parcel}
         placement={placement}
         remainingCapacity={remainingCapacity}
+        capacityBasis={capacityBasis}
         isProxy={parcelOutline.isProxy}
       />
 
@@ -1372,6 +1378,7 @@ function Parcel2DScene({
   parcel,
   config,
   remainingCapacity,
+  capacityBasis,
   pose,
   flowLayout = false,
 }: ParcelSceneProps) {
@@ -1402,6 +1409,7 @@ function Parcel2DScene({
         parcel={parcel}
         placement={placement}
         remainingCapacity={remainingCapacity}
+        capacityBasis={capacityBasis}
         isProxy={outline.isProxy}
       />
     </div>
