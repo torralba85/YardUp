@@ -219,6 +219,14 @@ export default function EstimateSummaryPanel({
           </div>
         </div>
 
+        <div className="rounded-none border border-lot-line bg-lot-surface p-4">
+          <h3 className="text-sm font-semibold text-lot-ink">Hard &amp; soft cost allowances</h3>
+          <p className="mt-1 text-xs leading-5 text-lot-stone">See how your estimated build cost is put together. Your Certificate explains the construction base, roof, openings, regional adjustment, and combined design and permit allowance.</p>
+          <Button type="button" variant="secondary" size="xs" className="mt-3" onClick={onGenerateReport} disabled={reportCtaBusy} leftIcon={certificateUnlocked ? undefined : <Lock size={13} />}>
+            {certificateUnlocked ? "View cost allowances" : "Unlock cost allowances"}
+          </Button>
+        </div>
+
         {feeThreshold && (
           <div
             className={`flex items-start gap-3 rounded-none border p-4 ${

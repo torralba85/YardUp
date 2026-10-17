@@ -104,9 +104,7 @@ test.describe("A lot more landing", () => {
   }) => {
     await page.goto("/");
     const numbers = page.locator("#numbers");
-    await expect(numbers.getByText("$2,050", { exact: false })).toBeVisible();
-    await expect(numbers.getByText("15.1", { exact: false })).toBeVisible();
-    await numbers.getByRole("radio", { name: "market", exact: true }).click();
+    // The landing opens on the market case, matching the hero and the Studio sample link.
     await expect(numbers.getByText("$2,350", { exact: false })).toBeVisible();
     await expect(numbers.getByText("13.2", { exact: false })).toBeVisible();
     await expect(numbers.getByText(/SEATTLE DEMO/)).toBeVisible();
@@ -119,6 +117,9 @@ test.describe("A lot more landing", () => {
     await expect(
       numbers.getByText(/annual net operating income is \$19,035/),
     ).toBeVisible();
+    await numbers.getByRole("radio", { name: "conservative", exact: true }).click();
+    await expect(numbers.getByText("$2,050", { exact: false })).toBeVisible();
+    await expect(numbers.getByText("15.1", { exact: false })).toBeVisible();
   });
 
   test("supports intent selection, report inspection, and honest purchase copy", async ({
@@ -135,7 +136,8 @@ test.describe("A lot more landing", () => {
     const report = page.getByRole("article", {
       name: "Sample feasibility report",
     });
-    await expect(report.getByText("$2,050", { exact: true })).toBeVisible();
+    // The sample report follows the selected rent case, which starts on market.
+    await expect(report.getByText("$2,350", { exact: true })).toBeVisible();
     await page.getByRole("radio", { name: "Next steps", exact: true }).click();
     await expect(report.getByText(/Confirm property boundaries/)).toBeVisible();
     await expect(

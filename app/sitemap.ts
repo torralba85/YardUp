@@ -16,6 +16,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     "/",
     "/studio",
+    "/seattle",
+    "/portland",
+    "/austin",
     "/about",
     "/help",
     "/feedback",

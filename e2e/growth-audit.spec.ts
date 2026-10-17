@@ -1,0 +1,75 @@
+import { expect, test } from "@playwright/test";
+
+test("Studio previews cost detail while keeping the free estimate available", async ({ page }, testInfo) => {
+  await page.goto("/studio?parcel=oak-street&step=certificate", { waitUntil: "domcontentloaded" });
+  const detail = page.getByText("Five modeled line items included in your Certificate.");
+  await expect(detail).toBeVisible();
+  await detail.scrollIntoViewIfNeeded();
+  await expect(page.getByRole("button", { name: "Unlock cost allowances", exact: true }).first()).toBeAttached();
+  await page.screenshot({ path: testInfo.outputPath("studio-cost-preview.png") });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("market demo, full sample, and keyboard dismissal agree", async ({ page }, testInfo) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const rent = page.getByRole("radiogroup", { name: "Demo rent assumption" });
+  await expect(rent.getByRole("radio", { name: "market", exact: true })).toHaveAttribute("aria-checked", "true");
+  await page.getByText("What’s behind these numbers?").click();
+  await expect(page.locator("#numbers details")).toContainText("$19,035");
+  await rent.getByRole("radio", { name: "conservative", exact: true }).click();
+  await expect(page.locator("#numbers details")).toContainText("$16,605");
+  const preview = page.getByRole("button", { name: "View full sample / save PDF" });
+  await preview.click();
+  const dialog = page.getByRole("dialog", { name: "Oak Street sample Certificate" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading")).toHaveCSS("font-size", "18px");
+  const report = page.frameLocator('iframe[title="Full sample Certificate of Feasibility"]');
+  await expect(report.getByRole("heading", { name: "Hard & Soft Cost Allowances" })).toBeVisible();
+  await expect(report.getByText("Public sample", { exact: false })).toContainText("market rent");
+  await page.screenshot({ path: testInfo.outputPath("sample-dialog.png") });
+  await page.getByRole("button", { name: "Close sample" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(preview).toBeFocused();
+  await page.locator("#report").screenshot({ path: testInfo.outputPath("certificate-offer.png") });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("city pages have static local numbers, a self canonical, and the matching demo", async ({ page, request }) => {
+  for (const [city, label, parcel, rent] of [
+    ["seattle", "Seattle", "oak-street", "$2,350"],
+    ["portland", "Portland", "corner-lot", "$2,600"],
+    ["austin", "Austin", "compact-lot", "$2,150"],
+  ]) {
+    const sample = await request.get(`/sample-certificate/${city}`);
+    expect(sample.headers()["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(sample.headers()["x-robots-tag"]).toContain("noindex");
+    const response = await request.get(`/${city}`);
+    const html = await response.text();
+    expect(html).toContain(`https://lotfoundry.net/${city}`);
+    expect(html).toContain(`${label} ADU Feasibility`);
+    expect(html).toContain(rent);
+    await page.goto(`/${city}`, { waitUntil: "domcontentloaded" });
+    const link = page.getByRole("link", { name: `Open the ${label} sample lot in the 3D studio` });
+    await expect(link).toContainText(rent);
+    expect(new URLSearchParams((await link.getAttribute("href"))!.split("?")[1]).get("parcel")).toBe(parcel);
+  }
+  const redirect = await request.get("/san-diego", { maxRedirects: 0 });
+  expect(redirect.status()).toBe(308);
+  expect(redirect.headers().location).toContain("/adu/ca/san-diego/cost");
+  const unknown = await request.get("/unsupported-city");
+  expect(unknown.status()).toBe(404);
+});
+
+test("sample remains usable at 320px", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole("button", { name: "View full sample / save PDF" }).click();
+  const dialog = page.getByRole("dialog", { name: "Oak Street sample Certificate" });
+  await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((node) => node.getBoundingClientRect().width <= innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("sample-dialog-320.png") });
+  await page.getByRole("button", { name: "Close sample" }).click();
+  await expect(dialog).not.toBeVisible();
+});

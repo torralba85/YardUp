@@ -11,6 +11,15 @@ async function rootHeaders(): Promise<Record<string, string>> {
 }
 
 describe("security headers", () => {
+  it("allows only the fixed public sample documents to be framed on the same site", async () => {
+    const groups = await nextConfig.headers!();
+    const sample = groups.find((group) => group.source === "/sample-certificate/:path*");
+    expect(sample?.headers).toEqual([
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      { key: "X-Robots-Tag", value: "noindex, follow" },
+    ]);
+    expect(groups.indexOf(sample!)).toBeGreaterThan(groups.findIndex((group) => group.source === "/:path*"));
+  });
   it("sets the baseline hardening headers on every route", async () => {
     const headers = await rootHeaders();
 

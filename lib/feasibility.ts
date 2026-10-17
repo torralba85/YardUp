@@ -14,7 +14,7 @@ import type { Pose2D } from "./scene-model";
 import type { Parcel } from "./parcel-types";
 export type { Parcel } from "./parcel-types";
 import { calculateZoning, type CapacityBasis } from "./zoning";
-import { calculateFinance } from "./finance";
+import { calculateFinance, type ConstructionBudget } from "./finance";
 import type {
   MarketData,
   MarketProvenance,
@@ -85,6 +85,8 @@ export interface FinancialAssumptions {
  * range, and the income/return summary for the configured ADU.
  */
 export interface FeasibilityResult {
+  /** Absent only on historical saved results. Components reconcile to the engine's central estimate. */
+  costBreakdown?: ConstructionBudget;
   /** False means coverage arithmetic omits an unknown existing footprint. */
   footprintKnown?: boolean;
   /** True means the regulatory limits are assumptions, not confirmed rules. */

@@ -1,12 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
-import {
-  calculateFeasibility,
-  defaultAduConfig,
-  defaultFinancialAssumptions,
-  parcelPresets,
-} from "@/lib/feasibility";
+import { landingScenarios } from "@/lib/landing-demo";
 import { COLOR } from "@/lib/design-tokens";
 
 
@@ -58,23 +53,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   // Use one explicit demo configuration from the studio engine. Artwork is illustrative.
-  const scenarios = (["conservative", "market", "optimistic"] as const).map(
-    (rentScenario) => {
-      const result = calculateFeasibility(parcelPresets[0], defaultAduConfig, {
-        ...defaultFinancialAssumptions,
-        rentScenario,
-      });
-      return {
-        id: rentScenario,
-        costLow: result.costLow,
-        costHigh: result.costHigh,
-        rent: result.monthlyRent,
-        noi: result.annualNoi,
-        payback: result.paybackYears,
-        expenseRatio: result.operatingExpenseRatio,
-      };
-    },
-  );
+  const scenarios = landingScenarios();
   return (
     <div className={`${display.variable} ${body.variable}`}>
       <LotMoreLanding scenarios={scenarios} />

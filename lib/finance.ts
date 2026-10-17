@@ -4,6 +4,7 @@ import type { ADUConfig, FinancialAssumptions, RentScenario } from "./feasibilit
  * Computed financial projections for a proposed ADU.
  */
 export interface FinanceResult {
+  costBreakdown: ConstructionBudget;
   costLow: number;
   costHigh: number;
   costPerSqftLow: number;
@@ -13,6 +14,27 @@ export interface FinanceResult {
   paybackYears: number;
   /** The operating-expense ratio actually applied to gross rent (0–1). */
   operatingExpenseRatio: number;
+}
+
+export interface ConstructionBudget {
+  baseConstruction: number;
+  roofPremium: number;
+  openings: number;
+  regionalAdjustment: number;
+  softCosts: number;
+  total: number;
+}
+
+export const constructionBudgetNote = "Modeled allowances, not contractor quotes. Construction is a bundled assumption; site work, utility extensions, soil conditions, and local fees need project-specific quotes. Soft costs combine design, engineering, and permits; they are not separately priced.";
+
+export function constructionBudgetRows(budget: ConstructionBudget): Array<[string, number]> {
+  return [
+    ["Construction base", budget.baseConstruction],
+    ["Roof premium", budget.roofPremium],
+    ["Openings allowance", budget.openings],
+    ["Regional hard-cost adjustment", budget.regionalAdjustment],
+    ["Soft-cost allowance", budget.softCosts],
+  ];
 }
 
 /** Location adjustments resolved from the parcel's market data. */
@@ -58,7 +80,22 @@ export function calculateFinance(
   const annualNoi = Math.round(monthlyRent * 12 * (1 - operatingExpenseRatio));
   const paybackYears = Number((costMid / annualNoi).toFixed(1));
 
+  // Whole dollars that still sum exactly to the central estimate: the CSV export
+  // prints these raw, and regional multipliers otherwise leave float noise.
+  const baseConstruction = Math.round(aduSqft * baseCostPerSqft);
+  const roofCost = Math.round(aduSqft * roofPremium);
+  const hardTotal = Math.round(hardCost);
+  const budgetTotal = Math.round(costMid);
+
   return {
+    costBreakdown: {
+      baseConstruction,
+      roofPremium: roofCost,
+      openings: openingPremium,
+      regionalAdjustment: hardTotal - baseConstruction - roofCost - openingPremium,
+      softCosts: budgetTotal - hardTotal,
+      total: budgetTotal,
+    },
     costLow,
     costHigh,
     costPerSqftLow: aduSqft > 0 ? Math.round(costLow / aduSqft) : 0,
