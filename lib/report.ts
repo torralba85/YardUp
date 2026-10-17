@@ -12,7 +12,13 @@ import type { AIProjectBrief } from "./ai-types";
 import { buildableArea } from "./feasibility-verdict";
 import { getSiteFitCapacityStatus } from "./site-fit";
 import { parcelConfidence, parcelDataNotice } from "./parcel-confidence";
-import { buildCashFlowProForma, proFormaFootnote, proFormaTableRows } from "./certificate-pro-forma";
+import {
+  buildCashFlowProForma,
+  leadScenario,
+  proFormaFootnote,
+  proFormaSummary,
+  proFormaTableRows,
+} from "./certificate-pro-forma";
 import { buildPermitFeeAudit, type AuditTone, type PermitFeeAudit } from "./certificate-permit-audit";
 import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "./certificate-bid-checklist";
 import { buildAduHeightModel } from "./scene-model";
@@ -387,6 +393,7 @@ export function buildReportHtml({
     .stage-blocker { color: var(--brick); }
     .brief-disclaimer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 10px; line-height: 1.6; }
     .fine { margin-top: 10px; font-size: 10px; line-height: 1.6; }
+    .lead-note { margin: 12px 0 4px; border-left: 3px solid var(--ink); padding: 4px 0 4px 14px; color: var(--ink); }
     .pro-forma th, .pro-forma td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; font-size: 12px; color: var(--ink); }
     .pro-forma thead th { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--ink); }
     .pro-forma th[scope="row"] { text-align: left; font-weight: 400; }
@@ -553,6 +560,7 @@ function buildProFormaHtml(result: FeasibilityResult): string {
   const proForma = buildCashFlowProForma(result);
   return `<h2>Leveraged Monthly Cash-Flow Pro Forma</h2>
         <p>The ${escapeHtml(formatCurrency(result.costLow))}&ndash;${escapeHtml(formatCurrency(result.costHigh))} build cost financed two ways, against ${escapeHtml(formatCurrency(proForma.monthlyRent))}/mo gross rent (${escapeHtml(result.rentBasis)}).</p>
+        <p class="lead-note">${escapeHtml(proFormaSummary(proForma))}</p>
         <div class="table-scroll">
           <table class="pro-forma" aria-label="Monthly cash flow under two financing options">
             <thead>
@@ -900,6 +908,7 @@ function certificatePacketCsvRows(
   });
   const rows: Array<[string, string]> = [
     ["Cash Flow Operating Costs ($/mo)", String(proForma.operatingCosts)],
+    ["Cash Flow Best Option", leadScenario(proForma).scenario.label],
   ];
   for (const row of proForma.scenarios) {
     const name = `Cash Flow - ${row.scenario.label}`;
@@ -912,6 +921,8 @@ function certificatePacketCsvRows(
       [`${name} - Monthly P&I High ($)`, String(row.paymentHigh)],
       [`${name} - Net Monthly Cash Flow at High Cost ($)`, String(row.netLow)],
       [`${name} - Net Monthly Cash Flow at Low Cost ($)`, String(row.netHigh)],
+      [`${name} - Year-1 Principal Paid Down Low ($/mo)`, String(row.principalPaydownLow)],
+      [`${name} - Year-1 Principal Paid Down High ($/mo)`, String(row.principalPaydownHigh)],
       [`${name} - Break-even Rent Low ($/mo)`, row.breakEvenRentLow === null ? "Not reachable" : String(row.breakEvenRentLow)],
       [`${name} - Break-even Rent High ($/mo)`, row.breakEvenRentHigh === null ? "Not reachable" : String(row.breakEvenRentHigh)],
       [`${name} - Break-even Cash In Low ($)`, String(row.breakEvenCashInLow)],

@@ -9,6 +9,7 @@ import {
   formatCurrencyRange,
   formatOperatingShare,
   formatSignedRange,
+  leadScenario,
 } from "@/lib/certificate-pro-forma";
 import { assessImpactFeeThreshold, type FeeJurisdiction } from "@/lib/certificate-permit-audit";
 import { Button } from "@/components/ui/Button";
@@ -72,7 +73,7 @@ export default function EstimateSummaryPanel({
   const isCompliant = result.zoningStatus === "Compliant";
   const CoverageIcon = isCompliant ? CheckCircle2 : TriangleAlert;
   const verdictChip = VERDICT_CHIP[feasibilityStatus];
-  const heloc = buildCashFlowProForma(result).scenarios[0];
+  const lead = leadScenario(buildCashFlowProForma(result));
   const feeThreshold = feeJurisdiction === "other" ? null : assessImpactFeeThreshold(result.aduSqft);
   const ThresholdIcon = feeThreshold?.isExempt ? CheckCircle2 : TriangleAlert;
   const metrics = [
@@ -182,17 +183,19 @@ export default function EstimateSummaryPanel({
               </div>
               <p className="mt-1 text-xs leading-5 text-lot-stone">
                 {certificateUnlocked
-                  ? `${heloc.scenario.label}, ${financingTermsLabel(heloc.scenario)}, after the ${formatOperatingShare(result.operatingExpenseRatio)} operating allowance.${
-                      heloc.netLow < 0 && heloc.breakEvenRentLow !== null && heloc.breakEvenRentHigh !== null
-                        ? ` Breaks even at ${formatCurrencyRange(heloc.breakEvenRentLow, heloc.breakEvenRentHigh)}/mo rent.`
+                  ? `Best option: ${lead.scenario.label}, ${financingTermsLabel(lead.scenario)}, after the ${formatOperatingShare(result.operatingExpenseRatio)} operating allowance. Each payment also pays down about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal in year 1, equity you keep.${
+                      lead.netLow < 0
+                        ? ` Positive across the cost range at ${
+                            lead.breakEvenRentHigh === null ? "" : `${formatCurrency(lead.breakEvenRentHigh)}/mo rent or with `
+                          }${formatCurrency(lead.breakEvenCashInHigh)} total cash in.`
                         : ""
                     } Both financing options are in your certificate.`
-                  : "Does rent cover an 8% HELOC payment? Your certificate shows the payment, the monthly result, and the rent or cash in that breaks even."}
+                  : "Two ways to finance it, the monthly result after the loan, the equity each payment builds, and the rent or cash in that makes it positive. In your certificate."}
               </p>
             </div>
             {certificateUnlocked ? (
               <div className="lf-money-md text-lot-ink">
-                {formatSignedRange(heloc.netLow, heloc.netHigh)}
+                {formatSignedRange(lead.netLow, lead.netHigh)}
                 <span className="font-sans text-xs font-medium text-lot-stone">/mo</span>
               </div>
             ) : (

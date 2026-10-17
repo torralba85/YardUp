@@ -197,9 +197,17 @@ describe("ReportPreview certificate packet", () => {
     expect(within(table).getByRole("columnheader", { name: "100% financed HELOC" })).toBeInTheDocument();
     expect(within(table).getByRole("columnheader", { name: "20% down construction-to-perm" })).toBeInTheDocument();
     expect(within(table).getByRole("rowheader", { name: "Less operating costs (32.5% of rent)" })).toBeInTheDocument();
-    for (const name of ["Net monthly cash flow", "Rent to break even", "Cash in to break even"]) {
+    for (const name of [
+      "Net monthly cash flow",
+      "Principal paid down (equity, year-1 avg)",
+      "Rent to break even",
+      "Cash in to break even",
+    ]) {
       expect(within(table).getByRole("rowheader", { name })).toBeInTheDocument();
     }
+    // The stronger option leads the summary and the first column.
+    expect(within(table).getByText(/^Best option: 20% down construction-to-perm/)).toBeInTheDocument();
+    expect(within(table).getAllByRole("columnheader")[1]).toHaveTextContent("20% down construction-to-perm");
   });
 
   it("audits the 750 sq ft threshold, fees, submittals and modeled height for a California lot", () => {

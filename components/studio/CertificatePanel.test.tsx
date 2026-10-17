@@ -376,7 +376,8 @@ describe("CertificatePanel", () => {
       expect(within(proForma).getAllByText(/monthly cash flow locked$/)).toHaveLength(2);
       // The mask is sign-neutral and carries no real dollar figure.
       expect(proForma.textContent).not.toMatch(/[+−-]\$\d/);
-      expect(screen.getByText(/Does rent cover an 8% HELOC payment\?/)).toBeInTheDocument();
+      expect(screen.getByText(/the rent or cash in that makes it positive\. In your certificate\.$/)).toBeInTheDocument();
+      expect(screen.queryByText(/does rent cover/i)).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Unlock cash flow" })).toBeInTheDocument();
     });
 

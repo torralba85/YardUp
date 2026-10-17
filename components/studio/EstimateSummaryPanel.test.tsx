@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets } from "@/lib/feasibility";
-import { buildCashFlowProForma, formatSignedRange } from "@/lib/certificate-pro-forma";
+import { buildCashFlowProForma, formatSignedRange, leadScenario } from "@/lib/certificate-pro-forma";
 
 const compliant = {
   ...calculateFeasibility(parcelPresets[0], defaultAduConfig, defaultFinancialAssumptions),
@@ -52,13 +52,16 @@ describe("leveraged cash-flow row", () => {
     expect(screen.getByRole("button", { name: "Unlock cash flow" })).toBeDisabled();
   });
 
-  it("shows the HELOC result, sign included, and its break-even rent once purchased", () => {
-    const heloc = buildCashFlowProForma(compliant).scenarios[0];
+  it("leads with the best option, its equity and its path to positive once purchased", () => {
+    const lead = leadScenario(buildCashFlowProForma(compliant));
     render(<EstimateSummaryPanel parcelName="Oak Street" result={compliant}
       feasibilityStatus="eligible" onGenerateReport={vi.fn()} certificateUnlocked />);
 
-    expect(screen.getByText(formatSignedRange(heloc.netLow, heloc.netHigh))).toBeInTheDocument();
-    expect(screen.getByText(/Breaks even at \$[\d,]+–\$[\d,]+\/mo rent/)).toBeInTheDocument();
+    expect(lead.scenario.id).toBe("construction");
+    expect(screen.getByText(formatSignedRange(lead.netLow, lead.netHigh))).toBeInTheDocument();
+    expect(screen.getByText(/^Best option: 20% down construction-to-perm/)).toBeInTheDocument();
+    expect(screen.getByText(/pays down about \$142–\$178\/mo of principal in year 1, equity you keep/)).toBeInTheDocument();
+    expect(screen.getByText(/Positive across the cost range at \$2,396\/mo rent or with \$92,000 total cash in/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Unlock cash flow" })).not.toBeInTheDocument();
   });
 });

@@ -8,9 +8,12 @@ import type { FeasibilityResult } from "./feasibility";
  *
  * Operating costs use the same share of rent as the free estimate's annual
  * net income, so the monthly table and the annual ledger agree. At typical
- * rates a fully financed build often costs more each month than it earns; the
- * break-even rows say by how much, instead of the terms being tuned to hide it.
- * The terms are fixed, disclosed planning assumptions, not a lender quote.
+ * rates a fully financed build often costs more each month than it earns.
+ * The terms are not tuned to hide that; instead the pro forma leads with the
+ * option closest to positive, shows the principal each payment pays down
+ * (equity the owner keeps, not cash), and names the rent or cash in that makes
+ * it positive. The terms are fixed, disclosed planning assumptions, not a
+ * lender quote.
  *
  * @module certificate-pro-forma
  */
@@ -28,9 +31,11 @@ export interface FinancingScenario {
   years: number;
 }
 
-/** The two scenarios the certificate compares, in display order. */
+/**
+ * The two scenarios the certificate compares, in display order: the one that
+ * usually comes out closer to positive first.
+ */
 export const FINANCING_SCENARIOS: readonly FinancingScenario[] = [
-  { id: "heloc", label: "100% financed HELOC", financedShare: 1, annualRate: 0.08, years: 20 },
   {
     id: "construction",
     label: "20% down construction-to-perm",
@@ -38,6 +43,7 @@ export const FINANCING_SCENARIOS: readonly FinancingScenario[] = [
     annualRate: 0.075,
     years: 30,
   },
+  { id: "heloc", label: "100% financed HELOC", financedShare: 1, annualRate: 0.08, years: 20 },
 ];
 
 function assertTerms(annualRate: number, years: number) {
@@ -77,6 +83,20 @@ export function maxPrincipalForPayment(monthlyPayment: number, annualRate: numbe
   return (monthlyPayment * (1 - (1 + monthlyRate) ** -months)) / monthlyRate;
 }
 
+/**
+ * Principal repaid over the first 12 payments of a fixed-rate, fully
+ * amortizing loan: the part of those payments that becomes equity.
+ */
+export function principalPaidInFirstYear(principal: number, annualRate: number, years: number): number {
+  const payment = calculateMonthlyPayment(principal, annualRate, years);
+  const months = Math.min(12, years * 12);
+  const monthlyRate = annualRate / 12;
+  if (monthlyRate === 0) return payment * months;
+  const growth = (1 + monthlyRate) ** months;
+  const balance = principal * growth - (payment * (growth - 1)) / monthlyRate;
+  return principal - balance;
+}
+
 /** Pro forma figures for one financing scenario. Dollars are whole numbers. */
 export interface ScenarioCashFlow {
   scenario: FinancingScenario;
@@ -93,6 +113,12 @@ export interface ScenarioCashFlow {
   netLow: number;
   /** Net monthly cash flow at the low build cost (the better case). */
   netHigh: number;
+  /**
+   * Average monthly principal repaid in year 1 at the low / high build cost:
+   * equity the owner keeps. Not cash, so it is never added to the net.
+   */
+  principalPaydownLow: number;
+  principalPaydownHigh: number;
   /**
    * Gross rent at which the net reaches $0, at the low / high build cost.
    * `null` when operating costs take the whole rent.
@@ -151,6 +177,8 @@ export function buildCashFlowProForma(
       paymentHigh,
       netLow: rentAfterCosts - paymentHigh,
       netHigh: rentAfterCosts - paymentLow,
+      principalPaydownLow: Math.round(principalPaidInFirstYear(principalLow, scenario.annualRate, scenario.years) / 12),
+      principalPaydownHigh: Math.round(principalPaidInFirstYear(principalHigh, scenario.annualRate, scenario.years) / 12),
       breakEvenRentLow: breakEvenRent(paymentLow),
       breakEvenRentHigh: breakEvenRent(paymentHigh),
       breakEvenCashInLow: breakEvenCashIn(result.costLow),
@@ -158,6 +186,12 @@ export function buildCashFlowProForma(
     };
   });
   return { monthlyRent, operatingExpenseRatio, operatingCosts, scenarios };
+}
+
+/** The scenario closest to positive: the highest net at the mid-range cost (first wins ties). */
+export function leadScenario(proForma: CashFlowProForma): ScenarioCashFlow {
+  const mid = (row: ScenarioCashFlow) => row.netLow + row.netHigh;
+  return proForma.scenarios.reduce((best, row) => (mid(row) > mid(best) ? row : best));
 }
 
 /** "8.0% APR · 20-yr amortization". */
@@ -221,6 +255,10 @@ export function proFormaTableRows(proForma: CashFlowProForma): ProFormaRow[] {
     { label: "Less principal & interest", values: each((row) => formatCurrencyRange(row.paymentLow, row.paymentHigh)) },
     { label: "Net monthly cash flow", values: each((row) => formatSignedRange(row.netLow, row.netHigh)), total: true },
     {
+      label: "Principal paid down (equity, year-1 avg)",
+      values: each((row) => `${formatCurrencyRange(row.principalPaydownLow, row.principalPaydownHigh)}/mo`),
+    },
+    {
       label: "Rent to break even",
       values: each((row) =>
         row.breakEvenRentLow === null || row.breakEvenRentHigh === null
@@ -235,7 +273,22 @@ export function proFormaTableRows(proForma: CashFlowProForma): ProFormaRow[] {
   ];
 }
 
+/**
+ * The pro forma's lead sentence: the option closest to positive, the equity it
+ * builds, and, when it doesn't yet cover itself, what would make it positive
+ * across the whole cost range. Every figure also appears in the table.
+ */
+export function proFormaSummary(proForma: CashFlowProForma): string {
+  const lead = leadScenario(proForma);
+  const equity = `about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal paid down in year 1, equity you keep`;
+  const opening = `Best option: ${lead.scenario.label}, ${formatSignedRange(lead.netLow, lead.netHigh)}/mo after the loan and operating costs, plus ${equity}.`;
+  if (lead.netLow >= 0) return opening;
+  const rent = lead.breakEvenRentHigh === null ? null : `${WHOLE_DOLLARS.format(lead.breakEvenRentHigh)}/mo rent`;
+  const cash = `${WHOLE_DOLLARS.format(lead.breakEvenCashInHigh)} total cash in`;
+  return `${opening} Positive across the whole cost range at ${rent ? `${rent} or with ${cash}` : `${cash}`}.`;
+}
+
 /** The disclosure printed under every rendering of the pro forma. */
 export function proFormaFootnote(proForma: CashFlowProForma): string {
-  return `Fixed-rate, fully amortizing payments on the modeled build cost range; ranges run from the high build cost to the low one. Illustrative terms, not a lender quote: loan fees, draw schedules, interest during construction and tax effects are not modeled, and a HELOC's rate can change. Operating costs use the same ${formatOperatingShare(proForma.operatingExpenseRatio)} allowance as the annual net income. Break-even cash in is the total you would put in, rounded up to $1,000, for rent after operating costs to cover the loan.`;
+  return `Fixed-rate, fully amortizing payments on the modeled build cost range; ranges run from the high build cost to the low one. Illustrative terms, not a lender quote: loan fees, draw schedules, interest during construction and tax effects are not modeled, and a HELOC's rate can change. Operating costs use the same ${formatOperatingShare(proForma.operatingExpenseRatio)} allowance as the annual net income. Principal paid down is the part of the first year's payments that repays the loan; it builds equity but is not cash, so it is not added to the net. Break-even cash in is the total you would put in, rounded up to $1,000, for rent after operating costs to cover the loan.`;
 }

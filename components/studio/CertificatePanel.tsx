@@ -541,7 +541,8 @@ export default function CertificatePanel({
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-semibold text-lot-ink">Leveraged monthly cash-flow pro forma</h4>
                   <p className="mt-0.5 text-xs leading-5 text-lot-stone">
-                    Loan payment vs. local rent for this concept, and the rent or cash in that breaks even
+                    Two financing options against local rent, the equity each payment builds, and the
+                    rent or cash in that makes it positive
                   </p>
                   <dl className="mt-2 divide-y divide-lot-line border-y border-lot-line">
                     {FINANCING_SCENARIOS.map((scenario) => (

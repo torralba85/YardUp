@@ -8,7 +8,11 @@ import {
   formatOperatingShare,
   formatSignedCurrency,
   formatSignedRange,
+  leadScenario,
   maxPrincipalForPayment,
+  principalPaidInFirstYear,
+  proFormaSummary,
+  proFormaTableRows,
 } from "./certificate-pro-forma";
 import {
   calculateFeasibility,
@@ -36,6 +40,14 @@ describe("calculateMonthlyPayment", () => {
   });
 });
 
+describe("principalPaidInFirstYear", () => {
+  it("matches a month-by-month amortization schedule", () => {
+    expect(principalPaidInFirstYear(200_000, 0.08, 20)).toBeCloseTo(4227.39, 0);
+    expect(principalPaidInFirstYear(120_000, 0, 10)).toBe(12_000);
+    expect(principalPaidInFirstYear(0, 0.08, 20)).toBe(0);
+  });
+});
+
 describe("maxPrincipalForPayment", () => {
   it("inverts the payment calculation", () => {
     const payment = calculateMonthlyPayment(200_000, 0.08, 20);
@@ -56,10 +68,10 @@ describe("buildCashFlowProForma", () => {
     monthlyRent: 2000,
     operatingExpenseRatio: 0.325,
   });
-  const [heloc, construction] = proForma.scenarios;
+  const [construction, heloc] = proForma.scenarios;
 
-  it("models the two disclosed scenarios in order", () => {
-    expect(FINANCING_SCENARIOS.map((scenario) => scenario.id)).toEqual(["heloc", "construction"]);
+  it("models the two disclosed scenarios, the usually stronger one first", () => {
+    expect(FINANCING_SCENARIOS.map((scenario) => scenario.id)).toEqual(["construction", "heloc"]);
     expect(financingTermsLabel(heloc.scenario)).toBe("8.0% APR · 20-yr amortization");
     expect(financingTermsLabel(construction.scenario)).toBe("7.5% APR · 30-yr amortization");
   });
@@ -105,6 +117,32 @@ describe("buildCashFlowProForma", () => {
     expect([construction.breakEvenCashInLow, construction.breakEvenCashInHigh]).toEqual([7000, 57_000]);
   });
 
+  it("reports the equity each payment builds without adding it to the net", () => {
+    expect([construction.principalPaydownLow, construction.principalPaydownHigh]).toEqual([123, 154]);
+    expect([heloc.principalPaydownLow, heloc.principalPaydownHigh]).toEqual([352, 440]);
+    const rows = proFormaTableRows(proForma);
+    expect(rows.map((row) => row.label)).toContain("Principal paid down (equity, year-1 avg)");
+    expect(rows.find((row) => row.total)?.values).toEqual(["−$48 to +$231", "−$741 to −$323"]);
+  });
+
+  it("leads with the option closest to positive and what makes it positive", () => {
+    expect(leadScenario(proForma).scenario.id).toBe("construction");
+    expect(proFormaSummary(proForma)).toBe(
+      "Best option: 20% down construction-to-perm, −$48 to +$231/mo after the loan and operating costs, plus about $123–$154/mo of principal paid down in year 1, equity you keep. Positive across the whole cost range at $2,072/mo rent or with $57,000 total cash in.",
+    );
+  });
+
+  it("drops the path sentence once the best option is positive across the range", () => {
+    const strong = buildCashFlowProForma({
+      costLow: 100_000,
+      costHigh: 120_000,
+      monthlyRent: 3000,
+      operatingExpenseRatio: 0.3,
+    });
+    expect(proFormaSummary(strong)).toMatch(/^Best option: 20% down construction-to-perm, \+\$\d/);
+    expect(proFormaSummary(strong)).not.toMatch(/Positive across/);
+  });
+
   it("needs no extra cash when rent already covers the loan", () => {
     const cheap = buildCashFlowProForma({
       costLow: 50_000,
@@ -133,12 +171,17 @@ describe("buildCashFlowProForma", () => {
     }
   });
 
-  it("shows the Studio's default concept honestly, including a monthly loss", () => {
+  it("shows the Studio's default concept honestly: a HELOC loss, led by the near-even 20% down option", () => {
     const result = calculateFeasibility(parcelPresets[0], defaultAduConfig, defaultFinancialAssumptions);
     const studio = buildCashFlowProForma(result);
+    const fullyFinanced = studio.scenarios.find((row) => row.scenario.id === "heloc")!;
     expect(studio.operatingExpenseRatio).toBe(result.operatingExpenseRatio);
-    expect(studio.scenarios[0].netHigh).toBeLessThan(0);
-    expect(studio.scenarios[0].breakEvenRentLow).toBeGreaterThan(result.monthlyRent);
+    expect(fullyFinanced.netHigh).toBeLessThan(0);
+    expect(fullyFinanced.breakEvenRentLow).toBeGreaterThan(result.monthlyRent);
+    const lead = leadScenario(studio);
+    expect(lead.scenario.id).toBe("construction");
+    expect([lead.netLow, lead.netHigh]).toEqual([-233, 92]);
+    expect([lead.principalPaydownLow, lead.principalPaydownHigh]).toEqual([142, 178]);
   });
 });
 

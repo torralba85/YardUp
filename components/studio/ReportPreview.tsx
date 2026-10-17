@@ -25,6 +25,7 @@ import {
   buildCashFlowProForma,
   formatCurrencyRange,
   proFormaFootnote,
+  proFormaSummary,
   proFormaTableRows,
 } from "@/lib/certificate-pro-forma";
 import {
@@ -544,6 +545,9 @@ function CertificateProFormaSection({ result }: { result: FeasibilityResult }) {
       <p className="mt-2 max-w-2xl text-xs leading-5 text-lot-stone">
         The {formatCurrencyRange(result.costLow, result.costHigh)} build cost financed two ways,
         against {formatCurrency(proForma.monthlyRent)}/mo gross rent ({result.rentBasis}).
+      </p>
+      <p className="mt-3 max-w-2xl border-l-2 border-lot-ink pl-3 text-sm leading-6 text-lot-ink">
+        {proFormaSummary(proForma)}
       </p>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[480px] border-collapse text-xs">
