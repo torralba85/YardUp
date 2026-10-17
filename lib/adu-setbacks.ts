@@ -38,6 +38,9 @@ export interface AduSetbacks {
 
 type AduShape = Partial<Pick<ADUConfig, "width" | "length" | "height" | "roof">>;
 
+/** An ADU's size, plus the wall height and roof that decide height-based setbacks. */
+export type AduFootprint = Pick<ADUConfig, "width" | "length"> & Partial<Pick<ADUConfig, "height" | "roof">>;
+
 function modeledTotalHeightFt(config: AduShape | null | undefined): number | null {
   if (!config) return null;
   const { width, length, height, roof } = config;

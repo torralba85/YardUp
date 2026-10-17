@@ -23,6 +23,17 @@ All notable changes to LotFoundry are documented here. Format follows
   build sets `NEXT_PUBLIC_APPLE_SIGN_IN=true`, and the consent and help copy
   name only the providers on offer.
 
+### Fixed
+
+- The Studio places a California backyard home against ADU setbacks, not the
+  house's assumed zoning setbacks. Live California lots held it 20 ft from the
+  rear line and 5 ft from the sides, although state law caps an ADU's side and
+  rear setbacks at 4 ft (Gov. Code § 66314(d)(7)). City of San Diego lots now
+  allow 0 ft side and rear at 16 ft tall or less and 4 ft above that, with a note
+  to confirm the fire hazard and Coastal Zone maps. The plan view, 3D setback
+  lines, placement check, verdict, certificate and AI brief share one rule
+  (`lib/adu-setbacks.ts`). Lots outside California are unchanged.
+
 ## [1.0.2] - 2026-10-12
 
 ### Added

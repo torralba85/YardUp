@@ -26,10 +26,7 @@ import { describePlacementWithEvidence } from "./placement-evidence";
 import { parcelConfidence } from "./parcel-confidence";
 import { modeledSetbackAreaSqft } from "./parcel-geometry";
 import type { GeoJsonPolygon } from "./parcel-types";
-import { aduSetbackNote, aduSetbacks, type AduSetbacks } from "./adu-setbacks";
-
-/** The ADU's size, plus the wall height and roof that decide height-based setbacks. */
-type AduFootprint = Pick<ADUConfig, "width" | "length"> & Partial<Pick<ADUConfig, "height" | "roof">>;
+import { aduSetbackNote, aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks";
 
 export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
 

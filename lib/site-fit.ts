@@ -7,10 +7,7 @@ import {
 } from "./scene-model";
 import { buildSetbackEnvelope, REVIEW_SEPARATION_FT, validatePlacement, type PlacementResult } from "./placement-validation";
 import { parcelConfidence } from "./parcel-confidence";
-import { aduSetbacks, type AduSetbacks } from "./adu-setbacks";
-
-/** The ADU's size, plus the wall height and roof that decide height-based setbacks. */
-type AduFootprint = Pick<ADUConfig, "width" | "length"> & Partial<Pick<ADUConfig, "height" | "roof">>;
+import { aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks";
 
 /**
  * Validates a pose against the ADU's setbacks (`lib/adu-setbacks.ts`) and the modeled house.
