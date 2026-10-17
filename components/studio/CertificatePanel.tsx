@@ -41,6 +41,19 @@ import {
   rememberCertificatePurchaseIntent,
 } from "@/lib/certificate-purchase-intent";
 import type { LiveParcelData } from "@/lib/parcel-types";
+import {
+  FINANCING_SCENARIOS,
+  financingTermsLabel,
+  formatOperatingShare,
+} from "@/lib/certificate-pro-forma";
+import {
+  assessImpactFeeThreshold,
+  feeJurisdiction as resolveFeeJurisdiction,
+  permitAuditPreviewLines,
+  permitAuditTitle,
+} from "@/lib/certificate-permit-audit";
+import { BID_CHECKLIST_PREVIEW_COUNT, BID_LEVELING_CHECKLIST } from "@/lib/certificate-bid-checklist";
+import { marketProvenanceLine } from "@/lib/market/market-basis";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 
 /** One locked row of the paywall's "Included in your certificate" preview. */
@@ -92,10 +105,20 @@ function includedSections(preview: AIProjectBriefPreview | null | undefined): In
           : "What to do next, in order",
     },
     {
-      title: "Printable, shareable property record",
-      detail: "Print, export CSV, share a link, or connect with builders",
+      title: "Print-ready report, CSV export & permanent share link",
+      detail: "Print or save as PDF, export CSV, share a link, or connect with builders",
     },
   ];
+}
+
+/** A locked dollar figure: a sign-neutral mask, so the preview never hints at profit or loss. */
+function MaskedFigure({ label }: { label: string }) {
+  return (
+    <span className="shrink-0 text-sm font-semibold tabular-nums text-lot-ink">
+      <span aria-hidden="true" className="select-none blur-xs">±$•,•••/mo</span>
+      <span className="sr-only">{label} locked</span>
+    </span>
+  );
 }
 
 /** Props for {@link CertificatePanel}. */
@@ -391,6 +414,9 @@ export default function CertificatePanel({
     ? "Continue to secure checkout"
     : "Continue to purchase";
   const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel);
+  const feeJurisdiction = resolveFeeJurisdiction(parcel);
+  const feeThreshold = assessImpactFeeThreshold(result.aduSqft);
+  const lockedBidItems = BID_LEVELING_CHECKLIST.length - BID_CHECKLIST_PREVIEW_COUNT;
   const recoveryPending = !purchased && Boolean(recovery.intent && recovery.intent.kind !== "cancel");
   const reportBusy = busy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
 
@@ -457,18 +483,19 @@ export default function CertificatePanel({
       )}
 
       {!purchased && (
-        <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">
-          <div className="flex items-center gap-2">
-            <Lock size={16} className="shrink-0 text-lot-orange-ink" aria-hidden="true" />
+        <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-4 py-5 sm:px-6">
+          <div className="flex items-start gap-2">
+            <Lock size={16} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-lot-ink">
-              Unlock the complete record for {parcel.address}
+              Unlock the complete ADU feasibility &amp; builder bid packet
               {certPrice.exact ? ` — one-time ${price}` : " — one-time purchase"}
             </h3>
           </div>
           <p className="lf-body-sm mt-1 text-lot-stone">
-            The estimate below is free. The certificate adds what it leaves out: what could
-            stop this project, what to verify, and what happens next, recorded for this
-            property so you can take it to builders, lenders, and local professionals.
+            For {parcel.address}. The estimate below is free. The certificate adds what you
+            need to decide and to compare builders: whether rent covers the loan, the fees and
+            permit paperwork for this size, and a scope sheet that makes three quotes cover the
+            same job.
           </p>
           <div
             className={`mt-4 flex items-start gap-3 rounded-none border px-4 py-3 ${
@@ -509,6 +536,80 @@ export default function CertificatePanel({
               Included in your certificate
             </p>
             <ul aria-labelledby={includedHeadingId} className="divide-y divide-lot-line">
+              <li className="flex items-start gap-3 px-4 py-3">
+                <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-semibold text-lot-ink">Leveraged monthly cash-flow pro forma</h4>
+                  <p className="mt-0.5 text-xs leading-5 text-lot-stone">
+                    Loan payment vs. local rent for this concept, and the rent or cash in that breaks even
+                  </p>
+                  <dl className="mt-2 divide-y divide-lot-line border-y border-lot-line">
+                    {FINANCING_SCENARIOS.map((scenario) => (
+                      <div key={scenario.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2">
+                        <dt className="min-w-0 text-xs leading-5 text-lot-ink">
+                          {scenario.label}
+                          <span className="block text-lot-stone">{financingTermsLabel(scenario)}</span>
+                        </dt>
+                        <dd>
+                          <MaskedFigure label={`${scenario.label} monthly cash flow`} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </li>
+              <li className="flex items-start gap-3 px-4 py-3">
+                <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-semibold text-lot-ink">
+                    {feeJurisdiction === "other"
+                      ? permitAuditTitle(feeJurisdiction)
+                      : "SB 13 (750 sq ft) impact-fee & permit submittal audit"}
+                  </h4>
+                  <p className="mt-0.5 text-xs leading-5 text-lot-stone">
+                    {feeJurisdiction === "other"
+                      ? "The fees and paperwork to confirm with your city for this layout"
+                      : feeThreshold.isExempt
+                        ? `At ${feeThreshold.sqft.toLocaleString()} sq ft: within the exemption, with the fees and paperwork that still apply`
+                        : `At ${feeThreshold.sqft.toLocaleString()} sq ft: ${feeThreshold.sqftOverLimit.toLocaleString()} sq ft over the exemption, with the fees that follow and the trim that avoids them`}
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {permitAuditPreviewLines(feeJurisdiction).map((line) => (
+                      <li key={line} className="flex items-start gap-2 text-xs leading-5 text-lot-stone">
+                        <Lock size={12} className="mt-1 shrink-0" aria-hidden="true" />
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+              <li className="flex items-start gap-3 px-4 py-3">
+                <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-semibold text-lot-ink">
+                    Contractor bid-leveling RFQ checklist
+                  </h4>
+                  <p className="mt-0.5 text-xs leading-5 text-lot-stone">
+                    {BID_LEVELING_CHECKLIST.length} scope items builders often exclude, printable with
+                    columns for three builders
+                  </p>
+                  <ol className="mt-2 space-y-1.5">
+                    {BID_LEVELING_CHECKLIST.slice(0, BID_CHECKLIST_PREVIEW_COUNT).map((item, index) => (
+                      <li key={item.id} className="grid grid-cols-[20px_1fr] gap-2 text-xs leading-5">
+                        <span className="tabular-nums text-lot-stone">{String(index + 1).padStart(2, "0")}</span>
+                        <span className="min-w-0 text-lot-ink">
+                          {item.title}
+                          <span className="block text-lot-stone">{item.ask}</span>
+                        </span>
+                      </li>
+                    ))}
+                    <li className="flex items-center gap-2 text-xs leading-5 text-lot-stone">
+                      <Lock size={12} className="shrink-0" aria-hidden="true" />
+                      {lockedBidItems} more scope items, locked in the certificate
+                    </li>
+                  </ol>
+                </div>
+              </li>
               {includedSections(projectBriefPreview).map((section) => (
                 <li key={section.title} className="flex items-start gap-3 px-4 py-3">
                   <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />
@@ -528,9 +629,6 @@ export default function CertificatePanel({
             <strong>One purchase unlocks this property.</strong> Revise the backyard home concept and
             regenerate its certificate without paying again.
           </p>
-          <p className="lf-caption mt-3 text-lot-stone">
-            Planning estimate only. Not a permit, appraisal, architectural or engineering opinion, lending decision, government determination, or guarantee of income. Third-party data may be incomplete or outdated; verify with local authorities and licensed professionals before building or investing.
-          </p>
         </div>
       )}
 
@@ -543,6 +641,8 @@ export default function CertificatePanel({
         reportCtaBusy={reportBusy}
         reportCtaNote={ctaNote}
         error={!purchased ? error : null}
+        certificateUnlocked={purchased}
+        feeJurisdiction={feeJurisdiction}
       />
 
       {purchased && (
@@ -612,6 +712,47 @@ export default function CertificatePanel({
           </div>
         </div>
       )}
+
+      {/* Methodology stays one tap away, below the purchase decision rather than above it. */}
+      <details className="rounded-none border border-lot-line bg-lot-chalk px-4">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+          Methodology &amp; data sources
+        </summary>
+        <div className="space-y-2 pb-4 text-xs leading-5 text-lot-stone">
+          <p>
+            <strong className="font-semibold text-lot-ink">Build cost:</strong> a per-square-foot
+            construction base by exterior finish, roof and openings, adjusted by a regional cost
+            factor where the market data has one, plus an allowance for design, engineering and
+            permits.
+          </p>
+          <p>
+            <strong className="font-semibold text-lot-ink">Rent:</strong> {result.rentBasis}.{" "}
+            {marketProvenanceLine(result.market)}.
+          </p>
+          <p>
+            <strong className="font-semibold text-lot-ink">Net income and payback:</strong> annual
+            net income subtracts a {formatOperatingShare(result.operatingExpenseRatio)} operating
+            allowance from gross rent; payback divides the mid-range build cost by that income,
+            before financing.
+          </p>
+          <p>
+            <strong className="font-semibold text-lot-ink">Cash flow (certificate):</strong>{" "}
+            fixed-rate, fully amortizing payments on the build cost range at{" "}
+            {FINANCING_SCENARIOS.map((scenario) => `${(scenario.annualRate * 100).toFixed(1)}% over ${scenario.years} years (${Math.round(scenario.financedShare * 100)}% financed)`).join(" or ")},
+            after the same operating allowance. Illustrative terms, not a lender quote.
+          </p>
+          {feeJurisdiction !== "other" && (
+            <p>
+              <strong className="font-semibold text-lot-ink">Impact fees (certificate):</strong>{" "}
+              California&apos;s exemption for ADUs of 750 sq ft of interior livable space or less
+              (HCD ADU Handbook, March 2026), checked against the Studio&apos;s outside footprint.
+            </p>
+          )}
+          <p>
+            Planning estimate only. Not a permit, appraisal, architectural or engineering opinion, lending decision, government determination, or guarantee of income. Third-party data may be incomplete or outdated; verify with local authorities and licensed professionals before building or investing.
+          </p>
+        </div>
+      </details>
 
       <AuthModal
         isOpen={authOpen}

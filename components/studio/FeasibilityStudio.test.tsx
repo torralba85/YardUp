@@ -625,7 +625,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // ...but the complete certificate is gated behind a one-time price.
     expect(
       screen.getByRole("heading", {
-        name: /unlock the complete record for .* one-time \$29/i,
+        name: /unlock the complete adu feasibility & builder bid packet — one-time \$29/i,
       }),
     ).toBeInTheDocument();
 

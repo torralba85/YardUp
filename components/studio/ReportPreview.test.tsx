@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   calculateFeasibility,
@@ -169,5 +169,61 @@ describe("ReportPreview", () => {
 
     const homeImg = screen.getByAltText("Reference Home");
     expect(homeImg).toHaveAttribute("src", "https://example.com/home.jpg");
+  });
+});
+
+describe("ReportPreview certificate packet", () => {
+  const caParcel = { ...parcelPresets[0], city: "Oceanside, CA 92054" };
+  const config = { ...defaultAduConfig, footprint: 800, width: 25, length: 32 };
+  const result = calculateFeasibility(caParcel, config, defaultFinancialAssumptions);
+
+  function renderPacket(parcel = caParcel) {
+    render(
+      <ReportPreview
+        parcel={parcel}
+        parcelName={`${parcel.address}, ${parcel.city}`}
+        result={result}
+        config={config}
+        feasibilityStatus="eligible"
+        onClose={vi.fn()}
+        onDownload={vi.fn()}
+      />,
+    );
+  }
+
+  it("tables both financing scenarios with the same operating share as the annual ledger", () => {
+    renderPacket();
+    const table = screen.getByRole("heading", { name: "Leveraged monthly cash-flow pro forma" }).closest("section")!;
+    expect(within(table).getByRole("columnheader", { name: "100% financed HELOC" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "20% down construction-to-perm" })).toBeInTheDocument();
+    expect(within(table).getByRole("rowheader", { name: "Less operating costs (32.5% of rent)" })).toBeInTheDocument();
+    for (const name of ["Net monthly cash flow", "Rent to break even", "Cash in to break even"]) {
+      expect(within(table).getByRole("rowheader", { name })).toBeInTheDocument();
+    }
+  });
+
+  it("audits the 750 sq ft threshold, fees, submittals and modeled height for a California lot", () => {
+    renderPacket();
+    const audit = screen.getByRole("heading", { name: "750 sq ft impact-fee & permit audit" }).closest("section")!;
+    expect(within(audit).getByText("50 sq ft over 750")).toBeInTheDocument();
+    expect(within(audit).getByText("Impact fees: 50 sq ft over the exemption")).toBeInTheDocument();
+    expect(within(audit).getByText(/^Height:/)).toBeInTheDocument();
+    expect(within(audit).getByText("Counter submittal checklist")).toBeInTheDocument();
+    expect(within(audit).getByRole("link", { name: /HCD ADU Handbook/ })).toHaveAttribute("target", "_blank");
+  });
+
+  it("keeps California rules out of the audit for a lot elsewhere", () => {
+    renderPacket(parcelPresets[0]);
+    expect(screen.getByRole("heading", { name: "Permit fee & submittal audit" })).toBeInTheDocument();
+    expect(screen.queryByText(/SB 13/)).not.toBeInTheDocument();
+  });
+
+  it("prints a 12-line RFQ sheet with a checkbox per builder", () => {
+    renderPacket();
+    const sheet = screen.getByRole("heading", { name: "Contractor bid-leveling checklist" }).closest("section")!;
+    expect(sheet.className).toMatch(/print:break-before-page/);
+    expect(within(sheet).getAllByRole("rowheader")).toHaveLength(12);
+    expect(within(sheet).getAllByRole("checkbox")).toHaveLength(36);
+    expect(within(sheet).getByRole("checkbox", { name: /^Builder C includes Final inspection/ })).toBeInTheDocument();
   });
 });
