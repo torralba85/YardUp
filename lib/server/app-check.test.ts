@@ -10,17 +10,20 @@ const request = (token?: string) => new NextRequest("https://lotfoundry.net/api/
   method: "POST",
   headers: token ? { "X-Firebase-AppCheck": token } : {},
 });
+const sdkError = (code: string) => Object.assign(new Error(code), { code });
 
 describe("verifyLimitedUseAppCheck", () => {
   beforeEach(() => {
     mocks.verifyToken.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
-  it("consumes a valid token so it cannot be replayed", async () => {
+  it("verifies the signature, then consumes the token so it cannot be replayed", async () => {
     mocks.verifyToken.mockResolvedValue({ alreadyConsumed: false, appId: "web" });
     expect(await verifyLimitedUseAppCheck(request("token"))).toBe("valid");
-    expect(mocks.verifyToken).toHaveBeenCalledWith("token", { consume: true });
+    expect(mocks.verifyToken).toHaveBeenNthCalledWith(1, "token");
+    expect(mocks.verifyToken).toHaveBeenNthCalledWith(2, "token", { consume: true });
   });
 
   it("reports a missing header without calling App Check", async () => {
@@ -29,19 +32,26 @@ describe("verifyLimitedUseAppCheck", () => {
   });
 
   it("rejects a replayed token", async () => {
-    mocks.verifyToken.mockResolvedValue({ alreadyConsumed: true, appId: "web" });
+    mocks.verifyToken.mockResolvedValueOnce({ appId: "web" }).mockResolvedValueOnce({ alreadyConsumed: true, appId: "web" });
     expect(await verifyLimitedUseAppCheck(request("token"))).toBe("invalid");
   });
 
-  it.each(["app-check/invalid-argument", "app-check/app-check-token-expired"])("rejects a token the SDK refuses with %s", async (code) => {
-    mocks.verifyToken.mockRejectedValue(Object.assign(new Error("bad token"), { code }));
+  it.each(["app-check/invalid-argument", "app-check/app-check-token-expired"])("rejects a token the SDK refuses with %s, without consuming", async (code) => {
+    mocks.verifyToken.mockRejectedValue(sdkError(code));
     expect(await verifyLimitedUseAppCheck(request("token"))).toBe("invalid");
+    expect(mocks.verifyToken).toHaveBeenCalledTimes(1);
   });
 
   it("separates an App Check outage from a bad token", async () => {
-    mocks.verifyToken.mockRejectedValue(Object.assign(new Error("backend down"), { code: "app-check/unknown-error" }));
+    mocks.verifyToken.mockRejectedValue(sdkError("app-check/unknown-error"));
     expect(await verifyLimitedUseAppCheck(request("token"))).toBe("unavailable");
     mocks.verifyToken.mockRejectedValue(new Error("socket hang up"));
     expect(await verifyLimitedUseAppCheck(request("token"))).toBe("unavailable");
+  });
+
+  it("accepts a verified token when the replay check is denied, and logs it", async () => {
+    mocks.verifyToken.mockResolvedValueOnce({ appId: "web" }).mockRejectedValueOnce(sdkError("app-check/permission-denied"));
+    expect(await verifyLimitedUseAppCheck(request("token"))).toBe("valid");
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("replay protection unavailable"), "app-check/permission-denied");
   });
 });
