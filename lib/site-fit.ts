@@ -1,4 +1,17 @@
 import type { ADUConfig, Parcel } from "./feasibility";
+import { buildExistingHouseSceneModel, type Pose2D } from "./scene-model";
+import { buildSetbackEnvelope, validatePlacement } from "./placement-validation";
+
+export function getScenePlacement(parcel: Parcel, config: Pick<ADUConfig, "width" | "length">, pose: Pose2D) {
+  return validatePlacement({ aduWidth: config.width, aduLength: config.length, pose,
+    envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, parcel.setbacks),
+    existingHouseCorners: buildExistingHouseSceneModel(parcel).corners });
+}
+
+export function getDefaultAduPose(parcel: Parcel, config: Pick<ADUConfig, "width" | "length">): Pose2D {
+  const bounds = getAduPlacementBounds(parcel, config);
+  return { x: 0, z: Math.min(bounds.minZ + 3, bounds.maxZ), rotationDeg: 0 };
+}
 
 export interface SiteFitCapacityStatus {
   title: string;
