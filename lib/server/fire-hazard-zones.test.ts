@@ -262,6 +262,28 @@ describe("fetchFireHazardZone — failures", () => {
     });
   });
 
+  it.each([
+    ["NonWildland", { SRA: "LRA", FHSZ: -3, FHSZ_Description: "NonWildland" }],
+    ["Moderate", { SRA: "LRA", FHSZ: 1 }],
+    ["High", { SRA: "LRA", FHSZ: 2 }],
+  ])("turns a %s feature beside an unreadable one into unknown, never a clear answer", async (_label, readable) => {
+    stubLayers({ lra: esriFeatures(readable, { OBJECTID: 7 }) });
+    expect(await fetchFireHazardZone({ ...SAN_JOSE, state: "CA" })).toMatchObject({
+      zone: "unknown",
+      source: "CAL FIRE LRA FHSZ map (2025) and CAL FIRE SRA FHSZ map (2024)",
+    });
+  });
+
+  it("does not let another map's clear answer vouch for a layer with an unreadable feature", async () => {
+    stubLayers({ city: esriFeatures({ FHSZ_Description: "Moderate" }, { OBJECTID: 3 }), lra: NON_WILDLAND });
+    expect(await fetchFireHazardZone({ ...TECOLOTE, state: "CA" })).toMatchObject({ zone: "unknown" });
+  });
+
+  it("keeps a Very High feature even when another feature in the same layer is unreadable", async () => {
+    stubLayers({ lra: esriFeatures({ OBJECTID: 7 }, { SRA: "LRA", FHSZ: 3 }) });
+    expect(await fetchFireHazardZone({ ...SAN_JOSE, state: "CA" })).toMatchObject({ zone: "very-high", responsibility: "LRA" });
+  });
+
   it("accepts a truncated result that already holds Very High", async () => {
     stubLayers({ lra: { ok: true, status: 200, json: async () => ({ features: [{ attributes: { FHSZ: 3 } }], exceededTransferLimit: true }) } });
     expect(await fetchFireHazardZone({ ...SAN_JOSE, state: "CA" })).toMatchObject({ zone: "very-high" });

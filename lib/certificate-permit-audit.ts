@@ -202,6 +202,14 @@ function heightLine(jurisdiction: FeeJurisdiction, totalHeightFt: number, parcel
         tone: "review",
       };
     }
+    if (!overFloor && (!fire || fire.zone === "unknown")) {
+      // aduSetbacks holds 4 ft here (san-diego-unchecked), so the zero-setback line must not read as clear.
+      return {
+        title: "Height: 16 ft or less, fire zone not checked",
+        detail: `${height} San Diego allows an ADU up to 16 ft tall with no side or rear setback outside High and Very High fire hazard zones, but this lot's zone could not be checked, so the layout holds 4 ft side and rear setbacks. Check the City's fire hazard map before relying on a zero setback.`,
+        tone: "review",
+      };
+    }
     return overFloor
       ? {
           title: "Height: over San Diego's 16 ft line",

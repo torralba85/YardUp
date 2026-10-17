@@ -265,9 +265,13 @@ async function queryLayer(
 
     let zone: KnownZone | null = null;
     let responsibility = layer.responsibility;
+    let unreadable = false;
     for (const raw of features) {
       const read = readFeature(raw);
-      if (!read) continue;
+      if (!read) {
+        unreadable = true;
+        continue;
+      }
       if (zone === null || ZONE_RANK[read.zone] > ZONE_RANK[zone]) {
         zone = read.zone;
         responsibility = read.responsibility ?? layer.responsibility;
@@ -276,8 +280,9 @@ async function queryLayer(
     // Features that carry no readable class mean the layer changed shape, not
     // that the parcel is outside every zone.
     if (zone === null) return { ok: false };
-    // A truncated result can hide a higher class, unless it already holds the top one.
-    if (json.exceededTransferLimit && zone !== "very-high") return { ok: false };
+    // A truncated result, or a feature whose class could not be read, can hide a
+    // higher class than the ones read, unless one already holds the top class.
+    if ((json.exceededTransferLimit || unreadable) && zone !== "very-high") return { ok: false };
     return { ok: true, zone, responsibility, matched: true };
   } catch {
     return { ok: false };
