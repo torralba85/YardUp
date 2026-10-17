@@ -28,12 +28,6 @@
       "shortName": "Study",
       "url": "/studio",
       "chosenIconUrl": "https://lotfoundry.net/icon-512.png"
-    },
-    {
-      "name": "Builder Dashboard",
-      "shortName": "Builder",
-      "url": "/builder",
-      "chosenIconUrl": "https://lotfoundry.net/icon-512.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",

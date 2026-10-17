@@ -166,6 +166,9 @@ describe("FeasibilityStudio (guided spine)", () => {
     }]);
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    // Auth resolves before the saved-scenario request. Wait for that boundary
+    // before querying the conditional disclosure so its render can settle.
+    await waitFor(() => expect(savedMocks.fetch).toHaveBeenCalledWith("owner-1"));
     fireEvent.click(await screen.findByRole("button", { name: /Saved Concepts/ }));
     const remove = screen.getByRole("button", { name: "Delete saved concept Garden home" });
     fireEvent.click(remove);

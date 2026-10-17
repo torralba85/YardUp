@@ -89,12 +89,15 @@ full-screen TWA verification.
 
 ## Play Billing
 
-In-app products (must match `lib/commerce/products.ts`):
+Only `com.lotfoundry.certificate.credit1` is offered for new in-app purchases.
+Builder registration, dashboards and lead-credit purchases are web-only, including
+phone browsers. The three historical builder IDs remain in
+`lib/commerce/products.ts` for receipt verification; do not reactivate them as
+new Play offers. See `docs/play-store-homeowner-listing.md` for catalog checks.
 
-- `com.lotfoundry.certificate.credit1`
-- `com.lotfoundry.builder.credit1` (single lead unlock when balance is zero)
-- `com.lotfoundry.builder.credits5`
-- `com.lotfoundry.builder.credits10`
+The Builder Dashboard launcher shortcut has been removed from source. Delivering
+that launcher change requires a newly versioned Android release. The web route
+guard also handles existing shortcuts after the web deployment.
 
 The web client detects `getDigitalGoodsService` and routes purchases through
 `POST /api/store/purchases/verify`.

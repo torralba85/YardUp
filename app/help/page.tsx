@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 
@@ -43,11 +44,11 @@ export default function HelpPage() {
       <LegalSection title="Payments">
         <p>
           On the web, certificates and builder lead credits use Stripe Checkout. In the iOS and
-          Android apps, digital purchases use App Store and Google Play billing with server-side
+          Android apps, certificates use App Store and Google Play billing with server-side
           verification. Demo environments may unlock without payment.
         </p>
       </LegalSection>
-      <LegalSection title="Builder leads">
+      <WebBuilderOnly><LegalSection title="Builder leads">
         <p>
           Builders complete a profile on{" "}
           <Link href="/builder" className="font-medium text-lf-clay-ink underline">
@@ -56,7 +57,7 @@ export default function HelpPage() {
           , review redacted lead previews, and unlock contact details with credits. Homeowners
           share leads only after an explicit connect form.
         </p>
-      </LegalSection>
+      </LegalSection></WebBuilderOnly>
       <LegalSection title="AI style-match photos">
         <p>
           Style-match sends a photo you choose to OpenAI to generate a concept image. LotFoundry

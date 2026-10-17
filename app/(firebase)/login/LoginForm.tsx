@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
+import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
@@ -10,6 +12,7 @@ import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 export default function LoginForm() {
   const { signIn, signInWithGoogle, signInWithApple, user, profile } = useAuth();
   const router = useRouter();
+  const buildersAllowed = useWebBuilderAccess();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
@@ -20,11 +23,12 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (user && profile) {
+      const allowBuilder = !isNativeAppShell();
       const nextParam = searchParams.get("next");
       if (nextParam) {
-        router.replace(safeRedirectPath(nextParam));
+        router.replace(safeRedirectPath(nextParam, allowBuilder));
       } else {
-        router.replace(profile.role === "builder" ? "/builder" : "/studio");
+        router.replace(allowBuilder && profile.role === "builder" ? "/builder" : "/studio");
       }
     }
   }, [router, user, profile, searchParams]);
@@ -229,7 +233,7 @@ export default function LoginForm() {
             Sign up
           </Link>
         </p>
-        <p className="lf-body-sm text-center text-lf-muted">
+        {buildersAllowed && <p className="lf-body-sm text-center text-lf-muted">
           Are you a builder?{" "}
           <Link
             href="/signup?role=builder"
@@ -237,13 +241,13 @@ export default function LoginForm() {
           >
             Register here
           </Link>
-        </p>
+        </p>}
       </div>
     </>
   );
 }
 
-function safeRedirectPath(value: string | null): string {
+function safeRedirectPath(value: string | null, buildersAllowed: boolean): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return "/studio";
   }
@@ -254,7 +258,7 @@ function safeRedirectPath(value: string | null): string {
       return "/studio";
     }
     const allowed = ["/studio", "/builder", "/settings", "/delete-account", "/feedback"];
-    if (!allowed.includes(parsed.pathname)) {
+    if (!allowed.includes(parsed.pathname) || (!buildersAllowed && parsed.pathname === "/builder")) {
       return "/studio";
     }
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;

@@ -1,6 +1,8 @@
 "use client";
 
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
+import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,15 +18,25 @@ import { useAuth } from "@/lib/auth-context";
 export default function BuilderPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
+  const buildersAllowed = useWebBuilderAccess();
 
   useEffect(() => {
+    if (isNativeAppShell()) {
+      router.replace("/studio");
+      return;
+    }
+    if (!buildersAllowed) return;
     if (!loading && !user) {
       router.replace("/login?next=/builder");
     }
     if (!loading && user && profile && profile.role !== "builder") {
       router.replace("/studio");
     }
-  }, [loading, profile, router, user]);
+  }, [buildersAllowed, loading, profile, router, user]);
+
+  if (!buildersAllowed) {
+    return <div role="status" className="p-6 text-lot-ink">Opening Studio...</div>;
+  }
 
   if (loading || !user || !profile || profile.role !== "builder") {
     return (
