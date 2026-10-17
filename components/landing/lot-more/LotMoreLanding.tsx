@@ -1046,44 +1046,44 @@ export function LotMoreLanding({
         </main>
 
         <footer className={styles.footer}>
-          <p className={styles.footerDisclaimer}>
-            Planning estimates only. Demo lots and imagery are illustrative; local data and
-            assumptions need confirmation. A Certificate is a project brief, not a permit,
-            appraisal, loan approval, or guarantee of cost or income. Verify site conditions
-            and requirements with local authorities and licensed professionals.
-          </p>
           <div className={styles.footerTop}>
-            <p>
+            <p className={styles.footerTagline}>
               Early possibilities.
               <br />
               Informed next steps.
             </p>
             <nav aria-label="Footer">
-              <Link
-                href="/studio"
-                prefetch={false}
-                onClick={() => stashEntrySource("landing_cta")}
-              >
-                The studio
-              </Link>
-              <WebBuilderOnly><Link href="/signup?role=builder" prefetch={false}>
-                Register as a builder
-              </Link></WebBuilderOnly>
-              <Link href="/about">About us</Link>
-              <Link href="/adu/ca">ADU rules by city</Link>
-              <Link href="/adu/ca/san-diego/cost">San Diego ADU costs</Link>
-              <Link href="/adu-cost-calculator">ADU cost calculator</Link>
-              <Link href="/seattle">Seattle ADU demo</Link>
-              <Link href="/portland">Portland ADU demo</Link>
-              <Link href="/austin">Austin ADU demo</Link>
-              <Link href="/help">Get in touch</Link>
-              <a
-                href={GOOGLE_PLAY_URL}
-                rel="noopener"
-                aria-label="Android app on Google Play"
-              >
-                Google Play
-              </a>
+              <div className={styles.footerGroup}>
+                <h3>Explore</h3>
+                <ul>
+                  <li><Link href="/studio" prefetch={false} onClick={() => stashEntrySource("landing_cta")}>The studio</Link></li>
+                  <li><Link href="/adu-cost-calculator">ADU cost calculator</Link></li>
+                  <li><a href={GOOGLE_PLAY_URL} rel="noopener" aria-label="Android app on Google Play">Google Play</a></li>
+                </ul>
+              </div>
+              <div className={styles.footerGroup}>
+                <h3>Planning guides</h3>
+                <ul>
+                  <li><Link href="/adu/ca">ADU rules by city</Link></li>
+                  <li><Link href="/adu/ca/san-diego/cost">San Diego ADU costs</Link></li>
+                </ul>
+              </div>
+              <div className={styles.footerGroup}>
+                <h3>Demo lots</h3>
+                <ul>
+                  <li><Link href="/seattle">Seattle ADU demo</Link></li>
+                  <li><Link href="/portland">Portland ADU demo</Link></li>
+                  <li><Link href="/austin">Austin ADU demo</Link></li>
+                </ul>
+              </div>
+              <div className={styles.footerGroup}>
+                <h3>LotFoundry</h3>
+                <ul>
+                  <li><Link href="/about">About us</Link></li>
+                  <WebBuilderOnly><li><Link href="/signup?role=builder" prefetch={false}>Register as a builder</Link></li></WebBuilderOnly>
+                  <li><Link href="/help">Get in touch</Link></li>
+                </ul>
+              </div>
             </nav>
             <a
               href="#start"
@@ -1092,6 +1092,14 @@ export function LotMoreLanding({
             >
               <ArrowUpRight size={27} aria-hidden="true" />
             </a>
+          </div>
+          <div className={styles.footerNote}>
+            <p className={styles.footerDisclaimer}>
+              <strong>Planning estimates only.</strong> Demo lots and imagery are illustrative; local data and
+              assumptions need confirmation. A Certificate is a project brief, not a permit,
+              appraisal, loan approval, or guarantee of cost or income. Verify site conditions
+              and requirements with local authorities and licensed professionals.
+            </p>
           </div>
           <div className={styles.footerWordmark} aria-hidden="true">
             LotFoundry<span aria-hidden="true">↗</span>
