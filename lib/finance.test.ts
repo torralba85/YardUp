@@ -16,6 +16,13 @@ describe("calculateFinance", () => {
     expect(result.costLow).toBe(Math.round(total * 0.92 / 1000) * 1000);
     expect(result.costHigh).toBe(Math.round(total * 1.15 / 1000) * 1000);
   });
+  it("keeps cost allowances in whole dollars under fractional regional multipliers", () => {
+    const result = calculateFinance(600, { ...defaultAduConfig, roof: "gable" }, defaultFinancialAssumptions, getParcelById("oak-street").expectedRent, { costMultiplier: 1.08 });
+    const rows = constructionBudgetRows(result.costBreakdown);
+    for (const [, value] of rows) expect(Number.isInteger(value)).toBe(true);
+    expect(rows.reduce((sum, [, value]) => sum + value, 0)).toBe(result.costBreakdown.total);
+    expect(result.costBreakdown.total).toBe(Math.round((600 * 358 + 9000) * 1.08 * defaultFinancialAssumptions.softCostMultiplier));
+  });
   it("updates monthly rent and annual NOI when scenario changes to market", () => {
     const parcel = getParcelById("oak-street");
     const result = calculateFinance(600, defaultAduConfig, {

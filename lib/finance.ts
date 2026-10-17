@@ -80,14 +80,21 @@ export function calculateFinance(
   const annualNoi = Math.round(monthlyRent * 12 * (1 - operatingExpenseRatio));
   const paybackYears = Number((costMid / annualNoi).toFixed(1));
 
+  // Whole dollars that still sum exactly to the central estimate: the CSV export
+  // prints these raw, and regional multipliers otherwise leave float noise.
+  const baseConstruction = Math.round(aduSqft * baseCostPerSqft);
+  const roofCost = Math.round(aduSqft * roofPremium);
+  const hardTotal = Math.round(hardCost);
+  const budgetTotal = Math.round(costMid);
+
   return {
     costBreakdown: {
-      baseConstruction: aduSqft * baseCostPerSqft,
-      roofPremium: aduSqft * roofPremium,
+      baseConstruction,
+      roofPremium: roofCost,
       openings: openingPremium,
-      regionalAdjustment: hardCost - (aduSqft * (baseCostPerSqft + roofPremium) + openingPremium),
-      softCosts: costMid - hardCost,
-      total: costMid,
+      regionalAdjustment: hardTotal - baseConstruction - roofCost - openingPremium,
+      softCosts: budgetTotal - hardTotal,
+      total: budgetTotal,
     },
     costLow,
     costHigh,
