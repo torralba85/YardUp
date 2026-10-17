@@ -57,6 +57,7 @@ import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import ReportPreview from "./studio/ReportPreview";
+import type { LiveParcelData } from "@/lib/parcel-types";
 import CertificatePanel from "./studio/CertificatePanel";
 import BuildersPanel from "./studio/BuildersPanel";
 import BuilderLeadPanel, {
@@ -490,7 +491,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     const merged = mergeScenarioPartial(parsed);
     setParcelId(merged.parcelId);
     setConfig(merged.config);
-    setPoseState({key:merged.parcelId,pose:merged.pose ?? defaultPose(getParcelById(merged.parcelId),merged.config)});
+    const incomingPoseKey = parcelMode === "preset" ? merged.parcelId : sceneKey;
+    setPoseState({ key: incomingPoseKey, pose: merged.pose ?? defaultPose(parcelMode === "preset" ? getParcelById(merged.parcelId) : activeParcel, merged.config) });
     setAssumptions(merged.assumptions);
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the
@@ -916,8 +918,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     return { matchedCount: matchedBuilders.length };
   }
 
-  function downloadReport() {
+  function downloadReport(financing?: import("@/lib/certificate-planning").FinancingInputs) {
     const html = buildReportHtml({
+      financing,
       parcel: activeParcel,
       config,
       result,
@@ -928,8 +931,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     downloadBlob("lotfoundry-certificate-of-feasibility.html", html, "text/html");
   }
 
-  function exportCsv() {
+  function exportCsv(financing?: import("@/lib/certificate-planning").FinancingInputs) {
     const csv = buildReportCsv({
+      financing,
       parcel: activeParcel,
       config,
       result,
@@ -1125,6 +1129,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcelName={mobileParcelName}
           certificate={
             <CertificatePanel
+              emailScenario={parcelMode === "estimated" ? undefined : { version: 2, heightConvention: "wall", parcelId, config, assumptions, pose, ...(parcelMode === "live" ? { liveParcel: liveParcel as LiveParcelData } : {}) }}
               recovery={certificateRecovery}
               parcel={activeParcel}
               result={result}
@@ -1357,6 +1362,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           </>
         ) : activeStep === "certificate" ? (
           <CertificatePanel
+            emailScenario={parcelMode === "estimated" ? undefined : { version: 2, heightConvention: "wall", parcelId, config, assumptions, pose, ...(parcelMode === "live" ? { liveParcel: liveParcel as LiveParcelData } : {}) }}
               recovery={certificateRecovery}
             parcel={activeParcel}
             result={result}

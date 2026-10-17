@@ -67,6 +67,10 @@ const apiSecrets = [
   regridApiKey,
   ...(typeSafeApiKey ? [typeSafeApiKey] : []),
 ];
+// Enable only after the existing Workspace sender is configured and tested.
+if (process.env.SCENARIO_EMAIL_ENABLED === "true") {
+  apiSecrets.push(defineSecret("SCENARIO_SMTP_PASSWORD_SECRET"));
+}
 
 // scripts/prepare-firebase.js copies the Next.js standalone build into
 // functions/.next/standalone/. The compiled app (BUILD_ID, server/, manifests)

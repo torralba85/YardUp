@@ -34,6 +34,13 @@ export default function PrivacyPage() {
             configurations you design or save.
           </li>
           <li>
+            <strong>Emailed Layouts:</strong> If you request a layout email, we store your email
+            address and a snapshot of your lot, design, and placement to deliver that one message.
+            Its private link expires after 30 days. Anyone you share the link with can view the
+            property address and layout. This request does not subscribe you to marketing.
+            Contact support@lotfoundry.net to request deletion.
+          </li>
+          <li>
             <strong>Builder Profile Information:</strong> Business name, contractor license details,
             phone numbers, service regions, and trade specializations.
           </li>

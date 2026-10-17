@@ -326,6 +326,9 @@ describe("CertificatePanel", () => {
         (row) => within(row).getByRole("heading", { level: 4 }).textContent,
       );
       expect(titles).toEqual([
+        "Monthly financing cash-flow breakdown",
+        "Fee & overlay verification worksheet",
+        "Contractor bid-leveling checklist",
         "Property-specific risk review",
         "Typical local approval path",
         "Approval timeline",

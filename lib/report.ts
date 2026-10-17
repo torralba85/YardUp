@@ -1,4 +1,5 @@
 import { COLOR } from "@/lib/design-tokens";
+import { planningRows, type FinancingInputs } from "./certificate-planning";
 import {
   finishLabels,
   formatCurrency,
@@ -29,6 +30,7 @@ export interface ReportStyleMatchConcept {
 
 /** Inputs needed to render any of the feasibility report formats. */
 export interface ReportInput {
+  financing?: FinancingInputs;
   /** The parcel the report describes. */
   parcel: Parcel;
   /** The ADU configuration. */
@@ -76,6 +78,7 @@ function formatRecordedDate(date: Date): string {
  * @returns The report as newline-joined text.
  */
 export function buildReportText({
+  financing,
   parcel,
   config,
   result,
@@ -161,6 +164,7 @@ export function buildReportText({
     "",
     DISCLAIMER,
   ];
+  lines.push("", "Financing, fees & contractor review", ...planningRows(parcel, result, financing).map(([label, value]) => `${label}: ${value}`));
   return lines.join("\n");
 }
 
@@ -173,6 +177,7 @@ export function buildReportText({
  * @returns A complete HTML document string (printable / saveable).
  */
 export function buildReportHtml({
+  financing,
   parcel,
   config,
   result,
@@ -504,6 +509,10 @@ export function buildReportHtml({
     </div>
     <footer>${escapeHtml(DISCLAIMER)}</footer>
   </main>
+<section style="margin: 24px auto; max-width: 900px; padding: 24px;">
+  <h2>Financing, fees &amp; contractor review</h2>
+  <dl>${planningRows(parcel, result, financing).map(([label, value]) => `<dt><strong>${escapeHtml(label)}</strong></dt><dd style="margin: 4px 0 16px;">${escapeHtml(value)}</dd>`).join("")}</dl>
+</section>
 </body>
 </html>`;
 }
@@ -660,6 +669,7 @@ function reportStageClass(status: string): { className: string; label: string } 
  * @returns The report as CSV text.
  */
 export function buildReportCsv({
+  financing,
   parcel,
   config,
   result,
@@ -751,6 +761,7 @@ export function buildReportCsv({
       (warning, index): [string, string] => [`Review Note ${index + 1}`, warning],
     ),
     ...aiRows,
+    ...planningRows(parcel, result, financing),
     ["Disclaimer", DISCLAIMER],
   ];
 

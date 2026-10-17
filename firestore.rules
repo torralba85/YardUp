@@ -591,6 +591,11 @@ service cloud.firestore {
     }
 
     // Feedback intake is server-only (Admin SDK).
+    // Emailed layout snapshots and recipient addresses are server-only.
+    match /emailedLayouts/{token} {
+      allow read, write: if false;
+    }
+
     match /feedback/{ticketId} {
       allow read, write: if false;
     }

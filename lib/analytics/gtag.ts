@@ -61,7 +61,7 @@ export function sanitizePath(url: string): string {
   try {
     const dummyOrigin = "https://lotfoundry.net";
     const parsed = new URL(url, dummyOrigin);
-    return parsed.pathname || "/";
+    return parsed.pathname.startsWith("/layout/") ? "/layout/[private]" : parsed.pathname || "/";
   } catch {
     return url.split("?")[0].split("#")[0] || "/";
   }
@@ -77,7 +77,7 @@ export function sanitizeReferrer(referrer: string): string {
   if (!referrer) return "";
   try {
     const parsed = new URL(referrer);
-    return `${parsed.origin}${parsed.pathname}`;
+    return `${parsed.origin}${sanitizePath(parsed.pathname)}`;
   } catch {
     return referrer.split("?")[0].split("#")[0];
   }

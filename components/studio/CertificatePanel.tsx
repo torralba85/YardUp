@@ -42,6 +42,8 @@ import {
 } from "@/lib/certificate-purchase-intent";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
+import EmailLayoutCapture from "./EmailLayoutCapture";
+import type { SavedScenario } from "@/lib/saved-scenarios";
 
 /** One locked row of the paywall's "Included in your certificate" preview. */
 interface IncludedSection {
@@ -63,6 +65,18 @@ function countNoun(count: number, noun: string): string {
 function includedSections(preview: AIProjectBriefPreview | null | undefined): IncludedSection[] {
   const locked = preview?.locked;
   return [
+    {
+      title: "Monthly financing cash-flow breakdown",
+      detail: "Adjust loan terms and compare monthly debt payments with rent after operating costs",
+    },
+    {
+      title: "Fee & overlay verification worksheet",
+      detail: "San Diego fee guidance when applicable; coastal and fire-zone checks marked unverified until confirmed",
+    },
+    {
+      title: "Contractor bid-leveling checklist",
+      detail: "Compare scope, site work, allowances, exclusions, and payment milestones",
+    },
     {
       title: "Property-specific risk review",
       detail:
@@ -100,6 +114,7 @@ function includedSections(preview: AIProjectBriefPreview | null | undefined): In
 
 /** Props for {@link CertificatePanel}. */
 export interface CertificatePanelProps {
+  emailScenario?: Omit<SavedScenario, "id" | "createdAt" | "name">;
   recovery: CertificateRecovery;
   /** The active parcel (its identity keys the purchase). */
   parcel: Parcel;
@@ -133,6 +148,7 @@ export interface CertificatePanelProps {
  * webhook-written grant.
  */
 export default function CertificatePanel({
+  emailScenario,
   recovery,
   parcel,
   result,
@@ -544,6 +560,8 @@ export default function CertificatePanel({
         reportCtaNote={ctaNote}
         error={!purchased ? error : null}
       />
+
+      {!user && emailScenario && process.env.NEXT_PUBLIC_SCENARIO_EMAIL_ENABLED === "true" && <EmailLayoutCapture scenario={emailScenario} />}
 
       {purchased && (
         <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">

@@ -690,6 +690,15 @@ describe("FeasibilityStudio (guided spine)", () => {
     });
   });
 
+  it("restores a shared pose against the handed-off live parcel instead of the URL's preset identity", async () => {
+    stashInitialParcel(SAMPLE_LIVE_PARCEL);
+    const { serializeScenarioParams, defaultScenarioState } = await import("@/lib/scenario-url");
+    const pose = { x: 3, z: 8, rotationDeg: 90 };
+    window.history.replaceState({}, "", `/studio?${serializeScenarioParams({ ...defaultScenarioState, pose })}`);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await waitFor(() => expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", JSON.stringify(pose)));
+  });
+
   it("reopens the Certificate step and resumes Checkout after a real-address sign-in remount", async () => {
     // State a guest's purchase click leaves behind before SignedInStudioGate
     // remounts the Studio with their lot.

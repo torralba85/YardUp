@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import CertificatePlanning from "./CertificatePlanning";
+import { DEFAULT_FINANCING, type FinancingInputs } from "@/lib/certificate-planning";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle,
@@ -56,9 +58,9 @@ export interface ReportPreviewProps {
   /** Called to dismiss the preview. */
   onClose: () => void;
   /** Called to download the report (e.g. text/HTML certificate). */
-  onDownload: () => void;
+  onDownload: (financing?: FinancingInputs) => void;
   /** Optional handler to export the report as CSV. */
-  onExportCsv?: () => void;
+  onExportCsv?: (financing?: FinancingInputs) => void;
   /** Optional handler to copy/share a link. */
   onShare?: () => void;
   /** Optional handler to start the connect-with-builders flow. */
@@ -95,6 +97,7 @@ export default function ReportPreview({
   shareNotice,
   autoFocus = false,
 }: ReportPreviewProps) {
+  const [financing, setFinancing] = useState<FinancingInputs>(DEFAULT_FINANCING);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -226,7 +229,7 @@ export default function ReportPreview({
                   report_format: "html",
                   feasibility_status: feasibilityStatus,
                 });
-                onDownload();
+                onDownload(financing);
               }}
               leftIcon={<Download size={14} />}
             >
@@ -243,7 +246,7 @@ export default function ReportPreview({
                     report_format: "csv",
                     feasibility_status: feasibilityStatus,
                   });
-                  onExportCsv();
+                  onExportCsv(financing);
                 }}
                 leftIcon={<FileSpreadsheet size={14} />}
               >
@@ -359,6 +362,8 @@ export default function ReportPreview({
                 and market rents with local professionals before moving forward. No approval or
                 income outcome is guaranteed.
               </div>
+
+              {parcel && <CertificatePlanning parcel={parcel} result={result} inputs={financing} onChange={setFinancing} />}
 
               {styleMatchConcept && (
                 <CertificateStyleMatchSection concept={styleMatchConcept} />
