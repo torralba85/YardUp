@@ -10,17 +10,34 @@ import {
   FileSpreadsheet,
   FileText,
   Hammer,
+  Info,
   Printer,
   RotateCcw,
   Ruler,
   Share2,
   Sparkles,
+  Square,
   X,
 } from "lucide-react";
 import type { AIPermitStage, AIProjectBrief, AIRiskLevel } from "@/lib/ai-types";
-import { formatCurrency } from "@/lib/feasibility";
+import { formatCurrency, type ADUConfig } from "@/lib/feasibility";
+import {
+  buildCashFlowProForma,
+  formatCurrencyRange,
+  proFormaFootnote,
+  proFormaSummary,
+  proFormaTableRows,
+} from "@/lib/certificate-pro-forma";
+import {
+  buildPermitFeeAudit,
+  type AuditTone,
+  type PermitFeeAudit,
+} from "@/lib/certificate-permit-audit";
+import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "@/lib/certificate-bid-checklist";
+import { buildAduHeightModel } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { StatusChip } from "@/components/ui/StatusChip";
 import type { FeasibilityResult } from "./types";
 import { trackReportExported, type FeasibilityStatus } from "@/lib/analytics/events";
 import type { Parcel } from "@/lib/parcel-types";
@@ -36,6 +53,8 @@ export interface ReportPreviewProps {
   parcelName: string;
   /** The feasibility result rendered into the report. */
   result: FeasibilityResult;
+  /** The ADU design; its modeled height feeds the permit audit when present. */
+  config?: ADUConfig;
   /** Analytics status of the rendered verdict (not the raw zoning status). */
   feasibilityStatus: FeasibilityStatus;
   /** Unified AI parcel interpretation and permit timeline. */
@@ -80,6 +99,7 @@ export default function ReportPreview({
   parcel,
   parcelName,
   result,
+  config,
   feasibilityStatus,
   projectBrief,
   projectBriefSavedAt,
@@ -156,6 +176,14 @@ export default function ReportPreview({
   }, [isClient, onClose]);
 
   if (!isClient) return null;
+
+  const permitAudit = parcel
+    ? buildPermitFeeAudit({
+        parcel,
+        aduSqft: result.aduSqft,
+        totalHeightFt: config ? buildAduHeightModel(config)?.totalHeight : null,
+      })
+    : null;
 
   return createPortal(
     <div
@@ -337,6 +365,9 @@ export default function ReportPreview({
                   {[
                     "Project overview",
                     "Cost estimate range",
+                    "Leveraged cash-flow pro forma",
+                    ...(permitAudit ? [permitAudit.jurisdiction === "other" ? "Permit fee & submittal audit" : "750 sq ft fee & permit audit"] : []),
+                    "3-builder bid-leveling checklist",
                     "Modeled site-fit flags",
                     "Rental analysis",
                     "Assumptions",
@@ -360,6 +391,9 @@ export default function ReportPreview({
                 income outcome is guaranteed.
               </div>
 
+              <CertificateProFormaSection result={result} />
+              {permitAudit && <CertificatePermitAuditSection audit={permitAudit} />}
+
               {styleMatchConcept && (
                 <CertificateStyleMatchSection concept={styleMatchConcept} />
               )}
@@ -375,6 +409,8 @@ export default function ReportPreview({
                 error={projectBriefError}
                 onRetry={onRetryProjectBrief}
               />
+
+              <CertificateBidChecklistSection parcelName={parcelName} />
             </div>
           </div>
         </div>
@@ -492,6 +528,209 @@ function CertificateStyleMatchSection({
         Conceptual rendering for stylistic and architectural inspiration. Not engineering or construction blueprints.
       </p>
     </div>
+  );
+}
+
+/** Monthly view of the build financed two ways; shown only inside the purchased certificate. */
+function CertificateProFormaSection({ result }: { result: FeasibilityResult }) {
+  const proForma = buildCashFlowProForma(result);
+  const rows = proFormaTableRows(proForma);
+
+  return (
+    <section aria-labelledby="certificate-pro-forma-heading" className="mt-6 border-t border-lot-line pt-5">
+      <p className="lf-dataprint text-lot-orange-ink">Monthly cash flow · Modeled financing</p>
+      <h3 id="certificate-pro-forma-heading" className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
+        Leveraged monthly cash-flow pro forma
+      </h3>
+      <p className="mt-2 max-w-2xl text-xs leading-5 text-lot-stone">
+        The {formatCurrencyRange(result.costLow, result.costHigh)} build cost financed two ways,
+        against {formatCurrency(proForma.monthlyRent)}/mo gross rent ({result.rentBasis}).
+      </p>
+      <p className="mt-3 max-w-2xl border-l-2 border-lot-ink pl-3 text-sm leading-6 text-lot-ink">
+        {proFormaSummary(proForma)}
+      </p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[480px] border-collapse text-xs">
+          <thead>
+            <tr className="border-b border-lot-ink">
+              <th scope="col" className="py-2 pr-3 text-left">
+                <span className="sr-only">Line</span>
+              </th>
+              {proForma.scenarios.map((row) => (
+                <th key={row.scenario.id} scope="col" className="lf-dataprint px-3 py-2 text-right text-lot-stone">
+                  {row.scenario.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.label}
+                className={row.total ? "border-y-[1.5px] border-lot-ink font-semibold" : "border-b border-lot-line"}
+              >
+                <th scope="row" className={`py-2 pr-3 text-left text-lot-ink ${row.total ? "font-semibold" : "font-normal"}`}>
+                  {row.label}
+                </th>
+                {row.values.map((value, index) => (
+                  <td key={proForma.scenarios[index].scenario.id} className="px-3 py-2 text-right tabular-nums text-lot-ink">
+                    {value}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="lf-caption mt-3 text-lot-stone">{proFormaFootnote(proForma)}</p>
+    </section>
+  );
+}
+
+const AUDIT_TONE_ICON: Record<AuditTone, { icon: typeof Info; className: string }> = {
+  clear: { icon: CheckCircle2, className: "text-status-eligible" },
+  review: { icon: AlertTriangle, className: "text-status-review" },
+  info: { icon: Info, className: "text-lot-stone" },
+};
+
+/** Fee exposure and submittal paperwork for this size and jurisdiction. */
+function CertificatePermitAuditSection({ audit }: { audit: PermitFeeAudit }) {
+  const { threshold } = audit;
+  return (
+    <section aria-labelledby="certificate-permit-audit-heading" className="mt-6 border-t border-lot-line pt-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="lf-dataprint text-lot-orange-ink">Permit &amp; fee trap audit</p>
+          <h3 id="certificate-permit-audit-heading" className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
+            {audit.title}
+          </h3>
+        </div>
+        {audit.jurisdiction !== "other" && (
+          <StatusChip
+            status={threshold.isExempt ? "clear" : "review"}
+            label={threshold.isExempt ? "Within 750 sq ft" : `${threshold.sqftOverLimit.toLocaleString()} sq ft over 750`}
+          />
+        )}
+      </div>
+      <ul className="mt-4 divide-y divide-lot-line border-y border-lot-line">
+        {audit.feeLines.map((line) => {
+          const tone = AUDIT_TONE_ICON[line.tone];
+          const Icon = tone.icon;
+          return (
+            <li key={line.title} className="flex items-start gap-3 py-3">
+              <Icon size={15} className={`mt-0.5 shrink-0 ${tone.className}`} aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-lot-ink">{line.title}</p>
+                <p className="mt-1 text-xs leading-5 text-lot-stone">{line.detail}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-5 grid gap-6 sm:grid-cols-2">
+        {[
+          { heading: "Counter submittal checklist", items: audit.submittalChecklist },
+          { heading: "Zoning & overlay checks", items: audit.zoningChecklist },
+        ].map((group) => (
+          <div key={group.heading}>
+            <p className="lf-dataprint text-lot-orange-ink">{group.heading}</p>
+            <ul className="mt-2 space-y-1.5">
+              {group.items.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-xs leading-5 text-lot-ink">
+                  <Square size={13} className="mt-1 shrink-0 text-lot-stone" aria-hidden="true" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      {audit.sources.length > 0 && (
+        <div className="lf-caption mt-4 flex flex-wrap items-center gap-x-2 text-lot-stone">
+          <span>Sources:</span>
+          {audit.sources.map((source, index) => (
+            <span key={source.url} className="inline-flex items-center">
+              {index > 0 && <span className="mr-2 text-lot-stone">·</span>}
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center rounded-control text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              >
+                {source.label}
+              </a>
+            </span>
+          ))}
+        </div>
+      )}
+      <p className="lf-caption mt-2 text-lot-stone">
+        A planning checklist, not a fee determination. Confirm each line with the permitting
+        jurisdiction and the utility and school district before you budget.
+      </p>
+    </section>
+  );
+}
+
+/** Printable RFQ sheet: one row per scope item, one column per builder. */
+function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) {
+  return (
+    <section
+      aria-labelledby="certificate-bid-checklist-heading"
+      className="mt-6 border-t border-lot-ink pt-5 print:break-before-page"
+    >
+      <p className="lf-dataprint text-lot-orange-ink">Builder RFQ sheet · {parcelName}</p>
+      <h3 id="certificate-bid-checklist-heading" className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
+        Contractor bid-leveling checklist
+      </h3>
+      <p className="mt-2 max-w-2xl text-xs leading-5 text-lot-stone">
+        Give this sheet to three builders. Ask each to mark every line as included, excluded or an
+        allowance, and to price it, so the quotes cover the same job.
+      </p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[560px] border-collapse text-xs">
+          <thead>
+            <tr className="border-b border-lot-ink">
+              <th scope="col" className="w-8 py-2 pr-2 text-left">
+                <span className="sr-only">Item number</span>
+              </th>
+              <th scope="col" className="lf-dataprint py-2 pr-3 text-left text-lot-stone">Scope item</th>
+              {BID_LEVELING_BUILDERS.map((builder) => (
+                <th key={builder} scope="col" className="lf-dataprint w-24 px-1 py-2 text-center text-lot-stone">
+                  {builder}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {BID_LEVELING_CHECKLIST.map((item, index) => (
+              <tr key={item.id} className="border-b border-lot-line align-top">
+                <td className="py-2 pr-2 tabular-nums text-lot-stone">{String(index + 1).padStart(2, "0")}</td>
+                <th scope="row" className="py-2 pr-3 text-left font-normal">
+                  <span className="block text-sm font-semibold leading-5 text-lot-ink">{item.title}</span>
+                  <span className="mt-0.5 block leading-5 text-lot-stone">{item.ask}</span>
+                </th>
+                {BID_LEVELING_BUILDERS.map((builder) => (
+                  <td key={builder} className="px-1 py-1 text-center">
+                    <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
+                      <input
+                        type="checkbox"
+                        aria-label={`${builder} includes ${item.title}`}
+                        className="h-4 w-4 accent-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
+                      />
+                    </label>
+                    <span className="hidden text-lot-stone print:block">$______</span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="lf-caption mt-3 text-lot-stone">
+        Tick a box when that builder&apos;s quote includes the line. Wherever a line is an allowance,
+        ask for the amount in writing.
+      </p>
+    </section>
   );
 }
 

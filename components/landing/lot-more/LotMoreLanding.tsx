@@ -769,9 +769,10 @@ export function LotMoreLanding({
                     </strong>
                   </dt>
                   <dd>
-                    A property-specific record with modeled site-fit flags,
-                    financial assumptions, and next steps. Includes print, CSV,
-                    and a shareable scenario link.
+                    A property-specific packet: a financed monthly cash-flow
+                    model, a fee and permit audit for its size, and a
+                    bid-leveling checklist for three builders. Print or save
+                    as PDF, export CSV, or share a permanent link.
                   </dd>
                 </div>
               </dl>

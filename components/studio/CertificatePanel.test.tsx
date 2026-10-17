@@ -297,9 +297,10 @@ describe("CertificatePanel", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /unlock the complete record for .* one-time \$29/i,
+        name: /unlock the complete adu feasibility & builder bid packet — one-time \$29/i,
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`^For ${parcel.address}\\.`))).toBeInTheDocument();
     expect(screen.getByText("380 sf over modeled coverage allowance")).toBeInTheDocument();
     expect(
       screen.getByText(/reduce the adu footprint by at least 380 sf/i),
@@ -314,23 +315,42 @@ describe("CertificatePanel", () => {
       mocks.access.purchased = false;
     });
 
+    /** The top-level rows of the offer (nested preview lists excluded). */
     function includedRows() {
       const list = screen.getByRole("list", { name: "Included in your certificate" });
-      return within(list).getAllByRole("listitem");
+      return within(list)
+        .getAllByRole("listitem")
+        .filter((row) => row.parentElement === list);
     }
 
-    it("leads with new property analysis, keeping export as the last convenience", () => {
+    function rowTitled(title: string) {
+      const row = includedRows().find(
+        (item) => within(item).queryByRole("heading", { level: 4 })?.textContent === title,
+      );
+      if (!row) throw new Error(`No included row titled ${title}`);
+      return row;
+    }
+
+    const AI_ROWS = [
+      "Property-specific risk review",
+      "Typical local approval path",
+      "Approval timeline",
+      "Recommended next actions",
+    ];
+
+    it("leads with the decision tools, keeping export as the last convenience", () => {
       render(<CertificatePanel {...createProps()} />);
 
       const titles = includedRows().map(
         (row) => within(row).getByRole("heading", { level: 4 }).textContent,
       );
       expect(titles).toEqual([
-        "Property-specific risk review",
-        "Typical local approval path",
-        "Approval timeline",
-        "Recommended next actions",
-        "Printable, shareable property record",
+        "Leveraged monthly cash-flow pro forma",
+        // The Oak Street preset is in Washington, where California's 750 sq ft rule does not apply.
+        "Permit fee & submittal audit",
+        "Contractor bid-leveling RFQ checklist",
+        ...AI_ROWS,
+        "Print-ready report, CSV export & permanent share link",
       ]);
       // Free-estimate figures are no longer the pitch.
       expect(screen.queryByText(/cost, rent, noi, and payback summary/i)).not.toBeInTheDocument();
@@ -339,10 +359,69 @@ describe("CertificatePanel", () => {
     it("previews locked sections without fabricating counts before a brief exists", () => {
       render(<CertificatePanel {...createProps()} />);
 
-      for (const row of includedRows().slice(0, 4)) {
-        expect(row.textContent).not.toMatch(/\d/);
+      for (const title of AI_ROWS) {
+        expect(rowTitled(title).textContent).not.toMatch(/\d/);
       }
       expect(screen.getByText("Findings ranked for this lot, with what to verify")).toBeInTheDocument();
+    });
+
+    it("shows the financing terms but masks every cash-flow figure before purchase", () => {
+      render(<CertificatePanel {...createProps()} />);
+
+      const proForma = rowTitled("Leveraged monthly cash-flow pro forma");
+      expect(within(proForma).getByText("100% financed HELOC")).toBeInTheDocument();
+      expect(within(proForma).getByText("8.0% APR · 20-yr amortization")).toBeInTheDocument();
+      expect(within(proForma).getByText("20% down construction-to-perm")).toBeInTheDocument();
+      expect(within(proForma).getByText("7.5% APR · 30-yr amortization")).toBeInTheDocument();
+      expect(within(proForma).getAllByText(/monthly cash flow locked$/)).toHaveLength(2);
+      // The mask is sign-neutral and carries no real dollar figure.
+      expect(proForma.textContent).not.toMatch(/[+−-]\$\d/);
+      expect(screen.getByText(/the rent or cash in that makes it positive\. In your certificate\.$/)).toBeInTheDocument();
+      expect(screen.queryByText(/does rent cover/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Unlock cash flow" })).toBeInTheDocument();
+    });
+
+    it("previews two bid-leveling items and locks the other ten", () => {
+      render(<CertificatePanel {...createProps()} />);
+
+      const checklist = rowTitled("Contractor bid-leveling RFQ checklist");
+      expect(within(checklist).getByText(/^Architectural plans, structural engineering/)).toBeInTheDocument();
+      expect(within(checklist).getByText(/^City plan check & permit fees/)).toBeInTheDocument();
+      expect(within(checklist).getByText("10 more scope items, locked in the certificate")).toBeInTheDocument();
+      expect(within(checklist).queryByText(/Wet utility trenching/)).not.toBeInTheDocument();
+    });
+
+    it("names the 750 sq ft audit and its status for a California lot", () => {
+      const caParcel = { ...parcel, city: "Oceanside, CA 92054" };
+      render(<CertificatePanel {...createProps({ parcel: caParcel, result: { ...result, aduSqft: 800 } })} />);
+
+      const audit = rowTitled("SB 13 (750 sq ft) impact-fee & permit submittal audit");
+      expect(within(audit).getByText(/At 800 sq ft: 50 sq ft over the exemption/)).toBeInTheDocument();
+      expect(within(audit).getByText("SB 13 impact-fee (DIF) analysis")).toBeInTheDocument();
+      expect(screen.getByText("Size threshold alert")).toBeInTheDocument();
+    });
+
+    it("keeps the methodology and planning disclaimer below the purchase button", () => {
+      render(<CertificatePanel {...createProps()} />);
+
+      const cta = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      const methodology = screen.getByText("Methodology & data sources");
+      const disclaimer = screen.getByText(/not a permit, appraisal/i);
+      expect(cta.compareDocumentPosition(methodology) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(cta.compareDocumentPosition(disclaimer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(methodology.closest("details")).toContainElement(disclaimer);
+    });
+
+    it("starts the same purchase from the cash-flow teaser as from the main button", async () => {
+      mocks.startCertificateCheckout.mockResolvedValue({ kind: "redirect", url: "https://checkout.stripe.test/s" });
+      const assign = stubLocationAssign();
+      render(<CertificatePanel {...createProps()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Unlock cash flow" }));
+
+      await waitFor(() => expect(assign).toHaveBeenCalledWith("https://checkout.stripe.test/s"));
+      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
+      expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
     });
 
     it("shows honest counts from an already generated brief preview", () => {

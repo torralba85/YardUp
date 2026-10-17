@@ -1192,6 +1192,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
             parcel={activeParcel}
             parcelName={mobileParcelName}
             result={result}
+            config={config}
             feasibilityStatus={feasibilityStatus}
             projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
@@ -1384,6 +1385,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcel={activeParcel}
           parcelName={parcelName}
           result={result}
+          config={config}
           feasibilityStatus={feasibilityStatus}
           projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}

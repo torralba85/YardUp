@@ -12,6 +12,16 @@ import type { AIProjectBrief } from "./ai-types";
 import { buildableArea } from "./feasibility-verdict";
 import { getSiteFitCapacityStatus } from "./site-fit";
 import { parcelConfidence, parcelDataNotice } from "./parcel-confidence";
+import {
+  buildCashFlowProForma,
+  leadScenario,
+  proFormaFootnote,
+  proFormaSummary,
+  proFormaTableRows,
+} from "./certificate-pro-forma";
+import { buildPermitFeeAudit, type AuditTone, type PermitFeeAudit } from "./certificate-permit-audit";
+import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "./certificate-bid-checklist";
+import { buildAduHeightModel } from "./scene-model";
 
 function coverageLabel(parcel: Parcel, result: FeasibilityResult): string {
   const { footprintKnown, regulationsEstimated } = parcelConfidence(parcel);
@@ -382,6 +392,32 @@ export function buildReportHtml({
     .stage-review { color: ${COLOR["status-review"]}; }
     .stage-blocker { color: var(--brick); }
     .brief-disclaimer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 10px; line-height: 1.6; }
+    .fine { margin-top: 10px; font-size: 10px; line-height: 1.6; }
+    .lead-note { margin: 12px 0 4px; border-left: 3px solid var(--ink); padding: 4px 0 4px 14px; color: var(--ink); }
+    .pro-forma th, .pro-forma td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; font-size: 12px; color: var(--ink); }
+    .pro-forma thead th { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--ink); }
+    .pro-forma th[scope="row"] { text-align: left; font-weight: 400; }
+    .pro-forma tr.total th, .pro-forma tr.total td { border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); font-weight: 700; }
+    .audit-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .audit-head h2 { margin-bottom: 0; }
+    .audit-list { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--line); }
+    .audit-list li { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .audit-list strong { color: var(--ink); }
+    .audit-list p { margin-top: 4px; font-size: 12px; line-height: 1.6; }
+    .tone-clear { color: var(--forest); border-color: ${COLOR["status-eligible"]}60; }
+    .checklists { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+    .checklists h3 { margin: 0 0 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); }
+    .boxes { list-style: none; margin: 0; padding: 0; color: var(--ink); font-size: 12px; }
+    .boxes li { margin: 0; padding: 3px 0 3px 20px; position: relative; }
+    .boxes li::before { content: "\\2610"; position: absolute; left: 0; color: var(--muted); }
+    .sources a { color: var(--clay); }
+    .rfq { margin-top: 32px; padding-top: 4px; border-top: 1px solid var(--ink); break-before: page; page-break-before: always; }
+    .rfq th, .rfq td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 12px; }
+    .rfq thead th { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--ink); }
+    .rfq th[scope="row"] { font-weight: 400; }
+    .rfq th[scope="row"] strong { display: block; color: var(--ink); }
+    .rfq th[scope="row"] span { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .rfq td.mark { width: 92px; text-align: center; color: var(--muted); white-space: nowrap; }
     .motto {
       margin-top: 34px;
       text-align: center;
@@ -423,6 +459,8 @@ export function buildReportHtml({
       .brief-total { text-align: left; }
       .brief-grid { grid-template-columns: 1fr; }
       .brief-column + .brief-column { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 20px; }
+      .checklists { grid-template-columns: 1fr; }
+      .table-scroll { overflow-x: auto; }
       .stamp { right: 18px; bottom: 18px; }
     }
     @media print {
@@ -488,6 +526,14 @@ export function buildReportHtml({
           ${reviewNotes.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}
         </div>
 
+        ${buildProFormaHtml(result)}
+
+        ${buildPermitAuditHtml(buildPermitFeeAudit({
+          parcel,
+          aduSqft: result.aduSqft,
+          totalHeightFt: buildAduHeightModel(config)?.totalHeight,
+        }))}
+
         ${styleMatchConcept ? buildStyleMatchConceptHtml(styleMatchConcept) : ""}
 
         ${projectBrief && projectBriefSavedAt ? "<p>Saved Brief snapshot. Verify these historical notes against current guidance.</p>" : ""}
@@ -498,6 +544,8 @@ export function buildReportHtml({
           ${nextSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
         </ol>
 
+        ${buildBidChecklistHtml(parcel)}
+
         <div class="motto">&ldquo;See what your backyard can earn.&rdquo;</div>
         <div class="stamp">Concept &middot; Not a Permit</div>
       </div>
@@ -506,6 +554,90 @@ export function buildReportHtml({
   </main>
 </body>
 </html>`;
+}
+
+function buildProFormaHtml(result: FeasibilityResult): string {
+  const proForma = buildCashFlowProForma(result);
+  return `<h2>Leveraged Monthly Cash-Flow Pro Forma</h2>
+        <p>The ${escapeHtml(formatCurrency(result.costLow))}&ndash;${escapeHtml(formatCurrency(result.costHigh))} build cost financed two ways, against ${escapeHtml(formatCurrency(proForma.monthlyRent))}/mo gross rent (${escapeHtml(result.rentBasis)}).</p>
+        <p class="lead-note">${escapeHtml(proFormaSummary(proForma))}</p>
+        <div class="table-scroll">
+          <table class="pro-forma" aria-label="Monthly cash flow under two financing options">
+            <thead>
+              <tr><th scope="col"></th>${proForma.scenarios.map((row) => `<th scope="col">${escapeHtml(row.scenario.label)}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+              ${proFormaTableRows(proForma)
+                .map(
+                  (row) =>
+                    `<tr${row.total ? ' class="total"' : ""}><th scope="row">${escapeHtml(row.label)}</th>${row.values.map((value) => `<td>${escapeHtml(value)}</td>`).join("")}</tr>`,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+        <p class="fine">${escapeHtml(proFormaFootnote(proForma))}</p>`;
+}
+
+const AUDIT_TONE_CHIP: Record<AuditTone, { className: string; label: string }> = {
+  clear: { className: "tone-clear", label: "Clear" },
+  review: { className: "tone-medium", label: "Review" },
+  info: { className: "tone-low", label: "Note" },
+};
+
+function buildPermitAuditHtml(audit: PermitFeeAudit): string {
+  const thresholdChip =
+    audit.jurisdiction === "other"
+      ? ""
+      : `<span class="data-chip ${audit.threshold.isExempt ? "tone-clear" : "tone-medium"}">${
+          audit.threshold.isExempt
+            ? "Within 750 sq ft"
+            : `${audit.threshold.sqftOverLimit.toLocaleString()} sq ft over 750`
+        }</span>`;
+  const checklist = (heading: string, items: string[]) =>
+    `<div><h3>${escapeHtml(heading)}</h3><ul class="boxes">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>`;
+  return `<div class="audit-head"><h2>${escapeHtml(audit.title)}</h2>${thresholdChip}</div>
+        <ul class="audit-list">
+          ${audit.feeLines
+            .map((line) => {
+              const chip = AUDIT_TONE_CHIP[line.tone];
+              return `<li><div class="risk-head"><strong>${escapeHtml(line.title)}</strong><span class="data-chip ${chip.className}">${chip.label}</span></div><p>${escapeHtml(line.detail)}</p></li>`;
+            })
+            .join("")}
+        </ul>
+        <div class="checklists">
+          ${checklist("Counter submittal checklist", audit.submittalChecklist)}
+          ${checklist("Zoning & overlay checks", audit.zoningChecklist)}
+        </div>
+        ${
+          audit.sources.length > 0
+            ? `<p class="fine sources">Sources: ${audit.sources
+                .map((source) => `<a href="${escapeHtml(source.url)}">${escapeHtml(source.label)}</a>`)
+                .join(" &middot; ")}</p>`
+            : ""
+        }
+        <p class="fine">A planning checklist, not a fee determination. Confirm each line with the permitting jurisdiction and the utility and school district before you budget.</p>`;
+}
+
+function buildBidChecklistHtml(parcel: Parcel): string {
+  return `<section class="rfq" aria-labelledby="rfq-heading">
+          <h2 id="rfq-heading">Contractor Bid-Leveling Checklist &middot; Builder RFQ Sheet</h2>
+          <p>${escapeHtml(parcel.address)}, ${escapeHtml(parcel.city)}. Give this sheet to three builders. Ask each to mark every line as included, excluded or an allowance, and to price it, so the quotes cover the same job.</p>
+          <div class="table-scroll">
+            <table aria-label="Scope items to compare across three builders">
+              <thead>
+                <tr><th scope="col">#</th><th scope="col">Scope item</th>${BID_LEVELING_BUILDERS.map((builder) => `<th scope="col">${escapeHtml(builder)}</th>`).join("")}</tr>
+              </thead>
+              <tbody>
+                ${BID_LEVELING_CHECKLIST.map(
+                  (item, index) =>
+                    `<tr><td>${String(index + 1).padStart(2, "0")}</td><th scope="row"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.ask)}</span></th>${BID_LEVELING_BUILDERS.map(() => `<td class="mark">☐ Incl.<br />$______</td>`).join("")}</tr>`,
+                ).join("")}
+              </tbody>
+            </table>
+          </div>
+          <p class="fine">Tick a box when that builder's quote includes the line. Wherever a line is an allowance, ask for the amount in writing.</p>
+        </section>`;
 }
 
 function buildStyleMatchConceptHtml(concept: ReportStyleMatchConcept): string {
@@ -750,6 +882,7 @@ export function buildReportCsv({
     ...result.warnings.map(
       (warning, index): [string, string] => [`Review Note ${index + 1}`, warning],
     ),
+    ...certificatePacketCsvRows(parcel, config, result),
     ...aiRows,
     ["Disclaimer", DISCLAIMER],
   ];
@@ -759,6 +892,59 @@ export function buildReportCsv({
       [escapeCsv(field), escapeCsv(value)].join(","),
     )
     .join("\n");
+}
+
+/** Pro forma figures as raw numbers, then the permit audit and the RFQ lines. */
+function certificatePacketCsvRows(
+  parcel: Parcel,
+  config: ADUConfig,
+  result: FeasibilityResult,
+): Array<[string, string]> {
+  const proForma = buildCashFlowProForma(result);
+  const audit = buildPermitFeeAudit({
+    parcel,
+    aduSqft: result.aduSqft,
+    totalHeightFt: buildAduHeightModel(config)?.totalHeight,
+  });
+  const rows: Array<[string, string]> = [
+    ["Cash Flow Operating Costs ($/mo)", String(proForma.operatingCosts)],
+    ["Cash Flow Best Option", leadScenario(proForma).scenario.label],
+  ];
+  for (const row of proForma.scenarios) {
+    const name = `Cash Flow - ${row.scenario.label}`;
+    rows.push(
+      [`${name} - APR (%)`, (row.scenario.annualRate * 100).toFixed(1)],
+      [`${name} - Term (years)`, String(row.scenario.years)],
+      [`${name} - Cash In Low ($)`, String(row.downPaymentLow)],
+      [`${name} - Cash In High ($)`, String(row.downPaymentHigh)],
+      [`${name} - Monthly P&I Low ($)`, String(row.paymentLow)],
+      [`${name} - Monthly P&I High ($)`, String(row.paymentHigh)],
+      [`${name} - Net Monthly Cash Flow at High Cost ($)`, String(row.netLow)],
+      [`${name} - Net Monthly Cash Flow at Low Cost ($)`, String(row.netHigh)],
+      [`${name} - Year-1 Principal Paid Down Low ($/mo)`, String(row.principalPaydownLow)],
+      [`${name} - Year-1 Principal Paid Down High ($/mo)`, String(row.principalPaydownHigh)],
+      [`${name} - Break-even Rent Low ($/mo)`, row.breakEvenRentLow === null ? "Not reachable" : String(row.breakEvenRentLow)],
+      [`${name} - Break-even Rent High ($/mo)`, row.breakEvenRentHigh === null ? "Not reachable" : String(row.breakEvenRentHigh)],
+      [`${name} - Break-even Cash In Low ($)`, String(row.breakEvenCashInLow)],
+      [`${name} - Break-even Cash In High ($)`, String(row.breakEvenCashInHigh)],
+    );
+  }
+  if (audit.jurisdiction !== "other") {
+    rows.push([
+      "Impact Fee Exemption (750 sq ft)",
+      audit.threshold.isExempt ? "Within the limit" : `${audit.threshold.sqftOverLimit} sq ft over the limit`,
+    ]);
+  }
+  rows.push(
+    ...audit.feeLines.map((line): [string, string] => [`Fee Audit - ${line.title}`, line.detail]),
+    ...audit.submittalChecklist.map((item, index): [string, string] => [`Submittal Item ${index + 1}`, item]),
+    ...audit.zoningChecklist.map((item, index): [string, string] => [`Zoning Check ${index + 1}`, item]),
+    ...BID_LEVELING_CHECKLIST.map((item, index): [string, string] => [
+      `Bid Item ${index + 1} - ${item.title}`,
+      item.ask,
+    ]),
+  );
+  return rows;
 }
 
 function escapeCsv(value: string): string {

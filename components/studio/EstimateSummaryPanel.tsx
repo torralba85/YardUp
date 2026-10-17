@@ -1,8 +1,17 @@
 "use client";
 
-import { BarChart3, CheckCircle2, FileText, Home, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
+import { BarChart3, CheckCircle2, FileText, Home, Landmark, Lock, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityStatus } from "@/lib/analytics/events";
+import {
+  buildCashFlowProForma,
+  financingTermsLabel,
+  formatCurrencyRange,
+  formatOperatingShare,
+  formatSignedRange,
+  leadScenario,
+} from "@/lib/certificate-pro-forma";
+import { assessImpactFeeThreshold, type FeeJurisdiction } from "@/lib/certificate-permit-audit";
 import { Button } from "@/components/ui/Button";
 import { PanelHeader } from "@/components/ui/Panel";
 import { StatusChip, type StatusChipStatus } from "@/components/ui/StatusChip";
@@ -37,6 +46,10 @@ export interface EstimateSummaryPanelProps {
   reportCtaNote?: string;
   /** Error message to display above the CTA button if checkout or generation fails. */
   error?: string | null;
+  /** True once the certificate is purchased: the cash-flow row shows its figures. */
+  certificateUnlocked?: boolean;
+  /** Whose impact-fee rules apply; "other" hides the 750 sq ft row. */
+  feeJurisdiction?: FeeJurisdiction;
 }
 
 /**
@@ -54,10 +67,15 @@ export default function EstimateSummaryPanel({
   reportCtaBusy = false,
   reportCtaNote,
   error,
+  certificateUnlocked = false,
+  feeJurisdiction = "other",
 }: EstimateSummaryPanelProps) {
   const isCompliant = result.zoningStatus === "Compliant";
   const CoverageIcon = isCompliant ? CheckCircle2 : TriangleAlert;
   const verdictChip = VERDICT_CHIP[feasibilityStatus];
+  const lead = leadScenario(buildCashFlowProForma(result));
+  const feeThreshold = feeJurisdiction === "other" ? null : assessImpactFeeThreshold(result.aduSqft);
+  const ThresholdIcon = feeThreshold?.isExempt ? CheckCircle2 : TriangleAlert;
   const metrics = [
     {
       label: "Monthly Rent",
@@ -154,6 +172,83 @@ export default function EstimateSummaryPanel({
             );
           })}
         </div>
+
+        {/* The financed view is the certificate's; before purchase only its terms show. */}
+        <div className="rounded-none border border-lot-line bg-lot-surface p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 lf-kicker-dense font-medium text-lot-stone">
+                <Landmark size={13} aria-hidden="true" />
+                Leveraged monthly cash flow
+              </div>
+              <p className="mt-1 text-xs leading-5 text-lot-stone">
+                {certificateUnlocked
+                  ? `Best option: ${lead.scenario.label}, ${financingTermsLabel(lead.scenario)}, after the ${formatOperatingShare(result.operatingExpenseRatio)} operating allowance. Each payment also pays down about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal in year 1, equity you keep.${
+                      lead.netLow < 0
+                        ? ` Positive across the cost range at ${
+                            lead.breakEvenRentHigh === null ? "" : `${formatCurrency(lead.breakEvenRentHigh)}/mo rent or with `
+                          }${formatCurrency(lead.breakEvenCashInHigh)} total cash in.`
+                        : ""
+                    } Both financing options are in your certificate.`
+                  : "Two ways to finance it, the monthly result after the loan, the equity each payment builds, and the rent or cash in that makes it positive. In your certificate."}
+              </p>
+            </div>
+            {certificateUnlocked ? (
+              <div className="lf-money-md text-lot-ink">
+                {formatSignedRange(lead.netLow, lead.netHigh)}
+                <span className="font-sans text-xs font-medium text-lot-stone">/mo</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="lf-money-md text-lot-ink">
+                  <span aria-hidden="true" className="select-none blur-xs">±$•,•••</span>
+                  <span className="sr-only">Locked in the certificate</span>
+                </span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={onGenerateReport}
+                  disabled={reportCtaBusy}
+                  leftIcon={<Lock size={13} />}
+                >
+                  Unlock cash flow
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {feeThreshold && (
+          <div
+            className={`flex items-start gap-3 rounded-none border p-4 ${
+              feeThreshold.isExempt
+                ? "border-status-eligible/25 bg-status-eligible/5"
+                : "border-status-review/35 bg-status-review/5"
+            }`}
+          >
+            <ThresholdIcon
+              size={17}
+              aria-hidden="true"
+              className={`mt-0.5 shrink-0 ${feeThreshold.isExempt ? "text-status-eligible" : "text-status-review"}`}
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-lot-ink">
+                {feeThreshold.isExempt ? "Under the 750 sq ft impact-fee limit" : "Size threshold alert"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-lot-stone">
+                {feeThreshold.isExempt
+                  ? `At ${feeThreshold.sqft.toLocaleString()} sq ft, this layout is within California's 750 sq ft SB 13 impact-fee exemption.`
+                  : feeJurisdiction === "san-diego"
+                    ? `At ${feeThreshold.sqft.toLocaleString()} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit. The City of San Diego still exempts a lot's first two ADUs from its own impact fees; school and utility fees can apply.`
+                    : `At ${feeThreshold.sqft.toLocaleString()} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit, so impact fees can apply in proportion to the main house. Trimming ${feeThreshold.sqftOverLimit.toLocaleString()} sq ft of footprint keeps it under.`}{" "}
+                {certificateUnlocked
+                  ? "The fee and submittal breakdown is in your certificate."
+                  : "See the fee and submittal breakdown in the certificate."}
+              </p>
+            </div>
+          </div>
+        )}
 
         {result.warnings.length > 0 && (
           <div
