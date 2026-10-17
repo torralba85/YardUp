@@ -7,14 +7,21 @@ import { validateEmail } from "@/lib/account-settings";
 import { isRecord } from "@/lib/scenario-design";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { checkScenarioEmailRateLimit } from "@/lib/server/scenario-email-rate-limit";
-import { renderScenarioEmail, scenarioHeadlineNumbers } from "@/lib/server/studio-scenario-email";
+import {
+  dispatchScenarioEmail,
+  renderScenarioEmail,
+  scenarioHeadlineNumbers,
+} from "@/lib/server/studio-scenario-email";
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  const localOrigin = process.env.NODE_ENV !== "production" && origin === request.nextUrl.origin && request.nextUrl.hostname === "localhost";
+  const localOrigin =
+    process.env.NODE_ENV !== "production" &&
+    origin === request.nextUrl.origin &&
+    (request.nextUrl.hostname === "localhost" || request.nextUrl.hostname === "127.0.0.1");
   if (origin !== "https://lotfoundry.net" && !localOrigin) {
     return NextResponse.json({ error: "Open this form on LotFoundry." }, { status: 403, headers });
   }
@@ -47,6 +54,15 @@ export async function POST(request: NextRequest) {
     const scenarioUrl = buildScenarioShareUrl(scenario, token);
     const email = body.email.trim().toLowerCase();
     const message = renderScenarioEmail(scenario, scenarioUrl, body.marketingOptIn);
+    const sendResult = await dispatchScenarioEmail(
+      email,
+      scenario,
+      scenarioUrl,
+      body.marketingOptIn,
+      token,
+    );
+    const emailDeliveryStatus = sendResult.delivery === "sent" ? "sent_resend" : "queued_firestore";
+
     await getAdminDb().collection("studioScenarioLeads").doc(token).create({
       email, marketingOptIn: body.marketingOptIn,
       address: scenario.liveParcel.address, parcelId: scenario.parcelId, city: scenario.liveParcel.city,
@@ -54,11 +70,12 @@ export async function POST(request: NextRequest) {
       scenarioUrl, scenarioSnapshot: JSON.stringify(scenario), ...numbers,
       createdAt: FieldValue.serverTimestamp(),
       consentVersion: "studio-layout-v1",
-      emailDeliveryStatus: "queued_firestore",
+      emailDeliveryStatus,
+      resendId: sendResult.resendId ?? null,
       emailPayload: { to: [email], message },
     });
-    // No active outbound provider/Trigger Email extension is configured. Durable queue is success.
-    return NextResponse.json({ ok: true, delivery: "queued", scenarioUrl }, { headers });
+
+    return NextResponse.json({ ok: true, delivery: sendResult.delivery, scenarioUrl }, { headers });
   } catch {
     return NextResponse.json({ error: "We could not save your link. Please try again shortly." }, { status: 503, headers });
   }

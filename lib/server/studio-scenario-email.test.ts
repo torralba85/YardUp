@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 import { renderScenarioEmail, scenarioHeadlineNumbers } from "./studio-scenario-email";
 import { buildScenarioShareUrl } from "../scenario-share-url";
@@ -15,4 +15,18 @@ it("models the strict 750 sq ft boundary without promising all fees are waived",
 it("does not apply the California exemption to another state", () => {
   const scenario = { ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, state: "WA" } };
   expect(renderScenarioEmail(scenario, buildScenarioShareUrl(scenario), false).text).toContain("has not been applied");
+});
+
+describe("dispatchScenarioEmail", () => {
+  it("returns queued when RESEND_API_KEY is not set", async () => {
+    const originalKey = process.env.RESEND_API_KEY;
+    delete process.env.RESEND_API_KEY;
+    try {
+      const { dispatchScenarioEmail } = await import("./studio-scenario-email");
+      const result = await dispatchScenarioEmail("user@example.com", EMAIL_SCENARIO, buildScenarioShareUrl(EMAIL_SCENARIO), false);
+      expect(result).toEqual({ delivery: "queued" });
+    } finally {
+      process.env.RESEND_API_KEY = originalKey;
+    }
+  });
 });

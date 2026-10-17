@@ -3,9 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 import { buildScenarioShareUrl } from "@/lib/scenario-share-url";
 import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
-const mocks = vi.hoisted(() => ({ create: vi.fn(), limit: vi.fn(), collection: vi.fn(), get: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  create: vi.fn(),
+  limit: vi.fn(),
+  collection: vi.fn(),
+  get: vi.fn(),
+  dispatch: vi.fn(),
+}));
 vi.mock("@/lib/server/scenario-email-rate-limit", () => ({ checkScenarioEmailRateLimit: mocks.limit }));
 vi.mock("@/lib/server/firebase-admin", () => ({ getAdminDb: () => ({ collection: mocks.collection }) }));
+vi.mock("@/lib/server/studio-scenario-email", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/server/studio-scenario-email")>();
+  return {
+    ...actual,
+    dispatchScenarioEmail: mocks.dispatch,
+  };
+});
 import { POST } from "./route";
 import { GET } from "../scenario-link/[token]/route";
 
@@ -16,6 +29,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   resetRateLimitBuckets();
   mocks.limit.mockResolvedValue(null); mocks.create.mockResolvedValue(undefined);
+  mocks.dispatch.mockResolvedValue({ delivery: "queued" });
   mocks.collection.mockReturnValue({ doc: () => ({ create: mocks.create, get: mocks.get }) });
 });
 describe("Studio email lead API", () => {
@@ -50,6 +64,15 @@ describe("Studio email lead API", () => {
     expect(record.emailPayload.message.text).toContain("$29 Certificate");
     expect(record.emailPayload.message.text).toContain("not been subscribed");
     expect(await response.json()).toEqual({ ok: true, delivery: "queued", scenarioUrl: record.scenarioUrl });
+  });
+  it("delivers via Resend when dispatch succeeds and sets sent_resend", async () => {
+    mocks.dispatch.mockResolvedValue({ delivery: "sent", resendId: "re_msg_123" });
+    const response = await POST(request());
+    expect(response.status).toBe(200);
+    const record = mocks.create.mock.calls[0][0];
+    expect(record.emailDeliveryStatus).toBe("sent_resend");
+    expect(record.resendId).toBe("re_msg_123");
+    expect(await response.json()).toEqual({ ok: true, delivery: "sent", scenarioUrl: record.scenarioUrl });
   });
   it("records independent marketing opt-in and escapes user-controlled HTML", async () => {
     const address = '<img src=x onerror="bad()">';
