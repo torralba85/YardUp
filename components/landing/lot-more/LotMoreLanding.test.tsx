@@ -10,6 +10,7 @@ import {
   parcelPresets,
 } from "@/lib/feasibility";
 import { mergeScenarioPartial, parseScenarioParams } from "@/lib/scenario-url";
+import { landingScenarios } from "@/lib/landing-demo";
 
 const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
@@ -63,6 +64,29 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 describe("landing address handoff", () => {
+  it("starts at market rent and keeps the report and expanded NOI synchronized for every assumption", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const group = screen.getByRole("radiogroup", { name: "Demo rent assumption" });
+    expect(within(group).getByRole("radio", { name: "market" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(within(screen.getByRole("radiogroup", { name: "Sample report pages" })).getByRole("radio", { name: "The estimates" }));
+    fireEvent.click(screen.getByText("What’s behind these numbers?"));
+    for (const item of scenarios) {
+      fireEvent.click(within(group).getByRole("radio", { name: item.id }));
+      expect(screen.getByText(new RegExp(`estimated annual net operating income is \\$${item.noi.toLocaleString("en-US")}`))).toBeVisible();
+      expect(within(screen.getByRole("article", { name: "Sample feasibility report" })).getByText(`$${item.noi.toLocaleString("en-US")}`)).toBeVisible();
+      expect(within(screen.getByRole("article", { name: "Sample feasibility report" })).getByText(`${item.id.toUpperCase()} DEMO ASSUMPTIONS`)).toBeVisible();
+    }
+  });
+
+  it.each(["portland", "austin"] as const)("opens the matching %s demo with matching engine figures", (city) => {
+    render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
+    const name = city === "portland" ? "Portland" : "Austin";
+    const sample = screen.getByRole("link", { name: `Open the ${name} sample lot in the 3D studio` });
+    const restored = mergeScenarioPartial(parseScenarioParams(new URLSearchParams(sample.getAttribute("href")!.split("?")[1])));
+    expect(restored.parcelId).toBe(city === "portland" ? "corner-lot" : "compact-lot");
+    const result = calculateFeasibility(getParcelById(restored.parcelId), restored.config, restored.assumptions);
+    expect(within(sample).getByText(`$${result.monthlyRent.toLocaleString("en-US")}`)).toBeVisible();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();

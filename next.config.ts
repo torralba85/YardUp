@@ -49,7 +49,8 @@ const nextConfig: NextConfig = {
             value: "same-origin-allow-popups",
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // Nothing embeds LotFoundry app pages. Firebase Hosting serves the
+          // App pages cannot be embedded. The public sample-only exception is
+          // defined below. Firebase Hosting serves the
           // reserved `/__/auth/*` helper before the Next app, so this header
           // does not apply to Firebase's OAuth helper iframe.
           { key: "X-Frame-Options", value: "DENY" },
@@ -76,6 +77,13 @@ const nextConfig: NextConfig = {
             value:
               "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), usb=(), payment=(self)",
           },
+        ],
+      },
+      {
+        source: "/sample-certificate/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Robots-Tag", value: "noindex, follow" },
         ],
       },
     ];

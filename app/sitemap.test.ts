@@ -8,6 +8,9 @@ describe("sitemap", () => {
     expect(entries.map((entry) => entry.url)).toEqual([
       "https://lotfoundry.net/",
       "https://lotfoundry.net/studio",
+      "https://lotfoundry.net/seattle",
+      "https://lotfoundry.net/portland",
+      "https://lotfoundry.net/austin",
       "https://lotfoundry.net/about",
       "https://lotfoundry.net/help",
       "https://lotfoundry.net/feedback",
