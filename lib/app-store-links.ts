@@ -14,6 +14,19 @@ export const ANDROID_PACKAGE_NAME = "com.lotfoundry.app";
 /** Public Google Play listing for the Android app. */
 export const GOOGLE_PLAY_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE_NAME}`;
 
+export type PlayLinkPlacement = "hero" | "footer" | "calculator";
+
+/** Fixed campaign labels only; never include an address or account identifier. */
+export function playStoreLandingUrl(placement: PlayLinkPlacement): string {
+  const referrer = new URLSearchParams({
+    utm_source: "lotfoundry.net",
+    utm_medium: "website",
+    utm_campaign: "android_discovery",
+    utm_content: placement,
+  });
+  return `${GOOGLE_PLAY_URL}&referrer=${encodeURIComponent(referrer.toString())}`;
+}
+
 /**
  * Play Store link for an ADU jurisdiction page, tagged with the Play
  * Install Referrer plus UTMs carrying the city slug — so Play Console

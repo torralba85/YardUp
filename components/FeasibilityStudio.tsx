@@ -54,6 +54,7 @@ import type { LiveParcelData } from "@/lib/parcel-types";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StudioShell from "./studio/StudioShell";
+import { StudyFeedbackInvite } from "./studio/StudyFeedbackInvite";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
 import FeasibilityInspector from "./studio/FeasibilityInspector";
@@ -207,6 +208,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
   const [savingScenario, setSavingScenario] = useState(false);
+  const [hasSavedStudy, setHasSavedStudy] = useState(false);
   const [builderLeadOpen, setBuilderLeadOpen] = useState(false);
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
   const [authPrompt, setAuthPrompt] = useState<{
@@ -829,6 +831,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       const created = await saveSavedScenario(userId, entry);
       setSavedScenarios((prev) => [created, ...prev]);
       setSaveNotice("Saved");
+      setHasSavedStudy(true);
       const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
       trackScenarioSaved({
         parcel_mode: parcelMode,
@@ -1230,6 +1233,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           onBack={previousStep ? () => window.history.back() : undefined}
           onStepSelect={setJourneyStep}
         >
+          {hasSavedStudy && <StudyFeedbackInvite />}
           {stepContent}
         </MobileJourney>
         <FineTuneDrawer open={fineTuneOpen} onClose={() => setFineTuneOpen(false)}>
@@ -1314,6 +1318,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       onDeleteScenario={handleDeleteScenario}
       deleteNotice={deleteNotice}
     >
+      {hasSavedStudy && <StudyFeedbackInvite />}
       <section
         ref={stepBodyRef}
         tabIndex={-1}

@@ -10,6 +10,12 @@
 
 import { trackEvent } from "./gtag";
 import { readConsent } from "./consent";
+import type { PlayLinkPlacement } from "../app-store-links";
+
+/** Outbound intent; this event never asserts that an installation completed. */
+export function trackPlayStoreClicked(placement: PlayLinkPlacement | "city_guide"): void {
+  trackEvent("play_store_clicked", { link_placement: placement });
+}
 
 // -----------------------------------------------------------------------------
 // Bounded Parameter Types

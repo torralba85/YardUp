@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { aduCtaEvent, type AduCtaPlacement } from "@/lib/adu/types";
 import { trackEvent } from "@/lib/analytics/gtag";
-import { playStoreCityUrl } from "@/lib/app-store-links";
+import { playStoreCityUrl, playStoreLandingUrl } from "@/lib/app-store-links";
+import { trackPlayStoreClicked } from "@/lib/analytics/events";
 
 /**
  * Address-entry call to action for ADU jurisdiction pages.
@@ -78,7 +79,8 @@ export function AduStudioCta({
         <p className="mt-4 text-sm leading-relaxed text-lot-stone-on-dark">
           Prefer the app?{" "}
           <a
-            href={playStoreCityUrl(slug)}
+            href={slug === "adu-cost-calculator" ? playStoreLandingUrl("calculator") : playStoreCityUrl(slug)}
+            onClick={() => trackPlayStoreClicked(slug === "adu-cost-calculator" ? "calculator" : "city_guide")}
             className="underline underline-offset-2 hover:text-lot-chalk"
           >
             Get LotFoundry on Google Play

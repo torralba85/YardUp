@@ -221,7 +221,7 @@ describe("landing address handoff", () => {
       screen.getByRole("link", { name: "Android app on Google Play" }),
     ).toHaveAttribute(
       "href",
-      "https://play.google.com/store/apps/details?id=com.lotfoundry.app",
+      expect.stringContaining("utm_content%3Dfooter"),
     );
   });
 

@@ -8,6 +8,13 @@
 
 import { readConsent } from "./consent";
 import { GOOGLE_ADS_ID } from "./adsConversion";
+import { detectPurchaseChannel } from "../commerce/purchase-channel";
+
+/** The native bridge, not screen size, identifies the installed app. */
+export function getAppPlatform(): "web" | "android" | "ios" {
+  const channel = detectPurchaseChannel();
+  return channel === "google-play" ? "android" : channel === "app-store" ? "ios" : "web";
+}
 
 /** Arguments accepted by the global `gtag` command queue. */
 type GtagArgs =
@@ -147,6 +154,7 @@ export function pageview(url: string): void {
     page_referrer: referrer,
     page_title: document.title,
     send_to: id,
+    app_platform: getAppPlatform(),
   });
 }
 
@@ -166,8 +174,8 @@ export function trackEvent(
   params: Record<string, unknown> = {},
 ): void {
   if (typeof window === "undefined" || !window.gtag) return;
-  if (readConsent() !== "granted") return;
-  window.gtag("event", name, params);
+  if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
+  window.gtag("event", name, { ...params, app_platform: getAppPlatform() });
 }
 
 /**

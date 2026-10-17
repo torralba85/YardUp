@@ -106,6 +106,7 @@ describe("reportPhotorealError", () => {
     delete window.gtag;
     window.localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it("dispatches the sanitized report to the override reporter", () => {
@@ -146,6 +147,7 @@ describe("reportPhotorealError", () => {
   });
 
   it("sends the consent-gated analytics event only after opt-in", () => {
+    vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-TEST123");
     const gtag = vi.fn();
     window.gtag = gtag;
 

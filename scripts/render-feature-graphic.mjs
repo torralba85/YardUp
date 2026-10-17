@@ -19,6 +19,13 @@ const HEIGHT = 500;
 const dir = resolve(import.meta.dirname, "../native/android/store-listing");
 const source = resolve(dir, "feature-graphic.html");
 const output = resolve(dir, "feature-graphic.png");
+const { colors } = JSON.parse(readFileSync(resolve(dir, "../../../design/tokens.json"), "utf8"));
+const html = readFileSync(source, "utf8");
+for (const token of ["lot-chalk", "lot-ink", "lot-line", "lot-stone"]) {
+  if (!html.includes(`--color-${token}: ${colors[token]}`)) {
+    throw new Error(`Feature graphic token drift: ${token}`);
+  }
+}
 
 /**
  * Playwright's bundled Chromium is not always downloaded (`npx playwright
@@ -47,9 +54,8 @@ try {
   await page.evaluate(async () => {
     await document.fonts.ready;
     const requiredFonts = [
-      { family: "Libre Franklin", weight: "700", text: "LotFoundry" },
-      { family: "Instrument Sans", weight: "400", text: "backyard" },
-      { family: "DM Mono", weight: "500", text: "ADU" },
+      { family: "Space Grotesk", weight: "500", text: "backyard" },
+      { family: "Manrope", weight: "400", text: "ADU" },
     ];
     const missing = requiredFonts.filter(
       ({ family, weight, text }) =>

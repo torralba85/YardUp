@@ -26,7 +26,8 @@ import { Segmented } from "@/components/ui/Field";
 import { ParcelMark } from "@/components/ui/BrandLockup";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { stashEntrySource } from "@/lib/analytics/entry-source";
-import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { playStoreLandingUrl } from "@/lib/app-store-links";
+import { trackPlayStoreClicked } from "@/lib/analytics/events";
 import { SOCIAL_LINKS } from "@/lib/social-links";
 import { canGuestLookup } from "@/lib/guest-lookup";
 import {
@@ -499,8 +500,10 @@ export function LotMoreLanding({
               </figcaption>
             </figure>
             <div className={styles.appDownload}>
-              <span>Also on Android</span>
-              <a className={styles.appStoreLink} href={GOOGLE_PLAY_URL}>
+              <span>Keep your backyard plans handy on Android.</span>
+              <span>Your first address is free. Sign in to save studies.</span>
+              <a className={styles.appStoreLink} href={playStoreLandingUrl("hero")}
+                onClick={() => trackPlayStoreClicked("hero")}>
                 {/* Official badge from Google's Partner Marketing Hub:
                     partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1046,7 +1049,8 @@ export function LotMoreLanding({
               <Link href="/adu-cost-calculator">ADU cost calculator</Link>
               <Link href="/help">Get in touch</Link>
               <a
-                href={GOOGLE_PLAY_URL}
+                href={playStoreLandingUrl("footer")}
+                onClick={() => trackPlayStoreClicked("footer")}
                 rel="noopener"
                 aria-label="Android app on Google Play"
               >

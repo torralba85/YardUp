@@ -4,6 +4,7 @@ import {
   disableAnalytics,
   enableAnalytics,
   getMeasurementId,
+  getAppPlatform,
   isAnalyticsConfigured,
   pageview,
   sanitizePath,
@@ -17,6 +18,7 @@ describe("gtag helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    delete (window as unknown as { LotFoundryNative?: unknown }).LotFoundryNative;
     clearConsent();
     delete (window as unknown as Record<string, boolean>)["ga-disable-G-ABC1234567"];
     delete (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`];
@@ -133,7 +135,38 @@ describe("gtag helpers", () => {
 
       expect(gtag).toHaveBeenCalledWith("event", "report_generated", {
         market: "seattle",
+        app_platform: "web",
       });
+    });
+
+    it("uses the native bridge for Android events and page views", () => {
+      writeConsent("granted");
+      Object.assign(window, { LotFoundryNative: { platform: "android" } });
+      window.gtag = vi.fn();
+      trackEvent("studio_opened", { app_platform: "web" });
+      pageview("/studio?address=private");
+      expect(window.gtag).toHaveBeenCalledWith("event", "studio_opened", { app_platform: "android" });
+      expect(window.gtag).toHaveBeenCalledWith("event", "page_view", expect.objectContaining({
+        app_platform: "android", page_path: "/studio",
+      }));
+    });
+
+    it("distinguishes iOS and a narrow ordinary browser", () => {
+      expect(getAppPlatform()).toBe("web");
+      Object.assign(window, { LotFoundryNative: { platform: "ios" } });
+      expect(getAppPlatform()).toBe("ios");
+    });
+
+    it("suppresses custom events when analytics is unconfigured or consent withdrawn", () => {
+      writeConsent("granted");
+      window.gtag = vi.fn();
+      vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "");
+      trackEvent("play_store_clicked", { link_placement: "hero" });
+      vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
+      writeConsent("denied");
+      vi.mocked(window.gtag).mockClear();
+      trackEvent("play_store_clicked", { link_placement: "footer" });
+      expect(window.gtag).not.toHaveBeenCalled();
     });
   });
 
