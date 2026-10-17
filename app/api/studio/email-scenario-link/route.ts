@@ -1,10 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { parseEmailScenario } from "@/lib/scenario-email";
+import { isPlainPlaceText, parseEmailScenario } from "@/lib/scenario-email";
 import { buildScenarioShareUrl, isAllowedScenarioUrl } from "@/lib/scenario-share-url";
 import { validateEmail } from "@/lib/account-settings";
 import { isRecord } from "@/lib/scenario-design";
+import { verifyLimitedUseAppCheck } from "@/lib/server/app-check";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { checkScenarioEmailRateLimit } from "@/lib/server/scenario-email-rate-limit";
 import {
@@ -16,6 +17,15 @@ import {
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
+// Client text printed into the email. Real parcel labels are far shorter.
+const MAX_ADDRESS_LENGTH = 120;
+const MAX_CITY_LENGTH = 80;
+const MAX_RENT_BASIS_LENGTH = 160;
+
+/** Local development without a registered App Check debug token. Never honored in production. */
+function appCheckBypassed(): boolean {
+  return process.env.NODE_ENV !== "production" && process.env.LOTFOUNDRY_ALLOW_PUBLIC_API === "true";
+}
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -37,23 +47,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Enter a valid email and LotFoundry layout." }, { status: 400, headers });
   }
   const scenario = parseEmailScenario(body.scenario);
-  if (!scenario?.liveParcel || !scenario.liveParcel.address.trim() || !scenario.liveParcel.city.trim() || body.address !== scenario.liveParcel.address || body.parcelId !== scenario.parcelId) {
+  if (!scenario?.liveParcel || !isPlainPlaceText(scenario.liveParcel.address, MAX_ADDRESS_LENGTH) || !isPlainPlaceText(scenario.liveParcel.city, MAX_CITY_LENGTH) || body.address !== scenario.liveParcel.address || body.parcelId !== scenario.parcelId) {
     return NextResponse.json({ error: "Load a real address and valid design before saving your link." }, { status: 400, headers });
   }
   let numbers: ReturnType<typeof scenarioHeadlineNumbers>;
   try {
     numbers = scenarioHeadlineNumbers(scenario);
     if (![numbers.sqft, numbers.buildCostLow, numbers.buildCostHigh, numbers.monthlyRentLow, numbers.monthlyRentHigh].every((value) => Number.isFinite(value) && value >= 0)) throw new Error("Invalid figures");
+    // The rent basis quotes the client's market area label, so it gets the same text check.
+    if (!isPlainPlaceText(numbers.rentBasis, MAX_RENT_BASIS_LENGTH)) throw new Error("Invalid rent basis");
   } catch {
     return NextResponse.json({ error: "Review the layout's financial assumptions and try again." }, { status: 400, headers });
   }
-  const limited = await checkScenarioEmailRateLimit(request);
+  // Origin is forgeable and forwarding headers rotate, so before any quota or write, a
+  // consumed limited-use App Check token must show this is one real browser request.
+  if (!appCheckBypassed()) {
+    const appCheck = await verifyLimitedUseAppCheck(request);
+    if (appCheck === "unavailable") {
+      return NextResponse.json({ error: "Layout email is temporarily unavailable. Please try again shortly." }, { status: 503, headers: { ...headers, "Retry-After": "60" } });
+    }
+    if (appCheck !== "valid") {
+      return NextResponse.json({ error: "We couldn't verify this browser. Refresh the page and try again." }, { status: 403, headers });
+    }
+  }
+  const email = body.email.trim().toLowerCase();
+  const limited = await checkScenarioEmailRateLimit(request, email);
   if (limited) return limited;
   try {
     const token = randomBytes(24).toString("hex");
     // Rebuild from validated design: never email a caller-supplied redirect or paid return marker.
     const scenarioUrl = buildScenarioShareUrl(scenario, token);
-    const email = body.email.trim().toLowerCase();
     const message = renderScenarioEmail(scenario, scenarioUrl, body.marketingOptIn);
 
     // Persist the snapshot first: the emailed link must never point at a layout that was not saved.
@@ -73,7 +96,7 @@ export async function POST(request: NextRequest) {
     // From here the snapshot exists, so a transport problem degrades to "queued" instead of a 503.
     let sendResult: SendScenarioEmailResult = { delivery: "queued" };
     try {
-      sendResult = await dispatchScenarioEmail(email, scenario, scenarioUrl, body.marketingOptIn, token);
+      sendResult = await dispatchScenarioEmail(email, message, token);
     } catch (error) {
       console.error("[email-scenario-link] dispatch failed:", error instanceof Error ? error.message : "unknown");
     }

@@ -6,6 +6,9 @@ import { buildScenarioShareUrl } from "@/lib/scenario-share-url";
 import { GTAG_READY_EVENT } from "@/lib/analytics/gtag";
 import { writeConsent } from "@/lib/analytics/consent";
 
+const appCheck = vi.hoisted(() => ({ token: vi.fn() }));
+vi.mock("@/lib/app-check-token", () => ({ limitedUseAppCheckToken: appCheck.token }));
+
 const fetchMock = vi.fn();
 const scenarioUrl = buildScenarioShareUrl(EMAIL_SCENARIO, "a".repeat(48));
 function fillAndSubmit() {
@@ -18,6 +21,7 @@ beforeEach(() => {
   delete window.gtag;
   vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-TEST123");
   fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true, delivery: "queued", scenarioUrl }) });
+  appCheck.token.mockResolvedValue("limited-use-token");
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); delete window.gtag; });
 
@@ -29,15 +33,28 @@ describe("EmailScenarioLinkCard", () => {
     expect(screen.getByRole("checkbox")).not.toBeChecked();
     fillAndSubmit();
     expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeDisabled();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ marketingOptIn: false, address: EMAIL_SCENARIO.liveParcel!.address });
     await act(async () => resolve({ ok: true, json: async () => ({ ok: true, delivery: "queued", scenarioUrl }) }));
-    expect(screen.getByRole("status")).toHaveTextContent("queued for email");
+    expect(screen.getByRole("status")).toHaveTextContent("couldn't email it right now");
     expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
     expect(window.sessionStorage.getItem("lotfoundry_captured_email")).toBe("owner@example.com");
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) } });
     fireEvent.click(screen.getByRole("button", { name: "Copy Link" }));
     const fallback = await screen.findByLabelText("Select and copy your link");
     expect(fallback).toHaveValue(scenarioUrl);
+  });
+  it("sends a fresh single-use App Check token with each request, and still submits without one", async () => {
+    render(<EmailScenarioLinkCard scenario={EMAIL_SCENARIO} />);
+    fillAndSubmit();
+    await screen.findByRole("status");
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ "Content-Type": "application/json", "X-Firebase-AppCheck": "limited-use-token" });
+    window.sessionStorage.clear();
+    appCheck.token.mockResolvedValue(null);
+    render(<EmailScenarioLinkCard scenario={{ ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, address: "456 Different Street" } }} />);
+    fillAndSubmit();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[1][1].headers).toEqual({ "Content-Type": "application/json" });
   });
   it("handles sent state and clipboard success, and remembers submission only for the active address", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true, delivery: "sent", scenarioUrl }) });

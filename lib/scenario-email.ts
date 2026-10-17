@@ -3,6 +3,21 @@ import { normalizeLiveParcel } from "./saved-scenarios";
 import type { SavedScenario } from "./saved-scenarios";
 import { parcelPresets } from "./feasibility";
 
+// Links, email addresses and bare domains (two-plus characters, a dot, then letters).
+const LINK_LIKE = /:\/\/|www\.|@|\b[a-z0-9-]{2,}\.[a-z]{2,24}\b/i;
+// Control characters (including line breaks) and angle brackets.
+const UNSAFE_CHARACTERS = /[\u0000-\u001f\u007f<>]/;
+
+/**
+ * Text from the client that is printed into an outbound email, such as the
+ * parcel address, must read like a place name: short, one line, and with no
+ * links or addresses that would let the email carry someone else's message.
+ */
+export function isPlainPlaceText(value: string, maxLength: number): boolean {
+  const text = value.trim();
+  return text.length > 0 && text.length <= maxLength && !UNSAFE_CHARACTERS.test(text) && !LINK_LIKE.test(text);
+}
+
 /** Keep only design data; never carry a paid brief, purchase intent, or user profile. */
 export function parseEmailScenario(value: unknown): SavedScenario | null {
   if (!isRecord(value) || !isValidAduConfig(value.config) || !isValidFinancialAssumptions(value.assumptions) || !isValidPose(value.pose)) return null;

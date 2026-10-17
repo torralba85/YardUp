@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
+  type AppCheck,
 } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -43,6 +44,13 @@ const appCheckSiteKey =
 const appCheckDebugToken =
   process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN?.trim();
 
+// Kept on globalThis with the init flag so a hot-reloaded module still finds it.
+type AppCheckGlobal = typeof globalThis & {
+  FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;
+  __lotFoundryAppCheckInitialized?: boolean;
+  __lotFoundryAppCheck?: AppCheck;
+};
+
 /**
  * App Check must initialize before Auth/Firestore usage when enforcement is on.
  *
@@ -56,10 +64,7 @@ const appCheckDebugToken =
  * Never ship a debug token in production builds.
  */
 if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-  const appCheckGlobal = globalThis as typeof globalThis & {
-    FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;
-    __lotFoundryAppCheckInitialized?: boolean;
-  };
+  const appCheckGlobal = globalThis as AppCheckGlobal;
 
   if (!appCheckGlobal.__lotFoundryAppCheckInitialized) {
     const isLocalHost =
@@ -82,7 +87,7 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
     }
 
     try {
-      initializeAppCheck(app, {
+      appCheckGlobal.__lotFoundryAppCheck = initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
         isTokenAutoRefreshEnabled: true,
       });
@@ -91,6 +96,11 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
     }
     appCheckGlobal.__lotFoundryAppCheckInitialized = true;
   }
+}
+
+/** The browser's App Check instance; undefined on the server, in tests, or if init failed. */
+export function getClientAppCheck(): AppCheck | undefined {
+  return (globalThis as AppCheckGlobal).__lotFoundryAppCheck;
 }
 
 /** The Firebase Authentication instance for the client app. */

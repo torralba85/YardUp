@@ -1,6 +1,7 @@
 import { calculateFeasibility, formatCurrency } from "@/lib/feasibility";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { COLOR } from "@/lib/design-tokens";
+import { createHash } from "node:crypto";
 import { Resend } from "resend";
 
 export function scenarioHeadlineNumbers(scenario: SavedScenario) {
@@ -51,30 +52,43 @@ export interface SendScenarioEmailResult {
   error?: string;
 }
 
+export type ScenarioEmailMessage = ReturnType<typeof renderScenarioEmail>;
+
+/** A slow provider must not hold the request open; the saved link is still returned. */
+export const RESEND_SEND_TIMEOUT_MS = 8_000;
+
+/**
+ * Send an already-rendered layout email through Resend. Never throws: a missing
+ * key, a provider error or a timeout reports "queued" so the caller keeps the
+ * saved snapshot and offers the copy link instead.
+ */
 export async function dispatchScenarioEmail(
   toEmail: string,
-  scenario: SavedScenario,
-  scenarioUrl: string,
-  marketingOptIn: boolean,
-  idempotencyToken?: string,
+  message: ScenarioEmailMessage,
+  leadToken: string,
 ): Promise<SendScenarioEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return { delivery: "queued" };
   }
 
-  const message = renderScenarioEmail(scenario, scenarioUrl, marketingOptIn);
+  // The lead token opens the saved layout, so headers and the provider's idempotency
+  // store get a one-way reference instead of the token itself.
+  const reference = createHash("sha256").update(leadToken).digest("hex").slice(0, 32);
   try {
     const resend = new Resend(apiKey);
-    const { data, error } = await resend.emails.send({
-      from: "LotFoundry <support@lotfoundry.net>",
-      to: [toEmail],
-      replyTo: "support@lotfoundry.net",
-      subject: message.subject,
-      text: message.text,
-      html: message.html,
-      headers: idempotencyToken ? { "X-Entity-Ref-ID": idempotencyToken } : undefined,
-    });
+    const { data, error } = await resend.emails.send(
+      {
+        from: "LotFoundry <support@lotfoundry.net>",
+        to: [toEmail],
+        replyTo: "support@lotfoundry.net",
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
+        headers: { "X-Entity-Ref-ID": reference },
+      },
+      { idempotencyKey: `studio-layout/${reference}`, signal: AbortSignal.timeout(RESEND_SEND_TIMEOUT_MS) },
+    );
 
     if (error) {
       console.error("[dispatchScenarioEmail] Resend error:", error);
