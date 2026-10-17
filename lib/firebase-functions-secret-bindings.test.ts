@@ -49,8 +49,11 @@ describe("Firebase Functions provider secret bindings", () => {
       "{ ...aiFnOpts, secrets: [openAiApiKey] }",
     );
     expect(functionsEntry).toContain("{ ...fnOpts, secrets: apiSecrets }");
+    expect(functionsEntry).toContain(
+      'const resendApiKey = defineSecret("RESEND_API_KEY");',
+    );
     expect(functionsEntry).toMatch(
-      /const apiSecrets = \[\s*googleMapsApiKey,\s*googlePlacesServerKey,\s*regridApiKey,\s*\.\.\.\(typeSafeApiKey \? \[typeSafeApiKey\] : \[\]\),\s*\]/,
+      /const apiSecrets = \[\s*googleMapsApiKey,\s*googlePlacesServerKey,\s*regridApiKey,\s*resendApiKey,\s*\.\.\.\(typeSafeApiKey \? \[typeSafeApiKey\] : \[\]\),\s*\]/,
     );
     // Opt-in, like native store: never bound unless a TypeSafe flag is on.
     expect(functionsEntry).toMatch(

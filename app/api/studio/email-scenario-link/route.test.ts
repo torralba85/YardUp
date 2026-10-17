@@ -5,6 +5,7 @@ import { buildScenarioShareUrl } from "@/lib/scenario-share-url";
 import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
+  update: vi.fn(),
   limit: vi.fn(),
   collection: vi.fn(),
   get: vi.fn(),
@@ -29,8 +30,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   resetRateLimitBuckets();
   mocks.limit.mockResolvedValue(null); mocks.create.mockResolvedValue(undefined);
+  mocks.update.mockResolvedValue(undefined);
   mocks.dispatch.mockResolvedValue({ delivery: "queued" });
-  mocks.collection.mockReturnValue({ doc: () => ({ create: mocks.create, get: mocks.get }) });
+  mocks.collection.mockReturnValue({ doc: () => ({ create: mocks.create, update: mocks.update, get: mocks.get }) });
 });
 describe("Studio email lead API", () => {
   it.each([{ email: "invalid" }, { email: "a,b@example.com" }, { website: "bot.test" }, { marketingOptIn: "yes" }, { address: "" }, { parcelId: "other" }, { scenarioUrl: "https://lotfoundry.net.evil.test/studio" }, { scenario: { invalid: true } }])("rejects invalid payload %j", async (overrides) => {
@@ -65,14 +67,58 @@ describe("Studio email lead API", () => {
     expect(record.emailPayload.message.text).toContain("not been subscribed");
     expect(await response.json()).toEqual({ ok: true, delivery: "queued", scenarioUrl: record.scenarioUrl });
   });
-  it("delivers via Resend when dispatch succeeds and sets sent_resend", async () => {
+  it("delivers via Resend when dispatch succeeds and then records sent_resend", async () => {
     mocks.dispatch.mockResolvedValue({ delivery: "sent", resendId: "re_msg_123" });
     const response = await POST(request());
     expect(response.status).toBe(200);
     const record = mocks.create.mock.calls[0][0];
-    expect(record.emailDeliveryStatus).toBe("sent_resend");
-    expect(record.resendId).toBe("re_msg_123");
+    expect(record.emailDeliveryStatus).toBe("queued_firestore");
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.update).toHaveBeenCalledWith({ emailDeliveryStatus: "sent_resend", resendId: "re_msg_123" });
     expect(await response.json()).toEqual({ ok: true, delivery: "sent", scenarioUrl: record.scenarioUrl });
+  });
+  it("saves the layout before emailing it and hands the provider the same token and link", async () => {
+    mocks.dispatch.mockResolvedValue({ delivery: "sent", resendId: "re_msg_123" });
+    await POST(request());
+    expect(mocks.create.mock.invocationCallOrder[0]).toBeLessThan(mocks.dispatch.mock.invocationCallOrder[0]);
+    const record = mocks.create.mock.calls[0][0];
+    const [to, , scenarioUrl, marketingOptIn, token] = mocks.dispatch.mock.calls[0];
+    expect(to).toBe("owner@example.com");
+    expect(scenarioUrl).toBe(record.scenarioUrl);
+    expect(marketingOptIn).toBe(false);
+    expect(new URL(record.scenarioUrl).searchParams.get("layout")).toBe(token);
+  });
+  it("never calls the email provider when the snapshot cannot be saved", async () => {
+    mocks.create.mockRejectedValue(new Error("offline"));
+    expect((await POST(request())).status).toBe(503);
+    expect(mocks.dispatch).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+  it("leaves the queued status alone when the provider did not accept the email", async () => {
+    mocks.dispatch.mockResolvedValue({ delivery: "queued", error: "domain not verified" });
+    const response = await POST(request());
+    expect(response.status).toBe(200);
+    expect((await response.json()).delivery).toBe("queued");
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+  it("still reports success when only the post-send status update fails", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.dispatch.mockResolvedValue({ delivery: "sent", resendId: "re_msg_123" });
+    mocks.update.mockRejectedValue(new Error("firestore unavailable"));
+    const response = await POST(request());
+    expect(response.status).toBe(200);
+    expect((await response.json()).delivery).toBe("sent");
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+  it("degrades to queued instead of a 503 if the dispatcher throws after the snapshot is saved", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.dispatch.mockRejectedValue(new Error("unexpected"));
+    const response = await POST(request());
+    expect(response.status).toBe(200);
+    expect((await response.json()).delivery).toBe("queued");
+    expect(mocks.update).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
   it("records independent marketing opt-in and escapes user-controlled HTML", async () => {
     const address = '<img src=x onerror="bad()">';

@@ -11,6 +11,7 @@ import {
   dispatchScenarioEmail,
   renderScenarioEmail,
   scenarioHeadlineNumbers,
+  type SendScenarioEmailResult,
 } from "@/lib/server/studio-scenario-email";
 
 export const runtime = "nodejs";
@@ -54,26 +55,36 @@ export async function POST(request: NextRequest) {
     const scenarioUrl = buildScenarioShareUrl(scenario, token);
     const email = body.email.trim().toLowerCase();
     const message = renderScenarioEmail(scenario, scenarioUrl, body.marketingOptIn);
-    const sendResult = await dispatchScenarioEmail(
-      email,
-      scenario,
-      scenarioUrl,
-      body.marketingOptIn,
-      token,
-    );
-    const emailDeliveryStatus = sendResult.delivery === "sent" ? "sent_resend" : "queued_firestore";
 
-    await getAdminDb().collection("studioScenarioLeads").doc(token).create({
+    // Persist the snapshot first: the emailed link must never point at a layout that was not saved.
+    const lead = getAdminDb().collection("studioScenarioLeads").doc(token);
+    await lead.create({
       email, marketingOptIn: body.marketingOptIn,
       address: scenario.liveParcel.address, parcelId: scenario.parcelId, city: scenario.liveParcel.city,
       // GeoJSON rings contain nested arrays, which Firestore cannot store directly.
       scenarioUrl, scenarioSnapshot: JSON.stringify(scenario), ...numbers,
       createdAt: FieldValue.serverTimestamp(),
       consentVersion: "studio-layout-v1",
-      emailDeliveryStatus,
-      resendId: sendResult.resendId ?? null,
+      emailDeliveryStatus: "queued_firestore",
+      resendId: null,
       emailPayload: { to: [email], message },
     });
+
+    // From here the snapshot exists, so a transport problem degrades to "queued" instead of a 503.
+    let sendResult: SendScenarioEmailResult = { delivery: "queued" };
+    try {
+      sendResult = await dispatchScenarioEmail(email, scenario, scenarioUrl, body.marketingOptIn, token);
+    } catch (error) {
+      console.error("[email-scenario-link] dispatch failed:", error instanceof Error ? error.message : "unknown");
+    }
+    if (sendResult.delivery === "sent") {
+      try {
+        await lead.update({ emailDeliveryStatus: "sent_resend", resendId: sendResult.resendId ?? null });
+      } catch (error) {
+        // The email went out and the snapshot is saved; only the status bookkeeping is stale.
+        console.error("[email-scenario-link] delivery status update failed:", sendResult.resendId, error instanceof Error ? error.message : "unknown");
+      }
+    }
 
     return NextResponse.json({ ok: true, delivery: sendResult.delivery, scenarioUrl }, { headers });
   } catch {
