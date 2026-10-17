@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
 import { HeroLot } from "./HeroLot";
+import { PlayFilm, FILM_DURATION, FILM_FPS } from "./play-film/PlayFilm";
 import { LotFoundryDemo } from "./demo/LotFoundryDemo";
 import {
   DEMO_DURATION_IN_FRAMES,
@@ -8,6 +9,13 @@ import {
   DEMO_HEIGHT,
   DEMO_WIDTH,
 } from "./demo/constants";
+import {
+  PLAY_DURATION_IN_FRAMES,
+  PLAY_FPS,
+  PLAY_HEIGHT,
+  PLAY_WIDTH,
+  PlayPromo,
+} from "./play/PlayPromo";
 import { KickstarterCampaign } from "./kickstarter/KickstarterCampaign";
 import {
   FPS,
@@ -19,6 +27,14 @@ import {
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      <Composition
+        id="LotFoundryPlayFilm"
+        component={PlayFilm}
+        durationInFrames={FILM_DURATION}
+        fps={FILM_FPS}
+        width={1920}
+        height={1080}
+      />
       <Composition
         id="HeroLot"
         component={HeroLot}
@@ -42,6 +58,14 @@ export const RemotionRoot: React.FC = () => {
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
+      />
+      <Composition
+        id="LotFoundryPlayPromo"
+        component={PlayPromo}
+        durationInFrames={PLAY_DURATION_IN_FRAMES}
+        fps={PLAY_FPS}
+        width={PLAY_WIDTH}
+        height={PLAY_HEIGHT}
       />
     </>
   );

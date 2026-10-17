@@ -1,0 +1,38 @@
+[
+  {
+    "key": "hook",
+    "text": "Could your backyard be earning rent? LotFoundry shows you what your lot can do, in about a minute.",
+    "src": "play/vo-hook.mp3",
+    "seconds": 5.44
+  },
+  {
+    "key": "find",
+    "text": "Start with your address. LotFoundry pulls your parcel, local zoning, and your area's market rents.",
+    "src": "play/vo-find.mp3",
+    "seconds": 6.26
+  },
+  {
+    "key": "earn",
+    "text": "See what a backyard home could earn. On this Seattle demo lot, about two thousand and fifty dollars a month.",
+    "src": "play/vo-earn.mp3",
+    "seconds": 5.97
+  },
+  {
+    "key": "shape",
+    "text": "Then shape it. Place an ADU in 3D, right on your lot, and see whether it fits.",
+    "src": "play/vo-shape.mp3",
+    "seconds": 5.25
+  },
+  {
+    "key": "check",
+    "text": "Check feasibility: an estimated build range, rent, and payback, plus what to verify before you permit.",
+    "src": "play/vo-check.mp3",
+    "seconds": 6.69
+  },
+  {
+    "key": "cta",
+    "text": "LotFoundry. Find out what your backyard can do. Available now on Google Play.",
+    "src": "play/vo-cta.mp3",
+    "seconds": 4.75
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "fps": 30,
+  "duration": 28.8,
+  "narrationFile": "brielle.wav",
+  "voice": "Brielle",
+  "voiceId": "a00bc7f3-0236-5e76-ac65-90137ce0f5a4",
+  "scenes": [
+    {"id":"opening", "from":0, "to":2.8},
+    {"id":"find", "from":2.8, "to":5.55},
+    {"id":"earn", "from":5.55, "to":8.05},
+    {"id":"shape", "from":8.05, "to":12.75},
+    {"id":"check", "from":12.75, "to":20.05},
+    {"id":"recap", "from":20.05, "to":25.9},
+    {"id":"closing", "from":25.9, "to":28.8}
+  ],
+  "script": "See what your backyard could become.\nStart with your address. Explore a rental estimate.\nTry a footprint in the three D studio, and see how it fits.\nCompare estimated cost, rent, and payback. See what to check before you permit.\nLot Foundry. A clearer first step. A lot more possibility."
+}
