@@ -15,6 +15,17 @@ function makeInput() {
   return { parcel, config, result };
 }
 
+it("exports the engine's cost allowances and keeps historical results readable", () => {
+  const input = makeInput();
+  expect(buildReportHtml(input)).toContain("Hard &amp; Soft Cost Allowances");
+  expect(buildReportCsv(input)).toContain("Central Project Estimate ($),251340");
+  expect(buildReportCsv(input)).toContain("Soft-cost allowance ($),38340");
+  expect(buildReportHtml(input)).toContain("not contractor quotes");
+  const historical = { ...input, result: { ...input.result, costBreakdown: undefined } };
+  expect(buildReportHtml(historical)).not.toContain("Hard &amp; Soft Cost Allowances");
+  expect(buildReportCsv(historical)).not.toContain("Central Project Estimate ($)");
+});
+
 it("labels historical Saved Brief snapshots in every exported Report", () => {
   const input = { ...makeInput(), projectBrief: makeProjectBrief(), projectBriefSavedAt: "2026-09-13T00:00:00Z" };
   expect(buildReportText(input)).toContain("Saved Brief snapshot");

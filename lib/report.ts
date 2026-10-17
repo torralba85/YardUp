@@ -1,4 +1,5 @@
 import { COLOR } from "@/lib/design-tokens";
+import { constructionBudgetNote, constructionBudgetRows } from "./finance";
 import {
   finishLabels,
   formatCurrency,
@@ -522,6 +523,12 @@ export function buildReportHtml({
           </tbody>
         </table>
 
+        ${result.costBreakdown ? `<h2>Hard &amp; Soft Cost Allowances</h2>
+        <table class="snapshot"><tbody>
+          ${constructionBudgetRows(result.costBreakdown).map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(formatCurrency(value))}</td></tr>`).join("")}
+          <tr><th scope="row">Central project estimate</th><td>${escapeHtml(formatCurrency(result.costBreakdown.total))}</td></tr>
+        </tbody></table><p>${escapeHtml(constructionBudgetNote)}</p>` : ""}
+
         <h2>Project Snapshot</h2>
         <table class="snapshot">
           <tbody>
@@ -882,6 +889,11 @@ export function buildReportCsv({
     ["Remaining Coverage Capacity (sf)", parcelConfidence(parcel).footprintKnown ? String(result.remainingCapacity) : "Unknown"],
     ...(parcelConfidence(parcel).regulationsEstimated ? [["Regulatory assumptions", "Zoning, setbacks and maximum coverage unverified"] as [string, string]] : []),
     ["Zoning Status", result.zoningStatus],
+    ...(result.costBreakdown ? [
+      ...constructionBudgetRows(result.costBreakdown).map(([label, value]): [string, string] => [`${label} ($)`, String(value)]),
+      ["Central Project Estimate ($)", String(result.costBreakdown.total)] as [string, string],
+      ["Construction Budget Basis", constructionBudgetNote] as [string, string],
+    ] : []),
     ["Build Cost Low ($)", String(result.costLow)],
     ["Build Cost High ($)", String(result.costHigh)],
     ["Monthly Rent ($)", String(result.monthlyRent)],

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { constructionBudgetNote, constructionBudgetRows } from "@/lib/finance";
 import {
   AlertTriangle,
   BarChart3,
@@ -391,6 +392,17 @@ export default function ReportPreview({
                 income outcome is guaranteed.
               </div>
 
+              {result.costBreakdown && (
+                <section className="mt-6 border-t border-lot-line pt-5" aria-label="Hard and soft cost allowances">
+                  <h3 className="font-display text-xl font-medium text-lot-ink">Hard &amp; soft cost allowances</h3>
+                  <dl className="mt-3 divide-y divide-lot-line">
+                    {[...constructionBudgetRows(result.costBreakdown), ["Central project estimate", result.costBreakdown.total] as [string, number]].map(([label, value]) => (
+                      <div key={label} className="flex flex-wrap justify-between gap-2 py-2 text-sm text-lot-ink"><dt>{label}</dt><dd className="tabular-nums">{formatCurrency(value)}</dd></div>
+                    ))}
+                  </dl>
+                  <p className="mt-2 text-xs leading-5 text-lot-stone">{constructionBudgetNote}</p>
+                </section>
+              )}
               <CertificateProFormaSection result={result} />
               {permitAudit && <CertificatePermitAuditSection audit={permitAudit} />}
 

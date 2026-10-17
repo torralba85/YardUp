@@ -349,6 +349,7 @@ describe("CertificatePanel", () => {
         // The Oak Street preset is in Washington, where California's 750 sq ft rule does not apply.
         "Permit fee & submittal audit",
         "Contractor bid-leveling RFQ checklist",
+        "Hard & soft cost allowances",
         ...AI_ROWS,
         "Print-ready report, CSV export & permanent share link",
       ]);

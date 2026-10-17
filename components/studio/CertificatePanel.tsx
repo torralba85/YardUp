@@ -613,6 +613,14 @@ export default function CertificatePanel({
                   </ol>
                 </div>
               </li>
+              <li className="flex items-start gap-3 px-4 py-3">
+                <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-semibold text-lot-ink">Hard &amp; soft cost allowances</h4>
+                  <p className="mt-0.5 text-xs leading-5 text-lot-stone">Your free build-cost range, explained: construction base, roof, openings, regional adjustment, and combined design and permit allowance.</p>
+                  <p className="mt-2 text-xs text-lot-stone">Five modeled line items included in your Certificate.</p>
+                </div>
+              </li>
               {includedSections(projectBriefPreview).map((section) => (
                 <li key={section.title} className="flex items-start gap-3 px-4 py-3">
                   <Lock size={14} className="mt-0.5 shrink-0 text-lot-stone" aria-hidden="true" />

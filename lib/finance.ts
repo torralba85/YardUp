@@ -4,6 +4,7 @@ import type { ADUConfig, FinancialAssumptions, RentScenario } from "./feasibilit
  * Computed financial projections for a proposed ADU.
  */
 export interface FinanceResult {
+  costBreakdown: ConstructionBudget;
   costLow: number;
   costHigh: number;
   costPerSqftLow: number;
@@ -13,6 +14,27 @@ export interface FinanceResult {
   paybackYears: number;
   /** The operating-expense ratio actually applied to gross rent (0–1). */
   operatingExpenseRatio: number;
+}
+
+export interface ConstructionBudget {
+  baseConstruction: number;
+  roofPremium: number;
+  openings: number;
+  regionalAdjustment: number;
+  softCosts: number;
+  total: number;
+}
+
+export const constructionBudgetNote = "Modeled allowances, not contractor quotes. Construction is a bundled assumption; site work, utility extensions, soil conditions, and local fees need project-specific quotes. Soft costs combine design, engineering, and permits; they are not separately priced.";
+
+export function constructionBudgetRows(budget: ConstructionBudget): Array<[string, number]> {
+  return [
+    ["Construction base", budget.baseConstruction],
+    ["Roof premium", budget.roofPremium],
+    ["Openings allowance", budget.openings],
+    ["Regional hard-cost adjustment", budget.regionalAdjustment],
+    ["Soft-cost allowance", budget.softCosts],
+  ];
 }
 
 /** Location adjustments resolved from the parcel's market data. */
@@ -59,6 +81,14 @@ export function calculateFinance(
   const paybackYears = Number((costMid / annualNoi).toFixed(1));
 
   return {
+    costBreakdown: {
+      baseConstruction: aduSqft * baseCostPerSqft,
+      roofPremium: aduSqft * roofPremium,
+      openings: openingPremium,
+      regionalAdjustment: hardCost - (aduSqft * (baseCostPerSqft + roofPremium) + openingPremium),
+      softCosts: costMid - hardCost,
+      total: costMid,
+    },
     costLow,
     costHigh,
     costPerSqftLow: aduSqft > 0 ? Math.round(costLow / aduSqft) : 0,
