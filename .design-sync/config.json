@@ -1,0 +1,49 @@
+{
+  "projectId": "7ff0e4d3-df13-49ca-ac9f-6bd42cfb99bf",
+  "shape": "package",
+  "pkg": "@lotfoundry/ui",
+  "globalName": "LotFoundryUI",
+  "entry": ".design-sync/kit/src/index.ts",
+  "buildCmd": "node .design-sync/kit/build.mjs",
+  "srcDir": "../../components/ui",
+  "tsconfig": "../../tsconfig.json",
+  "cssEntry": "dist/styles.css",
+  "extraFonts": ["dist/fonts/fonts.css"],
+  "extraEntries": ["./src/icons.ts"],
+  "guidelinesGlob": ["../../docs/design/design-system.md"],
+  "overrides": {
+    "PanelHeader": { "cardMode": "column" },
+    "Bezel": { "cardMode": "column" },
+    "FeasibilityBadge": { "cardMode": "column" },
+    "UtilityEstimateCard": { "cardMode": "column" }
+  },
+  "docsMap": {
+    "Button": "../groups/actions.md",
+    "Input": "../groups/forms.md",
+    "Select": "../groups/forms.md",
+    "Textarea": "../groups/forms.md",
+    "FieldLabel": "../groups/forms.md",
+    "Segmented": "../groups/forms.md",
+    "Slider": "../groups/forms.md",
+    "Bezel": "../groups/surfaces.md",
+    "PanelHeader": "../groups/surfaces.md",
+    "Skeleton": "../groups/surfaces.md",
+    "StatusChip": "../groups/status.md",
+    "FeasibilityBadge": "../groups/status.md",
+    "MoneyFigure": "../groups/figures.md",
+    "UtilityEstimateCard": "../groups/figures.md",
+    "StepRail": "../groups/navigation.md",
+    "BrandLockup": "../groups/brand.md",
+    "ParcelMark": "../groups/brand.md"
+  },
+  "componentSrcMap": {
+    "Input": "../../components/ui/Field.tsx",
+    "Select": "../../components/ui/Field.tsx",
+    "Textarea": "../../components/ui/Field.tsx",
+    "FieldLabel": "../../components/ui/Field.tsx",
+    "Segmented": "../../components/ui/Field.tsx",
+    "Slider": "../../components/ui/Field.tsx",
+    "PanelHeader": "../../components/ui/Panel.tsx",
+    "ParcelMark": "../../components/ui/BrandLockup.tsx"
+  }
+}
