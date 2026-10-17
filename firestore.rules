@@ -1,6 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Private lead + durable email queue. Bearer API returns only a validated scenario projection.
+    match /studioScenarioLeads/{leadId} {
+      allow read, write: if false;
+    }
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }

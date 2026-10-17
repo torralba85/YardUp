@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { useEffect, useState } from "react";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/lib/auth-context";
+import { rememberCapturedEmail } from "@/lib/certificate-purchase-intent";
 
 const mocks = vi.hoisted(() => ({
   auth: { user: null as { uid: string } | null },
@@ -61,6 +62,16 @@ function Host() {
 describe("AuthModal focus restore", () => {
   beforeEach(() => {
     mocks.auth.user = null;
+    window.sessionStorage.clear();
+  });
+
+  it("prefills a captured email for certificate signup while keeping it editable", () => {
+    rememberCapturedEmail("owner@example.com");
+    render(<AuthModal isOpen initialMode="sign-up" analyticsSource="certificate_purchase" onClose={() => {}} />);
+    const input = screen.getByLabelText("Email");
+    expect(input).toHaveValue("owner@example.com");
+    fireEvent.change(input, { target: { value: "different@example.com" } });
+    expect(input).toHaveValue("different@example.com");
   });
   afterEach(() => {
     vi.unstubAllEnvs();

@@ -28,8 +28,8 @@ Home and feasibility studio on phone, and the studio on tablet.
 - Uses authenticated OpenAI Responses API workflows for a parcel-and-permit
   brief and style-matched ADU concepts.
 - Produces a shareable, printable Certificate of Feasibility.
-- Saves scenarios with Firebase Auth and Firestore, while guest scenarios stay
-  local to the browser.
+- Saves scenarios with Firebase Auth and Firestore. Guests can also request a
+  free resumable 3D lot link by email; see [delivery queue setup](docs/studio-email-links.md).
 - Supports homeowner-to-builder handoff and verified web/native purchase
   channels.
 - Resolves real lots without a paid parcel API wherever the public GIS registry

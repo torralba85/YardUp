@@ -40,6 +40,7 @@ import AIProjectBriefPanel from "./AIProjectBriefPanel";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 import { useParcel } from "@/lib/parcel-context";
 import { COLOR } from "@/lib/design-tokens";
+import type { ReactNode } from "react";
 
 
 const STATUS_ICON: Record<ConstraintStatus, typeof CheckCircle2> = {
@@ -62,6 +63,7 @@ const RENT_SCENARIO_LABELS: Record<RentScenario, string> = {
 };
 
 export interface ConstraintsPanelProps {
+  emailLinkCard?: ReactNode;
   parcel: Parcel & { zoning?: string; source?: string };
   result: FeasibilityResult;
   config: ADUConfig;
@@ -77,6 +79,7 @@ export interface ConstraintsPanelProps {
 }
 
 export default function ConstraintsPanel({
+  emailLinkCard,
   parcel,
   result,
   config,
@@ -179,6 +182,12 @@ export default function ConstraintsPanel({
             onViewCertificate={onViewCertificate}
           />
         </div>
+
+        {emailLinkCard && (
+          <div className="mt-[18px] border-t border-lot-line pt-[18px]">
+            {emailLinkCard}
+          </div>
+        )}
       </div>
 
       {/* Verdict-reason strip */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { User as FirebaseUser } from "firebase/auth";
 import { AlertTriangle, CheckCircle2, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
@@ -123,6 +123,7 @@ function MaskedFigure({ label }: { label: string }) {
 
 /** Props for {@link CertificatePanel}. */
 export interface CertificatePanelProps {
+  emailLinkCard?: ReactNode;
   recovery: CertificateRecovery;
   /** The active parcel (its identity keys the purchase). */
   parcel: Parcel;
@@ -156,6 +157,7 @@ export interface CertificatePanelProps {
  * webhook-written grant.
  */
 export default function CertificatePanel({
+  emailLinkCard,
   recovery,
   parcel,
   result,
@@ -754,6 +756,8 @@ export default function CertificatePanel({
           </p>
         </div>
       </details>
+
+      {!purchased && emailLinkCard}
 
       <AuthModal
         isOpen={authOpen}

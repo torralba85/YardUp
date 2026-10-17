@@ -58,6 +58,7 @@ import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch"
 import FeasibilityInspector from "./studio/FeasibilityInspector";
 import ReportPreview from "./studio/ReportPreview";
 import CertificatePanel from "./studio/CertificatePanel";
+import EmailScenarioLinkCard from "./studio/EmailScenarioLinkCard";
 import BuildersPanel from "./studio/BuildersPanel";
 import BuilderLeadPanel, {
   type BuilderLeadSubmitInput,
@@ -149,16 +150,16 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
  *   the studio opened (the native app's onboarding), so the mobile journey
  *   starts at the Earn reveal instead of asking them to find a lot again.
  */
-export default function FeasibilityStudio({ demoChosen = false, nativeShell = false }: { demoChosen?: boolean; nativeShell?: boolean } = {}) {
+export default function FeasibilityStudio({ demoChosen = false, nativeShell = false, initialScenario }: { demoChosen?: boolean; nativeShell?: boolean; initialScenario?: SavedScenario } = {}) {
   const initialPreset = parcelPresets[0];
   return (
     <ParcelProvider initialPreset={initialPreset}>
-      <FeasibilityStudioInner demoChosen={demoChosen} nativeShell={nativeShell} />
+      <FeasibilityStudioInner demoChosen={demoChosen} nativeShell={nativeShell} initialScenario={initialScenario} />
     </ParcelProvider>
   );
 }
 
-function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boolean; nativeShell: boolean }) {
+function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { demoChosen: boolean; nativeShell: boolean; initialScenario?: SavedScenario }) {
   const { user, loading: authLoading } = useAuth();
   const {
     parcel: liveParcel,
@@ -487,10 +488,26 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const parsed = parseScenarioParams(params);
-    const merged = mergeScenarioPartial(parsed);
+    const merged = initialScenario ? {
+      ...initialScenario,
+      config: parsed.config ?? initialScenario.config,
+      pose: parsed.pose ?? initialScenario.pose,
+      assumptions: parsed.assumptions ?? initialScenario.assumptions,
+    } : mergeScenarioPartial(parsed);
     setParcelId(merged.parcelId);
     setConfig(merged.config);
-    setPoseState({key:merged.parcelId,pose:merged.pose ?? defaultPose(getParcelById(merged.parcelId),merged.config)});
+    // Explicit placement from the URL or a restored layout takes precedence;
+    // otherwise calculate placement from the active parcel (preset or live).
+    const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
+    const initialPose =
+      explicitPose ??
+      (parcelMode === "preset"
+        ? defaultPose(getParcelById(merged.parcelId), merged.config)
+        : defaultPose(activeParcel, merged.config));
+    setPoseState({
+      key: parcelMode === "preset" ? merged.parcelId : sceneKey,
+      pose: initialPose,
+    });
     setAssumptions(merged.assumptions);
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the
@@ -565,6 +582,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     selectionVersion,
   });
 
+  const emailScenario: SavedScenario | null = parcelMode === "live" && !parcelLoading && "source" in activeParcel && activeParcel.source !== "estimated"
+    ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel }
+    : null;
+  const hasSavedActiveAddress = savedScenarios.some((scenario) => scenario.liveParcel && certificateKey(scenario.liveParcel) === certificateKey(activeParcel));
+  const emailLinkCard = emailScenario && !authLoading && !certificateRecovery.access.loading && !certificateRecovery.access.purchased && !hasSavedActiveAddress
+    ? <EmailScenarioLinkCard key={`${sceneKey}|${user?.uid ?? "guest"}`} scenario={emailScenario} initialEmail={user?.email ?? ""} />
+    : null;
+
   useEffect(() => {
     if (!hydratedFromUrl || typeof window === "undefined") return;
     // `serializeScenarioParams` throws on an invalid scenario, which is right for
@@ -578,10 +603,17 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
     const currentParams = new URLSearchParams(window.location.search);
     const certParam = currentParams.get("cert");
+    const layoutParam = initialScenario?.liveParcel && certificateKey(initialScenario.liveParcel) === certificateKey(activeParcel)
+      ? currentParams.get("layout") : null;
     // Certificate Recovery consumes the one-shot return markers after capture.
     const checkoutCancelled = currentParams.get(CHECKOUT_RETURN_PARAM) === CHECKOUT_CANCELLED;
     const nextQuery = [
       serialized,
+      ...(layoutParam ? [`layout=${encodeURIComponent(layoutParam)}`] : []),
+      ...["utm_source", "utm_medium", "utm_campaign"].flatMap((name) => {
+        const value = currentParams.get(name);
+        return value ? [`${name}=${encodeURIComponent(value)}`] : [];
+      }),
       ...(certParam ? [`cert=${encodeURIComponent(certParam)}`] : []),
       ...(checkoutCancelled ? [`${CHECKOUT_RETURN_PARAM}=${CHECKOUT_CANCELLED}`] : []),
     ].join("&");
@@ -592,7 +624,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
     // Next.js's own router state on this entry, since replaceState's first
     // argument replaces the whole state object, not just the URL.
     window.history.replaceState(window.history.state, "", next);
-  }, [assumptions, config, hydratedFromUrl, parcelId, pose]);
+  }, [activeParcel, assumptions, config, hydratedFromUrl, initialScenario, parcelId, pose]);
 
   // Track feasibility result review once per parcel context when reached
   const reviewedParcelsRef = useRef<Set<string>>(new Set());
@@ -1058,6 +1090,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
       stepContent = (
         <EarnStep
           parcelNotice={<ParcelDataNotice parcel={activeParcel} />}
+          emailLinkCard={emailLinkCard}
           parcelName={mobileParcelName}
           result={result}
           estimated={parcelMode !== "live"}
@@ -1125,6 +1158,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           parcelName={mobileParcelName}
           certificate={
             <CertificatePanel
+              emailLinkCard={emailLinkCard}
               recovery={certificateRecovery}
               parcel={activeParcel}
               result={result}
@@ -1311,6 +1345,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
                 projectBriefError={projectBriefError}
                 onGenerateProjectBrief={handleGenerateProjectBrief}
                 addressFocusSignal={addressFocusSignal}
+                emailLinkCard={emailLinkCard}
               />
             </div>
             <PermitGuidePanel address={parcelName} />
@@ -1358,6 +1393,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell }: { demoChosen: boole
           </>
         ) : activeStep === "certificate" ? (
           <CertificatePanel
+            emailLinkCard={emailLinkCard}
               recovery={certificateRecovery}
             parcel={activeParcel}
             result={result}

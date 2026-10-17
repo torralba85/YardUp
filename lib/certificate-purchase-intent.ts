@@ -11,6 +11,21 @@
  */
 
 const INTENT_KEY = "lf:certificate-purchase-intent";
+const CAPTURED_EMAIL_KEY = "lotfoundry_captured_email";
+
+/** An editable convenience hint only; never an authenticated identity or a purchase intent. */
+export function rememberCapturedEmail(email: string): void {
+  if (typeof window === "undefined") return;
+  try { window.sessionStorage.setItem(CAPTURED_EMAIL_KEY, email.trim().toLowerCase()); } catch { /* Optional prefill. */ }
+}
+
+export function readCapturedEmail(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const email = window.sessionStorage.getItem(CAPTURED_EMAIL_KEY) ?? "";
+    return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
+  } catch { return ""; }
+}
 
 /** How long a purchase click stays resumable while the visitor signs in. */
 export const PURCHASE_INTENT_TTL_MS = 30 * 60 * 1000;

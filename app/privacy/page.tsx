@@ -16,7 +16,7 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 12, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 16, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -36,6 +36,14 @@ export default function PrivacyPage() {
           <li>
             <strong>Builder Profile Information:</strong> Business name, contractor license details,
             phone numbers, service regions, and trade specializations.
+          </li>
+          <li>
+            <strong>Emailed Studio Links:</strong> When you request a 3D lot link, we save your email,
+            property address, design, estimate snapshot, and optional permit-update preference to
+            prepare and deliver that email. Links remain available until deleted; anyone with your
+            link can view the layout and property address. Marketing updates require a separate,
+            optional opt-in. Contact support@lotfoundry.net to withdraw that opt-in or delete the
+            saved link and associated lead. Transactional email may be queued before delivery.
           </li>
           <li>
             <strong>Marketplace Connection Data:</strong> Direct contact requests submitted by

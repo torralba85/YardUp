@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, Suspense } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition, Suspense } from "react";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
@@ -16,7 +16,10 @@ import {
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input } from "@/components/ui/Field";
+import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
 import { useRadioGroup, type RadioItemProps } from "@/components/ui/useRadioGroup";
+
+const subscribeToNothing = () => () => {};
 
 function SignupForm() {
   const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
@@ -27,7 +30,9 @@ function SignupForm() {
   const [isPending, startTransition] = useTransition();
 
   const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
+  const capturedEmail = useSyncExternalStore(subscribeToNothing, readCapturedEmail, () => "");
+  const [editedEmail, setEmail] = useState<string | null>(null);
+  const email = editedEmail ?? capturedEmail;
   const [password, setPassword] = useState("");
   const [legalAccepted, setLegalAccepted] = useState(false);
   

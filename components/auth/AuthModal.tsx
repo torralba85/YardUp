@@ -15,6 +15,7 @@ import {
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 import { Input, Select } from "@/components/ui/Field";
+import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
 
 /**
  * Why the modal closed.
@@ -183,6 +184,7 @@ export function AuthModal({
         // Open-edge synchronization is intentional: the modal stays mounted
         // between prompts, but each caller can choose its initial auth mode.
         setIsSignUp(signUpMode);
+        setEmail((current) => current || readCapturedEmail());
         trackAuthPromptShown({
           surface: analyticsSurface,
           source: analyticsSource,

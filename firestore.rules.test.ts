@@ -60,6 +60,20 @@ function ownerProfile(overrides: Record<string, unknown> = {}) {
   };
 }
 
+describe.skipIf(!hasFirestoreEmulator)("private Studio email leads", () => {
+  it("denies guest and signed-in direct reads and writes, including queued email payloads", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "studioScenarioLeads", "private-lead"), { email: "owner@example.com", emailDeliveryStatus: "queued_firestore" });
+    });
+    for (const context of [rulesEnv().unauthenticatedContext(), rulesEnv().authenticatedContext(OWNER_ID)]) {
+      const ref = doc(context.firestore(), "studioScenarioLeads", "private-lead");
+      await assertFails(getDoc(ref));
+      await assertFails(setDoc(ref, { email: "other@example.com" }));
+      await assertFails(deleteDoc(ref));
+    }
+  });
+});
+
 function currentConsent(acceptedAt: unknown = serverTimestamp()) {
   return {
     termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,

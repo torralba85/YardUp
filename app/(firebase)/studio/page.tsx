@@ -13,6 +13,8 @@ import { parseScenarioParams } from "@/lib/scenario-url";
 import { peekAddressQuery } from "@/lib/address-handoff";
 import { peekInitialParcel } from "@/lib/parcel-handoff";
 import { trackStudioOpened } from "@/lib/analytics/events";
+import EmailedScenarioEntry from "@/components/studio/EmailedScenarioEntry";
+import { validLayoutToken } from "@/lib/scenario-share-url";
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 // The native shell is fixed for the life of the page; there is nothing to observe.
@@ -32,6 +34,7 @@ export default function StudioPage() {
   const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
   const [demoEntry, setDemoEntry] = useState<boolean | null>(null);
   const [studioEntryRecorded, setStudioEntryRecorded] = useState(false);
+  const [layoutToken, setLayoutToken] = useState<string | null>(null);
   const initialDemoEntry = useRef<boolean | null>(null);
   const studioOpenedSent = useRef(false);
 
@@ -42,9 +45,13 @@ export default function StudioPage() {
     if (initialDemoEntry.current === null) {
       const search = new URLSearchParams(window.location.search);
       const isCert = search.has("cert");
+      const token = search.get("layout");
+      const hasLayout = Boolean(token && validLayoutToken(token));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (hasLayout && token) setLayoutToken(token);
       const scenario = parseScenarioParams(search);
       initialDemoEntry.current = Boolean(
-        isCert || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel()),
+        !hasLayout && (isCert || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel())),
       );
     }
     setDemoEntry(initialDemoEntry.current);
@@ -62,16 +69,19 @@ export default function StudioPage() {
       device_mode: deviceMode,
       auth_state: user ? "signed_in" : "guest",
       entry_source: entrySource,
-      parcel_mode: demoEntry ? "preset" : undefined,
+      parcel_mode: demoEntry ? "preset" : (layoutToken ? "live" : undefined),
     });
     setStudioEntryRecorded(true);
-  }, [loading, user, demoEntry]);
+  }, [loading, user, demoEntry, layoutToken]);
 
   useEffect(() => {
-    if (buildersAllowed && !loading && profile?.role === "builder") {
+    const search = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const token = search?.get("layout");
+    const hasLayout = Boolean(token && validLayoutToken(token));
+    if (buildersAllowed && !loading && profile?.role === "builder" && !layoutToken && !hasLayout) {
       router.replace("/builder");
     }
-  }, [buildersAllowed, loading, profile, router]);
+  }, [buildersAllowed, loading, profile, router, layoutToken]);
 
   // AuthProvider re-enters `loading` on every auth event (sign-in, token
   // refresh, sign-out), not just the first. Swapping in the arrival plate then
@@ -79,6 +89,10 @@ export default function StudioPage() {
   // it stays mounted. Builder accounts also use the homeowner Studio in the app.
   const [authSettled, setAuthSettled] = useState(false);
   if (!loading && !authSettled) setAuthSettled(true);
+  // Keep the restored study mounted during auth/token updates, including any edits made since opening it.
+  if (layoutToken && authSettled && studioEntryRecorded) {
+    return <EmailedScenarioEntry token={layoutToken} />;
+  }
   if (inNativeApp && authSettled && studioEntryRecorded) {
     return <AppStudioOnboarding user={user} />;
   }
@@ -90,7 +104,7 @@ export default function StudioPage() {
   if (
     loading ||
     !studioEntryRecorded ||
-    (buildersAllowed && profile?.role === "builder") ||
+    (!layoutToken && buildersAllowed && profile?.role === "builder") ||
     (user && demoEntry === null)
   ) {
     return (
