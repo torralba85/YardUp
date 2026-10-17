@@ -22,6 +22,14 @@ import {
 import { buildPermitFeeAudit, type AuditTone, type PermitFeeAudit } from "./certificate-permit-audit";
 import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "./certificate-bid-checklist";
 import { buildAduHeightModel } from "./scene-model";
+import { aduSetbackNote, aduSetbacks } from "./adu-setbacks";
+
+/** The backyard home's setbacks, with the rule behind the side and rear figures. */
+function setbacksLabel(parcel: Parcel, config: ADUConfig): string {
+  const setbacks = aduSetbacks(parcel, config);
+  const note = aduSetbackNote(setbacks.rule);
+  return `${setbacks.front} ft front, ${setbacks.rear} ft rear, ${setbacks.side} ft side${note ? `. ${note}` : ""}`;
+}
 
 function coverageLabel(parcel: Parcel, result: FeasibilityResult): string {
   const { footprintKnown, regulationsEstimated } = parcelConfidence(parcel);
@@ -119,8 +127,8 @@ export function buildReportText({
     "",
     "Site Fit",
     `Lot coverage: ${coverageLabel(parcel, result)}`,
-    `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
-    `Estimated area after modeled setbacks: ${buildableArea(parcel).toLocaleString()} sf`,
+    `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${setbacksLabel(parcel, config)}`,
+    `Estimated area after modeled setbacks: ${buildableArea(parcel, config).toLocaleString()} sf`,
     `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel).title}`,
     `Zoning status: ${result.zoningStatus}`,
     ...(result.warnings.length > 0
@@ -200,9 +208,9 @@ export function buildReportHtml({
     ["Lot coverage", coverageLabel(parcel, result)],
     [
       parcelConfidence(parcel).regulationsEstimated ? "Setbacks (assumed)" : "Setbacks",
-      `${parcel.setbacks.front} ft front, ${parcel.setbacks.rear} ft rear, ${parcel.setbacks.side} ft side`,
+      setbacksLabel(parcel, config),
     ],
-    ["Estimated area after modeled setbacks", `${buildableArea(parcel).toLocaleString()} sf`],
+    ["Estimated area after modeled setbacks", `${buildableArea(parcel, config).toLocaleString()} sf`],
     ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel).title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
@@ -804,6 +812,8 @@ export function buildReportCsv({
   const nextSteps = Array.isArray(projectBrief?.recommendedNextSteps)
     ? projectBrief.recommendedNextSteps
     : [];
+  const setbacks = aduSetbacks(parcel, config);
+  const setbackNote = aduSetbackNote(setbacks.rule);
   const aiRows: Array<[string, string]> = [];
   if (projectBrief && projectBriefSavedAt) {
     aiRows.push(["Brief provenance", "Saved historical snapshot"], ["Scenario saved at", projectBriefSavedAt]);
@@ -864,10 +874,11 @@ export function buildReportCsv({
     ["Exterior Finish", finishLabels[config.finish]],
     ["Lot Coverage (%)", parcelConfidence(parcel).footprintKnown ? result.coveragePercent.toFixed(1) : "Unknown"],
     ["Max Coverage (%)", String(result.maxCoveragePercent)],
-    ["Front Setback (ft)", String(parcel.setbacks.front)],
-    ["Rear Setback (ft)", String(parcel.setbacks.rear)],
-    ["Side Setback (ft)", String(parcel.setbacks.side)],
-    ["Estimated Area After Modeled Setbacks (sf)", String(buildableArea(parcel))],
+    ["Front Setback (ft)", String(setbacks.front)],
+    ["Rear Setback (ft)", String(setbacks.rear)],
+    ["Side Setback (ft)", String(setbacks.side)],
+    ...(setbackNote ? [["Setback Basis", setbackNote] as [string, string]] : []),
+    ["Estimated Area After Modeled Setbacks (sf)", String(buildableArea(parcel, config))],
     ["Remaining Coverage Capacity (sf)", parcelConfidence(parcel).footprintKnown ? String(result.remainingCapacity) : "Unknown"],
     ...(parcelConfidence(parcel).regulationsEstimated ? [["Regulatory assumptions", "Zoning, setbacks and maximum coverage unverified"] as [string, string]] : []),
     ["Zoning Status", result.zoningStatus],

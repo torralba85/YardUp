@@ -1,5 +1,6 @@
 import type { AIProjectBriefInput } from "./ai-types";
 import type { ADUConfig, FeasibilityResult, Parcel } from "./feasibility";
+import { withAduSetbacks } from "./adu-setbacks";
 
 export interface AIProjectBriefSource {
   parcel: Parcel & { zoning?: string; source?: string; state?: string; zip?: string };
@@ -25,7 +26,7 @@ export function buildAIProjectBriefInput({
       lotLength: parcel.lotLength,
       existingHouseSqft: parcel.existingHouseSqft,
       maxLotCoveragePercent: parcel.maxLotCoveragePercent,
-      setbacks: parcel.setbacks,
+      setbacks: withAduSetbacks(parcel, config).setbacks,
       zoning: parcel.zoning,
       source: parcel.source,
       ...(parcel.state ? { state: parcel.state } : {}),

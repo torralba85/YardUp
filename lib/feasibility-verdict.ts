@@ -26,6 +26,10 @@ import { describePlacementWithEvidence } from "./placement-evidence";
 import { parcelConfidence } from "./parcel-confidence";
 import { modeledSetbackAreaSqft } from "./parcel-geometry";
 import type { GeoJsonPolygon } from "./parcel-types";
+import { aduSetbackNote, aduSetbacks, type AduSetbacks } from "./adu-setbacks";
+
+/** The ADU's size, plus the wall height and roof that decide height-based setbacks. */
+type AduFootprint = Pick<ADUConfig, "width" | "length"> & Partial<Pick<ADUConfig, "height" | "roof">>;
 
 export type VerdictLevel = "Likely Feasible" | "Needs Review" | "Unlikely";
 
@@ -59,15 +63,22 @@ export interface FeasibilitySummary {
   openCount: number;
 }
 
-/** Usable lot area remaining after applying the recorded setbacks. */
-export function buildableArea(parcel: Parcel & { boundaryGeoJson?: GeoJsonPolygon | null }): number {
-  const usableWidth = Math.max(0, parcel.lotWidth - parcel.setbacks.side * 2);
+/**
+ * Usable lot area remaining after applying the ADU's setbacks
+ * (`lib/adu-setbacks.ts`). Pass the config so height-based rules apply.
+ */
+export function buildableArea(
+  parcel: Parcel & { boundaryGeoJson?: GeoJsonPolygon | null },
+  config?: AduFootprint,
+): number {
+  const setbacks = aduSetbacks(parcel, config);
+  const usableWidth = Math.max(0, parcel.lotWidth - setbacks.side * 2);
   const usableDepth = Math.max(
     0,
-    parcel.lotLength - parcel.setbacks.front - parcel.setbacks.rear,
+    parcel.lotLength - setbacks.front - setbacks.rear,
   );
   const area = parcel.boundaryGeoJson
-    ? modeledSetbackAreaSqft(parcel.boundaryGeoJson, parcel.setbacks)
+    ? modeledSetbackAreaSqft(parcel.boundaryGeoJson, setbacks)
     : usableWidth * usableDepth;
   // An invalid polygon cannot establish usable land. Published lot area is a
   // final upper bound because geometry and assessor area can differ.
@@ -126,12 +137,13 @@ export function statusTone(status: ConstraintStatus): VerdictTone {
 
 function fitsWithinEnvelope(
   parcel: Parcel,
+  setbacks: AduSetbacks,
   footprint: Pick<ADUConfig, "width" | "length">,
 ): boolean {
-  const usableWidth = Math.max(0, parcel.lotWidth - parcel.setbacks.side * 2);
+  const usableWidth = Math.max(0, parcel.lotWidth - setbacks.side * 2);
   const usableDepth = Math.max(
     0,
-    parcel.lotLength - parcel.setbacks.front - parcel.setbacks.rear,
+    parcel.lotLength - setbacks.front - setbacks.rear,
   );
   return (
     (footprint.width <= usableWidth && footprint.length <= usableDepth) ||
@@ -142,10 +154,12 @@ function fitsWithinEnvelope(
 export function summarizeFeasibility(
   parcel: Parcel,
   result: FeasibilityResult,
-  config?: Pick<ADUConfig, "width" | "length">,
+  config?: AduFootprint,
   placement: PlacementResult | undefined = result.placement,
 ): FeasibilitySummary {
-  const buildableSqft = buildableArea(parcel);
+  const setbacks = aduSetbacks(parcel, config);
+  const setbackNote = aduSetbackNote(setbacks.rule);
+  const buildableSqft = buildableArea(parcel, config);
   const { footprintKnown, regulationsEstimated } = parcelConfidence(parcel);
   const coverageUnverified = !footprintKnown || regulationsEstimated;
   const compliant = result.zoningStatus === "Compliant";
@@ -155,9 +169,9 @@ export function summarizeFeasibility(
   // disagree because allowedFootprint is rounded while coveragePercent is not.
   const coverageOk = hasCapacity;
   const envelopeFits = placement ? placement.envelopeStatus === "fits" : config
-    ? config.width <= parcel.lotWidth - parcel.setbacks.side * 2 && config.length <= parcel.lotLength - parcel.setbacks.front - parcel.setbacks.rear
+    ? config.width <= parcel.lotWidth - setbacks.side * 2 && config.length <= parcel.lotLength - setbacks.front - setbacks.rear
     : buildableSqft >= result.aduSqft;
-  const minimumEnvelopeFits = fitsWithinEnvelope(parcel, { width: 20, length: 20 });
+  const minimumEnvelopeFits = fitsWithinEnvelope(parcel, setbacks, { width: 20, length: 20 });
 
   // Live parcels carry a raw zoning code; presets don't.
   const zoneCode = "zoning" in parcel ? String((parcel as { zoning: string }).zoning) : undefined;
@@ -178,7 +192,7 @@ export function summarizeFeasibility(
       id: "buildable",
       group: "Zoning & setbacks",
       label: "Estimated area after modeled setbacks",
-      detail: `${regulationsEstimated ? "Assumed setbacks: " : ""}${parcel.setbacks.side}′ side · ${parcel.setbacks.front}′ front · ${parcel.setbacks.rear}′ rear${"source" in parcel ? ". Frontage and setback-axis alignment are unverified." : ""}`,
+      detail: `${regulationsEstimated ? "Assumed setbacks: " : ""}${setbacks.side}′ side · ${setbacks.front}′ front · ${setbacks.rear}′ rear${setbackNote ? `. ${setbackNote.replace(/\.$/, "")}` : ""}${"source" in parcel ? ". Frontage and setback-axis alignment are unverified." : ""}`,
       status: envelopeFits && !regulationsEstimated && !("source" in parcel) ? "clear" : "review",
       value: `${buildableSqft.toLocaleString()} sf`,
     },

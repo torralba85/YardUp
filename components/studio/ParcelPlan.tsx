@@ -4,6 +4,7 @@ import { finishColors } from "@/lib/feasibility";
 import { buildSceneModel, type Pose2D } from "@/lib/scene-model";
 import { getScenePlacement } from "@/lib/site-fit";
 import { buildSetbackEnvelope } from "@/lib/placement-validation";
+import { aduSetbacks } from "@/lib/adu-setbacks";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import { COLOR } from "@/lib/design-tokens";
 
@@ -30,7 +31,7 @@ export function ParcelPlan({
 }) {
   const model = buildSceneModel(parcel, config, pose);
   const grid = useId();
-  const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, parcel.setbacks);
+  const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config));
   const placement = getScenePlacement(parcel, config, pose);
   const points = (corners: { x: number; z: number }[] | null) =>
     corners?.map((p) => `${p.x},${p.z}`).join(" ");
