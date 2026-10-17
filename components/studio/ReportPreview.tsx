@@ -646,22 +646,22 @@ function CertificatePermitAuditSection({ audit }: { audit: PermitFeeAudit }) {
         ))}
       </div>
       {audit.sources.length > 0 && (
-        <p className="lf-caption mt-4 text-lot-stone">
-          Sources:{" "}
+        <div className="lf-caption mt-4 flex flex-wrap items-center gap-x-2 text-lot-stone">
+          <span>Sources:</span>
           {audit.sources.map((source, index) => (
-            <span key={source.url}>
-              {index > 0 && " · "}
+            <span key={source.url} className="inline-flex items-center">
+              {index > 0 && <span className="mr-2 text-lot-stone">·</span>}
               <a
                 href={source.url}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-control text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="inline-flex min-h-11 items-center rounded-control text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 {source.label}
               </a>
             </span>
           ))}
-        </p>
+        </div>
       )}
       <p className="lf-caption mt-2 text-lot-stone">
         A planning checklist, not a fee determination. Confirm each line with the permitting

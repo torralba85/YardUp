@@ -26,7 +26,7 @@ export const BID_CHECKLIST_PREVIEW_COUNT = 2;
 export const BID_LEVELING_CHECKLIST: readonly BidScopeItem[] = [
   {
     id: "design",
-    title: "Architectural plans, structural engineering & Title 24 energy calcs",
+    title: "Architectural plans, structural engineering & energy code calcs (Title 24 in CA)",
     ask: "Is design in the price, or quoted separately by an architect or engineer?",
   },
   {
@@ -56,7 +56,7 @@ export const BID_LEVELING_CHECKLIST: readonly BidScopeItem[] = [
   },
   {
     id: "solar",
-    title: "Title 24 rooftop solar PV",
+    title: "Rooftop solar PV (Title 24 in CA)",
     ask: "Is the solar system a new detached unit needs included, or a documented exception?",
   },
   {

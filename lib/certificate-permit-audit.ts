@@ -83,7 +83,7 @@ export function assessImpactFeeThreshold(sqft: number): ImpactFeeThreshold {
     sqft: Math.round(sqft),
     limitSqft: IMPACT_FEE_EXEMPT_MAX_SQFT,
     isExempt: over <= 0,
-    sqftOverLimit: over > 0 ? Math.max(1, Math.round(over)) : 0,
+    sqftOverLimit: over > 0 ? Math.max(1, Math.ceil(over)) : 0,
     sqftUnderLimit: over < 0 ? Math.round(-over) : 0,
   };
 }
@@ -181,7 +181,7 @@ function heightLine(jurisdiction: FeeJurisdiction, totalHeightFt: number): Audit
     return overFloor
       ? {
           title: "Height: over San Diego's 16 ft line",
-          detail: `${height} Over 16 ft next to a residential lot, San Diego requires 4 ft side and rear setbacks (or the base zone's, if smaller). In High and Very High fire hazard zones, 4 ft applies at any height.`,
+          detail: `${height} Over 16 ft next to a residential lot, San Diego requires 4 ft side and rear setbacks (or the base zone's outside the Coastal Overlay Zone, if smaller). In High and Very High fire hazard zones, 4 ft applies at any height.`,
           tone: "review",
         }
       : {

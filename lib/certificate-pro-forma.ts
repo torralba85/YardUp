@@ -165,8 +165,9 @@ export function buildCashFlowProForma(
     const paymentLow = Math.round(calculateMonthlyPayment(principalLow, scenario.annualRate, scenario.years));
     const paymentHigh = Math.round(calculateMonthlyPayment(principalHigh, scenario.annualRate, scenario.years));
     const coveredLoan = maxPrincipalForPayment(rentAfterCosts, scenario.annualRate, scenario.years);
+    const minDownPayment = (cost: number) => cost * (1 - scenario.financedShare);
     const breakEvenCashIn = (cost: number) =>
-      Math.min(cost, Math.ceil(Math.max(0, cost - coveredLoan) / 1000) * 1000);
+      Math.min(cost, Math.ceil(Math.max(minDownPayment(cost), cost - coveredLoan) / 1000) * 1000);
     return {
       scenario,
       downPaymentLow: result.costLow - principalLow,
@@ -290,5 +291,5 @@ export function proFormaSummary(proForma: CashFlowProForma): string {
 
 /** The disclosure printed under every rendering of the pro forma. */
 export function proFormaFootnote(proForma: CashFlowProForma): string {
-  return `Fixed-rate, fully amortizing payments on the modeled build cost range; ranges run from the high build cost to the low one. Illustrative terms, not a lender quote: loan fees, draw schedules, interest during construction and tax effects are not modeled, and a HELOC's rate can change. Operating costs use the same ${formatOperatingShare(proForma.operatingExpenseRatio)} allowance as the annual net income. Principal paid down is the part of the first year's payments that repays the loan; it builds equity but is not cash, so it is not added to the net. Break-even cash in is the total you would put in, rounded up to $1,000, for rent after operating costs to cover the loan.`;
+  return `Fixed-rate, fully amortizing payments on the modeled build cost range. Illustrative terms, not a lender quote: loan fees, draw schedules, interest during construction and tax effects are not modeled, and a HELOC's rate can change. Operating costs use the same ${formatOperatingShare(proForma.operatingExpenseRatio)} allowance as the annual net income. Principal paid down is the part of the first year's payments that repays the loan; it builds equity but is not cash, so it is not added to the net. Net monthly cash flow ranges run from the high build cost (conservative) to the low one; loan payments, equity and break-even figures run from low to high. Break-even cash in is the total you would put in, rounded up to $1,000, for rent after operating costs to cover the loan.`;
 }

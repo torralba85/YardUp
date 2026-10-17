@@ -114,7 +114,7 @@ describe("buildCashFlowProForma", () => {
     expect([heloc.breakEvenRentLow, heloc.breakEvenRentHigh]).toEqual([2479, 3098]);
     expect([heloc.breakEvenCashInLow, heloc.breakEvenCashInHigh]).toEqual([39_000, 89_000]);
     expect([construction.breakEvenRentLow, construction.breakEvenRentHigh]).toEqual([1658, 2072]);
-    expect([construction.breakEvenCashInLow, construction.breakEvenCashInHigh]).toEqual([7000, 57_000]);
+    expect([construction.breakEvenCashInLow, construction.breakEvenCashInHigh]).toEqual([40_000, 57_000]);
   });
 
   it("reports the equity each payment builds without adding it to the net", () => {
@@ -143,16 +143,19 @@ describe("buildCashFlowProForma", () => {
     expect(proFormaSummary(strong)).not.toMatch(/Positive across/);
   });
 
-  it("needs no extra cash when rent already covers the loan", () => {
+  it("needs only the program down payment when rent already covers the loan", () => {
     const cheap = buildCashFlowProForma({
       costLow: 50_000,
       costHigh: 60_000,
       monthlyRent: 3000,
       operatingExpenseRatio: 0.3,
     });
+    const [cheapConstruction, cheapHeloc] = cheap.scenarios;
+    expect(cheapHeloc.breakEvenCashInLow).toBe(0);
+    expect(cheapHeloc.breakEvenCashInHigh).toBe(0);
+    expect(cheapConstruction.breakEvenCashInLow).toBe(10_000);
+    expect(cheapConstruction.breakEvenCashInHigh).toBe(12_000);
     for (const row of cheap.scenarios) {
-      expect(row.breakEvenCashInLow).toBe(0);
-      expect(row.breakEvenCashInHigh).toBe(0);
       expect(row.netLow).toBeGreaterThan(0);
     }
   });

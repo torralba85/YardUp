@@ -37,6 +37,7 @@ describe("assessImpactFeeThreshold", () => {
   it("flags anything over 750 sq ft with the footprint to trim", () => {
     expect(assessImpactFeeThreshold(751)).toMatchObject({ isExempt: false, sqftOverLimit: 1 });
     expect(assessImpactFeeThreshold(750.2)).toMatchObject({ isExempt: false, sqftOverLimit: 1 });
+    expect(assessImpactFeeThreshold(751.2)).toMatchObject({ isExempt: false, sqftOverLimit: 2 });
     expect(assessImpactFeeThreshold(800)).toEqual({
       sqft: 800, limitSqft: 750, isExempt: false, sqftOverLimit: 50, sqftUnderLimit: 0,
     });
