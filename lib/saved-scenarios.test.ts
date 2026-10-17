@@ -4,6 +4,7 @@ import {
   isValidProjectBrief,
   isValidSavedScenario,
   isValidStyleMatchConcept,
+  migrateSavedScenario,
   normalizeLiveParcel,
   normalizeProjectBrief,
   normalizeStyleMatchConcept,
@@ -204,6 +205,69 @@ describe("createSavedScenarioStore", () => {
         assumptions: defaultFinancialAssumptions,
       }),
     ).toBe(false);
+  });
+
+  it.each([
+    [null],
+    [{ points: [{ lng: -121.89, lat: 37.33 }] }],
+    [[null]],
+    [[[-121.89]]],
+    [[["-121.89", 37.33]]],
+    [[[-121.89, Number.NaN]]],
+    [[[181, 37.33]]],
+    [[[-121.89, 91]]],
+  ])("rejects malformed boundary coordinates (%j)", (...coordinates) => {
+    expect(normalizeLiveParcel({
+      ...liveParcel,
+      boundaryGeoJson: { type: "Polygon", coordinates },
+    })).toBeNull();
+  });
+
+  it("keeps legacy empty boundaries readable", () => {
+    expect(normalizeLiveParcel({
+      ...liveParcel,
+      boundaryGeoJson: { type: "Polygon", coordinates: [] },
+    })?.boundaryGeoJson).toEqual({ type: "Polygon", coordinates: [] });
+  });
+
+  it("keeps valid saved designs when optional AI snapshots are corrupt", () => {
+    const store = createSavedScenarioStore(storage);
+    const saved = store.save({
+      name: "Recoverable design",
+      parcelId: "oak-street",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+    storage.setItem(STORAGE_KEY, JSON.stringify([{
+      ...saved,
+      projectBrief: { headline: "incomplete" },
+      styleMatchConcept: null,
+    }]));
+
+    const restored = store.load(saved.id);
+    expect(restored?.config).toEqual(saved.config);
+    expect(restored).not.toHaveProperty("projectBrief");
+    expect(restored).not.toHaveProperty("styleMatchConcept");
+  });
+
+  it("does not restore an optional concept rejected by normalization", () => {
+    const oversizedConcept = {
+      styleName: "Craftsman",
+      matchPercentage: 80,
+      traits: [],
+      conceptUrl: `data:image/png;base64,${"A".repeat(600_001)}`,
+    };
+    const migrated = migrateSavedScenario({
+      id: "scenario-1",
+      createdAt: "2026-10-02T00:00:00.000Z",
+      name: "Valid design",
+      parcelId: "oak-street",
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+      styleMatchConcept: oversizedConcept,
+    });
+    expect(migrated).not.toBeNull();
+    expect(migrated).not.toHaveProperty("styleMatchConcept");
   });
 
   const sampleProjectBrief: AIProjectBrief = {

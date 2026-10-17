@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useRadioGroup } from "./useRadioGroup";
 
 /** Shared visual recipe for native text inputs and selects on chalk surfaces. */
 export const fieldControlClass =
@@ -88,66 +89,27 @@ export function Segmented<T extends string>({
   className,
   ...aria
 }: SegmentedProps<T>) {
-  const refs = React.useRef<Record<string, HTMLButtonElement | null>>({});
-  const selectedIndex = options.findIndex((option) => option.value === value);
-
-  function move(nextIndex: number) {
-    const wrapped = (nextIndex + options.length) % options.length;
-    const next = options[wrapped];
-    onChange(next.value);
-    refs.current[next.value]?.focus();
-  }
-
-  function handleKeyDown(event: React.KeyboardEvent, index: number) {
-    switch (event.key) {
-      case "ArrowRight":
-      case "ArrowDown":
-        event.preventDefault();
-        move(index + 1);
-        break;
-      case "ArrowLeft":
-      case "ArrowUp":
-        event.preventDefault();
-        move(index - 1);
-        break;
-      case "Home":
-        event.preventDefault();
-        move(0);
-        break;
-      case "End":
-        event.preventDefault();
-        move(options.length - 1);
-        break;
-      default:
-        break;
-    }
-  }
+  const { groupProps, getRadioProps } = useRadioGroup({
+    value,
+    onChange,
+    values: options.map((option) => option.value),
+  });
 
   return (
     <div
-      role="radiogroup"
+      {...groupProps}
       aria-label={aria["aria-label"]}
       aria-labelledby={aria["aria-labelledby"]}
       className={cn("grid gap-2", className)}
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
-      {options.map((option, index) => {
+      {options.map((option) => {
         const checked = option.value === value;
-        // When nothing matches (shouldn't happen in practice), keep the first
-        // option reachable so the group is never a tab dead-end.
-        const tabbable = checked || (selectedIndex === -1 && index === 0);
         return (
           <button
             key={option.value}
-            ref={(el) => {
-              refs.current[option.value] = el;
-            }}
             type="button"
-            role="radio"
-            aria-checked={checked}
-            tabIndex={tabbable ? 0 : -1}
-            onClick={() => onChange(option.value)}
-            onKeyDown={(event) => handleKeyDown(event, index)}
+            {...getRadioProps(option.value)}
             className={cn(
               "min-h-11 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
               checked
