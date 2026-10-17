@@ -18,6 +18,7 @@ import {
   fetchCensusLocation,
 } from "@/lib/server/census-geocode";
 import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
+import { fetchFireHazardZone } from "@/lib/server/fire-hazard-zones";
 import { type StreetAddress, delimitStreetAddress, parseStreetAddress } from "@/lib/server/address-match";
 import {
   type AddressParcelResult,
@@ -67,7 +68,10 @@ const DEFAULT_SETBACKS = { front: 20, rear: 20, side: 5 };
  *
  * The free US Census geocoder resolves state/ZIP/county alongside the chain
  * for every path, so financials key off the address's own geography even when
- * no parcel provider answers. Responses are cached for an hour.
+ * no parcel provider answers. Every California response, guest or not, also
+ * carries the parcel's Fire Hazard Severity Zone from the keyless CAL FIRE and
+ * City of San Diego maps (`lib/server/fire-hazard-zones.ts`), looked up in
+ * parallel with the market data. Responses are cached for an hour.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -255,6 +259,16 @@ export async function GET(request: NextRequest) {
       regridFootprint === null && boundaryGeoJson
         ? fetchBuildingFootprint(boundaryGeoJson)
         : Promise.resolve(null);
+    // Needs only the state, so it starts as soon as the geocoder answers and
+    // overlaps the footprint and market lookups. Neither promise rejects.
+    const fireHazardPromise = censusLocation.then((census) =>
+      fetchFireHazardZone({
+        lat,
+        lng,
+        polygon: boundaryGeoJson,
+        state: mergeLocations(extractRegridLocation(fields), census).state,
+      }),
+    );
 
     // Prefer the real parcel shape's oriented bounding box (latitude-corrected,
     // rotation-proof); otherwise estimate proportions from lot area so the 3D
@@ -288,7 +302,10 @@ export async function GET(request: NextRequest) {
       county: loc.county,
       city: fields.scity ?? fields.city,
     });
-    const marketData = await resolveMarketData({ lat, lng, ...loc });
+    const [marketData, fireHazard] = await Promise.all([
+      resolveMarketData({ lat, lng, ...loc }),
+      fireHazardPromise,
+    ]);
     const structuresFootprint = positiveNumber(structures?.totalSqft);
     const buildingAreaFallback = positiveNumber(fields.sqft);
     const existingHouseSqft =
@@ -355,6 +372,7 @@ export async function GET(request: NextRequest) {
       zip: loc.zip,
       county: loc.county,
       marketData,
+      ...(fireHazard ? { fireHazard } : {}),
       dataQuality: {
         version: 1,
         fields: {
@@ -654,9 +672,10 @@ async function countyGisResponse(
     zip: census?.zip ?? "",
     county: census?.county || stripStatewideLabel(countyParcel.county),
   };
-  const [marketData, structures] = await Promise.all([
+  const [marketData, structures, fireHazard] = await Promise.all([
     resolveMarketData({ lat, lng, ...loc }),
     fetchBuildingFootprint(countyParcel.polygon),
+    fetchFireHazardZone({ lat, lng, polygon: countyParcel.polygon, state: loc.state }),
   ]);
   const retrievedAt = new Date().toISOString();
   const parcelSource = {
@@ -726,6 +745,7 @@ async function countyGisResponse(
     zip: loc.zip,
     county: loc.county,
     marketData,
+    ...(fireHazard ? { fireHazard } : {}),
     dataQuality: {
       version: 1,
       fields: {
@@ -858,7 +878,11 @@ async function presetFallbackResponse(
     { state: area?.state ?? "", zip: parsedZip },
     census,
   );
-  const marketData = await resolveMarketData({ lat, lng, ...loc });
+  // The preset lends dimensions only; the fire zone is the searched point's own.
+  const [marketData, fireHazard] = await Promise.all([
+    resolveMarketData({ lat, lng, ...loc }),
+    fetchFireHazardZone({ lat, lng, state: loc.state }),
+  ]);
   const retrievedAt = new Date().toISOString();
   const presetSource = {
     provider: "LotFoundry",
@@ -882,6 +906,7 @@ async function presetFallbackResponse(
     zip: loc.zip,
     county: loc.county,
     marketData,
+    ...(fireHazard ? { fireHazard } : {}),
     dataQuality: {
       version: 1,
       fields: {

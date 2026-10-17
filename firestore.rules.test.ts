@@ -547,6 +547,83 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     );
   });
 
+  it("accepts a full San Diego county GIS parcel with lineage and a fire zone", async () => {
+    // The shape /api/parcel returns for a real San Diego lot, after
+    // normalizeLiveParcel and the Firestore boundary encoding: every optional
+    // parcel field, market components and the full dataQuality block. The
+    // budget guard above leaves dataQuality out, so this case keeps the
+    // fire-zone check honest against the payload a real save sends.
+    const evidence = (status: string, confidence: string) => ({
+      status,
+      source: { provider: "ArcGIS", dataset: "California (statewide) parcels", sourceUrl: "https://example.test/parcels" },
+      retrievedAt: "2026-10-16T00:00:00.000Z",
+      confidence,
+      warnings: ["Setbacks are planning assumptions, not address-specific rules."],
+    });
+    const realistic = {
+      ...SAMPLE_LIVE_PARCEL_MAX,
+      address: "4321 Tecolote Rd",
+      city: "San Diego, CA 92110",
+      lat: 32.788,
+      lng: -117.195,
+      source: "county-gis",
+      zip: "92110",
+      county: "San Diego",
+      zoning: "Unknown",
+      marketData: {
+        ...SAMPLE_LIVE_PARCEL_MAX.marketData,
+        components: {
+          rent: evidence("observed", "high"),
+          constructionCost: evidence("derived", "medium"),
+          operatingExpenses: evidence("defaulted", "low"),
+        },
+      },
+      fireHazard: {
+        zone: "very-high",
+        responsibility: "LRA",
+        source: "City of San Diego FHSZ map (2025)",
+        checkedAt: "2026-10-16T00:00:00.000Z",
+      },
+      dataQuality: {
+        version: 1,
+        fields: Object.fromEntries(
+          ["address", "lotArea", "lotDimensions", "existingHouseSqft", "maxLotCoveragePercent", "setbacks", "zoning", "boundaryGeoJson"]
+            .map((field) => [field, evidence("observed", "high")]),
+        ),
+        providerAttempts: [
+          { provider: "ArcGIS", dataset: "California (statewide) parcels", sourceUrl: "https://example.test/parcels", outcome: "matched" },
+        ],
+        warnings: ["Zoning, setbacks, and maximum lot coverage are unverified; confirm local planning rules."],
+      },
+    };
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+
+    await assertSucceeds(setDoc(scenarioRef, sampleScenario({ liveParcel: realistic })));
+  });
+
+  it("rejects a malformed fire zone", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+    const valid = SAMPLE_LIVE_PARCEL_MAX.fireHazard;
+
+    for (const fireHazard of [
+      "very-high",
+      { ...valid, zone: "extreme" },
+      { ...valid, source: 7 },
+      { ...valid, source: "s".repeat(201) },
+      { zone: "high", source: "x" },
+      { ...valid, polygonId: 12 },
+    ]) {
+      await assertFails(
+        setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ fireHazard }) })),
+      );
+    }
+    await assertSucceeds(
+      setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ fireHazard: valid }) })),
+    );
+  });
+
   it("rejects update on existing scenarios", async () => {
     await rulesEnv().withSecurityRulesDisabled(async (context) => {
       await setDoc(

@@ -237,6 +237,39 @@ describe("createSavedScenarioStore", () => {
     })).toBeNull();
   });
 
+  it("keeps the fire hazard zone, picked down to the fields the rules allow", () => {
+    const fireHazard = {
+      zone: "very-high" as const,
+      responsibility: "LRA" as const,
+      source: "City of San Diego FHSZ map (2025)",
+      checkedAt: "2026-10-16T00:00:00.000Z",
+    };
+    expect(normalizeLiveParcel({ ...liveParcel, fireHazard })?.fireHazard).toEqual(fireHazard);
+    expect(isValidSavedScenario({
+      id: "s1", name: "x", createdAt: "2026-10-16", parcelId: "live",
+      liveParcel: { ...liveParcel, fireHazard }, config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+    })).toBe(true);
+    expect(normalizeLiveParcel({
+      ...liveParcel,
+      fireHazard: { ...fireHazard, responsibility: "FRA", polygonId: 7 },
+    })?.fireHazard).toEqual({ zone: "very-high", source: fireHazard.source, checkedAt: fireHazard.checkedAt });
+  });
+
+  it.each([
+    ["an unknown class", { zone: "extreme", source: "x", checkedAt: "2026-10-16" }],
+    ["no source", { zone: "high", checkedAt: "2026-10-16" }],
+    ["no timestamp", { zone: "high", source: "x" }],
+    ["not a record", "very-high"],
+  ])("drops a fire hazard zone with %s but keeps the parcel", (_label, fireHazard) => {
+    const normalized = normalizeLiveParcel({ ...liveParcel, fireHazard });
+    expect(normalized).not.toBeNull();
+    expect(normalized).not.toHaveProperty("fireHazard");
+    expect(isValidSavedScenario({
+      id: "s1", name: "x", createdAt: "2026-10-16", parcelId: "live",
+      liveParcel: { ...liveParcel, fireHazard }, config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+    })).toBe(false);
+  });
+
   it("keeps legacy empty boundaries readable", () => {
     expect(normalizeLiveParcel({
       ...liveParcel,

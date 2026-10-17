@@ -86,6 +86,30 @@ export interface LiveParcelData extends Parcel {
   marketData?: MarketData;
   /** Present on new API responses; absent only on scenarios saved before v1. */
   dataQuality?: ParcelDataQuality;
+  /**
+   * Fire Hazard Severity Zone at the parcel, from the public CAL FIRE and City
+   * of San Diego maps. Set for California lookups only; absent outside
+   * California and on scenarios saved before the lookup existed. Absent and
+   * `unknown` both mean "not checked", never "outside every zone".
+   */
+  fireHazard?: ParcelFireHazard;
+}
+
+/**
+ * Fire Hazard Severity Zone classes, highest first. `none` means the maps
+ * answered and put the parcel in no zone; `unknown` means a map could not be
+ * read, so the parcel may still be in one.
+ */
+export type FireHazardZone = "very-high" | "high" | "moderate" | "none" | "unknown";
+
+export interface ParcelFireHazard {
+  zone: FireHazardZone;
+  /** Who is responsible for wildfire protection where the zone was mapped. */
+  responsibility?: "SRA" | "LRA";
+  /** The map that decided the class, or every map consulted for `none`/`unknown`. */
+  source: string;
+  /** ISO timestamp of the lookup. */
+  checkedAt: string;
 }
 
 /** Minimal GeoJSON Polygon shape (avoids importing a full types package). */

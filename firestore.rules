@@ -379,6 +379,17 @@ service cloud.firestore {
         (!("components" in market) || market.components is map);
     }
 
+    // Shallow on purpose, like isValidMarketData: every expression here counts
+    // against the same 1000-per-request ceiling as the rest of the liveParcel.
+    function isValidFireHazard(fire) {
+      return fire is map &&
+        fire.keys().hasOnly(["zone", "responsibility", "source", "checkedAt"]) &&
+        fire.zone in ["very-high", "high", "moderate", "none", "unknown"] &&
+        fire.source is string &&
+        fire.source.size() <= 200 &&
+        fire.checkedAt is string;
+    }
+
     function isValidLiveParcel(parcel) {
       return parcel is map &&
         parcel.keys().hasOnly([
@@ -399,7 +410,8 @@ service cloud.firestore {
           "zip",
           "county",
           "marketData",
-          "dataQuality"
+          "dataQuality",
+          "fireHazard"
         ]) &&
         parcel.address is string &&
         parcel.address.size() > 0 &&
@@ -434,7 +446,8 @@ service cloud.firestore {
         (!("zip" in parcel) || (parcel.zip is string && parcel.zip.size() <= 20)) &&
         (!("county" in parcel) || (parcel.county is string && parcel.county.size() <= 100)) &&
         (!("marketData" in parcel) || isValidMarketData(parcel.marketData)) &&
-        (!("dataQuality" in parcel) || parcel.dataQuality is map);
+        (!("dataQuality" in parcel) || parcel.dataQuality is map) &&
+        (!("fireHazard" in parcel) || isValidFireHazard(parcel.fireHazard));
     }
 
     function isValidNewScenario() {
