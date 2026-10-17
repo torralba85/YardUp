@@ -114,6 +114,45 @@ only; the ion Community plan is non-commercial). With neither configured the vie
 renders map imagery, which is an expected state. Full credential, billing, CSP, and
 Google-attribution notes live in [cesium-photoreal-deployment.md](./cesium-photoreal-deployment.md).
 
+### Regrid token expiry and rotation
+
+Regrid API tokens are HS256 JWTs with an `exp` claim, so they expire. On
+2026-09-29 the production token was found to have expired on 2026-06-29, two weeks
+before the secret was created. Regrid answers `401 Invalid token`, and signed-in
+`/api/parcel` lookups quietly fell back to the free county/statewide GIS chain with
+no zoning. Nothing flagged it for three months.
+
+**How a failure shows up.** For each rejected lookup `/api/parcel` logs one line,
+`{"severity":"ERROR","event":"regrid_auth_failed","status":401,"token":{...}}`, where
+`token` holds the token's format, `expiresAt`, `daysLeft` and `expired` (never the
+token), and records a `Regrid` provider attempt with outcome `auth-failed`. Once per
+server instance it also logs `regrid_token_expiring` when the token is expired or
+expires within 14 days. Filter Cloud Logging on `jsonPayload.event="regrid_auth_failed"`
+or `"regrid_token_expiring"`. Alert on either.
+
+**Check the stored token's expiry.** The value is piped and never printed:
+
+```bash
+firebase functions:secrets:access REGRID_API_KEY_SECRET --project yardup-2026 | node scripts/check-regrid-token.mjs
+```
+
+Exit 0 is valid (with a warning inside 14 days), 1 expired, 2 no readable expiry.
+
+**Rotate the token.**
+
+1. Generate a new token in the Regrid account. Do not paste it into chat, tickets or CI logs.
+2. `firebase functions:secrets:set REGRID_API_KEY_SECRET --project yardup-2026` and paste
+   it at the prompt. This creates a new version.
+3. Redeploy so `api` picks it up: merge to `master` (CI deploys) or dispatch a forced
+   deploy. A manual deploy needs `FUNCTIONS_DISCOVERY_TIMEOUT=120`.
+4. Verify: `regrid_auth_failed` stops appearing, a signed-in lookup returns
+   `source: "regrid"`, and the check command above prints `OK` with the new expiry.
+5. Run `firebase functions:secrets:prune --project yardup-2026` to destroy versions no
+   deployed function uses. It is irreversible, so read the list it prints first.
+
+Put the expiry on a calendar. The expired token had a 30-day lifetime, which may mean
+it was a trial token; ask Regrid what lifetime the new one has.
+
 ## Content-Security-Policy (planned)
 
 The app has no CSP today. Before adding one, read

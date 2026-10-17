@@ -36,6 +36,8 @@ export type ProviderOutcome =
   | "unsupported"
   | "timeout"
   | "provider-error"
+  /** The provider rejected our credential (HTTP 401 or 403): expired, revoked or wrong plan. */
+  | "auth-failed"
   | "invalid-response";
 
 /** One provider's observable outcome during a lookup. */

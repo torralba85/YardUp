@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
+import { resetRegridTokenWarning } from "@/lib/server/regrid-token";
 import { clearZoningCache } from "@/lib/server/zoning-classifier";
 import { GET } from "./route";
 import { extractRegridLocation } from "@/lib/server/parcel-location";
@@ -1100,5 +1101,116 @@ describe("GET /api/parcel — zoning shadow classification", () => {
 
     expect(res.status).toBe(200);
     expect(typeSafeCalls(fetchMock)).toHaveLength(0);
+  });
+});
+
+describe("GET /api/parcel — Regrid credential failures", () => {
+  const DAY_S = 86_400;
+
+  /** A JWT-shaped token with the given `exp` (seconds); the signature is fake. */
+  function fakeJwt(expSecondsFromNow: number): string {
+    const enc = (value: unknown) =>
+      Buffer.from(JSON.stringify(value)).toString("base64url");
+    const exp = Math.floor(Date.now() / 1000) + expSecondsFromNow;
+    return `${enc({ alg: "HS256" })}.${enc({ iss: "regrid.com", exp })}.c2lnbmF0dXJl`;
+  }
+
+  const regridStatus = (status: number) => ({
+    ok: false,
+    status,
+    json: async () => ({ message: "Invalid token" }),
+  });
+
+  function events(spy: ReturnType<typeof vi.spyOn>, name: string) {
+    return spy.mock.calls
+      .map((call: unknown[]) => String(call[0]))
+      .filter((line: string) => line.includes(`"event":"${name}"`))
+      .map((line: string) => JSON.parse(line));
+  }
+
+  let error: ReturnType<typeof vi.spyOn>;
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    resetRegridTokenWarning();
+    error = vi.spyOn(console, "error").mockImplementation(() => {});
+    warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  it.each([401, 403])(
+    "records an auth failure and still returns a fallback parcel for a %i",
+    async (status) => {
+      stubProviders({ regrid: regridStatus(status) });
+
+      const res = await GET(makeRequest(47.65, -122.31));
+      const data = (await res.json()) as LiveParcelData;
+
+      expect(res.status).toBe(200);
+      expect(data.source).not.toBe("regrid");
+      expect(data.dataQuality?.providerAttempts).toContainEqual(
+        expect.objectContaining({ provider: "Regrid", outcome: "auth-failed" }),
+      );
+      const logged = events(error, "regrid_auth_failed");
+      expect(logged).toHaveLength(1);
+      expect(logged[0]).toMatchObject({
+        severity: "ERROR",
+        event: "regrid_auth_failed",
+        status,
+        token: { format: "opaque" },
+      });
+    },
+  );
+
+  it("says in the log that an expired token is why, without logging the token", async () => {
+    const expired = fakeJwt(-30 * DAY_S);
+    vi.stubEnv("REGRID_API_KEY", expired);
+    stubProviders({ regrid: regridStatus(401) });
+
+    await GET(makeRequest(47.65, -122.31));
+
+    const [failure] = events(error, "regrid_auth_failed");
+    expect(failure.token).toMatchObject({ format: "jwt", expired: true });
+    expect(failure.token.daysLeft).toBeLessThan(0);
+    expect(failure.token.expiresAt).toEqual(expect.any(String));
+    const everyLine = [...error.mock.calls, ...warn.mock.calls]
+      .map((call: unknown[]) => String(call[0]))
+      .join("\n");
+    expect(everyLine).not.toContain(expired);
+    expect(everyLine).not.toContain("token=");
+  });
+
+  it("leaves other Regrid failures as ordinary provider errors", async () => {
+    stubProviders({ regrid: regridStatus(500) });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "provider-error" }),
+    );
+    expect(events(error, "regrid_auth_failed")).toHaveLength(0);
+  });
+
+  it("warns once per instance when the token expires within two weeks", async () => {
+    vi.stubEnv("REGRID_API_KEY", fakeJwt(5 * DAY_S));
+    stubProviders({ regrid: regridResponse({ ll_gisacre: 0.25, state: "WA" }) });
+
+    await GET(makeRequest(47.65, -122.31));
+    await GET(makeRequest(47.65, -122.31));
+
+    const warned = events(warn, "regrid_token_expiring");
+    expect(warned).toHaveLength(1);
+    expect(warned[0]).toMatchObject({ severity: "WARNING", expired: false });
+    expect(warned[0].daysLeft).toBeLessThanOrEqual(5);
+  });
+
+  it("stays quiet when the token has plenty of time left", async () => {
+    vi.stubEnv("REGRID_API_KEY", fakeJwt(60 * DAY_S));
+    stubProviders({ regrid: regridResponse({ ll_gisacre: 0.25, state: "WA" }) });
+
+    await GET(makeRequest(47.65, -122.31));
+
+    expect(events(warn, "regrid_token_expiring")).toHaveLength(0);
+    expect(events(error, "regrid_token_expiring")).toHaveLength(0);
   });
 });

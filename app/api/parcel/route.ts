@@ -30,6 +30,10 @@ import {
 } from "@/lib/server/parcel-location";
 import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import {
+  logRegridAuthFailure,
+  warnIfRegridTokenExpiring,
+} from "@/lib/server/regrid-token";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 import { shadowClassifyZoning } from "@/lib/server/zoning-classifier";
 import { deriveMaxCoverage } from "@/lib/server/zoning-heuristics";
@@ -101,6 +105,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  warnIfRegridTokenExpiring(regridKey);
+
   try {
     const url = new URL(REGRID_API);
     url.searchParams.set("lat", String(lat));
@@ -129,6 +135,22 @@ export async function GET(request: NextRequest) {
         requestedAddress,
         censusLocation,
         [regridAttempt("provider-error", "Regrid rate-limited the lookup.")],
+      );
+    }
+
+    // A 401 or 403 means the credential itself is bad (expired, revoked, wrong
+    // plan), so every signed-in lookup degrades until it is replaced. It used
+    // to surface only as a generic provider error, and an expired token went
+    // unnoticed for months. Log it loudly and record a distinct outcome; the
+    // lookup still falls back to public GIS.
+    if (regridRes.status === 401 || regridRes.status === 403) {
+      logRegridAuthFailure(regridRes.status, regridKey);
+      return await successWithoutRegrid(
+        lat,
+        lng,
+        requestedAddress,
+        censusLocation,
+        [regridAttempt("auth-failed", "Regrid rejected the API credentials.")],
       );
     }
 
