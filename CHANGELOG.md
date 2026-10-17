@@ -42,6 +42,17 @@ All notable changes to LotFoundry are documented here. Format follows
   (`capacityBasis: "california-800"`). The site-fit status, verdict rows and
   certificate say so, and anything above 800 sq ft is still flagged.
 
+### Security
+
+- The Studio's "Email My 3D Link" route can no longer be scripted into sending
+  mail from support@lotfoundry.net. Each request must carry a fresh,
+  single-use App Check token (reCAPTCHA Enterprise), verified and consumed on
+  the server. Each inbox gets at most 3 layout emails a day, and the address,
+  city and rent-basis text printed into the email must be short single-line
+  text with no links, domains or `@`. A slow Resend call now times out after
+  8 s, and the email is rendered once. The privacy policy lists Resend as a
+  subprocessor.
+
 ## [1.0.2] - 2026-10-12
 
 ### Added

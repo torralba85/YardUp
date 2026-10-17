@@ -53,7 +53,9 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
     sending.current = true;
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/studio/email-scenario-link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      // A single-use App Check token shows the server this send came from a real browser.
+      const appCheckToken = await import("@/lib/app-check-token").then((module) => module.limitedUseAppCheckToken()).catch(() => null);
+      const response = await fetch("/api/studio/email-scenario-link", { method: "POST", headers: { "Content-Type": "application/json", ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}) }, body: JSON.stringify({
         email, marketingOptIn, website, address: scenario.liveParcel?.address, parcelId: scenario.parcelId,
         scenarioUrl: buildScenarioShareUrl(scenario), scenario,
       }) });
@@ -87,7 +89,7 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
         <div className="mt-4 space-y-3">
           <p role="status" className="flex items-start gap-2 text-sm text-status-eligible-on-dark">
             <CheckCircle2 size={18} className="shrink-0" aria-hidden="true" />
-            {receipt.delivery === "sent" ? "Sent! Check your inbox for your 3D lot link (plus a quick-copy link button below)." : "Saved! Your 3D lot link is queued for email. Copy it below to keep it now."}
+            {receipt.delivery === "sent" ? "Sent! Check your inbox for your 3D lot link (plus a quick-copy link button below)." : "Saved! We couldn't email it right now, so copy your 3D lot link below to keep it."}
           </p>
           <Button type="button" variant="secondary" className="border-lot-stone-on-dark bg-lot-ink text-lot-chalk hover:bg-lot-surface-dark focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink" onClick={() => void copyLink()} leftIcon={<Copy size={15} />}>{copied ? "Copied!" : "Copy Link"}</Button>
           {copyFallback && <div><label htmlFor={`${id}-copy`} className="block text-xs text-lot-stone-on-dark">Select and copy your link</label><Input id={`${id}-copy`} className="bg-lot-surface-dark text-lot-chalk focus-visible:ring-lot-chalk" readOnly value={receipt.scenarioUrl} onFocus={(event) => event.target.select()} /></div>}

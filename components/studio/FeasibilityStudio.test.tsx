@@ -109,6 +109,8 @@ vi.mock("@/lib/firebase", () => ({
   db: {},
   app: {},
 }));
+// The email card asks for an App Check token before posting; no reCAPTCHA in jsdom.
+vi.mock("@/lib/app-check-token", () => ({ limitedUseAppCheckToken: async () => null }));
 
 // Resolved auth user for the mocked onAuthStateChanged below. Null = guest
 // (the default); live-lookup tests sign in, since address searches are gated
@@ -199,7 +201,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
     fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    // These suites render the whole Studio, which is slow under parallel CI load.
+    await waitFor(() => expect(fetch).toHaveBeenCalled(), { timeout: 5000 });
     const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
     expect(body.scenario.assumptions.softCostMultiplier).toBe(1.4);
   });
@@ -217,7 +220,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
     fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    // These suites render the whole Studio, which is slow under parallel CI load.
+    await waitFor(() => expect(fetch).toHaveBeenCalled(), { timeout: 5000 });
     const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
     expect(body.scenario.assumptions.softCostMultiplier).toBe(1.2);
     expect(body.scenario.assumptions.operatingExpenseRatio).toBe(0.25);

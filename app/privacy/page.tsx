@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
- * infrastructure (Firebase, Regrid, Census, USA Structures, OpenAI, TypeSafe, Stripe, GA4).
+ * infrastructure (Firebase, Regrid, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4).
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 16, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 17, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
             prepare and deliver that email. Links remain available until deleted; anyone with your
             link can view the layout and property address. Marketing updates require a separate,
             optional opt-in. Contact support@lotfoundry.net to withdraw that opt-in or delete the
-            saved link and associated lead. Transactional email may be queued before delivery.
+            saved link and associated lead. The email is delivered by Resend (see Section 3).
           </li>
           <li>
             <strong>Marketplace Connection Data:</strong> Direct contact requests submitted by
@@ -96,6 +96,12 @@ export default function PrivacyPage() {
             <strong>Geocoding &amp; Spatial Data:</strong> Property searches use <em>Google Maps Platform</em>,{" "}
             <em>Regrid</em> (Loveland Technologies parcel boundaries), the <em>US Census Bureau Geocoder</em>,{" "}
             <em>USA Structures</em> (federal building footprints), and municipal GIS open data portals.
+          </li>
+          <li>
+            <strong>Transactional Email (Resend):</strong> When you ask us to email a 3D lot link, we
+            send <em>Resend</em> your email address and the message, which includes the property
+            address, the link and the headline estimate, so it can deliver that one email from
+            support@lotfoundry.net. We do not use Resend for marketing lists.
           </li>
           <li>
             <strong>Payment Gateways:</strong> Digital web purchases use <em>Stripe</em>. Mobile

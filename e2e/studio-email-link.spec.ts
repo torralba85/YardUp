@@ -26,7 +26,7 @@ test("free lot link queues a real design and carries email into certificate sign
   await card.screenshot({ path: testInfo.outputPath("email-link-form.png") });
   await expect(card.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveValue("layout-owner@example.test");
   await card.getByRole("button", { name: "Email My 3D Link" }).click();
-  await expect(card.getByRole("status")).toContainText("queued for email");
+  await expect(card.getByRole("status")).toContainText("couldn't email it right now");
   expect(captured).toMatchObject({ email: "layout-owner@example.test", marketingOptIn: false, address: parcel.address, scenario: { liveParcel: { address: parcel.address } } });
   expect(new URL(captured!.scenarioUrl as string).origin).toBe("https://lotfoundry.net");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
