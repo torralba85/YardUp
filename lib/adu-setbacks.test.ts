@@ -22,7 +22,14 @@ const california: Parcel = {
   maxLotCoveragePercent: 50,
   setbacks: { front: 20, rear: 20, side: 5 },
 };
-const sanDiego = { ...california, city: "San Diego", state: "CA" } as Parcel;
+// Checked against the fire maps and outside every zone: the case that earns 0 ft.
+// Fire-zone and unchecked lots are covered in adu-setbacks.fire-zones.test.ts.
+const sanDiego = {
+  ...california,
+  city: "San Diego",
+  state: "CA",
+  fireHazard: { zone: "none", source: "CAL FIRE LRA 2025; City of San Diego", checkedAt: "2026-10-16T00:00:00Z" },
+} as Parcel;
 const seattle = parcelPresets[0];
 
 const low: ADUConfig = { ...defaultAduConfig, height: 9, roof: "flat" };
@@ -53,7 +60,7 @@ describe("aduSetbacks", () => {
 
   it("drops side and rear to 0 ft in the City of San Diego at 16 ft or less", () => {
     expect(aduSetbacks(sanDiego, low)).toEqual({ front: 20, rear: 0, side: 0, rule: "san-diego-low" });
-    expect(aduSetbackNote("san-diego-low")).toMatch(/4 ft in High and Very High fire hazard zones/);
+    expect(aduSetbackNote("san-diego-low")).toMatch(/outside High and Very High fire hazard zones, and this lot is outside them/);
   });
 
   it("uses 4 ft in the City of San Diego over 16 ft", () => {

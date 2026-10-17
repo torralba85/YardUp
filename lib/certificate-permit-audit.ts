@@ -1,5 +1,6 @@
 import { CANONICAL_ORIGIN } from "./canonical-origin";
 import type { Parcel } from "./feasibility";
+import { fireZoneLabel, isHighFireZone, parcelFireHazard } from "./fire-hazard";
 import { parcelConfidence } from "./parcel-confidence";
 import { STATE_BASELINE_SOURCES } from "@/content/adu/state-baseline";
 
@@ -174,10 +175,41 @@ function impactFeeLine(threshold: ImpactFeeThreshold, parcel: Parcel): AuditLine
   };
 }
 
-function heightLine(jurisdiction: FeeJurisdiction, totalHeightFt: number): AuditLine {
+/** The fire zone checklist line, naming the mapped zone when the lookup found one. */
+function fireZoneChecklistLine(parcel: Parcel): string {
+  const fire = parcelFireHazard(parcel);
+  const label = fire ? fireZoneLabel(fire.zone) : null;
+  if (!fire || fire.zone === "unknown") {
+    return "Fire hazard severity zone mapping: it can change setbacks, materials and access";
+  }
+  if (!label) {
+    return `Fire hazard severity zone: none mapped at this lot on the ${fire.source}; confirm with the fire department`;
+  }
+  return isHighFireZone(fire.zone)
+    ? `Fire hazard severity zone: mapped ${label} on the ${fire.source}; expect ignition-resistant materials, defensible space and fire access review`
+    : `Fire hazard severity zone: mapped ${label} on the ${fire.source}; ask the fire department which material and defensible-space rules apply`;
+}
+
+function heightLine(jurisdiction: FeeJurisdiction, totalHeightFt: number, parcel: Parcel): AuditLine {
   const height = `Modeled height is ${formatFeet(totalHeightFt)}.`;
   const overFloor = totalHeightFt > STATE_DETACHED_HEIGHT_FLOOR_FT;
   if (jurisdiction === "san-diego") {
+    const fire = parcelFireHazard(parcel);
+    if (!overFloor && fire && isHighFireZone(fire.zone)) {
+      return {
+        title: "Height: 16 ft or less, in a fire hazard zone",
+        detail: `${height} This lot is mapped ${fireZoneLabel(fire.zone)} on the ${fire.source}, so San Diego requires 4 ft side and rear setbacks at any height.`,
+        tone: "review",
+      };
+    }
+    if (!overFloor && (!fire || fire.zone === "unknown")) {
+      // aduSetbacks holds 4 ft here (san-diego-unchecked), so the zero-setback line must not read as clear.
+      return {
+        title: "Height: 16 ft or less, fire zone not checked",
+        detail: `${height} San Diego allows an ADU up to 16 ft tall with no side or rear setback outside High and Very High fire hazard zones, but this lot's zone could not be checked, so the layout holds 4 ft side and rear setbacks. Check the City's fire hazard map before relying on a zero setback.`,
+        tone: "review",
+      };
+    }
     return overFloor
       ? {
           title: "Height: over San Diego's 16 ft line",
@@ -294,7 +326,7 @@ export function buildPermitFeeAudit(input: {
       tone: "info",
     },
   );
-  if (knownHeight !== null) feeLines.push(heightLine(jurisdiction, knownHeight));
+  if (knownHeight !== null) feeLines.push(heightLine(jurisdiction, knownHeight, parcel));
 
   return {
     jurisdiction,
@@ -318,7 +350,7 @@ export function buildPermitFeeAudit(input: {
         ? "Side and rear setbacks: 0 ft up to 16 ft tall; 4 ft above that or in High and Very High fire hazard zones"
         : "Side and rear setbacks: state law caps them at 4 ft for a new detached ADU",
       "Coastal zone mapping: a coastal development permit may be needed",
-      "Fire hazard severity zone mapping: it can change setbacks, materials and access",
+      fireZoneChecklistLine(parcel),
       "Historic district or landmark status",
       "Easements and utility lines the backyard home can't sit on",
       "Parking: none can be required within a half-mile walk of public transit",

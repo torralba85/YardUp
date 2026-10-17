@@ -13,7 +13,8 @@ import type { ADUConfig, FinancialAssumptions } from "./feasibility";
 import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesign } from "./scenario-design";
 export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario-design";
 import type { Pose2D } from "./scene-model";
-import type { LiveParcelData } from "./parcel-types";
+import type { LiveParcelData, ParcelFireHazard } from "./parcel-types";
+import { FIRE_HAZARD_ZONES } from "./fire-hazard";
 import type { AIProjectBrief, AIRiskLevel } from "./ai-types";
 
 /** `localStorage` key under which the saved-scenario array is persisted. */
@@ -136,8 +137,26 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     (value.zip === undefined || typeof value.zip === "string") &&
     (value.county === undefined || typeof value.county === "string") &&
     (value.marketData === undefined || isRecord(value.marketData)) &&
-    (value.dataQuality === undefined || isRecord(value.dataQuality))
+    (value.dataQuality === undefined || isRecord(value.dataQuality)) &&
+    (value.fireHazard === undefined || pickFireHazard(value.fireHazard) !== undefined)
   );
+}
+
+/** The fire-zone record `isValidFireHazard` in firestore.rules accepts, or undefined. */
+function pickFireHazard(value: unknown): ParcelFireHazard | undefined {
+  if (!isRecord(value)) return undefined;
+  const zone = FIRE_HAZARD_ZONES.find((candidate) => candidate === value.zone);
+  if (!zone || typeof value.source !== "string" || typeof value.checkedAt !== "string") {
+    return undefined;
+  }
+  return {
+    zone,
+    ...(value.responsibility === "SRA" || value.responsibility === "LRA"
+      ? { responsibility: value.responsibility }
+      : {}),
+    source: value.source.slice(0, 200),
+    checkedAt: value.checkedAt.slice(0, 40),
+  };
 }
 
 /** The exact `marketData` keys `isValidMarketData` in firestore.rules allows. */
@@ -332,6 +351,10 @@ export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
   if (isRecord(value.marketData)) normalized.marketData = pickMarketData(value.marketData);
   const dataQuality = pickDataQuality(value.dataQuality);
   if (dataQuality) normalized.dataQuality = dataQuality;
+  // A malformed fire zone is dropped rather than failing the parcel: absent
+  // reads as "not checked", which the setback rules already treat cautiously.
+  const fireHazard = pickFireHazard(value.fireHazard);
+  if (fireHazard) normalized.fireHazard = fireHazard;
   return isValidLiveParcelData(normalized) ? normalized : null;
 }
 

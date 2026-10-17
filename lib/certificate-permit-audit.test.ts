@@ -108,6 +108,55 @@ describe("buildPermitFeeAudit", () => {
     );
   });
 
+  it("names the mapped fire zone in the checklist and the San Diego height line", () => {
+    const fire = (zone: string, source = "City of San Diego FHSZ map (2025)") =>
+      ({ ...sanDiego, fireHazard: { zone, source, checkedAt: "2026-10-16T00:00:00.000Z" } }) as Parcel;
+    const fireLine = (parcel: Parcel) =>
+      buildPermitFeeAudit({ parcel, aduSqft: 600, totalHeightFt: 14 }).zoningChecklist.find((line) => line.startsWith("Fire hazard"));
+
+    const veryHigh = buildPermitFeeAudit({ parcel: fire("very-high"), aduSqft: 600, totalHeightFt: 14 });
+    expect(fireLine(fire("very-high"))).toBe(
+      "Fire hazard severity zone: mapped Very High on the City of San Diego FHSZ map (2025); expect ignition-resistant materials, defensible space and fire access review",
+    );
+    expect(veryHigh.feeLines.at(-1)).toEqual({
+      title: "Height: 16 ft or less, in a fire hazard zone",
+      detail: "Modeled height is 14 ft. This lot is mapped Very High on the City of San Diego FHSZ map (2025), so San Diego requires 4 ft side and rear setbacks at any height.",
+      tone: "review",
+    });
+    expect(fireLine(fire("none", "CAL FIRE LRA FHSZ map (2025) and CAL FIRE SRA FHSZ map (2024)"))).toBe(
+      "Fire hazard severity zone: none mapped at this lot on the CAL FIRE LRA FHSZ map (2025) and CAL FIRE SRA FHSZ map (2024); confirm with the fire department",
+    );
+    expect(buildPermitFeeAudit({ parcel: fire("none"), aduSqft: 600, totalHeightFt: 14 }).feeLines.at(-1)?.tone).toBe("clear");
+
+    const generic = "Fire hazard severity zone mapping: it can change setbacks, materials and access";
+    expect(fireLine(fire("unknown"))).toBe(generic);
+    expect(fireLine(sanDiego)).toBe(generic);
+    expect(fireLine({ ...base, fireHazard: { zone: "moderate", source: "CAL FIRE LRA FHSZ map (2025)", checkedAt: "" } } as Parcel))
+      .toBe("Fire hazard severity zone: mapped Moderate on the CAL FIRE LRA FHSZ map (2025); ask the fire department which material and defensible-space rules apply");
+  });
+
+  it("does not call San Diego's zero-setback height line clear while the fire zone is unchecked", () => {
+    const withFire = (fireHazard?: { zone: string; source: string; checkedAt: string }) =>
+      ({ ...sanDiego, ...(fireHazard ? { fireHazard } : {}) }) as Parcel;
+    const heightLine = (parcel: Parcel, totalHeightFt = 14) =>
+      buildPermitFeeAudit({ parcel, aduSqft: 600, totalHeightFt }).feeLines.at(-1);
+    const checked = (zone: string) => withFire({ zone, source: "City of San Diego FHSZ map (2025)", checkedAt: "2026-10-16T00:00:00.000Z" });
+
+    for (const parcel of [withFire(), checked("unknown")]) {
+      const line = heightLine(parcel);
+      expect(line?.title).toBe("Height: 16 ft or less, fire zone not checked");
+      expect(line?.tone).toBe("review");
+      expect(line?.detail).toContain("4 ft side and rear setbacks");
+      expect(line?.detail).not.toContain("needs no side or rear setback");
+    }
+    // A zone the maps actually cleared keeps the zero-setback line.
+    for (const zone of ["none", "moderate"]) {
+      expect(heightLine(checked(zone))).toMatchObject({ title: "Height: 16 ft or less", tone: "clear" });
+    }
+    // Taller layouts are already a review item whether or not the zone was checked.
+    expect(heightLine(withFire(), 18)?.title).toBe("Height: over San Diego's 16 ft line");
+  });
+
   it("leaves height out when it is unknown", () => {
     const audit = buildPermitFeeAudit({ parcel: base, aduSqft: 600, totalHeightFt: null });
     expect(audit.feeLines.some((line) => line.title.startsWith("Height"))).toBe(false);

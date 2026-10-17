@@ -72,4 +72,11 @@ export const SAMPLE_LIVE_PARCEL_MAX = {
     geography: { metro: "San Jose-Sunnyvale-Santa Clara", fips: "06085" },
     comparableCount: 42,
   },
+  // The longest source the lookup writes: every map consulted, none in a zone.
+  fireHazard: {
+    zone: "none",
+    responsibility: "LRA",
+    source: "City of San Diego FHSZ map (2025), CAL FIRE LRA FHSZ map (2025) and CAL FIRE SRA FHSZ map (2024)",
+    checkedAt: "2026-10-16T00:00:00.000Z",
+  },
 } as const;
