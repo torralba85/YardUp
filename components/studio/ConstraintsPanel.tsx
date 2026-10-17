@@ -182,6 +182,12 @@ export default function ConstraintsPanel({
             onViewCertificate={onViewCertificate}
           />
         </div>
+
+        {emailLinkCard && (
+          <div className="mt-[18px] border-t border-lot-line pt-[18px]">
+            {emailLinkCard}
+          </div>
+        )}
       </div>
 
       {/* Verdict-reason strip */}
@@ -208,7 +214,6 @@ export default function ConstraintsPanel({
           View certificate
         </Button>
       </div>
-      {emailLinkCard && <div className="px-4 pb-4">{emailLinkCard}</div>}
     </aside>
   );
 }

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 import { buildScenarioShareUrl } from "@/lib/scenario-share-url";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 const mocks = vi.hoisted(() => ({ create: vi.fn(), limit: vi.fn(), collection: vi.fn(), get: vi.fn() }));
 vi.mock("@/lib/server/scenario-email-rate-limit", () => ({ checkScenarioEmailRateLimit: mocks.limit }));
 vi.mock("@/lib/server/firebase-admin", () => ({ getAdminDb: () => ({ collection: mocks.collection }) }));
@@ -13,6 +14,7 @@ function request(overrides = {}, origin = "https://lotfoundry.net") {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  resetRateLimitBuckets();
   mocks.limit.mockResolvedValue(null); mocks.create.mockResolvedValue(undefined);
   mocks.collection.mockReturnValue({ doc: () => ({ create: mocks.create, get: mocks.get }) });
 });
@@ -90,5 +92,17 @@ describe("Studio email lead API", () => {
     mocks.get.mockResolvedValue({ data: () => record });
     const response = await GET(new Request("https://lotfoundry.net"), { params: Promise.resolve({ token: "a".repeat(48) }) });
     expect((await response.json()).scenario.liveParcel.boundaryGeoJson).toEqual(boundaryGeoJson);
+  });
+  it("throttles excessive bearer token lookups with 429", async () => {
+    const params = { params: Promise.resolve({ token: "a".repeat(48) }) };
+    mocks.get.mockResolvedValue({ data: () => ({ scenarioSnapshot: JSON.stringify(EMAIL_SCENARIO) }) });
+    for (let i = 0; i < 60; i++) {
+      const res = await GET(new Request("https://lotfoundry.net"), params);
+      expect(res.status).toBe(200);
+    }
+    const limited = await GET(new Request("https://lotfoundry.net"), params);
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("retry-after")).toBeDefined();
+    expect(limited.headers.get("cache-control")).toContain("no-store");
   });
 });

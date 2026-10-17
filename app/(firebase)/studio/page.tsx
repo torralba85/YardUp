@@ -46,12 +46,12 @@ export default function StudioPage() {
       const search = new URLSearchParams(window.location.search);
       const isCert = search.has("cert");
       const token = search.get("layout");
-      // Freeze the external URL at hydration; later Studio URL edits must not remount the study.
+      const hasLayout = Boolean(token && validLayoutToken(token));
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (token && validLayoutToken(token)) setLayoutToken(token);
+      if (hasLayout && token) setLayoutToken(token);
       const scenario = parseScenarioParams(search);
       initialDemoEntry.current = Boolean(
-        isCert || (token && validLayoutToken(token)) || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel()),
+        !hasLayout && (isCert || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel())),
       );
     }
     setDemoEntry(initialDemoEntry.current);
@@ -69,16 +69,19 @@ export default function StudioPage() {
       device_mode: deviceMode,
       auth_state: user ? "signed_in" : "guest",
       entry_source: entrySource,
-      parcel_mode: demoEntry ? "preset" : undefined,
+      parcel_mode: demoEntry ? "preset" : (layoutToken ? "live" : undefined),
     });
     setStudioEntryRecorded(true);
-  }, [loading, user, demoEntry]);
+  }, [loading, user, demoEntry, layoutToken]);
 
   useEffect(() => {
-    if (buildersAllowed && !loading && profile?.role === "builder") {
+    const search = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const token = search?.get("layout");
+    const hasLayout = Boolean(token && validLayoutToken(token));
+    if (buildersAllowed && !loading && profile?.role === "builder" && !layoutToken && !hasLayout) {
       router.replace("/builder");
     }
-  }, [buildersAllowed, loading, profile, router]);
+  }, [buildersAllowed, loading, profile, router, layoutToken]);
 
   // AuthProvider re-enters `loading` on every auth event (sign-in, token
   // refresh, sign-out), not just the first. Swapping in the arrival plate then
@@ -87,7 +90,7 @@ export default function StudioPage() {
   const [authSettled, setAuthSettled] = useState(false);
   if (!loading && !authSettled) setAuthSettled(true);
   // Keep the restored study mounted during auth/token updates, including any edits made since opening it.
-  if (layoutToken && authSettled && studioEntryRecorded && !(buildersAllowed && profile?.role === "builder")) {
+  if (layoutToken && authSettled && studioEntryRecorded) {
     return <EmailedScenarioEntry token={layoutToken} />;
   }
   if (inNativeApp && authSettled && studioEntryRecorded) {
@@ -101,7 +104,7 @@ export default function StudioPage() {
   if (
     loading ||
     !studioEntryRecorded ||
-    (buildersAllowed && profile?.role === "builder") ||
+    (!layoutToken && buildersAllowed && profile?.role === "builder") ||
     (user && demoEntry === null)
   ) {
     return (

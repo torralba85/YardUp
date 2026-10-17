@@ -492,12 +492,22 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       ...initialScenario,
       config: parsed.config ?? initialScenario.config,
       pose: parsed.pose ?? initialScenario.pose,
-      assumptions: { ...initialScenario.assumptions, rentScenario: parsed.assumptions?.rentScenario ?? initialScenario.assumptions.rentScenario },
+      assumptions: parsed.assumptions ?? initialScenario.assumptions,
     } : mergeScenarioPartial(parsed);
     setParcelId(merged.parcelId);
     setConfig(merged.config);
-    // A live parcel has its own scene identity; keep its custom placement across auth remounts.
-    setPoseState({key: parcelMode === "preset" ? merged.parcelId : sceneKey, pose:merged.pose ?? defaultPose(activeParcel,merged.config)});
+    // Explicit placement from the URL or a restored layout takes precedence;
+    // otherwise calculate placement from the active parcel (preset or live).
+    const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
+    const initialPose =
+      explicitPose ??
+      (parcelMode === "preset"
+        ? defaultPose(getParcelById(merged.parcelId), merged.config)
+        : defaultPose(activeParcel, merged.config));
+    setPoseState({
+      key: parcelMode === "preset" ? merged.parcelId : sceneKey,
+      pose: initialPose,
+    });
     setAssumptions(merged.assumptions);
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the

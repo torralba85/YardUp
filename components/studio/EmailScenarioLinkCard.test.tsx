@@ -53,7 +53,10 @@ describe("EmailScenarioLinkCard", () => {
     const again = render(<EmailScenarioLinkCard scenario={EMAIL_SCENARIO} />);
     expect(screen.getByRole("status")).toHaveTextContent("Sent!");
     again.unmount();
-    render(<EmailScenarioLinkCard scenario={{ ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, address: "456 Different Street" } }} />);
+    const differentAddress = render(<EmailScenarioLinkCard scenario={{ ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, address: "456 Different Street" } }} />);
+    expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeVisible();
+    differentAddress.unmount();
+    render(<EmailScenarioLinkCard scenario={{ ...EMAIL_SCENARIO, config: { ...EMAIL_SCENARIO.config, footprint: 800 } }} />);
     expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeVisible();
   });
   it("retains editable form on API failure without storing the email or firing analytics", async () => {

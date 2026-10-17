@@ -1,12 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { parseEmailScenario } from "@/lib/scenario-email";
 import { validLayoutToken } from "@/lib/scenario-share-url";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow, noarchive", "Referrer-Policy": "no-referrer" };
 
-export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  const limited = checkRateLimit(request as unknown as NextRequest, {
+    namespace: "scenario-link-read",
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (limited) {
+    for (const [key, val] of Object.entries(headers)) limited.headers.set(key, val);
+    return limited;
+  }
+
   const { token } = await params;
   if (!validLayoutToken(token)) return NextResponse.json({ error: "Layout not found." }, { status: 404, headers });
   try {

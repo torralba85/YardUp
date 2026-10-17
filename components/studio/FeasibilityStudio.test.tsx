@@ -19,6 +19,7 @@ import { certificateKey } from "@/lib/certificate-key";
 import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import * as adsConversion from "@/lib/analytics/adsConversion";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
+import { defaultPose } from "@/lib/scenario-design";
 
 const briefFixture: AIProjectBrief = {
   headline: "Recorded garden studio study", summary: "Saved planning snapshot", bestFit: "Detached ADU",
@@ -201,6 +202,36 @@ describe("FeasibilityStudio (guided spine)", () => {
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
     expect(body.scenario.assumptions.softCostMultiplier).toBe(1.4);
+  });
+
+  it("prefers URL assumptions over initialScenario when explicit URL parameters are present", async () => {
+    stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+    const initialScenario = { ...EMAIL_SCENARIO, assumptions: { ...EMAIL_SCENARIO.assumptions, softCostMultiplier: 1.4 } };
+    window.history.replaceState(
+      null,
+      "",
+      `/studio?v=2&layout=${"a".repeat(48)}&cost_cedar=350&cost_lap=300&cost_stucco=320&cost_board=310&soft=1.2&opex=0.25&rent=conservative`,
+    );
+    render(<AuthProvider><FeasibilityStudio initialScenario={initialScenario} /></AuthProvider>);
+    await screen.findByRole("heading", { name: "Save this 3D lot layout for later — Free" });
+    fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
+    fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
+    expect(body.scenario.assumptions.softCostMultiplier).toBe(1.2);
+    expect(body.scenario.assumptions.operatingExpenseRatio).toBe(0.25);
+    expect(body.scenario.assumptions.costPerSqft.cedar).toBe(350);
+  });
+
+  it("calculates default pose from the live parcel rather than demo parcel when URL pose is absent", async () => {
+    stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+    window.history.replaceState(null, "", "/studio");
+    render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+    const scene = await screen.findByTestId("parcel-scene");
+    const pose = JSON.parse(scene.getAttribute("data-pose")!);
+    expect(pose).toBeDefined();
+    expect(pose).toEqual(defaultPose(EMAIL_SCENARIO.liveParcel!, defaultAduConfig));
   });
 
   it("does not offer email capture for a demo parcel", async () => {

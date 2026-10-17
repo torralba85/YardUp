@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Copy, Mail, TriangleAlert } from "lucide-react";
 import { Input, FieldLabel } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import type { SavedScenario } from "@/lib/saved-scenarios";
+import { serializeScenarioParams } from "@/lib/scenario-url";
 import { buildScenarioShareUrl, isAllowedScenarioUrl } from "@/lib/scenario-share-url";
 import { readCapturedEmail, rememberCapturedEmail } from "@/lib/certificate-purchase-intent";
 import { trackEvent } from "@/lib/analytics/gtag";
@@ -22,19 +23,27 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
   const [error, setError] = useState("");
   const [copyFallback, setCopyFallback] = useState(false);
   const [copied, setCopied] = useState(false);
-  const storageKey = `lf:studio-link:${scenario.liveParcel?.address}|${scenario.liveParcel?.city}`;
+  let scenarioParams = "";
+  try {
+    scenarioParams = serializeScenarioParams(scenario);
+  } catch {
+    scenarioParams = `${scenario.config.width}x${scenario.config.length}x${scenario.config.height}`;
+  }
+  const storageKey = `lf:studio-link:${scenario.liveParcel?.address}|${scenario.liveParcel?.city}|${scenarioParams}`;
 
   useEffect(() => {
-    // This component is keyed to the active address. Restore only this tab's submitted state.
+    // This component is keyed to the active address and design. Restore only this tab's submitted state.
     /* eslint-disable react-hooks/set-state-in-effect */
     setEmail(initialEmail || readCapturedEmail());
+    let savedReceipt: Receipt | null = null;
     try {
       const raw = window.sessionStorage.getItem(storageKey);
       const saved: unknown = raw ? JSON.parse(raw) : null;
       if (saved && typeof saved === "object" && "scenarioUrl" in saved && "delivery" in saved && isAllowedScenarioUrl(saved.scenarioUrl) && (saved.delivery === "queued" || saved.delivery === "sent")) {
-        setReceipt({ scenarioUrl: saved.scenarioUrl, delivery: saved.delivery });
+        savedReceipt = { scenarioUrl: saved.scenarioUrl, delivery: saved.delivery };
       }
     } catch { /* The form still works when session storage is unavailable. */ }
+    setReceipt(savedReceipt);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [initialEmail, storageKey]);
 

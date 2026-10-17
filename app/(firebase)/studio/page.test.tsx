@@ -233,4 +233,23 @@ describe("StudioPage", () => {
     expect(screen.getByText("App Onboarding Mock guest")).toBeInTheDocument();
     expect(screen.queryByText("Feasibility Studio Mock")).not.toBeInTheDocument();
   });
+
+  it("allows builders to view shared layout links without redirecting to /builder", () => {
+    const token = "a".repeat(48);
+    window.history.replaceState(null, "", `/studio?layout=${token}`);
+    mocks.authState.user = { uid: "builder-1" };
+    mocks.authState.profile = { role: "builder" };
+    render(<StudioPage />);
+    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(screen.getByText(`Emailed layout ${token}`)).toBeInTheDocument();
+  });
+
+  it("classifies shared layout links as live parcel mode in analytics", () => {
+    const token = "a".repeat(48);
+    window.history.replaceState(null, "", `/studio?layout=${token}`);
+    render(<StudioPage />);
+    expect(mocks.trackStudioOpened).toHaveBeenCalledWith(
+      expect.objectContaining({ parcel_mode: "live" }),
+    );
+  });
 });
