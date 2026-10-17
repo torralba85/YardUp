@@ -49,7 +49,14 @@ export interface Parcel {
  * - `regrid` — the paid Regrid parcel record.
  * - `county-gis` — a free public county or statewide ArcGIS parcel service.
  *   Published parcel geometry; zoning, setbacks and coverage remain
- *   unverified assumptions. A zero building footprint means unknown.
+ *   unverified assumptions. A zero building footprint means unknown. Usually
+ *   selected by the searched point. Where an official address layer covers the
+ *   area the searched street address is also checked against it: when the point
+ *   fell on no parcel, or on one published under a different address, the
+ *   parcel that publishes the searched address may be returned instead, with
+ *   `lat`/`lng` a point inside it and `dataQuality` recording the address match
+ *   (official parcel ID in `source.recordId`) at reduced confidence. A parcel
+ *   the layer could not vouch for is served at reduced confidence with a warning.
  * - `fallback` — no provider had data and we used the closest preset's
  *   typical dimensions instead. The UI must display a caveat for this one.
  */
