@@ -36,6 +36,8 @@ export interface CertificateRecovery {
   consumeOpen: () => boolean;
   consumePurchase: () => boolean;
   consumeCancellation: () => boolean;
+  /** Retire a cancelled return once the Homeowner starts Checkout again. */
+  acknowledgeCancellation: () => void;
 }
 
 function captureIntent(): CertificateReturnIntent | null {
@@ -52,11 +54,14 @@ function captureIntent(): CertificateReturnIntent | null {
 
 /** Own the return intent, bounded Grant observation, and Parcel restoration together. */
 export function useCertificateRecovery({
-  uid, certKey, ready, onRestore, selectionVersion = 0,
+  uid, certKey, ready, hydrated = true, onRestore, selectionVersion = 0,
 }: {
   uid: string | null | undefined;
   certKey: string;
+  /** Auth and profile have resolved; Grant reads wait for it. */
   ready: boolean;
+  /** The active Parcel reflects URL hydration; the return binds to this selection. */
+  hydrated?: boolean;
   selectionVersion?: number;
   onRestore?: (grant: CertificateGrant, selectionVersion: number) => void | Promise<void>;
 }): CertificateRecovery {
@@ -73,6 +78,10 @@ export function useCertificateRecovery({
   const consumed = useRef(new Set<string>());
   useEffect(() => { restore.current = onRestore; }, [onRestore]);
   const retry = useCallback(() => setNonce((n) => n + 1), []);
+  const cancelReturn = captured?.kind === "cancel";
+  const acknowledgeCancellation = useCallback(() => {
+    if (cancelReturn) setAbandoned(true);
+  }, [cancelReturn]);
   const intent = abandoned ? null : captured;
   const returning = intent?.kind === "checkout" || intent?.kind === "open";
   let target = certKey;
@@ -91,21 +100,24 @@ export function useCertificateRecovery({
   }, []);
 
   useEffect(() => {
-    if (!uid || !ready) return;
+    if (!hydrated) return;
+    // Bind the return to the hydrated selection without waiting for auth, so a
+    // lookup accepted while auth is pending abandons it instead of becoming its baseline.
+    anchorKey.current ??= certKey;
+    anchorSelection.current ??= selectionVersion;
     if (returning && intent?.certKey === "1" && legacyKey === null) {
-      // Bind the legacy return to the first authenticated, hydrated Parcel.
+      // Bind the legacy return to the hydrated Parcel.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLegacyKey(certKey);
       return;
     }
-    anchorKey.current ??= certKey;
-    anchorSelection.current ??= selectionVersion;
     if (returning && certKey === target) anchorKey.current = target;
-    if (returning && (selectionVersion !== anchorSelection.current || (certKey !== anchorKey.current && certKey !== target))) {
-      // A new Address chosen by the Homeowner abandons the prior return.
+    if (intent && (selectionVersion !== anchorSelection.current || certKey !== anchorKey.current)) {
+      // A new Address chosen by the Homeowner abandons the prior return or cancellation.
       setAbandoned(true);
       return;
     }
+    if (!uid || !ready) return;
     let cancelled = false;
     let settled = false;
     let pollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -149,20 +161,19 @@ export function useCertificateRecovery({
       clearTimeout(pollTimer);
       clearTimeout(deadlineTimer);
     };
-  }, [uid, ready, certKey, requestKey, returning, target, intent?.certKey, legacyKey, selectionVersion]);
+  }, [uid, ready, hydrated, certKey, requestKey, returning, target, intent, legacyKey, selectionVersion]);
 
   const current = Boolean(uid) && snapshot.key === requestKey;
   const purchased = current && Boolean(snapshot.grant) && certKey === target;
   const status = returning
     ? purchased ? "granted" : !ready || !uid || !current ? "checking" : snapshot.status === "granted" ? "unverified" : snapshot.status
     : purchased ? "granted" : "idle";
-  const consume = (event: string, allowed: boolean) => {
-    if (!allowed) return false;
-    const key = `${uid ?? "guest"}:${target}:${event}`;
-    if (consumed.current.has(key)) return false;
+  const consume = (key: string, allowed: boolean) => {
+    if (!allowed || consumed.current.has(key)) return false;
     consumed.current.add(key);
     return true;
   };
+  const grantKey = `${uid ?? "guest"}:${target}`;
   return {
     access: {
       purchased,
@@ -171,9 +182,10 @@ export function useCertificateRecovery({
       analyticsOrderId: purchased ? snapshot.grant?.analyticsOrderId : undefined,
       amount: purchased ? snapshot.grant?.amount : undefined,
     },
-    intent, status, retry,
-    consumeOpen: () => consume("open", purchased && Boolean(returning)),
-    consumePurchase: () => consume("purchase", purchased && intent?.kind === "checkout" && Boolean(snapshot.grant?.analyticsOrderId)),
+    intent, status, retry, acknowledgeCancellation,
+    consumeOpen: () => consume(`${grantKey}:open`, purchased && Boolean(returning)),
+    consumePurchase: () => consume(`${grantKey}:purchase`, purchased && intent?.kind === "checkout" && Boolean(snapshot.grant?.analyticsOrderId)),
+    // The captured cancellation is one event, whichever account or Parcel is active later.
     consumeCancellation: () => consume("cancel", intent?.kind === "cancel"),
   };
 }
