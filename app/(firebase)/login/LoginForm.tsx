@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
@@ -9,6 +9,10 @@ import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { Input } from "@/components/ui/Field";
 
+const subscribeToNothing = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 /** Email/password, Google, and Apple sign-in with a validated redirect. */
 export default function LoginForm() {
   const { signIn, signInWithGoogle, signInWithApple, user, profile } = useAuth();
@@ -16,6 +20,9 @@ export default function LoginForm() {
   const buildersAllowed = useWebBuilderAccess();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  // SSR controls must not accept input or submit the browser's default GET
+  // before React attaches the sign-in handlers on a slow connection.
+  const hydrated = useSyncExternalStore(subscribeToNothing, clientReady, serverReady);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,6 +122,7 @@ export default function LoginForm() {
           <Input
             id="email"
             type="email"
+            disabled={!hydrated}
             required
             autoComplete="email"
             value={email}
@@ -141,6 +149,7 @@ export default function LoginForm() {
           <Input
             id="password"
             type="password"
+            disabled={!hydrated}
             required
             autoComplete="current-password"
             value={password}
@@ -151,7 +160,7 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={!hydrated || isPending}
           className="w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-(--duration-settle) ease-settle hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
         >
           {isPending ? "Signing in..." : "Sign in"}
@@ -161,6 +170,7 @@ export default function LoginForm() {
       <label className="mt-6 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
         <input
           type="checkbox"
+          disabled={!hydrated}
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
           className="mt-0.5 h-5 w-5 shrink-0 accent-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"

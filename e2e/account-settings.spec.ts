@@ -2,38 +2,38 @@ import { expect, test } from "@playwright/test";
 
 test.describe("account and support surfaces", () => {
   test("settings page renders guest sign-in CTA", async ({ page }) => {
-    await page.goto("/settings");
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /account settings|settings/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
   });
 
   test("help and feedback are linked and usable", async ({ page }) => {
-    await page.goto("/help");
+    await page.goto("/help", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /help/i })).toBeVisible();
-    await page.goto("/feedback");
+    await page.goto("/feedback", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /feedback/i })).toBeVisible();
     await expect(page.getByLabel(/what happened, or what should we build/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /send feedback/i })).toBeVisible();
   });
 
   test("delete-account explains retention and offers sign-in", async ({ page }) => {
-    await page.goto("/delete-account");
+    await page.goto("/delete-account", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /delete your account/i })).toBeVisible();
     await expect(page.getByText(/what lotfoundry deletes/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
   });
 
   test("legal pages use Terms & Conditions labeling", async ({ page }) => {
-    await page.goto("/terms");
+    await page.goto("/terms", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /terms & conditions/i })).toBeVisible();
-    await page.goto("/privacy");
+    await page.goto("/privacy", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/firebase hosting/i)).toBeVisible();
     await expect(page.getByText("OpenAI", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: /delete account/i }).first()).toBeVisible();
   });
 
   test("account creation and social sign-in require affirmative legal consent", async ({ page }) => {
-    await page.goto("/signup");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
     const signupConsent = page.getByRole("checkbox", { name: /18 or older/i });
     await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
     await expect(page.getByRole("button", { name: "Google" })).toBeDisabled();
@@ -43,7 +43,7 @@ test.describe("account and support surfaces", () => {
     await expect(page.getByRole("button", { name: "Google" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Apple" })).toBeEnabled();
 
-    await page.goto("/login");
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     const loginConsent = page.getByRole("checkbox", { name: /18 or older/i });
     await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Google" })).toBeDisabled();

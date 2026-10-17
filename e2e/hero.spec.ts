@@ -8,7 +8,7 @@ test.describe("A lot more landing", () => {
     page.on("request", (request) => {
       if (/\/api\/suggest/.test(request.url())) suggestRequests.push(request.url());
     });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     const hero = page.getByRole("region", {
       name: "Explore your lot",
       exact: true,
@@ -40,10 +40,10 @@ test.describe("A lot more landing", () => {
   test("asks a visitor who already used their free lookup to sign in", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     // Spend the anonymous allowance, as a return visit would have.
     await page.evaluate(() => window.localStorage.setItem("lf:guest-lookups", "1"));
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
 
     const hero = page.getByRole("region", {
       name: "Explore your lot",
@@ -73,7 +73,7 @@ test.describe("A lot more landing", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     const controls = page.getByRole("radiogroup", {
       name: "Property illustration view",
     });
@@ -102,7 +102,7 @@ test.describe("A lot more landing", () => {
   test("updates income and payback together while keeping demo context visible", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     const numbers = page.locator("#numbers");
     await expect(numbers.getByText("$2,050", { exact: false })).toBeVisible();
     await expect(numbers.getByText("15.1", { exact: false })).toBeVisible();
@@ -124,7 +124,7 @@ test.describe("A lot more landing", () => {
   test("supports intent selection, report inspection, and honest purchase copy", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.getByRole("radio", { name: "For income", exact: true }).click();
     await expect(
       page.getByText("Explore what a small home could earn, and what it might take to bring it to life."),
@@ -163,7 +163,7 @@ test.describe("A lot more landing", () => {
       )
         requests.push(request.url());
     });
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(
       page.getByRole("heading", { name: /A LOT MORE/ }),
     ).toBeVisible();
@@ -176,7 +176,7 @@ test.describe("A lot more landing", () => {
     viewport,
   }) => {
     test.skip(!viewport || viewport.width > 800, "mobile navigation only");
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "Open menu" }).click();
     const menu = page.getByRole("navigation", { name: "Mobile navigation" });
     await menu.getByRole("link", { name: "What’s included", exact: true }).focus();

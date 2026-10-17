@@ -66,7 +66,7 @@ test.describe("analytics consent", () => {
       }
     });
 
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     await expect(page.getByRole("region", { name: banner })).toBeVisible();
@@ -80,20 +80,20 @@ test.describe("analytics consent", () => {
       if (request.url().includes("googletagmanager.com")) googleRequests.push(request.url());
     });
 
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     await page.getByRole("button", { name: /decline/i }).click();
     await expect(page.getByRole("region", { name: banner })).toHaveCount(0);
 
     // A refusal has to survive a reload, or the banner nags on every page.
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.getByRole("region", { name: banner })).toHaveCount(0);
     expect(googleRequests).toEqual([]);
   });
 
   test("accepting loads gtag.js for the configured property", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     const gtagRequest = page.waitForRequest((request) =>
@@ -120,11 +120,11 @@ test.describe("analytics consent", () => {
   });
 
   test("the privacy page can turn analytics back off", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     await page.getByRole("button", { name: /^accept$/i }).click();
-    await page.goto("/privacy");
+    await page.goto("/privacy", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("button", { name: /turn off measurement/i }).click();
     await expect(page.getByText(/analytics and ads measurement cookies are off/i)).toBeVisible();

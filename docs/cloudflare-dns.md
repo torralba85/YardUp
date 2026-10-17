@@ -36,16 +36,24 @@ TLS is valid (no `-k` needed), so the Firebase certificate has issued —
 `/sitemap.xml` advertises `lotfoundry.net`, and `/.well-known/assetlinks.json`
 returns 200. Blocker 1 of that handoff is resolved **for the apex only**.
 
-## `auth.lotfoundry.net` (Firebase Auth handler)
+## Firebase Auth handler (verified 2026-10-15)
 
-Firebase Auth's `authDomain` is `auth.lotfoundry.net` (`lib/firebase.ts`, the
-production env in `.github/workflows/ci.yml`). It must not be the apex: the
-Android app (`native/android`) claims every `https://lotfoundry.net` URL as a
-verified app link, so Google's or Apple's return to the apex's
-`/__/auth/handler` can open outside the tab that started sign-in and fail with
-"missing initial state". It must not be `yardup-2026.firebaseapp.com` either:
-that is cross-site, so Chrome partitions the helper iframe's storage. A
-lotfoundry.net subdomain is same-site and unclaimed.
+Firebase Auth's `authDomain` is restored to `lotfoundry.net` (`lib/firebase.ts`
+and the production env in `.github/workflows/ci.yml`). Both `/__/auth/handler`
+and `/__/auth/iframe` serve the Firebase helper directly over valid HTTPS.
+The proposed `auth.lotfoundry.net` host has no DNS, Hosting registration or
+Firebase Auth authorization as of this verification; #282 shipped it prematurely.
+
+Older installed Android builds claim apex URLs and can intercept the provider's
+return, producing "missing initial state". Keep the browser-retention fix in
+`native/android`: website links must stay in their initiating browser, while
+app-icon launches use Play Billing. The native update still needs a signed Play
+release. Existing affected users can disable **Open supported links** for
+LotFoundry and start a fresh sign-in. Hosted dynamic exclusions help Android 15+
+after device refresh, but do not replace the app update for older Android.
+Do not switch to the cross-site `firebaseapp.com` helper as a shortcut.
+
+An unclaimed same-site auth subdomain remains an option once fully provisioned.
 
 Setup, all required before a build with this `authDomain` ships:
 
@@ -61,8 +69,12 @@ Setup, all required before a build with this `authDomain` ships:
    `auth.lotfoundry.net` to Domains and
    `https://auth.lotfoundry.net/__/auth/handler` to Return URLs.
 
-Verify: `curl -sSI https://auth.lotfoundry.net/__/auth/handler` answers 200
-from `Google Frontend`. Other paths on the host 301 to the apex (`proxy.ts`).
+Verify both helpers with `node scripts/ci/verify-auth-host.mjs auth.lotfoundry.net`.
+The check requires HTTPS, direct HTTP 200, HTML, and the corresponding Firebase
+helper script; redirects and app-shell HTML fail. CI reads the exact host from
+`.env.production.local` before building or recording a deployment. OAuth provider
+callback registration and a real sign-in remain separate checks. Other paths on
+the proposed host 301 to the apex (`proxy.ts`).
 
 ## Open issue: `www` is still proxied and still redirects off-domain
 

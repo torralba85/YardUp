@@ -14,14 +14,13 @@ const firebaseConfig = {
   apiKey:
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() ||
     "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
-  // A subdomain, not the apex: the Android app claims every lotfoundry.net
-  // URL as a verified app link, so Google's return to the apex's
-  // /__/auth/handler can open outside the signing-in tab and lose Firebase's
-  // sessionStorage. auth.lotfoundry.net is unclaimed but still same-site, so
-  // the helper iframe is not storage-partitioned.
+  // Use the provisioned same-site helper. auth.lotfoundry.net must not ship
+  // until Hosting/TLS, Auth authorization and provider callbacks are ready.
+  // Website links must stay in the browser (see native/android/README.md);
+  // older Android installs still need the app-link manifest update.
   authDomain:
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ||
-    "auth.lotfoundry.net",
+    "lotfoundry.net",
   projectId:
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() || "yardup-2026",
   storageBucket:

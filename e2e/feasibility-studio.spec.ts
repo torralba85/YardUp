@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page).toHaveTitle("ADU Feasibility Check: Rent, Cost & Payback | LotFoundry");
     await expect(
@@ -26,7 +26,7 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("signup exposes homeowner and builder account choices", async ({ page }) => {
-    await page.goto("/signup");
+    await page.goto("/signup", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
     await expect(page.getByRole("radio", { name: /Homeowner/i })).toBeVisible();
@@ -36,7 +36,7 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("studio is open to guests", async ({ page, viewport }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     // Guests are no longer redirected — mobile gets the five-reveal journey,
     // desktop gets the dashboard.
@@ -52,7 +52,7 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("builder dashboard requires sign in and preserves the next route", async ({ page }) => {
-    await page.goto("/builder");
+    await page.goto("/builder", { waitUntil: "domcontentloaded" });
 
     await expect(page).toHaveURL(/\/login\?next=\/builder$/);
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
@@ -62,7 +62,7 @@ test.describe("Public LotFoundry flows", () => {
     // Desktop-only: the mobile journey surfaces permit caveats as the Check
     // reveal's verify items instead of the full permit guide panel (#130).
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /Rules & Fit/i }).click();
     await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
     await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();
@@ -73,7 +73,7 @@ test.describe("Public LotFoundry flows", () => {
     // Desktop-only: the mobile journey keeps Shape to broad size/style
     // choices; the gallery is not part of the default mobile path (#130).
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     // Navigating via sidebar navigation button
     await page.getByRole("button", { name: /Design/i }).click();
     await page.getByText("Browse designs").click();
@@ -92,7 +92,7 @@ test.describe("Public LotFoundry flows", () => {
 
   test("Design keeps setup and secondary tools out of the initial workspace", async ({ page, isMobile }) => {
     test.skip(isMobile, "Desktop Design; mobile uses the existing journey");
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
     await expect(page.getByRole("heading", { name: "Design your ADU", exact: true })).toBeVisible();
     await expect(page.getByRole("radiogroup", { name: "ADU footprint size" })).toBeVisible();
@@ -124,7 +124,7 @@ test.describe("Public LotFoundry flows", () => {
   }) => {
     test.skip(!isMobile, "The five-reveal journey is the mobile layout only");
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("radio", { name: /Seattle/i }).click();
     await page.getByRole("button", { name: /Reveal my backyard/i }).click();
     await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();
@@ -135,7 +135,7 @@ test.describe("Public LotFoundry flows", () => {
     // of which is heading-role, so assert on the actual heading text.
     await expect(page.getByRole("heading", { name: /Pick a direction/i })).toBeVisible();
 
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
 
     // The study survives: we land on the previous reveal, still inside the app.
     await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();

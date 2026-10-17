@@ -49,7 +49,7 @@ test.describe("Studio Neighborhood 3D", () => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
 
     await expect(page.getByTestId("cesium-container")).toBeVisible();
@@ -74,7 +74,7 @@ test.describe("Studio Neighborhood 3D", () => {
       if (scriptRequests === 1) await route.abort();
       else await route.continue();
     });
-    await page.goto("/studio?v=2&hc=wall&parcel=oak-street&w=20&l=30&h=12&x=0&z=0&rotation=0&size=600&roof=shed&finish=cedar&openings=1");
+    await page.goto("/studio?v=2&hc=wall&parcel=oak-street&w=20&l=30&h=12&x=0&z=0&rotation=0&size=600&roof=shed&finish=cedar&openings=1", { waitUntil: "domcontentloaded" });
     const views = parcelViews(page);
     await views.getByRole("radio", { name: "Neighborhood" }).click();
     await expect(page.getByText("3D Globe currently unavailable")).toBeVisible();
@@ -90,7 +90,7 @@ test.describe("Studio Neighborhood 3D", () => {
   test("reports a ground elevation or says it is unavailable, never a bare number", async ({
     page,
   }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
 
     // Mount plus ground-elevation lookup share one CDN-backed load.
@@ -111,7 +111,7 @@ test.describe("Studio Neighborhood 3D", () => {
     // Two renderer mounts share this test; each external CDN load can take 60s,
     // and CI's software WebGL makes every later action slow as well.
     test.setTimeout(300_000);
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const canvas = page.getByTestId("cesium-container");
     const credits = page.locator(".cesium-credit-logoContainer");
@@ -163,7 +163,7 @@ test.describe("Studio Neighborhood 3D", () => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     const views = parcelViews(page);
     await views.getByRole("radio", { name: "Neighborhood" }).click();
     await expect(page.getByTestId("cesium-container")).toBeVisible();
@@ -185,7 +185,7 @@ test.describe("Studio Neighborhood 3D", () => {
     // frame, which is slow under CI's software WebGL. The step maths is the same.
     await page.emulateMedia({ reducedMotion: "reduce" });
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
     const controls = page.getByRole("group", { name: "Camera controls" });
     await expect(controls.getByRole("button", { name: "Zoom in" })).toBeEnabled({ timeout: 90_000 });
@@ -212,7 +212,7 @@ test.describe("Studio Neighborhood 3D", () => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     const views = parcelViews(page);
 
     // Each entry builds a Cesium viewer and each exit destroys it; a missed

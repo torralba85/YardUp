@@ -158,13 +158,17 @@ test("verification-only workflow edits do not hide deployment/header changes", (
   assert.match(deploymentDefinition(actual), /Record production deployment outcome/);
 });
 
-test("production build pins Firebase Auth to the same-site auth subdomain", () => {
+test("production build pins and checks the provisioned same-site Firebase auth host", () => {
   const workflow = readFileSync(new URL("../../.github/workflows/ci.yml", import.meta.url), "utf8");
-  assert.match(workflow, /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="auth\.lotfoundry\.net"/);
+  assert.match(workflow, /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="lotfoundry\.net"/);
   assert.doesNotMatch(
     workflow,
     /NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="\$\{\{\s*secrets\.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN\s*\}\}"/,
   );
+  const authPreflight = workflow.indexOf("run: node scripts/ci/verify-auth-host.mjs");
+  assert.ok(authPreflight > workflow.indexOf("cat > .env.production.local"));
+  assert.ok(authPreflight < workflow.indexOf("run: npm run build:firebase"));
+  assert.ok(authPreflight < workflow.indexOf("Record production deployment attempt"));
 });
 
 test("git diff includes both sides of a rename and all paths beyond API file limits", () => {

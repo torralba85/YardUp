@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 // T08 browser reproductions derived from Gemini's audit coverage outline.
 // The actual selectors and assertions were verified against the source by Codex.
 async function openShape(page: Page) {
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: /reveal my backyard/i }).click();
   await page.getByRole("button", { name: /shape your adu/i }).click();
   await expect(page.getByRole("heading", { name: /pick a direction/i })).toBeVisible();

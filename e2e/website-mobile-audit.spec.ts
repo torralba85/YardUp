@@ -32,7 +32,7 @@ async function mockLookup(page: Page) {
 
 test("sample card preserves its advertised market scenario", async ({ page, isMobile }) => {
   await mockTestOwnerAuth(page);
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const card = page.getByRole("link", { name: /Open the Seattle sample lot/ });
   await expect(card).toContainText("2,350");
   await expect(card).toContainText("13.2");
@@ -47,7 +47,7 @@ test("sample card preserves its advertised market scenario", async ({ page, isMo
     await expect(page.getByRole("complementary", { name: "Property constraints" })).toContainText("13.2");
   }
   await expect.poll(() => new URL(page.url()).searchParams.get("rent")).toBe("market");
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByRole("main")).toContainText("2,350");
 });
 
@@ -57,7 +57,7 @@ test("native guest gets one successful lookup, preserves Back, and is asked to s
   await page.addInitScript(() => {
     Object.assign(window, { LotFoundryNative: { platform: "android" } });
   });
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: /Explore my property/ }).click();
   await expect(page.getByTestId("app-guide")).toBeVisible();
   await page.getByRole("button", { name: /Open the Studio/ }).click();
@@ -68,7 +68,7 @@ test("native guest gets one successful lookup, preserves Back, and is asked to s
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(calls).toEqual({ geocode: 1, parcel: 1 });
   await page.screenshot({ path: testInfo.outputPath("native-guest-first-lookup.png"), fullPage: true });
-  await page.goBack();
+  await page.goBack({ waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: /Start with your address/ })).toBeVisible();
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1423 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
@@ -79,7 +79,7 @@ test("native guest gets one successful lookup, preserves Back, and is asked to s
 
 test("unverified aerial is context only, without invented house, ADU or setback locations", async ({ page, isMobile }, testInfo) => {
   await mockLookup(page);
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   if (isMobile) {
@@ -106,7 +106,7 @@ test("imagery credits stay visible below the context notice at desktop and 320px
     headers: { "X-Aerial-Attribution": credit },
     body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="540"><rect width="800" height="540" fill="#161616"/></svg>',
   }));
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   if (isMobile) {

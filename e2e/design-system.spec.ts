@@ -8,7 +8,7 @@ const orange = "rgb(255, 91, 36)";
 test.describe("Project-wide A LOT MORE contract", () => {
   test("Studio gives the task action one signal-orange fill", async ({ page, isMobile }, testInfo) => {
     test.skip(isMobile, "Desktop rail and context header; mobile has its own journey contract");
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     const save = page.getByRole("button", { name: "Save this property — free account", exact: true });
     const certificate = page.getByRole("button", { name: "View certificate", exact: true });
     const signIn = page.getByRole("complementary", { name: "Studio navigation" })
@@ -27,7 +27,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
   });
 
   test("landing home target remains usable on narrow screens", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     const home = page.getByRole("link", { name: "LotFoundry home", exact: true });
     for (const width of [320, 390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
@@ -38,7 +38,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
 
   test("mobile dark header has visible keyboard focus", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-chromium", "mobile header only");
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     const reset = page.getByRole("button", { name: "Reset scenario", exact: true });
     await expect(reset).toBeVisible();
     await reset.focus();
@@ -49,7 +49,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
 
   test("owner entry presents a clearly illustrative preview without overflow", async ({ page }, testInfo) => {
     await mockTestOwnerAuth(page);
-    await page.goto("/login?next=/studio");
+    await page.goto("/login?next=/studio", { waitUntil: "domcontentloaded" });
     await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
     await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
     await page.locator('button[type="submit"]').click();
@@ -64,7 +64,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
 
   for (const route of ["/login", "/signup", "/forgot-password", "/terms", "/settings"]) {
     test(`${route} uses the shared ground and fonts`, async ({ page }, testInfo) => {
-      await page.goto(route);
+      await page.goto(route, { waitUntil: "domcontentloaded" });
       await expect(page.locator("body")).toHaveCSS("background-color", chalk);
       await expect(page.locator("body")).toHaveCSS("font-family", /manrope/i);
       await expect(page.getByRole("heading").first()).toBeVisible();
@@ -76,7 +76,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
 
   for (const route of ["/login", "/signup"]) {
     test(`${route} keeps consent explicit and primary labels readable`, async ({ page }) => {
-      await page.goto(route);
+      await page.goto(route, { waitUntil: "domcontentloaded" });
       const checkbox = page.getByRole("checkbox");
       await expect(checkbox).not.toBeChecked();
       await expect(checkbox).toHaveCSS("accent-color", carbon);
@@ -95,7 +95,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
   }
 
   test("Studio sign-in uses the same chalk form and returns focus", async ({ page }, testInfo) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     const signIn = page.getByRole("button", { name: /^sign in$/i }).filter({ visible: true }).first();
     await signIn.click();
     const dialog = page.getByRole("dialog");

@@ -60,6 +60,13 @@ The safeguard suite covers full PR diffs, mixed/unknown paths, >300 changed
 files, renames, failed-release recovery, forced redeploys, aggregate failures,
 workflow deployment boundaries, and recording release outcomes.
 
+UI navigation waits for `domcontentloaded`, then each test waits for its actual
+page content or controls. Do not wait for the global `load` event: external
+reCAPTCHA, analytics and Firebase helper frames can stall it while the app is
+already usable. `e2e/navigation-readiness.spec.ts` holds an external frame open
+and verifies that the sign-in form remains interactive. Real auth and deployment
+readiness are checked separately; this does not mock or skip the UI assertions.
+
 For a non-protected branch already containing this workflow, push an incremental
 docs-only commit, then dispatch with the earlier full SHA:
 

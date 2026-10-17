@@ -18,7 +18,7 @@ test.describe("Visual breakpoint coverage", () => {
         reducedMotion: "reduce",
       });
       const page = await context.newPage();
-      await page.goto("/");
+      await page.goto("/", { waitUntil: "domcontentloaded" });
 
       await expect(page.getByRole("heading", { name: /A LOT MORE/i })).toBeVisible();
       // Always-rendered closing CTA heading — stable across hero variants.

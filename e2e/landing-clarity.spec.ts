@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("landing explains the tool before address entry and keeps the mobile app link after the preview", async ({
   page,
 }, testInfo) => {
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.emulateMedia({ reducedMotion: "reduce" });
   const hero = page.locator("#start");
   const explanation = hero.getByText(
@@ -45,7 +45,7 @@ test("landing explains the tool before address entry and keeps the mobile app li
     height: 844,
   });
   // Capture initial entry independently of the resize and offscreen-paint checks.
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => document.fonts.ready);
   // Confirm hydration before screenshots hide the input caret. Otherwise the
   // temporary screenshot style can be seen by React during hydration.
@@ -79,7 +79,7 @@ test("landing explains the tool before address entry and keeps the mobile app li
 test("landing radios expose one tab stop, move focus, and update the associated report", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const groups = page.getByRole("radiogroup");
   await expect(groups).toHaveCount(4);
   for (const group of await groups.all()) {
@@ -108,7 +108,7 @@ test("landing radios expose one tab stop, move focus, and update the associated 
 test("actual Studio preview loads and the example opens without an account prompt", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const capture = page.getByRole("img", {
     name: /Oak Street demo in the LotFoundry 3D studio/,
   });

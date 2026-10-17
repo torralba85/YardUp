@@ -49,7 +49,7 @@ test.describe("address suggestions", () => {
       });
     });
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
 
     const search = page.getByLabel("Search property address");

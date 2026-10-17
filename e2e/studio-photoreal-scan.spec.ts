@@ -29,7 +29,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("registered demo parcel offers Scan beside the other views", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     const views = parcelViews(page);
     await expect(views.getByRole("radio", { name: "3D model" })).toBeVisible();
@@ -41,7 +41,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("a parcel with no registered scan hides Scan entirely", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     // The sample-property picker lives on Your Lot; the Studio opens on Rules & Fit.
     await page.getByRole("button", { name: "Your Lot" }).click();
 
@@ -56,7 +56,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("entering Scan states the sample provenance and keeps 3D reachable", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     const views = parcelViews(page);
     await views.getByRole("radio", { name: /^Scan/ }).click();
@@ -85,7 +85,7 @@ test.describe("Studio photoreal scan (beta)", () => {
       "internal tool: build with NEXT_PUBLIC_SCAN_CALIBRATION=true",
     );
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await parcelViews(page).getByRole("radio", { name: /^Scan/ }).click();
 
     const openCalibration = page.getByRole("button", { name: "Calibrate Scan" });
@@ -132,7 +132,7 @@ test.describe("Studio photoreal scan (beta)", () => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     const views = parcelViews(page);
     await views.getByRole("radio", { name: /^Scan/ }).click();
 
@@ -146,7 +146,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("ADU design choices survive a 3D to Scan round trip", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /Design/i }).click();
 
     const sizes = page.getByRole("radiogroup", { name: "ADU footprint size" });

@@ -4,7 +4,7 @@ test.describe("mobile studio journey", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 1024, "mobile-only suite");
 
   test("golden path: five reveals from find to act", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     // Reveal 1 · Find — the journey replaces the old sheet composition.
     await expect(page.getByTestId("mobile-journey")).toBeVisible();
@@ -47,7 +47,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("progress targets stay labeled and at least 44px at narrow widths", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     for (const width of [320, 390, 440, 768]) {
       await page.setViewportSize({ width, height: 844 });
       const rail = page.getByRole("navigation", { name: "Journey progress" });
@@ -65,7 +65,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /reveal my backyard/i }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
 
@@ -85,7 +85,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("the rail travels back to completed reveals only", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /reveal my backyard/i }).click();
     await expect(
       page.getByRole("heading", { name: /your backyard could earn/i }),
@@ -107,7 +107,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("a shared scenario link opens on the money reveal, not onboarding", async ({ page }) => {
-    await page.goto("/studio?parcel=corner-lot&size=800&roof=gable&finish=board&rent=market&openings=1");
+    await page.goto("/studio?parcel=corner-lot&size=800&roof=gable&finish=board&rent=market&openings=1", { waitUntil: "domcontentloaded" });
 
     // The restored lot's money figure is the first visible state.
     await expect(
@@ -126,7 +126,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("a default-scenario URL still begins at the Find reveal", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street&size=600&roof=shed&finish=cedar&rent=conservative&openings=1");
+    await page.goto("/studio?parcel=oak-street&size=600&roof=shed&finish=cedar&rent=conservative&openings=1", { waitUntil: "domcontentloaded" });
 
     await expect(
       page.getByRole("heading", { name: /start with your address/i }),
@@ -138,7 +138,7 @@ test.describe("desktop studio regression", () => {
   test.skip(({ viewport }) => !viewport || viewport.width < 1024, "desktop-only suite");
 
   test("desktop shows the guided spine and never the mobile journey", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Rules & Fit" })).toBeVisible();

@@ -3,7 +3,7 @@ import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test("property entry supports skip navigation and a visible field focus", async ({ page }, testInfo) => {
   await mockTestOwnerAuth(page);
-  await page.goto("/login?next=/studio");
+  await page.goto("/login?next=/studio", { waitUntil: "domcontentloaded" });
   await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
   await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
   await page.locator('button[type="submit"]').click();
@@ -28,7 +28,7 @@ test("property entry supports skip navigation and a visible field focus", async 
 
 test("mobile journey labels and provenance remain readable at narrow widths", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile journey");
-  await page.goto("/studio?parcel=oak-street");
+  await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
   // The default scenario begins at Find; commit to the demo lot to reach Earn.
   await page.getByRole("button", { name: /reveal my backyard/i }).click();
   const rail = page.getByRole("navigation", { name: "Journey progress" });
@@ -57,7 +57,7 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
 
 test("support text stays readable on hover", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "hover-capable pointer");
-  await page.goto("/help");
+  await page.goto("/help", { waitUntil: "domcontentloaded" });
   const openStudio = page.getByRole("link", { name: "Open studio", exact: true });
   await openStudio.hover();
   await expect(openStudio).toHaveCSS("color", "rgb(22, 22, 22)");

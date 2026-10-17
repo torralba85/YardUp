@@ -175,6 +175,13 @@ FIREBASE_SMOKE_EMAIL=<test user> FIREBASE_SMOKE_PASSWORD=<password> FIREBASE_SMO
 
 After deployment, confirm:
 
+- Before building, `node scripts/ci/verify-auth-host.mjs` must pass against the
+  authDomain in `.env.production.local` (or pass a hostname for read-only diagnosis).
+  Both Firebase helpers must serve direct HTTP 200 HTML. This catches missing
+  DNS/TLS and accidental redirects; provider callback registration and an actual
+  social sign-in still need verification. The signup canary uses email/password
+  and cannot establish that Google/Apple redirect sign-in works.
+
 - `/`, `/studio`, `/settings`, `/about`, `/help`, `/feedback`, `/delete-account`,
   `/privacy`, and `/terms` load successfully.
 - Address search works with the configured provider keys and preserves a usable

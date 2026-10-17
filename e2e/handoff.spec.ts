@@ -20,12 +20,12 @@ const ADDRESS_HANDOFF_KEY = "lf:pending-address";
  * The landing-side half of the seam is covered as a guest in `hero.spec.ts`.
  */
 async function handOffAddress(page: import("@playwright/test").Page) {
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.evaluate(
     ([key, address]) => window.sessionStorage.setItem(key, address),
     [ADDRESS_HANDOFF_KEY, UNRESOLVABLE_ADDRESS] as const,
   );
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
 }
 
 test.describe("landing → studio handoff", () => {

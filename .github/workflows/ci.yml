@@ -45,7 +45,7 @@ jobs:
       - name: Validate public repository hygiene
         run: node scripts/validate-public-repo.mjs
       - name: Test CI scope and release safeguards
-        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs
+        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/auth-host.checks.mjs
       - name: Determine verification and deployment scope
         id: scope
         run: node scripts/ci/scope.mjs
@@ -175,10 +175,9 @@ jobs:
           EOF
           cat > .env.production.local <<EOF
           NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
-          # Keep the OAuth helper same-site (not firebaseapp.com, whose iframe is
-          # storage-partitioned) but off the apex, which the Android app claims
-          # as an app link and can steal Google's return to /__/auth/handler.
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="auth.lotfoundry.net"
+          # This same-site host is provisioned and authorized. Do not ship the
+          # proposed auth subdomain until Hosting/TLS and OAuth setup are ready.
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="lotfoundry.net"
           NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}"
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}"
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}"
@@ -187,6 +186,8 @@ jobs:
           NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY }}"
           NEXT_PUBLIC_GA_MEASUREMENT_ID="${{ secrets.NEXT_PUBLIC_GA_MEASUREMENT_ID }}"
           EOF
+      - name: Verify configured Firebase auth helpers
+        run: node scripts/ci/verify-auth-host.mjs
       - name: Install functions dependencies
         run: npm ci --prefix functions
       - run: npm run build:firebase

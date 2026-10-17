@@ -12,7 +12,7 @@ test.describe("native app Studio onboarding", () => {
     await page.addInitScript(() => {
       Object.assign(window, { LotFoundryNative: { platform: "android" } });
     });
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
   }
 
   test("a demo city opens without an account, and back steps through onboarding", async ({ page }, testInfo) => {
@@ -28,7 +28,7 @@ test.describe("native app Studio onboarding", () => {
     await page.screenshot({ path: testInfo.outputPath("app-guide.png"), fullPage: true });
 
     // A remount must resume the chosen city, not drop back to Welcome.
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.getByText("Start in Portland, OR")).toBeVisible({ timeout: 20_000 });
 
     await page.getByRole("button", { name: /Open the Studio/ }).click();
@@ -37,9 +37,9 @@ test.describe("native app Studio onboarding", () => {
     await expect(page.getByText(/812 Linden Avenue/).first()).toBeVisible();
     expect(new URL(page.url()).searchParams.get("parcel")).toBe("corner-lot");
 
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("app-guide")).toBeVisible();
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("app-welcome")).toBeVisible();
   });
 
@@ -57,9 +57,9 @@ test.describe("native app Studio onboarding", () => {
     await page.screenshot({ path: testInfo.outputPath("app-guest-address.png"), fullPage: true });
 
     // Back from the guest workspace returns through the guide to Welcome.
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("app-guide")).toBeVisible();
-    await page.goBack();
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("app-welcome")).toBeVisible();
   });
 

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Accessibility smoke", () => {
   test("tab order reaches the primary controls without trapping", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     let activeTag: string | null = null;
     const tags: string[] = [];
@@ -28,7 +28,7 @@ test.describe("Accessibility smoke", () => {
       reducedMotion: "reduce",
     });
     const page = await context.newPage();
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     const widths = await page.evaluate(() => ({
       doc: document.documentElement.scrollWidth,
@@ -40,7 +40,7 @@ test.describe("Accessibility smoke", () => {
   });
 
   test("primary landing actions are keyboard reachable", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     const focusLabels: string[] = [];
     for (let i = 0; i < 8; i++) {

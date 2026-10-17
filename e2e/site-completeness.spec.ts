@@ -24,7 +24,7 @@ for (const path of PUBLIC_PATHS) {
   test(`${path} loads without page errors`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    const response = await page.goto(path);
+    const response = await page.goto(path, { waitUntil: "domcontentloaded" });
     expect(response?.status(), `${path} status`).toBeLessThan(400);
     // Prefer main landmarks; auth pages use AuthLayout headings; studio mobile
     // may expose scene, sheet, or wizard copy instead of a single <main>.
@@ -86,7 +86,7 @@ test("robots and sitemap are reachable", async ({ request }) => {
 });
 
 test("unknown route shows branded 404 recovery", async ({ page }) => {
-  await page.goto("/this-route-does-not-exist-lf");
+  await page.goto("/this-route-does-not-exist-lf", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: /page not found/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /^home$/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /get help/i })).toBeVisible();
@@ -94,7 +94,7 @@ test("unknown route shows branded 404 recovery", async ({ page }) => {
 
 
 test("/studio exposes crawlable overview content and public links", async ({ page }) => {
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
   const overview = page.getByTestId("studio-overview");
   const overviewDisclosure = overview.locator("details");

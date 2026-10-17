@@ -6,6 +6,15 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore Firebase Auth to the provisioned `lotfoundry.net` helper. The proposed
+  `auth.lotfoundry.net` host had no DNS, Hosting registration or Auth authorization.
+  Deployment now checks both helper pages before building or publishing.
+  Existing Android installs with host-wide app links still need the native
+  manifest update, or Open supported links disabled, to keep browser sign-in
+  and Stripe returns in their original tab. This is not a native release.
+
 ## [1.0.2] - 2026-10-12
 
 ### Added
@@ -66,12 +75,11 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Fixed
 
-- Google and Apple sign-in on Android no longer stop on Firebase's "missing
-  initial state" page. The auth handler lived on `lotfoundry.net`, which the
-  Android app claims as a verified app link, so the provider's return to
-  `/__/auth/handler` could open in the app or another tab without the
-  signing-in tab's session storage. Firebase Auth now uses
-  `auth.lotfoundry.net`, which is same-site but unclaimed.
+- Proposed moving Firebase Auth to the same-site, unclaimed
+  `auth.lotfoundry.net` host to avoid Android app-link interception (#282).
+  That host's external setup was incomplete; the Unreleased fix above restores
+  the provisioned helper. The Android missing-state issue is not fully resolved
+  for existing installations until their app-link handling is updated.
 - Street postdirectionals such as NE remain part of the street when followed by
   a ZIP code, avoiding a false Nebraska mismatch on valid Washington addresses.
 - Saved studies remain recoverable when optional AI snapshots are invalid; malformed

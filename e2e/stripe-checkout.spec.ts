@@ -11,7 +11,7 @@ const CERTIFICATE_ROUTE = "**/api/stripe/checkout-certificate";
 
 async function signIn(page: Page) {
   await mockTestOwnerAuth(page);
-  await page.goto("/login?next=/studio");
+  await page.goto("/login?next=/studio", { waitUntil: "domcontentloaded" });
   await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
   await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
   await page.locator('button[type="submit"]').click();
@@ -23,7 +23,7 @@ function unlockButton(page: Page) {
 }
 
 async function openCertificateStep(page: Page, query = "parcel=oak-street&step=certificate") {
-  await page.goto(`/studio?${query}`);
+  await page.goto(`/studio?${query}`, { waitUntil: "domcontentloaded" });
   await expect(unlockButton(page)).toBeVisible();
 }
 
@@ -31,7 +31,7 @@ test.describe("web certificate checkout", () => {
   test("an unresolved Checkout return offers recovery instead of another purchase", async ({ page }, testInfo) => {
     test.setTimeout(60000);
     await signIn(page);
-    await page.goto("/studio?parcel=oak-street&cert=oak-street&checkout=returned");
+    await page.goto("/studio?parcel=oak-street&cert=oak-street&checkout=returned", { waitUntil: "domcontentloaded" });
     await expect(page.getByText("Checking certificate access. Your access record may still be arriving.").filter({ visible: true }).first()).toBeVisible();
     await expect(unlockButton(page)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Check again" }).filter({ visible: true }).first()).toBeVisible({ timeout: 40000 });
@@ -142,7 +142,7 @@ test.describe("web certificate checkout", () => {
     await expect(notice.first()).toBeVisible();
     // The one-shot marker is stripped so a reload never re-reports it.
     await expect(page).not.toHaveURL(/checkout=cancelled/);
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.getByRole("navigation", { name: /Studio steps|Journey progress/ }).first()).toBeVisible();
     await expect(page).not.toHaveURL(/checkout=cancelled/);
     await expect(notice).toHaveCount(0);
@@ -173,7 +173,7 @@ test.describe("web certificate checkout", () => {
       await route.fulfill({ status: 401, json: { error: "unauthorized" } });
     });
 
-    await page.goto("/studio?parcel=oak-street&step=certificate");
+    await page.goto("/studio?parcel=oak-street&step=certificate", { waitUntil: "domcontentloaded" });
     const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
     await cta.click();
@@ -209,9 +209,9 @@ test.describe("web certificate checkout", () => {
     );
 
     // The landing's address handoff, as a guest.
-    await page.goto("/privacy");
+    await page.goto("/privacy", { waitUntil: "domcontentloaded" });
     await page.evaluate(() => window.sessionStorage.setItem("lf:pending-address", "1421 NE 88th St, Seattle, WA"));
-    await page.goto("/studio?step=certificate");
+    await page.goto("/studio?step=certificate", { waitUntil: "domcontentloaded" });
     const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
     await expect(page.getByText("1421 NE 88th St").first()).toBeVisible();
