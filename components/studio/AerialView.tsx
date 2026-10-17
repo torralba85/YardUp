@@ -227,27 +227,53 @@ export default function AerialView({
           />
         )}
 
-        {/* ADU footprint, at the same position and rotation as the 3D model */}
-        {aduRect && (
+        {/* ADU footprint and house marker — only assert on real images if we have verified geographic alignment. Without it, preserve drafting on the fallback grid but show context-only on satellite. */}
+        {(onChalkGrid) && (
           <>
-            <polygon
-              points={aduRect.points}
-              fill={`${statusColor}22`}
-              stroke={statusColor}
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
+            {aduRect && (
+              <>
+                <polygon
+                  points={aduRect.points}
+                  fill={`${statusColor}22`}
+                  stroke={statusColor}
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+                <rect
+                  x={aduRect.labelX - 46}
+                  y={aduRect.labelY - 10}
+                  width="92"
+                  height="18"
+                  rx="3"
+                  fill="rgba(38,19,7,0.78)"
+                />
+                <text
+                  x={aduRect.labelX}
+                  y={aduRect.labelY + 4}
+                  textAnchor="middle"
+                  fill="#F5F5F0"
+                  fontSize="10"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                  fontWeight="600"
+                  letterSpacing="0.06em"
+                >
+                  PROPOSED ADU
+                </text>
+              </>
+            )}
+
+            {/* Existing house marker */}
             <rect
-              x={aduRect.labelX - 46}
-              y={aduRect.labelY - 10}
-              width="92"
+              x={houseCenter.x - 52}
+              y={houseCenter.y - 10}
+              width="104"
               height="18"
               rx="3"
-              fill="rgba(38,19,7,0.78)"
+              fill="rgba(38,19,7,0.66)"
             />
             <text
-              x={aduRect.labelX}
-              y={aduRect.labelY + 4}
+              x={houseCenter.x}
+              y={houseCenter.y + 4}
               textAnchor="middle"
               fill="#F5F5F0"
               fontSize="10"
@@ -255,32 +281,10 @@ export default function AerialView({
               fontWeight="600"
               letterSpacing="0.06em"
             >
-              PROPOSED ADU
+              EXISTING HOUSE
             </text>
           </>
         )}
-
-        {/* Existing house marker */}
-        <rect
-          x={houseCenter.x - 52}
-          y={houseCenter.y - 10}
-          width="104"
-          height="18"
-          rx="3"
-          fill="rgba(38,19,7,0.66)"
-        />
-        <text
-          x={houseCenter.x}
-          y={houseCenter.y + 4}
-          textAnchor="middle"
-          fill="#F5F5F0"
-          fontSize="10"
-          style={{ fontFamily: "var(--font-mono)" }}
-          fontWeight="600"
-          letterSpacing="0.06em"
-        >
-          EXISTING HOUSE
-        </text>
 
         {/* Setback labels — rear */}
         <SetbackLabel

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import { buildAduSceneModel, projectLocalToGeodetic, type Pose2D } from "@/lib/scene-model";
-import { describePlacement, type PlacementResult } from "@/lib/placement-validation";
+import { describePlacementWithEvidence, type PlacementResult } from "@/lib/placement-validation";
 import { loadCesium } from "@/lib/cesium-loader";
 import {
   describePhotorealRoute,
@@ -204,7 +204,7 @@ function placeSceneGeometry(
         const aduHeightM = (config.height || 14) * FEET_TO_METERS;
         const canExtrude = canClamp || groundHeightMeters !== null;
 
-        const feedback = describePlacement(placement);
+        const feedback = describePlacementWithEvidence(placement, parcel);
         const statusColor = PLACEMENT_STYLE[feedback.tone].color;
         const statusLabel = feedback.title;
 
@@ -265,7 +265,7 @@ export default function CesiumNeighborhoodView({
   placement,
   onReturnToModel,
 }: CesiumNeighborhoodViewProps) {
-  const placementFeedback = describePlacement(placement);
+  const placementFeedback = describePlacementWithEvidence(placement, parcel);
   const placementStyle = PLACEMENT_STYLE[placementFeedback.tone];
   const PlacementIcon = placementStyle.Icon;
   const containerRef = useRef<HTMLDivElement>(null);

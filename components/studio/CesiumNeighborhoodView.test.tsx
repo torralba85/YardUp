@@ -581,7 +581,7 @@ describe("CesiumNeighborhoodView", () => {
       expect(mockCesium.Color.fromCssColorString).toHaveBeenCalledWith("#A82D16");
     });
     it.each([
-      ["fits", "Fits at this placement", "#176B4C"],
+      ["fits", "Fits the estimated model", "#176B4C"],
       ["review", "Placement needs a closer look", "#8A5300"],
       ["invalid", "Can't evaluate this placement", "#A82D16"],
     ] as const)("shows canonical %s status in both the HUD and ADU label", async (status, title, color) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSetbackEnvelope, describePlacement, REVIEW_SEPARATION_FT, validatePlacement, type PlacementInput } from "./placement-validation";
+import { buildSetbackEnvelope, describePlacement, describePlacementWithEvidence, REVIEW_SEPARATION_FT, validatePlacement, type PlacementInput, type PlacementResult } from "./placement-validation";
 import { rectangleCorners } from "./scene-model";
 import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets } from "./feasibility";
 import { summarizeFeasibility } from "./feasibility-verdict";
@@ -84,5 +84,35 @@ describe("actual placement contract", () => {
   it("rejects self-intersecting rings and nonadjacent edge contact", () => {
     const envelope = [{ x: -20, z: -20 }, { x: 20, z: 20 }, { x: -20, z: 20 }, { x: 20, z: -20 }];
     expect(validatePlacement({ ...base, envelope }).envelopeStatus).toBe("invalid");
+  });
+
+  describe("describePlacementWithEvidence", () => {
+    it("appends missing evidence notice when geometry is estimated and placement fits", () => {
+      const placement = {
+        status: "fits",
+        reasons: [],
+        houseClearanceFt: 15
+      } as unknown as PlacementResult;
+      
+      const presetParcel = { id: "demo" } as unknown as import("./feasibility").Parcel; // no source
+      expect(describePlacementWithEvidence(placement, presetParcel).title).toBe("Fits at this placement");
+      
+      const realParcel = { id: "real", source: "regrid" } as unknown as import("./feasibility").Parcel;
+      const evidence = describePlacementWithEvidence(placement, realParcel);
+      expect(evidence.title).toBe("Fits the estimated model");
+      expect(evidence.missingEvidenceNotice).toContain("Measured boundary or house footprint is unavailable");
+    });
+
+    it("preserves blocked tone without qualification", () => {
+      const placement = {
+        status: "blocked",
+        reasons: [],
+        houseClearanceFt: null
+      } as unknown as PlacementResult;
+      const realParcel = { id: "real", source: "regrid" } as unknown as import("./feasibility").Parcel;
+      const evidence = describePlacementWithEvidence(placement, realParcel);
+      expect(evidence.title).toBe("Doesn't fit at this placement");
+      expect(evidence.missingEvidenceNotice).toBeUndefined();
+    });
   });
 });

@@ -690,3 +690,25 @@ export function describePlacement(result: PlacementResult): PlacementFitStatus {
       : "Clears the buildable envelope and the existing structure.";
   return { title: STATUS_TITLE[result.status], detail, tone: STATUS_TONE[result.status] };
 }
+
+export interface PlacementEvidenceStatus extends PlacementFitStatus {
+  missingEvidenceNotice?: string;
+}
+
+export function describePlacementWithEvidence(
+  result: PlacementResult,
+  parcel?: import('./feasibility').Parcel
+): PlacementEvidenceStatus {
+  const base = describePlacement(result);
+  const isDemoPreset = parcel && !('source' in parcel);
+  
+  if (base.title === "Fits at this placement" && !isDemoPreset) {
+    return {
+      ...base,
+      title: "Fits the estimated model",
+      missingEvidenceNotice: "Measured boundary or house footprint is unavailable. Fit is not zoning approval. Confirm surveyed boundaries and building separations."
+    };
+  }
+  
+  return base;
+}

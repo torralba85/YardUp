@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { CheckCircle2, ChevronDown, TriangleAlert, XCircle } from "lucide-react";
 import type { PlacementResult } from "@/lib/placement-validation";
-import { describePlacement } from "@/lib/placement-validation";
+import { describePlacementWithEvidence } from "@/lib/placement-validation";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
 import type { Parcel } from "@/lib/parcel-types";
 import { updateStudioParcel } from "@/lib/studio-enhancements-store";
@@ -25,7 +25,7 @@ export function SceneStatus({
   isProxy: boolean;
   parcel?: Parcel;
 }) {
-  const status = describePlacement(placement);
+  const status = describePlacementWithEvidence(placement, parcel);
   const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel);
   const needsReview = status.tone !== "clear" || coverage.tone !== "ok";
   const StatusIcon = status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
@@ -66,6 +66,12 @@ export function SceneStatus({
           <p className="mt-1 max-w-prose text-xs leading-5 text-lot-stone">
             {placement.reasons[0]?.message ?? status.detail}
           </p>
+          {status.missingEvidenceNotice && (
+            <p className="mt-1 flex items-start gap-1.5 text-[11px] leading-tight text-status-review font-medium">
+              <TriangleAlert size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {status.missingEvidenceNotice}
+            </p>
+          )}
         </div>
       </div>
 
