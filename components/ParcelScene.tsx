@@ -9,6 +9,8 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition, LIGHTING_PRESETS, type LightingPresetId } from "@/lib/scene-lighting";
 import { getDefaultAduPose, getScenePlacement } from "@/lib/site-fit";
+import { aduSetbacks } from "@/lib/adu-setbacks";
+import type { CapacityBasis } from "@/lib/zoning";
 import { describePlacement } from "@/lib/placement-validation";
 import {
   buildAduSceneModel,
@@ -63,6 +65,8 @@ interface ParcelSceneProps {
   config: ADUConfig;
   isCompliant: boolean;
   remainingCapacity: number;
+  /** What sets the ADU's room: the coverage limit or California's 800 sq ft protection. */
+  capacityBasis?: CapacityBasis;
   /**
    * The committed ADU pose. Optional so the dev measurement harness and the
    * 2D fallback can mount the scene without owning scenario state; when it is
@@ -284,15 +288,15 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: b
   );
 }
 
-/** Setback envelope as dashed clay drafting lines (recorded-fact register). */
-function SetbackLines({ parcel }: { parcel: Parcel }) {
+/** The ADU's setback envelope as dashed clay drafting lines (recorded-fact register). */
+function SetbackLines({ parcel, setbacks }: { parcel: Parcel; setbacks: Parcel["setbacks"] }) {
   const points = useMemo((): [number, number, number][] => {
     const halfWidth = parcel.lotWidth / 2;
     const halfLength = parcel.lotLength / 2;
-    const left = -halfWidth + parcel.setbacks.side;
-    const right = halfWidth - parcel.setbacks.side;
-    const front = halfLength - parcel.setbacks.front;
-    const rear = -halfLength + parcel.setbacks.rear;
+    const left = -halfWidth + setbacks.side;
+    const right = halfWidth - setbacks.side;
+    const front = halfLength - setbacks.front;
+    const rear = -halfLength + setbacks.rear;
     const y = 0.18;
     return [
       [left, y, rear],
@@ -301,7 +305,7 @@ function SetbackLines({ parcel }: { parcel: Parcel }) {
       [left, y, front],
       [left, y, rear],
     ];
-  }, [parcel]);
+  }, [parcel, setbacks]);
 
   return (
     <Line
@@ -322,10 +326,10 @@ function SetbackLines({ parcel }: { parcel: Parcel }) {
  * envelope edge plus overall lot dimensions along the boundary, all derived
  * from the parcel's declared numbers.
  */
-function SetbackDimensions({ parcel }: { parcel: Parcel }) {
+function SetbackDimensions({ parcel, setbacks }: { parcel: Parcel; setbacks: Parcel["setbacks"] }) {
   const hw = parcel.lotWidth / 2;
   const hl = parcel.lotLength / 2;
-  const { front, rear, side } = parcel.setbacks;
+  const { front, rear, side } = setbacks;
   // Sized for the top-down plat framing: the camera pulls back to fit the
   // whole lot, so the chips scale with lot size to stay legible.
   const scale = Math.max(parcel.lotWidth * 0.85, 30);
@@ -777,6 +781,7 @@ export default function ParcelScene({
   config,
   isCompliant,
   remainingCapacity,
+  capacityBasis,
   pose,
   onPoseCommit,
   measurement,
@@ -836,6 +841,7 @@ export default function ParcelScene({
     () => getScenePlacement(parcel, config, activePose),
     [parcel, config, activePose],
   );
+  const envelopeSetbacks = useMemo(() => aduSetbacks(parcel, config), [parcel, config]);
   const placementTone = describePlacement(placement).tone;
 
   // --- Camera framing ------------------------------------------------------
@@ -1060,6 +1066,7 @@ export default function ParcelScene({
         config={config}
         isCompliant={isCompliant}
         remainingCapacity={remainingCapacity}
+        capacityBasis={capacityBasis}
         pose={activePose}
         flowLayout={flowLayout}
       />
@@ -1217,8 +1224,8 @@ export default function ParcelScene({
             {!(scanMode && splatOnly) && (
               <>
                 <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
-                <SetbackLines parcel={parcel} />
-                {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} />}
+                <SetbackLines parcel={parcel} setbacks={envelopeSetbacks} />
+                {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} setbacks={envelopeSetbacks} />}
                 <ProposedAdu
                   config={config}
                   pose={activePose}
@@ -1273,6 +1280,7 @@ export default function ParcelScene({
         parcel={parcel}
         placement={placement}
         remainingCapacity={remainingCapacity}
+        capacityBasis={capacityBasis}
         isProxy={parcelOutline.isProxy}
       />
 
@@ -1370,6 +1378,7 @@ function Parcel2DScene({
   parcel,
   config,
   remainingCapacity,
+  capacityBasis,
   pose,
   flowLayout = false,
 }: ParcelSceneProps) {
@@ -1400,6 +1409,7 @@ function Parcel2DScene({
         parcel={parcel}
         placement={placement}
         remainingCapacity={remainingCapacity}
+        capacityBasis={capacityBasis}
         isProxy={outline.isProxy}
       />
     </div>

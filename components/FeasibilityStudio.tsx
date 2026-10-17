@@ -1024,6 +1024,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           config={config}
           isCompliant={isCompliant}
           remainingCapacity={result.remainingCapacity}
+          capacityBasis={result.capacityBasis}
           flowLayout={!isDesktop}
           pose={pose}
           onPoseCommit={commitPose}

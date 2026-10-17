@@ -12,6 +12,7 @@ import {
   utilityRunDistanceFt,
 } from "@/components/canvas/UtilityTrenchLine";
 import { buildSetbackEnvelope } from "@/lib/placement-validation";
+import { aduSetbacks } from "@/lib/adu-setbacks";
 import { buildExistingHouseSceneModel, rectangleCorners } from "@/lib/scene-model";
 import {
   registerSitePlanCapture,
@@ -90,9 +91,9 @@ export function SceneVisibility({ utilityMode = false }: { utilityMode?: boolean
 
   const innerBoundary = useMemo(() => {
     if (!parcel) return [];
-    const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, parcel.setbacks);
+    const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config));
     return envelope?.map((point) => new THREE.Vector2(point.x, point.z)) ?? [];
-  }, [parcel]);
+  }, [parcel, config]);
 
   const setbackViolated =
     placement?.envelopeStatus === "overflow" || placement?.envelopeStatus === "empty";

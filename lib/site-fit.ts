@@ -7,11 +7,16 @@ import {
 } from "./scene-model";
 import { buildSetbackEnvelope, REVIEW_SEPARATION_FT, validatePlacement, type PlacementResult } from "./placement-validation";
 import { parcelConfidence } from "./parcel-confidence";
+import { aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks";
+import type { CapacityBasis } from "./zoning";
 
-/** Validates a pose against the parcel's setbacks and modeled house. Pass `height` and `roof` to also measure the roof-edge gap. */
+/**
+ * Validates a pose against the ADU's setbacks (`lib/adu-setbacks.ts`) and the modeled house.
+ * Pass `height` and `roof` to also measure the roof-edge gap and apply height-based setbacks.
+ */
 export function getScenePlacement(
   parcel: Parcel,
-  config: Pick<ADUConfig, "width" | "length"> & Partial<Pick<ADUConfig, "height" | "roof">>,
+  config: AduFootprint,
   pose: Pose2D,
 ) {
   const heightModel =
@@ -19,7 +24,7 @@ export function getScenePlacement(
       ? buildAduHeightModel({ width: config.width, length: config.length, height: config.height, roof: config.roof })
       : null;
   return validatePlacement({ aduWidth: config.width, aduLength: config.length, pose,
-    envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, parcel.setbacks),
+    envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config)),
     existingHouseCorners: buildExistingHouseSceneModel(parcel).corners,
     ...(heightModel && {
       aduRoofOverhangFt: heightModel.roofGeometry.overhangFt,
@@ -50,19 +55,20 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
  * position and placement validation reports the conflict: a starting position
  * is a convenience, not a claim that the ADU fits.
  */
-export function getDefaultAduPose(parcel: Parcel, config: Pick<ADUConfig, "width" | "length">): Pose2D {
-  const bounds = getAduPlacementBounds(parcel, config);
+export function getDefaultAduPose(parcel: Parcel, config: AduFootprint): Pose2D {
+  const setbacks = aduSetbacks(parcel, config);
+  const bounds = placementBounds(parcel, setbacks, config);
   const rearBiased: Pose2D = { x: 0, z: Math.min(bounds.minZ + REAR_SETBACK_OFFSET_FT, bounds.maxZ), rotationDeg: 0 };
   const houseModel = buildExistingHouseSceneModel(parcel);
   const house = houseModel.boundsLocal;
   if (!house || !Number.isFinite(config.width) || !Number.isFinite(config.length)) return rearBiased;
 
-  const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, parcel.setbacks);
+  const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, setbacks);
   const candidates: { pose: Pose2D; placement: PlacementResult }[] = [];
   for (const rotationDeg of [0, 90]) {
     const turned = rotationDeg === 90;
     const span = { width: turned ? config.length : config.width, length: turned ? config.width : config.length };
-    const b = getAduPlacementBounds(parcel, span);
+    const b = placementBounds(parcel, setbacks, span);
     const xs = [clamp(0, b.minX, b.maxX), b.minX, b.maxX];
     const behindHouse = house.minZ - REVIEW_SEPARATION_FT - span.length / 2;
     const zs = [
@@ -104,14 +110,19 @@ export interface AduPlacementBounds {
 }
 
 /** Center-point bounds that keep an ADU footprint inside the drawn setbacks. */
-export function getAduPlacementBounds(
+export function getAduPlacementBounds(parcel: Parcel, config: AduFootprint): AduPlacementBounds {
+  return placementBounds(parcel, aduSetbacks(parcel, config), config);
+}
+
+function placementBounds(
   parcel: Parcel,
-  config: Pick<ADUConfig, "width" | "length">,
+  setbacks: AduSetbacks,
+  span: Pick<ADUConfig, "width" | "length">,
 ): AduPlacementBounds {
-  const rawMinX = -parcel.lotWidth / 2 + parcel.setbacks.side + config.width / 2;
-  const rawMaxX = parcel.lotWidth / 2 - parcel.setbacks.side - config.width / 2;
-  const rawMinZ = -parcel.lotLength / 2 + parcel.setbacks.rear + config.length / 2;
-  const rawMaxZ = parcel.lotLength / 2 - parcel.setbacks.front - config.length / 2;
+  const rawMinX = -parcel.lotWidth / 2 + setbacks.side + span.width / 2;
+  const rawMaxX = parcel.lotWidth / 2 - setbacks.side - span.width / 2;
+  const rawMinZ = -parcel.lotLength / 2 + setbacks.rear + span.length / 2;
+  const rawMaxZ = parcel.lotLength / 2 - setbacks.front - span.length / 2;
 
   const xMidpoint = (rawMinX + rawMaxX) / 2;
   const zMidpoint = (rawMinZ + rawMaxZ) / 2;
@@ -124,10 +135,15 @@ export function getAduPlacementBounds(
   };
 }
 
-/** Human-readable modeled coverage capacity for the Studio and certificate. */
+/**
+ * Human-readable modeled coverage capacity for the Studio and certificate.
+ * Pass the result's `capacityBasis` so room that comes from California's
+ * 800 sq ft protection isn't called coverage.
+ */
 export function getSiteFitCapacityStatus(
   remainingCapacity: number,
   parcel?: Parcel,
+  capacityBasis: CapacityBasis = "coverage",
 ): SiteFitCapacityStatus {
   const confidence = parcel ? parcelConfidence(parcel) : undefined;
   if (confidence?.footprintKnown === false) {
@@ -135,6 +151,20 @@ export function getSiteFitCapacityStatus(
   }
 
   const squareFeet = Math.round(Math.abs(remainingCapacity)).toLocaleString();
+  if (capacityBasis === "california-800") {
+    const protection = `California doesn't let lot coverage block an ADU up to 800 sf (Gov. Code § 66321(b)(3)), and this lot's ${confidence?.regulationsEstimated ? "assumed " : ""}coverage limit leaves less than that.`;
+    return remainingCapacity < 0
+      ? {
+          title: `${squareFeet} sf over California's 800 sf ADU protection`,
+          action: `${protection} Reduce the footprint by at least ${squareFeet} sf, or confirm the local coverage limit.`,
+          tone: "warn",
+        }
+      : {
+          title: `${Math.round(remainingCapacity).toLocaleString()} sf of room under California's 800 sf ADU protection`,
+          action: `${protection} Confirm with your city.`,
+          tone: confidence?.regulationsEstimated ? "warn" : "ok",
+        };
+  }
   if (remainingCapacity < 0) {
     return {
       title: `${squareFeet} sf over ${confidence?.regulationsEstimated ? "assumed" : "modeled"} coverage allowance`,

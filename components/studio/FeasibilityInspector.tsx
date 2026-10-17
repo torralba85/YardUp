@@ -15,6 +15,7 @@ import {
 } from "@/lib/feasibility";
 import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
+import { aduSetbacks } from "@/lib/adu-setbacks";
 import ParcelDataNotice from "./ParcelDataNotice";
 import { Button } from "@/components/ui/Button";
 import { PanelHeader } from "@/components/ui/Panel";
@@ -176,6 +177,7 @@ export default function FeasibilityInspector({
 
   const presetParcel = parcelPresets.find((p) => p.id === parcelId) ?? parcelPresets[0];
   const displayParcel = parcelMode === "live" ? parcel : presetParcel;
+  const displaySetbacks = aduSetbacks(displayParcel, config);
   const { footprintKnown, regulationsEstimated, physicalEstimated } = parcelConfidence(displayParcel);
 
   const selectedOption = footprintOptions.find(
@@ -387,8 +389,8 @@ export default function FeasibilityInspector({
                   <Fact label="Zoning" value={String((displayParcel as { zoning: string }).zoning)} />
                 )}
                 <Fact
-                  label="Setbacks"
-                  value={`${displayParcel.setbacks.front}/${displayParcel.setbacks.side}/${displayParcel.setbacks.rear} ft`}
+                  label="ADU Setbacks"
+                  value={`${displaySetbacks.front}/${displaySetbacks.side}/${displaySetbacks.rear} ft`}
                 />
               </div>
               <ParcelDataNotice parcel={displayParcel} />

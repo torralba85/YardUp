@@ -35,6 +35,20 @@ it("keeps legacy fallback dimensions and footprints qualified in every export", 
   }
 });
 
+it("records the backyard home's setbacks and their rule in every export", () => {
+  const parcel = { ...getParcelById("oak-street"), city: "Oceanside, CA 92054", setbacks: { front: 20, rear: 20, side: 5 } };
+  const config = defaultAduConfig;
+  const result = calculateFeasibility(parcel, config, defaultFinancialAssumptions);
+  const input = { parcel, config, result };
+  const label = "20 ft front, 4 ft rear, 4 ft side. California caps ADU side and rear setbacks at 4 ft.";
+  expect(buildReportText(input)).toContain(label);
+  expect(buildReportHtml(input)).toContain(label);
+  const csv = buildReportCsv(input);
+  expect(csv).toContain("Rear Setback (ft),4");
+  expect(csv).toContain("Side Setback (ft),4");
+  expect(csv).toContain("Setback Basis,California caps ADU side and rear setbacks at 4 ft.");
+});
+
 it("keeps unknown county GIS coverage out of text, HTML, and CSV certificates", () => {
   const parcel = { ...getParcelById("oak-street"), source: "county-gis", zoning: "Unknown", existingHouseSqft: 0 };
   const config = defaultAduConfig;

@@ -415,7 +415,7 @@ export default function CertificatePanel({
   const guestPurchaseAction = certPrice.channel === "web"
     ? "Continue to secure checkout"
     : "Continue to purchase";
-  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel);
+  const siteFitStatus = getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis);
   const feeJurisdiction = resolveFeeJurisdiction(parcel);
   const feeThreshold = assessImpactFeeThreshold(result.aduSqft);
   const lockedBidItems = BID_LEVELING_CHECKLIST.length - BID_CHECKLIST_PREVIEW_COUNT;

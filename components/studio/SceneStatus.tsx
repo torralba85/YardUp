@@ -6,6 +6,7 @@ import type { PlacementResult } from "@/lib/placement-validation";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
 import type { Parcel } from "@/lib/parcel-types";
+import type { CapacityBasis } from "@/lib/zoning";
 import { updateStudioParcel } from "@/lib/studio-enhancements-store";
 
 /**
@@ -16,17 +17,19 @@ export function SceneStatus({
   id,
   placement,
   remainingCapacity,
+  capacityBasis,
   isProxy,
   parcel,
 }: {
   id?: string;
   placement: PlacementResult;
   remainingCapacity: number;
+  capacityBasis?: CapacityBasis;
   isProxy: boolean;
   parcel?: Parcel;
 }) {
   const status = describePlacementWithEvidence(placement, parcel);
-  const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel);
+  const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel, capacityBasis);
   const needsReview = status.tone !== "clear" || coverage.tone !== "ok";
   const StatusIcon = status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
   const statusColor = status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";

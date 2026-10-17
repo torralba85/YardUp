@@ -13,7 +13,7 @@ import type { Pose2D } from "./scene-model";
  */
 import type { Parcel } from "./parcel-types";
 export type { Parcel } from "./parcel-types";
-import { calculateZoning } from "./zoning";
+import { calculateZoning, type CapacityBasis } from "./zoning";
 import { calculateFinance } from "./finance";
 import type {
   MarketData,
@@ -98,8 +98,13 @@ export interface FeasibilityResult {
   totalFootprint: number;
   /** Maximum buildable footprint allowed by the lot coverage limit. */
   allowedFootprint: number;
-  /** Allowed footprint minus total footprint; negative means over-built. */
+  /**
+   * Room left for the ADU under {@link capacityBasis}: the coverage allowance
+   * minus the total footprint, or 800 sq ft minus the ADU. Negative means over.
+   */
   remainingCapacity: number;
+  /** What sets the room: the coverage limit, or California's 800 sq ft protection. Absent on older saves. */
+  capacityBasis?: CapacityBasis;
   /** Total footprint as a percentage of lot area. */
   coveragePercent: number;
   /** The parcel's maximum allowed lot coverage percentage. */
