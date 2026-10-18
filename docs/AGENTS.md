@@ -66,7 +66,7 @@ REGRID_API_KEY=<server-side Regrid Parcel API key>
 Server-side provider credentials are stored in Google Secret Manager and bound
 only to the Functions that use them; they are not duplicated in GitHub Actions.
 
-Without API keys the app runs in demo mode with 3 presets (Seattle, Portland, Austin).
+Without API keys the app runs in demo mode with 4 presets (Seattle, Portland, Austin, San Diego).
 
 ---
 

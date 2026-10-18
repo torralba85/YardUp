@@ -10,11 +10,11 @@ owners still land on the address-first workspace.
 | Path | Screens | Account |
 |---|---|---|
 | Explore my property | Welcome → Sign in → Quick guide → address workspace | Required |
-| Try a demo city (Seattle, Portland, Austin) | Welcome → Quick guide → Studio on that lot | Not required |
+| Try a demo city (Seattle, Portland, Austin, San Diego) | Welcome → Quick guide → Studio on that lot | Not required |
 | Returning member who has read the guide | Straight to the address workspace | Already signed in |
 
 - **Welcome** introduces LotFoundry with labelled concept artwork. The primary
-  action is *Explore my property*; the three demo cities sit below it.
+  action is *Explore my property*; the four demo cities sit below it.
 - **Sign in** explains why an account is needed and opens the existing
   authentication dialog. Dismissing it keeps the visitor on this screen; a
   completed sign-in replaces it with the guide.

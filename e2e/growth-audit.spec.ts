@@ -36,16 +36,19 @@ test("market demo, full sample, and keyboard dismissal agree", async ({ page }, 
 });
 
 test("city pages have static local numbers, a self canonical, and the matching demo", async ({ page, request }) => {
-  for (const [city, label, parcel, rent] of [
-    ["seattle", "Seattle", "oak-street", "$2,350"],
-    ["portland", "Portland", "corner-lot", "$2,600"],
-    ["austin", "Austin", "compact-lot", "$2,150"],
+  for (const [city, label, parcel, rent, demoName] of [
+    ["seattle", "Seattle", "oak-street", "$2,350", "Oak Street"],
+    ["portland", "Portland", "corner-lot", "$2,600", "Linden Avenue"],
+    ["austin", "Austin", "compact-lot", "$2,150", "Mesa Court"],
+    ["san-diego", "San Diego", "coyote-brush", "$2,754", "Coyote Brush Court"],
   ]) {
     const sample = await request.get(`/sample-certificate/${city}`);
     expect(sample.headers()["x-frame-options"]).toBe("SAMEORIGIN");
     expect(sample.headers()["x-robots-tag"]).toContain("noindex");
     const response = await request.get(`/${city}`);
+    expect(response.status()).toBe(200);
     const html = await response.text();
+    expect(html).toContain(demoName);
     expect(html).toContain(`https://lotfoundry.net/${city}`);
     expect(html).toContain(`${label} ADU Feasibility`);
     expect(html).toContain(rent);
@@ -54,9 +57,9 @@ test("city pages have static local numbers, a self canonical, and the matching d
     await expect(link).toContainText(rent);
     expect(new URLSearchParams((await link.getAttribute("href"))!.split("?")[1]).get("parcel")).toBe(parcel);
   }
-  const redirect = await request.get("/san-diego", { maxRedirects: 0 });
-  expect(redirect.status()).toBe(308);
-  expect(redirect.headers().location).toContain("/adu/ca/san-diego/cost");
+  const costGuide = await request.get("/adu/ca/san-diego/cost");
+  expect(costGuide.status()).toBe(200);
+  expect(await costGuide.text()).toContain("San Diego");
   const unknown = await request.get("/unsupported-city");
   expect(unknown.status()).toBe(404);
 });

@@ -150,7 +150,7 @@ Take verbatim values from `docs/play-declarations.md`:
   `node scripts/capture-store-screenshots.mjs https://lotfoundry.net`.
 - **App content** — ads, target age, app access, data deletion, financial
   features. App access needs a working reviewer account; note that the demo-lot
-  path (Seattle, Portland, Austin) runs the full journey with no sign-in.
+  path (Seattle, Portland, Austin, San Diego) runs the full journey with no sign-in.
 - **Data safety** — the marketplace sharing disclosure is the only third-party
   sharing claim. Everything collected is encrypted in transit.
 - **Content rating** — IARC questionnaire; digital-goods purchases are `Yes`.

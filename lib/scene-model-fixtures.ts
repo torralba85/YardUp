@@ -61,7 +61,7 @@ export function irregularPolygon(lat: number, lng: number): GeoJsonPolygon {
   return { type: "Polygon", coordinates: [ring] };
 }
 
-/** The three demo presets used across the studio (Seattle/Portland/Austin), re-exported so tests don't hand-copy their numbers. */
+/** The four demo presets used across the studio (Seattle/Portland/Austin/San Diego), re-exported so tests don't hand-copy their numbers. */
 export const demoPresets: ParcelPreset[] = parcelPresets;
 
 /** A live parcel whose real boundary sits at true compass bearing 30° (clockwise from north) relative to the local axes — the oriented-dimension case D3 is about. */

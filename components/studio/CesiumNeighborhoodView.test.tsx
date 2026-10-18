@@ -167,6 +167,12 @@ function lastSetViewPose() {
 }
 
 describe("CesiumNeighborhoodView", () => {
+  it("uses downtown San Diego as ungeocoded context for the fictional preset", async () => {
+    renderView({ parcel: parcelPresets[3] });
+    await waitFor(() => expect(mockCesium.Viewer).toHaveBeenCalled());
+    expect(mockCesium.Cartesian3.fromDegrees).toHaveBeenCalledWith(-117.1611, 32.7157, expect.any(Number));
+    expect(screen.getByText(/32.71570°N, 117.16110°W/)).toHaveTextContent("(City Default)");
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mockCameraFlyTo.mockImplementation((options) => options.complete?.());

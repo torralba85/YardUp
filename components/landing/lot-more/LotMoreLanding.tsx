@@ -741,8 +741,8 @@ export function LotMoreLanding({
                   {(scenario.expenseRatio * 100).toFixed(1)}% of gross rent;
                   estimated annual net operating income is {money(scenario.noi)}{" "}
                   before financing and income tax. Simple payback uses the
-                  central project estimate divided by this operating income.
-                  Demo rent bands are curated assumptions. Artwork is illustrative.
+                  central project estimate divided by this operating income.{" "}
+                  {demo.note ?? "Demo rent bands are curated assumptions."} Artwork is illustrative.
                 </p>
               </details>
               <a href="#start" className={styles.textLink} onClick={focusHeroAddress}>
@@ -1011,7 +1011,7 @@ export function LotMoreLanding({
                 ],
                 [
                   "Can I check my address?",
-                  "Yes. Your first address lookup needs no account — enter it above and the studio opens on your own lot. Create a free account to look up more. Available parcel and market detail varies by location, and the studio identifies its assumptions and anything missing. Seattle, Portland, and Austin demo lots are always open.",
+                  "Yes. Your first address lookup needs no account — enter it above and the studio opens on your own lot. Create a free account to look up more. Available parcel and market detail varies by location, and the studio identifies its assumptions and anything missing. Seattle, Portland, Austin, and San Diego demo lots are always open.",
                 ],
                 [
                   "How are the estimates calculated?",
@@ -1090,6 +1090,7 @@ export function LotMoreLanding({
                   <li><Link href="/seattle">{landingDemos.seattle.name} demo, {landingDemos.seattle.city}</Link></li>
                   <li><Link href="/portland">{landingDemos.portland.name} demo, {landingDemos.portland.city}</Link></li>
                   <li><Link href="/austin">{landingDemos.austin.name} demo, {landingDemos.austin.city}</Link></li>
+                  <li><Link href="/san-diego">{landingDemos["san-diego"].name} demo, {landingDemos["san-diego"].city}</Link></li>
                 </ul>
               </div>
               <div className={styles.footerGroup}>

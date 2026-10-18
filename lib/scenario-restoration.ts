@@ -20,7 +20,8 @@ export interface ProjectBriefState {
 export function calculateScenarioFeasibility(
   parcel: Parcel & { expectedRent?: Record<RentScenario, number> }, config: ADUConfig, assumptions: FinancialAssumptions, pose: Pose2D,
 ) {
-  const base = calculateFeasibility(parcel, config, assumptions, parcel.expectedRent);
+  // Demo presets resolve their own bedroom-specific market data; retain live-parcel overrides.
+  const base = calculateFeasibility(parcel, config, assumptions, "source" in parcel ? parcel.expectedRent : undefined);
   const placement = getScenePlacement(parcel, config, pose);
   const totalHeight = buildAduHeightModel(config)?.totalHeight;
   return {
