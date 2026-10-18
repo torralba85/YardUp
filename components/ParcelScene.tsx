@@ -1262,7 +1262,7 @@ export default function ParcelScene({
                 className="h-11 gap-1.5 px-3 leading-none aria-[checked=false]:text-lot-ink aria-[checked=false]:hover:bg-lot-ink/5"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="text-xs font-medium">{label}</span>
+                <span className="whitespace-nowrap text-xs font-medium">{label}</span>
               </Button>
             );
           })}
