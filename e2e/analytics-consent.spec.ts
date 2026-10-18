@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { devices, expect, test } from "@playwright/test";
 
 /**
  * Consent gating for Google Analytics.
@@ -146,3 +146,41 @@ test.describe("analytics consent", () => {
     expect(cookies.filter((cookie) => cookie.name.startsWith("_ga") || cookie.name.startsWith("_gcl_") || cookie.name.startsWith("_gac_"))).toEqual([]);
   });
 });
+
+test.describe("phone banner layout", () => {
+  // Not `...devices["iPhone 13"]`: that carries `defaultBrowserType: "webkit"`,
+  // which Playwright rejects inside a describe group.
+  test.use({ viewport: devices["iPhone 13"].viewport, isMobile: true, hasTouch: true });
+
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, "webdriver", {
+        configurable: true,
+        get: () => false,
+      });
+    });
+  });
+
+  test("the phone banner leaves the hero address field visible", async ({ page }) => {
+    await page.goto("/");
+    test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
+
+    const consentBanner = page.getByRole("region", { name: banner });
+    await expect(consentBanner).toBeVisible();
+
+    const bannerBox = await consentBanner.boundingBox();
+    expect(bannerBox).not.toBeNull();
+
+    const submitButton = page
+      .locator("#hero-address")
+      .locator("xpath=ancestor::form")
+      .getByRole("button", { name: /explore my lot/i });
+    await expect(submitButton).toBeVisible();
+
+    const submitBox = await submitButton.boundingBox();
+    expect(submitBox).not.toBeNull();
+
+    expect(bannerBox!.y).toBeGreaterThanOrEqual(submitBox!.y + submitBox!.height);
+  });
+});
+
