@@ -19,6 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/seattle",
     "/portland",
     "/austin",
+    "/san-diego",
     "/about",
     "/help",
     "/feedback",

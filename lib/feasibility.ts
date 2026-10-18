@@ -183,6 +183,19 @@ export const parcelPresets: ParcelPreset[] = [
     setbacks: { front: 15, rear: 15, side: 5 },
     expectedRent: { conservative: 1850, market: 2150, optimistic: 2450 },
   },
+  {
+    id: "coyote-brush",
+    name: "San Diego RS-1-7 Lot",
+    address: "1234 Coyote Brush Court", // Fictional; no such county street in OpenStreetMap (2026-10-17).
+    city: "San Diego, CA 92117",
+    lotArea: 5000, // SDMC § 131.0431 Table 131-04D: RS-1-7 minimum 5,000 sf, 50 ft wide, 95 ft deep.
+    lotWidth: 50,
+    lotLength: 100,
+    existingHouseSqft: 1400, // Illustrative; no primary source.
+    maxLotCoveragePercent: 60, // No flat-lot coverage cap; 0.60 FAR (Table 131-04J) models a single-story footprint at 60%.
+    setbacks: { front: 15, rear: 13, side: 4 }, // RS-1-7 base zone (Table 131-04D); ADU side/rear: lib/adu-setbacks.ts.
+    expectedRent: { conservative: 2459, market: 2754, optimistic: 3074 }, // HUD FY2026 San Diego County 1BR FMR; standard 1.0/1.12/1.25 spreads.
+  },
 ];
 
 /**

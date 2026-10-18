@@ -11,6 +11,7 @@ import {
 } from "@/lib/feasibility";
 import { mergeScenarioPartial, parseScenarioParams } from "@/lib/scenario-url";
 import { landingDemos, landingScenarios } from "@/lib/landing-demo";
+import SanDiegoPage, { metadata as sanDiegoMetadata } from "@/app/san-diego/page";
 
 const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
@@ -64,6 +65,21 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 describe("landing address handoff", () => {
+  it("renders the San Diego page with its own metadata, kicker, demo and provenance", () => {
+    render(<SanDiegoPage />);
+    expect(sanDiegoMetadata.alternates?.canonical).toBe("https://lotfoundry.net/san-diego");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Explore an ADU on your lot in 3D.");
+    expect(screen.getByText("San Diego ADU feasibility · see what fits your lot")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("$2,754");
+    expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("Coyote Brush Court");
+    fireEvent.click(screen.getByText("What’s behind these numbers?"));
+    const note = "Rent bands start from HUD's FY2026 Fair Market Rent for a one-bedroom in San Diego County ($2,459/mo), plus the studio's standard 12% and 25% spreads. The lot follows San Diego's RS-1-7 minimums; the address is fictional, and coverage is modeled at 60% because the city limits floor area (0.60 FAR), not flat-lot coverage.";
+    expect(landingDemos["san-diego"].note).toBe(note);
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent?.includes(note) === true)).toBeVisible();
+    for (const city of ["seattle", "portland", "austin"] as const) {
+      expect(landingDemos[city].note).toBe("Demo rent bands are curated assumptions.");
+    }
+  });
   it("uses one descriptive H1 while retaining the brand display", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
@@ -95,7 +111,7 @@ describe("landing address handoff", () => {
     }
   });
 
-  it.each(["seattle", "portland", "austin"] as const)("names the %s demo consistently and keeps the Seattle capture label", (city) => {
+  it.each(["seattle", "portland", "austin", "san-diego"] as const)("names the %s demo consistently and keeps the Seattle capture label", (city) => {
     render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
     const demo = landingDemos[city];
     const sample = screen.getByRole("link", { name: `Open the ${demo.city} sample lot in the 3D studio` });
@@ -104,7 +120,7 @@ describe("landing address handoff", () => {
     expect(screen.getByText("Oak Street demo, Seattle", { selector: "span" })).toBeVisible();
     const footer = screen.getByRole("contentinfo");
     for (const item of Object.values(landingDemos)) {
-      expect(within(footer).getByRole("link", { name: `${item.name} demo, ${item.city}` })).toHaveAttribute("href", `/${item.city.toLowerCase()}`);
+      expect(within(footer).getByRole("link", { name: `${item.name} demo, ${item.city}` })).toHaveAttribute("href", `/${item.city.toLowerCase().replaceAll(" ", "-")}`);
     }
   });
 

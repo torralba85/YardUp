@@ -42,7 +42,7 @@ describe("buildExistingHouseFootprint — D1 area agreement", () => {
     expect(footprint.areaSqft).toBe(1380);
   });
 
-  it("preserves the declared existingHouseSqft exactly for all three demo presets", () => {
+  it("preserves the declared existingHouseSqft exactly for all demo presets", () => {
     for (const parcel of demoPresets) {
       const footprint = buildExistingHouseFootprint(parcel);
       expect(footprint.width).not.toBeNull();

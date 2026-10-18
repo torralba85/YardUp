@@ -298,6 +298,9 @@ export default function CesiumNeighborhoodView({
     if (city.includes("austin")) {
       return { lat: 30.2672, lng: -97.7431, isGeocoded: false };
     }
+    if (city.includes("san diego")) {
+      return { lat: 32.7157, lng: -117.1611, isGeocoded: false };
+    }
     // Seattle default
     return { lat: 47.6917, lng: -122.3488, isGeocoded: false };
   }, [parcel]);

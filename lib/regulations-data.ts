@@ -3,7 +3,8 @@
  *
  * The first three ids (`oak-street`, `corner-lot`, `compact-lot`) double as the
  * demo parcel presets, mapping to Seattle, Portland, and Austin respectively;
- * the remainder are real city jurisdictions. `local-review` is the fallback for
+ * Coyote Brush aliases the existing San Diego entry. The remainder are real
+ * city jurisdictions. `local-review` is the fallback for
  * addresses that aren't mapped yet.
  *
  * @module regulations-data
@@ -270,5 +271,6 @@ export function inferJurisdiction(address: string): JurisdictionId {
   if (normalized.includes("oak street")) return "oak-street";
   if (normalized.includes("linden")) return "corner-lot";
   if (normalized.includes("mesa court")) return "compact-lot";
+  if (normalized.includes("coyote brush")) return "san-diego";
   return "local-review";
 }

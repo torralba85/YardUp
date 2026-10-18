@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { inferJurisdiction, regulationGuides } from "./regulations-data";
+import { getParcelById } from "./feasibility";
 
 describe("regulations data layers", () => {
+  it("maps the fictional San Diego preset to the existing city guide", () => {
+    const parcel = getParcelById("coyote-brush");
+    expect(inferJurisdiction(parcel.address)).toBe("san-diego");
+    expect(inferJurisdiction(`${parcel.address}, ${parcel.city}`)).toBe("san-diego");
+    expect(regulationGuides[inferJurisdiction(parcel.address)]).toBe(regulationGuides["san-diego"]);
+    expect(inferJurisdiction("1234 Coyote Brush Court, Denver, CO")).toBe("denver");
+  });
   it("resolves specific cities correctly", () => {
     expect(inferJurisdiction("123 Oak St, Denver, CO 80202")).toBe("denver");
     expect(inferJurisdiction("812 Linden Ave, Portland, OR")).toBe("corner-lot");
