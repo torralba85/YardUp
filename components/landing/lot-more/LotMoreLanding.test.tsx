@@ -10,7 +10,7 @@ import {
   parcelPresets,
 } from "@/lib/feasibility";
 import { mergeScenarioPartial, parseScenarioParams } from "@/lib/scenario-url";
-import { landingScenarios } from "@/lib/landing-demo";
+import { landingDemos, landingScenarios } from "@/lib/landing-demo";
 
 const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
@@ -64,6 +64,67 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 describe("landing address handoff", () => {
+  it("uses one descriptive H1 while retaining the brand display", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Explore an ADU on your lot in 3D.");
+    expect(screen.getByText(/A LOT\s*MORE/).tagName).toBe("P");
+  });
+
+  it("opens the sample on its estimates page", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const pages = screen.getByRole("radiogroup", { name: "Sample report pages" });
+    expect(within(pages).getByRole("radio", { name: "The estimates", checked: true })).toBeVisible();
+    expect(within(screen.getByRole("article", { name: "Sample feasibility report" })).getByRole("heading", { name: /A clearer\s*financial picture\./ })).toBeVisible();
+  });
+
+  it.each([false, true])("focuses the hero address from start links (motion allowed: %s)", (motionAllowed) => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const input = document.getElementById("hero-address")!;
+    const scroll = vi.fn();
+    input.scrollIntoView = scroll;
+    const focus = vi.spyOn(input, "focus");
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: motionAllowed }));
+    for (const name of ["Start with my lot", "Explore your own numbers", "Explore my lot"]) {
+      const link = screen.getByRole("link", { name });
+      expect(link).toHaveAttribute("href", "#start");
+      fireEvent.click(link);
+      expect(input).toHaveFocus();
+      expect(scroll).toHaveBeenLastCalledWith({ block: "center", behavior: motionAllowed ? "smooth" : "instant" });
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    }
+  });
+
+  it.each(["seattle", "portland", "austin"] as const)("names the %s demo consistently and keeps the Seattle capture label", (city) => {
+    render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
+    const demo = landingDemos[city];
+    const sample = screen.getByRole("link", { name: `Open the ${demo.city} sample lot in the 3D studio` });
+    expect(sample).toHaveTextContent(`${demo.name} demo, ${demo.city} · market rent · open it in 3D`);
+    expect(screen.getByText(`${demo.name.toUpperCase()} DEMO, ${demo.city.toUpperCase()} · 600 SQ FT · 1 BED CONCEPT`)).toBeVisible();
+    expect(screen.getByText("Oak Street demo, Seattle", { selector: "span" })).toBeVisible();
+    const footer = screen.getByRole("contentinfo");
+    for (const item of Object.values(landingDemos)) {
+      expect(within(footer).getByRole("link", { name: `${item.name} demo, ${item.city}` })).toHaveAttribute("href", `/${item.city.toLowerCase()}`);
+    }
+  });
+
+  it("uses an upward arrow for back to top", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    const link = screen.getByRole("link", { name: "Back to top" });
+    expect(link).toHaveAttribute("href", "#start");
+    expect(link.querySelector("svg")).toHaveClass("lucide-arrow-up");
+  });
+
+  it("changes the concrete pillar lead with the selection", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.getByText("A 600 sq ft, one-bedroom concept.")).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: "For income" }));
+    expect(screen.getByText(`$${scenarios[1].rent.toLocaleString("en-US")}/mo estimated market rent in this demo.`)).toBeVisible();
+    expect(screen.queryByText("A 600 sq ft, one-bedroom concept.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /For what/ }));
+    expect(screen.getByText("One concept, many uses over time.")).toBeVisible();
+  });
+
   it("starts at market rent and keeps the report and expanded NOI synchronized for every assumption", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     const group = screen.getByRole("radiogroup", { name: "Demo rent assumption" });

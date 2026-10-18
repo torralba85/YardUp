@@ -27,7 +27,8 @@ describe("CookieConsentBanner", () => {
     expect(await screen.findByRole("region", { name: /cookie consent/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /decline/i })).toBeInTheDocument();
-    expect(screen.getByText(/Google Ads conversion measurement/i)).toBeInTheDocument();
+    expect(screen.getByText(/Google Analytics/i)).toBeInTheDocument();
+    expect(screen.getByText(/Google Ads/i)).toBeInTheDocument();
   });
 
   it("renders nothing when no measurement ID is configured", () => {
@@ -92,5 +93,15 @@ describe("CookieConsentBanner", () => {
 
     const link = await screen.findByRole("link", { name: /privacy policy/i });
     expect(link).toHaveAttribute("href", "/privacy");
+  });
+
+  it("renders Accept and Decline with equal visual weight and identical variant classes", async () => {
+    render(<CookieConsentBanner />);
+
+    const accept = await screen.findByRole("button", { name: /accept/i });
+    const decline = screen.getByRole("button", { name: /decline/i });
+
+    expect(accept.className).toBe(decline.className);
+    expect(accept.className).toContain("border-lot-stone");
   });
 });

@@ -107,11 +107,11 @@ test.describe("A lot more landing", () => {
     // The landing opens on the market case, matching the hero and the Studio sample link.
     await expect(numbers.getByText("$2,350", { exact: false })).toBeVisible();
     await expect(numbers.getByText("13.2", { exact: false })).toBeVisible();
-    await expect(numbers.getByText(/SEATTLE DEMO/)).toBeVisible();
+    await expect(numbers.getByText(/OAK STREET DEMO, SEATTLE/)).toBeVisible();
     await numbers.locator("summary").click();
     await expect(
       numbers.getByText(
-        /curated Seattle demo, calculated by the studio engine/,
+        /curated Oak Street demo in Seattle, calculated by the studio engine/,
       ),
     ).toBeVisible();
     await expect(
@@ -167,7 +167,7 @@ test.describe("A lot more landing", () => {
     });
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: /A LOT MORE/ }),
+      page.getByRole("heading", { level: 1, name: "Explore an ADU on your lot in 3D." }),
     ).toBeVisible();
     await expect(page.locator("#hero-address")).toBeVisible();
     expect(requests).toEqual([]);

@@ -6,7 +6,7 @@ test.describe("Public LotFoundry flows", () => {
 
     await expect(page).toHaveTitle("ADU Feasibility Check: Rent, Cost & Payback | LotFoundry");
     await expect(
-      page.getByRole("heading", { name: /A LOT MORE/i }),
+      page.getByRole("heading", { level: 1, name: "Explore an ADU on your lot in 3D." }),
     ).toBeVisible();
     // The property illustration anchors the new landing hero.
     await expect(

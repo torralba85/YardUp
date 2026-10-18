@@ -6,12 +6,14 @@ import {
   useState,
   useSyncExternalStore,
   type FormEvent,
+  type MouseEvent,
 } from "react";
 import dynamic from "next/dynamic";
 import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   Facebook,
   Instagram,
@@ -71,21 +73,6 @@ const money = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const intentions = [
-  {
-    label: "For family",
-    copy: "Keep the people you love nearby, with a little more independence for everyone.",
-  },
-  {
-    label: "For income",
-    copy: "Explore what a small home could earn, and what it might take to bring it to life.",
-  },
-  {
-    label: "For what’s next",
-    copy: "A home for grown children, future plans, or the life you haven’t quite imagined yet.",
-  },
-];
-
 function Eyebrow({
   number,
   children,
@@ -139,7 +126,7 @@ export function LotMoreLanding({
   const [scene, setScene] = useState(2);
   const [intention, setIntention] = useState(0);
   const [scenarioIndex, setScenarioIndex] = useState(() => Math.max(0, scenarios.findIndex((item) => item.id === "market")));
-  const [reportTab, setReportTab] = useState(0);
+  const [reportTab, setReportTab] = useState(1);
   const [sampleOpen, setSampleOpen] = useState(false);
   const [mobileCta, setMobileCta] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -158,6 +145,23 @@ export function LotMoreLanding({
   const router = useRouter();
   const scenario = scenarios[scenarioIndex];
   const sample = scenarios.find((item) => item.id === "market") ?? scenarios[0];
+  const intentions = [
+    {
+      label: "For family",
+      lead: "A 600 sq ft, one-bedroom concept.",
+      copy: "Keep the people you love nearby, with a little more independence for everyone.",
+    },
+    {
+      label: "For income",
+      lead: `${money(sample.rent)}/mo estimated market rent in this demo.`,
+      copy: "Explore what a small home could earn, and what it might take to bring it to life.",
+    },
+    {
+      label: "For what’s next",
+      lead: "One concept, many uses over time.",
+      copy: "A home for grown children, future plans, or the life you haven’t quite imagined yet.",
+    },
+  ];
   const reportScenario = scenario;
   const sampleHref = `/studio?${serializeScenarioParams({
     ...defaultScenarioState,
@@ -211,6 +215,16 @@ export function LotMoreLanding({
       return;
     }
     setAuthOpen(true);
+  }
+
+  function focusHeroAddress(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    const input = document.getElementById("hero-address");
+    input?.scrollIntoView({
+      block: "center",
+      behavior: window.matchMedia("(prefers-reduced-motion: no-preference)").matches ? "smooth" : "instant",
+    });
+    input?.focus({ preventScroll: true });
   }
 
   function addressForm(id: string) {
@@ -296,7 +310,7 @@ export function LotMoreLanding({
                 <ArrowUpRight size={15} aria-hidden="true" />
               </Link>
             )}
-            <a className={styles.headerCta} href="#start">
+            <a className={styles.headerCta} href="#start" onClick={focusHeroAddress}>
               Explore my lot
               <ArrowUpRight size={16} aria-hidden="true" />
             </a>
@@ -357,12 +371,12 @@ export function LotMoreLanding({
                 <span />
                 {city === "seattle" ? "Small homes. Big possibility." : `${demo.city} ADU feasibility · see what fits your lot`}
               </p>
-              <h1>
+              <p className={styles.heroDisplay}>
                 A LOT
                 <br />
                 MORE<span className={styles.orange}>.</span>
-              </h1>
-              <p className={styles.heroLead}>Explore a backyard home in 3D.</p>
+              </p>
+              <h1 className={styles.heroLead}>Explore an ADU on your lot in 3D.</h1>
               <p className={styles.heroDescription}>
                 See what could fit, compare estimated build costs, and explore
                 rental potential.
@@ -409,7 +423,7 @@ export function LotMoreLanding({
                   </div>
                 </dl>
                 <span className={styles.sampleCta}>
-                  {demo.city} demo lot · {sample.id} rent · open it in 3D
+                  {demo.name} demo, {demo.city} · {sample.id} rent · open it in 3D
                   <ArrowRight size={17} aria-hidden="true" />
                 </span>
               </Link>
@@ -562,7 +576,7 @@ export function LotMoreLanding({
               <figure className={styles.studioDemo}>
                 <div className={styles.demoLabel}>
                   <span>Studio preview</span>
-                  <span>Seattle demo</span>
+                  <span>{landingDemos.seattle.name} demo, {landingDemos.seattle.city}</span>
                 </div>
                 <picture>
                   <source
@@ -643,7 +657,7 @@ export function LotMoreLanding({
                   }))}
                 />
               </div>
-              <p aria-live="polite">{intentions[intention].copy}</p>
+              <p aria-live="polite"><strong>{intentions[intention].lead}</strong> {intentions[intention].copy}</p>
             </div>
           </section>
 
@@ -670,7 +684,7 @@ export function LotMoreLanding({
             <div className={styles.scenarioBar}>
               <span>
                 <span className={styles.orangeDot} />
-                {demo.city.toUpperCase()} DEMO · 600 SQ FT · 1 BED CONCEPT
+                {demo.name.toUpperCase()} DEMO, {demo.city.toUpperCase()} · 600 SQ FT · 1 BED CONCEPT
               </span>
               <Segmented
                 aria-label="Demo rent assumption"
@@ -720,7 +734,7 @@ export function LotMoreLanding({
                   <Plus size={17} aria-hidden="true" />
                 </summary>
                 <p>
-                  A curated {demo.city} demo, calculated by the studio engine: 600
+                  The curated {demo.name} demo in {demo.city}, calculated by the studio engine: 600
                   sq ft, cedar finish, shed roof, openings included. Base
                   construction is $340/sq ft, with an 18% soft-cost allowance.
                   Operating expenses use{" "}
@@ -731,7 +745,7 @@ export function LotMoreLanding({
                   Demo rent bands are curated assumptions. Artwork is illustrative.
                 </p>
               </details>
-              <a href="#start" className={styles.textLink}>
+              <a href="#start" className={styles.textLink} onClick={focusHeroAddress}>
                 Explore your own numbers
                 <ArrowUpRight size={19} aria-hidden="true" />
               </a>
@@ -790,18 +804,6 @@ export function LotMoreLanding({
                 <li><strong>Spot questions before requesting quotes.</strong> Review modeled setbacks, coverage, utility scope, and fee checks.</li>
                 <li><strong>Give builders the same brief.</strong> Bring a 12-item scope checklist and a printable PDF to your next conversation.</li>
               </ul>
-              <div className={styles.offerActions}>
-              <button type="button" className={styles.textLink} onClick={() => setSampleOpen(true)}>
-                View full sample / save PDF <ArrowUpRight size={18} aria-hidden="true" />
-              </button>
-              <a href="#start" className={styles.darkButton}>
-                Start with my lot <ArrowUpRight size={18} aria-hidden="true" />
-              </a>
-              </div>
-              <p className={styles.reportPrice}>
-                The complete certificate is an optional one-time purchase.
-                Review it in the studio before checkout.
-              </p>
             </div>
             <div className={styles.reportPreview}>
               <Segmented
@@ -922,8 +924,8 @@ export function LotMoreLanding({
                         </div>
                       </dl>
                       <p className={styles.paperDetail}>
-                        Same 600 sq ft {demo.city} demo and selected rent assumption
-                        as above. The full sample adds the financing comparison.
+                        Same 600 sq ft {demo.name} demo, {demo.city}, and selected
+                        rent assumption as above. The full sample adds the financing comparison.
                       </p>
                     </>
                   )}
@@ -966,6 +968,20 @@ export function LotMoreLanding({
               <p className={styles.previewNote}>
                 Sample Certificate of Feasibility summary. Create yours in the
                 studio.
+              </p>
+            </div>
+            <div className={styles.reportActions}>
+              <div className={styles.offerActions}>
+              <button type="button" className={styles.textLink} onClick={() => setSampleOpen(true)}>
+                View full sample / save PDF <ArrowUpRight size={18} aria-hidden="true" />
+              </button>
+              <a href="#start" className={styles.darkButton} onClick={focusHeroAddress}>
+                Start with my lot <ArrowUpRight size={18} aria-hidden="true" />
+              </a>
+              </div>
+              <p className={styles.reportPrice}>
+                The complete certificate is an optional one-time purchase.
+                Review it in the studio before checkout.
               </p>
             </div>
           </section>
@@ -1071,9 +1087,9 @@ export function LotMoreLanding({
               <div className={styles.footerGroup}>
                 <h3>Demo lots</h3>
                 <ul>
-                  <li><Link href="/seattle">Seattle ADU demo</Link></li>
-                  <li><Link href="/portland">Portland ADU demo</Link></li>
-                  <li><Link href="/austin">Austin ADU demo</Link></li>
+                  <li><Link href="/seattle">{landingDemos.seattle.name} demo, {landingDemos.seattle.city}</Link></li>
+                  <li><Link href="/portland">{landingDemos.portland.name} demo, {landingDemos.portland.city}</Link></li>
+                  <li><Link href="/austin">{landingDemos.austin.name} demo, {landingDemos.austin.city}</Link></li>
                 </ul>
               </div>
               <div className={styles.footerGroup}>
@@ -1090,7 +1106,7 @@ export function LotMoreLanding({
               className={styles.backTop}
               aria-label="Back to top"
             >
-              <ArrowUpRight size={27} aria-hidden="true" />
+              <ArrowUp size={27} aria-hidden="true" />
             </a>
           </div>
           <div className={styles.footerNote}>
@@ -1153,7 +1169,7 @@ export function LotMoreLanding({
 
         {sampleOpen && <SampleCertificateDialog city={city} onClose={() => setSampleOpen(false)} />}
         {mobileCta && (
-          <a className={styles.stickyCta} href="#start">
+          <a className={styles.stickyCta} href="#start" onClick={focusHeroAddress}>
             Explore my lot
             <ArrowUpRight size={18} aria-hidden="true" />
           </a>

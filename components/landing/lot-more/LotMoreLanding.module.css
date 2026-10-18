@@ -204,6 +204,8 @@
   background: var(--line);
 }
 .signIn {
+  min-width: 44px;
+  justify-content: center;
   font-size: 14px;
   gap: 7px;
 }
@@ -275,7 +277,8 @@
   background: var(--orange);
   border-radius: 50%;
 }
-.hero h1 {
+.hero .heroDisplay {
+  font-family: var(--font-lot-display), Arial, sans-serif;
   font-size: clamp(90px, 10vw, 164px);
   font-weight: 600;
   letter-spacing: -0.075em;
@@ -284,6 +287,9 @@
 }
 .orange {
   color: var(--orange);
+}
+.hero .heroLead {
+  font-family: var(--font-lot-body), Arial, sans-serif;
 }
 .heroLead {
   font-size: clamp(21px, 2vw, 30px);
@@ -537,37 +543,55 @@
   align-items: center;
   font-size: 11px;
 }
-.sceneControls {
-  display: flex;
-  align-self: center;
+.sceneControls,
+.intentControls,
+.scenarioControls,
+.reportTabs {
+  display: grid;
+  gap: 0;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 3px;
   padding: 4px;
+}
+.sceneControls {
+  align-self: center;
   margin: 14px 0 18px;
 }
-.sceneControls button {
+.sceneControls button,
+.intentControls button,
+.scenarioControls button,
+.reportTabs button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 9px;
-  padding: 9px 15px;
-  background: transparent;
-  border: 0;
-  font-size: 12px;
+  min-width: 0;
   min-height: 44px;
-  border-radius: var(--radius-control, 3px);
+  overflow-wrap: anywhere;
+  padding: 9px 8px;
+  background: transparent;
+  color: var(--stone);
+  border: 0;
+  border-radius: 3px;
+  font-size: 14px;
 }
 .sceneControls button span {
   color: var(--stone);
   font-size: 10px;
 }
-.sceneControls button[aria-checked="true"] {
+.sceneControls button[aria-checked="true"],
+.intentControls button[aria-checked="true"],
+.reportTabs button[aria-checked="true"] {
   background: var(--ink);
   color: var(--chalk);
 }
 .sceneControls button[aria-checked="true"] span {
   color: var(--color-lot-stone-on-dark);
 }
-.sceneControls button:hover:not([aria-checked="true"]) {
+.sceneControls button:hover:not([aria-checked="true"]),
+.intentControls button:hover:not([aria-checked="true"]),
+.reportTabs button:hover:not([aria-checked="true"]) {
   background: var(--line);
 }
 .artCaption {
@@ -607,29 +631,7 @@
   margin: 0 auto;
 }
 .intentControls {
-  display: flex;
-  gap: 18px;
   margin-top: 33px;
-  border-bottom: 1px solid var(--color-lot-line);
-}
-.intentControls button {
-  background: none;
-  padding: 13px 0;
-  font-size: 12px;
-  color: var(--stone);
-  border: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  white-space: nowrap;
-  min-height: 44px;
-}
-.intentControls button:hover:not([aria-checked="true"]) {
-  color: var(--ink);
-  border-bottom-color: var(--line);
-}
-.intentControls button[aria-checked="true"] {
-  border-color: var(--ink);
-  color: var(--ink);
 }
 .numbersSection {
   background: var(--ink);
@@ -669,25 +671,18 @@
   letter-spacing: 0.08em;
 }
 .scenarioControls {
-  display: flex;
-  gap: 6px;
+  border-color: var(--line-dark);
 }
 .scenarioControls button {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: var(--color-lot-stone-on-dark);
-  padding: 8px 12px;
-  font-size: 12px;
+  color: var(--stone-on-dark);
   text-transform: capitalize;
-  min-height: 44px;
 }
 .scenarioControls button[aria-checked="true"] {
-  border-color: var(--color-lot-stone-on-dark);
-  color: var(--chalk);
+  background: var(--chalk);
+  color: var(--ink);
 }
-.scenarioControls button:hover {
-  background: var(--color-lot-ink-hover);
+.scenarioControls button:hover:not([aria-checked="true"]) {
+  background: var(--ink-hover);
 }
 .metrics {
   display: grid;
@@ -775,10 +770,18 @@
   padding: 112px 9%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12%;
+  column-gap: 12%;
+  grid-template-areas: ". preview" "copy preview" "actions preview" ". preview";
+  grid-template-rows: 1fr auto auto 1fr;
   max-width: 1600px;
   margin: 0 auto;
   align-items: center;
+}
+.reportCopy {
+  grid-area: copy;
+}
+.reportActions {
+  grid-area: actions;
 }
 .reportCopy > p:not(.eyebrow):not(.reportPrice) {
   color: var(--stone);
@@ -806,30 +809,11 @@
   margin-top: 12px !important;
 }
 .reportPreview {
+  grid-area: preview;
   min-width: 0;
 }
 .reportTabs {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
   margin-bottom: 20px;
-}
-.reportTabs button {
-  font-size: 12px;
-  padding: 8px 0;
-  min-height: 44px;
-  background: none;
-  border: none;
-  border-bottom: 1px solid transparent;
-  color: var(--stone);
-}
-.reportTabs button:hover:not([aria-checked="true"]) {
-  color: var(--ink);
-  border-bottom-color: var(--line);
-}
-.reportTabs button[aria-checked="true"] {
-  border-color: var(--ink);
-  color: var(--ink);
 }
 .paper {
   border: 1px solid var(--line);
@@ -1172,7 +1156,8 @@
 }
 .offerBenefits strong { color: var(--ink); }
 .offerBenefits li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; column-gap: 20px; }
-.offerActions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+.offerActions .textLink { font-size: 14px; font-weight: 700; }
+.offerActions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .footerDisclaimer {
   max-width: 100ch;
   font-size: 13px;
@@ -1309,7 +1294,7 @@
     padding-top: 48px;
     min-height: 660px;
   }
-  .hero h1 {
+  .hero .heroDisplay {
     font-size: 11vw;
   }
   .heroVisual {
@@ -1330,12 +1315,8 @@
   .closing .inputRow .primaryButton {
     width: auto;
   }
-  .intentControls {
-    gap: 12px;
-  }
   .sceneControls button {
     padding: 8px 10px;
-    font-size: 11px;
   }
   .sceneControls button span {
     display: none;
@@ -1351,7 +1332,7 @@
     font-size: 4.1vw;
   }
   .reportSection {
-    gap: 8%;
+    column-gap: 8%;
     padding-left: 7%;
     padding-right: 7%;
   }
@@ -1410,7 +1391,7 @@
     min-height: 0;
     align-items: stretch;
   }
-  .hero h1 {
+  .hero .heroDisplay {
     font-size: clamp(90px, 17vw, 130px);
     margin: 28px 0 24px;
   }
@@ -1435,7 +1416,6 @@
     margin-top: 6px;
   }
   .sceneControls button {
-    font-size: 12px;
     padding: 8px 15px;
   }
   .sceneControls button span {
@@ -1461,9 +1441,6 @@
   }
   .howSection {
     padding: 68px 6%;
-  }
-  .intentControls {
-    gap: 25px;
   }
   .numbersSection {
     padding: 65px 6% 34px;
@@ -1505,6 +1482,8 @@
   .reportSection {
     padding: 70px 8%;
     grid-template-columns: 1fr;
+    grid-template-areas: "copy" "preview" "actions";
+    grid-template-rows: auto;
     gap: 50px;
   }
   .reportCopy > p:not(.eyebrow):not(.reportPrice) {
@@ -1603,7 +1582,7 @@
   .heroKicker {
     order: 0;
   }
-  .hero h1 {
+  .hero .heroDisplay {
     order: 1;
   }
   .heroLead {
@@ -1646,12 +1625,12 @@
   .signIn > svg {
     display: none;
   }
-  .hero h1 {
+  .hero .heroDisplay {
     font-size: 21vw;
     margin: 20px 0 18px;
   }
   .heroKicker {
-    font-size: 10px;
+    font-size: 11px;
   }
   .heroLead {
     font-size: 24px;
@@ -1681,7 +1660,7 @@
   }
   .sceneTag {
     top: 8%;
-    font-size: 9px;
+    font-size: 10px;
     padding: 6px 8px;
   }
   .tagLine {
@@ -1692,8 +1671,6 @@
     justify-content: space-between;
   }
   .sceneControls button {
-    font-size: 11px;
-    gap: 5px;
     padding: 8px;
     flex: 1;
     justify-content: center;
@@ -1709,15 +1686,9 @@
     font-size: 38px;
   }
   .eyebrow {
-    font-size: 10px;
+    font-size: 11px;
     gap: 10px;
     margin-bottom: 24px !important;
-  }
-  .intentControls {
-    gap: 14px;
-  }
-  .intentControls button {
-    font-size: 11px;
   }
   .metrics {
     grid-template-columns: 1fr;
@@ -1746,7 +1717,6 @@
     font-size: 9px;
   }
   .scenarioControls button {
-    font-size: 11px;
     padding: 8px;
   }
   .reportSection {
@@ -1778,12 +1748,6 @@
   .reportQuestions {
     font-size: 12px;
   }
-  .reportTabs {
-    gap: 5px;
-  }
-  .reportTabs button {
-    font-size: 11px;
-  }
   .closing h2 {
     font-size: 13vw;
     margin-top: 55px;
@@ -1795,7 +1759,7 @@
     right: 6%;
   }
   .closingKicker {
-    font-size: 9px;
+    font-size: 11px;
     max-width: 190px;
   }
   .closing .inputRow {
@@ -1932,6 +1896,12 @@
 .intentControls button {
   white-space: normal;
 }
+.intentBand > p > strong {
+  display: block;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 500;
+}
 .offerComparison {
   margin: 26px 0;
 }
@@ -1971,9 +1941,6 @@
 /* Shared Segmented supplies semantics; the landing owns its ground and focus. */
 .page [role="radio"]:focus-visible {
   box-shadow: none;
-}
-.scenarioControls button[aria-checked="true"] {
-  background: var(--line-dark);
 }
 @media (max-width: 1150px) {
   .demoLayout {
@@ -2030,6 +1997,42 @@
   }
   .intentControls {
     max-width: 430px;
-    gap: 14px;
+  }
+}
+
+@media (min-width: 801px) {
+  .demoSteps {
+    position: sticky;
+    align-self: start;
+    top: 32px;
+  }
+}
+@media (max-width: 480px) {
+  .demoIntro {
+    width: 100%;
+  }
+  .darkButton {
+    width: 100%;
+    justify-content: space-between;
+    padding: 12px 15px;
+  }
+  .offerActions {
+    flex-direction: column;
+    align-items: start;
+  }
+  .sceneControls button,
+  .intentControls button,
+  .scenarioControls button,
+  .reportTabs button {
+    padding-inline: 4px;
+  }
+}
+@media (max-width: 360px) {
+  .sceneControls button,
+  .intentControls button,
+  .scenarioControls button,
+  .reportTabs button {
+    font-size: 13px;
+    padding-inline: 4px;
   }
 }
