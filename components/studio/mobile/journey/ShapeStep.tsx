@@ -13,6 +13,7 @@ import {
   type ExteriorFinish,
   type FeasibilityResult,
 } from "@/lib/feasibility";
+import { rentRangeLabel } from "../../StudioPreview";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Button } from "@/components/ui/Button";
 
@@ -27,6 +28,7 @@ const FINISHES = Object.keys(finishLabels) as ExteriorFinish[];
 
 /** Props for {@link ShapeStep}. */
 export interface ShapeStepProps {
+  certificateUnlocked?: boolean;
   /** The active ADU configuration. */
   config: ADUConfig;
   /** Apply a configuration change (size/style). */
@@ -48,6 +50,7 @@ export interface ShapeStepProps {
  * dimensions, roof, and assumptions stay behind the optional Fine-tune action.
  */
 export default function ShapeStep({
+  certificateUnlocked = false,
   config,
   onConfigChange,
   result,
@@ -144,7 +147,7 @@ export default function ShapeStep({
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-lot-line pt-4">
           <p className="text-xs text-lot-stone">Projected rent / mo</p>
-          <MoneyFigure value={result.monthlyRent} animate size="inline" tone="onLight" />
+          {certificateUnlocked ? <MoneyFigure value={result.monthlyRent} animate size="inline" tone="onLight" /> : <p className="font-display text-lg font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}</p>}
         </div>
 
         <button

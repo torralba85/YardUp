@@ -119,6 +119,7 @@ function spanBounds(value: number, floor: number, otherSpan: number) {
 export interface FeasibilityInspectorProps {
   /** Desktop Design already has a project journey; show only design controls. */
   designOnly?: boolean;
+  showWarnings?: boolean;
   initialStep?: 1 | 2 | 3;
   /** Id of the active parcel preset. */
   parcelId: string;
@@ -156,6 +157,7 @@ export interface FeasibilityInspectorProps {
  */
 export default function FeasibilityInspector({
   designOnly = false,
+  showWarnings = true,
   initialStep = 1,
   parcelId,
   config,
@@ -636,7 +638,7 @@ export default function FeasibilityInspector({
                 />
               </div>
 
-              {result.warnings.length > 0 && (
+              {showWarnings && result.warnings.length > 0 && (
                 <div
                   role="alert"
                   className="rounded-none border border-status-review/35 bg-status-review-soft p-3 text-sm text-status-review"
@@ -657,7 +659,7 @@ export default function FeasibilityInspector({
 
         {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
         <div className="space-y-3 border-t border-lot-line px-6 py-5">
-          {designOnly && result.warnings.length > 0 && (
+          {showWarnings && designOnly && result.warnings.length > 0 && (
             <div role="alert" className="flex items-start gap-2 text-sm text-status-review">
               <TriangleAlert size={17} aria-hidden="true" className="mt-0.5 shrink-0" />
               <p><strong>Review needed.</strong> {result.warnings[0]}</p>

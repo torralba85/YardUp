@@ -779,8 +779,8 @@ export function LotMoreLanding({
                     <strong>Free</strong>
                   </dt>
                   <dd>
-                    3D layout exploration and initial cost, rent, and payback
-                    estimates. Your first address needs no account.
+                    3D layout exploration and an estimated monthly rent range.
+                    Your first address needs no account.
                   </dd>
                 </div>
                 <div>
@@ -792,8 +792,8 @@ export function LotMoreLanding({
                     </strong>
                   </dt>
                   <dd>
-                    A property-specific packet: a financed monthly cash-flow
-                    model, a fee and permit audit for its size, and a
+                    A property-specific packet: build costs, net income, payback,
+                    financing scenarios, a fee and permit audit for its size, and a
                     bid-leveling checklist for three builders. Print or save
                     as PDF, export CSV, or share a permanent link.
                   </dd>
@@ -1023,7 +1023,7 @@ export function LotMoreLanding({
                 ],
                 [
                   "What is free, and what costs extra?",
-                  `Exploring the studio and its initial estimates is free. The complete Certificate of Feasibility is a one-time${certificatePrice ? ` ${certificatePrice}` : ""} purchase. You can review what is included before checkout.`,
+                  `Exploring the 3D concept and monthly rent range is free. The complete Certificate of Feasibility is a one-time${certificatePrice ? ` ${certificatePrice}` : ""} purchase. You can review what is included before checkout.`,
                 ],
               ].map(([question, answer]) => (
                 <details key={question}>

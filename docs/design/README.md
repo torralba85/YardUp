@@ -15,6 +15,8 @@ When two documents disagree, the higher entry wins:
 
 ## Files
 
+The [Studio free/paid boundary](./2026-10-18-studio-paid-preview.md) defines which figures appear before certificate purchase.
+
 | File | What it is |
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |

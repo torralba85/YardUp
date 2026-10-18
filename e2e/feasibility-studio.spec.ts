@@ -58,14 +58,14 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 
-  test("guest can navigate to Permit Guide and view demo rules", async ({ page, viewport }) => {
+  test("guest sees a locked planning preview instead of the permit breakdown", async ({ page, viewport }) => {
     // Desktop-only: the mobile journey surfaces permit caveats as the Check
     // reveal's verify items instead of the full permit guide panel (#130).
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
     await page.goto("/studio");
     await page.getByRole("button", { name: /Rules & Fit/i }).click();
-    await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toBeVisible();
-    await expect(page.getByText(/Confirm lot size is at least 3,200 sf/i)).toBeVisible();
+    await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Seattle ADU Starter Guide/i })).toHaveCount(0);
   });
 
   test("guest can browse Inspiration Gallery and apply a demo template", async ({ page, viewport }) => {
@@ -100,10 +100,7 @@ test.describe("Public LotFoundry flows", () => {
     await expect(page.getByRole("button", { name: "Reset", exact: true })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Courtyard Studio" })).not.toBeVisible();
     await expect(page.getByRole("region", { name: "Feasibility metrics" })).not.toBeVisible();
-    await page.getByRole("button", { name: "Numbers & readiness" }).click();
-    await expect(page.getByRole("region", { name: "Feasibility metrics" })).toBeVisible();
-    await expect(page.getByText("Curated demo estimate", { exact: true }).first()).toBeVisible();
-    await page.getByRole("button", { name: "Numbers & readiness" }).click();
+    await expect(page.getByRole("button", { name: "Numbers & readiness" })).toHaveCount(0);
     await page.getByText("Tools", { exact: true }).click();
     await page.getByRole("button", { name: "Plan utilities" }).click();
     await expect(page.getByText(/Click the primary house in the 3D model/)).toBeVisible();

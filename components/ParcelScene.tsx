@@ -61,6 +61,7 @@ class ErrorBoundary extends Component<
 }
 
 interface ParcelSceneProps {
+  analysisUnlocked?: boolean;
   parcel: Parcel;
   config: ADUConfig;
   isCompliant: boolean;
@@ -777,6 +778,7 @@ function clampToLot(pose: Pose2D, parcel: Parcel, config: ADUConfig): Pose2D {
  *   optional dev measurement adapter.
  */
 export default function ParcelScene({
+  analysisUnlocked = true,
   parcel,
   config,
   isCompliant,
@@ -1062,6 +1064,7 @@ export default function ParcelScene({
   if (!webglAvailable) {
     return (
       <Parcel2DScene
+        analysisUnlocked={analysisUnlocked}
         parcel={parcel}
         config={config}
         isCompliant={isCompliant}
@@ -1276,6 +1279,7 @@ export default function ParcelScene({
       {/* Status and editing sit below the viewport instead of floating over it —
           the audit measured phone overlays covering 40.4% of the scene (U3). */}
       <SceneStatus
+        analysisUnlocked={analysisUnlocked}
         id="studio-site-fit-status"
         parcel={parcel}
         placement={placement}
@@ -1375,6 +1379,7 @@ export default function ParcelScene({
  * numeric placement controls stay with the 3D scene.
  */
 function Parcel2DScene({
+  analysisUnlocked = true,
   parcel,
   config,
   remainingCapacity,
@@ -1405,6 +1410,7 @@ function Parcel2DScene({
       </div>
 
       <SceneStatus
+        analysisUnlocked={analysisUnlocked}
         id="studio-site-fit-status"
         parcel={parcel}
         placement={placement}

@@ -125,6 +125,8 @@ export interface FeasibilityResult {
   costPerSqftHigh: number;
   /** Monthly rent selected from the rent table for the chosen scenario. */
   monthlyRent: number;
+  /** Conservative through optimistic rent scenarios; not a confidence interval. */
+  rentRange?: { low: number; high: number };
   /** Annual net operating income after operating expenses. */
   annualNoi: number;
   /** Estimated years to recoup the mid construction cost from NOI. */
@@ -430,6 +432,7 @@ export function calculateFeasibility(
   return {
     ...zoning,
     ...finance,
+    rentRange: { low: rentTable.conservative, high: rentTable.optimistic },
     warnings,
     rentBasis,
     market,

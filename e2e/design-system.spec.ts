@@ -10,7 +10,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
     test.skip(isMobile, "Desktop rail and context header; mobile has its own journey contract");
     await page.goto("/studio?parcel=oak-street");
     const save = page.getByRole("button", { name: "Save this property — free account", exact: true });
-    const certificate = page.getByRole("button", { name: "View certificate", exact: true });
+    const certificate = page.getByRole("button", { name: "See what’s behind the numbers", exact: true });
     const signIn = page.getByRole("complementary", { name: "Studio navigation" })
       .getByRole("button", { name: "Sign In", exact: true });
     await expect(save).toHaveCSS("background-color", chalk);

@@ -41,14 +41,14 @@ test("sample card preserves its advertised market scenario", async ({ page, isMo
   expect(scenario.get("rent")).toBe("market");
   await card.click();
   if (isMobile) {
-    await expect(page.getByRole("main")).toContainText("2,350");
+    await expect(page.getByRole("main")).toContainText("$2,050–$2,650");
   } else {
-    await expect(page.getByRole("complementary", { name: "Property constraints" })).toContainText("2,350");
-    await expect(page.getByRole("complementary", { name: "Property constraints" })).toContainText("13.2");
+    await expect(page.getByRole("region", { name: "Free property preview" })).toContainText("$2,050–$2,650");
+    await expect(page.getByText("13.2", { exact: true })).toHaveCount(0);
   }
   await expect.poll(() => new URL(page.url()).searchParams.get("rent")).toBe("market");
   await page.reload();
-  await expect(page.getByRole("main")).toContainText("2,350");
+  await expect(page.getByRole("main")).toContainText("$2,050–$2,650");
 });
 
 test("native guest gets one successful lookup, preserves Back, and is asked to sign in for another", async ({ page, isMobile }, testInfo) => {

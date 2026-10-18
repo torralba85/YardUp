@@ -4,12 +4,14 @@ import { useEffect, type ReactNode } from "react";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import { rentRangeLabel } from "../../StudioPreview";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Button } from "@/components/ui/Button";
 import { haptic } from "@/lib/haptics";
 
 /** Props for {@link EarnStep}. */
 export interface EarnStepProps {
+  certificateUnlocked?: boolean;
   emailLinkCard?: ReactNode;
   parcelNotice?: ReactNode;
   /** "Address, City" line for the reveal. */
@@ -27,7 +29,7 @@ export interface EarnStepProps {
  * resolution: estimated monthly and annual rent potential, followed by a
  * simple confidence teaser (the market basis line). One primary action.
  */
-export default function EarnStep({ parcelName, result, estimated, onContinue, parcelNotice, emailLinkCard }: EarnStepProps) {
+export default function EarnStep({ certificateUnlocked = false, parcelName, result, estimated, onContinue, parcelNotice, emailLinkCard }: EarnStepProps) {
   const annualGross = result.monthlyRent * 12;
   const unverified =
     !result.market.verified &&
@@ -53,14 +55,14 @@ export default function EarnStep({ parcelName, result, estimated, onContinue, pa
       <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
 
       <div className="mt-7">
-        <MoneyFigure value={result.monthlyRent} animate size="hero" tone="onLight" />
-        <p className="mt-3 text-sm text-lot-stone">
+        {certificateUnlocked ? <MoneyFigure value={result.monthlyRent} animate size="hero" tone="onLight" /> : <p className="font-display text-4xl font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}</p>}
+        {certificateUnlocked && <p className="mt-3 text-sm text-lot-stone">
           About{" "}
           <span className="font-display text-lg font-semibold text-lot-ink">
             {formatCurrency(annualGross)}
           </span>{" "}
           a year in gross rent from a {result.aduSqft.toLocaleString()} sf backyard home.
-        </p>
+        </p>}
         <p className="mt-1 font-sans text-xs text-lot-stone">
           Estimated potential for rental income, guest space, or family living.
         </p>

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import {
   defaultAduConfig,
   defaultFinancialAssumptions,
+  formatCurrency,
   getParcelById,
   parcelPresets,
   type ADUConfig,
@@ -89,7 +90,7 @@ import { useJourneyHistory } from "@/lib/use-journey-history";
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
 import { Button } from "./ui/Button";
-import { MoneyFigure } from "./ui/MoneyFigure";
+import StudioPreview, { rentRangeLabel } from "./studio/StudioPreview";
 import { Skeleton } from "./ui/Skeleton";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { ArrowRight, ImageOff, Search } from "lucide-react";
@@ -582,6 +583,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     selectionVersion,
   });
 
+  const certificateUnlocked = certificateRecovery.access.purchased;
+
   const emailScenario: SavedScenario | null = parcelMode === "live" && !parcelLoading && "source" in activeParcel && activeParcel.source !== "estimated"
     ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel }
     : null;
@@ -715,6 +718,11 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   function handleGenerateReport(projectBriefUnavailableError?: string) {
+    if (!certificateUnlocked) {
+      setActiveStep("certificate");
+      setJourneyStep("act");
+      return;
+    }
     if (projectBriefUnavailableError) {
       setProjectBriefState((current) => ({
         key: projectBriefKey,
@@ -1020,6 +1028,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         )}
         <div className="relative min-h-0 flex-1">
         <ParcelScene
+          analysisUnlocked={certificateUnlocked}
           parcel={sceneParcel}
           config={config}
           isCompliant={isCompliant}
@@ -1095,12 +1104,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           parcelName={mobileParcelName}
           result={result}
           estimated={parcelMode !== "live"}
+          certificateUnlocked={certificateUnlocked}
           onContinue={() => setJourneyStep("shape")}
         />
       );
     } else if (journeyStep === "shape") {
       stepContent = (
         <ShapeStep
+          certificateUnlocked={certificateUnlocked}
           config={config}
           onConfigChange={setConfig}
           result={result}
@@ -1128,6 +1139,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     } else if (journeyStep === "check") {
       stepContent = (
         <CheckStep
+          certificateUnlocked={certificateUnlocked}
           parcel={activeParcel}
           result={result}
           config={config}
@@ -1205,6 +1217,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         <FineTuneDrawer open={fineTuneOpen} onClose={() => setFineTuneOpen(false)}>
           <FeasibilityInspector
             initialStep={2}
+            designOnly={!certificateUnlocked}
+            showWarnings={certificateUnlocked}
             parcelId={parcelId}
             config={config}
             assumptions={assumptions}
@@ -1222,7 +1236,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             saveNotice={saveNotice}
           />
         </FineTuneDrawer>
-        {reportOpen && (
+        {reportOpen && certificateUnlocked && (
           <ReportPreview
             parcel={activeParcel}
             parcelName={mobileParcelName}
@@ -1294,7 +1308,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         aria-label={currentStepMeta.label}
         className="flex flex-1 flex-col outline-none"
       >
-        {showsVerdictBand && (
+        {showsVerdictBand && certificateUnlocked && (
           <FeasibilityVerdictBand
             parcel={activeParcel}
             result={result}
@@ -1317,7 +1331,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             onViewModeChange={changeViewMode}
             hasScan={Boolean(splatScene)}
             hasParcel={parcelResolved}
-            monthlyRent={result.monthlyRent}
+            monthlyRent={certificateUnlocked ? formatCurrency(result.monthlyRent) : rentRangeLabel(result)}
             addressFocusSignal={addressFocusSignal}
             parcelLoading={parcelLoading}
             parcelError={parcelError}
@@ -1334,9 +1348,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onViewModeChange={changeViewMode}
                 hasScan={Boolean(splatScene)}
               />
-              <PermitGuidePanel address={parcelName} />
+              {certificateUnlocked && <PermitGuidePanel address={parcelName} />}
             </div>
-            <ConstraintsPanel
+            {certificateUnlocked ? <ConstraintsPanel
               parcel={activeParcel}
               result={result}
               config={config}
@@ -1349,7 +1363,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               onGenerateProjectBrief={handleGenerateProjectBrief}
               addressFocusSignal={addressFocusSignal}
               emailLinkCard={emailLinkCard}
-            />
+            /> : <div className="min-h-0 w-full shrink-0 space-y-4 overflow-y-auto p-5 lg:w-[384px]">
+              <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} />
+              <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
+              {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}
+              {emailLinkCard}
+            </div>}
           </div>
         ) : activeStep === "design" ? (
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -1378,6 +1397,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             </div>
             <FeasibilityInspector
               designOnly
+              showWarnings={certificateUnlocked}
               parcelId={parcelId}
               config={config}
               assumptions={assumptions}
@@ -1421,7 +1441,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         )}
       </section>
 
-      {reportOpen && (
+      {reportOpen && certificateUnlocked && (
         <ReportPreview
           parcel={activeParcel}
           parcelName={parcelName}
@@ -1623,7 +1643,7 @@ interface LotStepProps {
   onViewModeChange: (mode: SceneViewMode) => void;
   hasScan?: boolean;
   hasParcel: boolean;
-  monthlyRent: number;
+  monthlyRent: string;
   addressFocusSignal: number;
   parcelLoading: boolean;
   parcelError: string | null;
@@ -1693,7 +1713,7 @@ function LotStep({
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             {hasParcel && <div>
               <p className="lf-kicker-dense text-lot-stone">If built</p>
-              <MoneyFigure value={monthlyRent} animate size="inline" tone="onLight" className="mt-0.5" />
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-lot-ink">{monthlyRent}</p>
             </div>}
             <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
               Continue to Rules &amp; Fit
