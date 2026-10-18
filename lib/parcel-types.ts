@@ -42,6 +42,8 @@ export interface Parcel {
   lotLength: number; // ft
   existingHouseSqft: number; // sq ft
   maxLotCoveragePercent: number; // 0–100
+  /** True when regulatory limits are modeling assumptions rather than confirmed rules. */
+  regulationsEstimated?: boolean;
   setbacks: {
     front: number; // ft
     rear: number; // ft

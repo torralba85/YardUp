@@ -27,7 +27,7 @@ export function parcelConfidence(parcel: Parcel) {
       Number.isFinite(parcel.existingHouseSqft) &&
       parcel.existingHouseSqft > 0
     ),
-    regulationsEstimated: live && (
+    regulationsEstimated: parcel.regulationsEstimated === true || live && (
       liveParcel?.source === "county-gis" || liveParcel?.source === "fallback" ||
       regulatoryEvidenceEstimated || !zoning || zoning.toLowerCase() === "unknown"
     ),

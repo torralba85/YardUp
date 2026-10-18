@@ -18,8 +18,18 @@ describe("San Diego demo", () => {
       lotLength: 100,
       existingHouseSqft: 1400,
       maxLotCoveragePercent: 60,
+      regulationsEstimated: true,
       setbacks: { front: 15, rear: 13, side: 4 },
       expectedRent: { conservative: 2459, market: 2754, optimistic: 3074 },
+      marketData: {
+        rentByBedroom: { studio: 2090, "1br": 2459, "2br": 3123 },
+        costMultiplier: 1,
+        source: "hud-county",
+        area: "San Diego County, CA",
+        asOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
+        sourceUrl: "https://www.huduser.gov/portal/datasets/fmr.html",
+        confidence: "medium",
+      },
     });
     expect(aduSetbacks(parcelPresets[3], defaultAduConfig)).toEqual({ front: 15, rear: 4, side: 4, rule: "san-diego-unchecked" });
   });
