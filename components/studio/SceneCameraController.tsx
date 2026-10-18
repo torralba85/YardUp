@@ -31,7 +31,7 @@ export function SceneCameraController({ commandId, mode, bounds, geometryRevisio
   useEffect(() => {
     if (!controls || !(camera instanceof Perspective || camera instanceof Ortho)) return;
     const fit = calculateCameraFit({ bounds: latest.current, fov: 42, viewportWidth: size.width, viewportHeight: size.height,
-      insets: { top: 8, bottom: 8, left: 8, right: 8 }, mode });
+      insets: { top: 12, bottom: 64, left: 12, right: 12 }, mode });
     if (!fit) return;
     camera.near = fit.near; camera.far = fit.far;
     camera.up.fromArray(mode === "setbacks" ? [0,0,-1] : [0,1,0]);

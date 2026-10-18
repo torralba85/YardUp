@@ -223,7 +223,7 @@ export default function StudioShell({
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
       {/* Mobile fallback header */}
-      <main id="main-content" tabIndex={-1} className="flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lot-chalk text-lot-ink lg:h-dvh lg:overflow-y-auto">
+      <main id="main-content" tabIndex={-1} className="flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lot-chalk text-lot-ink lg:h-dvh lg:overflow-hidden">
         <header className="flex items-center justify-between border-b border-lot-line bg-lot-chalk px-4 py-3 lg:hidden">
           <Link
             href="/"

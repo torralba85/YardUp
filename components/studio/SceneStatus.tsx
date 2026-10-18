@@ -30,9 +30,11 @@ export function SceneStatus({
 }) {
   const status = describePlacementWithEvidence(placement, parcel);
   const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel, capacityBasis);
-  const needsReview = status.tone !== "clear" || coverage.tone !== "ok";
-  const StatusIcon = status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
-  const statusColor = status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
+  const isFits = placement.status === "fits";
+  const needsReview = !isFits && (status.tone !== "clear" || coverage.tone !== "ok");
+  const StatusIcon = isFits ? CheckCircle2 : status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
+  const statusColor = isFits ? "text-status-eligible" : status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
+  const titleColor = isFits ? "text-lot-ink" : statusColor;
   const setbackConflict =
     placement.envelopeStatus === "overflow" || placement.envelopeStatus === "empty";
 
@@ -65,20 +67,19 @@ export function SceneStatus({
       <div className="flex items-start gap-2.5 px-4 pt-3">
         <StatusIcon size={18} aria-hidden="true" className={`mt-0.5 shrink-0 ${statusColor}`} />
         <div className="min-w-0">
-          <p className={`text-sm font-semibold ${statusColor}`}>{status.title}</p>
+          <p className={`text-sm font-semibold ${titleColor}`}>{status.title}</p>
           <p className="mt-1 max-w-prose text-xs leading-5 text-lot-stone">
             {placement.reasons[0]?.message ?? status.detail}
           </p>
           {status.missingEvidenceNotice && (
-            <p className="mt-1 flex items-start gap-1.5 text-[11px] leading-tight text-status-review font-medium">
-              <TriangleAlert size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p className="mt-2 border-t border-lot-line/70 pt-2 text-[11px] leading-4 text-lot-stone">
               {status.missingEvidenceNotice}
             </p>
           )}
         </div>
       </div>
 
-      <details className="group/status px-4">
+      <details className="group/status px-4" open={placement.status === "blocked" ? true : undefined}>
         <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
           Modeled site fit details
           <ChevronDown size={14} aria-hidden="true" className="ml-auto shrink-0 group-open/status:rotate-180" />
