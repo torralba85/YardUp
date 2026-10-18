@@ -26,9 +26,10 @@ function escapeXml(value: string): string {
  */
 export function buildAduSitemapXml(): string {
   const urls = [
-    { loc: hubUrl(), lastmod: "2026-09-24", changefreq: "monthly", priority: "0.8" },
+    // Significant fee-guidance and calculator-budget updates shipped in #275.
+    { loc: hubUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
     { loc: stateCostUrl(), lastmod: "2026-10-07", changefreq: "monthly", priority: "0.8" },
-    { loc: calculatorUrl(), lastmod: "2026-09-24", changefreq: "monthly", priority: "0.8" },
+    { loc: calculatorUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
       lastmod: city.asOf,
