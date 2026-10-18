@@ -1326,94 +1326,98 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             onContinue={() => setActiveStep("feasibility")}
           />
         ) : activeStep === "feasibility" ? (
-          <>
-            <div className="lf-studio-pane flex flex-col lg:flex-row">
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <SceneSection
                 sceneNode={sceneNode}
                 viewMode={effectiveViewMode}
                 onViewModeChange={changeViewMode}
                 hasScan={Boolean(splatScene)}
               />
-              <ConstraintsPanel
-                parcel={activeParcel}
-                result={result}
-                config={config}
-                assumptions={assumptions}
-                onAssumptionsChange={setAssumptions}
-                onViewCertificate={() => setActiveStep("certificate")}
-                projectBriefResponse={projectBriefResponse}
-                projectBriefLoading={projectBriefLoading}
-                projectBriefError={projectBriefError}
-                onGenerateProjectBrief={handleGenerateProjectBrief}
-                addressFocusSignal={addressFocusSignal}
-                emailLinkCard={emailLinkCard}
-              />
+              <PermitGuidePanel address={parcelName} />
             </div>
-            <PermitGuidePanel address={parcelName} />
-          </>
+            <ConstraintsPanel
+              parcel={activeParcel}
+              result={result}
+              config={config}
+              assumptions={assumptions}
+              onAssumptionsChange={setAssumptions}
+              onViewCertificate={() => setActiveStep("certificate")}
+              projectBriefResponse={projectBriefResponse}
+              projectBriefLoading={projectBriefLoading}
+              projectBriefError={projectBriefError}
+              onGenerateProjectBrief={handleGenerateProjectBrief}
+              addressFocusSignal={addressFocusSignal}
+              emailLinkCard={emailLinkCard}
+            />
+          </div>
         ) : activeStep === "design" ? (
-          <>
-            <div className="lf-studio-pane flex flex-col lg:flex-row">
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <SceneSection
                 sceneNode={sceneNode}
                 viewMode={effectiveViewMode}
                 onViewModeChange={changeViewMode}
                 hasScan={Boolean(splatScene)}
               />
-              <FeasibilityInspector
-                designOnly
-                parcelId={parcelId}
-                config={config}
-                assumptions={assumptions}
-                result={result}
-                onParcelChange={setParcelId}
-                onConfigChange={setConfig}
-                onAssumptionsChange={setAssumptions}
-                onReset={resetScenario}
-                onGenerateReport={() => setActiveStep("certificate")}
-                onSaveScenario={handleSaveScenario}
-                savingScenario={savingScenario}
-                saveNotice={saveNotice}
-              />
+              <details className="group border-t border-lot-line bg-lot-chalk">
+                <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+                  Browse designs
+                  <span aria-hidden="true" className="group-open:rotate-45">+</span>
+                </summary>
+                <InspirationGalleryPanel
+                  parcel={activeParcel}
+                  config={config}
+                  generatedConcepts={generatedConcepts}
+                  onGenerationComplete={handleGenerationComplete}
+                  onViewComparison={handleViewComparison}
+                  styleMatchKey={styleMatchKey}
+                  onApply={(item) => setConfig(configForInspirationItem(item, config))}
+                />
+              </details>
             </div>
-            <details className="group border-t border-lot-line bg-lot-chalk">
-              <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
-                Browse designs
-                <span aria-hidden="true" className="group-open:rotate-45">+</span>
-              </summary>
-              <InspirationGalleryPanel
-                parcel={activeParcel}
-                config={config}
-                generatedConcepts={generatedConcepts}
-                onGenerationComplete={handleGenerationComplete}
-                onViewComparison={handleViewComparison}
-                styleMatchKey={styleMatchKey}
-                onApply={(item) => setConfig(configForInspirationItem(item, config))}
-              />
-            </details>
-          </>
+            <FeasibilityInspector
+              designOnly
+              parcelId={parcelId}
+              config={config}
+              assumptions={assumptions}
+              result={result}
+              onParcelChange={setParcelId}
+              onConfigChange={setConfig}
+              onAssumptionsChange={setAssumptions}
+              onReset={resetScenario}
+              onGenerateReport={() => setActiveStep("certificate")}
+              onSaveScenario={handleSaveScenario}
+              savingScenario={savingScenario}
+              saveNotice={saveNotice}
+            />
+          </div>
         ) : activeStep === "certificate" ? (
-          <CertificatePanel
-            emailLinkCard={emailLinkCard}
+          <div className="flex-1 overflow-y-auto">
+            <CertificatePanel
+              emailLinkCard={emailLinkCard}
               recovery={certificateRecovery}
-            parcel={activeParcel}
-            result={result}
-            feasibilityStatus={feasibilityStatus}
-            parcelName={parcelName}
-            onOpenCertificate={handleGenerateReport}
-            projectBrief={projectBrief}
+              parcel={activeParcel}
+              result={result}
+              feasibilityStatus={feasibilityStatus}
+              parcelName={parcelName}
+              onOpenCertificate={handleGenerateReport}
+              projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
-            projectBriefPreview={projectBriefPreview}
-            projectBriefLoading={projectBriefLoading}
-            projectBriefError={projectBriefError}
-            onGenerateProjectBrief={handleGenerateProjectBrief}
-          />
+              projectBriefPreview={projectBriefPreview}
+              projectBriefLoading={projectBriefLoading}
+              projectBriefError={projectBriefError}
+              onGenerateProjectBrief={handleGenerateProjectBrief}
+            />
+          </div>
         ) : (
-          <BuildersPanel
-            parcelCity={activeParcel.city}
-            feasibilityStatus={feasibilityStatus}
-            onConnect={() => setBuilderLeadOpen(true)}
-          />
+          <div className="flex-1 overflow-y-auto">
+            <BuildersPanel
+              parcelCity={activeParcel.city}
+              feasibilityStatus={feasibilityStatus}
+              onConnect={() => setBuilderLeadOpen(true)}
+            />
+          </div>
         )}
       </section>
 
@@ -1496,7 +1500,7 @@ function SceneViewport({
   flowLayout?: boolean;
 }) {
   return (
-    <div data-testid="scene-viewport" className={`relative flex min-h-0 flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto" : "h-[58dvh] min-h-[500px]") : "h-full"}`}>
+    <div data-testid="scene-viewport" className={`relative flex min-h-0 flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto" : "h-[58dvh] min-h-[500px]") : (viewMode === "3d" || viewMode === "scan" ? "h-auto" : "h-[clamp(460px,65dvh,700px)]")}`}>
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} hasScan={hasScan} />
       <div className="min-h-0 flex-1">{sceneNode}</div>
     </div>
@@ -1518,7 +1522,7 @@ function SceneSection({
   return (
     <section
       aria-label="Parcel massing scene"
-      className="lf-entrance flex min-h-[440px] flex-1 flex-col overflow-y-auto border-b border-lot-line bg-lot-ink md:min-h-[480px] lg:min-h-0 lg:border-b-0 lg:border-r"
+      className="lf-entrance flex min-h-0 shrink-0 flex-col border-b border-lot-line bg-lot-ink lg:border-b-0 lg:border-r"
     >
       <SceneViewport
         sceneNode={sceneNode}
@@ -1651,7 +1655,7 @@ function LotStep({
   onContinue,
 }: LotStepProps) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="border-b border-lot-line bg-lot-chalk px-6 py-8 lg:px-10">
         <p className="lf-kicker text-lot-orange-ink">Step 1 · Your Lot</p>
         <h2 className="lf-section-heading mt-2 text-lot-ink">Start with your address.</h2>

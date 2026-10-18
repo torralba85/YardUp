@@ -344,7 +344,7 @@ export default function AddressSearch({
   }
 
   return (
-    <form className="relative w-full" onSubmit={handleSubmit} role="search">
+    <form className="group relative w-full" onSubmit={handleSubmit} role="search">
       <label htmlFor="address-search" className="sr-only">
         Search property address
       </label>
@@ -451,7 +451,7 @@ export default function AddressSearch({
       )}
 
       {!signedIn || (!loading && !hasPlacesKey) ? (
-        <p className="mt-1.5 text-xs text-lot-stone" role="note">
+        <p className="sr-only group-focus-within:not-sr-only mt-1.5 text-xs text-lot-stone" role="note">
           Type a full address (street, city, state) and press Search.
         </p>
       ) : null}

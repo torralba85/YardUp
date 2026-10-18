@@ -93,6 +93,7 @@ export default function ConstraintsPanel({
   addressFocusSignal,
 }: ConstraintsPanelProps) {
   const summary = summarizeFeasibility(parcel, result, config);
+  const evaluatedCount = summary.clearedCount + summary.openCount;
   const tone = verdictTone(summary.verdict);
   const { parcelLoading, parcelError, searchParcel, searchByAddress } = useParcel();
 
@@ -109,7 +110,7 @@ export default function ConstraintsPanel({
       aria-label="Property constraints"
       className="flex w-full shrink-0 flex-col border-t border-lot-line bg-lot-chalk text-lot-ink lg:h-full lg:min-h-0 lg:w-[384px] lg:border-l lg:border-t-0"
     >
-      <div className="border-b border-lot-line px-6 pb-4 pt-5">
+      <div className="border-b border-lot-line px-5 py-3.5">
         <p className="pb-2 lf-kicker text-lot-stone">
           Your property
         </p>
@@ -131,78 +132,80 @@ export default function ConstraintsPanel({
         )}
       </div>
 
-      <PanelHeader eyebrow="Property constraints" title="What this lot allows" />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <PanelHeader eyebrow="Property constraints" title="What this lot allows" />
+        <div className="px-6 pb-5">
+          {GROUP_ORDER.map((group) => {
+            const rows = summary.constraints.filter((c) => c.group === group);
+            if (rows.length === 0) return null;
+            return (
+              <div key={group}>
+                <p className="pb-0.5 pt-[18px] font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-lot-stone">
+                  {group}
+                  {group === "Economics" ? (
+                    <span className="font-medium text-lot-stone"> · if built</span>
+                  ) : null}
+                </p>
+                {rows.map((row) => (
+                  <ConstraintRow key={row.id} item={row} />
+                ))}
+              </div>
+            );
+          })}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">
-        {GROUP_ORDER.map((group) => {
-          const rows = summary.constraints.filter((c) => c.group === group);
-          if (rows.length === 0) return null;
-          return (
-            <div key={group}>
-              <p className="pb-0.5 pt-[18px] font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-lot-stone">
-                {group}
-                {group === "Economics" ? (
-                  <span className="font-medium text-lot-stone"> · if built</span>
-                ) : null}
-              </p>
-              {rows.map((row) => (
-                <ConstraintRow key={row.id} item={row} />
-              ))}
-            </div>
-          );
-        })}
-
-        {/* Rent scenario — drives the headline $/mo. Lives on the Feasibility
-            tab so the income figure is adjustable without opening Massing. */}
-        <div className="mt-[18px] border-t border-lot-line pt-[18px]">
-          <FieldLabel
-            className="pb-2"
-            value={<MoneyFigure value={result.monthlyRent} size="sm" tone="onLight" className="text-lot-ink" />}
-          >
-            Rent estimate
-          </FieldLabel>
-          <Segmented
-            aria-label="Rent estimate basis"
-            value={assumptions.rentScenario}
-            onChange={(scenario) => onAssumptionsChange({ ...assumptions, rentScenario: scenario })}
-            options={(Object.keys(RENT_SCENARIO_LABELS) as RentScenario[]).map((scenario) => ({
-              value: scenario,
-              label: RENT_SCENARIO_LABELS[scenario],
-            }))}
-          />
-          <p className="mt-2 text-xs text-lot-stone">{result.rentBasis} — Estimates, not guarantees.</p>
-        </div>
-
-        <div className="mt-[18px] border-t border-lot-line pt-[18px]">
-          <AIProjectBriefPanel
-            response={projectBriefResponse}
-            loading={projectBriefLoading}
-            error={projectBriefError}
-            onGenerate={onGenerateProjectBrief}
-            onViewCertificate={onViewCertificate}
-          />
-        </div>
-
-        {emailLinkCard && (
+          {/* Rent scenario — drives the headline $/mo. Lives on the Feasibility
+              tab so the income figure is adjustable without opening Massing. */}
           <div className="mt-[18px] border-t border-lot-line pt-[18px]">
-            {emailLinkCard}
+            <FieldLabel
+              className="pb-2"
+              value={<MoneyFigure value={result.monthlyRent} size="sm" tone="onLight" className="text-lot-ink" />}
+            >
+              Rent estimate
+            </FieldLabel>
+            <Segmented
+              aria-label="Rent estimate basis"
+              value={assumptions.rentScenario}
+              onChange={(scenario) => onAssumptionsChange({ ...assumptions, rentScenario: scenario })}
+              options={(Object.keys(RENT_SCENARIO_LABELS) as RentScenario[]).map((scenario) => ({
+                value: scenario,
+                label: RENT_SCENARIO_LABELS[scenario],
+              }))}
+            />
+            <p className="mt-2 text-xs text-lot-stone">{result.rentBasis} — Estimates, not guarantees.</p>
           </div>
-        )}
+
+          <div className="mt-[18px] border-t border-lot-line pt-[18px]">
+            <AIProjectBriefPanel
+              response={projectBriefResponse}
+              loading={projectBriefLoading}
+              error={projectBriefError}
+              onGenerate={onGenerateProjectBrief}
+              onViewCertificate={onViewCertificate}
+            />
+          </div>
+
+          {emailLinkCard && (
+            <div className="mt-[18px] border-t border-lot-line pt-[18px]">
+              {emailLinkCard}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Verdict-reason strip */}
       <div
-        className="flex items-start gap-3 border-t border-lot-line bg-lot-surface px-6 py-3.5"
+        className="flex items-start gap-3 border-t border-lot-line bg-lot-surface px-5 py-2.5"
         style={{ borderLeft: `3px solid ${tone.color}` }}
       >
         <p className="text-[13px] leading-[1.5] text-lot-ink">
           <strong style={{ color: tone.color }}>{summary.verdict}.</strong>{" "}
-          {summary.clearedCount} of {summary.constraints.filter((c) => c.status !== "info").length}{" "}
-          checks clear, with {summary.openCount}{" "}to confirm before permitting.
+          {summary.clearedCount > 0
+            ? `${summary.clearedCount} of ${evaluatedCount} checks clear, with ${summary.openCount} to confirm before permitting.`
+            : `${summary.openCount} site & zoning items to confirm before permitting.`}{" "}
           Utility capacity and easements aren&rsquo;t in this estimate.
         </p>
       </div>
-      <div className="px-6 pb-4 pt-3">
+      <div className="px-5 py-3">
         <Button
           type="button"
           variant="primary"
