@@ -11,7 +11,7 @@ describe("robots", () => {
       rules: {
         userAgent: "*",
         allow: "/",
-        disallow: ["/builder", "/settings", "/api/", "/_next/static/media/"],
+        disallow: ["/builder", "/settings", "/api/"],
       },
     });
   });
