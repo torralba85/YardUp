@@ -39,21 +39,25 @@ export default function StudioLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Desktop: the overview is a fixed-height bar at the bottom of the viewport
+  // (StudioShell subtracts `--studio-guide-bar`), and it opens upward over the
+  // Studio. Below it used to sit under a full-height shell, which gave the page
+  // a second scroll that slid the Studio's top controls out of view.
   return (
-    <div className="bg-lot-ground-dark">
+    <div className="bg-lot-ground-dark lg:[--studio-guide-bar:3rem]">
       {children}
       <section
         data-testid="studio-overview"
         aria-labelledby="studio-overview-heading"
-        className="border-t border-lot-line bg-lot-chalk text-lot-ink lg:ml-[248px]"
+        className="border-t border-lot-line bg-lot-chalk text-lot-ink lg:relative lg:z-(--z-index-sheet) lg:ml-[248px] lg:h-(--studio-guide-bar)"
       >
-        <details className="group">
-          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-line/25 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink [&::-webkit-details-marker]:hidden">
-            <div className="min-w-0">
+        <details className="group lg:h-full">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-line/25 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
+            <div className="min-w-0 lg:flex lg:items-baseline lg:gap-3">
               <p className="lf-kicker-dense text-lot-stone">Planning guide &amp; methodology</p>
               <h1
                 id="studio-overview-heading"
-                className="font-display text-lg font-medium tracking-[-0.025em] text-pretty"
+                className="font-display text-lg font-medium tracking-[-0.025em] text-pretty lg:text-base"
               >
                 ADU Feasibility Studio
               </h1>
@@ -65,7 +69,7 @@ export default function StudioLayout({
               +
             </span>
           </summary>
-          <div className="border-t border-lot-line px-[4.5%] py-8">
+          <div className="border-t border-lot-line px-[4.5%] py-8 lg:absolute lg:inset-x-0 lg:bottom-full lg:max-h-[min(70dvh,560px)] lg:overflow-y-auto lg:bg-lot-chalk">
             <div className="grid max-w-[1200px] gap-6 text-pretty text-sm leading-6 text-lot-stone xl:grid-cols-3">
               <p>
                 LotFoundry helps homeowners evaluate an accessory dwelling unit before spending money

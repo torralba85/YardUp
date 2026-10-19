@@ -15,7 +15,7 @@ When two documents disagree, the higher entry wins:
 
 ## Files
 
-The [Studio free/paid boundary](./2026-10-18-studio-paid-preview.md) defines which figures appear before certificate purchase.
+The [Studio free/paid boundary](./2026-10-18-studio-paid-preview.md) defines which figures appear before certificate purchase. The [Studio desktop layout](./2026-10-18-studio-desktop-fill.md) keeps the desktop Studio to one viewport with a full stage and a reachable certificate CTA.
 
 | File | What it is |
 |---|---|

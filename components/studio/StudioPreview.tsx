@@ -10,14 +10,21 @@ export function rentRangeLabel(result: FeasibilityResult) {
     : formatCurrency(result.monthlyRent);
 }
 
-/** The free preview contains placeholders, never CSS-blurred paid figures. */
-export default function StudioPreview({ result, onUnlock, ctaLabel = "See what’s behind the numbers", busy = false, ctaNote, error }: {
+/**
+ * The free preview contains placeholders, never CSS-blurred paid figures.
+ * `stickyCta` pins the unlock button to the bottom of the scrolling pane while
+ * the preview is on screen (the desktop rail), so it never sits below the fold.
+ * Sticky offsets are measured inside the pane's padding, so a -1.25rem bottom
+ * cancels the rail's `p-5` and the bar sits flush with the pane edge.
+ */
+export default function StudioPreview({ result, onUnlock, ctaLabel = "See what’s behind the numbers", busy = false, ctaNote, error, stickyCta = false }: {
   result: FeasibilityResult;
   onUnlock: () => void;
   ctaLabel?: string;
   busy?: boolean;
   ctaNote?: string;
   error?: string | null;
+  stickyCta?: boolean;
 }) {
   const caveat = result.footprintKnown === false
     ? "Existing building footprint is unknown; site fit and coverage cannot be confirmed."
@@ -60,7 +67,9 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
       <p className="text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
       {error && <p role="alert" className="text-sm text-status-blocked">{error}</p>}
-      <Button fullWidth variant="primary" onClick={onUnlock} disabled={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>
+      <div className={stickyCta ? "sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t border-lot-line bg-lot-chalk px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6" : undefined}>
+        <Button fullWidth variant="primary" onClick={onUnlock} disabled={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>
+      </div>
       {ctaNote && <p className="text-center text-xs leading-5 text-lot-stone">{ctaNote}</p>}
     </section>
   );

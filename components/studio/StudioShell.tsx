@@ -42,8 +42,8 @@ export interface StudioShellProps {
  * Desktop studio chrome for the guided-spine IA: a mahogany sidebar carrying the
  * logo, the single {@link StepRail} navigation (replacing the old sidebar-nav +
  * tab-bar double navigation), the active-parcel card, saved concepts, and the
- * account block. The main region **scrolls** instead of clipping to one viewport,
- * which is the structural fix for the studio being "unviewable" on short screens.
+ * account block. On desktop the shell is one locked viewport and each pane
+ * scrolls on its own, so short screens can still reach every control.
  *
  * Desktop-only: the mobile studio has its own shell ({@link MobileStudio}); this
  * component is rendered only in the desktop branch.
@@ -75,7 +75,10 @@ export default function StudioShell({
   const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
 
   return (
-    <div className="flex min-h-dvh bg-lot-ink text-lot-ink lg:h-dvh lg:overflow-hidden">
+    // Desktop is one locked viewport. The route layout's planning-guide bar sets
+    // `--studio-guide-bar`; reserving it here keeps the bar on screen without a
+    // second, document-level scroll. Panes scroll inside `main`.
+    <div className="flex min-h-dvh bg-lot-ink text-lot-ink lg:h-[calc(100dvh_-_var(--studio-guide-bar,0px))] lg:min-h-0 lg:overflow-hidden">
       <aside
         aria-label="Studio navigation"
         className="hidden w-[248px] shrink-0 flex-col border-r border-lot-line-dark bg-lot-ink text-lot-chalk lg:flex"
@@ -222,8 +225,11 @@ export default function StudioShell({
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
+      {/* `relative` contains absolutely positioned descendants (sr-only labels
+          among them); without a positioned ancestor they escaped the clip and
+          stretched the page below the Studio. */}
       {/* Mobile fallback header */}
-      <main id="main-content" tabIndex={-1} className="flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lot-chalk text-lot-ink lg:h-dvh lg:overflow-hidden">
+      <main id="main-content" tabIndex={-1} className="relative flex min-h-dvh w-full min-w-0 flex-1 flex-col bg-lot-chalk text-lot-ink lg:min-h-0 lg:overflow-hidden">
         <header className="flex items-center justify-between border-b border-lot-line bg-lot-chalk px-4 py-3 lg:hidden">
           <Link
             href="/"
