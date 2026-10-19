@@ -228,4 +228,119 @@ test.describe("Studio Neighborhood 3D", () => {
 
     expect(pageErrors).toEqual([]);
   });
+
+  test("real address flow: clicking Neighborhood while lookup is pending displays loading state without demo address fallback", async ({
+    page,
+  }) => {
+    // Delay geocode or parcel request to keep it in pending state
+    await page.route("**/api/geocode*", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          lat: 37.4446,
+          lng: -122.1611,
+          formattedAddress: "250 Hamilton Avenue, Palo Alto, CA 94301",
+        }),
+      });
+    });
+
+    await page.goto("/studio?q=250+Hamilton+Avenue,+Palo+Alto,+CA+94301");
+
+    // Left rail / header shows target address immediately, not 1234 Oak Street
+    await expect(page.getByText("250 Hamilton Avenue").first()).toBeVisible();
+    await expect(page.locator("text=1234 Oak Street")).toHaveCount(0);
+
+    // Switch to Neighborhood while still pending
+    await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
+
+    // Renders loading placeholder, does not mount Cesium with Oak Street
+    await expect(page.getByTestId("neighborhood-loading")).toBeVisible();
+    await expect(page.getByText("Loading property for Neighborhood 3D…")).toBeVisible();
+    await expect(page.locator("text=1234 Oak Street")).toHaveCount(0);
+    await expect(page.getByTestId("cesium-container")).toHaveCount(0);
+  });
+
+  test("real address flow: failed lookup displays retry state in Neighborhood and does not mount demo", async ({
+    page,
+  }) => {
+    await page.route("**/api/geocode*", async (route) => {
+      await route.abort();
+    });
+
+    await page.goto("/studio?q=250+Hamilton+Avenue,+Palo+Alto,+CA+94301");
+
+    // Switch to Neighborhood
+    await parcelViews(page).getByRole("radio", { name: "Neighborhood" }).click();
+
+    // Displays neighborhood lookup error and retry button
+    await expect(page.getByTestId("neighborhood-lookup-error")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Retry lookup" })).toBeVisible();
+    await expect(page.locator("text=1234 Oak Street")).toHaveCount(0);
+    await expect(page.getByTestId("cesium-container")).toHaveCount(0);
+  });
+
+  test("real address flow: successful lookup mounts Cesium with live parcel coordinates and supports view switching", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await page.route("**/api/geocode*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          lat: 37.4446,
+          lng: -122.1611,
+          formattedAddress: "250 Hamilton Avenue, Palo Alto, CA 94301",
+        }),
+      });
+    });
+    await page.route("**/api/parcel*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          address: "250 Hamilton Ave",
+          city: "Palo Alto, CA",
+          lotArea: 7500,
+          lotWidth: 60,
+          lotLength: 125,
+          existingHouseSqft: 2000,
+          maxLotCoveragePercent: 40,
+          setbacks: { front: 20, rear: 20, side: 6 },
+          zoning: "R-1",
+          boundaryGeoJson: null,
+          lat: 37.4446,
+          lng: -122.1611,
+          source: "regrid",
+          state: "CA",
+          zip: "94301",
+          county: "Santa Clara",
+        }),
+      });
+    });
+
+    await page.goto("/studio?q=250+Hamilton+Avenue,+Palo+Alto,+CA+94301");
+
+    // Wait for live parcel to resolve
+    await expect(page.getByText("250 Hamilton Ave").first()).toBeVisible();
+    await expect(page.locator("text=1234 Oak Street")).toHaveCount(0);
+
+    // Switch to Neighborhood
+    const views = parcelViews(page);
+    await views.getByRole("radio", { name: "Neighborhood" }).click();
+
+    // Cesium mounts for the live parcel
+    await expect(page.getByTestId("cesium-container")).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId("neighborhood-loading")).toHaveCount(0);
+    await expect(page.locator("text=1234 Oak Street")).toHaveCount(0);
+
+    // Return to 3D model and switch back
+    await views.getByRole("radio", { name: "3D model" }).click();
+    await expect(page.getByText("250 Hamilton Ave").first()).toBeVisible();
+    await views.getByRole("radio", { name: "Neighborhood" }).click();
+    await expect(page.getByTestId("cesium-container")).toBeVisible();
+    await expect(page.locator("text=1234 Oak Street")).toHaveCount(0);
+  });
 });
