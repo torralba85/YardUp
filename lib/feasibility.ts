@@ -16,6 +16,7 @@ export type { Parcel } from "./parcel-types";
 import { calculateZoning, type CapacityBasis } from "./zoning";
 import { calculateFinance, type ConstructionBudget } from "./finance";
 import type {
+  BedroomClass,
   MarketData,
   MarketProvenance,
   OperatingExpenseBreakdown,
@@ -42,6 +43,8 @@ export interface ParcelPreset extends Parcel {
   name: string;
   /** Monthly rent for each scenario, used directly instead of an estimate. */
   expectedRent: Record<RentScenario, number>;
+  /** Bedroom mix applied to the curated 1BR demo table; not observed comps. */
+  rentBedroomRatios?: Record<BedroomClass, number>;
   /** Bedroom-specific market anchors, when the demo uses a published rent source. */
   marketData?: MarketData;
 }
@@ -162,6 +165,8 @@ export const parcelPresets: ParcelPreset[] = [
     maxLotCoveragePercent: 40,
     setbacks: { front: 20, rear: 25, side: 5 },
     expectedRent: { conservative: 2050, market: 2350, optimistic: 2650 },
+    // Bedroom mix from the matching ZIP seed in lib/server/market/data/fmr.json.
+    rentBedroomRatios: { studio: 1820 / 2000, "1br": 1, "2br": 2430 / 2000 },
   },
   {
     id: "corner-lot",
@@ -175,6 +180,8 @@ export const parcelPresets: ParcelPreset[] = [
     maxLotCoveragePercent: 42,
     setbacks: { front: 18, rear: 20, side: 6 },
     expectedRent: { conservative: 2250, market: 2600, optimistic: 2950 },
+    // Bedroom mix from the matching ZIP seed in lib/server/market/data/fmr.json.
+    rentBedroomRatios: { studio: 1550 / 1720, "1br": 1, "2br": 2060 / 1720 },
   },
   {
     id: "compact-lot",
@@ -188,6 +195,8 @@ export const parcelPresets: ParcelPreset[] = [
     maxLotCoveragePercent: 38,
     setbacks: { front: 15, rear: 15, side: 5 },
     expectedRent: { conservative: 1850, market: 2150, optimistic: 2450 },
+    // Bedroom mix from the matching ZIP seed in lib/server/market/data/fmr.json.
+    rentBedroomRatios: { studio: 1500 / 1700, "1br": 1, "2br": 2050 / 1700 },
   },
   {
     id: "coyote-brush",
@@ -402,7 +411,13 @@ export function calculateFeasibility(
     };
     market = provenanceFromMarketData(marketData);
   } else if ("expectedRent" in parcel) {
-    rentTable = (parcel as ParcelPreset).expectedRent;
+    const preset = parcel as ParcelPreset;
+    const scale = preset.rentBedroomRatios?.[bedroom] ?? 1;
+    rentTable = {
+      conservative: Math.round(preset.expectedRent.conservative * scale),
+      market: Math.round(preset.expectedRent.market * scale),
+      optimistic: Math.round(preset.expectedRent.optimistic * scale),
+    };
     market = presetProvenance();
   } else {
     rentTable = estimateRent(parcel.lotArea);
