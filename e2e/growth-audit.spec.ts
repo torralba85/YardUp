@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-test("Studio previews cost detail while keeping the free estimate available", async ({ page }, testInfo) => {
+test("Studio previews locked detail while keeping the free rent range available", async ({ page }, testInfo) => {
   await page.goto("/studio?parcel=oak-street&step=certificate", { waitUntil: "domcontentloaded" });
-  const detail = page.getByText("Five modeled line items included in your Certificate.");
-  await expect(detail).toBeVisible();
-  await detail.scrollIntoViewIfNeeded();
-  await expect(page.getByRole("button", { name: "Unlock cost allowances", exact: true }).first()).toBeAttached();
+  const preview = page.getByRole("region", { name: "Free property preview" });
+  await expect(preview).toBeVisible();
+  await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
+  await expect(preview).toContainText("Estimated monthly rent");
+  await expect(page.getByRole("button", { name: "Continue to secure checkout — $29" })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("studio-cost-preview.png") });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

@@ -74,7 +74,7 @@ test.describe("mobile studio journey", () => {
     await expect(drawer).toBeVisible();
     await expect(drawer.getByRole("button", { name: /close fine-tune panel/i })).toBeFocused();
     await expect(
-      drawer.getByRole("heading", { name: /feasibility studio/i }),
+      drawer.getByRole("heading", { name: /design your adu/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: /close fine-tune panel/i }).click();

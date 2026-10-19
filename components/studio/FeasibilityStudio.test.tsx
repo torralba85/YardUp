@@ -372,6 +372,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
 
     expect(stepButton(/Rules & Fit/)).toHaveAttribute("aria-current", "step");
+    expect(screen.getByLabelText("Search property address")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Numbers & readiness" })).not.toBeInTheDocument();
     expect(screen.queryByText(/Readiness:/)).not.toBeInTheDocument();

@@ -1364,6 +1364,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               addressFocusSignal={addressFocusSignal}
               emailLinkCard={emailLinkCard}
             /> : <div className="min-h-0 w-full shrink-0 space-y-4 overflow-y-auto p-5 lg:w-[384px]">
+              <AddressSearch
+                onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
+                onSubmitText={searchByAddress}
+                autoFocusSignal={addressFocusSignal}
+              />
+              {parcelLoading && <p role="status" className="text-xs text-lot-stone">Looking up property data…</p>}
+              {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
               <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} />
               <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}

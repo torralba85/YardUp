@@ -4,7 +4,6 @@ test("free Studio offers a 3D concept and rent range without exposing paid figur
   await page.goto("/studio?parcel=coyote-brush");
   const mobile = testInfo.project.name.includes("mobile");
   if (mobile) {
-    await page.getByRole("button", { name: /Reveal my backyard/ }).click();
     await expect(page.getByText("$2,459–$3,074")).toBeVisible();
     await page.getByRole("button", { name: /Shape your ADU/ }).click();
     await expect(page.getByRole("radiogroup", { name: "ADU size", exact: true })).toBeVisible();
