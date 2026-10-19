@@ -28,6 +28,15 @@ const briefFixture: AIProjectBrief = {
   recommendedNextSteps: ["Verify with the city"], disclaimer: "Planning estimate",
 };
 
+const entitlement = vi.hoisted(() => ({ purchased: false }));
+vi.mock("@/lib/certificate-recovery", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/certificate-recovery")>();
+  return { ...actual, useCertificateRecovery: (options: Parameters<typeof actual.useCertificateRecovery>[0]) => {
+    const recovery = actual.useCertificateRecovery(options);
+    return entitlement.purchased ? { ...recovery, access: { ...recovery.access, purchased: true } } : recovery;
+  } };
+});
+
 const savedMocks = vi.hoisted(() => ({ fetch: vi.fn(), remove: vi.fn(), save: vi.fn() }));
 vi.mock("@/lib/scenarios-firestore", () => ({
   fetchSavedScenarios: savedMocks.fetch,
@@ -171,6 +180,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     clearInitialParcel();
     clearCertificatePurchaseIntent();
     authMocks.user = null;
+    entitlement.purchased = false;
     // Simulate reduced motion so useCountUp snaps synchronously to its final
     // value, keeping assertions on count-up figures deterministic.
     vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({
@@ -362,9 +372,10 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
 
     expect(stepButton(/Rules & Fit/)).toHaveAttribute("aria-current", "step");
-    expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Numbers & readiness" })).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText("Readiness: 82/100")).not.toBeVisible();
+    expect(screen.getByLabelText("Search property address")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Numbers & readiness" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Readiness:/)).not.toBeInTheDocument();
   });
 
   it("renders the searched live parcel's dimensions in the 3D scene", async () => {
@@ -433,6 +444,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "52");
     });
     expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-length", "143");
+    expect(screen.getByText("If built").parentElement).toHaveTextContent("/mo");
   });
 
   it("keeps the parcel view switch inside the scene and changes views explicitly", async () => {
@@ -541,6 +553,7 @@ describe("FeasibilityStudio (guided spine)", () => {
   });
 
   it("folds the local permit guide into the Rules & Fit step", () => {
+    entitlement.purchased = true; // The complete workspace requires a property grant.
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
       screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i }),
@@ -548,6 +561,7 @@ describe("FeasibilityStudio (guided spine)", () => {
   });
 
   it("offers one AI action for the parcel interpretation and approval timeline", () => {
+    entitlement.purchased = true; // The complete workspace requires a property grant.
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     const brief = screen.getByRole("region", { name: "Property notes and timeline" });
@@ -591,8 +605,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Check feasibility/i }));
 
     // Reveal 4 · Check — plain-language verdict before any permit detail.
-    expect(await screen.findByText(/Verify before permit/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /See your certificate/i }));
+    expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /See what’s behind the numbers/i }));
 
     // Reveal 5 · Act — the completion artifact plus the two next actions.
     expect(
@@ -627,7 +641,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     const drawer = await screen.findByTestId("fine-tune-drawer");
     // The advanced inspector is progressive disclosure, never the default path.
     expect(
-      within(drawer).getByRole("heading", { name: "Feasibility Studio", hidden: true }),
+      within(drawer).getByRole("heading", { name: "Design your ADU", hidden: true }),
     ).toBeInTheDocument();
   });
 
@@ -639,12 +653,12 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     expect(screen.queryByRole("combobox", { name: "Sample Property" })).not.toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "ADU footprint size" })).toBeVisible();
-    expect(screen.getByText("Build Cost Range")).not.toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Numbers & readiness" }));
-    expect(screen.getByText("Build Cost Range")).toBeVisible();
+    expect(screen.queryByText("Build Cost Range")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Numbers & readiness" })).not.toBeInTheDocument();
   });
 
   it("flags review needed when selecting a 1,000 sf concept on the compact preset", async () => {
+    entitlement.purchased = true; // The complete workspace requires a property grant.
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
@@ -660,6 +674,7 @@ describe("FeasibilityStudio (guided spine)", () => {
   });
 
   it("updates the rental estimate when switching the basis to Market", async () => {
+    entitlement.purchased = true; // The complete workspace requires a property grant.
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
@@ -677,16 +692,8 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     await user.click(stepButton(/Certificate/));
 
-    // The free estimate snapshot stays visible...
-    expect(
-      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
-    ).toBeInTheDocument();
-    // ...but the complete certificate is gated behind a one-time price.
-    expect(
-      screen.getByRole("heading", {
-        name: /unlock the complete adu feasibility & builder bid packet — one-time \$29/i,
-      }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
+    expect(screen.getByText("Annual net income locked in the certificate")).toBeInTheDocument();
 
     // A guest sees the price on the purchase CTA (the account step comes
     // after), and the paid report does not open.
@@ -789,18 +796,18 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     await user.click(stepButton(/Certificate/));
     expect(
-      screen.getByRole("heading", { name: "Estimate Summary", level: 2 }),
+      screen.getByRole("region", { name: "Free property preview" }),
     ).toBeInTheDocument();
 
     await user.click(stepButton(/Rules & Fit/));
-    expect(screen.getByRole("heading", { name: "What this lot allows" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
   });
 
   it("jumps to the certificate step from the constraints panel without opening the report", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(screen.getByRole("button", { name: "View certificate" }));
+    await user.click(screen.getByRole("button", { name: "See what’s behind the numbers" }));
 
     expect(stepButton(/Certificate/)).toHaveAttribute("aria-current", "step");
     expect(
@@ -835,7 +842,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /See your certificate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
     fireEvent.click(
       await screen.findByRole("button", { name: /Connect with matched builders/i }),
     );
@@ -850,6 +857,7 @@ describe("FeasibilityStudio (guided spine)", () => {
   });
 
   it("keeps lead money figures neutral", () => {
+    entitlement.purchased = true; // The complete workspace requires a property grant.
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     const summary = document.getElementById("summary");
     expect(summary).not.toBeNull();
@@ -872,7 +880,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /See your certificate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
     expect(
       await screen.findByRole("heading", { name: /Your feasibility study is ready/i }),
     ).toBeInTheDocument();
@@ -907,7 +915,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
-    expect(await screen.findByText(/Verify before permit/i)).toBeInTheDocument();
+    expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
 
     // Jump backward via the rail's completed "Earn" chip. JourneyRail only
     // makes done chips clickable and calls onStepSelect (setJourneyStep)

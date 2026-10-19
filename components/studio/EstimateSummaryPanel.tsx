@@ -15,6 +15,7 @@ import { assessImpactFeeThreshold, type FeeJurisdiction } from "@/lib/certificat
 import { Button } from "@/components/ui/Button";
 import { PanelHeader } from "@/components/ui/Panel";
 import { StatusChip, type StatusChipStatus } from "@/components/ui/StatusChip";
+import StudioPreview from "./StudioPreview";
 import type { FeasibilityResult } from "./types";
 
 /**
@@ -63,13 +64,17 @@ export default function EstimateSummaryPanel({
   result,
   feasibilityStatus,
   onGenerateReport,
-  reportCtaLabel = "Create report",
+  reportCtaLabel = "See what’s behind the numbers",
   reportCtaBusy = false,
   reportCtaNote,
   error,
   certificateUnlocked = false,
   feeJurisdiction = "other",
 }: EstimateSummaryPanelProps) {
+  if (!certificateUnlocked) {
+    return <StudioPreview result={result} onUnlock={onGenerateReport} ctaLabel={reportCtaLabel}
+      busy={reportCtaBusy} ctaNote={reportCtaNote} error={error} />;
+  }
   const isCompliant = result.zoningStatus === "Compliant";
   const CoverageIcon = isCompliant ? CheckCircle2 : TriangleAlert;
   const verdictChip = VERDICT_CHIP[feasibilityStatus];

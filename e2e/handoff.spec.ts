@@ -37,9 +37,8 @@ test.describe("landing → studio handoff", () => {
     await handOffAddress(page);
 
     await expect(page).toHaveURL(/\/studio/);
-    // Seam rule (DESIGN.md): a money-green figure within 3s of arrival — the
-    // dawn arrival plate stamps data-money while Firebase auth resolves.
-    await expect(page.locator("[data-money]").first()).toBeVisible({ timeout: 3000 });
+    const preview = page.getByRole("region", { name: "Free property preview" });
+    await expect(preview).toBeVisible({ timeout: 15000 });
     // The handed-off search ran and failed for this unresolvable address
     // (15s absorbs the geocode round trip; the banner surfaces with or without
     // keys). Filter to the alert that carries text: Next.js's route announcer
@@ -48,10 +47,9 @@ test.describe("landing → studio handoff", () => {
     await expect(
       page.getByRole("alert").filter({ hasText: /\S/ }).first(),
     ).toBeVisible({ timeout: 15000 });
-    // Money moment survives: the desktop studio opens on Feasibility with the
-    // demo preset, so its "If built" income figure stays on screen after the
-    // failed search settles. 15s absorbs auth + the search round trip.
-    await expect(page.getByText("If built").first()).toBeVisible({ timeout: 15000 });
+    // The demo rent range stays available after the failed lookup.
+    await expect(preview).toContainText("Estimated monthly rent");
+    await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
     // Privacy: the typed address never reaches the URL.
     expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });

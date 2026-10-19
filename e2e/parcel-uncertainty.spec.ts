@@ -14,8 +14,8 @@ test("county GIS uncertainty survives the parcel handoff into Rules & Fit", asyn
     await page.getByRole("button", { name: /shape your adu/i }).click();
     await page.getByRole("button", { name: /check feasibility/i }).click();
   }
-  await expect(page.getByText("Needs Review", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/Zoning and ADU permission are unverified/).first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
+  await expect(page.getByText(/Not permit approval or guaranteed income/).first()).toBeVisible();
   await expect(page.getByText(/Existing building footprint is unknown/).first()).toBeVisible();
   await expect(page.getByText(/ADU appears permitted under current rules/)).toHaveCount(0);
 });

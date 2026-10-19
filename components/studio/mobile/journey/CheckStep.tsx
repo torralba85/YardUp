@@ -16,6 +16,7 @@ import {
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { Button } from "@/components/ui/Button";
 import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
+import StudioPreview from "../../StudioPreview";
 import ParcelDataNotice from "../../ParcelDataNotice";
 
 const VERDICT_ICON: Record<VerdictLevel, typeof CheckCircle2> = {
@@ -31,6 +32,7 @@ const VERDICT_COPY: Record<VerdictLevel, string> = {
 };
 
 export interface CheckStepProps {
+  certificateUnlocked?: boolean;
   parcel: Parcel;
   result: FeasibilityResult;
   config: Pick<ADUConfig, "width" | "length">;
@@ -40,6 +42,7 @@ export interface CheckStepProps {
 }
 
 export default function CheckStep({
+  certificateUnlocked = false,
   parcel,
   result,
   config,
@@ -47,6 +50,12 @@ export default function CheckStep({
   onContinue,
   onCreateAccount,
 }: CheckStepProps) {
+  if (!certificateUnlocked) {
+    return <section aria-label="Feasibility check" className="space-y-5 px-5 py-7">
+      <StudioPreview result={result} onUnlock={onContinue} />
+      <Button variant="secondary" fullWidth onClick={onFineTune}>Keep exploring the 3D concept</Button>
+    </section>;
+  }
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
   const Icon = VERDICT_ICON[summary.verdict];

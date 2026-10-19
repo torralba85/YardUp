@@ -32,8 +32,8 @@ test.describe("mobile studio journey", () => {
 
     // Reveal 4 · Check — the plain-language verdict leads, then the
     // verification items follow it.
-    await expect(page.getByText(/verify before permit/i)).toBeVisible();
-    await page.getByRole("button", { name: /see your certificate/i }).click();
+    await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
+    await page.getByRole("button", { name: /See what’s behind the numbers/i }).click();
 
     // Reveal 5 · Act — completion artifact plus the two next actions.
     await expect(
@@ -74,7 +74,7 @@ test.describe("mobile studio journey", () => {
     await expect(drawer).toBeVisible();
     await expect(drawer.getByRole("button", { name: /close fine-tune panel/i })).toBeFocused();
     await expect(
-      drawer.getByRole("heading", { name: /feasibility studio/i }),
+      drawer.getByRole("heading", { name: /design your adu/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: /close fine-tune panel/i }).click();

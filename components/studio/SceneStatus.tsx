@@ -5,6 +5,7 @@ import { CheckCircle2, ChevronDown, TriangleAlert, XCircle } from "lucide-react"
 import type { PlacementResult } from "@/lib/placement-validation";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import { getSiteFitCapacityStatus } from "@/lib/site-fit";
+import { parcelConfidence } from "@/lib/parcel-confidence";
 import type { Parcel } from "@/lib/parcel-types";
 import type { CapacityBasis } from "@/lib/zoning";
 import { updateStudioParcel } from "@/lib/studio-enhancements-store";
@@ -14,6 +15,7 @@ import { updateStudioParcel } from "@/lib/studio-enhancements-store";
  * fallback. Placement and coverage are reported as separate outcomes.
  */
 export function SceneStatus({
+  analysisUnlocked = true,
   id,
   placement,
   remainingCapacity,
@@ -21,6 +23,7 @@ export function SceneStatus({
   isProxy,
   parcel,
 }: {
+  analysisUnlocked?: boolean;
   id?: string;
   placement: PlacementResult;
   remainingCapacity: number;
@@ -79,7 +82,11 @@ export function SceneStatus({
         </div>
       </div>
 
-      <details className="group/status px-4" open={placement.status === "blocked" ? true : undefined}>
+      {remainingCapacity < 0 && (!parcel || parcelConfidence(parcel).footprintKnown) && (
+        <p role="alert" className="px-4 py-3 text-xs leading-5 text-status-review">This concept exceeds the modeled size allowance. Reduce the footprint and confirm local planning rules.</p>
+      )}
+
+      {analysisUnlocked && <details className="group/status px-4" open={placement.status === "blocked" ? true : undefined}>
         <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
           Modeled site fit details
           <ChevronDown size={14} aria-hidden="true" className="ml-auto shrink-0 group-open/status:rotate-180" />
@@ -96,14 +103,9 @@ export function SceneStatus({
             ; house footprint and position are approximate. Compass bearing is unverified. Confirm surveyed boundaries and building separations.
           </p>
         </div>
-      </details>
+      </details>}
 
-      {coverage.tone !== "ok" && (
-        <p className="flex items-start gap-2 px-3 pb-3 text-xs leading-5 text-status-review">
-          <TriangleAlert size={16} aria-hidden="true" className="shrink-0" />
-          <span>{coverage.title}. {coverage.action}</span>
-        </p>
-      )}
+
     </div>
   );
 }
