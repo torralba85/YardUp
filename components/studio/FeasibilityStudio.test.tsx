@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import FeasibilityStudio from "../FeasibilityStudio";
 import { AuthProvider } from "@/lib/auth-context";
 import { clearInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
+import { stashAddressQuery } from "@/lib/address-handoff";
 import {
   clearCertificatePurchaseIntent,
   hasCertificatePurchaseIntent,
@@ -89,26 +90,41 @@ vi.mock("next/dynamic", () => ({
   default: () => {
     // Expose the dims the scene receives so tests can assert the 3D lot
     // tracks the active parcel (preset, estimated, or live).
-    const MockParcelScene = (props: {
-      parcel?: { lotWidth: number; lotLength: number };
+    const MockDynamic = (props: {
+      parcel?: { address?: string; city?: string; lotWidth: number; lotLength: number };
       scanMode?: boolean;
       splatOnly?: boolean;
       pose?: unknown;
       onScanStatus?: (status: { state: "error"; message: string }) => void;
-    }) => (
-      <div
-        data-testid="parcel-scene"
-        data-lot-width={props.parcel?.lotWidth}
-        data-lot-length={props.parcel?.lotLength}
-        data-pose={JSON.stringify(props.pose)}
-        data-splat-only={props.splatOnly}
-      >
-        parcel scene placeholder
-        {props.scanMode && <button onClick={() => props.onScanStatus?.({ state: "error", message: "Decode failed" })}>Fail scan load</button>}
-      </div>
-    );
-    MockParcelScene.displayName = "MockParcelScene";
-    return MockParcelScene;
+      onReturnToModel?: () => void;
+    }) => {
+      if (props.onReturnToModel) {
+        return (
+          <div
+            data-testid="cesium-neighborhood-view"
+            data-address={props.parcel?.address}
+            data-city={props.parcel?.city}
+          >
+            cesium neighborhood view
+            <button onClick={props.onReturnToModel}>Return to model</button>
+          </div>
+        );
+      }
+      return (
+        <div
+          data-testid="parcel-scene"
+          data-lot-width={props.parcel?.lotWidth}
+          data-lot-length={props.parcel?.lotLength}
+          data-pose={JSON.stringify(props.pose)}
+          data-splat-only={props.splatOnly}
+        >
+          parcel scene placeholder
+          {props.scanMode && <button onClick={() => props.onScanStatus?.({ state: "error", message: "Decode failed" })}>Fail scan load</button>}
+        </div>
+      );
+    };
+    MockDynamic.displayName = "MockDynamic";
+    return MockDynamic;
   },
 }));
 
@@ -177,6 +193,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     savedMocks.save.mockReset();
     window.history.replaceState(null, "", "/");
     window.localStorage.clear();
+    window.sessionStorage.clear();
     clearInitialParcel();
     clearCertificatePurchaseIntent();
     authMocks.user = null;
@@ -543,6 +560,118 @@ describe("FeasibilityStudio (guided spine)", () => {
       expect(screen.getByRole("button", { name: "Close calibration panel" })).toHaveFocus();
       await user.keyboard("{Escape}");
       await waitFor(() => expect(screen.getByRole("button", { name: "Calibrate Scan" })).toHaveFocus());
+    });
+  });
+
+  describe("real-address flow and neighborhood view fallback prevention", () => {
+    it("renders loading state in 3D scene and prevents mounting demo in Neighborhood view while address is pending", async () => {
+      const user = userEvent.setup();
+      const pendingFetch = vi.spyOn(globalThis, "fetch").mockReturnValue(new Promise(() => {}) as unknown as Promise<Response>);
+
+      stashAddressQuery("250 Hamilton Avenue, Palo Alto, CA 94301");
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+      // Shell / address header should show target address and loading status, not 1234 Oak Street
+      expect(screen.getByText("250 Hamilton Avenue")).toBeInTheDocument();
+      expect(screen.getByText(/Palo Alto, CA 94301 · Looking up…/)).toBeInTheDocument();
+      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+
+      // In 3D model view, property loading is rendered instead of parcel scene with demo
+      expect(screen.getByTestId("property-loading")).toBeInTheDocument();
+      expect(screen.queryByTestId("parcel-scene")).not.toBeInTheDocument();
+
+      // Click Neighborhood view
+      const viewport = screen.getByTestId("scene-viewport");
+      const neighborhoodRadio = within(viewport).getByRole("radio", { name: "Neighborhood" });
+      await user.click(neighborhoodRadio);
+
+      // Neighborhood view renders loading placeholder and NOT Cesium with demo
+      expect(screen.getByTestId("neighborhood-loading")).toBeInTheDocument();
+      expect(screen.getByText(/Loading property for Neighborhood 3D…/)).toBeInTheDocument();
+      expect(screen.getByText(/Looking up satellite and 3D imagery for 250 Hamilton Avenue/)).toBeInTheDocument();
+      expect(screen.queryByTestId("cesium-neighborhood-view")).not.toBeInTheDocument();
+
+      // Can return to 3D model via button
+      await user.click(screen.getByRole("button", { name: "Return to 3D model" }));
+      expect(screen.getByTestId("property-loading")).toBeInTheDocument();
+
+      pendingFetch.mockRestore();
+    });
+
+    it("renders error state when lookup fails and offers retry or exploring demo", async () => {
+      const user = userEvent.setup();
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(JSON.stringify({ error: "Could not reach the parcel service. Check your connection and try again." }), { status: 502 }),
+      );
+
+      stashAddressQuery("250 Hamilton Avenue, Palo Alto, CA 94301");
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+      // Wait for error state to appear
+      await screen.findByTestId("property-lookup-error");
+      expect(screen.getByText("Could not load property data")).toBeInTheDocument();
+      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+
+      // Switch to Neighborhood view
+      const viewport = screen.getByTestId("scene-viewport");
+      const neighborhoodRadio = within(viewport).getByRole("radio", { name: "Neighborhood" });
+      await user.click(neighborhoodRadio);
+
+      // Shows neighborhood lookup error with retry button, never demo
+      expect(screen.getByTestId("neighborhood-lookup-error")).toBeInTheDocument();
+      expect(screen.getByText("Could not load neighborhood view")).toBeInTheDocument();
+      expect(screen.queryByTestId("cesium-neighborhood-view")).not.toBeInTheDocument();
+
+      // Return to 3D model
+      await user.click(screen.getByRole("button", { name: "Return to 3D model" }));
+      expect(screen.getByTestId("property-lookup-error")).toBeInTheDocument();
+
+      // User can choose to explore demo lot instead
+      await user.click(screen.getByRole("button", { name: "Explore demo lot" }));
+      expect(screen.getByTestId("parcel-scene")).toBeInTheDocument();
+      expect(screen.getByText("1234 Oak Street")).toBeInTheDocument();
+
+      // Now Neighborhood view works for the demo lot
+      await user.click(within(screen.getByTestId("scene-viewport")).getByRole("radio", { name: "Neighborhood" }));
+      expect(screen.getByTestId("cesium-neighborhood-view")).toBeInTheDocument();
+      expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", "1234 Oak Street");
+
+      fetchSpy.mockRestore();
+    });
+
+    it("mounts CesiumNeighborhoodView with live parcel coordinates and retains it across view switches", async () => {
+      const user = userEvent.setup();
+      stashInitialParcel(SAMPLE_LIVE_PARCEL);
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+      // Header shows live address
+      expect(screen.getByText(SAMPLE_LIVE_PARCEL.address)).toBeInTheDocument();
+      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+
+      // 3D scene renders with live parcel dims
+      const scene = screen.getByTestId("parcel-scene");
+      expect(scene).toHaveAttribute("data-lot-width", String(SAMPLE_LIVE_PARCEL.lotWidth));
+
+      // Switch to Neighborhood
+      const viewport = screen.getByTestId("scene-viewport");
+      const neighborhoodRadio = within(viewport).getByRole("radio", { name: "Neighborhood" });
+      await user.click(neighborhoodRadio);
+
+      // Renders Cesium with live parcel data
+      const cesium = screen.getByTestId("cesium-neighborhood-view");
+      expect(cesium).toBeInTheDocument();
+      expect(cesium).toHaveAttribute("data-address", SAMPLE_LIVE_PARCEL.address);
+      expect(cesium).toHaveAttribute("data-city", SAMPLE_LIVE_PARCEL.city);
+
+      // Return to model via Cesium callback
+      await user.click(screen.getByRole("button", { name: "Return to model" }));
+      expect(screen.getByTestId("parcel-scene")).toBeInTheDocument();
+      expect(screen.getByText(SAMPLE_LIVE_PARCEL.address)).toBeInTheDocument();
+
+      // Switch back to Neighborhood
+      await user.click(within(screen.getByTestId("scene-viewport")).getByRole("radio", { name: "Neighborhood" }));
+      expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", SAMPLE_LIVE_PARCEL.address);
+      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
     });
   });
 

@@ -93,7 +93,7 @@ import { Button } from "./ui/Button";
 import StudioPreview, { rentRangeLabel } from "./studio/StudioPreview";
 import { Skeleton } from "./ui/Skeleton";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
-import { ArrowRight, ImageOff, Search } from "lucide-react";
+import { AlertCircle, ArrowRight, ImageOff, RefreshCw, Search } from "lucide-react";
 import { summarizeFeasibility } from "@/lib/feasibility-verdict";
 import { hasCertificatePurchaseIntent } from "@/lib/certificate-purchase-intent";
 import {
@@ -167,6 +167,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     parcelMode,
     parcelError,
     parcelLoading,
+    targetAddress,
+    isRealAddressFlow,
+    retryLookup,
     selectionVersion,
     authRequired,
     clearAuthRequired,
@@ -372,6 +375,31 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       ? userCalibration.transform
       : splatScene.transform
     : undefined;
+
+  const isLookupPending = parcelLoading || Boolean(pendingAddressQuery);
+  const isRealAddressActive = isRealAddressFlow && parcelMode !== "live";
+  const displayAddress = isRealAddressActive
+    ? (targetAddress ?? pendingAddressQuery ?? "Looking up property…")
+    : activeParcel.address;
+
+  const shellAddress = useMemo(() => {
+    if (!isRealAddressActive) {
+      return { address: activeParcel.address, city: activeParcel.city };
+    }
+    const raw = displayAddress;
+    const commaIndex = raw.indexOf(",");
+    if (commaIndex > 0) {
+      const street = raw.slice(0, commaIndex).trim();
+      const locality = raw.slice(commaIndex + 1).trim();
+      const statusSuffix = isLookupPending ? " · Looking up…" : (parcelError ? " · Lookup failed" : "");
+      return { address: street, city: `${locality}${statusSuffix}` };
+    }
+    return {
+      address: raw,
+      city: isLookupPending ? "Looking up property data…" : (parcelError ? "Lookup failed" : ""),
+    };
+  }, [isRealAddressActive, activeParcel.address, activeParcel.city, displayAddress, isLookupPending, parcelError]);
+
   const result = useMemo(
     () => calculateScenarioFeasibility(activeParcel, config, assumptions, pose),
     [assumptions, config, activeParcel, pose],
@@ -982,13 +1010,48 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const sceneNode =
     effectiveViewMode === "neighborhood" ? (
-      <CesiumNeighborhoodView
-        parcel={activeParcel}
-        config={config}
-        pose={pose}
-        placement={result.placement}
-        onReturnToModel={() => setViewMode("3d")}
-      />
+      isRealAddressActive ? (
+        parcelError ? (
+          <div
+            role="alert"
+            data-testid="neighborhood-lookup-error"
+            className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-chalk p-8 text-center"
+          >
+            <AlertCircle size={28} className="text-status-blocked" aria-hidden="true" />
+            <p className="font-display text-sm font-semibold text-lot-ink">Could not load neighborhood view</p>
+            <p className="max-w-[36ch] text-xs text-lot-stone">{parcelError}</p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <Button variant="secondary" onClick={() => changeViewMode("3d")}>Return to 3D model</Button>
+              <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            role="status"
+            data-testid="neighborhood-loading"
+            className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-chalk p-8 text-center"
+          >
+            <RefreshCw className="animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
+            <p className="font-display text-sm font-semibold text-lot-ink">Loading property for Neighborhood 3D…</p>
+            <p className="text-xs text-lot-stone">
+              {displayAddress !== "Looking up property…"
+                ? `Looking up satellite and 3D imagery for ${displayAddress}…`
+                : "Looking up property data…"}
+            </p>
+            <div className="mt-2">
+              <Button variant="secondary" size="xs" onClick={() => changeViewMode("3d")}>Return to 3D model</Button>
+            </div>
+          </div>
+        )
+      ) : (
+        <CesiumNeighborhoodView
+          parcel={activeParcel}
+          config={config}
+          pose={pose}
+          placement={result.placement}
+          onReturnToModel={() => setViewMode("3d")}
+        />
+      )
     ) : effectiveViewMode === "aerial" ? (
       aerialAvailable ? (
         <AerialView
@@ -1027,22 +1090,62 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           </div>
         )}
         <div className="relative min-h-0 flex-1">
-        <ParcelScene
-          analysisUnlocked={certificateUnlocked}
-          parcel={sceneParcel}
-          config={config}
-          isCompliant={isCompliant}
-          remainingCapacity={result.remainingCapacity}
-          capacityBasis={result.capacityBasis}
-          flowLayout={!isDesktop}
-          pose={pose}
-          onPoseCommit={commitPose}
-          scanMode={effectiveViewMode === "scan"}
-          splatScene={splatScene}
-          scanTransform={activeSplatTransform}
-          splatOnly={splatOnly}
-          onScanStatus={onScanStatus}
-        />
+          {isRealAddressActive ? (
+            parcelError ? (
+              <div
+                role="alert"
+                data-testid="property-lookup-error"
+                className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-ink p-8 text-center"
+              >
+                <AlertCircle size={28} className="text-status-blocked" aria-hidden="true" />
+                <p className="font-display text-sm font-semibold text-lot-chalk">Could not load property data</p>
+                <p className="max-w-[36ch] text-xs text-lot-stone-on-dark">{parcelError}</p>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                  <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      resetToPreset(parcelPresets[0]);
+                      setParcelId(parcelPresets[0].id);
+                    }}
+                  >
+                    Explore demo lot
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div
+                role="status"
+                data-testid="property-loading"
+                className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-ink p-8 text-center"
+              >
+                <RefreshCw className="animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
+                <p className="font-display text-sm font-semibold text-lot-chalk">Looking up property data…</p>
+                <p className="text-xs text-lot-stone-on-dark">
+                  {displayAddress !== "Looking up property…"
+                    ? `Resolving property boundary and zoning for ${displayAddress}…`
+                    : "Retrieving parcel geometry…"}
+                </p>
+              </div>
+            )
+          ) : (
+            <ParcelScene
+              analysisUnlocked={certificateUnlocked}
+              parcel={sceneParcel}
+              config={config}
+              isCompliant={isCompliant}
+              remainingCapacity={result.remainingCapacity}
+              capacityBasis={result.capacityBasis}
+              flowLayout={!isDesktop}
+              pose={pose}
+              onPoseCommit={commitPose}
+              scanMode={effectiveViewMode === "scan"}
+              splatScene={splatScene}
+              scanTransform={activeSplatTransform}
+              splatOnly={splatOnly}
+              onScanStatus={onScanStatus}
+            />
+          )}
         {scanCalibrationEnabled && effectiveViewMode === "scan" && splatScene && activeSplatTransform && (
           <div className={`absolute right-0 top-0 z-(--z-index-scene) max-h-full max-w-full ${showCalibration ? "w-full overflow-y-auto overscroll-contain sm:w-80 md:w-96" : "p-3"}`}>
             {showCalibration ? (
@@ -1078,7 +1181,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // screen, with the advanced inspector behind an optional fine-tune drawer.
     const journeySteps = deriveJourneySteps(journeyStep, { found });
     const previousStep = prevJourneyStep(journeyStep);
-    const mobileParcelName = `${activeParcel.address}, ${activeParcel.city}`;
+    const mobileParcelName = isRealAddressActive
+      ? displayAddress
+      : `${activeParcel.address}, ${activeParcel.city}`;
 
     let stepContent: ReactNode;
     if (journeyStep === "find") {
@@ -1203,7 +1308,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           pageScroll={!nativeShell}
           header={
             <MobileHeader
-              address={activeParcel.address}
+              address={isRealAddressActive ? shellAddress.address : activeParcel.address}
               estimated={parcelMode === "estimated"}
               onReset={resetScenario}
             />
@@ -1276,10 +1381,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     );
   }
 
-  const parcelName = `${activeParcel.address}, ${activeParcel.city}`;
+  const parcelName = isRealAddressActive
+    ? displayAddress
+    : `${activeParcel.address}, ${activeParcel.city}`;
   // Whether the user has resolved their own address (live Regrid / wizard
   // estimate) vs. the default demo preset — drives the "Your Lot" value teaser.
-  const parcelResolved = parcelMode !== "preset";
+  const parcelResolved = parcelMode !== "preset" && !isRealAddressActive;
   // P1 keeps the whole journey explorable on any loaded lot (presets included);
   // the paid preconditions (certificate purchase, builder charge) are enforced
   // at those actions in later phases, not as navigation locks.
@@ -1293,8 +1400,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     <StudioShell
       steps={steps}
       onStepSelect={handleStepSelect}
-      parcelAddress={activeParcel.address}
-      parcelCity={activeParcel.city}
+      parcelAddress={shellAddress.address}
+      parcelCity={shellAddress.city}
       onChangeAddress={handleChangeAddress}
       onReset={resetScenario}
       savedScenarios={savedScenarios}
