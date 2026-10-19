@@ -26,6 +26,7 @@ export function calculateScenarioFeasibility(
   const totalHeight = buildAduHeightModel(config)?.totalHeight;
   return {
     ...base, placement, placementPose: pose,
+    heightReviewRequired: base.heightReviewRequired || Boolean(totalHeight && totalHeight > 16),
     warnings: [
       ...base.warnings,
       ...(placement.status !== "fits" ? placement.reasons.map((reason) => reason.message) : []),

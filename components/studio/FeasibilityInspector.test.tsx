@@ -164,3 +164,16 @@ it("shows a half-foot design narrower than the usual minimum in both controls", 
   expect(field.value).toBe("10.5");
   expect(slider.value).toBe("10.5");
 });
+
+
+
+it("retains height screening when generic free-preview warnings are hidden", () => {
+  const config = { ...defaultAduConfig, height: 20 };
+  render(<FeasibilityInspector designOnly showWarnings={false} parcelId={parcelPresets[0].id}
+    config={config} assumptions={defaultFinancialAssumptions}
+    result={calculateFeasibility(parcelPresets[0], config, defaultFinancialAssumptions)}
+    onParcelChange={vi.fn()} onConfigChange={vi.fn()} onAssumptionsChange={vi.fn()}
+    onReset={vi.fn()} onGenerateReport={vi.fn()} />);
+  expect(screen.getByRole("alert")).toHaveTextContent("Modeled roof height needs confirmation");
+  expect(screen.queryByText("Review needed")).not.toBeInTheDocument();
+});

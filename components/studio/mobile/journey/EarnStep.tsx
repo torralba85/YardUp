@@ -55,7 +55,7 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
       <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
 
       <div className="mt-7">
-        {certificateUnlocked ? <MoneyFigure value={result.monthlyRent} animate size="hero" tone="onLight" /> : <p className="font-display text-4xl font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}</p>}
+        {certificateUnlocked ? <MoneyFigure value={result.monthlyRent} animate size="hero" tone="onLight" /> : <p className="font-display text-4xl font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}<span className="ml-2 text-base font-normal">/mo</span></p>}
         {certificateUnlocked && <p className="mt-3 text-sm text-lot-stone">
           About{" "}
           <span className="font-display text-lg font-semibold text-lot-ink">

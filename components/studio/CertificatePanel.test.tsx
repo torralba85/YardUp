@@ -292,7 +292,7 @@ describe("CertificatePanel", () => {
   it("keeps a coverage conflict and permanent property access visible before purchase", () => {
     mocks.access.purchased = false;
     render(<CertificatePanel {...createProps({ result: { ...result, remainingCapacity: -380 } })} />);
-    expect(screen.getByText(/This concept exceeds the modeled coverage allowance/)).toBeInTheDocument();
+    expect(screen.getByText(/This concept exceeds the modeled size allowance/)).toBeInTheDocument();
     expect(screen.getByText(/Unlocks this property permanently/)).toBeInTheDocument();
   });
 

@@ -24,10 +24,10 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
     : result.regulationsEstimated
       ? "Zoning, setbacks and coverage are modeling assumptions."
       : "Local rules, site conditions and rent assumptions need confirmation.";
-  const conflict = result.placement?.status === "blocked"
+  const conflict = (result.placement?.status === "blocked" || result.placement?.houseStatus === "close" || result.placement?.houseStatus === "boundary-contact")
     ? result.placement.reasons[0]?.message
-    : result.footprintKnown !== false && !result.regulationsEstimated && result.remainingCapacity < 0
-      ? "This concept exceeds the modeled coverage allowance. Adjust the design before relying on this estimate."
+    : result.footprintKnown !== false && result.remainingCapacity < 0
+      ? "This concept exceeds the modeled size allowance. Adjust the design and confirm local planning rules."
       : undefined;
 
   return (
@@ -57,6 +57,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
       </div>
       <p className="text-sm leading-6 text-lot-stone">Includes cost allowances, financing comparisons, local permit steps, items to verify, and a builder bid checklist.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
+      {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
       <p className="text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
       {error && <p role="alert" className="text-sm text-status-blocked">{error}</p>}
       <Button fullWidth variant="primary" onClick={onUnlock} disabled={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>

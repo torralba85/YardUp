@@ -444,6 +444,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "52");
     });
     expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-length", "143");
+    expect(screen.getByText("If built").parentElement).toHaveTextContent("/mo");
   });
 
   it("keeps the parcel view switch inside the scene and changes views explicitly", async () => {

@@ -659,6 +659,9 @@ export default function FeasibilityInspector({
 
         {/* Footer CTAs stay in the panel flow so short desktop viewports can scroll. */}
         <div className="space-y-3 border-t border-lot-line px-6 py-5">
+          {!showWarnings && result.heightReviewRequired && (
+            <p role="alert" className="text-sm text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>
+          )}
           {showWarnings && designOnly && result.warnings.length > 0 && (
             <div role="alert" className="flex items-start gap-2 text-sm text-status-review">
               <TriangleAlert size={17} aria-hidden="true" className="mt-0.5 shrink-0" />

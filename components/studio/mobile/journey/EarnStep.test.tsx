@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   calculateFeasibility,
@@ -69,4 +69,10 @@ describe("EarnStep", () => {
 
     expect(vibrate).toHaveBeenCalledTimes(1);
   });
+});
+
+
+it("identifies the free rent range as monthly", () => {
+  render(<EarnStep parcelName="Sample" result={result} estimated={false} onContinue={vi.fn()} />);
+  expect(screen.getByText("/mo")).toBeInTheDocument();
 });

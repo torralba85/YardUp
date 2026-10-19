@@ -1720,7 +1720,7 @@ function LotStep({
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             {hasParcel && <div>
               <p className="lf-kicker-dense text-lot-stone">If built</p>
-              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-lot-ink">{monthlyRent}</p>
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-lot-ink">{monthlyRent}<span className="ml-2 text-sm font-normal">/mo</span></p>
             </div>}
             <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
               Continue to Rules &amp; Fit

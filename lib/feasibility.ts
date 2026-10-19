@@ -133,6 +133,8 @@ export interface FeasibilityResult {
   paybackYears: number;
   /** Human-readable cautions (coverage overage, height review, etc.). */
   warnings: string[];
+  /** True when the design exceeds the model’s height screening threshold. */
+  heightReviewRequired?: boolean;
   /** One-line citation for the rent figure (source + area + bedroom). */
   rentBasis: string;
   /** Provenance of the financial figures: source, freshness, confidence. */
@@ -433,6 +435,7 @@ export function calculateFeasibility(
     ...zoning,
     ...finance,
     rentRange: { low: rentTable.conservative, high: rentTable.optimistic },
+    heightReviewRequired: config.height > 16,
     warnings,
     rentBasis,
     market,
