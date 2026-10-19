@@ -1083,7 +1083,7 @@ export default function ParcelScene({
   return (
     <div className={`flex min-h-0 flex-col bg-lot-chalk ${flowLayout ? "h-auto" : "h-full"}`}>
       <div
-        className={`relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "h-[clamp(340px,54dvh,560px)] shrink-0"}`}
+        className={`relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[clamp(340px,54dvh,560px)] flex-1 lg:min-h-0"}`}
         style={{ backgroundColor: SCENE_BACKDROP }}
         tabIndex={0}
         role="group"

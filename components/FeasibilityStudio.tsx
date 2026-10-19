@@ -1413,7 +1413,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         ref={stepBodyRef}
         tabIndex={-1}
         aria-label={currentStepMeta.label}
-        className="flex flex-1 flex-col outline-none"
+        // min-h-0: without it the step grew to its tallest pane and `main`
+        // clipped the overflow, so neither pane could scroll to its last controls.
+        className="flex min-h-0 flex-1 flex-col outline-none"
       >
         {showsVerdictBand && certificateUnlocked && (
           <FeasibilityVerdictBand
@@ -1478,7 +1480,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               />
               {parcelLoading && <p role="status" className="text-xs text-lot-stone">Looking up property data…</p>}
               {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
-              <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} />
+              <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} stickyCta />
               <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}
               {emailLinkCard}
@@ -1634,7 +1636,7 @@ function SceneViewport({
   flowLayout?: boolean;
 }) {
   return (
-    <div data-testid="scene-viewport" className={`relative flex min-h-0 flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto" : "h-[58dvh] min-h-[500px]") : (viewMode === "3d" || viewMode === "scan" ? "h-auto" : "h-[clamp(460px,65dvh,700px)]")}`}>
+    <div data-testid="scene-viewport" className={`relative flex flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto min-h-0" : "h-[58dvh] min-h-[500px]") : (viewMode === "3d" || viewMode === "scan" ? "h-auto min-h-0" : "min-h-[clamp(460px,65dvh,700px)]")}`}>
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} hasScan={hasScan} />
       <div className="min-h-0 flex-1">{sceneNode}</div>
     </div>
@@ -1654,9 +1656,14 @@ function SceneSection({
   hasScan?: boolean;
 }) {
   return (
+    // The stage grows into whatever height its column leaves free, so the model
+    // fills the workspace instead of leaving chalk below it. Content that
+    // follows (permit guide, design gallery) shrinks it back to the floor. The
+    // floor is explicit on desktop: the scene's percentage heights make the
+    // automatic (content) minimum circular, and the stage would never shrink.
     <section
       aria-label="Parcel massing scene"
-      className="lf-entrance flex min-h-0 shrink-0 flex-col border-b border-lot-line bg-lot-ink lg:border-b-0 lg:border-r"
+      className="lf-entrance flex flex-1 shrink-0 flex-col border-b border-lot-line bg-lot-ink lg:min-h-[clamp(480px,72dvh,720px)] lg:border-b-0 lg:border-r"
     >
       <SceneViewport
         sceneNode={sceneNode}
