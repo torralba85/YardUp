@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
+import { pageOpenGraph } from "@/lib/og-images";
+
+const title = "Terms & Conditions | LotFoundry";
+const description =
+  "Read the LotFoundry Terms & Conditions covering the feasibility studio, AI features, marketplace, payments, estimates, and acceptable use.";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | LotFoundry",
-  description:
-    "Read the LotFoundry Terms & Conditions covering the feasibility studio, AI features, marketplace, payments, estimates, and acceptable use.",
+  title,
+  description,
   alternates: { canonical: "/terms" },
+  openGraph: pageOpenGraph({ title, description, url: "/terms" }),
 };
 
 /**

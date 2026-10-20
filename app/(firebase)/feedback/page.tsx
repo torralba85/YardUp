@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { FeedbackForm } from "./FeedbackForm";
+import { pageOpenGraph } from "@/lib/og-images";
+
+const title = "Send Feedback | LotFoundry";
+const description =
+  "Report LotFoundry bugs, incorrect parcel or zoning data, billing problems, or product ideas, and learn what details help us investigate.";
 
 /** Page metadata for the feedback route. */
 export const metadata: Metadata = {
-  title: "Send Feedback | LotFoundry",
-  description:
-    "Report LotFoundry bugs, incorrect parcel or zoning data, billing problems, or product ideas, and learn what details help us investigate.",
+  title,
+  description,
   alternates: { canonical: "/feedback" },
+  openGraph: pageOpenGraph({ title, description, url: "/feedback" }),
 };
 
 /** Public feedback page (`/feedback`). */

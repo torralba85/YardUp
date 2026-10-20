@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
+import { pageOpenGraph } from "@/lib/og-images";
+
+const title = "Help | LotFoundry";
+const description = "Getting started with LotFoundry: studio, account, payments, AI photos, and deletion.";
 
 export const metadata: Metadata = {
-  title: "Help | LotFoundry",
-  description: "Getting started with LotFoundry: studio, account, payments, AI photos, and deletion.",
+  title,
+  description,
   alternates: { canonical: "/help" },
+  openGraph: pageOpenGraph({ title, description, url: "/help" }),
 };
 
 export default function HelpPage() {

@@ -11,15 +11,15 @@ const baseUrl = CANONICAL_ORIGIN;
  * `noindex` as well — omitting them from the sitemap alone would not keep them
  * out of the index. `/delete-account` stays publicly reachable for store-policy
  * compliance; it is de-indexed, not hidden.
+ *
+ * The demo landings (`/seattle`, `/portland`, `/austin`, `/san-diego`) are
+ * absent for the same reason: they repeat the homepage with a different sample
+ * lot and carry `noindex` (`cityLandingMetadata`).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     "/",
     "/studio",
-    "/seattle",
-    "/portland",
-    "/austin",
-    "/san-diego",
     "/about",
     "/help",
     "/feedback",

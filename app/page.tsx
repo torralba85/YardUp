@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
 import { landingScenarios } from "@/lib/landing-demo";
+import { LANDING_OG_IMAGE } from "@/lib/og-images";
 import { COLOR } from "@/lib/design-tokens";
 
 
@@ -20,8 +21,10 @@ export const viewport: Viewport = {
   themeColor: COLOR["lot-chalk"],
   viewportFit: "cover",
 };
+// Says what a searcher does here (enter an address) and that the first one is
+// free; the search snippet and the shared-link card both read this line.
 const description =
-  "Discover what your backyard could become. Explore space for an ADU, estimated build costs, and rental potential with LotFoundry.";
+  "Enter your address to see what could fit on your lot in 3D, with estimated ADU build cost, rent and payback. First address free, no account needed.";
 const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
@@ -34,20 +37,13 @@ export const metadata: Metadata = {
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
     url: canonicalUrl,
-    images: [
-      {
-        url: "/landing/a-lot-more/parcel-after.webp",
-        width: 1536,
-        height: 1024,
-        alt: "An illustrative miniature property with an orange backyard home",
-      },
-    ],
+    images: [LANDING_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
-    images: ["/landing/a-lot-more/parcel-after.webp"],
+    images: [LANDING_OG_IMAGE.url],
   },
 };
 

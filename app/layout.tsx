@@ -4,7 +4,8 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
-import { SOCIAL_URLS } from "@/lib/social-links";
+import { DIRECTORY_URLS, SOCIAL_URLS } from "@/lib/social-links";
+import { SITE_OG_IMAGE } from "@/lib/og-images";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
@@ -79,7 +80,7 @@ const jsonLd = {
     // it only ever lists URLs that actually resolve. A 404 here is a negative
     // signal, not a neutral one — add each social profile when it is claimed,
     // never ahead of it.
-    sameAs: [GOOGLE_PLAY_URL, ...SOCIAL_URLS],
+    sameAs: [GOOGLE_PLAY_URL, ...SOCIAL_URLS, ...DIRECTORY_URLS],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
@@ -115,14 +116,7 @@ export const metadata: Metadata = {
     title: "LotFoundry | See what your backyard can earn",
     description:
       "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
-    images: [
-      {
-        url: "/lotfoundry-og.png",
-        width: 1200,
-        height: 630,
-        alt: "LotFoundry — ADU planning for homeowners",
-      },
-    ],
+    images: [SITE_OG_IMAGE],
     type: "website",
   },
 };

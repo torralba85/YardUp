@@ -10,7 +10,9 @@ import {
   stateCostUrl,
 } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
-import { SOCIAL_LINKS } from "@/lib/social-links";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { landingDemos } from "@/lib/landing-demo";
+import { DIRECTORY_LINKS, SOCIAL_LINKS } from "@/lib/social-links";
 
 describe("buildLlmsTxt", () => {
   it("lists every shipped jurisdiction, so the file cannot go stale when a city ships", () => {
@@ -64,6 +66,32 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain(SOCIAL_LINKS.instagram);
     expect(text).toContain(SOCIAL_LINKS.facebook);
     expect(text).toContain(SOCIAL_LINKS.x);
+    expect(text).toContain(DIRECTORY_LINKS.crunchbase);
+  });
+
+  it("lists every demo lot from the landing registry", () => {
+    const text = buildLlmsTxt();
+
+    for (const demo of Object.values(landingDemos)) {
+      expect(text).toContain(`[${demo.name}, ${demo.city}](https://lotfoundry.net/studio?parcel=${demo.parcelId})`);
+    }
+  });
+
+  it("claims no more about setbacks than the code models", () => {
+    const text = buildLlmsTxt();
+
+    // Outside California the studio uses assumed setbacks, so "real setbacks"
+    // would be repeated to homeowners as a fact the tool does not have.
+    expect(text).not.toMatch(/real setbacks/i);
+    expect(text).toContain("assumed setbacks (20 ft front, 20 ft rear, 5 ft side)");
+    expect(text).toContain("California's 4 ft cap");
+  });
+
+  it("states the certificate price checkout bills, so assistants do not call the product free-only", () => {
+    const text = buildLlmsTxt();
+
+    expect(text).toContain(`USD ${CERTIFICATE_PRICE_CENTS / 100} one-time on the web`);
+    expect(text).toContain("https://lotfoundry.net/sample-certificate/san-diego");
   });
 
   it("states the planning-aid limitation, because this text is read verbatim by assistants", () => {
