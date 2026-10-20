@@ -24,12 +24,13 @@ export default function AboutPage() {
           already own — then connect with builders when you are ready.
         </p>
       </LegalSection>
-      {/* Same facts as the JSON-LD legalName and the public Crunchbase profile;
-          founder name and founding date wait for the owner's confirmation. */}
+      {/* Same facts as the JSON-LD legalName and the public Crunchbase profile,
+          with the founder line Andrew approved on 2026-10-20. The founding date
+          is left out until he confirms it. */}
       <LegalSection title="Who makes LotFoundry">
         <p>
           LotFoundry is made by VeriShare, a small software company based in San Diego,
-          California.
+          California. Andrew Torralba founded VeriShare and is CEO of LotFoundry.
         </p>
       </LegalSection>
       <LegalSection title="Who it is for">
