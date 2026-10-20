@@ -921,4 +921,26 @@ describe("CertificatePanel", () => {
     );
     expect(screen.getByRole("button", { name: /unlock property certificate/i })).toBeEnabled();
   });
+
+  it("says it is opening secure checkout while the session is created, not that it is preparing a certificate", async () => {
+    mocks.access.purchased = false;
+    let finishCheckout: (outcome: { kind: "redirect"; url: string }) => void = () => {};
+    mocks.startCertificateCheckout.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishCheckout = resolve;
+      }),
+    );
+    stubLocationAssign();
+    render(<CertificatePanel {...createProps()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+    const busy = await screen.findByRole("button", { name: "Opening secure checkout" });
+    expect(busy).toHaveAttribute("aria-busy", "true");
+    expect(busy).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /preparing certificate/i })).not.toBeInTheDocument();
+
+    finishCheckout({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_test_1" });
+    await waitFor(() => expect(window.location.assign).toHaveBeenCalledTimes(1));
+  });
 });

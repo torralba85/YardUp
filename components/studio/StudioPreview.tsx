@@ -68,7 +68,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
       <p className="text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
       {error && <p role="alert" className="text-sm text-status-blocked">{error}</p>}
       <div className={stickyCta ? "sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t border-lot-line bg-lot-chalk px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6" : undefined}>
-        <Button fullWidth variant="primary" onClick={onUnlock} disabled={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>
+        <Button fullWidth variant="primary" onClick={onUnlock} loading={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>
       </div>
       {ctaNote && <p className="text-center text-xs leading-5 text-lot-stone">{ctaNote}</p>}
     </section>

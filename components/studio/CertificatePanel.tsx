@@ -353,7 +353,9 @@ export default function CertificatePanel({
     : reportBusy
     ? purchased
       ? "Preparing complete certificate"
-      : "Preparing certificate"
+      : busy
+        ? certPrice.channel === "web" ? "Opening secure checkout" : "Opening purchase"
+        : "Preparing certificate"
     : purchased
     ? "View complete certificate"
     : !user
