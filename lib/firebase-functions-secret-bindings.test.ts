@@ -60,11 +60,25 @@ describe("Firebase Functions provider secret bindings", () => {
       /const typeSafeApiKey =\s*process\.env\.TYPESAFE_GEOCODE_PICKER === "true" \|\|\s*process\.env\.TYPESAFE_ZONING_SHADOW === "true"\s*\? defineSecret\("TYPESAFE_API_KEY_SECRET"\)\s*: null;/,
     );
     expect(functionsEntry).toContain(
-      "{ ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] }",
+      "{ ...fnOpts, minInstances: 1, secrets: [stripeSecretKey, stripeWebhookSecret] }",
     );
     expect(functionsEntry).toContain(
       "{ ...fnOpts, secrets: nativeStoreSecrets }",
     );
+  });
+
+  it("keeps one Stripe instance warm, and only that one", () => {
+    // `apiStripe` scales to zero otherwise and the first request after idle
+    // waits 5-8 s on a cold start, which is the wait behind the $29 buy click
+    // and a slow first webhook. Firebase deploys write the scaling settings
+    // from this file, so a `gcloud run services update` alone would be undone
+    // by the next deploy.
+    expect(functionsEntry).toMatch(
+      /exports\.apiStripe = onRequest\(\s*\{ \.\.\.fnOpts, minInstances: 1, secrets:/,
+    );
+    // Every other function stays on scale-to-zero: each warm instance bills
+    // around $13 a month whether or not it serves a request.
+    expect(functionsEntry.match(/minInstances:/g)).toHaveLength(1);
   });
 
   it("does not serialize server credentials into the CI environment file", () => {

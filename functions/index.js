@@ -171,8 +171,15 @@ exports.apiStore = onRequest(
 // Stripe checkout + webhook only. firebase.json routes /api/stripe/** here so
 // the payment secrets are bound to this function alone (least privilege) and
 // never reach the other API handlers.
+//
+// One instance stays warm. Scaled to zero, the first request after idle waits
+// 5-8 s on a cold start (measured in Cloud Run logs: even a 401 took 6.9 s), the
+// wait behind the $29 buy click, and a webhook arriving after idle starts just as
+// slowly. A warm instance bills idle CPU and memory at $0.0000025 per second each:
+// about $13 a month for 1 vCPU and 1 GiB, with no free tier on that idle time.
+// Deploys write scaling from this file, so set it here, not with gcloud alone.
 exports.apiStripe = onRequest(
-  { ...fnOpts, secrets: [stripeSecretKey, stripeWebhookSecret] },
+  { ...fnOpts, minInstances: 1, secrets: [stripeSecretKey, stripeWebhookSecret] },
   async (req, res) => {
     const handle = await ready();
     return handle(requestForNext(req), res);

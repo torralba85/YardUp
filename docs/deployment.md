@@ -9,7 +9,7 @@ The production Firebase project is `yardup-2026`.
 |---|---|---|
 | Web app | Hosting + `app` | Serves all non-API Next.js routes and static assets |
 | AI API | `apiAi` | Serves `/api/ai/**` with the OpenAI secret and a longer timeout |
-| Stripe API | `apiStripe` | Serves `/api/stripe/**` with Stripe secrets only |
+| Stripe API | `apiStripe` | Serves `/api/stripe/**` with Stripe secrets only; keeps one instance warm (`minInstances: 1`, about $13 a month) so the buy click and webhooks skip a 5-8 s cold start |
 | Native-store API | `apiStore` | Serves `/api/store/**` receipt verification with native-store secrets only when enabled |
 | General API | `api` | Serves remaining `/api/**` routes with Google Maps, server Places fallback, and Regrid secrets; production Places calls use the Function's OAuth identity so App Check can remain enforced |
 
