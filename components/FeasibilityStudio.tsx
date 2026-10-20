@@ -1205,7 +1205,6 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       stepContent = (
         <EarnStep
           parcelNotice={<ParcelDataNotice parcel={activeParcel} />}
-          emailLinkCard={emailLinkCard}
           parcelName={mobileParcelName}
           result={result}
           estimated={parcelMode !== "live"}
@@ -1471,7 +1470,6 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               projectBriefError={projectBriefError}
               onGenerateProjectBrief={handleGenerateProjectBrief}
               addressFocusSignal={addressFocusSignal}
-              emailLinkCard={emailLinkCard}
             /> : <div className="min-h-0 w-full shrink-0 space-y-4 overflow-y-auto p-5 lg:w-[384px]">
               <AddressSearch
                 onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
@@ -1483,7 +1481,6 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} stickyCta />
               <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}
-              {emailLinkCard}
             </div>}
           </div>
         ) : activeStep === "design" ? (

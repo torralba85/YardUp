@@ -11,3 +11,28 @@ Andrew selected this boundary on October 18, 2026: the free Studio shows an inte
 This is a Studio presentation boundary. The deterministic engine still runs in the client; it is not a new server-side authorization boundary. Existing server checks continue to protect paid certificate access and AI interpretation. Public example certificates and educational city pages remain examples of the product.
 
 Implementation: `components/studio/StudioPreview.tsx`, `components/FeasibilityStudio.tsx`, and `components/studio/CertificatePanel.tsx`. Regression coverage includes free/purchased component tests and `e2e/studio-paid-preview.spec.ts` for desktop and mobile.
+
+## Email capture placement - October 20, 2026
+
+Andrew chose a collapsed secondary action below the Certificate offer. The flow is
+3D exploration and rent preview, then the Certificate purchase decision, then
+"Email this layout for later" for visitors who want to return. The email form no
+longer appears in the desktop Rules & Fit rail or the mobile Earn reveal.
+
+Use the existing chalk, carbon, stone and drafting-line tokens, Manrope body type,
+and a 48px disclosure row. Keep signal orange for the primary Certificate action.
+The form opens on request and preserves its input, optional unchecked marketing
+choice, error handling and copy-link fallback. Demo, estimated, saved and purchased
+properties keep their existing exclusions.
+
+The free email contains the property address and saved-layout link, followed by a
+short $29 Certificate offer and a link to its purchase step. Do not print build
+cost, rent, cash flow or fee findings in this return email. The existing Studio
+presentation boundary and paid access checks continue to apply when it is opened.
+
+Coverage: `e2e/studio-email-link.spec.ts`, `e2e/studio-desktop-layout.spec.ts`,
+`components/studio/FeasibilityStudio.test.tsx` and
+`lib/server/studio-scenario-email.test.ts`.
+
+Review captures use a synthetic property: [desktop offer and collapsed email row](./evidence/studio-email-placement/desktop.png)
+and [expanded form on a 320px phone](./evidence/studio-email-placement/mobile-320.png).

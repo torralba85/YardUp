@@ -91,12 +91,18 @@ test("a signed-in real lot leaves no blank page below the Studio", async ({ page
   url.searchParams.set("step", "certificate");
   await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
-  const card = page.getByRole("region", { name: "Save this 3D lot layout for later — Free" }).filter({ visible: true }).first();
+  await page.locator("summary").filter({ hasText: "Email this layout for later" }).click();
+  const card = page.getByRole("region", { name: "Save your layout link" }).filter({ visible: true }).first();
   await expect(card).toBeVisible({ timeout: 15_000 });
 
   for (const step of [/Certificate/, /Rules & Fit/]) {
     await openStep(page, step);
-    await expect(page.getByRole("region", { name: "Save this 3D lot layout for later — Free" }).filter({ visible: true }).first()).toBeAttached();
+    if (String(step).includes("Certificate")) {
+      await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toBeVisible();
+    } else {
+      await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
+      await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+    }
     const geometry = await stepGeometry(page);
     expect(geometry.documentHeight, `${step} page scroll`).toBeLessThanOrEqual(geometry.viewportHeight);
   }

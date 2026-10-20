@@ -18,14 +18,24 @@ it("models the strict 750 sq ft boundary without promising all fees are waived",
   for (const [width, length, expected] of [[20, 30, true], [25, 30, false], [30, 30, false]] as const) {
     const scenario = { ...EMAIL_SCENARIO, config: { ...EMAIL_SCENARIO.config, width, length, footprint: width * length } };
     expect(scenarioHeadlineNumbers(scenario).isUnder750SqftFeeWaiver).toBe(expected);
-    const message = renderScenarioEmail(scenario, buildScenarioShareUrl(scenario), false);
-    expect(message.text).toContain(expected ? "Other fees and local/program exceptions" : "750 sq ft or larger");
-    expect(message.text).toContain("Rent basis:");
   }
 });
-it("does not apply the California exemption to another state", () => {
-  const scenario = { ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, state: "WA" } };
-  expect(renderScenarioEmail(scenario, buildScenarioShareUrl(scenario), false).text).toContain("has not been applied");
+it("emails a return link and paid offer without giving away financial or fee analysis", () => {
+  for (const state of ["CA", "WA"]) {
+    const scenario = { ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, state } };
+    const url = buildScenarioShareUrl(scenario, "a".repeat(48));
+    const message = renderScenarioEmail(scenario, url, false);
+    for (const body of [message.text, message.html]) {
+      expect(body).toContain("Open Your 3D Lot Layout");
+      expect(body).toContain("View the $29 Certificate");
+      expect(body).toContain("step=certificate");
+      expect(body).toContain("does not unlock the paid analysis");
+      expect(body).toContain("not been subscribed to marketing");
+      expect(body).not.toMatch(/Estimated build range|rent range|Rent basis:|750|sq ft|exemption|impact.fee/i);
+      expect(body.match(/\$[\d,]+/g)?.every((amount) => amount === "$29")).toBe(true);
+    }
+    expect(message.text).toContain(url);
+  }
 });
 
 describe("dispatchScenarioEmail", () => {

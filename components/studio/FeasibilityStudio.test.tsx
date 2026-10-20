@@ -222,8 +222,13 @@ describe("FeasibilityStudio (guided spine)", () => {
     const initialScenario = { ...EMAIL_SCENARIO, assumptions: { ...EMAIL_SCENARIO.assumptions, softCostMultiplier: 1.4 } };
     window.history.replaceState(null, "", `/studio?layout=${"a".repeat(48)}&utm_source=studio_email`);
     render(<AuthProvider><FeasibilityStudio initialScenario={initialScenario} /></AuthProvider>);
-    await screen.findByRole("heading", { name: "Save this 3D lot layout for later — Free" });
+    await screen.findByTestId("parcel-scene");
     expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", JSON.stringify(initialScenario.pose));
+    expect(screen.queryByText("Email this layout for later")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Certificate.*upcoming/i }));
+    const disclosure = await screen.findByText("Email this layout for later");
+    expect(disclosure.closest("details")).not.toHaveAttribute("open");
+    fireEvent.click(disclosure);
     expect(new URLSearchParams(window.location.search).get("layout")).toHaveLength(48);
     fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
@@ -243,7 +248,9 @@ describe("FeasibilityStudio (guided spine)", () => {
       `/studio?v=2&layout=${"a".repeat(48)}&cost_cedar=350&cost_lap=300&cost_stucco=320&cost_board=310&soft=1.2&opex=0.25&rent=conservative`,
     );
     render(<AuthProvider><FeasibilityStudio initialScenario={initialScenario} /></AuthProvider>);
-    await screen.findByRole("heading", { name: "Save this 3D lot layout for later — Free" });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(screen.getByRole("button", { name: /Certificate.*upcoming/i }));
+    fireEvent.click(await screen.findByText("Email this layout for later"));
     fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
     fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
@@ -268,6 +275,9 @@ describe("FeasibilityStudio (guided spine)", () => {
   it("does not offer email capture for a demo parcel", async () => {
     render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
     await screen.findByTestId("parcel-scene");
+    fireEvent.click(screen.getByRole("button", { name: /Certificate.*upcoming/i }));
+    await screen.findByRole("heading", { name: "Your Certificate of Feasibility." });
+    expect(screen.queryByText("Email this layout for later")).toBeNull();
     expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
   });
 
