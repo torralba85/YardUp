@@ -78,12 +78,14 @@ describe("buildLlmsTxt", () => {
   });
 
   it("claims no more about setbacks than the code models", () => {
-    const text = buildLlmsTxt();
+    const text = buildLlmsTxt().replace(/\s+/g, " ");
 
-    // Outside California the studio uses assumed setbacks, so "real setbacks"
-    // would be repeated to homeowners as a fact the tool does not have.
+    // Live-record defaults differ from the preset values shown on demo and
+    // fallback parcels, so neither set should be described as universal.
     expect(text).not.toMatch(/real setbacks/i);
-    expect(text).toContain("assumed setbacks (20 ft front, 20 ft rear, 5 ft side)");
+    expect(text).toContain("Live parcel records without zoning setbacks use rough defaults (20 ft front, 20 ft rear, 5 ft side)");
+    expect(text).toContain("Demo and no-record fallback parcels use their preset-specific setbacks instead");
+    expect(text).toContain("Portland 18/20/6 ft and Austin 15/15/5 ft");
     expect(text).toContain("California's 4 ft cap");
   });
 

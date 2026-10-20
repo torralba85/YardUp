@@ -62,10 +62,9 @@ function costLine(cost: JurisdictionCostContent): string {
  * the moment it ships, and a stale hand-written list is worse than none.
  *
  * "What the studio uses for a lot" must stay no stronger than the code: county
- * and statewide GIS only where `lib/server/county-parcels.ts` has a source, and
- * the assumed setbacks in `app/api/parcel/route.ts` everywhere outside the
- * California and City of San Diego rules in `lib/adu-setbacks.ts`. An assistant
- * repeats this file to homeowners as fact.
+ * and statewide GIS only where `lib/server/county-parcels.ts` has a source.
+ * Live-record setback defaults, demo/fallback preset setbacks, and California
+ * rules differ; an assistant repeats this file to homeowners as fact.
  */
 export function buildLlmsTxt(): string {
   const cities = [...ADU_CITIES.map(cityLine), ...ADU_COST_PAGES.map(costLine)].join("\n");
@@ -96,9 +95,12 @@ licensed builder.
   lot dimensions and says so.
 - ADU side and rear setbacks: California's 4 ft cap statewide, and the City of
   San Diego's own ADU rules, including High and Very High fire hazard zones.
-  Outside California, and for front setbacks everywhere, the studio uses
-  assumed setbacks (20 ft front, 20 ft rear, 5 ft side) that need local
-  confirmation.
+  Outside California, side and rear setbacks come from the parcel; the front
+  setback always comes from the parcel. Live parcel records without zoning
+  setbacks use rough defaults (20 ft front, 20 ft rear, 5 ft side). Demo and
+  no-record fallback parcels use their preset-specific setbacks instead (for
+  example, Portland 18/20/6 ft and Austin 15/15/5 ft). These modeled values
+  need local confirmation.
 - Build cost, rent, and payback: regional estimates, with the assumptions shown.
 
 ## Pricing
