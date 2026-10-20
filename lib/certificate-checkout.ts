@@ -59,37 +59,6 @@ export interface StartCertificateCheckoutInput {
   parcelData?: Record<string, unknown>;
 }
 
-const CERTIFICATE_CHECKOUT_PATH = "/api/stripe/checkout-certificate";
-
-/** An idle Cloud Run instance is reclaimed after about 15 minutes; refresh a
- * little sooner so a buyer who lingers on the paywall still lands on a warm one. */
-const WARM_INTERVAL_MS = 10 * 60 * 1000;
-
-let warmedAt = 0;
-
-/**
- * Wake the checkout function before the buyer clicks. It scales to zero, and the
- * first request after idle waits 5-8 s on a cold start (Cloud Run logs,
- * 2026-10-19: even a 401 took 6.9 s; warm calls took under 0.5 s), which is the
- * wait behind "Unlock property certificate". Fire-and-forget: a failed wake-up
- * costs nothing, because the click makes the real request anyway. Store
- * channels never reach Stripe, so they skip it.
- */
-export function warmCertificateCheckout(): void {
-  if (typeof window === "undefined") return;
-  if (requiresStoreBilling(detectPurchaseChannel())) return;
-  const now = Date.now();
-  if (now - warmedAt < WARM_INTERVAL_MS) return;
-  warmedAt = now;
-  fetch(CERTIFICATE_CHECKOUT_PATH, {
-    method: "GET",
-    cache: "no-store",
-    credentials: "omit",
-  }).catch(() => {
-    // Best effort only.
-  });
-}
-
 /**
  * Begin a certificate purchase on the correct channel:
  * - web → Stripe Checkout (`/api/stripe/checkout-certificate`)
@@ -124,7 +93,7 @@ export async function startCertificateCheckout(
 
   let res: Response;
   try {
-    res = await fetch(CERTIFICATE_CHECKOUT_PATH, {
+    res = await fetch("/api/stripe/checkout-certificate", {
       method: "POST",
       headers: {
         "content-type": "application/json",

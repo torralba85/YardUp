@@ -59,21 +59,6 @@ function cancelReturnQuery(returnQuery: string): string {
 }
 
 /**
- * GET /api/stripe/checkout-certificate
- *
- * Wake-up only. This function scales to zero, and the first request after idle
- * waits 5-8 s for a cold start, so the paywall calls this before the buyer
- * clicks and the click lands on a warm instance. It is anonymous, answers
- * nothing, and never reads Stripe or the reservation store.
- */
-export function GET() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: { "Cache-Control": "no-store" },
-  });
-}
-
-/**
  * POST /api/stripe/checkout-certificate  { certKey, parcelName, checkoutAttemptId? }
  *
  * Starts a certificate purchase for the authenticated user. With a Stripe key:
