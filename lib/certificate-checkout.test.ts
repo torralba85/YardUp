@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { STORE_PRODUCTS } from "@/lib/commerce/products";
-import { CertificateCheckoutError, startCertificateCheckout } from "./certificate-checkout";
+import {
+  CertificateCheckoutError,
+  startCertificateCheckout,
+  warmCertificateCheckout,
+} from "./certificate-checkout";
 
 const purchaseMocks = vi.hoisted(() => ({
   detectPurchaseChannel: vi.fn((): "web" | "app-store" | "google-play" => "web"),
@@ -160,5 +164,72 @@ describe("startCertificateCheckout", () => {
     expect(purchaseMocks.purchase).toHaveBeenCalledWith(STORE_PRODUCTS.certificate.id, {
       certKey: "lot-key-42",
     });
+  });
+});
+
+describe("warmCertificateCheckout", () => {
+  const HOUR_MS = 60 * 60 * 1000;
+  // The warm-up remembers when it last ran, so every case starts an hour later
+  // than the one before it instead of resetting module state.
+  let clock = Date.UTC(2026, 9, 19);
+
+  function startClock() {
+    clock += HOUR_MS;
+    vi.useFakeTimers();
+    vi.setSystemTime(clock);
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("wakes the checkout function with an anonymous, uncacheable GET on the web channel", () => {
+    startClock();
+    const fetchMock = vi.fn().mockResolvedValue({ status: 204 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    warmCertificateCheckout();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith("/api/stripe/checkout-certificate", {
+      method: "GET",
+      cache: "no-store",
+      credentials: "omit",
+    });
+  });
+
+  it("does not repeat while the instance it woke is still warm, then refreshes it", () => {
+    startClock();
+    const fetchMock = vi.fn().mockResolvedValue({ status: 204 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    warmCertificateCheckout();
+    vi.advanceTimersByTime(5 * 60 * 1000);
+    warmCertificateCheckout();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(6 * 60 * 1000);
+    warmCertificateCheckout();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves store channels alone, because they never reach Stripe", () => {
+    startClock();
+    purchaseMocks.detectPurchaseChannel.mockReturnValue("google-play");
+    purchaseMocks.requiresStoreBilling.mockReturnValue(true);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    warmCertificateCheckout();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("never surfaces a failed wake-up to the buyer", async () => {
+    startClock();
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    expect(() => warmCertificateCheckout()).not.toThrow();
+    await vi.advanceTimersByTimeAsync(0);
   });
 });

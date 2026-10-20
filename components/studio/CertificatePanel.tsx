@@ -32,6 +32,7 @@ import Link from "next/link";
 import {
   CertificateCheckoutError,
   startCertificateCheckout,
+  warmCertificateCheckout,
 } from "@/lib/certificate-checkout";
 import { clearInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
 import {
@@ -135,6 +136,13 @@ export default function CertificatePanel({
       purchase_channel: channel,
     });
   }, [loading, purchased, certKey, user, feasibilityStatus, recovery]);
+
+  // The buy click is the first request the payment function sees after idle, and
+  // a cold start makes it wait 5-8 s. Wake it as soon as the offer is on screen.
+  useEffect(() => {
+    if (loading || purchased) return;
+    warmCertificateCheckout();
+  }, [loading, purchased]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
     if (!user) {
@@ -353,7 +361,9 @@ export default function CertificatePanel({
     : reportBusy
     ? purchased
       ? "Preparing complete certificate"
-      : "Preparing certificate"
+      : busy
+        ? certPrice.channel === "web" ? "Opening secure checkout" : "Opening purchase"
+        : "Preparing certificate"
     : purchased
     ? "View complete certificate"
     : !user

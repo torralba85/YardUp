@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   trackPurchase: vi.fn(),
   startCertificateCheckout: vi.fn(),
+  warmCertificateCheckout: vi.fn(),
   intent: null as CertificateReturnIntent | null,
   recoveryStatus: "idle" as CertificateRecovery["status"],
   consumeOpen: vi.fn(),
@@ -118,6 +119,7 @@ vi.mock("@/lib/certificate-checkout", async (importOriginal) => {
   return {
     ...actual,
     startCertificateCheckout: mocks.startCertificateCheckout,
+    warmCertificateCheckout: mocks.warmCertificateCheckout,
   };
 });
 
@@ -237,6 +239,7 @@ describe("CertificatePanel", () => {
     mocks.refresh.mockReset();
     mocks.trackPurchase.mockReset();
     mocks.startCertificateCheckout.mockReset();
+    mocks.warmCertificateCheckout.mockReset();
     mocks.intent = null;
     mocks.recoveryStatus = "idle";
     mocks.consumeOpen.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
@@ -920,5 +923,48 @@ describe("CertificatePanel", () => {
       "Could not connect to payment processor. Please try again.",
     );
     expect(screen.getByRole("button", { name: /unlock property certificate/i })).toBeEnabled();
+  });
+
+  it("says it is opening secure checkout while the session is created, not that it is preparing a certificate", async () => {
+    mocks.access.purchased = false;
+    let finishCheckout: (outcome: { kind: "redirect"; url: string }) => void = () => {};
+    mocks.startCertificateCheckout.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishCheckout = resolve;
+      }),
+    );
+    stubLocationAssign();
+    render(<CertificatePanel {...createProps()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+
+    const busy = await screen.findByRole("button", { name: "Opening secure checkout" });
+    expect(busy).toHaveAttribute("aria-busy", "true");
+    expect(busy).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /preparing certificate/i })).not.toBeInTheDocument();
+
+    finishCheckout({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_test_1" });
+    await waitFor(() => expect(window.location.assign).toHaveBeenCalledTimes(1));
+  });
+
+  it("wakes the checkout function when an unpurchased visitor reaches the paywall", () => {
+    mocks.access.purchased = false;
+    const props = createProps();
+    const { rerender } = render(<CertificatePanel {...props} />);
+    rerender(<CertificatePanel {...props} />);
+
+    expect(mocks.warmCertificateCheckout).toHaveBeenCalled();
+  });
+
+  it("does not wake it while the access read is pending or once the certificate is bought", () => {
+    mocks.access.purchased = false;
+    mocks.access.loading = true;
+    const { rerender } = render(<CertificatePanel {...createProps()} />);
+    expect(mocks.warmCertificateCheckout).not.toHaveBeenCalled();
+
+    mocks.access.loading = false;
+    mocks.access.purchased = true;
+    rerender(<CertificatePanel {...createProps()} />);
+    expect(mocks.warmCertificateCheckout).not.toHaveBeenCalled();
   });
 });

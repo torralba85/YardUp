@@ -118,7 +118,7 @@ vi.mock("@/lib/stripe", () => ({
   getStripe: async () => mocks.stripe,
 }));
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 function postRequest(body: unknown): NextRequest {
   return new NextRequest("http://localhost/api/stripe/checkout-certificate", {
@@ -138,6 +138,23 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+});
+
+describe("GET /api/stripe/checkout-certificate", () => {
+  // The paywall calls this to wake a scaled-to-zero instance before the buyer
+  // clicks, so it must be cheap, anonymous and never cached or acted on.
+  it("answers an empty, uncacheable 204 without touching Stripe or the reservation store", async () => {
+    mocks.stripe = { checkout: { sessions: { create: vi.fn(), retrieve: vi.fn() } } };
+
+    const res = await GET();
+
+    expect(res.status).toBe(204);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(await res.text()).toBe("");
+    expect(mocks.stripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mocks.stripe.checkout.sessions.retrieve).not.toHaveBeenCalled();
+    expect(mocks.reservations.size).toBe(0);
+  });
 });
 
 describe("POST /api/stripe/checkout-certificate", () => {
