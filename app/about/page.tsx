@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
+import { pageOpenGraph } from "@/lib/og-images";
+
+const title = "About LotFoundry: Free ADU Feasibility Check";
+const description =
+  "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own.";
 
 export const metadata: Metadata = {
-  title: "About LotFoundry: Free ADU Feasibility Check",
-  description:
-    "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own.",
+  title,
+  description,
   alternates: { canonical: "/about" },
+  openGraph: pageOpenGraph({ title, description, url: "/about" }),
 };
 
 export default function AboutPage() {
@@ -17,6 +22,15 @@ export default function AboutPage() {
           LotFoundry is an ADU feasibility studio. Enter an address to explore estimated rent
           potential, build cost ranges, and payback for an accessory dwelling unit on a lot you
           already own — then connect with builders when you are ready.
+        </p>
+      </LegalSection>
+      {/* Same facts as the JSON-LD legalName and the public Crunchbase profile,
+          with the founder line Andrew approved on 2026-10-20. The founding date
+          is left out until he confirms it. */}
+      <LegalSection title="Who makes LotFoundry">
+        <p>
+          LotFoundry is made by VeriShare, a small software company based in San Diego,
+          California. Andrew Torralba founded VeriShare and is CEO of LotFoundry.
         </p>
       </LegalSection>
       <LegalSection title="Who it is for">

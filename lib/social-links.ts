@@ -14,3 +14,13 @@ export const SOCIAL_LINKS = {
 } as const;
 
 export const SOCIAL_URLS: readonly string[] = Object.values(SOCIAL_LINKS);
+
+/**
+ * Directory profiles that describe LotFoundry. Listed in structured data and
+ * /llms.txt, not as footer icons.
+ */
+export const DIRECTORY_LINKS = {
+  crunchbase: "https://www.crunchbase.com/organization/lotfoundry",
+} as const;
+
+export const DIRECTORY_URLS: readonly string[] = Object.values(DIRECTORY_LINKS);

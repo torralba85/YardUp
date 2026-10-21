@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CookiePreferences } from "@/components/analytics/CookiePreferences";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
+import { pageOpenGraph } from "@/lib/og-images";
+
+const title = "Privacy Policy | LotFoundry";
+const description =
+  "Learn what LotFoundry collects, how property, account, payment, analytics, and AI data are used, and how to exercise your privacy rights.";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | LotFoundry",
-  description:
-    "Learn what LotFoundry collects, how property, account, payment, analytics, and AI data are used, and how to exercise your privacy rights.",
+  title,
+  description,
   alternates: { canonical: "/privacy" },
+  openGraph: pageOpenGraph({ title, description, url: "/privacy" }),
 };
 
 /**

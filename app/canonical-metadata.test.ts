@@ -20,6 +20,8 @@ import { metadata as aduCaCostMetadata } from "./adu/ca/cost/page";
 import { metadata as aduCostCalculatorMetadata } from "./adu-cost-calculator/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { buildCityMetadata } from "@/lib/adu/content";
+import { cityLandingMetadata } from "@/components/landing/lot-more/CityLandingPage";
+import { landingDemos, type LandingCity } from "@/lib/landing-demo";
 
 describe("canonical metadata", () => {
   it("pins the metadata base and supplies a pathname-relative fallback", () => {
@@ -102,9 +104,34 @@ describe("share previews", () => {
   for (const { name, metadata } of [
     { name: "/adu/ca", metadata: aduCaMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
+    ...(Object.keys(landingDemos) as LandingCity[]).map((city) => ({ name: `/${city}`, metadata: cityLandingMetadata(city) })),
   ]) {
     it(`gives ${name} an Open Graph image, because its own openGraph block replaces the layout's`, () => {
       expect(metadata.openGraph?.images).toBeTruthy();
+    });
+  }
+
+  for (const { name, metadata } of [
+    { name: "/about", metadata: aboutMetadata },
+    { name: "/help", metadata: helpMetadata },
+    { name: "/feedback", metadata: feedbackMetadata },
+    { name: "/privacy", metadata: privacyMetadata },
+    { name: "/terms", metadata: termsMetadata },
+  ]) {
+    it(`shares ${name} under its own URL and title rather than the homepage's`, () => {
+      expect(metadata.openGraph?.url).toBe(name);
+      expect(metadata.openGraph?.title).toBe(metadata.title);
+      expect(metadata.openGraph?.images).toBeTruthy();
+    });
+  }
+});
+
+describe("demo landings", () => {
+  for (const city of Object.keys(landingDemos) as LandingCity[]) {
+    it(`keeps /${city} out of search, because it repeats the homepage with a different sample lot`, () => {
+      const metadata = cityLandingMetadata(city);
+      expect(metadata.robots).toEqual({ index: false, follow: true });
+      expect(metadata.alternates?.canonical).toBe(`https://lotfoundry.net/${city}`);
     });
   }
 });
