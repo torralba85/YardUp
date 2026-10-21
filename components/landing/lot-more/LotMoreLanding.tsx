@@ -245,8 +245,10 @@ export function LotMoreLanding({
     // stranger to create an account before they have seen anything is the
     // single most expensive step in this funnel, and it also pulls the Firebase
     // client bundle onto the critical path. The account ask comes after they
-    // have seen their own lot, not before.
-    if (!hasMemberSession && canGuestLookup()) {
+    // have seen their own lot, not before. A remembered member marker can be
+    // expired; it must not put an eligible guest behind the landing auth gate.
+    // Studio resolves the actual session before selecting parcel providers.
+    if (canGuestLookup()) {
       stashAddressQuery(pendingAddress.current);
       stashEntrySource("landing_cta");
       setEntering(true);

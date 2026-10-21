@@ -91,6 +91,7 @@ test.describe("Public LotFoundry flows", () => {
   });
 
   test("Design keeps setup and secondary tools out of the initial workspace", async ({ page, isMobile }) => {
+    test.setTimeout(60_000);
     test.skip(isMobile, "Desktop Design; mobile uses the existing journey");
     await page.goto("/studio?parcel=oak-street");
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();

@@ -276,9 +276,7 @@ describe("landing address handoff", () => {
     );
   });
 
-  // A returning member still goes through the gate, which resolves their
-  // existing session rather than prompting.
-  it("routes a browser that has signed in before through the auth gate", () => {
+  it("does not let a remembered session block an available guest lookup", () => {
     window.localStorage.setItem("lf:member-session", "1");
     render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
@@ -289,10 +287,21 @@ describe("landing address handoff", () => {
       screen.getAllByRole("button", { name: "Explore my lot" })[0],
     );
 
-    const authDialog = screen.getByRole("dialog");
-    expect(authDialog).toBeInTheDocument();
-    expect(authDialog).toHaveAttribute("data-initial-mode", "sign-in");
-    expect(authDialog).toHaveAttribute("data-analytics-source", "account_control");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(stash).toHaveBeenCalledExactlyOnceWith("456 Pine St, Denver, CO");
+    expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
+  });
+
+  it("still resolves a remembered member when the guest allowance is spent", () => {
+    window.localStorage.setItem("lf:member-session", "1");
+    spendGuestAllowance();
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.change(screen.getAllByLabelText("Property address", { exact: true })[0], {
+      target: { value: "456 Pine St, Denver, CO" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Explore my lot" })[0]);
+
+    expect(screen.getByRole("dialog")).toHaveAttribute("data-initial-mode", "sign-in");
     expect(push).not.toHaveBeenCalled();
   });
 

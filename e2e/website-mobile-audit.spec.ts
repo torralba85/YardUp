@@ -78,6 +78,7 @@ test("native guest gets one successful lookup, preserves Back, and is asked to s
 });
 
 test("unverified aerial is context only, without invented house, ADU or setback locations", async ({ page, isMobile }, testInfo) => {
+  test.setTimeout(60_000);
   await mockLookup(page);
   await page.goto("/studio");
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");

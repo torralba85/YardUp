@@ -3,7 +3,9 @@
 CI always creates a `verify` result. The `scope` job runs repository hygiene and
 the dependency-free CI safeguard suite before choosing heavy jobs. `quality`
 runs lint, units, and Firestore rules alongside `browser`, which runs typecheck,
-build, and both Playwright projects. Deploy waits for the aggregate `verify`.
+build, and both Playwright projects. Desktop and mobile run as separate matrix
+jobs with unique report artifacts; neither is canceled if the other fails.
+Deploy waits for the aggregate `verify`, including both browser projects.
 
 ## Changed-file rules
 
@@ -85,3 +87,9 @@ complete change set. Its green result never substitutes for the latest PR
 Record elapsed workflow time separately from the sum of job durations. Parallel
 jobs shorten feedback time but add checkout/install overhead. Keep the full
 desktop/mobile test counts and measure any proposed browser sharding separately.
+
+The desktop/mobile split retains all 280 cases (140 per project before runtime
+skips). The previous serial browser job exhausted its 30-minute budget on
+2026-10-21. Five longer Studio scenarios retain their assertions and use a
+60-second total scenario budget to accommodate software-rendered 3D interaction;
+individual expectations retain their existing deadlines.

@@ -53,7 +53,9 @@ export function SceneCameraController({ commandId, mode, bounds, geometryRevisio
   useFrame((_, delta) => {
     const current = flight.current;
     if (!current || !controls) return;
-    const step = 1 - Math.exp(-4.8 * Math.min(delta, 0.1));
+    // Exponential damping stays bounded even for a long frame. Capping delta
+    // made a short flight take many seconds on slow/software graphics.
+    const step = 1 - Math.exp(-4.8 * Math.max(0, delta));
     camera.position.lerp(current.position, step); controls.target.lerp(current.target, step);
     if (camera.position.distanceToSquared(current.position)<0.001 && controls.target.distanceToSquared(current.target)<0.001) {
       camera.position.copy(current.position); controls.target.copy(current.target); flight.current = null;

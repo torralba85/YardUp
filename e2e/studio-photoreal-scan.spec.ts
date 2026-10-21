@@ -41,6 +41,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("a parcel with no registered scan hides Scan entirely", async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto("/studio");
     // The sample-property picker lives on Your Lot; the Studio opens on Rules & Fit.
     await page.getByRole("button", { name: "Your Lot" }).click();
@@ -146,6 +147,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("ADU design choices survive a 3D to Scan round trip", async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto("/studio");
     await page.getByRole("button", { name: /Design/i }).click();
 
