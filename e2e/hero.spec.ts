@@ -29,7 +29,9 @@ test.describe("A lot more landing", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible();
     expect(guestGeocode).toBe(true);
     expect(guestParcel).toBe(true);
-    expect(page.url()).not.toMatch(/Cedar|[?&]q=/i);
+    const search = new URL(page.url()).searchParams;
+    expect([...search.values()].join(" ")).not.toContain(SAMPLE_LIVE_PARCEL.address);
+    expect(search.has("q")).toBe(false);
     if (isMobile) await page.getByRole("button", { name: "Shape your ADU" }).click();
     await expect(page.locator("canvas").first()).toBeVisible();
   });
