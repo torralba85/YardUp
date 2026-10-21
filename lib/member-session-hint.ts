@@ -24,6 +24,7 @@
  */
 
 const MEMBER_SESSION_KEY = "lf:member-session";
+const MEMBER_SESSION_EVENT = "lf:member-session-changed";
 
 /**
  * Record that this browser holds a resolved member session.
@@ -35,7 +36,9 @@ const MEMBER_SESSION_KEY = "lf:member-session";
 export function rememberMemberSession(): void {
   if (typeof window === "undefined") return;
   try {
+    if (window.localStorage.getItem(MEMBER_SESSION_KEY) === "1") return;
     window.localStorage.setItem(MEMBER_SESSION_KEY, "1");
+    window.dispatchEvent(new Event(MEMBER_SESSION_EVENT));
   } catch {
     // Storage disabled or full — degrade to the signed-out landing header.
   }
@@ -50,7 +53,9 @@ export function rememberMemberSession(): void {
 export function forgetMemberSession(): void {
   if (typeof window === "undefined") return;
   try {
+    if (window.localStorage.getItem(MEMBER_SESSION_KEY) === null) return;
     window.localStorage.removeItem(MEMBER_SESSION_KEY);
+    window.dispatchEvent(new Event(MEMBER_SESSION_EVENT));
   } catch {
     // Nothing to clear if storage is unavailable.
   }
@@ -59,9 +64,9 @@ export function forgetMemberSession(): void {
 /**
  * Subscribe to changes in the marker, for `useSyncExternalStore`.
  *
- * Only another tab's writes arrive as `storage` events, which is the case worth
- * hearing about: signing out in one tab should drop the member navigation in
- * every other one rather than leave it advertising a session that has ended.
+ * Other tabs notify through `storage`; this tab also notifies when Firebase
+ * resolves or clears a session. In particular, clearing an expired hint must
+ * let the landing submit a guest lookup instead of waiting for sign-in.
  *
  * @param onChange - Callback React supplies to request a re-read.
  * @returns The unsubscribe function.
@@ -73,7 +78,11 @@ export function subscribeMemberSession(onChange: () => void): () => void {
     if (event.key === null || event.key === MEMBER_SESSION_KEY) onChange();
   };
   window.addEventListener("storage", handleStorage);
-  return () => window.removeEventListener("storage", handleStorage);
+  window.addEventListener(MEMBER_SESSION_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(MEMBER_SESSION_EVENT, onChange);
+  };
 }
 
 /**
