@@ -55,7 +55,7 @@ expect(twa.display === "standalone", "TWA display mode must be standalone.");
 expect(twa.minSdkVersion >= 24, "Minimum Android SDK must be API 24 or newer.");
 // Highest versionCode already uploaded to Google Play. Play rejects any upload whose
 // versionCode does not exceed it, so the checked-in manifest must stay ahead of it.
-const PUBLISHED_VERSION_CODE = 14; // versionName 1.0.13, live in production at 100% (verified 2026-10-08)
+const PUBLISHED_VERSION_CODE = 16; // versionName 1.0.15, accepted into a production release draft (verified 2026-10-21)
 expect(
   twa.appVersionCode > PUBLISHED_VERSION_CODE,
   `Android version code (${twa.appVersionCode}) must exceed the published Play version code (${PUBLISHED_VERSION_CODE}).`,

@@ -49,7 +49,9 @@ must be raised whenever a new bundle is accepted.
 | 1.0.11 | 12 | production | Mobile landing performance improvements and current A LOT MORE icons throughout launcher, splash, shortcuts, notifications, and web assets; verified at 100% production rollout on 2026-09-21. |
 | 1.0.12 | 13 | available to internal testers 2026-09-29 | Locally signed with the current Play upload key after the CI bundle was rejected for using the retired key. Andrew approved internal publication; Play confirmed availability at 8:01 PM Pacific. Current-build device/billing verification and separate production confirmation remain pending. |
 | 1.0.13 | 14 | live production at 100%, verified 2026-10-08 | Built from master ab78270 with the then-current Play upload key. |
-| 1.0.14 | 15 | next build | Carries #274's manifest (no HTTP(S) intent filters). The first CI bundle (2026-10-08) was rejected for the retired upload key. Play activated the reset upload key (SHA-1 `A7:AA:76:59:36:BE:4E:96:83:C1:36:A9:FC:6E:6A:12:74:3B:10:90`, SHA-256 `FC:5E:42:92:…:05:EC:2D`) by 2026-10-12, and its SHA-256 is now trusted in the TWA manifest and Digital Asset Links. Rotate the `play-production` secrets to that keystore before dispatching the bundle workflow. |
+| 1.0.14 | 15 | available on Google Play, verified 2026-10-21 | Published Oct 16. Signed bundle from Actions run `38858599134` with the reset upload key; carries #274's manifest without HTTP(S) intent filters. |
+| 1.0.15 | 16 | accepted production draft 2026-10-21 | Signed bundle from Actions run `39686620787`, source `0b98549`. Play reports ready to release with no supported devices lost. Native behavior and billing dependencies are unchanged from code 15; submission and publication are separate gates. |
+| 1.0.16 | 17 | next build | Reserved after Play accepted code 16. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
 cross-origin redirect when verifying Digital Asset Links, so a bundle built
