@@ -91,7 +91,7 @@
     "vitest": "^4.1.7"
   },
   "optionalDependencies": {
-    "@rolldown/binding-linux-x64-gnu": "1.2.11"
+    "@rolldown/binding-linux-x64-gnu": "1.2.13"
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.5",
