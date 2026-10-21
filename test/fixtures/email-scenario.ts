@@ -1,17 +1,11 @@
-import { defaultAduConfig, defaultFinancialAssumptions } from "@/lib/feasibility";
-import { defaultPose } from "@/lib/scenario-design";
-import type { SavedScenario } from "@/lib/saved-scenarios";
+import { defaultScenarioState } from "@/lib/scenario-url";
 import { SAMPLE_LIVE_PARCEL } from "./live-parcel";
+import type { SavedScenario } from "@/lib/saved-scenarios";
 
 export const EMAIL_SCENARIO: SavedScenario = {
-  version: 2,
-  heightConvention: "wall",
-  id: "email-scenario-1",
-  name: "141 N Almaden Blvd",
-  createdAt: "2026-09-25T00:00:00.000Z",
-  parcelId: "oak-street",
-  liveParcel: SAMPLE_LIVE_PARCEL,
-  config: defaultAduConfig,
-  assumptions: defaultFinancialAssumptions,
-  pose: defaultPose(SAMPLE_LIVE_PARCEL, defaultAduConfig),
+  ...defaultScenarioState,
+  version: 2, heightConvention: "wall",
+  id: "example", name: "My lot", createdAt: "2026-10-16T00:00:00Z",
+  pose: { x: 7, z: -11, rotationDeg: 90 },
+  liveParcel: { ...SAMPLE_LIVE_PARCEL, address: "123 Example Street", city: "San Diego", state: "CA" },
 };

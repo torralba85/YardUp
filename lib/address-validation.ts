@@ -105,19 +105,19 @@ export function evaluateClientInputReadiness(rawInput: string): ClientAddressRea
 
   const parsed = parseStreetAddressWithConfidence(trimmed);
   const leadingNumberMatch = /^\d+[A-Za-z]?(?:\s+|$)/.exec(trimmed);
-  const hasStreetNumber = Boolean(parsed.address?.houseNumber || leadingNumberMatch);
+  const hasStreetNumber = Boolean(parsed?.address?.houseNumber || leadingNumberMatch);
 
   const afterNumber = leadingNumberMatch
     ? trimmed.slice(leadingNumberMatch[0].length).trim()
     : trimmed;
   const hasStreetName = Boolean(
-    parsed.address?.street || (hasStreetNumber && afterNumber.length >= 2),
+    parsed?.address?.street || (hasStreetNumber && afterNumber.length >= 2),
   );
 
-  const hasPostalCode = Boolean(parsed.address?.zip || /\b\d{5}(?:-\d{4})?\b/.test(trimmed));
+  const hasPostalCode = Boolean(parsed?.address?.zip || /\b\d{5}(?:-\d{4})?\b/.test(trimmed));
   const hasCommaLocality = trimmed.includes(",") && trimmed.split(",")[1]?.trim().length >= 2;
   const hasLocalityOrState = Boolean(
-    parsed.address?.city || parsed.address?.state || hasPostalCode || hasCommaLocality,
+    parsed?.address?.city || parsed?.address?.state || hasPostalCode || hasCommaLocality,
   );
   const needsUnitNumber = SUBPREMISE_HINT_REGEX.test(trimmed);
 
@@ -208,7 +208,7 @@ export function evaluatePlacesAddress(
 
   // When addressComponents are not populated (e.g. minimal Place Details fields),
   // fall back to structured parsing of formattedAddress.
-  const fallbackParsed = parseStreetAddressWithConfidence(formattedAddress).address;
+  const fallbackParsed = parseStreetAddressWithConfidence(formattedAddress)?.address;
   const components: AddressComponentSummary = {
     streetNumber: extracted.streetNumber ?? fallbackParsed?.houseNumber,
     route: extracted.route ?? fallbackParsed?.street,
@@ -305,11 +305,11 @@ export function evaluatePlacesAddress(
   }
 
   // 3. Check if raw user query had a different house number than what Places matched.
-  const rawParsed = rawTrimmed ? parseStreetAddressWithConfidence(rawTrimmed).address : null;
+  const rawParsed = rawTrimmed ? parseStreetAddressWithConfidence(rawTrimmed)?.address : null;
   const houseNumberMismatch =
     Boolean(rawParsed?.houseNumber) &&
     Boolean(components.streetNumber) &&
-    rawParsed!.houseNumber.toUpperCase() !== components.streetNumber.toUpperCase();
+    (Boolean(rawParsed?.houseNumber && components.streetNumber && rawParsed.houseNumber.toUpperCase() !== components.streetNumber.toUpperCase()));
 
   if (houseNumberMismatch) {
     return {
@@ -413,7 +413,7 @@ export function evaluateGoogleAddressValidationResponse(
 
   const verdict = result.verdict ?? {};
   const addr = result.address;
-  const formattedAddress = addr.formattedAddress;
+  const formattedAddress: string = addr.formattedAddress ?? rawQuery.trim();
   const missingComponents = addr.missingComponentTypes ?? [];
   const unconfirmedComponents = addr.unconfirmedComponentTypes ?? [];
   const componentsList = addr.addressComponents ?? [];
@@ -562,3 +562,4 @@ export function evaluateGoogleAddressValidationResponse(
     source: "address_validation",
   };
 }
+

@@ -46,7 +46,7 @@ export async function acquireLiveParcel(
         }
         if (reconciliationWarnings.length > 0) {
           parcel.dataQuality.warnings = [
-            ...parcel.dataQuality.warnings,
+            ...(parcel.dataQuality.warnings ?? []),
             ...reconciliationWarnings,
           ];
         }
@@ -64,3 +64,4 @@ export async function acquireLiveParcel(
     throw error;
   }
 }
+

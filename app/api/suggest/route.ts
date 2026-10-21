@@ -115,15 +115,7 @@ export async function GET(request: NextRequest) {
     process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
     process.env.GCLOUD_PROJECT?.trim() ||
     "";
-  const viteFallbackKey =
-    process.env.NODE_ENV === "test"
-      ? ""
-      : process.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
-  const googleKey =
-    process.env.GOOGLE_PLACES_SERVER_KEY?.trim() ||
-    process.env.GOOGLE_MAPS_API_KEY?.trim() ||
-    process.env.GOOGLE_GEOCODING_KEY?.trim() ||
-    viteFallbackKey;
+  const googleKey = process.env.GOOGLE_PLACES_SERVER_KEY?.trim() || process.env.GOOGLE_MAPS_API_KEY?.trim() || process.env.GOOGLE_GEOCODING_KEY?.trim() || "";
   if (!googleProjectId && !googleKey) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
@@ -219,3 +211,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ suggestions: [] } satisfies AddressSuggestions);
   }
 }
+

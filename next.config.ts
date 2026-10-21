@@ -7,17 +7,8 @@ const noindexHeaders = [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarch
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  allowedDevOrigins: ["127.0.0.1", "localhost", "*.run.app", "*.google.com"],
+  allowedDevOrigins: ["127.0.0.1"],
   transpilePackages: ["motion"],
-  env: {
-    NEXT_PUBLIC_GOOGLE_PLACES_KEY: /^AIza[\w-]{35}$/.test(
-      process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY ?? "",
-    )
-      ? process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY!
-      : process.env.VITE_GOOGLE_MAPS_API_KEY ??
-        process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY ??
-        "",
-  },
   // Firebase Hosting serves static assets; API routes go to Cloud Functions
   basePath: "",
   assetPrefix: "",
@@ -58,10 +49,11 @@ const nextConfig: NextConfig = {
             value: "same-origin-allow-popups",
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // App pages cannot be embedded in production, but development allows iframe preview
-          ...(process.env.NODE_ENV === "development"
-            ? []
-            : [{ key: "X-Frame-Options", value: "DENY" }]),
+          // App pages cannot be embedded. The public sample-only exception is
+          // defined below. Firebase Hosting serves the
+          // reserved `/__/auth/*` helper before the Next app, so this header
+          // does not apply to Firebase's OAuth helper iframe.
+          { key: "X-Frame-Options", value: "DENY" },
           {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",

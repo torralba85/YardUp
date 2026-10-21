@@ -1,103 +1,101 @@
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import type { LiveParcelData } from "@/lib/parcel-types";
 
 export type RuleCheck = "yes" | "no" | "unknown";
 
-/**
- * California residential zoning regex screen.
- * Tests if a zoning code string matches typical residential designations.
- */
-export function residentialZoningCode(zoning: string | undefined | null): RuleCheck {
-  if (!zoning || typeof zoning !== "string") return "unknown";
-  const cleaned = zoning.trim().toUpperCase();
-  if (!cleaned) return "unknown";
-
-  // Common residential designations: R1, R2, R3, RS, RD, RM, RH, R-1, etc.
-  if (/^(R\d|RS|RD|RM|RH|R-|RES)/i.test(cleaned)) {
-    return "yes";
-  }
-
-  // Non-residential or commercial/industrial/public facilities
-  if (/^(C\d|CC|CR|M\d|IL|IH|PF|OS|A\d|AR)/i.test(cleaned)) {
-    return "no";
-  }
-
-  return "no";
-}
-
 export interface CaliforniaAduEvaluation {
   applicable: boolean;
-  status: "qualified" | "review";
-  title: string;
-  summary: string;
+  status: "qualified" | "review" | "not-applicable";
   residentialZoning: RuleCheck;
   footprintProtected: boolean;
   parkingWaiverEligible: boolean | null;
   transitDistanceMiles: number | null;
+  title: string;
+  summary: string;
 }
 
-export interface EvaluateCaliforniaAduRulesParams {
-  parcel: Parcel;
-  config: Pick<ADUConfig, "footprint" | "width" | "length">;
-  transitDistanceMiles?: number | null;
+function parcelState(parcel: Parcel): string {
+  if ("state" in parcel && typeof (parcel as LiveParcelData).state === "string") {
+    return (parcel as LiveParcelData).state.trim().toUpperCase();
+  }
+  const match = parcel.city.match(/,\s*([A-Z]{2})(?:\s|$)/i);
+  return match?.[1]?.toUpperCase() ?? "";
+}
+
+/** Whether a raw zoning designation reads as residential, by code pattern. */
+export function residentialZoningCode(rawZoning: string): RuleCheck {
+  const zoning = rawZoning.trim().toUpperCase();
+  if (!zoning || zoning === "UNKNOWN") return "unknown";
+  if (/RESIDENTIAL|SINGLE[- ]?FAMILY|MULTI[- ]?FAMILY/.test(zoning)) return "yes";
+  if (/^(R|RS|RM|RD|RL|RH|SF|MF|LDR|MDR|HDR)(?:[-\s\d]|$)/.test(zoning)) return "yes";
+  return "no";
+}
+
+function residentialZoning(parcel: Parcel): RuleCheck {
+  if (!("zoning" in parcel)) return "unknown";
+  return residentialZoningCode(String((parcel as LiveParcelData).zoning ?? ""));
 }
 
 /**
- * Pre-screen an ADU concept against California state ADU regulations.
+ * Baseline California ADU screen requested by the LotFoundry sprint plan.
+ *
+ * This is intentionally a narrow statewide-baseline evaluator, not a local
+ * zoning determination or permit approval. Transit distance is optional because
+ * the current parcel contract does not provide a verified transit measurement;
+ * when it is unavailable the parking-waiver check remains explicitly unknown.
  */
 export function evaluateCaliforniaAduRules({
   parcel,
   config,
   transitDistanceMiles = null,
-}: EvaluateCaliforniaAduRulesParams): CaliforniaAduEvaluation {
-  const parcelRecord = parcel as unknown as Record<string, unknown>;
-  const parcelState = typeof parcelRecord.state === "string" ? parcelRecord.state : undefined;
-  const isCalifornia =
-    parcelState?.toUpperCase() === "CA" ||
-    parcel.address?.toLowerCase().includes(", ca") ||
-    parcel.city?.toLowerCase().includes("san diego") ||
-    parcel.city?.toLowerCase().includes("los angeles") ||
-    parcel.city?.toLowerCase().includes("chula vista") ||
-    parcel.city?.toLowerCase().includes("carlsbad") ||
-    parcel.city?.toLowerCase().includes("oceanside") ||
-    parcel.city?.toLowerCase().includes("escondido");
+}: {
+  parcel: Parcel;
+  config: Pick<ADUConfig, "footprint" | "width" | "length">;
+  transitDistanceMiles?: number | null;
+}): CaliforniaAduEvaluation {
+  const applicable = parcelState(parcel) === "CA";
+  const zoning = residentialZoning(parcel);
+  const footprintSqft = Number.isFinite(config.footprint)
+    ? config.footprint
+    : config.width * config.length;
+  const footprintProtected = footprintSqft > 0 && footprintSqft <= 800;
+  const normalizedTransitDistance =
+    transitDistanceMiles !== null && Number.isFinite(transitDistanceMiles) && transitDistanceMiles >= 0
+      ? transitDistanceMiles
+      : null;
+  const parkingWaiverEligible =
+    normalizedTransitDistance === null ? null : normalizedTransitDistance <= 0.5;
 
-  if (!isCalifornia) {
+  if (!applicable) {
     return {
       applicable: false,
-      status: "review",
-      title: "California ADU Pre-Screen",
-      summary: "Not applicable outside California.",
-      residentialZoning: "unknown",
-      footprintProtected: false,
-      parkingWaiverEligible: null,
-      transitDistanceMiles: null,
+      status: "not-applicable",
+      residentialZoning: zoning,
+      footprintProtected,
+      parkingWaiverEligible,
+      transitDistanceMiles: normalizedTransitDistance,
+      title: "California statewide screen not applicable",
+      summary: "Use the parcel's local zoning and state rules for this address.",
     };
   }
 
-  const zoning = typeof parcelRecord.zoning === "string" ? parcelRecord.zoning : undefined;
-  const residentialZoning = residentialZoningCode(zoning);
-  const aduFootprint = config.footprint ?? config.width * config.length;
-  const footprintProtected = aduFootprint <= 800;
-
-  const parkingWaiverEligible =
-    transitDistanceMiles !== null && transitDistanceMiles !== undefined
-      ? transitDistanceMiles <= 0.5
-      : null;
-
-  const qualified = residentialZoning !== "no" && footprintProtected;
-
+  const qualified = zoning === "yes" && footprintProtected;
   return {
     applicable: true,
     status: qualified ? "qualified" : "review",
-    title: qualified
-      ? "California ADU Pre-Screen: Qualified"
-      : "California ADU Pre-Screen: Review needed",
-    summary: qualified
-      ? "Proposed ADU meets state baseline standards for residential parcels under 800 sq ft."
-      : "Proposed ADU has parameters that warrant local verification or exceeds protected baseline limits.",
-    residentialZoning,
+    residentialZoning: zoning,
     footprintProtected,
     parkingWaiverEligible,
-    transitDistanceMiles: transitDistanceMiles ?? null,
+    transitDistanceMiles: normalizedTransitDistance,
+    title: qualified
+      ? "Statewide Exemption Qualified (Gov Code § 65852.2)"
+      : "California baseline needs review",
+    summary: qualified
+      ? "The current concept passes LotFoundry's baseline residential-zone and 800 sf screening checks."
+      : zoning === "unknown"
+        ? "Zoning is unverified, so LotFoundry cannot confirm the statewide baseline screen yet."
+        : zoning === "no"
+          ? "The parcel's reported zoning does not read as residential in the current dataset."
+          : "Reduce the concept to 800 sf or less to satisfy this baseline footprint screen.",
   };
 }

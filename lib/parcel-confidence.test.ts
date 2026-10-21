@@ -91,7 +91,7 @@ describe("parcelConfidence", () => {
       formattedAddress: "123 Oak St, Seattle, WA 98105",
       match: {
         precision: "range-interpolated",
-        locationConfirmed: true,
+        provider: "census", matchType: "Exact", partialMatch: false,
         components: { zip: "98105" },
         evidence: {
           status: "derived",
@@ -137,4 +137,5 @@ describe("parcelConfidence", () => {
     });
   });
 });
+
 

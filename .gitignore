@@ -39,6 +39,7 @@ firestore-debug.log
 .codex/
 .grok/
 .superdesign/
+.gmp_cache/
 terminals/
 
 # OS and editor noise
