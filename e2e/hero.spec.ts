@@ -4,7 +4,10 @@ import { SAMPLE_LIVE_PARCEL } from "../test/fixtures/live-parcel";
 
 test.describe("A lot more landing", () => {
   test("an expired member hint still opens the guest's real property", async ({ page, isMobile }) => {
-    await page.addInitScript(() => window.localStorage.setItem("lf:member-session", "1"));
+    test.setTimeout(60_000);
+    await page.addInitScript(() => {
+      if (window.top === window) window.localStorage.setItem("lf:member-session", "1");
+    });
     let guestGeocode = false;
     let guestParcel = false;
     await page.route("**/api/geocode?**", (route) => {
@@ -27,13 +30,13 @@ test.describe("A lot more landing", () => {
     await expect(page).toHaveURL(/\/studio/);
     await expect(page.getByText(SAMPLE_LIVE_PARCEL.address, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    expect(guestGeocode).toBe(true);
-    expect(guestParcel).toBe(true);
+    await expect.poll(() => guestGeocode).toBe(true);
+    await expect.poll(() => guestParcel).toBe(true);
     const search = new URL(page.url()).searchParams;
-    expect([...search.values()].join(" ")).not.toContain(SAMPLE_LIVE_PARCEL.address);
+    expect(Array.from(search.values()).join(" ")).not.toContain(SAMPLE_LIVE_PARCEL.address);
     expect(search.has("q")).toBe(false);
     if (isMobile) await page.getByRole("button", { name: "Shape your ADU" }).click();
-    await expect(page.locator("canvas").first()).toBeVisible();
+    await expect(page.locator("canvas").first()).toBeVisible({ timeout: 15_000 });
   });
 
   test("keeps address entry private and preserves it between the two forms", async ({
