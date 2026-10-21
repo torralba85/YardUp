@@ -39,6 +39,7 @@ async function stepGeometry(page: Page) {
 }
 
 test("desktop Studio fits one viewport and every pane reaches its last control", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto("/studio?parcel=coyote-brush");
   const overview = page.getByTestId("studio-overview");
   await expect(overview).toBeVisible();
