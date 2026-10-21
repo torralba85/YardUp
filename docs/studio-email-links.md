@@ -1,6 +1,6 @@
 # Studio email links
 
-The free inline card appears after a real parcel resolves, on desktop Feasibility, mobile Earn, and beside the Certificate estimate. It is hidden for demo/estimated parcels and addresses already saved or purchased by the current user. A separate unchecked marketing option is independent of the requested transactional email and analytics consent.
+The free layout-link form appears only below the Certificate offer, inside a closed-by-default "Email this layout for later" disclosure on desktop and mobile. It does not interrupt Rules & Fit or the mobile Earn reveal. It is hidden for demo/estimated parcels and addresses already saved or purchased by the current user. A separate unchecked marketing option is independent of the requested transactional email and analytics consent.
 
 ## Delivery queue and Resend transport
 
@@ -27,7 +27,7 @@ The URL uses the existing v2 design serializer on `https://lotfoundry.net/studio
 
 Firestore rules deny all direct client access to `studioScenarioLeads`; only Admin writes and the projected read API are allowed. POST validation enforces a real parcel, a parsed exact canonical URL origin (localhost only outside production), same-site submission, bounded request/design validation, honeypot, a consumed App Check token and shared fail-closed quotas (2 per client/hour, 3 per recipient/day, 30 globally/hour). Numeric email metadata is recomputed using the current feasibility model, not trusted from client summary fields. Requesting the link means consent to that transactional delivery; marketing requires its independent opt-in. Analytics use the existing consent-aware wrapper/initialization queue with bounded boolean/category fields, never email/address/token.
 
-Financial figures are planning estimates and carry their existing source basis. Rent is called illustrative when market data is unverified; it is not unconditionally labeled HUD. The strict `sqft < 750` flag describes size, not a finding that all fees are waived. California wording is limited to CA parcels and discloses other fees/program exceptions. Source checked 2026-10-16: https://www.sandiego.gov/planning/work/public-spaces/faq .
+The email is a return-to-layout message, not a free report: address, saved-layout link, a concise $29 Certificate offer and a Certificate-step link. Neither HTML nor text includes property-specific cost, rent, size, cash-flow or fee findings. Numeric metadata remains server-recomputed for the existing record contract; it is not printed in the email.
 
 ## Release checks
 

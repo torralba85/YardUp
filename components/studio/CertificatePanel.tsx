@@ -532,7 +532,15 @@ export default function CertificatePanel({
         </div>
       </details>}
 
-      {!purchased && emailLinkCard}
+      {!purchased && emailLinkCard && (
+        <details className="group border-t border-lot-line">
+          <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-2 py-3 text-sm font-semibold text-lot-stone focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+            Email this layout for later
+            <span aria-hidden="true" className="group-open:rotate-45">+</span>
+          </summary>
+          <div className="pb-4">{emailLinkCard}</div>
+        </details>
+      )}
 
       <AuthModal
         isOpen={authOpen}

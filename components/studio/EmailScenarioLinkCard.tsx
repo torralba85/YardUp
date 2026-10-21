@@ -81,8 +81,8 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
       <div className="flex items-start gap-3">
         <Mail size={19} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
         <div className="min-w-0">
-          <h3 id={`${id}-heading`} className="font-display text-base font-medium leading-snug text-lot-ink">Save this 3D lot layout for later — Free</h3>
-          <p className="mt-1 text-xs leading-5 text-lot-stone">Get a permanent link to your 3D setback model and headline estimate emailed to you.</p>
+          <h3 id={`${id}-heading`} className="font-display text-base font-medium leading-snug text-lot-ink">Save your layout link</h3>
+          <p className="mt-1 text-xs leading-5 text-lot-stone">Get a free link to return to this design. Detailed costs, cash flow and planning analysis are included with the paid Certificate.</p>
         </div>
       </div>
       {receipt ? (

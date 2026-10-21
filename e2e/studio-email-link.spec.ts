@@ -5,6 +5,29 @@ import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test.setTimeout(90_000);
 
+test("email capture stays out of the first result and design flow", async ({ page, isMobile }) => {
+  await mockTestOwnerAuth(page);
+  await page.route("**/api/studio/scenario-link/*", (route) => route.fulfill({ json: { scenario: EMAIL_SCENARIO } }));
+  const url = new URL(buildScenarioShareUrl(EMAIL_SCENARIO, "d".repeat(48)));
+  await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
+  if (isMobile) {
+    await expect(page.getByRole("button", { name: "Shape your ADU" })).toBeVisible();
+  } else {
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Rules & Fit/ }).click();
+    await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
+  }
+  await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+  if (isMobile) {
+    await page.getByRole("button", { name: "Shape your ADU" }).click();
+  } else {
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+  }
+  await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+});
+
 test("free lot link queues a real design and carries email into certificate signup", async ({ page }, testInfo) => {
   await mockTestOwnerAuth(page);
   const parcel = EMAIL_SCENARIO.liveParcel!;
@@ -19,7 +42,19 @@ test("free lot link queues a real design and carries email into certificate sign
   await page.evaluate((address) => window.sessionStorage.setItem("lf:pending-address", address), parcel.address);
   await page.goto("/studio?step=certificate", { waitUntil: "domcontentloaded" });
   await expect(page.getByText(parcel.address).first()).toBeVisible({ timeout: 30_000 });
-  const card = page.getByRole("region", { name: "Save this 3D lot layout for later — Free" }).filter({ visible: true }).first();
+  const disclosure = page.locator("summary").filter({ hasText: "Email this layout for later" }).filter({ visible: true }).first();
+  await expect(disclosure).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).not.toBeVisible();
+  const purchase = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
+  await expect(purchase).toBeVisible();
+  expect(await disclosure.evaluate((summary) => {
+    const button = Array.from(document.querySelectorAll("button")).find((node) => node.textContent?.includes("Continue to secure checkout"));
+    return Boolean(button && (button.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING));
+  })).toBe(true);
+  await disclosure.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("certificate-email-collapsed.png"), fullPage: true });
+  await disclosure.click();
+  const card = page.getByRole("region", { name: "Save your layout link" }).filter({ visible: true }).first();
   await expect(card).toBeVisible({ timeout: 15_000 });
   await expect(card.getByRole("checkbox")).not.toBeChecked();
   await card.getByRole("textbox", { name: "Email address for your 3D lot link" }).fill("layout-owner@example.test");
@@ -44,7 +79,19 @@ test("emailed layout restores the real parcel without a guest lookup and survive
   url.searchParams.set("step", "certificate");
   await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
-  const card = page.getByRole("region", { name: "Save this 3D lot layout for later — Free" }).filter({ visible: true }).first();
+  const disclosure = page.locator("summary").filter({ hasText: "Email this layout for later" }).filter({ visible: true }).first();
+  await expect(disclosure).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).not.toBeVisible();
+  const purchase = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
+  await expect(purchase).toBeVisible();
+  expect(await disclosure.evaluate((summary) => {
+    const button = Array.from(document.querySelectorAll("button")).find((node) => node.textContent?.includes("Continue to secure checkout"));
+    return Boolean(button && (button.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING));
+  })).toBe(true);
+  await disclosure.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("certificate-email-collapsed.png"), fullPage: true });
+  await disclosure.click();
+  const card = page.getByRole("region", { name: "Save your layout link" }).filter({ visible: true }).first();
   await expect(card).toBeVisible({ timeout: 15_000 });
   expect(parcelLookups).toBe(0);
   await expect.poll(() => new URL(page.url()).searchParams.get("layout")).toBe("a".repeat(48));
@@ -67,7 +114,19 @@ test("free link form fits a 320px phone with readable inputs and touch targets",
   const url = new URL(buildScenarioShareUrl(EMAIL_SCENARIO, "c".repeat(48)));
   url.searchParams.set("step", "certificate");
   await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
-  const card = page.getByRole("region", { name: "Save this 3D lot layout for later — Free" }).filter({ visible: true }).first();
+  const disclosure = page.locator("summary").filter({ hasText: "Email this layout for later" }).filter({ visible: true }).first();
+  await expect(disclosure).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).not.toBeVisible();
+  const purchase = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
+  await expect(purchase).toBeVisible();
+  expect(await disclosure.evaluate((summary) => {
+    const button = Array.from(document.querySelectorAll("button")).find((node) => node.textContent?.includes("Continue to secure checkout"));
+    return Boolean(button && (button.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING));
+  })).toBe(true);
+  await disclosure.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("certificate-email-collapsed.png"), fullPage: true });
+  await disclosure.click();
+  const card = page.getByRole("region", { name: "Save your layout link" }).filter({ visible: true }).first();
   await expect(card).toBeVisible({ timeout: 30_000 });
   await card.scrollIntoViewIfNeeded();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

@@ -12,7 +12,6 @@ import { haptic } from "@/lib/haptics";
 /** Props for {@link EarnStep}. */
 export interface EarnStepProps {
   certificateUnlocked?: boolean;
-  emailLinkCard?: ReactNode;
   parcelNotice?: ReactNode;
   /** "Address, City" line for the reveal. */
   parcelName: string;
@@ -29,7 +28,7 @@ export interface EarnStepProps {
  * resolution: estimated monthly and annual rent potential, followed by a
  * simple confidence teaser (the market basis line). One primary action.
  */
-export default function EarnStep({ certificateUnlocked = false, parcelName, result, estimated, onContinue, parcelNotice, emailLinkCard }: EarnStepProps) {
+export default function EarnStep({ certificateUnlocked = false, parcelName, result, estimated, onContinue, parcelNotice }: EarnStepProps) {
   const annualGross = result.monthlyRent * 12;
   const unverified =
     !result.market.verified &&
@@ -89,7 +88,6 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
         </p>
       )}
       {parcelNotice}
-      {emailLinkCard && <div className="mt-5">{emailLinkCard}</div>}
 
       <div className="mt-auto pt-8">
         <Button
