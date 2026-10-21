@@ -316,11 +316,31 @@ export default function FeasibilityInspector({
 
                   <div className="flex items-start gap-2 rounded-none border border-lot-line bg-lot-chalk p-3">
                     <MapPin size={15} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-lot-ink">
                         {displayParcel.address}
                       </div>
                       <div className="mt-0.5 text-xs text-lot-stone">{displayParcel.city}</div>
+                      {"source" in displayParcel && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-lot-line pt-1.5 text-xs text-lot-stone">
+                          <span>
+                            {displayParcel.source === "regrid"
+                              ? "Regrid parcel record"
+                              : displayParcel.source === "county-gis"
+                                ? "County GIS parcel record"
+                                : "Regional fallback estimate"}
+                          </span>
+                          {"dataQuality" in displayParcel &&
+                            (displayParcel.dataQuality?.fields.address.source.recordId ??
+                              displayParcel.dataQuality?.fields.boundaryGeoJson.source.recordId) && (
+                            <span className="tabular-nums text-lot-ink">
+                              · ID{" "}
+                              {displayParcel.dataQuality?.fields.address.source.recordId ??
+                                displayParcel.dataQuality?.fields.boundaryGeoJson.source.recordId}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 

@@ -89,6 +89,28 @@ export function AduArchitecture({ config }: AduArchitectureProps) {
 
   if (!heightModel || !meshData) return null;
 
+  const hw = config.width / 2;
+  const hl = config.length / 2;
+  const wallHeight = heightModel.wallHeight;
+  const roofRise = heightModel.roofGeometry.rise;
+  const sideWinW = Math.min(3.6, config.length * 0.28);
+  const sideWinH = Math.min(3.0, Math.max(wallHeight * 0.34, 1.8));
+  const sideWinY = Math.min(4.6, wallHeight * 0.55);
+  const solarW = Math.max(config.width * 0.52, 4);
+  const solarL = Math.max(config.length * 0.42, 4);
+  const solarY =
+    config.roof === "flat"
+      ? wallHeight + 0.64
+      : config.roof === "shed"
+        ? wallHeight + 1.28
+        : wallHeight + roofRise * 0.58;
+  const solarTiltX =
+    config.roof === "shed"
+      ? Math.atan2(roofRise, config.length + 1.4)
+      : config.roof === "gable"
+        ? 0.16
+        : 0.06;
+
   return (
     <group>
       <GeometryMesh data={meshData.walls} material={materials.wall} />
@@ -98,6 +120,48 @@ export function AduArchitecture({ config }: AduArchitectureProps) {
         <GeometryMesh data={meshData.window} material={materials.glass} castShadow={false} />
       )}
       {meshData.trim && <GeometryMesh data={meshData.trim} material={materials.trim} />}
+
+      {config.includeOpenings !== false && (
+        <>
+          {/* Cantilevered architectural entry brow over front door */}
+          <mesh
+            position={[-config.width * 0.25, Math.min(7.35, wallHeight - 0.35), hl + 0.65]}
+            material={materials.trim}
+            castShadow
+          >
+            <boxGeometry args={[Math.min(3.8, config.width * 0.4), 0.16, 1.25]} />
+          </mesh>
+          {/* Door lever handle */}
+          <mesh
+            position={[-config.width * 0.25 + Math.min(3.0, config.width * 0.35) * 0.36, 3.3, hl + 0.06]}
+            material={materials.trim}
+          >
+            <boxGeometry args={[0.22, 0.08, 0.1]} />
+          </mesh>
+          {/* Side elevation architectural window with cased frame */}
+          <group position={[hw + 0.02, sideWinY, 0]}>
+            <mesh material={materials.trim} castShadow>
+              <boxGeometry args={[0.08, sideWinH + 0.28, sideWinW + 0.28]} />
+            </mesh>
+            <mesh position={[0.03, 0, 0]} material={materials.glass}>
+              <boxGeometry args={[0.04, sideWinH, sideWinW]} />
+            </mesh>
+            <mesh position={[0.05, 0, 0]} material={materials.trim}>
+              <boxGeometry args={[0.04, sideWinH, 0.1]} />
+            </mesh>
+          </group>
+        </>
+      )}
+
+      {/* Rooftop architectural skylight / solar-ready collector module */}
+      <group position={[0, solarY, 0]} rotation={[solarTiltX, 0, 0]}>
+        <mesh material={materials.trim} castShadow receiveShadow>
+          <boxGeometry args={[solarW + 0.25, 0.1, solarL + 0.25]} />
+        </mesh>
+        <mesh position={[0, 0.06, 0]} material={materials.glass}>
+          <boxGeometry args={[solarW, 0.04, solarL]} />
+        </mesh>
+      </group>
     </group>
   );
 }

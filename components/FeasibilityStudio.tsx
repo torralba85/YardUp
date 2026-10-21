@@ -1480,6 +1480,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               />
               {parcelLoading && <p role="status" className="text-xs text-lot-stone">Looking up property data…</p>}
               {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
+              <ParcelDataNotice parcel={activeParcel} />
               <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} stickyCta />
               <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}

@@ -173,6 +173,31 @@ describe("ParcelScene controls", () => {
 
     expect(screen.getByTestId("parcel-canvas")).toBeInTheDocument();
   });
+
+  it("toggles live 3D clearance guides and cycles shadow preview time from the viewport HUD", () => {
+    render(
+      <ParcelScene
+        parcel={parcelPresets[0]}
+        config={defaultAduConfig}
+        isCompliant
+        remainingCapacity={20}
+      />,
+    );
+
+    const clearancesBtn = screen.getByRole("button", { name: "Clearances" });
+    expect(clearancesBtn).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(clearancesBtn);
+    expect(clearancesBtn).toHaveAttribute("aria-pressed", "true");
+
+    const sunBtn = screen.getByRole("button", {
+      name: /Cycle shadow preview time/i,
+    });
+    expect(sunBtn).toHaveTextContent("Solar · 2 PM");
+    fireEvent.click(sunBtn);
+    expect(sunBtn).toHaveTextContent("Solar · 5 PM");
+    fireEvent.click(sunBtn);
+    expect(sunBtn).toHaveTextContent("Solar · 9 AM");
+  });
 });
 
 describe("placementToneColor", () => {

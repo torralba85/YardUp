@@ -1,106 +1,86 @@
-import { Vector2 } from "three";
-
-const EPSILON = 1e-7;
-
-function signedArea(points: readonly Vector2[]): number {
-  let area = 0;
-  for (let i = 0; i < points.length; i += 1) {
-    const current = points[i];
-    const next = points[(i + 1) % points.length];
-    area += current.x * next.y - next.x * current.y;
-  }
-  return area / 2;
-}
-
-function intersectLines(
-  a: Vector2,
-  aDirection: Vector2,
-  b: Vector2,
-  bDirection: Vector2,
-): Vector2 | null {
-  const cross = aDirection.x * bDirection.y - aDirection.y * bDirection.x;
-  if (Math.abs(cross) < EPSILON) return null;
-
-  const deltaX = b.x - a.x;
-  const deltaY = b.y - a.y;
-  const t = (deltaX * bDirection.y - deltaY * bDirection.x) / cross;
-  return new Vector2(a.x + aDirection.x * t, a.y + aDirection.y * t);
-}
-
-function inwardNormal(direction: Vector2, counterClockwise: boolean): Vector2 {
-  return counterClockwise
-    ? new Vector2(-direction.y, direction.x)
-    : new Vector2(direction.y, -direction.x);
-}
+import * as THREE from "three";
 
 /**
- * Inset a simple 2D polygon by a distance measured in the polygon's units.
- *
- * LotFoundry scene coordinates use feet, so an inset of `4` represents the
- * statewide four-foot side/rear baseline described by the implementation plan.
- * The implementation is dependency-free and works best for the simple parcel
- * rings used by the Studio. Degenerate or fully-collapsed inputs return `[]`.
+ * Insets a 2D polygon (array of THREE.Vector2) inward by a given distance.
+ * For rectangular lots (4 points) or general convex polygons, moves edges inward by distance.
  */
 export function polygonInset(
-  boundary: readonly Vector2[],
-  setbackFt = 4,
-): Vector2[] {
-  if (
-    boundary.length < 3 ||
-    !Number.isFinite(setbackFt) ||
-    setbackFt < 0 ||
-    boundary.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))
-  ) {
-    return [];
+  points: readonly THREE.Vector2[],
+  distance: number,
+): THREE.Vector2[] {
+  if (!points || points.length < 3 || distance <= 0) {
+    return points ? points.map((p) => p.clone()) : [];
   }
 
-  if (setbackFt === 0) return boundary.map((point) => point.clone());
+  // Calculate polygon centroid to determine inward direction
+  let cx = 0;
+  let cy = 0;
+  for (const p of points) {
+    cx += p.x;
+    cy += p.y;
+  }
+  cx /= points.length;
+  cy /= points.length;
+  const centroid = new THREE.Vector2(cx, cy);
 
-  const area = signedArea(boundary);
-  if (Math.abs(area) < EPSILON) return [];
-  const counterClockwise = area > 0;
-
-  const result: Vector2[] = [];
-  for (let i = 0; i < boundary.length; i += 1) {
-    const previous = boundary[(i - 1 + boundary.length) % boundary.length];
-    const current = boundary[i];
-    const next = boundary[(i + 1) % boundary.length];
-
-    const previousDirection = current.clone().sub(previous);
-    const nextDirection = next.clone().sub(current);
-    if (previousDirection.lengthSq() < EPSILON || nextDirection.lengthSq() < EPSILON) {
-      return [];
-    }
-    previousDirection.normalize();
-    nextDirection.normalize();
-
-    const previousNormal = inwardNormal(previousDirection, counterClockwise);
-    const nextNormal = inwardNormal(nextDirection, counterClockwise);
-    const previousOffset = current.clone().addScaledVector(previousNormal, setbackFt);
-    const nextOffset = current.clone().addScaledVector(nextNormal, setbackFt);
-
-    const intersection = intersectLines(
-      previousOffset,
-      previousDirection,
-      nextOffset,
-      nextDirection,
-    );
-
-    if (intersection) {
-      result.push(intersection);
-      continue;
-    }
-
-    const averagedNormal = previousNormal.clone().add(nextNormal);
-    if (averagedNormal.lengthSq() < EPSILON) return [];
-    averagedNormal.normalize();
-    result.push(current.clone().addScaledVector(averagedNormal, setbackFt));
+  // Check if it's an axis-aligned bounding box or rectangular lot
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const p of points) {
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y);
+    maxY = Math.max(maxY, p.y);
   }
 
-  if (result.length < 3 || Math.abs(signedArea(result)) < EPSILON) return [];
+  const width = maxX - minX;
+  const height = maxY - minY;
 
-  // A valid inward offset should not flip winding. A flip indicates that the
-  // requested inset consumed the parcel or produced an unstable miter.
-  if (Math.sign(signedArea(result)) !== Math.sign(area)) return [];
+  // If setback exceeds half of width or height, clamp gracefully
+  const effectiveDistance = Math.min(distance, Math.min(width, height) / 2 - 0.1);
+  if (effectiveDistance <= 0) {
+    return points.map((p) => p.clone());
+  }
+
+  const n = points.length;
+  const result: THREE.Vector2[] = [];
+
+  // Edge normals pointing inward toward the centroid
+  for (let i = 0; i < n; i++) {
+    const prev = points[(i - 1 + n) % n];
+    const curr = points[i];
+    const next = points[(i + 1) % n];
+
+    // Edge vectors
+    const d1 = new THREE.Vector2().subVectors(curr, prev).normalize();
+    const d2 = new THREE.Vector2().subVectors(next, curr).normalize();
+
+    // Inward normal for edge 1 (prev -> curr)
+    const n1 = new THREE.Vector2(-d1.y, d1.x);
+    // Inward normal for edge 2 (curr -> next)
+    const n2 = new THREE.Vector2(-d2.y, d2.x);
+
+    // Ensure normal points toward centroid
+    const mid1 = new THREE.Vector2().addVectors(prev, curr).multiplyScalar(0.5);
+    if (new THREE.Vector2().subVectors(centroid, mid1).dot(n1) < 0) {
+      n1.negate();
+    }
+    const mid2 = new THREE.Vector2().addVectors(curr, next).multiplyScalar(0.5);
+    if (new THREE.Vector2().subVectors(centroid, mid2).dot(n2) < 0) {
+      n2.negate();
+    }
+
+    // Offset bisector direction
+    const bisector = new THREE.Vector2().addVectors(n1, n2).normalize();
+    const cosHalf = bisector.dot(n1);
+    const miterDist = Math.abs(cosHalf) > 0.1 ? effectiveDistance / cosHalf : effectiveDistance;
+    // Cap extreme miters on sharp corners
+    const cappedDist = Math.min(miterDist, effectiveDistance * 2.5);
+
+    result.push(new THREE.Vector2().copy(curr).addScaledVector(bisector, cappedDist));
+  }
+
   return result;
 }

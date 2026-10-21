@@ -463,4 +463,24 @@ describe("landing address handoff", () => {
     expect(consumeEntrySource()).toBe("landing_cta");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("updates maquette inspection readouts and interactive massing sandbox figures", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(screen.getByText(/24′ × 25′ footprint · 1 bed/)).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Inspect Modeled Setback Buffer" }),
+    );
+    expect(screen.getByText(/5′ rear · 5′ side clearance/)).toBeVisible();
+
+    const sandbox = screen.getByLabelText("Interactive massing preview");
+    expect(within(sandbox).getByText("32% of lot")).toBeVisible();
+    fireEvent.click(within(sandbox).getByRole("button", { name: "800 sq ft" }));
+    expect(within(sandbox).getByText("36% of lot")).toBeVisible();
+    fireEvent.click(within(sandbox).getByRole("button", { name: "gable" }));
+    expect(within(sandbox).getByRole("button", { name: "gable" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
 });
+

@@ -25,6 +25,31 @@ export async function acquireLiveParcel(
       const address = enrichStreetAddress(query, geocode.formattedAddress);
       parcel = await fetchParcel(geocode.lat, geocode.lng, idToken, address);
       if (geocode.match && parcel.dataQuality) {
+        const geocodeZip = geocode.match.components.zip?.slice(0, 5);
+        const parcelZip = parcel.zip?.slice(0, 5);
+        const reconciliationWarnings: string[] = [];
+        if (geocode.match.precision === "range-interpolated") {
+          reconciliationWarnings.push(
+            "Address coordinates were range-interpolated along the block rather than pinned to a rooftop.",
+          );
+        }
+        if (
+          geocodeZip &&
+          parcelZip &&
+          /^\d{5}$/.test(geocodeZip) &&
+          /^\d{5}$/.test(parcelZip) &&
+          geocodeZip !== parcelZip
+        ) {
+          reconciliationWarnings.push(
+            `Geocoded ZIP (${geocodeZip}) differs from the parcel record ZIP (${parcelZip}); confirm property location.`,
+          );
+        }
+        if (reconciliationWarnings.length > 0) {
+          parcel.dataQuality.warnings = [
+            ...parcel.dataQuality.warnings,
+            ...reconciliationWarnings,
+          ];
+        }
         parcel.dataQuality.geocode = {
           requestedAddress: query,
           formattedAddress: geocode.formattedAddress,

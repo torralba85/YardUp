@@ -19,7 +19,12 @@ import {
 } from "@/lib/server/census-geocode";
 import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
 import { fetchFireHazardZone } from "@/lib/server/fire-hazard-zones";
-import { type StreetAddress, delimitStreetAddress, parseStreetAddress } from "@/lib/server/address-match";
+import {
+  type StreetAddress,
+  compareSitus,
+  delimitStreetAddress,
+  parseStreetAddress,
+} from "@/lib/server/address-match";
 import {
   type AddressParcelResult,
   type CountyParcelResult,
@@ -250,9 +255,18 @@ export async function GET(request: NextRequest) {
       }
       return await presetFallbackResponse(lat, lng, requestedAddress, census, attempts, "conflict");
     }
-    const identityWarnings = regridIdentity?.verdict === "unverified"
-      ? ["The official address layer could not confirm that this parcel is the searched street address; verify the parcel against county records."]
-      : [];
+    const regridSitus = reconcileRegridSitus(fields, searchedAddress);
+    const identityWarnings = [
+      ...(regridIdentity?.verdict === "unverified"
+        ? ["The official address layer could not confirm that this parcel is the searched street address; verify the parcel against county records."]
+        : []),
+      ...regridSitus.warnings,
+    ];
+    const identityConfidence: DataEvidence["confidence"] = regridSitus.conflict
+      ? "low"
+      : identityWarnings.length
+        ? "medium"
+        : "high";
 
     const regridFootprint = positiveNumber(fields.ll_bldg_footprint_sqft);
     const structuresPromise =
@@ -340,12 +354,18 @@ export async function GET(request: NextRequest) {
     const setbacksObserved = hasCompleteSetbacks(rawSetbacks);
     const zoningObserved = typeof fields.zoning === "string" && fields.zoning.trim() !== "";
     const addressObserved = Boolean(fields.saddress ?? fields.address);
+    const structureWarnings = [
+      "Imagery-derived building footprints can lag recent construction.",
+      ...(structures && structures.structureCount > 1
+        ? [
+            `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
+          ]
+        : []),
+    ];
     const footprintEvidence = regridFootprint !== null
       ? evidence("observed", "high")
       : structuresFootprint !== null
-        ? evidence("observed", "medium", [
-            "Imagery-derived building footprints can lag recent construction.",
-          ], usaStructuresSource())
+        ? evidence("observed", "medium", structureWarnings, usaStructuresSource())
         : buildingAreaFallback !== null
           ? evidence("derived", "low", [
               "Provider building area is being used as a ground-footprint proxy.",
@@ -377,11 +397,11 @@ export async function GET(request: NextRequest) {
         version: 1,
         fields: {
           address: addressObserved
-            ? evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings)
+            ? evidence("observed", identityConfidence, identityWarnings)
             : evidence("derived", "medium", [
                 "The provider did not publish a situs address; the searched address or coordinates were used.",
               ], userInputSource()),
-          lotArea: evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings),
+          lotArea: evidence("observed", identityConfidence, identityWarnings),
           lotDimensions: evidence("derived", boundaryGeoJson ? "medium" : "low", [
             boundaryGeoJson
               ? "Lot dimensions are derived from the parcel polygon."
@@ -406,7 +426,7 @@ export async function GET(request: NextRequest) {
                 "Address-specific zoning was unavailable.",
               ]),
           boundaryGeoJson: boundaryGeoJson
-            ? evidence("observed", identityWarnings.length ? "medium" : "high", identityWarnings)
+            ? evidence("observed", identityConfidence, identityWarnings)
             : evidence("unavailable", "unknown", [
                 "The provider did not return a parcel boundary.",
               ]),
@@ -575,6 +595,49 @@ async function successWithoutRegrid(
 function fullStreetAddress(requestedAddress: string | undefined): StreetAddress | null {
   const address = parseStreetAddress(requestedAddress);
   return address && (address.city || address.zip) ? address : null;
+}
+
+/**
+ * Reconcile Regrid's situs fields (`saddress`, `scity`, `state2`, `szip5`)
+ * against the searched street address. Mailing fields (`address`, `city`,
+ * `state`, `zip`) are intentionally ignored here because they can belong to an
+ * off-site owner rather than the physical parcel.
+ */
+function reconcileRegridSitus(
+  fields: Record<string, unknown>,
+  searched: StreetAddress | null,
+): { conflict: boolean; warnings: string[] } {
+  const situsLine = stringValue(fields.saddress);
+  if (!searched || !situsLine) {
+    return { conflict: false, warnings: [] };
+  }
+  const scity = stringValue(fields.scity);
+  const state2 = stringValue(fields.state2)?.toUpperCase();
+  const szip5 = stringValue(fields.szip5)?.slice(0, 5);
+  const comparison = compareSitus(searched, {
+    line: situsLine,
+    cities: scity ? [scity] : [],
+    ...(szip5 && /^\d{5}$/.test(szip5) ? { zip: szip5 } : {}),
+    ...(state2 && /^[A-Z]{2}$/.test(state2) ? { state: state2 } : {}),
+  });
+  if (comparison.verdict === "different-address") {
+    return {
+      conflict: true,
+      warnings: [
+        `The parcel provider's situs street address (${situsLine}) differs from the searched street address; verify parcel boundaries against county records.`,
+      ],
+    };
+  }
+  if (comparison.verdict === "locality-conflict") {
+    const situsLocality = [scity, state2, szip5].filter(Boolean).join(" ");
+    return {
+      conflict: true,
+      warnings: [
+        `The parcel provider's situs locality (${situsLocality || "unlisted"}) conflicts with the searched locality; confirm jurisdiction and ZIP.`,
+      ],
+    };
+  }
+  return { conflict: false, warnings: [] };
 }
 
 /**
@@ -795,7 +858,14 @@ async function countyGisResponse(
           retrievedAt,
           warnings: structuresSqft === null
             ? ["No building footprint was found; zero means unknown, not vacant."]
-            : ["Imagery-derived building footprints can lag recent construction."],
+            : [
+                "Imagery-derived building footprints can lag recent construction.",
+                ...(structures && structures.structureCount > 1
+                  ? [
+                      `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
+                    ]
+                  : []),
+              ],
         }),
         maxLotCoveragePercent: fieldEvidence({
           status: "defaulted",

@@ -5,6 +5,7 @@ import { Canvas, useThree, type RootState } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition, LIGHTING_PRESETS, type LightingPresetId } from "@/lib/scene-lighting";
@@ -541,42 +542,90 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const wallHeight = 9;
   const ridgeHeight = 5;
   const zPos = model.pose.z;
+  const overhang = EXISTING_HOUSE_ROOF_OVERHANG_FT;
 
   return (
     <group position={[0, 0, zPos]}>
       {/* Soft contact shadow grounding the house */}
-      <ContactShadow width={width + 6} length={depth + 6} opacity={0.3} />
+      <ContactShadow width={width + 6} length={depth + 6} opacity={0.34} />
 
-      {/* Foundation */}
+      {/* Foundation plinth & stepped water-table ledge */}
       <mesh position={[0, 0.2, 0]} receiveShadow>
         <boxGeometry args={[width + 1.5, 0.4, depth + 1.5]} />
-        <meshStandardMaterial color="#b0a898" roughness={0.92} />
+        <meshStandardMaterial color="#b0a898" roughness={0.92} metalness={0.04} />
+      </mesh>
+      <mesh position={[0, 0.46, 0]} receiveShadow>
+        <boxGeometry args={[width + 0.5, 0.14, depth + 0.5]} />
+        <meshStandardMaterial color="#c8c2b6" roughness={0.86} metalness={0.06} />
       </mesh>
 
-      {/* Walls */}
+      {/* Main plaster walls */}
       <mesh position={[0, wallHeight / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, wallHeight, depth]} />
-        <meshStandardMaterial color={SCENE.wall} roughness={0.82} />
+        <meshStandardMaterial color={SCENE.wall} roughness={0.82} metalness={0.02} />
       </mesh>
 
-      {/* Proper gable roof */}
+      {/* Proper gable roof + ridge beam cap + eave fascia trim */}
       <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
+      <mesh position={[0, wallHeight + ridgeHeight + 0.08, 0]} castShadow>
+        <boxGeometry args={[0.45, 0.22, depth + overhang * 2 + 0.2]} />
+        <meshStandardMaterial color={SCENE.ink} roughness={0.42} metalness={0.35} />
+      </mesh>
 
-      {/* Front door — a 6'-8" leaf in a cased opening, not the 4.4 ft door the
-          audit found reinforcing a toy-like scale (D4). */}
+      {/* Architectural masonry chimney with metal flue cap */}
+      <group position={[-width * 0.28, wallHeight + ridgeHeight * 0.42, -depth * 0.18]}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[2.1, 4.2, 2.1]} />
+          <meshStandardMaterial color="#8c857b" roughness={0.88} metalness={0.05} />
+        </mesh>
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <boxGeometry args={[2.4, 0.24, 2.4]} />
+          <meshStandardMaterial color={SCENE.ink} roughness={0.38} metalness={0.45} />
+        </mesh>
+      </group>
+
+      {/* Covered front entry porch canopy & support post */}
+      <group position={[width * 0.28, 0, depth / 2]}>
+        <mesh position={[0, 7.35, 1.3]} castShadow receiveShadow>
+          <boxGeometry args={[5.2, 0.28, 2.8]} />
+          <meshStandardMaterial color={SCENE.roof} roughness={0.55} metalness={0.2} />
+        </mesh>
+        <mesh position={[2.1, 3.65, 2.4]} castShadow>
+          <boxGeometry args={[0.28, 7.1, 0.28]} />
+          <meshStandardMaterial color="#e0d8cc" roughness={0.72} metalness={0.05} />
+        </mesh>
+        <mesh position={[-2.1, 3.65, 2.4]} castShadow>
+          <boxGeometry args={[0.28, 7.1, 0.28]} />
+          <meshStandardMaterial color="#e0d8cc" roughness={0.72} metalness={0.05} />
+        </mesh>
+        <mesh position={[0, 0.22, 1.4]} receiveShadow>
+          <boxGeometry args={[5.4, 0.44, 3.0]} />
+          <meshStandardMaterial color="#b0a898" roughness={0.9} />
+        </mesh>
+      </group>
+
+      {/* Front door — a 6'-8" leaf in a cased opening with brushed hardware */}
       <mesh position={[width * 0.28, 3.35, depth / 2 + 0.05]}>
         <boxGeometry args={[3, 6.7, 0.3]} />
-        <meshStandardMaterial color="#5a3a20" roughness={0.55} />
+        <meshStandardMaterial color="#5a3a20" roughness={0.55} metalness={0.08} />
+      </mesh>
+      <mesh position={[width * 0.28 + 1.05, 3.2, depth / 2 + 0.24]}>
+        <boxGeometry args={[0.14, 0.45, 0.12]} />
+        <meshStandardMaterial color="#d6d1c7" roughness={0.22} metalness={0.78} />
       </mesh>
       <mesh position={[width * 0.28, 6.9, depth / 2 + 0.06]}>
         <boxGeometry args={[3.5, 0.4, 0.35]} />
         <meshStandardMaterial color="#e0d8cc" roughness={0.8} />
       </mesh>
 
-      {/* Front window */}
+      {/* Front window with mullion & sill */}
       <mesh position={[-width * 0.2, 3, depth / 2 + 0.05]} castShadow>
         <boxGeometry args={[3.2, 3, 0.3]} />
-        <meshStandardMaterial color={SCENE.glass} roughness={0.2} metalness={0.3} />
+        <meshStandardMaterial color={SCENE.glass} roughness={0.16} metalness={0.38} />
+      </mesh>
+      <mesh position={[-width * 0.2, 3, depth / 2 + 0.14]}>
+        <boxGeometry args={[0.14, 3, 0.18]} />
+        <meshStandardMaterial color="#e0d8cc" roughness={0.75} />
       </mesh>
       <mesh position={[-width * 0.2, 4.7, depth / 2 + 0.06]}>
         <boxGeometry args={[3.6, 0.4, 0.35]} />
@@ -590,7 +639,13 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
       {/* Side window */}
       <mesh position={[width / 2 + 0.05, 3, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
         <boxGeometry args={[2.8, 2.8, 0.3]} />
-        <meshStandardMaterial color={SCENE.glass} roughness={0.2} metalness={0.3} />
+        <meshStandardMaterial color={SCENE.glass} roughness={0.16} metalness={0.38} />
+      </mesh>
+
+      {/* Rear garden transition terrace facing the backyard ADU zone */}
+      <mesh position={[0, 0.14, -depth / 2 - 2.2]} receiveShadow>
+        <boxGeometry args={[width * 0.52, 0.24, 4.2]} />
+        <meshStandardMaterial color={SCENE.slab} roughness={0.88} />
       </mesh>
 
       {/* Front walkway */}
@@ -598,34 +653,164 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
         <boxGeometry args={[3, 0.2, 7]} />
         <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
       </mesh>
-
     </group>
   );
 }
 
+/**
+ * Architectural cut-earth maquette slab beneath the lot, giving the 3D scene
+ * the museum-model depth of the A LOT MORE Possibility Series.
+ */
+function MaquettePlinth({ width, length }: { width: number; length: number }) {
+  const outerW = width + 26;
+  const outerL = length + 26;
+  const slabDepth = 2.6;
+  const cornerX = width / 2;
+  const cornerZ = length / 2;
 
-/** Tree: trunk + clustered canopy lobes, placed at lot edges. */
+  return (
+    <group>
+      {/* Thick cut-earth concrete slab sides */}
+      <mesh position={[0, -slabDepth / 2 - 0.09, 0]} receiveShadow>
+        <boxGeometry args={[outerW, slabDepth, outerL]} />
+        <meshStandardMaterial color={SCENE.slab} roughness={0.9} metalness={0.04} />
+      </mesh>
+      {/* Recessed dark museum shadow base */}
+      <mesh position={[0, -slabDepth - 0.35, 0]}>
+        <boxGeometry args={[outerW - 1.5, 0.5, outerL - 1.5]} />
+        <meshStandardMaterial color={SCENE.ink} roughness={0.75} metalness={0.15} />
+      </mesh>
+      {/* Survey monument pins at the four parcel corners */}
+      {(
+        [
+          [-cornerX, -cornerZ],
+          [cornerX, -cornerZ],
+          [cornerX, cornerZ],
+          [-cornerX, cornerZ],
+        ] as const
+      ).map(([cx, cz], idx) => (
+        <mesh key={idx} position={[cx, 0.12, cz]} castShadow>
+          <cylinderGeometry args={[0.32, 0.32, 0.24, 12]} />
+          <meshStandardMaterial color={SCENE.ink} roughness={0.35} metalness={0.65} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Tree: grounded planter base + trunk + branches + clustered canopy lobes. */
 function Tree({ position, height = 8, radius = 3 }: { position: [number, number, number]; height?: number; radius?: number }) {
   return (
     <group position={position}>
-      <mesh position={[0, height / 2, 0]} castShadow>
-        <cylinderGeometry args={[0.4, 0.6, height, 8]} />
+      <ContactShadow width={radius * 2.3} length={radius * 2.3} opacity={0.22} />
+      {/* Root flare / earth ring flush with ground */}
+      <mesh position={[0, 0.12, 0]} receiveShadow>
+        <cylinderGeometry args={[0.72, 0.95, 0.24, 10]} />
+        <meshStandardMaterial color={SCENE.treeTrunk} roughness={0.95} />
+      </mesh>
+      {/* Primary tapered trunk */}
+      <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.36, 0.62, height, 10]} />
         <meshStandardMaterial color={SCENE.treeTrunk} roughness={0.9} />
       </mesh>
+      {/* Secondary branch limb */}
+      <mesh position={[0.45, height * 0.68, 0.15]} rotation={[0.12, 0, -0.55]} castShadow>
+        <cylinderGeometry args={[0.14, 0.24, height * 0.32, 8]} />
+        <meshStandardMaterial color={SCENE.treeTrunk} roughness={0.9} />
+      </mesh>
+      {/* Multi-lobe architectural canopy */}
       <group position={[0, height + radius * 0.45, 0]}>
-        <mesh position={[0, radius * 0.2, 0]} castShadow>
+        <mesh position={[0, radius * 0.2, 0]} castShadow receiveShadow>
           <sphereGeometry args={[radius, 14, 12]} />
           <meshStandardMaterial color={SCENE.tree} roughness={0.85} />
         </mesh>
-        <mesh position={[radius * 0.55, -radius * 0.12, radius * 0.28]} castShadow>
+        <mesh position={[radius * 0.55, -radius * 0.12, radius * 0.28]} castShadow receiveShadow>
           <sphereGeometry args={[radius * 0.66, 12, 10]} />
-          <meshStandardMaterial color={SCENE.treeLight} roughness={0.85} />
+          <meshStandardMaterial color={SCENE.treeLight} roughness={0.8} />
         </mesh>
-        <mesh position={[-radius * 0.5, -radius * 0.06, -radius * 0.3]} castShadow>
+        <mesh position={[-radius * 0.5, -radius * 0.06, -radius * 0.3]} castShadow receiveShadow>
           <sphereGeometry args={[radius * 0.6, 12, 10]} />
-          <meshStandardMaterial color={SCENE.treeDark} roughness={0.85} />
+          <meshStandardMaterial color={SCENE.treeDark} roughness={0.88} />
+        </mesh>
+        <mesh position={[0.15, radius * 0.55, -radius * 0.22]} castShadow>
+          <sphereGeometry args={[radius * 0.52, 10, 10]} />
+          <meshStandardMaterial color={SCENE.treeLight} roughness={0.78} />
         </mesh>
       </group>
+    </group>
+  );
+}
+
+/**
+ * Live 3D laser-measurement clearance lines from the ADU footprint edges to
+ * the rear and nearest side lot lines, shown while dragging/hovering or when
+ * the Measure overlay is active.
+ */
+function ActiveClearanceGuides({
+  parcel,
+  config,
+  pose,
+}: {
+  parcel: Parcel;
+  config: ADUConfig;
+  pose: Pose2D;
+}) {
+  const hw = parcel.lotWidth / 2;
+  const hl = parcel.lotLength / 2;
+  const bounds = useMemo(
+    () => buildAduSceneModel(config, pose).footprintBoundsLocal,
+    [config, pose],
+  );
+  if (!bounds) return null;
+
+  const rearClearance = Math.max(0, Math.round((bounds.minZ - -hl) * 10) / 10);
+  const leftClearance = Math.max(0, Math.round((bounds.minX - -hw) * 10) / 10);
+  const rightClearance = Math.max(0, Math.round((hw - bounds.maxX) * 10) / 10);
+  const useLeft = leftClearance <= rightClearance;
+  const sideClearance = useLeft ? leftClearance : rightClearance;
+  const y = 0.26;
+  const labelScale = Math.max(parcel.lotWidth * 0.42, 16);
+
+  return (
+    <group>
+      {/* Rear clearance measurement line */}
+      <Line
+        points={[
+          [pose.x, y, bounds.minZ],
+          [pose.x, y, -hl],
+        ]}
+        color={SCENE.hoverGlow}
+        lineWidth={2}
+        dashed
+        dashSize={1.2}
+        gapSize={0.8}
+      />
+      <LabelSprite
+        text={`${rearClearance}′ rear`}
+        position={[pose.x, 1.4, (bounds.minZ + -hl) / 2]}
+        scale={labelScale}
+      />
+      {/* Nearest side clearance measurement line */}
+      <Line
+        points={[
+          [useLeft ? bounds.minX : bounds.maxX, y, pose.z],
+          [useLeft ? -hw : hw, y, pose.z],
+        ]}
+        color={SCENE.hoverGlow}
+        lineWidth={2}
+        dashed
+        dashSize={1.2}
+        gapSize={0.8}
+      />
+      <LabelSprite
+        text={`${sideClearance}′ side`}
+        position={[
+          useLeft ? (bounds.minX + -hw) / 2 : (bounds.maxX + hw) / 2,
+          1.4,
+          pose.z,
+        ]}
+        scale={labelScale}
+      />
     </group>
   );
 }
@@ -642,16 +827,20 @@ function Tree({ position, height = 8, radius = 3 }: { position: [number, number,
  * caller's committed pose: this component owns no placement state of its own.
  */
 function ProposedAdu({
+  parcel,
   config,
   pose,
   placementTone,
+  showClearances,
   onPreview,
   onCommit,
   constrain,
 }: {
+  parcel: Parcel;
   config: ADUConfig;
   pose: Pose2D;
   placementTone: "clear" | "review" | "blocked";
+  showClearances: boolean;
   onPreview: (pose: Pose2D) => void;
   onCommit: (pose: Pose2D) => void;
   constrain?: (pose: Pose2D) => Pose2D;
@@ -671,69 +860,94 @@ function ProposedAdu({
   }, [drag.active, hovered]);
 
   return (
-    <group
-      position={[pose.x, 0, pose.z]}
-      rotation={[0, (-pose.rotationDeg * Math.PI) / 180, 0]}
-      onPointerDown={drag.onPointerDown}
-      onPointerMove={drag.onPointerMove}
-      onPointerUp={drag.onPointerUp}
-      onPointerCancel={drag.onPointerCancel}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        setHovered(true);
-      }}
-      onPointerOut={() => {
-        if (!drag.active) setHovered(false);
-      }}
-    >
-      <ContactShadow width={config.width + 5} length={config.length + 5} opacity={0.34} />
-
-      {/* Footprint tint and ring are selection/compliance graphics, deliberately
-          drawn outside the architectural materials. */}
-      <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[config.width + 1, config.length + 1]} />
-        <meshBasicMaterial color={statusColor} opacity={placementTone === "clear" ? 0.15 : 0.22} transparent />
-      </mesh>
-
-      <AduArchitecture config={config} />
-
-      {/* Concrete pad */}
-      <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
-        <boxGeometry args={[config.width + 5, 0.24, 5]} />
-        <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
-      </mesh>
-
-      {(hovered || drag.active) && (
-        <>
-          <LabelSprite
-            text="PROPOSED ADU"
-            position={[0, config.height + 3, config.length / 2 + 0.2]}
-            scale={config.width * 0.35}
-          />
-          <Line
-            points={[
-              [-config.width / 2, 0.1, -config.length / 2],
-              [config.width / 2, 0.1, -config.length / 2],
-              [config.width / 2, 0.1, config.length / 2],
-              [-config.width / 2, 0.1, config.length / 2],
-              [-config.width / 2, 0.1, -config.length / 2],
-            ]}
-            color={SCENE.hoverGlow}
-            lineWidth={2.5}
-          />
-        </>
+    <>
+      {(hovered || drag.active || showClearances) && (
+        <ActiveClearanceGuides parcel={parcel} config={config} pose={pose} />
       )}
+      <group
+        position={[pose.x, 0, pose.z]}
+        rotation={[0, (-pose.rotationDeg * Math.PI) / 180, 0]}
+        onPointerDown={drag.onPointerDown}
+        onPointerMove={drag.onPointerMove}
+        onPointerUp={drag.onPointerUp}
+        onPointerCancel={drag.onPointerCancel}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          setHovered(true);
+        }}
+        onPointerOut={() => {
+          if (!drag.active) setHovered(false);
+        }}
+      >
+        <ContactShadow width={config.width + 5} length={config.length + 5} opacity={0.36} />
 
-      <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
-        <meshBasicMaterial
-          color={statusColor}
-          transparent
-          opacity={hovered || drag.active ? 0.86 : 0.6}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-    </group>
+        {/* Footprint tint and ring are selection/compliance graphics, deliberately
+            drawn outside the architectural materials. */}
+        <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[config.width + 1, config.length + 1]} />
+          <meshBasicMaterial color={statusColor} opacity={placementTone === "clear" ? 0.15 : 0.22} transparent />
+        </mesh>
+
+        {/* Stepped architectural foundation perimeter plinth */}
+        <mesh position={[0, 0.14, 0]} receiveShadow>
+          <boxGeometry args={[config.width + 0.6, 0.28, config.length + 0.6]} />
+          <meshStandardMaterial color="#9c968b" roughness={0.88} metalness={0.05} />
+        </mesh>
+
+        <AduArchitecture config={config} />
+
+        {/* Architectural entry timber deck & concrete pad with metal edge trim */}
+        <mesh position={[0, 0.12, config.length / 2 + 2.4]} receiveShadow>
+          <boxGeometry args={[config.width + 5, 0.24, 5]} />
+          <meshStandardMaterial color={SCENE.slab} roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 0.26, config.length / 2 + 1.8]} castShadow receiveShadow>
+          <boxGeometry args={[config.width * 0.82, 0.14, 3.4]} />
+          <meshStandardMaterial color="#8f6239" roughness={0.74} metalness={0.06} />
+        </mesh>
+        <mesh position={[0, 0.26, config.length / 2 + 3.52]}>
+          <boxGeometry args={[config.width * 0.82 + 0.1, 0.16, 0.12]} />
+          <meshStandardMaterial color={SCENE.ink} roughness={0.32} metalness={0.62} />
+        </mesh>
+
+        {/* Exterior architectural sconce light beside entry door */}
+        <mesh position={[-config.width * 0.25 - 2.1, 5.6, config.length / 2 + 0.16]} castShadow>
+          <boxGeometry args={[0.28, 0.65, 0.26]} />
+          <meshStandardMaterial color={SCENE.ink} roughness={0.28} metalness={0.75} />
+        </mesh>
+
+        {(hovered || drag.active) && (
+          <>
+            <LabelSprite
+              text={`${config.footprint} SF · ${config.width}′ × ${config.length}′`}
+              position={[0, config.height + 3, config.length / 2 + 0.2]}
+              scale={Math.max(config.width * 0.42, 10)}
+            />
+            <Line
+              points={[
+                [-config.width / 2, 0.1, -config.length / 2],
+                [config.width / 2, 0.1, -config.length / 2],
+                [config.width / 2, 0.1, config.length / 2],
+                [-config.width / 2, 0.1, config.length / 2],
+                [-config.width / 2, 0.1, -config.length / 2],
+              ]}
+              color={SCENE.hoverGlow}
+              lineWidth={2.5}
+            />
+          </>
+        )}
+
+        <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[config.width / 2 + 1.5, config.width / 2 + 2, 32]} />
+          <meshBasicMaterial
+            color={statusColor}
+            transparent
+            opacity={hovered || drag.active ? 0.86 : 0.6}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      </group>
+    </>
   );
 }
 
@@ -807,6 +1021,7 @@ export default function ParcelScene({
   const [lighting, setLighting] = useState<LightingPresetId>("shadow-preview");
   const [quality, setQuality] = useState<SceneQuality>("balanced");
   const [utilityMode, setUtilityMode] = useState(false);
+  const [showClearances, setShowClearances] = useState(false);
   const restoreTimer = useRef<number | null>(null);
 
   // --- Pose ---------------------------------------------------------------
@@ -879,6 +1094,15 @@ export default function ParcelScene({
   const selectView = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     setFrameCommand((id) => id + 1);
+  }, []);
+
+  const cycleSunHour = useCallback(() => {
+    setLighting("shadow-preview");
+    setSunHour((prev) => {
+      const stops = [9, 12, 14, 17];
+      const nextStop = stops.find((stop) => stop > prev + 0.25);
+      return nextStop ?? stops[0];
+    });
   }, []);
 
   // --- Keyboard placement --------------------------------------------------
@@ -1018,6 +1242,23 @@ export default function ParcelScene({
   }, [webglAvailable]);
 
   const handleCreated = useCallback((state: RootState) => {
+    try {
+      state.gl.toneMapping = THREE.ACESFilmicToneMapping;
+      state.gl.toneMappingExposure = 1.04;
+      state.gl.outputColorSpace = THREE.SRGBColorSpace;
+      state.gl.shadowMap.enabled = true;
+      state.gl.shadowMap.type = THREE.PCFSoftShadowMap;
+      const pmrem = new THREE.PMREMGenerator(state.gl);
+      pmrem.compileEquirectangularShader();
+      const envScene = new RoomEnvironment();
+      const envRT = pmrem.fromScene(envScene, 0.04);
+      state.scene.environment = envRT.texture;
+      state.scene.environmentIntensity = 0.5;
+      envScene.dispose();
+      pmrem.dispose();
+    } catch {
+      // Headless or mocked WebGL environments may not support PMREM generation.
+    }
     const canvasEl = state.gl.domElement;
     const armFallback = () => {
       restoreTimer.current = window.setTimeout(() => setWebglAvailable(false), 4000);
@@ -1052,12 +1293,12 @@ export default function ParcelScene({
   });
   const { groupProps: lightingGroupProps, getRadioProps: getLightingRadioProps } = useRadioGroup({
     value: lighting,
-    onChange: setLighting,
+    onChange: (val) => setLighting(val),
     values: Object.keys(LIGHTING_PRESETS) as LightingPresetId[],
   });
   const { groupProps: qualityGroupProps, getRadioProps: getQualityRadioProps } = useRadioGroup({
     value: quality,
-    onChange: setQuality,
+    onChange: (val) => setQuality(val),
     values: Object.keys(SCENE_QUALITY) as SceneQuality[],
   });
 
@@ -1141,8 +1382,11 @@ export default function ParcelScene({
                 shadowPreview ? 430 : 900,
               ]}
             />
+            <hemisphereLight
+              args={[preset.ambientColor, SCENE.groundPaper, 0.52]}
+            />
             <ambientLight
-              intensity={shadowPreview ? 1.15 : preset.ambientIntensity * 1.8}
+              intensity={shadowPreview ? 1.05 : preset.ambientIntensity * 1.65}
               color={preset.ambientColor}
             />
             <directionalLight
@@ -1160,6 +1404,8 @@ export default function ParcelScene({
               shadow-camera-right={90}
               shadow-camera-top={90}
               shadow-camera-bottom={-90}
+              shadow-bias={-0.0004}
+              shadow-normalBias={0.02}
             />
             {!shadowPreview && (
               <directionalLight
@@ -1174,6 +1420,7 @@ export default function ParcelScene({
                 to reveal the photoreal capture without visual conflict. */}
             {!scanMode && (
               <>
+                <MaquettePlinth width={parcel.lotWidth} length={parcel.lotLength} />
                 <SurveyGround
                   width={parcel.lotWidth}
                   length={parcel.lotLength}
@@ -1230,9 +1477,11 @@ export default function ParcelScene({
                 <SetbackLines parcel={parcel} setbacks={envelopeSetbacks} />
                 {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} setbacks={envelopeSetbacks} />}
                 <ProposedAdu
+                  parcel={parcel}
                   config={config}
                   pose={activePose}
                   placementTone={placementTone}
+                  showClearances={showClearances || viewMode === "setbacks"}
                   onPreview={previewPose}
                   onCommit={commitPose}
                   constrain={constrain}
@@ -1241,6 +1490,40 @@ export default function ParcelScene({
             )}
           </Canvas>
         </ErrorBoundary>
+
+        {/* Compact top-left architectural instrument HUD: live clearance toggle & solar time step */}
+        <div className="pointer-events-auto absolute left-3 top-3 z-(--z-index-scene) flex items-center gap-1 rounded-none border border-lot-line bg-lot-chalk/95 p-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={showClearances ? "selected" : "ghost"}
+            aria-pressed={showClearances}
+            onClick={() => setShowClearances((prev) => !prev)}
+            className="h-11 gap-1.5 px-2.5 leading-none aria-[pressed=false]:text-lot-ink aria-[pressed=false]:hover:bg-lot-ink/5"
+          >
+            <Ruler className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="whitespace-nowrap text-xs font-medium">Clearances</span>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={cycleSunHour}
+            aria-label={`Cycle shadow preview time (currently ${formatPreviewHour(sunHour)})`}
+            className="h-11 gap-1.5 px-2.5 leading-none text-lot-ink hover:bg-lot-ink/5"
+          >
+            <Sun className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="whitespace-nowrap font-sans text-xs font-semibold tabular-nums">
+              {`Solar · ${formatPreviewHour(sunHour)}`}
+            </span>
+          </Button>
+          <span
+            aria-live="polite"
+            className="hidden border-l border-lot-line px-2.5 font-sans text-xs font-medium tabular-nums text-lot-stone sm:inline-block"
+          >
+            {Math.round(activePose.x)}′ E · {Math.round(activePose.z)}′ S · {Math.round(activePose.rotationDeg)}°
+          </span>
+        </div>
 
         {/* Compact viewport toolbar. Button names stay visible at every width —
             the audit found them collapsing to bare icons below `sm` (U4). */}

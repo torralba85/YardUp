@@ -1166,4 +1166,29 @@ describe("GET /api/parcel — zoning shadow classification", () => {
     expect(res.status).toBe(200);
     expect(typeSafeCalls(fetchMock)).toHaveLength(0);
   });
+
+  it("downgrades Regrid identity confidence and emits a situs warning when Regrid saddress conflicts with the searched street address", async () => {
+    vi.stubEnv("TYPESAFE_ZONING_SHADOW", "");
+    stubWithTypeSafe(JEV_ANSWER, {
+      ...SHADOW_FIELDS,
+      saddress: "999 Different Ave",
+      scity: "Seattle",
+      state2: "WA",
+      szip5: "98105",
+    });
+
+    const res = await GET(
+      makeRequest(47.65, -122.31, "1234 NE 50th St, Seattle, WA 98105"),
+    );
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(res.status).toBe(200);
+    expect(data.source).toBe("regrid");
+    expect(data.dataQuality?.fields.address.confidence).toBe("low");
+    expect(data.dataQuality?.fields.lotArea.confidence).toBe("low");
+    expect(data.dataQuality?.warnings.join(" ")).toContain(
+      "situs street address (999 Different Ave) differs",
+    );
+  });
 });
+

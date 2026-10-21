@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, useTransition, Suspense } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
@@ -16,10 +16,8 @@ import {
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input } from "@/components/ui/Field";
-import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
 import { useRadioGroup, type RadioItemProps } from "@/components/ui/useRadioGroup";
-
-const subscribeToNothing = () => () => {};
+import { useSignupFormState } from "@/hooks/useSignupFormState";
 
 function SignupForm() {
   const { signUp, signInWithGoogle, signInWithApple, user, profile } = useAuth();
@@ -29,15 +27,20 @@ function SignupForm() {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [displayName, setDisplayName] = useState("");
-  const capturedEmail = useSyncExternalStore(subscribeToNothing, readCapturedEmail, () => "");
-  const [editedEmail, setEmail] = useState<string | null>(null);
-  const email = editedEmail ?? capturedEmail;
-  const [password, setPassword] = useState("");
-  const [legalAccepted, setLegalAccepted] = useState(false);
-  
   const initialRole = searchParams.get("role") === "builder" ? "builder" : "user";
-  const [selectedRole, setRole] = useState<"user" | "builder">(initialRole);
+  const {
+    displayName,
+    email,
+    role: selectedRole,
+    legalAccepted,
+    setDisplayName,
+    setEmail,
+    setRole,
+    setLegalAccepted,
+    clearSignupFormState,
+  } = useSignupFormState({ defaultRole: initialRole });
+  const [password, setPassword] = useState("");
+
   const role = buildersAllowed ? selectedRole : "user";
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +62,7 @@ function SignupForm() {
   // Called before the signed-in early return so the hook order never changes.
   const { groupProps: roleGroupProps, getRadioProps: getRoleRadioProps } = useRadioGroup({
     value: role,
-    onChange: setRole,
+    onChange: (val) => setRole(val),
     values: ["user", "builder"] as const,
   });
 
@@ -88,6 +91,7 @@ function SignupForm() {
           role,
         });
         await signUp(email, password, displayName, role, CURRENT_LEGAL_CONSENT);
+        clearSignupFormState();
         trackSignupSucceeded({
           method: "password",
           surface: "signup_page",
@@ -124,6 +128,7 @@ function SignupForm() {
           role,
         });
         await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+        clearSignupFormState();
         trackSignupSucceeded({
           method: "google",
           surface: "signup_page",
@@ -160,6 +165,7 @@ function SignupForm() {
           role,
         });
         await signInWithApple(role, CURRENT_LEGAL_CONSENT);
+        clearSignupFormState();
         trackSignupSucceeded({
           method: "apple",
           surface: "signup_page",

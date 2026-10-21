@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { GMP_SOLUTION_ATTRIBUTION_ID } from "@/lib/address-validation";
 
 const GOOGLE_AUTOCOMPLETE_API =
   "https://places.googleapis.com/v1/places:autocomplete";
@@ -18,10 +19,18 @@ let cachedRuntimeAccessToken:
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
 
+export interface StructuredAddressPrediction {
+  text: string;
+  placeId?: string;
+  types?: string[];
+}
+
 /** Shape of an `/api/suggest` response. */
 export interface AddressSuggestions {
   /** Up to five US address prediction strings (empty when unavailable). */
   suggestions: string[];
+  /** Optional structured predictions carrying Place IDs and types for validation. */
+  predictions?: StructuredAddressPrediction[];
 }
 
 async function getRuntimeOAuthHeaders(
@@ -106,11 +115,15 @@ export async function GET(request: NextRequest) {
     process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
     process.env.GCLOUD_PROJECT?.trim() ||
     "";
+  const viteFallbackKey =
+    process.env.NODE_ENV === "test"
+      ? ""
+      : process.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
   const googleKey =
     process.env.GOOGLE_PLACES_SERVER_KEY?.trim() ||
     process.env.GOOGLE_MAPS_API_KEY?.trim() ||
     process.env.GOOGLE_GEOCODING_KEY?.trim() ||
-    "";
+    viteFallbackKey;
   if (!googleProjectId && !googleKey) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
@@ -145,9 +158,10 @@ export async function GET(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
           ...authHeaders,
+          "X-Goog-Maps-Solution-ID": GMP_SOLUTION_ATTRIBUTION_ID,
           // Places API (New) field mask — without it some projects return empty.
           "X-Goog-FieldMask":
-            "suggestions.placePrediction.placeId,suggestions.placePrediction.text",
+            "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.types",
         },
         body: JSON.stringify({
           input: q,
@@ -169,16 +183,37 @@ export async function GET(request: NextRequest) {
     }
 
     const json = (await res.json()) as {
-      suggestions?: Array<{ placePrediction?: { text?: { text?: string } } }>;
+      suggestions?: Array<{
+        placePrediction?: {
+          placeId?: string;
+          text?: { text?: string };
+          types?: string[];
+        };
+      }>;
     };
-    const suggestions = (json.suggestions ?? [])
-      .map((s) => s.placePrediction?.text?.text?.trim() ?? "")
-      .filter(Boolean)
-      .slice(0, MAX_SUGGESTIONS);
+    const predictions: StructuredAddressPrediction[] = [];
+    for (const item of json.suggestions ?? []) {
+      const text = item.placePrediction?.text?.text?.trim() ?? "";
+      if (!text) continue;
+      predictions.push({
+        text,
+        ...(item.placePrediction?.placeId
+          ? { placeId: item.placePrediction.placeId }
+          : {}),
+        ...(item.placePrediction?.types
+          ? { types: item.placePrediction.types }
+          : {}),
+      });
+      if (predictions.length >= MAX_SUGGESTIONS) break;
+    }
+    const suggestions = predictions.map((p) => p.text);
 
-    return NextResponse.json({ suggestions } satisfies AddressSuggestions, {
-      headers: { "Cache-Control": "private, max-age=300" },
-    });
+    return NextResponse.json(
+      { suggestions, predictions } satisfies AddressSuggestions,
+      {
+        headers: { "Cache-Control": "private, max-age=300" },
+      },
+    );
   } catch (err) {
     console.error("[/api/suggest] autocomplete failed:", err);
     return NextResponse.json({ suggestions: [] } satisfies AddressSuggestions);

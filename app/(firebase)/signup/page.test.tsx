@@ -20,6 +20,7 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 beforeEach(() => {
+  window.sessionStorage.clear();
   mocks.user = null; mocks.profile = null;
   mocks.params = new URLSearchParams("role=builder");
 });
@@ -90,6 +91,33 @@ describe("builder auth in store shells", () => {
     vi.stubGlobal("innerWidth", 390);
     render(<SignupPage />);
     expect(screen.getByRole("radio", { name: /Builder/ })).toBeInTheDocument();
+  });
+
+  it("persists sign-up form progress in sessionStorage across remounts and clears on submit", async () => {
+    mocks.params = new URLSearchParams();
+    const first = render(<SignupPage />);
+
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Alma Reyes" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "alma@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret-password" } });
+    fireEvent.click(screen.getByRole("radio", { name: /Builder/ }));
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    first.unmount();
+
+    render(<SignupPage />);
+    expect(screen.getByLabelText("Full name")).toHaveValue("Alma Reyes");
+    expect(screen.getByLabelText("Email")).toHaveValue("alma@example.com");
+    expect(screen.getByLabelText("Password")).toHaveValue("");
+    expect(screen.getByRole("radio", { name: /Builder/ })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("checkbox")).toBeChecked();
+
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret-password" } });
+    fireEvent.submit(screen.getByLabelText("Email").closest("form")!);
+    await waitFor(() => expect(mocks.signUp).toHaveBeenCalledWith(
+      "alma@example.com", "secret-password", "Alma Reyes", "builder", {},
+    ));
+    expect(window.sessionStorage.getItem("lotfoundry:signup-form-state")).toBeNull();
   });
 
   it.each(["", "next=%2Fbuilder", "next=%2Fbuilder%3Fpack%3D10"])(

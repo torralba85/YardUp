@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
@@ -10,13 +10,13 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
-    "esModuleInterop": true,
+    "incremental": true,
     "module": "esnext",
+    "esModuleInterop": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": false,
     "plugins": [
       {
         "name": "next"
@@ -24,28 +24,21 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      // The repo's remotion/ source folder shadows the `remotion` package
-      // under baseUrl resolution once compositions are imported by app code
-      // (the scroll-scrubbed landing hero). Pin the bare specifier to the
-      // real package; bundlers already resolve it there at runtime.
-      "remotion": [
-        "./node_modules/remotion"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "**/*.mts",
+    "**/*.ts",
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
-    "remotion",
-    "remotion.config.ts"
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "e2e"
   ]
 }

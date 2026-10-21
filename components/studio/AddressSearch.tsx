@@ -2,11 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
-import { MapPin, Search } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MapPin, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { recordAddressSearchSubmission } from "@/lib/analytics/events";
+import {
+  evaluateClientInputReadiness,
+  evaluatePlacesAddress,
+  type AddressValidationResult,
+  type PlacesAddressComponentLike,
+} from "@/lib/address-validation";
+import type { StructuredAddressPrediction } from "@/app/api/suggest/route";
 
-/** A selected address with its resolved coordinates. */
+/** A selected address with its resolved coordinates and validation metadata. */
 export interface AddressSearchResult {
   /** Latitude in decimal degrees. */
   lat: number;
@@ -14,6 +21,8 @@ export interface AddressSearchResult {
   lng: number;
   /** The normalized, human-readable address. */
   formattedAddress: string;
+  /** Optional real-time Google Places deliverability validation result. */
+  validation?: AddressValidationResult;
 }
 
 /** Props for {@link AddressSearch}. */
@@ -26,6 +35,8 @@ export interface AddressSearchProps {
    * the path that works with no Google Places key configured.
    */
   onSubmitText?: (query: string) => void;
+  /** Optional callback fired whenever the real-time validation state updates. */
+  onValidationChange?: (validation: AddressValidationResult | null) => void;
   /** Placeholder text for the input. */
   placeholder?: string;
   /** Whether the input is disabled. */
@@ -41,11 +52,13 @@ export interface AddressSearchProps {
 /**
  * A single dropdown entry, sourced either from the browser Google Places (New)
  * API (carries a {@link google.maps.places.PlacePrediction}) or the server-side
- * `/api/suggest` fallback (text only).
+ * `/api/suggest` fallback.
  */
 interface AddressSuggestion {
   text: string;
   prediction: google.maps.places.PlacePrediction | null;
+  placeId?: string;
+  types?: string[];
 }
 
 let initialized = false;
@@ -67,26 +80,39 @@ function looksLikeBrowserKey(value: string | undefined): value is string {
 }
 
 /**
- * Address search input with a custom, design-system-styled suggestion dropdown.
+ * Determines whether a suggestion entry represents a specific deliverable
+ * property address (`street_address`, `premise`, `subpremise`, or starts with a street number).
+ */
+function isSuggestionDeliverableCandidate(suggestion: AddressSuggestion): boolean {
+  const types = suggestion.types ?? suggestion.prediction?.types ?? [];
+  if (
+    types.includes("street_address") ||
+    types.includes("premise") ||
+    types.includes("subpremise")
+  ) {
+    return true;
+  }
+  if (types.includes("route") || types.includes("locality")) {
+    return false;
+  }
+  const readiness = evaluateClientInputReadiness(suggestion.text);
+  return readiness.hasStreetNumber && readiness.hasStreetName;
+}
+
+/**
+ * Address search input with real-time Google Places API address validation
+ * and a design-system-styled suggestion dropdown.
  *
  * When `NEXT_PUBLIC_GOOGLE_PLACES_KEY` is set it uses the Google Places (New)
- * API (`AutocompleteSuggestion` + `Place.fetchFields`), resolving the picked
- * place to lat/lng + formatted address via {@link onSelect}. Without a key it
- * falls back to debounced server predictions from `/api/suggest`, submitted as
- * free text via {@link onSubmitText}. Both sources render into the same dropdown.
- *
- * Signed-out visitors get no dropdown: every suggestion source spends metered
- * Google quota. They can still type a full address and press Search — that
- * free-text path forwards to {@link onSubmitText}, and the parcel context
- * resolves it on the keyless provider chain under the guest allowance, then
- * asks for an account once that allowance is spent.
- *
- * Migrated off the deprecated `google.maps.places.Autocomplete` widget, which
- * Google no longer offers to new Cloud projects.
+ * API (`AutocompleteSuggestion` + `Place.fetchFields`), verifying property-level
+ * deliverability (`addressComponents`, `types`, `location`, `formattedAddress`)
+ * before resolving via {@link onSelect}. Without a key it falls back to
+ * debounced server predictions from `/api/suggest` and `/api/address-validate`.
  */
 export default function AddressSearch({
   onSelect,
   onSubmitText,
+  onValidationChange,
   placeholder = "Search property address…",
   disabled = false,
   autoFocusSignal,
@@ -115,6 +141,9 @@ export default function AddressSearch({
   const [suggestionsFor, setSuggestionsFor] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [validationResult, setValidationResult] =
+    useState<AddressValidationResult | null>(null);
+  const [validatedForText, setValidatedForText] = useState("");
 
   // Both sources feed the same dropdown. Google when a key is loaded and
   // working; otherwise the server fallback (needs a free-text handler). Either
@@ -206,7 +235,12 @@ export default function AddressSearch({
           next = predictions
             .map((s) => s.placePrediction)
             .filter((p): p is google.maps.places.PlacePrediction => p !== null)
-            .map((p) => ({ text: p.text.text, prediction: p }));
+            .map((p) => ({
+              text: p.text.text,
+              prediction: p,
+              placeId: p.placeId,
+              types: p.types,
+            }));
         } else {
           const idToken = await user?.getIdToken();
           const res = await fetch(`/api/suggest?q=${encodeURIComponent(query)}`, {
@@ -214,11 +248,23 @@ export default function AddressSearch({
             headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
           });
           if (!res.ok) return;
-          const data = (await res.json()) as { suggestions?: string[] };
-          next = (Array.isArray(data.suggestions) ? data.suggestions : []).map((text) => ({
-            text,
-            prediction: null,
-          }));
+          const data = (await res.json()) as {
+            suggestions?: string[];
+            predictions?: StructuredAddressPrediction[];
+          };
+          if (Array.isArray(data.predictions) && data.predictions.length > 0) {
+            next = data.predictions.map((item) => ({
+              text: item.text,
+              prediction: null,
+              placeId: item.placeId,
+              types: item.types,
+            }));
+          } else {
+            next = (Array.isArray(data.suggestions) ? data.suggestions : []).map((text) => ({
+              text,
+              prediction: null,
+            }));
+          }
         }
 
         if (!active) return;
@@ -238,6 +284,12 @@ export default function AddressSearch({
     };
   }, [inputValue, dropdownEnabled, googleEnabled, user]);
 
+  function applyValidation(next: AddressValidationResult | null, forText: string) {
+    setValidationResult(next);
+    setValidatedForText(forText);
+    onValidationChange?.(next);
+  }
+
   async function pickSuggestion(suggestion: AddressSuggestion) {
     selectedValueRef.current = suggestion.text;
     setInputValue(suggestion.text);
@@ -249,7 +301,7 @@ export default function AddressSearch({
       try {
         const place = suggestion.prediction.toPlace();
         await place.fetchFields({
-          fields: ["location", "formattedAddress"],
+          fields: ["location", "formattedAddress", "addressComponents", "types"],
           // Close the Autocomplete session on this Place Details call so it bills
           // as part of the cheaper session bundle rather than a standalone
           // request. `sessionToken` is accepted at runtime but missing from the
@@ -262,6 +314,33 @@ export default function AddressSearch({
         sessionTokenRef.current = null;
         if (place.location) {
           const formattedAddress = place.formattedAddress ?? suggestion.text;
+          const placeWithDetails = place as unknown as {
+            addressComponents?: PlacesAddressComponentLike[] | null;
+            types?: string[] | null;
+          };
+          const validation = evaluatePlacesAddress({
+            rawQuery: suggestion.text,
+            formattedAddress,
+            placeId: suggestion.prediction.placeId ?? suggestion.placeId,
+            location: {
+              lat: place.location.lat(),
+              lng: place.location.lng(),
+            },
+            addressComponents: placeWithDetails.addressComponents ?? null,
+            types: placeWithDetails.types ?? suggestion.types ?? null,
+          });
+          applyValidation(validation, formattedAddress);
+
+          // If Places explicitly reports a street-only or locality-only match
+          // without a house number, prompt the user to enter a street number
+          // instead of selecting a street midpoint.
+          if (!validation.deliverable) {
+            selectedValueRef.current = formattedAddress;
+            setInputValue(formattedAddress);
+            inputRef.current?.focus();
+            return;
+          }
+
           selectedValueRef.current = formattedAddress;
           resolvedValueRef.current = formattedAddress;
           setInputValue(formattedAddress);
@@ -284,12 +363,52 @@ export default function AddressSearch({
       selectedValueRef.current = "";
     }
 
+    // Evaluate deliverability readiness for server-backed picks as well.
+    const fallbackValidation = evaluatePlacesAddress({
+      rawQuery: suggestion.text,
+      formattedAddress: suggestion.text,
+      placeId: suggestion.placeId,
+      types: suggestion.types ?? null,
+    });
+    applyValidation(fallbackValidation, suggestion.text);
+
     // Server-suggestion pick, or a Google pick whose place couldn't resolve.
     recordAddressSearchSubmission("free_text", user ? "signed_in" : "guest");
     onSubmitText?.(suggestion.text);
   }
 
-  const suggestionsCurrent = suggestions.length > 0 && suggestionsFor === inputValue.trim();
+  const [validatingServer, setValidatingServer] = useState(false);
+
+  async function handleVerifyAddress() {
+    const query = inputValue.trim();
+    if (!query || validatingServer) return;
+    setValidatingServer(true);
+    try {
+      const idToken = await user?.getIdToken();
+      const res = await fetch("/api/address-validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+        },
+        body: JSON.stringify({ address: query }),
+      });
+      if (!res.ok) return;
+      const result = (await res.json()) as AddressValidationResult;
+      applyValidation(result, query);
+    } catch (err) {
+      console.error("[AddressSearch] Address validation failed:", err);
+    } finally {
+      setValidatingServer(false);
+    }
+  }
+
+  const trimmedInput = inputValue.trim();
+  const suggestionsCurrent = suggestions.length > 0 && suggestionsFor === trimmedInput;
+  const activeValidation =
+    validationResult && validatedForText === trimmedInput ? validationResult : null;
+  const clientReadiness =
+    trimmedInput.length >= 3 ? evaluateClientInputReadiness(trimmedInput) : null;
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (!suggestionsOpen || suggestions.length === 0) return;
@@ -386,6 +505,7 @@ export default function AddressSearch({
         disabled={isDisabled}
         aria-label="Search property address"
         aria-busy={loading}
+        aria-invalid={activeValidation ? !activeValidation.deliverable : undefined}
         role={dropdownEnabled ? "combobox" : undefined}
         aria-autocomplete={dropdownEnabled ? "list" : undefined}
         aria-expanded={dropdownEnabled ? suggestionsOpen : undefined}
@@ -420,35 +540,165 @@ export default function AddressSearch({
           aria-label="Address suggestions"
           className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-none border border-lot-line bg-lot-chalk shadow-none"
         >
-          {suggestions.map((suggestion, index) => (
-            <li
-              key={suggestion.prediction?.placeId ?? suggestion.text}
-              id={`address-suggestion-${index}`}
-              role="option"
-              aria-selected={index === activeIndex}
-              // onMouseDown so the pick fires before the input's blur closes the list
-              onMouseDown={(event) => {
-                event.preventDefault();
-                void pickSuggestion(suggestion);
-              }}
-              onMouseEnter={() => setActiveIndex(index)}
-              className={`flex cursor-pointer items-center gap-2 px-3 py-3 text-sm text-lot-ink ${
-                index === activeIndex ? "bg-lot-surface" : ""
-              }`}
-            >
-              <MapPin size={13} className="shrink-0 text-lot-orange-ink" aria-hidden="true" />
-              <span className="truncate">{suggestion.text}</span>
-            </li>
-          ))}
+          {suggestions.map((suggestion, index) => {
+            const deliverableCandidate = isSuggestionDeliverableCandidate(suggestion);
+            return (
+              <li
+                key={suggestion.prediction?.placeId ?? suggestion.placeId ?? suggestion.text}
+                id={`address-suggestion-${index}`}
+                role="option"
+                aria-selected={index === activeIndex}
+                // onMouseDown so the pick fires before the input's blur closes the list
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  void pickSuggestion(suggestion);
+                }}
+                onMouseEnter={() => setActiveIndex(index)}
+                className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-3 text-sm text-lot-ink ${
+                  index === activeIndex ? "bg-lot-surface" : ""
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <MapPin size={13} className="shrink-0 text-lot-orange-ink" aria-hidden="true" />
+                  <span className="truncate">{suggestion.text}</span>
+                </span>
+                <span
+                  className={`shrink-0 text-xs font-medium ${
+                    deliverableCandidate ? "text-status-eligible" : "text-status-review"
+                  }`}
+                >
+                  {deliverableCandidate ? "Deliverable" : "Add street #"}
+                </span>
+              </li>
+            );
+          })}
           <li
             role="presentation"
-            className="flex items-center justify-between border-t border-lot-line px-3 py-1.5 text-[10px] uppercase tracking-wide text-lot-stone"
+            className="flex items-center justify-between border-t border-lot-line px-3 py-1.5 text-xs uppercase tracking-wide text-lot-stone"
           >
             <span>↑↓ to select · Tab/Enter to choose</span>
-            {googleEnabled && <span>Powered by Google</span>}
+            {googleEnabled && <span>Google Maps</span>}
           </li>
         </ul>
       )}
+
+      {activeValidation ? (
+        <div
+          data-testid="address-validation-status"
+          className="mt-1.5 flex flex-col gap-0.5 border border-lot-line bg-lot-surface px-2.5 py-1.5 text-xs"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 font-medium ${
+                activeValidation.status === "deliverable"
+                  ? "text-status-eligible"
+                  : activeValidation.status === "needs_confirmation"
+                    ? "text-status-review"
+                    : "text-status-blocked"
+              }`}
+            >
+              {activeValidation.status === "deliverable" ? (
+                <CheckCircle2 size={13} className="shrink-0" aria-hidden="true" />
+              ) : (
+                <AlertTriangle size={13} className="shrink-0" aria-hidden="true" />
+              )}
+              <span>{activeValidation.message}</span>
+            </span>
+            {activeValidation.standardizedSuggestion &&
+              activeValidation.standardizedSuggestion !== trimmedInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const standardized = activeValidation.standardizedSuggestion!;
+                    selectedValueRef.current = standardized;
+                    setInputValue(standardized);
+                    const updatedValidation: AddressValidationResult = {
+                      ...activeValidation,
+                      status: "deliverable",
+                      deliverable: true,
+                    };
+                    applyValidation(updatedValidation, standardized);
+                    if (activeValidation.location) {
+                      resolvedValueRef.current = standardized;
+                      onSelect({
+                        lat: activeValidation.location.lat,
+                        lng: activeValidation.location.lng,
+                        formattedAddress: standardized,
+                      });
+                    }
+                  }}
+                  className="shrink-0 rounded-control border border-lot-stone px-2 py-0.5 text-xs font-semibold text-lot-ink hover:bg-lot-chalk focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                >
+                  Use standardized
+                </button>
+              )}
+          </div>
+          {activeValidation.source !== "client_heuristic" && (
+            <div className="text-xs text-lot-stone">Google Maps</div>
+          )}
+        </div>
+      ) : clientReadiness ? (
+        <div
+          data-testid="address-readiness-bar"
+          className="mt-1.5 flex flex-wrap items-center justify-between gap-2 border border-lot-line bg-lot-surface px-2.5 py-1.5 text-xs text-lot-stone"
+        >
+          <span className="inline-flex items-center gap-1.5 text-lot-ink">
+            {clientReadiness.isCompleteCandidate ? (
+              <CheckCircle2
+                size={13}
+                className="shrink-0 text-status-eligible"
+                aria-hidden="true"
+              />
+            ) : (
+              <AlertTriangle
+                size={13}
+                className="shrink-0 text-status-review"
+                aria-hidden="true"
+              />
+            )}
+            <span>{clientReadiness.summaryLabel}</span>
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span
+              className={
+                clientReadiness.hasStreetNumber
+                  ? "font-medium text-status-eligible"
+                  : "text-lot-stone"
+              }
+            >
+              {clientReadiness.hasStreetNumber ? "✓ Street #" : "○ Street #"}
+            </span>
+            <span
+              className={
+                clientReadiness.hasStreetName
+                  ? "font-medium text-status-eligible"
+                  : "text-lot-stone"
+              }
+            >
+              {clientReadiness.hasStreetName ? "✓ Street" : "○ Street"}
+            </span>
+            <span
+              className={
+                clientReadiness.hasLocalityOrState
+                  ? "font-medium text-status-eligible"
+                  : "text-lot-stone"
+              }
+            >
+              {clientReadiness.hasLocalityOrState ? "✓ City/State" : "○ City/State"}
+            </span>
+            {signedIn && clientReadiness.isCompleteCandidate && (
+              <button
+                type="button"
+                disabled={validatingServer}
+                onClick={() => void handleVerifyAddress()}
+                className="rounded-control border border-lot-stone bg-lot-chalk px-2 py-0.5 text-xs font-semibold text-lot-ink hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink disabled:opacity-60"
+              >
+                {validatingServer ? "Verifying…" : "Verify"}
+              </button>
+            )}
+          </span>
+        </div>
+      ) : null}
 
       {!signedIn || (!loading && !hasPlacesKey) ? (
         <p className="sr-only group-focus-within:not-sr-only mt-1.5 text-xs text-lot-stone" role="note">

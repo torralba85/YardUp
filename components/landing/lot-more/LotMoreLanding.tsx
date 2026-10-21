@@ -130,6 +130,10 @@ export function LotMoreLanding({
   const [sampleOpen, setSampleOpen] = useState(false);
   const [mobileCta, setMobileCta] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeHotspot, setActiveHotspot] = useState<number>(0);
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const [explorerFootprint, setExplorerFootprint] = useState<450 | 600 | 800>(600);
+  const [explorerRoof, setExplorerRoof] = useState<"shed" | "gable" | "flat">("shed");
   // The server snapshot is always false, so the prerendered header carries the
   // plain `Sign in` link and a signed-out visit never reaches the auth island.
   const hasMemberSession = useSyncExternalStore(
@@ -145,6 +149,41 @@ export function LotMoreLanding({
   const router = useRouter();
   const scenario = scenarios[scenarioIndex];
   const sample = scenarios.find((item) => item.id === "market") ?? scenarios[0];
+
+  const hotspots = [
+    {
+      id: "01",
+      title: "Proposed 600 sq ft ADU",
+      metric: "24′ × 25′ footprint · 1 bed",
+      detail: "Positioned in the rear yard envelope with full-height southern glazing and private deck access.",
+      x: "66%",
+      y: "54%",
+    },
+    {
+      id: "02",
+      title: "Modeled Setback Buffer",
+      metric: "5′ rear · 5′ side clearance",
+      detail: "Automated boundary offset checks rear, side, and house-to-ADU separation rules in real time.",
+      x: "80%",
+      y: "42%",
+    },
+    {
+      id: "03",
+      title: "Primary Residence Context",
+      metric: "1,420 sq ft existing · 32% lot coverage",
+      detail: "Preserves existing yard sightlines and calculates remaining allowable impervious coverage.",
+      x: "34%",
+      y: "46%",
+    },
+  ];
+
+  const explorerScale = explorerFootprint / 600;
+  const explorerRoofMultiplier = explorerRoof === "gable" ? 1.04 : explorerRoof === "flat" ? 0.98 : 1;
+  const explorerRent = Math.round(sample.rent * (explorerFootprint === 450 ? 0.82 : explorerFootprint === 800 ? 1.24 : 1));
+  const explorerCostLow = Math.round((sample.costLow / 1000) * explorerScale * explorerRoofMultiplier);
+  const explorerCostHigh = Math.round((sample.costHigh / 1000) * explorerScale * explorerRoofMultiplier);
+  const explorerCoverage = explorerFootprint === 450 ? 29 : explorerFootprint === 600 ? 32 : 36;
+
   const intentions = [
     {
       label: "For family",
@@ -430,8 +469,8 @@ export function LotMoreLanding({
             </div>
             <figure className={styles.heroVisual}>
               <div className={styles.artHeader}>
-                <span>ILLUSTRATIVE CONCEPT</span>
-                <span>LOT — 001</span>
+                <span>ILLUSTRATIVE CONCEPT · SCALE 1:100</span>
+                <span>LOT — 001 / ORTHO 3D</span>
               </div>
               <div className={styles.parcelCanvas} data-scene={scene}>
                 {/* Pre-sized local WebP variants keep the hero useful before JS. */}
@@ -465,18 +504,64 @@ export function LotMoreLanding({
                   aria-hidden="true"
                 />
                 <svg
+                  className={styles.cadGridOverlay}
+                  viewBox="0 0 1536 1024"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  {/* Precision corner registration ticks */}
+                  <path
+                    d="M64 96V64H96 M1472 96V64H1440 M64 928V960H96 M1472 928V960H1440"
+                    stroke={COLOR["lot-stone"]}
+                    strokeWidth="2"
+                    strokeOpacity="0.55"
+                  />
+                  {/* Subtle parcel survey boundary */}
+                  <path
+                    d="M270 560 L785 375 L1295 620 L765 865 Z"
+                    stroke={COLOR["lot-stone"]}
+                    strokeWidth="1.5"
+                    strokeDasharray="6 8"
+                    strokeOpacity="0.45"
+                  />
+                </svg>
+                <svg
                   className={styles.footprintOverlay}
                   viewBox="0 0 1536 1024"
                   fill="none"
                   aria-hidden="true"
                 >
+                  {/* Outer setback clearance envelope */}
                   <path
+                    d="m745 568 295-84 202 114-275 130Z"
+                    stroke={COLOR["lot-ink"]}
+                    strokeWidth="2"
+                    strokeDasharray="6 6"
+                    strokeOpacity="0.65"
+                  />
+                  {/* Proposed ADU footprint with animated stroke */}
+                  <path
+                    className={styles.footprintPolygon}
                     d="m800 578 250-70 166 94-231 110Z"
-                    fill={COLOR["lot-orange"]} fillOpacity={0.2}
+                    fill={COLOR["lot-orange"]}
+                    fillOpacity={0.22}
                     stroke={COLOR["lot-orange"]}
                     strokeWidth="5"
                     strokeDasharray="14 10"
                   />
+                  {/* Architectural dimension ticks */}
+                  <line
+                    x1="800"
+                    y1="556"
+                    x2="1050"
+                    y2="486"
+                    stroke={COLOR["lot-ink"]}
+                    strokeWidth="2"
+                  />
+                  <circle cx="800" cy="578" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                  <circle cx="1050" cy="508" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                  <circle cx="1216" cy="602" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                  <circle cx="985" cy="712" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
                 </svg>
                 <div className={styles.sceneTag}>
                   <span className={styles.tagDot} />
@@ -489,9 +574,40 @@ export function LotMoreLanding({
                   }
                   <span className={styles.tagLine} />
                 </div>
+                {scene === 2 && (
+                  <div className={styles.hotspotLayer} aria-label="Maquette inspection points">
+                    {hotspots.map((point, index) => (
+                      <button
+                        key={point.id}
+                        type="button"
+                        className={styles.hotspotPin}
+                        style={{ left: point.x, top: point.y }}
+                        aria-pressed={activeHotspot === index}
+                        aria-label={`Inspect ${point.title}`}
+                        onClick={() => setActiveHotspot(index)}
+                      >
+                        <span>{point.id}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className={styles.northMark} aria-hidden="true">
                   N<ArrowUpRight size={24} strokeWidth={1.5} />
                 </div>
+              </div>
+              <div className={styles.maquetteReadout} aria-live="polite">
+                <div className={styles.maquetteReadoutTop}>
+                  <span className={styles.maquetteReadoutIndex}>
+                    POINT {hotspots[activeHotspot].id} / 03
+                  </span>
+                  <span className={styles.maquetteReadoutMetric}>
+                    {hotspots[activeHotspot].metric}
+                  </span>
+                </div>
+                <p className={styles.maquetteReadoutBody}>
+                  <strong>{hotspots[activeHotspot].title}.</strong>{" "}
+                  {hotspots[activeHotspot].detail}
+                </p>
               </div>
               <Segmented
                 className={styles.sceneControls}
@@ -594,6 +710,61 @@ export function LotMoreLanding({
                     alt="Oak Street demo in the LotFoundry 3D studio, showing an existing home and a proposed backyard home"
                   />
                 </picture>
+                <div className={styles.interactiveSandbox} aria-label="Interactive massing preview">
+                  <div className={styles.sandboxControlsRow}>
+                    <div className={styles.sandboxControlGroup}>
+                      <span className={styles.sandboxControlLabel}>FOOTPRINT</span>
+                      <div className={styles.sandboxToggleBar}>
+                        {([450, 600, 800] as const).map((sqft) => (
+                          <button
+                            key={sqft}
+                            type="button"
+                            className={styles.sandboxToggle}
+                            aria-pressed={explorerFootprint === sqft}
+                            onClick={() => setExplorerFootprint(sqft)}
+                          >
+                            {sqft} sq ft
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className={styles.sandboxControlGroup}>
+                      <span className={styles.sandboxControlLabel}>ROOF PROFILE</span>
+                      <div className={styles.sandboxToggleBar}>
+                        {(["shed", "gable", "flat"] as const).map((profile) => (
+                          <button
+                            key={profile}
+                            type="button"
+                            className={styles.sandboxToggle}
+                            aria-pressed={explorerRoof === profile}
+                            onClick={() => setExplorerRoof(profile)}
+                          >
+                            {profile}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.sandboxReadoutGrid} aria-live="polite">
+                    <div>
+                      <span>MODELED COVERAGE</span>
+                      <strong>{explorerCoverage}% of lot</strong>
+                    </div>
+                    <div>
+                      <span>EST. BUILD BAND</span>
+                      <strong>
+                        {money(explorerCostLow)}k–{money(explorerCostHigh)}k
+                      </strong>
+                    </div>
+                    <div>
+                      <span>EST. MARKET RENT</span>
+                      <strong>
+                        {money(explorerRent)}
+                        <small>/mo</small>
+                      </strong>
+                    </div>
+                  </div>
+                </div>
                 <figcaption>
                   {city === "seattle"
                     ? "Explore placement, design choices, and the assumptions behind this demo."
@@ -602,7 +773,10 @@ export function LotMoreLanding({
               </figure>
               <div className={styles.demoSteps}>
                 <ol>
-                  <li>
+                  <li
+                    className={activeStep === 0 ? styles.demoStepActive : undefined}
+                    onMouseEnter={() => setActiveStep(0)}
+                  >
                     <span>01</span>
                     <div>
                       <h3>Place a backyard home.</h3>
@@ -612,7 +786,10 @@ export function LotMoreLanding({
                       </p>
                     </div>
                   </li>
-                  <li>
+                  <li
+                    className={activeStep === 1 ? styles.demoStepActive : undefined}
+                    onMouseEnter={() => setActiveStep(1)}
+                  >
                     <span>02</span>
                     <div>
                       <h3>Compare the estimates.</h3>
@@ -626,7 +803,10 @@ export function LotMoreLanding({
                       </a>
                     </div>
                   </li>
-                  <li>
+                  <li
+                    className={activeStep === 2 ? styles.demoStepActive : undefined}
+                    onMouseEnter={() => setActiveStep(2)}
+                  >
                     <span>03</span>
                     <div>
                       <h3>Plan your next questions.</h3>
@@ -709,6 +889,9 @@ export function LotMoreLanding({
                   {money(scenario.costHigh / 1000)}k
                 </strong>
                 <small>One-time project estimate</small>
+                <div className={styles.metricMeter} aria-hidden="true">
+                  <span style={{ width: "78%" }} />
+                </div>
               </div>
               <div>
                 <p>Estimated rental income</p>
@@ -717,6 +900,13 @@ export function LotMoreLanding({
                   <small>/mo</small>
                 </strong>
                 <small>Before expenses and financing</small>
+                <div className={styles.metricMeter} aria-hidden="true">
+                  <span
+                    style={{
+                      width: `${Math.min(100, Math.round((scenario.rent / (scenarios[2]?.rent || scenario.rent)) * 100))}%`,
+                    }}
+                  />
+                </div>
               </div>
               <div>
                 <p>Estimated simple payback</p>
@@ -725,6 +915,27 @@ export function LotMoreLanding({
                   <small>years</small>
                 </strong>
                 <small>Based on operating income</small>
+                <div className={styles.metricMeter} aria-hidden="true">
+                  <span
+                    style={{
+                      width: `${Math.max(35, Math.min(100, Math.round((18 / scenario.payback) * 75)))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className={styles.telemetryStrip} aria-label="Operating cash flow breakdown">
+              <div className={styles.telemetryItem}>
+                <span>ANNUAL OPERATING INCOME</span>
+                <strong>{money(scenario.noi)}/yr</strong>
+              </div>
+              <div className={styles.telemetryItem}>
+                <span>NET OPERATING MARGIN</span>
+                <strong>{((1 - scenario.expenseRatio) * 100).toFixed(1)}%</strong>
+              </div>
+              <div className={styles.telemetryItem}>
+                <span>MODELED EXPENSE ALLOWANCE</span>
+                <strong>{(scenario.expenseRatio * 100).toFixed(1)}% of gross</strong>
               </div>
             </div>
             <div className={styles.numberNotes}>
