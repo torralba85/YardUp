@@ -28,3 +28,9 @@ jobs:
         run: |
           gcloud run services describe app --region=us-central1 --project=yardup-2026 --format='yaml(status.conditions,status.traffic,status.latestReadyRevisionName,status.latestCreatedRevisionName)'
           gcloud run revisions list --service=app --region=us-central1 --project=yardup-2026 --limit=5 --format='table(metadata.name,status.conditions[0].status,status.conditions[0].message,metadata.creationTimestamp)'
+      - name: Inspect startup platform details
+        run: |
+          gcloud run revisions describe app-00311-fig --region=us-central1 --project=yardup-2026 --format='yaml(status,spec.containers.image,spec.containers.resources)'
+          gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="app" AND severity>=ERROR' --project=yardup-2026 --freshness=1h --limit=3 --format=json
+          gcloud logging read 'severity>=ERROR AND NOT log_id("run.googleapis.com/requests")' --project=yardup-2026 --freshness=1h --limit=20 --format='table(timestamp,resource.type,resource.labels.service_name,textPayload,jsonPayload.message,protoPayload.status)'
+          gcloud billing projects describe yardup-2026 --format='yaml(projectId,billingEnabled)'
