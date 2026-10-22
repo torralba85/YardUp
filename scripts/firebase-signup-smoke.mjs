@@ -1,6 +1,7 @@
 import { cert, deleteApp, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { verifyAttomOnProduction } from "./ci/attom-canary.mjs";
 
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDqUcyMOM_sS77xVkwFIxqgAjv8hKksrJc",
@@ -222,6 +223,11 @@ try {
   console.log("[signup-smoke] Disposable account signed back in.");
   await verifyProfile(loginSession);
   console.log("[signup-smoke] Login token verified persisted profile and consent.");
+
+  if (process.env.FIREBASE_SMOKE_ATTOM === "true") {
+    await verifyAttomOnProduction(loginSession.idToken, appCheckToken);
+    console.log("[signup-smoke] ATTOM live property-address verification passed.");
+  }
 
   await cleanupAccount(session.uid);
   session = null;

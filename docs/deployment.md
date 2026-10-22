@@ -238,6 +238,16 @@ gets past it. It also does not call Identity Toolkit's `createAuthUri`: App
 Check is enforced, so that call returns 401 without the SDK's App Check token.
 Apple sign-in is hidden (`NEXT_PUBLIC_APPLE_SIGN_IN`) and not checked.
 
+The post-deploy signup canary also sets `FIREBASE_SMOKE_ATTOM=true`. After its
+disposable account signs back in, it calls the production `/api/parcel` route
+for ATTOM's documented sample property (4529 Winona Court, Denver). It requires
+a matched ATTOM attempt and observed address evidence, so a successful fallback
+cannot conceal a missing binding, invalid key or subscription denial. The check
+uses the site's runtime key; it does not read Secret Manager or copy the key
+into CI. Tokens and provider bodies are not logged, and the existing cleanup
+also runs on verification failure. This adds one metered ATTOM parcel check per
+successful production deployment. A manual Signup Canary dispatch repeats it.
+
 ## Release verification
 
 Before a production deploy, run the release gate from a clean worktree:
