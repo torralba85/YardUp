@@ -1,0 +1,26 @@
+name: Outage diagnostics
+
+on:
+  push:
+    branches: [codex/lotfoundry-outage-20261022]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Authenticate to Firebase
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
+        with:
+          credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+      - name: Inspect function state without environment values
+        run: |
+          for fn in app api apiAi apiStripe apiStore; do
+            gcloud functions describe "$fn" --gen2 --region=us-central1 --project=yardup-2026 --format='yaml(name,state,stateMessages,updateTime,buildConfig.runtime,serviceConfig.uri,serviceConfig.revision)'
+          done
+      - name: Read recent app startup errors
+        run: |
+          gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="app" AND severity>=ERROR' --project=yardup-2026 --freshness=4h --limit=30 --format='table(timestamp,severity,resource.labels.revision_name,textPayload,jsonPayload.message)'
