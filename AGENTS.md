@@ -136,6 +136,7 @@ Project-specific design rules:
 Local live-data variables usually live in `.env.local` and/or `functions/.env`:
 
 ```bash
+ATTOM_API_KEY=<server-only ATTOM Property API key; Secret Manager ID ATTOM_API_KEY>
 GOOGLE_MAPS_API_KEY=<server-side Maps Static + Geocoding key>
 GOOGLE_GEOCODING_KEY=<optional dedicated server-side Geocoding key>
 GOOGLE_PLACES_SERVER_KEY=<optional server-side Places key>
@@ -173,11 +174,13 @@ GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=<service-account JSON with androidpublisher sco
 PLAY_RTDN_VERIFICATION_TOKEN=<shared secret in the Pub/Sub push URL for /api/store/rtdn/google>
 ```
 
-Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit storage backend selection: in-memory vs Firestore). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.
+Demo/dev flags: `LOTFOUNDRY_ALLOW_PUBLIC_API` (allow unauthenticated AI/API access locally), `LOTFOUNDRY_DEMO_UNLOCKS` (grant lead unlocks without payment), `AI_RATE_LIMIT_BACKEND` (rate-limit storage backend selection: in-memory vs Firestore). Server-only secrets (`OPENAI_API_KEY`, `STRIPE_*`, `REGRID_API_KEY`, `ATTOM_API_KEY`) belong in `.env.local`/`functions/.env`, never in `NEXT_PUBLIC_*`.
 
 Firebase App Check uses the registered reCAPTCHA Enterprise provider in production. Local authenticated development needs a registered `NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` in `.env.local`; never commit or deploy that token. Generic Playwright CI must not create accounts in the production Firebase project.
 
 Without parcel API keys, the app must still resolve real lots wherever the free tier reaches: `/api/parcel` chains Regrid (paid, optional) to the public county/statewide GIS services in `lib/server/county-parcels.ts`, resolves state/ZIP/county from the keyless US Census geocoder (`lib/server/census-geocode.ts`), and fills known parcel polygons from the public USA Structures footprint layer (`lib/server/building-footprints.ts`). It degrades to the Seattle, Portland, and Austin presets only where no parcel provider has coverage. Without `OPENAI_API_KEY`, AI panels stay visible but return a setup message instead of generating content. Without Firebase overrides, the checked-in `yardup-2026` web app config is used.
+
+ATTOM (`lib/server/attom.ts`) supplements full-address geocoding and parcel address checks for verified signed-in callers only. It uses the exact `ATTOM_API_KEY` Secret Manager secret bound to `api`; no build-time/GitHub key is needed. It never replaces official parcel geometry or regulatory facts; mismatches reduce confidence. See `docs/deployment.md#attom-address-accuracy`.
 
 Anonymous visitors get one real address lookup before the account ask (`lib/guest-lookup.ts`). That allowance is a funnel affordance, not a cost control: the ceiling is server-side, where `lib/server/guest-request.ts` treats a request carrying no bearer token as a guest and `/api/geocode` and `/api/parcel` then hold it to the keyless chain (Nominatim, then the US Census geocoder for street addresses Nominatim misses; county/statewide GIS) under their own `geocode-guest` / `parcel-guest` limiter namespaces. A guest lookup therefore cannot spend metered Google or Regrid quota however often it is repeated. The one opt-in exception is `TYPESAFE_GEOCODE_PICKER`: when it is on, each Nominatim lookup, guest or not, also makes one metered TypeSafe call (`lib/server/geocode-candidate-picker.ts`). Autocomplete stays signed-in only, because every suggestion source is metered; free-text Search is the guest path.
 
