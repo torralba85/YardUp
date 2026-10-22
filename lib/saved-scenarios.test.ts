@@ -188,6 +188,37 @@ describe("createSavedScenarioStore", () => {
     expect(normalized?.marketData?.components).not.toHaveProperty("vendorDebug");
   });
 
+  it("defaults missing evidence warnings to an empty list", () => {
+    const evidence = {
+      status: "observed",
+      source: { provider: "ATTOM", dataset: "Property Basic Profile" },
+      retrievedAt: "2026-09-25T00:00:00.000Z",
+      confidence: "medium",
+    };
+    const normalized = normalizeLiveParcel({
+      ...liveParcel,
+      dataQuality: {
+        version: 1,
+        fields: Object.fromEntries([
+          "address",
+          "lotArea",
+          "lotDimensions",
+          "existingHouseSqft",
+          "maxLotCoveragePercent",
+          "setbacks",
+          "zoning",
+          "boundaryGeoJson",
+        ].map((field) => [field, evidence])),
+        providerAttempts: [],
+        warnings: [],
+        addressVerification: evidence,
+      },
+    } as unknown as LiveParcelData);
+
+    expect(normalized?.dataQuality?.addressVerification?.warnings).toEqual([]);
+    expect(normalized?.dataQuality?.fields.address.warnings).toEqual([]);
+  });
+
   it("removes by id", () => {
     const store = createSavedScenarioStore(storage);
     const saved = store.save({
