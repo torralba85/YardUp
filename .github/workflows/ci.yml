@@ -120,6 +120,13 @@ jobs:
         run: |
           # Azure's mirror stalled font/library downloads for 13 minutes in
           # release CI. Keep Ubuntu's signed packages, using its public mirror.
+          # Runner images normally select mirrors through this priority file.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\t%s\n' \
+              'https://archive.ubuntu.com/ubuntu/' 'priority:1' \
+              'https://security.ubuntu.com/ubuntu/' 'priority:2' |
+              sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+          fi
           if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
             sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
           fi
