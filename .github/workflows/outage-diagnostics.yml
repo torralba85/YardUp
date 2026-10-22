@@ -37,3 +37,21 @@ jobs:
       - name: Inspect failing deployment startup
         run: |
           gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="apistore" AND NOT log_id("run.googleapis.com/requests") AND textPayload:*' --project=yardup-2026 --freshness=1h --limit=100 --format='table(timestamp,severity,resource.labels.revision_name,textPayload)'
+      - name: Start an isolated recovery revision of the deployed app
+        run: |
+          gcloud run services update app --region=us-central1 --project=yardup-2026 --update-env-vars=LOTFOUNDRY_RECOVERY_REVISION=20261022 --revision-suffix=recovery-20261022 --no-traffic --tag=outage-recovery --quiet
+      - name: Verify recovery before moving traffic
+        run: |
+          gcloud run services describe app --region=us-central1 --project=yardup-2026 --format='json(status)' > /tmp/app-status.json
+          recovery_url=$(python3 -c 'import json; s=json.load(open("/tmp/app-status.json"))["status"]; print(next(t["url"] for t in s["traffic"] if t.get("tag")=="outage-recovery"))')
+          for route in / /studio /login /privacy; do
+            curl --fail --silent --show-error --max-time 45 -H 'X-Fh-Requested-Host: lotfoundry.net' "$recovery_url$route" -o /tmp/recovery-page.html
+            test -s /tmp/recovery-page.html
+            echo "Recovery route passed: $route"
+          done
+          # Do not override another release that advanced production meanwhile.
+          gcloud run services describe app --region=us-central1 --project=yardup-2026 --format='json(status)' > /tmp/app-status.json
+          python3 -c 'import json; ts=json.load(open("/tmp/app-status.json"))["status"]["traffic"]; active=[t for t in ts if t.get("percent",0)>0]; assert active and all(t.get("revisionName")=="app-00311-fig" for t in active), "Production changed during recovery; leave its traffic untouched"'
+          gcloud run services update-traffic app --region=us-central1 --project=yardup-2026 --to-revisions=app-recovery-20261022=100 --quiet
+          curl --fail --silent --show-error --max-time 45 https://lotfoundry.net/ -o /tmp/production-page.html
+          echo 'Production homepage passed'
