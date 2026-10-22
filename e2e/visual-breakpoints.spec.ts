@@ -10,6 +10,8 @@ const breakpoints = [
 
 test.describe("Visual breakpoint coverage", () => {
   test.setTimeout(60_000);
+  // Bound the compositor surface itself, not just the resulting PNG dimensions.
+  test.use({ deviceScaleFactor: 1 });
 
   for (const bp of breakpoints) {
     test(`renders without clipped primary UI at ${bp.name}`, async ({ page }, testInfo) => {
