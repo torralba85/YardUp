@@ -1,7 +1,7 @@
 import type { DataEvidence } from "@/lib/data-evidence";
 
 export interface GeocodeMatch {
-  provider: "google" | "nominatim" | "census";
+  provider: "google" | "nominatim" | "census" | "attom";
   providerId?: string;
   matchType: string;
   precision:

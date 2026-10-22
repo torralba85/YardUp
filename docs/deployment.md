@@ -11,7 +11,7 @@ The production Firebase project is `yardup-2026`.
 | AI API | `apiAi` | Serves `/api/ai/**` with the OpenAI secret and a longer timeout |
 | Stripe API | `apiStripe` | Serves `/api/stripe/**` with Stripe secrets only; keeps one instance warm (`minInstances: 1`, about $13 a month) so the buy click and webhooks skip a 5-8 s cold start |
 | Native-store API | `apiStore` | Serves `/api/store/**` receipt verification with native-store secrets only when enabled |
-| General API | `api` | Serves remaining `/api/**` routes with Google Maps, server Places fallback, and Regrid secrets; production Places calls use the Function's OAuth identity so App Check can remain enforced |
+| General API | `api` | Serves remaining `/api/**` routes with Google Maps, server Places fallback, Regrid, and ATTOM secrets; production Places calls use the Function's OAuth identity so App Check can remain enforced |
 
 All five Functions use the same prepared Next.js handler. The rewrite selects the
 least-privilege function rather than a different application bundle.
@@ -62,6 +62,7 @@ GOOGLE_MAPS_API_KEY
 GOOGLE_GEOCODING_KEY                 # optional dedicated key
 GOOGLE_PLACES_SERVER_KEY             # optional dedicated key
 REGRID_API_KEY
+ATTOM_API_KEY                       # supplemental property-address verification
 OPENAI_API_KEY
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
@@ -80,15 +81,58 @@ TYPESAFE_API_KEY                     # TypeSafe flags only
 
 Store production server-only values in Google Secret Manager. `functions/index.js`
 binds `OPENAI_API_KEY` only to `apiAi`, Stripe values only to `apiStripe`, Google
-Maps/server Places fallback/Regrid values only to `api`, and platform-specific
+Maps/server Places fallback/Regrid/ATTOM values only to `api`, and platform-specific
 native-store credentials only to `apiStore` when the matching Apple or Google
 verification flag is enabled, and the TypeSafe key (`TYPESAFE_API_KEY_SECRET`)
 to `api` only when `TYPESAFE_GEOCODE_PICKER=true` or `TYPESAFE_ZONING_SHADOW=true` is in `functions/.env`. The legacy `ENABLE_NATIVE_STORE_VERIFICATION`
 flag enables both platforms. The production secret
 IDs are `OPENAI_API_KEY_SECRET`, `GOOGLE_MAPS_API_KEY_SECRET`,
 `GOOGLE_PLACES_SERVER_KEY_SECRET`, and `REGRID_API_KEY_SECRET`; the handler maps
-those values to the runtime variable names consumed by Next.js. Do not place
-server credentials in GitHub Actions secrets or `NEXT_PUBLIC_*` variables.
+those values to the runtime variable names consumed by Next.js. ATTOM uses the
+existing Secret Manager ID `ATTOM_API_KEY` directly, also bound only to `api`.
+Server credentials do not need to be duplicated in GitHub Actions and must never
+use `NEXT_PUBLIC_*` names. An existing GitHub `ATTOM_API_KEY` secret is not read
+by CI; the production key comes from Secret Manager at runtime.
+
+### ATTOM address accuracy
+
+`lib/server/attom.ts` uses ATTOM's [Property Basic Profile endpoint](https://api.developer.attomdata.com/docs)
+with an `apikey` header. It accepts one property only when the house number,
+street, and every entered locality component agree. Incomplete or ambiguous
+addresses skip ATTOM. Coordinates must be valid; property ownership, tax and
+sale fields are discarded. An address match has at most medium confidence; street-level points remain
+low-confidence, and explicit ZIP/city/area centroids are rejected. No match is
+a surveyed boundary guarantee. ATTOM's reserved unmatched-property ID is rejected.
+
+- `/api/geocode` keeps valid Google results (including rooftop precision), then
+  tries ATTOM for a full address before the keyless Nominatim/Census fallbacks.
+- `/api/parcel` checks autocomplete selections too, in parallel with the existing
+  parcel chain. `dataQuality.addressVerification` carries supplemental evidence;
+  `providerAttempts` records failures. If ATTOM's point falls outside the GIS
+  boundary, the existing warning surfaces flag it and geometry confidence drops.
+  Street-level points do not trigger a boundary conflict: they can lie in the road.
+  Official parcel geometry, area and regulatory values are never replaced.
+- Both routes require a verified Firebase token before calling ATTOM and retain
+  their rate limits. Guests never spend ATTOM quota. Free-text search followed
+  by parcel lookup can make two metered ATTOM calls. Each call has a five-second
+  timeout; missing keys, rejected credentials, no matches and outages fall back
+  to the existing providers.
+
+For local use, put `ATTOM_API_KEY` in `.env.local`. For production, the secret
+must exist in `yardup-2026` under that exact name before deployment. The supplied
+secret needs access to `/property/basicprofile`; a restricted subscription returns
+an `auth-failed` provider attempt while existing providers continue answering.
+Deploy the updated `api` Function through the normal CI release to activate the
+binding. Keep `ATTOM_API_KEY` out of the deployed `functions/.env` to avoid a
+plaintext/secret environment-name collision. Rotation requires a redeploy so new
+instances receive the latest version.
+No ATTOM key is required for builds, tests or browser bundles.
+
+To verify after deployment, search a known full address while signed in and
+inspect `/api/geocode` for `match.provider: "attom"` or `/api/parcel` for an ATTOM
+provider attempt and `dataQuality.addressVerification`. Repeat signed out and
+confirm no ATTOM attempt. Mock tests verify the contract and fallbacks; they do
+not establish that a production key has the required subscription or IAM access.
 
 Places API (New) App Check is enforced in `yardup-2026`. The production
 `/api/suggest` route therefore authenticates server-to-server with the `api`
@@ -193,6 +237,16 @@ missing Firebase Auth authorized domain or a disabled Google provider still
 gets past it. It also does not call Identity Toolkit's `createAuthUri`: App
 Check is enforced, so that call returns 401 without the SDK's App Check token.
 Apple sign-in is hidden (`NEXT_PUBLIC_APPLE_SIGN_IN`) and not checked.
+
+The post-deploy signup canary also sets `FIREBASE_SMOKE_ATTOM=true`. After its
+disposable account signs back in, it calls the production `/api/parcel` route
+for ATTOM's documented sample property (4529 Winona Court, Denver). It requires
+a matched ATTOM attempt and observed address evidence, so a successful fallback
+cannot conceal a missing binding, invalid key or subscription denial. The check
+uses the site's runtime key; it does not read Secret Manager or copy the key
+into CI. Tokens and provider bodies are not logged, and the existing cleanup
+also runs on verification failure. This adds one metered ATTOM parcel check per
+successful production deployment. A manual Signup Canary dispatch repeats it.
 
 ## Release verification
 

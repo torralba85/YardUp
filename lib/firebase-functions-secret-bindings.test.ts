@@ -15,6 +15,7 @@ describe("Firebase Functions provider secret bindings", () => {
     expect(functionsEntry).toContain(
       'defineSecret("REGRID_API_KEY_SECRET")',
     );
+    expect(functionsEntry).toContain('defineSecret("ATTOM_API_KEY")');
     expect(functionsEntry).toContain(
       'defineSecret("OPENAI_API_KEY_SECRET")',
     );
@@ -53,7 +54,7 @@ describe("Firebase Functions provider secret bindings", () => {
       'const resendApiKey = defineSecret("RESEND_API_KEY");',
     );
     expect(functionsEntry).toMatch(
-      /const apiSecrets = \[\s*googleMapsApiKey,\s*googlePlacesServerKey,\s*regridApiKey,\s*resendApiKey,\s*\.\.\.\(typeSafeApiKey \? \[typeSafeApiKey\] : \[\]\),\s*\]/,
+      /const apiSecrets = \[\s*googleMapsApiKey,\s*googlePlacesServerKey,\s*regridApiKey,\s*attomApiKey,\s*resendApiKey,\s*\.\.\.\(typeSafeApiKey \? \[typeSafeApiKey\] : \[\]\),\s*\]/,
     );
     // Opt-in, like native store: never bound unless a TypeSafe flag is on.
     expect(functionsEntry).toMatch(
@@ -104,7 +105,7 @@ describe("Firebase Functions provider secret bindings", () => {
       'TYPESAFE_ZONING_SHADOW="${{ vars.TYPESAFE_ZONING_SHADOW }}"',
     );
     expect(envWrite).not.toMatch(
-      /GOOGLE_MAPS_API_KEY|GOOGLE_PLACES_SERVER_KEY|REGRID_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON|TYPESAFE_API_KEY/,
+      /GOOGLE_MAPS_API_KEY|GOOGLE_PLACES_SERVER_KEY|REGRID_API_KEY|ATTOM_API_KEY|OPENAI_API_KEY|STRIPE_SECRET_KEY|APPLE_BUNDLE_ID|APPLE_ROOT_CA_FINGERPRINT256|GOOGLE_PLAY_PACKAGE_NAME|GOOGLE_PLAY_SERVICE_ACCOUNT_JSON|TYPESAFE_API_KEY/,
     );
   });
 });

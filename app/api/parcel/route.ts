@@ -44,6 +44,9 @@ import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseCoordinateParams } from "@/lib/server/request-validation";
 import { shadowClassifyZoning } from "@/lib/server/zoning-classifier";
 import { deriveMaxCoverage } from "@/lib/server/zoning-heuristics";
+import { canLookUpAttomAddress, fetchAttomAddress, type AttomLookup } from "@/lib/server/attom";
+import { withAttomAddressEvidence } from "@/lib/server/attom-parcel";
+import { requireApiAuth } from "@/lib/server/api-auth";
 
 const REGRID_API = "https://app.regrid.com/api/v2/parcels/point";
 const TIMEOUT_MS = 5000;
@@ -99,6 +102,29 @@ export async function GET(request: NextRequest) {
   const { lat, lng } = coordinates;
   const requestedAddress = sanitizeAddress(searchParams.get("address"));
 
+  // Autocomplete selections bypass /api/geocode, so check their address here
+  // too. Verify the token before spending ATTOM quota, and overlap the lookup
+  // with the existing parcel providers. Guests keep the keyless chain.
+  let attomLookup: Promise<AttomLookup> | undefined;
+  if (!guest && process.env.ATTOM_API_KEY && requestedAddress && canLookUpAttomAddress(requestedAddress)) {
+    const auth = await requireApiAuth(request);
+    if (!(auth instanceof NextResponse)) attomLookup = fetchAttomAddress(requestedAddress);
+  }
+  const response = await resolveParcel(lat, lng, requestedAddress, guest);
+  if (!attomLookup || !response.ok) return response;
+  const data = await response.json() as LiveParcelData;
+  return NextResponse.json(withAttomAddressEvidence(data, await attomLookup), {
+    status: response.status,
+    headers: response.headers,
+  });
+}
+
+async function resolveParcel(
+  lat: number,
+  lng: number,
+  requestedAddress: string | undefined,
+  guest: boolean,
+): Promise<NextResponse> {
   // Kicked off before the parcel providers so the two run concurrently: the
   // geocoder is free and keyless, so the only cost of always asking is one
   // parallel request that never extends the critical path.
