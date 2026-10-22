@@ -34,3 +34,6 @@ jobs:
           gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="app" AND severity>=ERROR' --project=yardup-2026 --freshness=1h --limit=3 --format=json
           gcloud logging read 'severity>=ERROR AND NOT log_id("run.googleapis.com/requests")' --project=yardup-2026 --freshness=1h --limit=20 --format='table(timestamp,resource.type,resource.labels.service_name,textPayload,jsonPayload.message,protoPayload.status)'
           gcloud billing projects describe yardup-2026 --format='yaml(projectId,billingEnabled)'
+      - name: Inspect failing deployment startup
+        run: |
+          gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="apistore" AND NOT log_id("run.googleapis.com/requests") AND textPayload:*' --project=yardup-2026 --freshness=1h --limit=100 --format='table(timestamp,severity,resource.labels.revision_name,textPayload)'
