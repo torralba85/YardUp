@@ -90,6 +90,25 @@ test.describe("mobile studio journey", () => {
     await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();
   });
 
+  test("closing fine-tune restores focus when exit animation events are lost", async ({ page }) => {
+    await page.goto("/studio");
+    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await page.getByRole("button", { name: /shape your adu/i }).click();
+    const trigger = page.getByRole("button", { name: /fine-tune dimensions/i });
+    await trigger.click();
+    const drawer = page.getByTestId("fine-tune-drawer");
+    await expect(drawer).toBeVisible();
+    // Reproduce a compositor dropping the events Radix Presence waits for.
+    await drawer.evaluate((node) => {
+      for (const type of ["animationend", "animationcancel"]) {
+        node.addEventListener(type, (event) => event.stopImmediatePropagation(), { capture: true });
+      }
+    });
+    await page.getByRole("button", { name: /close fine-tune panel/i }).click();
+    await expect(drawer).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+  });
+
   test("the rail travels back to completed reveals only", async ({ page }) => {
     await page.goto("/studio");
     await page.getByRole("button", { name: /reveal my backyard/i }).click();

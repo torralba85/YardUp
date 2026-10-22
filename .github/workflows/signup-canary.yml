@@ -83,6 +83,7 @@ jobs:
         env:
           FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN: ${{ secrets.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_SMOKE_ATTOM: "true"
       # Email/password above never touches the authDomain, so it stayed green
       # through the 2026-10-15 Google sign-in outage. Runs even when the step
       # above fails, so one red run reports both paths. Needs no dependencies.

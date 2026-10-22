@@ -8,6 +8,8 @@ import { isGuestRequest } from "@/lib/server/guest-request";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { normalizeCity, parseStreetAddressWithConfidence, sameStreet, US_STATE_NAMES } from "@/lib/server/address-match";
 import type { DataEvidence } from "@/lib/data-evidence";
+import { canLookUpAttomAddress, fetchAttomAddress } from "@/lib/server/attom";
+import { requireApiAuth } from "@/lib/server/api-auth";
 
 const GOOGLE_GEOCODE_API = "https://maps.googleapis.com/maps/api/geocode/json";
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/search";
@@ -32,7 +34,7 @@ export interface GeocodeResult {
 }
 
 export interface GeocodeMatch {
-  provider: "google" | "nominatim" | "census";
+  provider: "google" | "nominatim" | "census" | "attom";
   providerId?: string;
   matchType: string;
   precision:
@@ -59,11 +61,11 @@ export interface GeocodeMatch {
  *
  * Resolves a free-text US address to coordinates so the studio can look up a
  * parcel without the client-side Google Places widget. Prefers Google
- * Geocoding when the server-side Maps key is configured; otherwise (and as a
- * fallback if Google returns nothing) uses keyless Nominatim, then the keyless
+ * Geocoding when configured, then an exact ATTOM property address for verified
+ * members. If neither answers, uses keyless Nominatim, then the keyless
  * US Census geocoder for street addresses Nominatim misses (OSM often spells a
  * street differently from the county, e.g. "Gold Rush Way" vs "Goldrush Way").
- * Requests without a bearer token skip Google entirely and resolve through the
+ * Requests without a bearer token skip ATTOM and Google and resolve through the
  * keyless providers, so an anonymous lookup costs nothing. Returns 404 when no
  * provider can resolve it.
  */
@@ -100,6 +102,15 @@ export async function GET(request: NextRequest) {
 
   if (googleKey) {
     result = await geocodeWithGoogle(query, googleKey);
+  }
+  if (!result && !guest && process.env.ATTOM_API_KEY && canLookUpAttomAddress(query)) {
+    const auth = await requireApiAuth(request);
+    if (!(auth instanceof NextResponse)) {
+      const attom = (await fetchAttomAddress(query)).result;
+      // A street point may sit in the roadway or beside another lot. Keep
+      // ATTOM's address evidence in /api/parcel, but use a geocoder to locate it.
+      if (attom && attom.match.precision !== "street") result = attom;
+    }
   }
   if (!result) {
     result = await geocodeWithNominatim(query);

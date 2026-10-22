@@ -22,7 +22,8 @@ Home and feasibility studio on phone, and the studio on tablet.
 ## What it does
 
 - Searches real residential parcels through Regrid, public parcel GIS services,
-  the US Census geocoder, and Google Maps integrations.
+  the US Census geocoder, and Google Maps integrations, with optional ATTOM
+  property-address cross-checks for signed-in users.
 - Visualizes the lot, existing home, setbacks, and a movable ADU concept in 3D.
 - Estimates build cost, rent, annual NOI, payback, and basic zoning fit.
 - Uses authenticated OpenAI Responses API workflows for a parcel-and-permit
@@ -71,6 +72,11 @@ For live parcel data, authenticated saves, AI generation, and payments:
 ```bash
 cp .env.example .env.local
 ```
+
+For supplemental address accuracy, set server-only `ATTOM_API_KEY` locally.
+Production reads the existing `ATTOM_API_KEY` Secret Manager secret through the
+`api` Function; the GitHub secret is not needed by the build. See
+[ATTOM setup and behavior](docs/deployment.md#attom-address-accuracy).
 
 Fill only the services you intend to test. Never commit `.env.local`,
 `functions/.env`, signing keys, or store-service credentials.

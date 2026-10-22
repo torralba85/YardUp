@@ -215,8 +215,11 @@ function pickEvidence(value: unknown): Record<string, unknown> | undefined {
     if (key === "source") {
       const source = pickSource(value.source);
       if (source) evidence.source = source;
-    } else if (key === "warnings" && Array.isArray(value.warnings)) {
-      evidence.warnings = value.warnings.filter((warning): warning is string => typeof warning === "string");
+    } else if (key === "warnings") {
+      // Renderers read warnings as an array; stored evidence may omit it.
+      evidence.warnings = Array.isArray(value.warnings)
+        ? value.warnings.filter((warning): warning is string => typeof warning === "string")
+        : [];
     } else if (typeof value[key] === "string") {
       evidence[key] = value[key];
     }
@@ -282,7 +285,7 @@ function pickDataQuality(value: unknown): Record<string, unknown> | undefined {
   }
   const safeGeocode = isRecord(geocode) && match && matchEvidence &&
     typeof geocode.requestedAddress === "string" && typeof geocode.formattedAddress === "string" &&
-    ["google", "nominatim", "census"].includes(String(match.provider)) &&
+    ["google", "nominatim", "census", "attom"].includes(String(match.provider)) &&
     ["rooftop", "range-interpolated", "address", "street", "locality", "unknown"].includes(String(match.precision)) &&
     typeof match.matchType === "string" && typeof match.partialMatch === "boolean"
     ? {
@@ -296,10 +299,12 @@ function pickDataQuality(value: unknown): Record<string, unknown> | undefined {
         },
       }
     : undefined;
+  const addressVerification = pickEvidence(value.addressVerification);
   return {
     version: 1,
     fields,
     providerAttempts,
+    ...(addressVerification ? { addressVerification } : {}),
     ...(safeGeocode ? { geocode: safeGeocode } : {}),
     warnings: Array.isArray(value.warnings)
       ? value.warnings.filter((warning): warning is string => typeof warning === "string")

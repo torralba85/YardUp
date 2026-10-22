@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
- * infrastructure (Firebase, Regrid, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4).
+ * infrastructure (Firebase, Regrid, ATTOM, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4).
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 17, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 22, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -101,6 +101,12 @@ export default function PrivacyPage() {
             <strong>Geocoding &amp; Spatial Data:</strong> Property searches use <em>Google Maps Platform</em>,{" "}
             <em>Regrid</em> (Loveland Technologies parcel boundaries), the <em>US Census Bureau Geocoder</em>,{" "}
             <em>USA Structures</em> (federal building footprints), and municipal GIS open data portals.
+          </li>
+          <li>
+            <strong>Property Address Verification (ATTOM):</strong> For signed-in address searches,
+            we send the searched street address, city, state, and ZIP code to <em>ATTOM</em> to
+            cross-check the property address and location. These requests do not include your
+            name, email, or account details.
           </li>
           <li>
             <strong>Transactional Email (Resend):</strong> When you ask us to email a 3D lot link, we
