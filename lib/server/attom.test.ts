@@ -98,6 +98,14 @@ describe("ATTOM address lookup", () => {
     expect((await fetchAttomAddress(QUERY)).attempt.outcome).toBe("invalid-response");
   });
 
+  it.each([undefined, "Unknown"])("treats %s accuracy as a street-level point", async (accuracy) => {
+    const json = attomResponse(); json.property[0].location.accuracy = accuracy as string;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(json)));
+    const { result } = await fetchAttomAddress(QUERY);
+    expect(result?.match.precision).toBe("street");
+    expect(result?.match.evidence?.confidence).toBe("low");
+  });
+
   it("bounds provider latency with an abort signal", async () => {
     vi.useFakeTimers();
     vi.stubGlobal("fetch", vi.fn((_url, init: RequestInit) => new Promise((_resolve, reject) => {
