@@ -106,6 +106,8 @@ a surveyed boundary guarantee. ATTOM's reserved unmatched-property ID is rejecte
 
 - `/api/geocode` keeps valid Google results (including rooftop precision), then
   tries ATTOM for a full address before the keyless Nominatim/Census fallbacks.
+  Street-level ATTOM points never select parcels; those continue to the keyless
+  geocoders, with ATTOM retained as supplemental evidence in the parcel lookup.
 - `/api/parcel` checks autocomplete selections too, in parallel with the existing
   parcel chain. `dataQuality.addressVerification` carries supplemental evidence;
   `providerAttempts` records failures. If ATTOM's point falls outside the GIS

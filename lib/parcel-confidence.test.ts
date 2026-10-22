@@ -136,6 +136,27 @@ describe("parcelConfidence", () => {
       asOf: "2026-02-15",
     });
   });
+
+  it.each(["regrid", "fallback"] as const)("shows ATTOM conflicts in %s notices and evidence despite earlier warnings", (source) => {
+    const data = parcel(quality("observed"));
+    data.source = source;
+    const warning = "ATTOM's point for the searched address falls outside the returned parcel; confirm the address and boundary with county records.";
+    data.dataQuality!.warnings.push(warning);
+    data.dataQuality!.fields.address.warnings = ["Existing address caveat.", warning];
+    data.dataQuality!.addressVerification = {
+      ...observed("Property Basic Profile"),
+      source: { provider: "ATTOM", dataset: "Property Basic Profile", recordId: "123456" },
+      confidence: "low",
+      warnings: ["ATTOM confirms only the property address.", warning],
+    };
+    expect(parcelDataNotice(data)).toContain(warning);
+    const rows = parcelDataEvidenceRows(data);
+    expect(rows.find((row) => row.field === "address")?.detail).toContain(warning);
+    expect(rows.find((row) => row.field === "addressVerification")).toMatchObject({
+      label: "Address verification", confidence: "low", recordId: "123456",
+      detail: expect.stringContaining(warning),
+    });
+  });
 });
 
 

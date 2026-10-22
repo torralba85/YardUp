@@ -50,13 +50,30 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks();
 
 describe("ATTOM API route integration", () => {
   it("uses the exact ATTOM address before keyless geocoders", async () => {
-    const fetchMock = providerFetch(); vi.stubGlobal("fetch", fetchMock);
+    const json = attomResponse(); json.property[0].location.accuracy = "Rooftop";
+    const fetchMock = providerFetch(200, json); vi.stubGlobal("fetch", fetchMock);
     const response = await geocode(request("geocode"));
     expect(response.status).toBe(200);
     expect((await response.json()).match.provider).toBe("attom");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(requireApiAuth).toHaveBeenCalledTimes(1);
     expect(response.headers.get("cache-control")).toBe("private, max-age=3600");
+  });
+
+  it("uses an address geocoder instead of ATTOM's street point to select a parcel", async () => {
+    const json = attomResponse(); json.property[0].location.longitude = "-122.320";
+    const fetchMock = providerFetch(200, json); vi.stubGlobal("fetch", fetchMock);
+    const data = await (await geocode(request("geocode"))).json();
+    expect(data.match.provider).toBe("nominatim");
+    expect(data.lng).toBe(-122.313);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not return a street-level ATTOM point when address geocoders have no match", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input) => String(input).includes("attomdata.com")
+      ? Response.json(attomResponse())
+      : Response.json(String(input).includes("nominatim") ? [] : { result: { addressMatches: [] } })));
+    expect((await geocode(request("geocode"))).status).toBe(404);
   });
 
   it("preserves a valid Google rooftop result when ATTOM is also configured", async () => {

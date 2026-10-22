@@ -63,7 +63,7 @@ export async function fetchAttomAddress(query: string): Promise<AttomLookup> {
 
     const json = record(await response.json());
     const status = record(json.status);
-    if (status.code === 1) return outcome("no-match");
+    if (status.code === 400 || status.code === 1) return outcome("no-match");
     if (!response.ok) return outcome("provider-error");
     if (status.code !== 0) return outcome("invalid-response");
     if (!Array.isArray(json.property)) return outcome("invalid-response");

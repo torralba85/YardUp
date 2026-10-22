@@ -106,7 +106,10 @@ export async function GET(request: NextRequest) {
   if (!result && !guest && process.env.ATTOM_API_KEY && canLookUpAttomAddress(query)) {
     const auth = await requireApiAuth(request);
     if (!(auth instanceof NextResponse)) {
-      result = (await fetchAttomAddress(query)).result;
+      const attom = (await fetchAttomAddress(query)).result;
+      // A street point may sit in the roadway or beside another lot. Keep
+      // ATTOM's address evidence in /api/parcel, but use a geocoder to locate it.
+      if (attom && attom.match.precision !== "street") result = attom;
     }
   }
   if (!result) {

@@ -81,8 +81,8 @@ describe("ATTOM address lookup", () => {
     expect((await fetchAttomAddress(QUERY)).attempt.outcome).toBe("no-match");
   });
 
-  it("recognizes ATTOM's documented HTTP 400 no-match response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ status: { code: 1, total: 0 }, property: [] }, { status: 400 })));
+  it.each([[200, 400], [400, 400], [200, 1], [400, 1]])("recognizes HTTP %s with no-match body code %s", async (httpStatus, code) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ status: { code, total: 0 }, property: [] }, { status: httpStatus })));
     expect((await fetchAttomAddress(QUERY)).attempt.outcome).toBe("no-match");
   });
 
