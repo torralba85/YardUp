@@ -50,7 +50,7 @@ must be raised whenever a new bundle is accepted.
 | 1.0.12 | 13 | available to internal testers 2026-09-29 | Locally signed with the current Play upload key after the CI bundle was rejected for using the retired key. Andrew approved internal publication; Play confirmed availability at 8:01 PM Pacific. Current-build device/billing verification and separate production confirmation remain pending. |
 | 1.0.13 | 14 | live production at 100%, verified 2026-10-08 | Built from master ab78270 with the then-current Play upload key. |
 | 1.0.14 | 15 | available on Google Play, verified 2026-10-21 | Published Oct 16. Signed bundle from Actions run `38858599134` with the reset upload key; carries #274's manifest without HTTP(S) intent filters. |
-| 1.0.15 | 16 | accepted production draft 2026-10-21 | Signed bundle from Actions run `39686620787`, source `0b98549`. Play reports ready to release with no supported devices lost. Native behavior and billing dependencies are unchanged from code 15; submission and publication are separate gates. |
+| 1.0.15 | 16 | live production at 100%, verified 2026-10-22 | Published Oct 21. Play Console confirms code 16 is the active latest production release with no unpublished changes. Signed bundle from Actions run `39686620787`, source `0b98549`. Native behavior and billing dependencies are unchanged from code 15; code 16 device sign-in and certificate entitlement remain unverified. |
 | 1.0.16 | 17 | next build | Reserved after Play accepted code 16. |
 
 Version 1.0.5/vc6 predates the domain switch. Android does not follow a
