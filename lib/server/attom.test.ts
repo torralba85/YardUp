@@ -81,8 +81,8 @@ describe("ATTOM address lookup", () => {
     expect((await fetchAttomAddress(QUERY)).attempt.outcome).toBe("no-match");
   });
 
-  it("recognizes ATTOM's documented HTTP 400 no-match response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ status: { code: 1, total: 0 }, property: [] }, { status: 400 })));
+  it.each([[200, 400], [400, 400], [200, 1], [400, 1]])("recognizes HTTP %s with no-match body code %s", async (httpStatus, code) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ status: { code, total: 0 }, property: [] }, { status: httpStatus })));
     expect((await fetchAttomAddress(QUERY)).attempt.outcome).toBe("no-match");
   });
 
@@ -96,6 +96,14 @@ describe("ATTOM address lookup", () => {
     const json = attomResponse(); json.property[0].location.accuracy = accuracy;
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(json)));
     expect((await fetchAttomAddress(QUERY)).attempt.outcome).toBe("invalid-response");
+  });
+
+  it.each([undefined, "Unknown"])("treats %s accuracy as a street-level point", async (accuracy) => {
+    const json = attomResponse(); json.property[0].location.accuracy = accuracy as string;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(json)));
+    const { result } = await fetchAttomAddress(QUERY);
+    expect(result?.match.precision).toBe("street");
+    expect(result?.match.evidence?.confidence).toBe("low");
   });
 
   it("bounds provider latency with an abort signal", async () => {

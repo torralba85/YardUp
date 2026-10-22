@@ -63,7 +63,7 @@ export async function fetchAttomAddress(query: string): Promise<AttomLookup> {
 
     const json = record(await response.json());
     const status = record(json.status);
-    if (status.code === 1) return outcome("no-match");
+    if (status.code === 400 || status.code === 1) return outcome("no-match");
     if (!response.ok) return outcome("provider-error");
     if (status.code !== 0) return outcome("invalid-response");
     if (!Array.isArray(json.property)) return outcome("invalid-response");
@@ -108,7 +108,9 @@ export async function fetchAttomAddress(query: string): Promise<AttomLookup> {
     if (providerId === "999999999") return outcome("no-match");
 
     const matched = outcome("matched");
-    const streetPoint = accuracy === "street";
+    // Only a rooftop point is precise enough to select a parcel; street,
+    // missing or unrecognized accuracy follows the geocoder fallback.
+    const streetPoint = accuracy !== "rooftop";
     matched.result = {
       lat, lng,
       formattedAddress: `${line}, ${city}, ${state} ${zip}`,
@@ -127,7 +129,8 @@ export async function fetchAttomAddress(query: string): Promise<AttomLookup> {
           confidence: streetPoint ? "low" : "medium",
           warnings: [
             "ATTOM confirms the property address; its point is not proof of a surveyed boundary or rooftop location.",
-            ...(streetPoint ? ["ATTOM places this address at street-level precision; verify the property against county records."] : []),
+            ...(accuracy === "street" ? ["ATTOM places this address at street-level precision; verify the property against county records."] : []),
+            ...(streetPoint && accuracy !== "street" ? ["ATTOM does not report rooftop precision for this address point; verify the property against county records."] : []),
           ],
         },
       },

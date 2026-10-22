@@ -44,7 +44,8 @@ export function parcelDataNotice(parcel: Parcel): string | undefined {
     (warning) =>
       warning.includes("situs") ||
       warning.includes("Geocoded ZIP") ||
-      warning.includes("range-interpolated"),
+      warning.includes("range-interpolated") ||
+      warning.startsWith("ATTOM"),
   );
   const suffix = reconciliationNotes.length > 0 ? ` ${reconciliationNotes.join(" ")}` : "";
   if (parcelConfidence(parcel).physicalEstimated) {
@@ -56,6 +57,8 @@ export function parcelDataNotice(parcel: Parcel): string | undefined {
   const identity = fields?.address.source.provider === "ArcGIS" &&
     fields.address.source.dataset.endsWith("parcel addresses") && fields.address.source.recordId
     ? "Address checked against a published parcel record."
+    : live.dataQuality?.addressVerification?.status === "observed"
+    ? "ATTOM matched the searched property address; verify its parcel boundary with county records."
     : "The parcel's street address has not been independently confirmed. Verify county records.";
   const vintage = fields?.boundaryGeoJson.sourceAsOf;
   return `${identity} ${vintage ? `Boundary source date: ${vintage}.` : "Boundary source date unavailable; retrieval time does not establish freshness."} Setbacks and frontage need local confirmation.${suffix}`;
@@ -109,7 +112,21 @@ export function parcelDataEvidenceRows(parcel: Parcel): ParcelFieldEvidenceRow[]
       statusLabel: `Matched (${precisionLabel})`,
       confidence: geocodeMatch.evidence.confidence,
       sourceLabel: `${geocodeMatch.evidence.source.provider} · ${geocodeMatch.evidence.source.dataset}`,
-      ...(geocodeMatch.evidence.warnings[0] ? { detail: geocodeMatch.evidence.warnings[0] } : {}),
+      ...(geocodeMatch.evidence.warnings.length ? { detail: geocodeMatch.evidence.warnings.join(" ") } : {}),
+    });
+  }
+
+  const verification = quality.addressVerification;
+  if (verification) {
+    rows.push({
+      field: "addressVerification",
+      label: "Address verification",
+      status: verification.status,
+      statusLabel: STATUS_LABELS[verification.status],
+      confidence: verification.confidence,
+      sourceLabel: `${verification.source.provider} · ${verification.source.dataset}`,
+      ...(verification.source.recordId ? { recordId: verification.source.recordId } : {}),
+      ...(verification.warnings.length ? { detail: verification.warnings.join(" ") } : {}),
     });
   }
 
@@ -127,7 +144,7 @@ export function parcelDataEvidenceRows(parcel: Parcel): ParcelFieldEvidenceRow[]
       ...(evidence.sourceAsOf || evidence.sourceUpdatedAt
         ? { asOf: (evidence.sourceAsOf ?? evidence.sourceUpdatedAt)?.slice(0, 10) }
         : {}),
-      ...(evidence.warnings[0] ? { detail: evidence.warnings[0] } : {}),
+      ...(evidence.warnings.length ? { detail: evidence.warnings.join(" ") } : {}),
     });
   }
 

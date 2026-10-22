@@ -24,7 +24,8 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
   const closeRef = useRef<HTMLButtonElement>(null);
   return (
     <Drawer.Root open={open} onOpenChange={(next) => !next && onClose()}>
-      <Drawer.Portal>
+      {/* Closing must release the modal and focus even if an exit animation stalls. */}
+      {open && <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-(--z-index-sheet) bg-lot-ink/50" />
         <Drawer.Content
           data-testid="fine-tune-drawer"
@@ -60,7 +61,7 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
             {children}
           </div>
         </Drawer.Content>
-      </Drawer.Portal>
+      </Drawer.Portal>}
     </Drawer.Root>
   );
 }

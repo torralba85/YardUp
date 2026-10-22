@@ -215,8 +215,11 @@ function pickEvidence(value: unknown): Record<string, unknown> | undefined {
     if (key === "source") {
       const source = pickSource(value.source);
       if (source) evidence.source = source;
-    } else if (key === "warnings" && Array.isArray(value.warnings)) {
-      evidence.warnings = value.warnings.filter((warning): warning is string => typeof warning === "string");
+    } else if (key === "warnings") {
+      // Renderers read warnings as an array; stored evidence may omit it.
+      evidence.warnings = Array.isArray(value.warnings)
+        ? value.warnings.filter((warning): warning is string => typeof warning === "string")
+        : [];
     } else if (typeof value[key] === "string") {
       evidence[key] = value[key];
     }
