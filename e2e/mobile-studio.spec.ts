@@ -78,7 +78,19 @@ test.describe("mobile studio journey", () => {
     ).toBeVisible();
 
     await page.getByRole("button", { name: /close fine-tune panel/i }).click();
-    await expect(drawer).not.toBeVisible();
+    // Observe portal teardown in the page after Vaul's exit animation. The
+    // injected visibility query can retain the closing element during teardown.
+    await expect.poll(() => page.evaluate(() =>
+      document.querySelector('[data-testid="fine-tune-drawer"]') === null,
+    )).toBe(true);
+    await expect(page.getByRole("button", { name: /fine-tune dimensions/i })).toBeFocused();
+    // A second opening catches stale modal/focus locks after the first close.
+    await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
+    await expect(drawer).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect.poll(() => page.evaluate(() =>
+      document.querySelector('[data-testid="fine-tune-drawer"]') === null,
+    )).toBe(true);
     await expect(page.getByRole("button", { name: /fine-tune dimensions/i })).toBeFocused();
     // Closing the drawer lands back on the Shape reveal's default path.
     await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();

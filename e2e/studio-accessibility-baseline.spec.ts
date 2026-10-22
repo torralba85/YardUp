@@ -15,7 +15,8 @@ test.describe("T08 mobile accessibility verification", () => {
   test("U4: camera actions retain names at phone widths", async ({ page }, testInfo) => {
     await openShape(page);
     const scene = page.getByRole("group", { name: "Interactive ADU placement model", exact: true });
-    await expect(scene).toBeVisible();
+    // Shape's heading renders before its lazy-loaded 3D scene on cold CI runs.
+    await expect(scene).toBeVisible({ timeout: 20_000 });
     const cameraActions = page.getByRole("radiogroup", { name: "Camera view" }).getByRole("radio");
     await expect(cameraActions).toHaveCount(3);
     await page.screenshot({ path: testInfo.outputPath("shape-camera-controls.png"), fullPage: true });

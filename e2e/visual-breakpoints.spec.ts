@@ -12,12 +12,9 @@ test.describe("Visual breakpoint coverage", () => {
   test.setTimeout(60_000);
 
   for (const bp of breakpoints) {
-    test(`renders without clipped primary UI at ${bp.name}`, async ({ browser }, testInfo) => {
-      const context = await browser.newContext({
-        viewport: { width: bp.width, height: bp.height },
-        reducedMotion: "reduce",
-      });
-      const page = await context.newPage();
+    test(`renders without clipped primary UI at ${bp.name}`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width: bp.width, height: bp.height });
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/");
 
       await expect(page.getByRole("heading", { level: 1, name: "Explore an ADU on your lot in 3D." })).toBeVisible();
@@ -44,9 +41,9 @@ test.describe("Visual breakpoint coverage", () => {
       await page.screenshot({
         path: testInfo.outputPath(`${bp.name}.png`),
         fullPage: true,
+        // Keep full-page captures bounded even with the phone project's 2.75 DPR.
+        scale: "css",
       });
-
-      await context.close();
     });
   }
 });
