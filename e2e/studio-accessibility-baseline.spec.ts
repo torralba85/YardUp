@@ -13,9 +13,11 @@ test.describe("T08 mobile accessibility verification", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 640, "Names retain visibility below sm");
 
   test("U4: camera actions retain names at phone widths", async ({ page }, testInfo) => {
+    test.slow();
     await openShape(page);
     const scene = page.getByRole("group", { name: "Interactive ADU placement model", exact: true });
-    await expect(scene).toBeVisible();
+    // The lazy WebGL surface initializes after the heading on shared runners.
+    await expect(scene).toBeVisible({ timeout: 20_000 });
     const cameraActions = page.getByRole("radiogroup", { name: "Camera view" }).getByRole("radio");
     await expect(cameraActions).toHaveCount(3);
     await page.screenshot({ path: testInfo.outputPath("shape-camera-controls.png"), fullPage: true });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Drawer } from "vaul";
 
@@ -22,14 +22,23 @@ export interface FineTuneDrawerProps {
 export default function FineTuneDrawer({ open, onClose, children }: FineTuneDrawerProps) {
   const returnFocus=useRef<HTMLElement|null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [exitComplete, setExitComplete] = useState(!open);
+  useEffect(() => {
+    if (open) return;
+    // Vaul's exit lasts 500ms. Radix can remain modal indefinitely if the
+    // compositor drops animationend; release the portal after that exit.
+    const timer = setTimeout(() => setExitComplete(true), 600);
+    return () => clearTimeout(timer);
+  }, [open]);
   return (
     <Drawer.Root open={open} onOpenChange={(next) => !next && onClose()}>
-      <Drawer.Portal>
+      {(open || !exitComplete) && <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-(--z-index-sheet) bg-lot-ink/50" />
         <Drawer.Content
           data-testid="fine-tune-drawer"
           onCloseAutoFocus={event=>{event.preventDefault();returnFocus.current?.focus();}}
           onOpenAutoFocus={(event) => {
+            setExitComplete(false);
             event.preventDefault();
             returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             closeRef.current?.focus();
@@ -60,7 +69,7 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
             {children}
           </div>
         </Drawer.Content>
-      </Drawer.Portal>
+      </Drawer.Portal>}
     </Drawer.Root>
   );
 }
