@@ -117,7 +117,9 @@ import type { SplatTransform } from "@/lib/splat-scene";
 import type { SplatLayerStatus } from "./studio/GaussianSplatLayer";
 
 /** The scene render modes users can switch between via {@link SceneViewToggle}. */
-type SceneViewMode = "3d" | "scan" | "aerial" | "neighborhood";
+type SceneViewMode = "3d" | "scan" | "aerial" | "neighborhood" | "terrain";
+
+const ParcelTerrainPreview = dynamic(() => import("./studio/ParcelTerrainPreview"), { ssr: false });
 
 const CesiumNeighborhoodView = dynamic(() => import("./studio/CesiumNeighborhoodView"), {
   ssr: false,
@@ -1009,7 +1011,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   const sceneNode =
-    effectiveViewMode === "neighborhood" ? (
+    effectiveViewMode === "terrain" ? (
+      <ParcelTerrainPreview parcel={activeParcel} config={config} pending={isRealAddressActive} />
+    ) : effectiveViewMode === "neighborhood" ? (
       isRealAddressActive ? (
         parcelError ? (
           <div
@@ -1685,7 +1689,7 @@ function SceneViewToggle({
 }) {
   const options: SceneViewMode[] = ["3d"];
   if (hasScan) options.push("scan");
-  options.push("neighborhood", "aerial");
+  options.push("neighborhood", "aerial", "terrain");
 
   const { groupProps, getRadioProps } = useRadioGroup({
     value: mode,
@@ -1747,6 +1751,9 @@ function SceneViewToggle({
         }`}
       >
         Aerial
+      </Button>
+      <Button type="button" size="xs" variant={mode === "terrain" ? "selected" : "ghost"} {...getRadioProps("terrain")} className="h-11 px-3.5 focus-visible:ring-offset-lot-chalk">
+        Terrain
       </Button>
     </div>
   );
