@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Component, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Color, DoubleSide, PerspectiveCamera, SRGBColorSpace, Vector3 } from "three";
@@ -12,6 +12,20 @@ import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import { buildAduHeightModel, type LocalPoint, type Pose2D } from "@/lib/scene-model";
 import { COLOR } from "@/lib/design-tokens";
 import { createTerrainGrid, FEET_PER_METER, insideTerrainParcel, terrainFootprint, terrainHeightFeet, terrainTriangles, TERRAIN_SOURCE_URL, type ParcelTerrain } from "@/lib/parcel-terrain";
+import { isWebGLAvailable } from "@/lib/webgl";
+
+const NO_WEBGL = "Terrain preview needs WebGL, which this browser could not start. The other Studio views still work.";
+
+/** A renderer failure stays inside this preview instead of replacing the whole Studio. */
+class TerrainBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? <p role="status" className="p-6 text-sm">{NO_WEBGL}</p> : this.props.children;
+  }
+}
 
 // Reopening the tab and StrictMode share a bounded request, including failures.
 // Retry explicitly evicts a failure. Config/pose changes never request elevations.
@@ -107,11 +121,15 @@ function TerrainSurface({ terrain, onPlace }: { terrain: ParcelTerrain; onPlace:
 
 function initialPose(terrain: ParcelTerrain, config: ADUConfig): Pose2D {
   const candidates = [...terrain.grid.points].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
-  const point = candidates.find((p) => {
-    const footprint = terrainFootprint(terrain, { ...p, rotationDeg: 0 }, config.width, config.length);
-    return footprint && !footprint.boundaryCrossing;
-  }) ?? { x: 0, z: 0 };
-  return { x: point.x, z: point.z, rotationDeg: 0 };
+  // A quarter turn fits long ADUs on parcels that are narrower north to south.
+  for (const rotationDeg of [0, 90]) {
+    const point = candidates.find((p) => {
+      const footprint = terrainFootprint(terrain, { ...p, rotationDeg }, config.width, config.length);
+      return footprint && !footprint.boundaryCrossing;
+    });
+    if (point) return { x: point.x, z: point.z, rotationDeg };
+  }
+  return { x: 0, z: 0, rotationDeg: 0 };
 }
 
 function TerrainCamera({ width, depth, height, topView }: { width: number; depth: number; height: number; topView: boolean }) {
@@ -146,12 +164,20 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
   const parcelRelief = inParcelHeights.length > 1 ? (Math.max(...inParcelHeights) - Math.min(...inParcelHeights)) * FEET_PER_METER : null;
 
   function move(next: Pose2D) {
-    if (!terrainFootprint(terrain, next, config.width, config.length)) {
+    // Once a turn has carried the ADU off the sampled ground, steps back toward its middle still count.
+    const fits = terrainFootprint(terrain, next, config.width, config.length) !== null;
+    if (!fits && (footprint || Math.hypot(next.x, next.z) >= Math.hypot(pose.x, pose.z))) {
       setNotice("Keep the whole ADU inside the sampled ground area.");
       return;
     }
     setNotice("");
     setPose(next);
+  }
+
+  // Turning never stops at the sampled edge, so headings beyond an out-of-bounds one stay reachable.
+  function rotate() {
+    setNotice("");
+    setPose({ ...pose, rotationDeg: (pose.rotationDeg + 15) % 360 });
   }
 
   return (
@@ -183,7 +209,7 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
       </div>
       <div className="shrink-0 space-y-2 border-t border-lot-line p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-medium tabular-nums" data-testid="terrain-footprint-relief">{footprint ? `About ${footprint.reliefFeet.toFixed(1)} ft of ground change beneath this ADU` : "ADU extends beyond the sampled ground"}</p>
+          <p className="font-medium tabular-nums" data-testid="terrain-footprint-relief" aria-live="polite" aria-atomic="true">{footprint ? `About ${footprint.reliefFeet.toFixed(1)} ft of ground change beneath this ADU` : "ADU extends beyond the sampled ground"}</p>
           <p className="text-xs tabular-nums text-lot-stone">{config.width} × {config.length} ft · {pose.rotationDeg}° rotation</p>
         </div>
         <div className="flex flex-wrap gap-1" role="group" aria-label="Terrain ADU placement">
@@ -191,10 +217,10 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
           {([{ label: "Move ADU north", dx: 0, dz: -5, Icon: ArrowUp }, { label: "Move ADU west", dx: -5, dz: 0, Icon: ArrowLeft }, { label: "Move ADU south", dx: 0, dz: 5, Icon: ArrowDown }, { label: "Move ADU east", dx: 5, dz: 0, Icon: ArrowRight }] as const).map(({ label, dx, dz, Icon }) => (
             <Button key={label} size="xs" variant="secondary" aria-label={label} title={`${label} 5 ft`} onClick={() => move({ ...pose, x: pose.x + dx, z: pose.z + dz })}><Icon size={16} aria-hidden="true" /></Button>
           ))}
-          <Button size="xs" variant="secondary" leftIcon={<RotateCw size={16} />} onClick={() => move({ ...pose, rotationDeg: (pose.rotationDeg + 15) % 360 })}>Rotate 15°</Button>
+          <Button size="xs" variant="secondary" leftIcon={<RotateCw size={16} />} onClick={rotate}>Rotate 15°</Button>
           <Button size="xs" variant="ghost" onClick={() => { setPose(initialPose(terrain, config)); setNotice(""); }}>Reset position</Button>
         </div>
-        <p role="status" className="text-xs text-lot-stone">{notice || (placeOnClick ? "Tap the ground to position the ADU. Buttons move it 5 ft." : "Use the arrows to explore locations, or choose Place on ground.")}</p>
+        <p role="status" className="text-xs text-lot-stone">{notice || (!footprint ? "Rotate the ADU, or move it back toward the middle of the sampled ground." : placeOnClick ? "Tap the ground to position the ADU. Buttons move it 5 ft." : "Use the arrows to explore locations, or choose Place on ground.")}</p>
         {footprint?.boundaryCrossing && <p className="flex items-center gap-1 text-xs text-status-review"><AlertTriangle size={14} aria-hidden="true" />Preview crosses the published parcel boundary.</p>}
         <p className="text-xs text-lot-stone">Level floor shown above the sampled ground. Lines illustrate the height gap; foundation design, setbacks and existing buildings need a site check. This preview position is separate from your saved layout.</p>
         <details className="text-xs text-lot-stone">
@@ -218,20 +244,21 @@ function TerrainRequest({ boundary, config }: { boundary: string; config: ADUCon
   }, [boundary, attempt]);
   if (error) return <div role="alert" className="space-y-3 p-6 text-sm"><p>{error}</p><Button variant="secondary" onClick={() => { requests.delete(boundary); setError(null); setAttempt((value) => value + 1); }}>Retry elevations</Button></div>;
   if (!data) return <p role="status" className="p-6 text-sm">Loading ground elevations for your parcel…</p>;
-  return <LoadedTerrain terrain={data} config={config} />;
+  return <TerrainBoundary><LoadedTerrain terrain={data} config={config} /></TerrainBoundary>;
 }
 
 export default function ParcelTerrainPreview({ parcel, config, pending = false }: { parcel: Parcel | LiveParcelData; config: ADUConfig; pending?: boolean }) {
   const boundary = "boundaryGeoJson" in parcel && parcel.source !== "fallback" ? parcel.boundaryGeoJson : null;
   const boundaryKey = boundary ? JSON.stringify(boundary) : "";
   const available = !pending && createTerrainGrid(boundary) !== null;
+  const [webgl] = useState(isWebGLAvailable);
   return (
     <section aria-label="Parcel terrain preview" className="flex h-full min-h-0 flex-1 flex-col overflow-y-auto bg-lot-chalk text-lot-ink">
       <header className="shrink-0 border-b border-lot-line p-3">
         <h2 className="flex items-center gap-2 font-display text-base font-medium"><Mountain size={18} aria-hidden="true" />Terrain preview</h2>
         <p className="mt-1 text-xs text-lot-stone">Explore how your ADU sits on this parcel’s slope. Ground and boundary estimates; existing home not mapped in this preview.</p>
       </header>
-      {available ? <TerrainRequest key={boundaryKey} boundary={boundaryKey} config={config} /> : <p role="status" className="p-6 text-sm">{pending ? "Resolve your property lookup to load its terrain." : "Search a real address with a published parcel boundary to preview its terrain. Demo lots and estimated boundaries do not have measured ground data."}</p>}
+      {available && webgl ? <TerrainRequest key={boundaryKey} boundary={boundaryKey} config={config} /> : <p role="status" className="p-6 text-sm">{available ? NO_WEBGL : pending ? "Resolve your property lookup to load its terrain." : "Search a real address with a published parcel boundary to preview its terrain. Demo lots and estimated boundaries do not have measured ground data."}</p>}
     </section>
   );
 }

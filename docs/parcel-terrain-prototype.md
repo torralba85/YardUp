@@ -14,7 +14,14 @@ The preview uses the current ADU design. Move it with the north/east/south/west
 buttons (5 ft), rotate in 15-degree increments, or enable **Place on ground** and
 tap the terrain. A level floor clears the highest point in the sampled surface
 under the footprint; vertical lines illustrate the gap at the corners. The
-readout shows the range under the entire footprint, including interior peaks.
+readout shows the range under the entire footprint, including interior peaks,
+and is announced to screen readers as it changes.
+
+Moves stop at the edge of the sampled ground, but rotation keeps turning through
+headings that leave it so every heading stays reachable; the readout says when
+the ADU extends beyond the samples, and steps back toward the middle still move
+it. The starting position takes a quarter turn when only that heading fits, as on
+parcels narrower north to south than the ADU is long.
 
 ## Architecture and scope
 
@@ -33,7 +40,9 @@ readout shows the range under the entire footprint, including interior peaks.
 - `ParcelTerrainPreview.tsx`: lazily loaded R3F preview using the existing
   `AduArchitecture` model. Bounded browser request deduplication survives view
   reopening; changing the ADU or position does not fetch another grid. Parcel
-  changes discard late results. Failed reads offer an explicit retry.
+  changes discard late results. Failed reads offer an explicit retry. Without
+  WebGL the preview says so instead of requesting elevations, and a renderer
+  failure stays inside the Terrain view rather than replacing the Studio.
 - `FeasibilityStudio.tsx`: adds the Terrain choice alongside 3D model,
   Neighborhood and Aerial, including keyboard radio navigation.
 
@@ -61,8 +70,9 @@ data never becomes a flat-lot assumption.
 ## Verification
 
 Focused unit tests cover the projection, flat and sloped ground, valid negative
-elevations, rotation, interior peaks, holes, missing/duplicate/mixed-datum samples,
-coordinate matching, request reuse, parcel-switch races and input/error handling.
+elevations, rotation and heading reachability, interior peaks, holes,
+missing/duplicate/mixed-datum samples, coordinate matching, request reuse,
+parcel-switch races, WebGL fallback and input/error handling.
 `e2e/parcel-terrain.spec.ts` exercises the real renderer with explicit synthetic
 elevation fixtures on desktop and 390 px mobile, including controls, provenance,
 request counts and demo behavior. These fixture checks do not claim live USGS
