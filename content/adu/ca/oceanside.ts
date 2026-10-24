@@ -141,7 +141,7 @@ export const oceanside: JurisdictionContent = {
         "At most one space, waived within a half-mile walk of transit, in historic districts, for conversions, and for attached units. Much of central Oceanside near the Sprinter and Coaster stations qualifies for the waiver.",
     },
   ],
-  neighbors: ["carlsbad", "escondido"],
+  neighbors: ["carlsbad", "escondido", "san-diego-county"],
   sources: [
     {
       label: "Oceanside Comprehensive Zoning Ordinance, Part IV",

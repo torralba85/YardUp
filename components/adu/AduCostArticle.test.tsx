@@ -59,6 +59,8 @@ describe("AduCostArticle", () => {
       "/adu/ca/oceanside",
       "/adu/ca/escondido",
       "/adu/ca/carlsbad",
+      "/adu/ca/imperial-beach",
+      "/adu/ca/san-diego-county",
     ]);
   });
 });

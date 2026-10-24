@@ -14,6 +14,8 @@ import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { oceanside } from "@/content/adu/ca/oceanside";
 import { escondido } from "@/content/adu/ca/escondido";
 import { carlsbad } from "@/content/adu/ca/carlsbad";
+import { imperialBeach } from "@/content/adu/ca/imperial-beach";
+import { sanDiegoCounty } from "@/content/adu/ca/san-diego-county";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import {
   STATE_BASELINE_PARAGRAPHS,
@@ -23,13 +25,18 @@ import type { JurisdictionContent, JurisdictionCostContent } from "./types";
 
 const BASE_URL = CANONICAL_ORIGIN;
 
-/** Batch-one jurisdictions: the five largest cities in San Diego County. */
+/**
+ * San Diego County jurisdictions: the five largest cities (batch one), then
+ * Imperial Beach and the unincorporated county (batch two).
+ */
 export const ADU_CITIES: JurisdictionContent[] = [
   sanDiego,
   chulaVista,
   oceanside,
   escondido,
   carlsbad,
+  imperialBeach,
+  sanDiegoCounty,
 ];
 
 /**

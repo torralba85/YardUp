@@ -18,6 +18,8 @@ const PUBLIC_PATHS = [
   "/adu/ca/oceanside",
   "/adu/ca/escondido",
   "/adu/ca/carlsbad",
+  "/adu/ca/imperial-beach",
+  "/adu/ca/san-diego-county",
 ] as const;
 
 for (const path of PUBLIC_PATHS) {

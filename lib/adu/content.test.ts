@@ -19,7 +19,7 @@ import { aduCtaEvent } from "./types";
 import { ADU_CITIES } from "./content";
 
 describe("adu content helpers", () => {
-  it("generates one static param per batch-one city", () => {
+  it("generates one static param per jurisdiction", () => {
     expect(aduStaticParams()).toEqual(
       ADU_CITIES.map((city) => ({ state: "ca", city: city.slug })),
     );
