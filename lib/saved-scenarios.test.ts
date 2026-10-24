@@ -123,7 +123,7 @@ describe("createSavedScenarioStore", () => {
     expect(store.load(saved.id)?.liveParcel?.source).toBe("county-gis");
   });
 
-  it("preserves sanitized parcel and market evidence", () => {
+  it.each(["nominatim", "attom"])("preserves sanitized parcel and market evidence from %s", (provider) => {
     const evidence = {
       status: "observed" as const,
       source: { provider: "HUD", dataset: "Fair Market Rents" },
@@ -147,11 +147,12 @@ describe("createSavedScenarioStore", () => {
         ].map((field) => [field, evidence])),
         providerAttempts: [{ provider: "Regrid", dataset: "Parcel API v2", outcome: "matched" }],
         warnings: ["Verify zoning locally."],
+        addressVerification: { ...evidence, source: { provider: "ATTOM", dataset: "Property Basic Profile" }, vendorDebug: "drop me" },
         geocode: {
           requestedAddress: "202 C Street, San Diego, CA 92101",
           formattedAddress: "202 C Street, Chula Vista, CA 92101",
           match: {
-            provider: "nominatim", precision: "address", matchType: "building", partialMatch: false,
+            provider, precision: "address", matchType: "building", partialMatch: false,
             components: { city: "Chula Vista", vendorDebug: "drop me" },
             evidence: { ...evidence, confidence: "low", warnings: ["City conflict"] },
             vendorDebug: "drop me",
@@ -180,8 +181,42 @@ describe("createSavedScenarioStore", () => {
     expect(normalized?.dataQuality?.geocode?.match.evidence.warnings).toEqual(["City conflict"]);
     expect(normalized?.dataQuality?.geocode?.match.components).toEqual({ city: "Chula Vista" });
     expect(normalized?.dataQuality?.geocode?.match).not.toHaveProperty("vendorDebug");
+    expect(normalized?.dataQuality?.geocode?.match.provider).toBe(provider);
+    expect(normalized?.dataQuality?.addressVerification?.source.provider).toBe("ATTOM");
+    expect(normalized?.dataQuality?.addressVerification).not.toHaveProperty("vendorDebug");
     expect(normalized?.marketData?.components?.rent.source.provider).toBe("HUD");
     expect(normalized?.marketData?.components).not.toHaveProperty("vendorDebug");
+  });
+
+  it("defaults missing evidence warnings to an empty list", () => {
+    const evidence = {
+      status: "observed",
+      source: { provider: "ATTOM", dataset: "Property Basic Profile" },
+      retrievedAt: "2026-09-25T00:00:00.000Z",
+      confidence: "medium",
+    };
+    const normalized = normalizeLiveParcel({
+      ...liveParcel,
+      dataQuality: {
+        version: 1,
+        fields: Object.fromEntries([
+          "address",
+          "lotArea",
+          "lotDimensions",
+          "existingHouseSqft",
+          "maxLotCoveragePercent",
+          "setbacks",
+          "zoning",
+          "boundaryGeoJson",
+        ].map((field) => [field, evidence])),
+        providerAttempts: [],
+        warnings: [],
+        addressVerification: evidence,
+      },
+    } as unknown as LiveParcelData);
+
+    expect(normalized?.dataQuality?.addressVerification?.warnings).toEqual([]);
+    expect(normalized?.dataQuality?.fields.address.warnings).toEqual([]);
   });
 
   it("removes by id", () => {

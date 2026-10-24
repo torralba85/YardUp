@@ -27,6 +27,8 @@ export interface ParcelDataQuality {
   fields: Record<ParcelEvidenceField, DataEvidence>;
   providerAttempts: ProviderAttempt[];
   warnings: string[];
+  /** Supplemental property-address evidence; does not verify parcel geometry. */
+  addressVerification?: DataEvidence;
   geocode?: {
     requestedAddress: string;
     formattedAddress: string;
