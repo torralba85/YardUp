@@ -153,6 +153,11 @@ export default function AduCostCalculatorPage() {
           Simple payback divides the modeled construction midpoint by annual
           rent after operating expenses. It is not a mortgage cash-flow forecast:
           loan payments, taxes on income and future rent changes need a separate review.
+          The formulas and data sources are set out in{" "}
+          <Link href="/adu/how-we-estimate" className="underline underline-offset-2 hover:text-lot-ink">
+            how we estimate cost, rent and payback
+          </Link>
+          .
         </p>
       </section>
 

@@ -75,6 +75,19 @@ export function stateCostUrl(): string {
   return `${BASE_URL}${stateCostPath()}`;
 }
 
+/** ISO date the methodology page was last reviewed against the engine. */
+export const METHODOLOGY_AS_OF = "2026-10-24";
+
+/** Site-relative path for the cost, rent and payback methodology page. */
+export function methodologyPath(): string {
+  return "/adu/how-we-estimate";
+}
+
+/** Absolute canonical URL for the methodology page. */
+export function methodologyUrl(): string {
+  return `${BASE_URL}${methodologyPath()}`;
+}
+
 /** Absolute canonical URL for the California ADU cost calculator. */
 export function calculatorUrl(): string {
   return `${BASE_URL}/adu-cost-calculator`;

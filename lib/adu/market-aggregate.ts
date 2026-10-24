@@ -43,6 +43,16 @@ import type {
 /** Unit sizes quoted on city pages, in square feet. */
 export const CITY_MARKET_SIZES = [400, 600, 800, 1200] as const;
 
+/**
+ * Rent scenario multipliers applied to a HUD FMR anchor. Conservative is the
+ * FMR itself; the Studio applies the same spreads to a live parcel's anchor.
+ */
+export const RENT_SCENARIO_SPREADS = {
+  conservative: 1,
+  market: 1.12,
+  optimistic: 1.25,
+} as const;
+
 /** One city's rent anchor plus the vintage behind it. */
 interface CityMarketAnchor {
   /** Human citation, e.g. "San Diego County, CA". */
@@ -226,8 +236,8 @@ function sizeRow(
   // Same spreads calculateFeasibility applies to a live parcel's anchor.
   const rentTable = {
     conservative: anchorRent,
-    market: Math.round(anchorRent * 1.12),
-    optimistic: Math.round(anchorRent * 1.25),
+    market: Math.round(anchorRent * RENT_SCENARIO_SPREADS.market),
+    optimistic: Math.round(anchorRent * RENT_SCENARIO_SPREADS.optimistic),
   };
   const finance = calculateFinance(
     size,
