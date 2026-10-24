@@ -62,7 +62,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
           </div>
         ))}
       </div>
-      <p className="text-sm leading-6 text-lot-stone">Includes cost allowances, financing comparisons, local permit steps, items to verify, and a builder bid checklist.</p>
+      <p className="text-sm leading-6 text-lot-stone">Includes cost allowances, financing comparisons, local permit steps, items to verify, a builder bid checklist, and a site plan PDF.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
       <p className="text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
