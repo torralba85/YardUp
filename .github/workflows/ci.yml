@@ -45,7 +45,7 @@ jobs:
       - name: Validate public repository hygiene
         run: node scripts/validate-public-repo.mjs
       - name: Test CI scope and release safeguards
-        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/google-sign-in.checks.mjs
+        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/google-sign-in.checks.mjs scripts/ci/serving-revision.checks.mjs
       - name: Determine verification and deployment scope
         id: scope
         run: node scripts/ci/scope.mjs
@@ -356,6 +356,9 @@ jobs:
           # fields, and Hosting must publish hashed assets before the SSR app
           # starts rendering URLs that reference them.
           deploy_target "functions:app,functions:api,functions:apiAi,functions:apiStripe" || exit $?
+          # ACTIVE can still mean zero traffic when a recovery revision is pinned.
+          # Fail this same step so deployment records cannot report false success.
+          node scripts/ci/serving-revision.mjs
       - name: Record production deployment outcome
         if: always() && steps.deployment.outputs.id != ''
         run: node scripts/ci/deployment.mjs finish
