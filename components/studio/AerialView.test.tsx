@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AerialView from "./AerialView";
 import { defaultAduConfig } from "@/lib/feasibility";
@@ -48,6 +48,29 @@ describe("aerial context honesty", () => {
     await waitFor(() => expect(container.querySelectorAll("svg polygon")).toHaveLength(2));
     expect(screen.getByText(/published GIS boundary, not a survey/)).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/EXISTING HOUSE|PROPOSED ADU|Rear Setback|Front Setback/);
+  });
+
+  it("toggles closer lot view (zoom=20) and aligns the boundary to X-Aerial-Zoom", async () => {
+    draw({
+      ...parcel,
+      source: "county-gis",
+      boundaryGeoJson: {
+        type: "Polygon",
+        coordinates: [[[-122.31, 47.69], [-122.3099, 47.69], [-122.3099, 47.6901], [-122.31, 47.69]]],
+      },
+    });
+    await screen.findByAltText("Satellite context near Public test address");
+    const zoomBtn = screen.getByRole("button", { name: "Closer lot view" });
+    expect(zoomBtn).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(zoomBtn);
+    await waitFor(() => {
+      expect(fetch).toHaveBeenLastCalledWith(
+        expect.stringContaining("&zoom=20"),
+        expect.anything(),
+      );
+    });
+    expect(screen.getByRole("button", { name: "Closer view (2×)" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("does not assert geographic geometry on the provider's fallback grid", async () => {

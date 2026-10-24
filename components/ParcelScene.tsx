@@ -130,6 +130,18 @@ export function placementToneColor(tone: "clear" | "review" | "blocked"): string
 }
 
 /**
+ * Computes a tight orthographic shadow-camera half-extent (in feet) around the
+ * parcel and maquette plinth so shadow-map texels concentrate on the lot rather
+ * than empty air outside a fixed ±90 ft box.
+ */
+export function computeShadowFrustumHalfExtent(lotWidth: number, lotLength: number): number {
+  const w = Number.isFinite(lotWidth) && lotWidth > 0 ? lotWidth : 50;
+  const l = Number.isFinite(lotLength) && lotLength > 0 ? lotLength : 100;
+  const diagonalRadius = Math.hypot(w + 16, l + 16) * 0.52;
+  return Math.min(Math.max(Math.ceil(diagonalRadius), 38), 110);
+}
+
+/**
  * Canvas graph-paper tile: 5 ft minor lines inside a 25 ft major cell, inked
  * in carbon at low alpha over the given base. One tile repeats per 25 ft of
  * plane, so the grid stays true to lot dimensions.
@@ -140,7 +152,7 @@ export function placementToneColor(tone: "clear" | "review" | "blocked"): string
  * a `map={...}` prop is not owned by anything and leaked on every remount.
  */
 function makeSurveyGridCanvas(base: string, minorAlpha: number, majorAlpha: number) {
-  const size = 256;
+  const size = 512;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -198,7 +210,9 @@ function SurveyGround({
             args={[canvas]}
             wrapS={THREE.RepeatWrapping}
             wrapT={THREE.RepeatWrapping}
-            anisotropy={4}
+            anisotropy={8}
+            minFilter={THREE.LinearMipmapLinearFilter}
+            magFilter={THREE.LinearFilter}
             repeat={[width / GRID_CELL_FT, length / GRID_CELL_FT]}
             colorSpace={THREE.SRGBColorSpace}
           />
@@ -208,7 +222,7 @@ function SurveyGround({
   );
 }
 
-/** Soft radial contact shadow anchored under a building footprint. */
+/** Architectural rounded-footprint ambient occlusion contact shadow anchored under a building. */
 function ContactShadow({
   width,
   length,
@@ -219,18 +233,28 @@ function ContactShadow({
   opacity?: number;
 }) {
   const canvas = useMemo(() => {
-    const size = 128;
+    const size = 256;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.1, size / 2, size / 2, size / 2);
+    const half = size / 2;
+    const pad = size * 0.14;
+    const innerW = size - pad * 2;
+    const innerH = size - pad * 2;
+    const gradient = ctx.createRadialGradient(half, half, size * 0.12, half, half, half);
     gradient.addColorStop(0, "rgba(38,19,7,0.55)");
     gradient.addColorStop(0.7, "rgba(38,19,7,0.22)");
     gradient.addColorStop(1, "rgba(38,19,7,0)");
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
+    if (typeof ctx.roundRect === "function") {
+      ctx.beginPath();
+      ctx.roundRect(pad * 0.45, pad * 0.45, innerW + pad * 1.1, innerH + pad * 1.1, size * 0.18);
+      ctx.fill();
+    } else {
+      ctx.fillRect(0, 0, size, size);
+    }
     return canvas;
   }, []);
 
@@ -239,7 +263,7 @@ function ContactShadow({
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
       <planeGeometry args={[width, length]} />
       <meshBasicMaterial transparent opacity={opacity} depthWrite={false}>
-        <canvasTexture attach="map" args={[canvas]} colorSpace={THREE.SRGBColorSpace} />
+        <canvasTexture attach="map" args={[canvas]} anisotropy={4} colorSpace={THREE.SRGBColorSpace} />
       </meshBasicMaterial>
     </mesh>
   );
@@ -1323,6 +1347,7 @@ export default function ParcelScene({
   const preset = LIGHTING_PRESETS[lighting];
   const shadowPreview = lighting === "shadow-preview";
   const budget = SCENE_QUALITY[quality];
+  const shadowHalfExtent = computeShadowFrustumHalfExtent(parcel.lotWidth, parcel.lotLength);
 
   return (
     <div className={`flex min-h-0 flex-col bg-lot-chalk ${flowLayout ? "h-auto" : "h-full"}`}>
@@ -1403,10 +1428,12 @@ export default function ParcelScene({
               color={preset.sunColor}
               shadow-mapSize-width={budget.shadowResolution}
               shadow-mapSize-height={budget.shadowResolution}
-              shadow-camera-left={-90}
-              shadow-camera-right={90}
-              shadow-camera-top={90}
-              shadow-camera-bottom={-90}
+              shadow-camera-left={-shadowHalfExtent}
+              shadow-camera-right={shadowHalfExtent}
+              shadow-camera-top={shadowHalfExtent}
+              shadow-camera-bottom={-shadowHalfExtent}
+              shadow-camera-near={1}
+              shadow-camera-far={240}
               shadow-bias={-0.0004}
               shadow-normalBias={0.02}
             />

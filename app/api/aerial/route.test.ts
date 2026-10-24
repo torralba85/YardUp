@@ -5,8 +5,8 @@ import { GET } from "./route";
 const LAT = 37.3356039;
 const LNG = -121.89849;
 
-function makeRequest(): NextRequest {
-  return new NextRequest(`http://localhost/api/aerial?lat=${LAT}&lng=${LNG}&w=800&h=540`);
+function makeRequest(extraQuery = ""): NextRequest {
+  return new NextRequest(`http://localhost/api/aerial?lat=${LAT}&lng=${LNG}&w=800&h=540${extraQuery}`);
 }
 
 // A minimal JPEG header (SOI + APP0 marker) so magic-byte sniffing passes.
@@ -43,10 +43,29 @@ describe("GET /api/aerial", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("image/png");
     expect(res.headers.get("X-Aerial-Provider")).toBe("google");
+    expect(res.headers.get("X-Aerial-Zoom")).toBe("19");
     expect(res.headers.get("X-Aerial-Fallback")).toBeNull();
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(JPEG_BYTES);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain("maps.googleapis.com");
+  });
+
+  it("supports zoom=20 and falls back to zoom=19 when zoom=20 fails", async () => {
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "maps-key");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce(imageFetchResponse("image/png"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(makeRequest("&zoom=20"));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("X-Aerial-Provider")).toBe("google");
+    expect(res.headers.get("X-Aerial-Zoom")).toBe("19");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toContain("zoom=20");
+    expect(fetchMock.mock.calls[1][0]).toContain("zoom=19");
   });
 
   it("falls back to Esri World Imagery when the Maps key is not configured", async () => {
@@ -59,6 +78,7 @@ describe("GET /api/aerial", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("image/jpeg");
     expect(res.headers.get("X-Aerial-Provider")).toBe("esri");
+    expect(res.headers.get("X-Aerial-Zoom")).toBe("19");
     expect(res.headers.get("X-Aerial-Attribution")).toContain("Esri");
     expect(res.headers.get("X-Aerial-Fallback")).toBeNull();
 

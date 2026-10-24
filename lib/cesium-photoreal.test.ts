@@ -3,6 +3,7 @@ import {
   GOOGLE_PHOTOREAL_ION_ASSET_ID,
   PHOTOREAL_CACHE_BYTES,
   PHOTOREAL_CACHE_OVERFLOW_BYTES,
+  PHOTOREAL_MAX_SCREEN_SPACE_ERROR,
   createGoogleDirectTileset,
   createGoogleIonTileset,
   describePhotorealRoute,
@@ -58,7 +59,7 @@ describe("describePhotorealRoute", () => {
 });
 
 describe("createGoogleDirectTileset", () => {
-  it("passes the key and the Google-geocoder assertion to the helper", async () => {
+  it("passes the key, the Google-geocoder assertion, and high-detail SSE options to the helper", async () => {
     const Cesium = makeCesium();
     await createGoogleDirectTileset(Cesium, " gk ");
     expect(Cesium.createGooglePhotorealistic3DTileset).toHaveBeenCalledWith(
@@ -69,6 +70,10 @@ describe("createGoogleDirectTileset", () => {
       {
         cacheBytes: PHOTOREAL_CACHE_BYTES,
         maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
+        maximumScreenSpaceError: PHOTOREAL_MAX_SCREEN_SPACE_ERROR,
+        dynamicScreenSpaceError: true,
+        foveatedScreenSpaceError: true,
+        preloadFlightDestinations: true,
         enableCollision: true,
         showCreditsOnScreen: true,
       },
@@ -86,7 +91,7 @@ describe("createGoogleDirectTileset", () => {
 });
 
 describe("createGoogleIonTileset", () => {
-  it("scopes the token to the resource instead of an SDK default, and sets cache budgets", async () => {
+  it("scopes the token to the resource instead of an SDK default, and sets cache budgets and SSE options", async () => {
     const Cesium = makeCesium();
     await createGoogleIonTileset(Cesium, "ion-token");
 
@@ -96,7 +101,16 @@ describe("createGoogleIonTileset", () => {
     const fromUrl = Cesium.Cesium3DTileset?.fromUrl as ReturnType<typeof vi.fn>;
     expect(fromUrl).toHaveBeenCalledWith(
       { id: "ion-resource" },
-      expect.objectContaining({ cacheBytes: PHOTOREAL_CACHE_BYTES, enableCollision: true, showCreditsOnScreen: true }),
+      expect.objectContaining({
+        cacheBytes: PHOTOREAL_CACHE_BYTES,
+        maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
+        maximumScreenSpaceError: PHOTOREAL_MAX_SCREEN_SPACE_ERROR,
+        dynamicScreenSpaceError: true,
+        foveatedScreenSpaceError: true,
+        preloadFlightDestinations: true,
+        enableCollision: true,
+        showCreditsOnScreen: true,
+      }),
     );
   });
 

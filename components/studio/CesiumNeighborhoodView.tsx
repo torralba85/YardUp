@@ -121,10 +121,24 @@ interface CesiumEntityCollection {
   remove: (entity: unknown) => boolean;
 }
 
-interface CesiumViewerInstance {
+interface CesiumPostProcessStages {
+  fxaa?: { enabled: boolean };
+  ambientOcclusion?: {
+    enabled: boolean;
+    uniforms?: Record<string, number>;
+  };
+  tonemapper?: number;
+  exposure?: number;
+}
+
+export interface CesiumViewerInstance {
   destroy: () => void;
   isDestroyed: () => boolean;
+  resolutionScale?: number;
   entities: CesiumEntityCollection;
+  imageryLayers?: {
+    addImageryProvider?: (provider: unknown) => { alpha?: number } | void;
+  };
   camera: {
     flyTo: (options: Record<string, unknown>) => void;
     setView: (options: Record<string, unknown>) => void;
@@ -139,13 +153,16 @@ interface CesiumViewerInstance {
       add: (primitive: unknown) => void;
     };
     globe?: { show: boolean };
+    highDynamicRange?: boolean;
+    postProcessStages?: CesiumPostProcessStages;
   };
 }
 
-interface CesiumModule extends PhotorealCesiumModule, GroundSnapCesiumModule {
+export interface CesiumModule extends PhotorealCesiumModule, GroundSnapCesiumModule {
   Viewer: new (container: Element | string, options?: Record<string, unknown>) => CesiumViewerInstance;
   ImageryLayer: new (provider: unknown) => unknown;
   OpenStreetMapImageryProvider: new (options?: Record<string, unknown>) => unknown;
+  UrlTemplateImageryProvider?: new (options: Record<string, unknown>) => unknown;
   Cartesian3: {
     fromDegrees: (lng: number, lat: number, height?: number) => unknown;
     fromDegreesArray: (coordinates: number[]) => unknown;
@@ -168,10 +185,52 @@ interface CesiumModule extends PhotorealCesiumModule, GroundSnapCesiumModule {
   HeightReference?: {
     RELATIVE_TO_GROUND?: number;
   };
+  ClassificationType?: {
+    BOTH?: number;
+  };
+  Tonemapper?: {
+    ACES?: number;
+  };
   Math: {
     toRadians: (degrees: number) => number;
   };
   createOsmBuildingsAsync?: () => Promise<unknown>;
+}
+
+/**
+ * Configures Cesium post-processing, HDR tonemapping, FXAA, HBAO, and high-DPI
+ * resolution scaling so photogrammetry and GIS boundary overlays render crisply.
+ */
+export function configureCesiumSceneQuality(
+  Cesium: CesiumModule,
+  viewer: CesiumViewerInstance,
+  hasPhotoreal: boolean,
+): void {
+  const dpr = typeof window !== "undefined" && typeof window.devicePixelRatio === "number"
+    ? window.devicePixelRatio
+    : 1;
+  viewer.resolutionScale = Math.min(Math.max(dpr, 1), 1.75);
+  viewer.scene.highDynamicRange = true;
+
+  const stages = viewer.scene.postProcessStages;
+  if (!stages) return;
+
+  if (Cesium.Tonemapper?.ACES !== undefined) {
+    stages.tonemapper = Cesium.Tonemapper.ACES;
+    stages.exposure = 1.05;
+  }
+  if (stages.fxaa) {
+    stages.fxaa.enabled = true;
+  }
+  if (stages.ambientOcclusion) {
+    stages.ambientOcclusion.enabled = hasPhotoreal;
+    if (hasPhotoreal && stages.ambientOcclusion.uniforms) {
+      stages.ambientOcclusion.uniforms.intensity = 2.2;
+      stages.ambientOcclusion.uniforms.bias = 0.08;
+      stages.ambientOcclusion.uniforms.lengthCap = 0.25;
+      stages.ambientOcclusion.uniforms.stepSize = 1.6;
+    }
+  }
 }
 
 interface GroundReadout {
@@ -212,6 +271,7 @@ function placeSceneGeometry(
   const canClamp = typeof clampToGround === "number";
   const baseHeight = canClamp ? 0 : (groundHeightMeters ?? 0);
   const heightRef = canClamp ? { heightReference: clampToGround } : {};
+  const classifyBoth = Cesium.ClassificationType?.BOTH;
 
   // 1. Parcel Site pin & label
   added.push(
@@ -242,7 +302,8 @@ function placeSceneGeometry(
   );
 
   // 2. Add Parcel Boundary Polygon if GeoJSON is available. Left without an
-  // explicit height so Cesium drapes it on whatever surface is rendering.
+  // explicit height and classified onto BOTH terrain and 3D Tiles so Cesium
+  // drapes it directly over photogrammetry roofs, yards, or flat globe tiles.
   const boundaryGeoJson = "boundaryGeoJson" in parcel ? parcel.boundaryGeoJson : null;
   if (boundaryGeoJson?.coordinates?.[0]?.length) {
     const flatCoords = boundaryGeoJson.coordinates[0].flatMap(([coordLng, coordLat]) => [coordLng, coordLat]);
@@ -255,6 +316,7 @@ function placeSceneGeometry(
           outline: true,
           outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-stone"]),
           outlineWidth: 2,
+          ...(typeof classifyBoth === "number" ? { classificationType: classifyBoth } : {}),
         },
       }),
     );
@@ -497,12 +559,36 @@ export default function CesiumNeighborhoodView({
         viewerRef.current = viewer;
         cesiumModuleRef.current = Cesium;
 
+        configureCesiumSceneQuality(Cesium, viewer, hasPhotoreal);
+
         if (hasPhotoreal) {
           viewer.scene.primitives.add(photoreal.tileset);
           if (viewer.scene.globe) {
             viewer.scene.globe.show = false;
           }
         } else {
+          // When falling back to OSM without photogrammetry keys, layer Esri World
+          // Imagery satellite tiles when supported so the block still shows aerial
+          // roof/tree context alongside OSM building extrusions.
+          try {
+            if (
+              typeof Cesium.UrlTemplateImageryProvider === "function" &&
+              typeof viewer.imageryLayers?.addImageryProvider === "function"
+            ) {
+              const satelliteProvider = new Cesium.UrlTemplateImageryProvider({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                maximumLevel: 19,
+                credit: "Tiles © Esri",
+              });
+              const layer = viewer.imageryLayers.addImageryProvider(satelliteProvider);
+              if (layer && typeof layer === "object") {
+                layer.alpha = 0.85;
+              }
+            }
+          } catch {
+            // Optional satellite layer; OSM base layer remains active.
+          }
+
           // Only worth asking for OSM building extrusions when there is no
           // photogrammetry — otherwise they duplicate the real buildings.
           try {
@@ -650,7 +736,7 @@ export default function CesiumNeighborhoodView({
         } else if (hasPhotoreal && coarse.status === "measured") {
           // A coarse sample reads whatever LOD was loaded from 3.5 km up. Once the
           // close view has streamed, re-measure: fresh evidence outranks the earlier
-          // reading, and geometry is rebuilt only if the disagreement is visible.
+          // reading, and geometry + camera framing are updated if the disagreement is visible.
           const refined = await sampleGroundHeight(
             lat,
             lng,
@@ -658,7 +744,11 @@ export default function CesiumNeighborhoodView({
             { isCancelled, objectsToExclude: placedEntitiesRef.current },
           );
           if (cancelled || !viewer || viewer.isDestroyed()) return;
-          if (refined.status === "measured" && shouldRefineGround(coarse.heightMeters, refined.heightMeters)) {
+          if (
+            refined.status === "measured" &&
+            refined.heightMeters !== null &&
+            shouldRefineGround(coarse.heightMeters, refined.heightMeters)
+          ) {
             measuredGroundRef.current = refined.heightMeters;
             for (const entity of placedEntitiesRef.current) {
               viewer.entities.remove(entity);
@@ -671,6 +761,22 @@ export default function CesiumNeighborhoodView({
             ));
             publishGroundReadout(refined.status, refined.heightMeters);
             void ensureGeoidReady().then(republishGroundReadout);
+
+            if (!cameraAnimationRef.current) {
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(
+                  lng,
+                  lat - NEIGHBORHOOD_VIEW_LAT_OFFSET_DEG,
+                  refined.heightMeters + NEIGHBORHOOD_VIEW_HEIGHT_M,
+                ),
+                orientation: {
+                  heading: Cesium.Math.toRadians(0),
+                  pitch: Cesium.Math.toRadians(-35),
+                  roll: 0,
+                },
+                duration: 0.9,
+              });
+            }
           }
         }
       } catch (err) {

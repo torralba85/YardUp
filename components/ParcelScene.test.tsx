@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 import { getDefaultAduPose } from "@/lib/site-fit";
-import ParcelScene, { placementToneColor } from "./ParcelScene";
+import ParcelScene, { computeShadowFrustumHalfExtent, placementToneColor } from "./ParcelScene";
 
 vi.mock("@react-three/fiber", () => ({
   Canvas: () => <div data-testid="parcel-canvas" />,
@@ -205,5 +205,16 @@ describe("placementToneColor", () => {
     expect(placementToneColor("clear")).toBe("#176B4C");
     expect(placementToneColor("review")).toBe("#8A5300");
     expect(placementToneColor("blocked")).toBe("#A82D16");
+  });
+});
+
+describe("computeShadowFrustumHalfExtent", () => {
+  it("fits the orthographic shadow frustum tightly to urban lots instead of fixed 90 ft", () => {
+    const compact = computeShadowFrustumHalfExtent(40, 80);
+    const standard = computeShadowFrustumHalfExtent(50, 100);
+    expect(compact).toBeLessThan(standard);
+    expect(standard).toBeLessThan(90);
+    expect(computeShadowFrustumHalfExtent(15, 20)).toBeGreaterThanOrEqual(38);
+    expect(computeShadowFrustumHalfExtent(200, 300)).toBeLessThanOrEqual(110);
   });
 });

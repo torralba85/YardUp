@@ -1,5 +1,12 @@
+import * as THREE from "three";
 import { describe, it, expect } from "vitest";
-import { generateFinishTextures, createAduMaterial, disposeMaterial } from "./adu-materials";
+import {
+  generateFinishTextures,
+  generateRoofTextures,
+  createAduMaterial,
+  createRoofMaterial,
+  disposeMaterial,
+} from "./adu-materials";
 import type { ExteriorFinish } from "./feasibility";
 
 describe("adu-materials", () => {
@@ -41,9 +48,19 @@ describe("adu-materials", () => {
     }
   });
 
-  it("creates and disposes material bundles without errors", () => {
+  it("creates and disposes material bundles with mipmapped anisotropic filtering and standing-seam roof maps", () => {
     const mat = createAduMaterial("cedar");
     expect(mat.map).toBeDefined();
+    expect(mat.map?.generateMipmaps).toBe(true);
+    expect(mat.map?.minFilter).toBe(THREE.LinearMipmapLinearFilter);
+    expect(mat.map?.anisotropy).toBe(8);
     expect(() => disposeMaterial(mat)).not.toThrow();
+
+    const roofTex = generateRoofTextures();
+    expect(roofTex.normal.length).toBe(512 * 512 * 4);
+    const roofMat = createRoofMaterial();
+    expect(roofMat.normalMap).toBeDefined();
+    expect(roofMat.roughnessMap).toBeDefined();
+    expect(() => disposeMaterial(roofMat)).not.toThrow();
   });
 });

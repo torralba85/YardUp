@@ -1,9 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import ParcelTerrainPreview from "./ParcelTerrainPreview";
+import ParcelTerrainPreview, { buildTerrainContourSegments, computeTerrainVertexNormals } from "./ParcelTerrainPreview";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 import { FT_PER_DEG_LAT } from "@/lib/parcel-geometry";
-import { createTerrainGrid, FEET_PER_METER, type ParcelTerrain } from "@/lib/parcel-terrain";
+import { createTerrainGrid, FEET_PER_METER, terrainTriangles, type ParcelTerrain } from "@/lib/parcel-terrain";
 import type { LiveParcelData } from "@/lib/parcel-types";
 
 const renderer = vi.hoisted(() => ({ webgl: true, fails: false }));
@@ -56,6 +56,34 @@ describe("terrain preview", () => {
     expect(screen.getByTestId("terrain-footprint-relief")).toHaveTextContent("3.0 ft");
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/separate from your saved layout/)).toBeVisible();
+  });
+
+  it("computes normalized upward-facing vertex normals and topographic contour segments", async () => {
+    const p = parcel(0.08);
+    const terrain = data(p);
+    const low = Math.min(...terrain.elevations);
+    const positions = new Float32Array(
+      terrain.grid.points.flatMap((pt, i) => [pt.x, (terrain.elevations[i] - low) * FEET_PER_METER, pt.z]),
+    );
+    const indices = new Uint16Array(terrainTriangles(terrain.grid));
+    const normals = computeTerrainVertexNormals(positions, indices);
+    expect(normals.length).toBe(positions.length);
+    for (let v = 0; v < normals.length; v += 3) {
+      const len = Math.hypot(normals[v], normals[v + 1], normals[v + 2]);
+      expect(len).toBeCloseTo(1, 4);
+      expect(normals[v + 1]).toBeGreaterThan(0);
+    }
+
+    const contours = buildTerrainContourSegments(terrain, 2);
+    expect(contours.length).toBeGreaterThan(0);
+    expect(contours[0]).toHaveLength(2);
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => terrain }));
+    render(<ParcelTerrainPreview parcel={p} config={defaultAduConfig} />);
+    const contourBtn = await screen.findByRole("button", { name: "Contours" });
+    expect(contourBtn).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(contourBtn);
+    expect(contourBtn).toHaveAttribute("aria-pressed", "false");
   });
 
   it("ignores a late response from the previously selected parcel", async () => {
