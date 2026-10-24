@@ -15,6 +15,7 @@ export interface ProceduralTextures {
  */
 const DIM = 512;
 const cache = new Map<ExteriorFinish, ProceduralTextures>();
+let cachedRoofTextures: { normal: Uint8Array<ArrayBuffer>; roughness: Uint8Array<ArrayBuffer> } | null = null;
 
 function parseHex(hex: string): [number, number, number] {
   const num = parseInt(hex.replace("#", ""), 16);
@@ -111,9 +112,65 @@ export function createDataTexture(data: Uint8Array<ArrayBuffer>, colorSpace: THR
   const t = new THREE.DataTexture(data, DIM, DIM, THREE.RGBAFormat, THREE.UnsignedByteType);
   t.wrapS = THREE.RepeatWrapping;
   t.wrapT = THREE.RepeatWrapping;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.anisotropy = 8;
   t.colorSpace = colorSpace;
   t.needsUpdate = true;
   return t;
+}
+
+/**
+ * Deterministic standing-seam architectural metal roof normal + roughness maps.
+ * Ribs run along the slope axis (every 64 texels = 6 inches at 4 ft tile scale)
+ * with subtle micro-grain between standing seams.
+ */
+export function generateRoofTextures(): { normal: Uint8Array<ArrayBuffer>; roughness: Uint8Array<ArrayBuffer> } {
+  if (cachedRoofTextures) return cachedRoofTextures;
+
+  const total = DIM * DIM;
+  const norm = new Uint8Array(total * 4);
+  const rough = new Uint8Array(total * 4);
+  const height = new Float32Array(total);
+
+  for (let y = 0; y < DIM; y++) {
+    for (let x = 0; x < DIM; x++) {
+      const i = y * DIM + x;
+      const px = x % 64;
+      const isRib = px < 6;
+      const ribProfile = isRib ? Math.sin((px / 6) * Math.PI) * 0.45 : 0;
+      const micro = Math.sin(x * 0.25 + y * 0.15) * 0.015;
+      height[i] = 0.5 + ribProfile + micro;
+
+      const rVal = isRib ? 128 : 168;
+      const p = i * 4;
+      rough[p] = rVal;
+      rough[p + 1] = rVal;
+      rough[p + 2] = rVal;
+      rough[p + 3] = 255;
+    }
+  }
+
+  for (let y = 0; y < DIM; y++) {
+    const y0 = (y - 1 + DIM) % DIM;
+    const y1 = (y + 1) % DIM;
+    for (let x = 0; x < DIM; x++) {
+      const x0 = (x - 1 + DIM) % DIM;
+      const x1 = (x + 1) % DIM;
+      const dx = (height[y * DIM + x1] - height[y * DIM + x0]) * 3.0;
+      const dy = (height[y1 * DIM + x] - height[y0 * DIM + x]) * 3.0;
+      const len = Math.hypot(dx, dy, 1.0);
+      const p = (y * DIM + x) * 4;
+      norm[p] = Math.round(((-dx / len) * 0.5 + 0.5) * 255);
+      norm[p + 1] = Math.round(((-dy / len) * 0.5 + 0.5) * 255);
+      norm[p + 2] = Math.round(((1.0 / len) * 0.5 + 0.5) * 255);
+      norm[p + 3] = 255;
+    }
+  }
+
+  cachedRoofTextures = { normal: norm, roughness: rough };
+  return cachedRoofTextures;
 }
 
 export function createAduMaterial(finish: ExteriorFinish): THREE.MeshStandardMaterial {
@@ -128,7 +185,15 @@ export function createAduMaterial(finish: ExteriorFinish): THREE.MeshStandardMat
 }
 
 export function createRoofMaterial(): THREE.MeshStandardMaterial {
-  return new THREE.MeshStandardMaterial({ color: new THREE.Color("#373a3c"), roughness: 0.65, metalness: 0.15 });
+  const tex = generateRoofTextures();
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color("#373a3c"),
+    normalMap: createDataTexture(tex.normal, THREE.NoColorSpace),
+    normalScale: new THREE.Vector2(0.5, 0.5),
+    roughnessMap: createDataTexture(tex.roughness, THREE.NoColorSpace),
+    roughness: 0.65,
+    metalness: 0.22,
+  });
 }
 
 export function createDoorMaterial(): THREE.MeshStandardMaterial {

@@ -46,6 +46,8 @@ export default function AerialView({
   const [aerialSrc, setAerialSrc] = useState<string | null>(null);
   const [aerialError, setAerialError] = useState(false);
   const [attribution, setAttribution] = useState<string | null>(null);
+  const [requestedZoom, setRequestedZoom] = useState<19 | 20>(ZOOM);
+  const [resolvedZoom, setResolvedZoom] = useState<number>(ZOOM);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,8 +60,9 @@ export default function AerialView({
 
       try {
         const idToken = await user?.getIdToken();
+        const zoomSuffix = requestedZoom === 20 ? "&zoom=20" : "";
         const res = await fetch(
-          `/api/aerial?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&w=${IMG_W}&h=${IMG_H}`,
+          `/api/aerial?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&w=${IMG_W}&h=${IMG_H}${zoomSuffix}`,
           {
             headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
           },
@@ -78,6 +81,10 @@ export default function AerialView({
           return;
         }
         if (!cancelled) {
+          const headerZoom = Number(res.headers.get("X-Aerial-Zoom"));
+          setResolvedZoom(
+            Number.isFinite(headerZoom) && headerZoom >= 18 ? headerZoom : requestedZoom,
+          );
           setAerialError(res.headers.get("X-Aerial-Fallback") === "true");
           setAttribution(res.headers.get("X-Aerial-Attribution"));
           setAerialSrc(objectUrl);
@@ -95,23 +102,19 @@ export default function AerialView({
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [lat, lng, user]);
+  }, [lat, lng, requestedZoom, user]);
 
-  // Project a lat/lng to SVG pixel coordinates
-  const toPixel = (pLat: number, pLng: number) =>
-    latLngToPixel(pLat, pLng, lat, lng, ZOOM, IMG_W, IMG_H);
-
-  // Project parcel boundary GeoJSON to SVG polygon points string
+  // Project parcel boundary GeoJSON to SVG polygon points string using the
+  // effective zoom returned by /api/aerial so fallback from zoom 20 -> 19 stays aligned.
   const boundaryPoints = useMemo(() => {
     if (!parcel.boundaryGeoJson?.coordinates?.[0]) return null;
     return parcel.boundaryGeoJson.coordinates[0]
       .map(([pLng, pLat]) => {
-        const { x, y } = toPixel(pLat, pLng);
+        const { x, y } = latLngToPixel(pLat, pLng, lat, lng, resolvedZoom, IMG_W, IMG_H);
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(" ");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parcel.boundaryGeoJson, lat, lng]);
+  }, [parcel.boundaryGeoJson, lat, lng, resolvedZoom]);
 
   return (
     <div
@@ -181,9 +184,22 @@ export default function AerialView({
         </Button>
       )}
 
-      <div className="pointer-events-none absolute right-4 top-4 border border-lot-line bg-lot-chalk px-2.5 py-1.5 text-xs font-semibold text-lot-ink"
-        aria-label="Zoning designation, not approval">
-        {parcel.zoning}
+      <div className="absolute right-4 top-4 flex items-center gap-2">
+        <Button
+          type="button"
+          size="xs"
+          variant={requestedZoom === 20 ? "selected" : "secondary"}
+          aria-pressed={requestedZoom === 20}
+          onClick={() => setRequestedZoom((z) => (z === 20 ? 19 : 20))}
+        >
+          {requestedZoom === 20 ? "Closer view (2×)" : "Closer lot view"}
+        </Button>
+        <div
+          className="pointer-events-none border border-lot-line bg-lot-chalk px-2.5 py-1.5 text-xs font-semibold text-lot-ink"
+          aria-label="Zoning designation, not approval"
+        >
+          {parcel.zoning}
+        </div>
       </div>
 
       {/* Fallback notice */}

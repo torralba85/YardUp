@@ -16,6 +16,109 @@ import { isWebGLAvailable } from "@/lib/webgl";
 
 const NO_WEBGL = "Terrain preview needs WebGL, which this browser could not start. The other Studio views still work.";
 
+/**
+ * Computes smooth upward-facing vertex normals (+Y up) for an indexed terrain mesh
+ * so directional and hemisphere lighting reveals slope and aspect on the 3D surface.
+ */
+export function computeTerrainVertexNormals(positions: Float32Array, indices: Uint16Array): Float32Array {
+  const normals = new Float32Array(positions.length);
+
+  for (let i = 0; i + 2 < indices.length; i += 3) {
+    const i0 = indices[i] * 3;
+    const i1 = indices[i + 1] * 3;
+    const i2 = indices[i + 2] * 3;
+
+    const ax = positions[i0], ay = positions[i0 + 1], az = positions[i0 + 2];
+    const bx = positions[i1], by = positions[i1 + 1], bz = positions[i1 + 2];
+    const cx = positions[i2], cy = positions[i2 + 1], cz = positions[i2 + 2];
+
+    const abx = bx - ax, aby = by - ay, abz = bz - az;
+    const acx = cx - ax, acy = cy - ay, acz = cz - az;
+
+    let nx = aby * acz - abz * acy;
+    let ny = abz * acx - abx * acz;
+    let nz = abx * acy - aby * acx;
+
+    if (ny < 0) {
+      nx = -nx;
+      ny = -ny;
+      nz = -nz;
+    }
+
+    normals[i0] += nx; normals[i0 + 1] += ny; normals[i0 + 2] += nz;
+    normals[i1] += nx; normals[i1 + 1] += ny; normals[i1 + 2] += nz;
+    normals[i2] += nx; normals[i2 + 1] += ny; normals[i2 + 2] += nz;
+  }
+
+  for (let v = 0; v < normals.length; v += 3) {
+    const nx = normals[v], ny = normals[v + 1], nz = normals[v + 2];
+    const len = Math.hypot(nx, ny, nz);
+    if (len > 1e-6) {
+      normals[v] = nx / len;
+      normals[v + 1] = ny / len;
+      normals[v + 2] = nz / len;
+    } else {
+      normals[v] = 0;
+      normals[v + 1] = 1;
+      normals[v + 2] = 0;
+    }
+  }
+
+  return normals;
+}
+
+/**
+ * Extracts topographic iso-elevation contour segments across the triangulated
+ * terrain grid at regular vertical intervals (1 ft on gentle slopes, 2 ft on steeper lots).
+ */
+export function buildTerrainContourSegments(
+  terrain: ParcelTerrain,
+  intervalFt?: number,
+): [number, number, number][][] {
+  const { grid, elevations } = terrain;
+  if (!elevations.length || !grid.points.length) return [];
+
+  const lowMeters = Math.min(...elevations);
+  const relFeet = elevations.map((e) => (e - lowMeters) * FEET_PER_METER);
+  const maxRelFeet = Math.max(...relFeet);
+  const stepFt = intervalFt ?? (maxRelFeet > 12 ? 2 : 1);
+  if (stepFt <= 0 || maxRelFeet < stepFt) return [];
+
+  const triangles = terrainTriangles(grid);
+  const segments: [number, number, number][][] = [];
+
+  for (let level = stepFt; level < maxRelFeet - 0.05; level += stepFt) {
+    for (let t = 0; t + 2 < triangles.length; t += 3) {
+      const idx = [triangles[t], triangles[t + 1], triangles[t + 2]];
+      const crossings: [number, number, number][] = [];
+
+      for (let e = 0; e < 3; e++) {
+        const a = idx[e];
+        const b = idx[(e + 1) % 3];
+        const ha = relFeet[a];
+        const hb = relFeet[b];
+        if ((ha < level && hb >= level) || (hb < level && ha >= level)) {
+          const denom = hb - ha;
+          const frac = Math.abs(denom) > 1e-6 ? (level - ha) / denom : 0.5;
+          const pa = grid.points[a];
+          const pb = grid.points[b];
+          crossings.push([
+            pa.x + (pb.x - pa.x) * frac,
+            level + 0.08,
+            pa.z + (pb.z - pa.z) * frac,
+          ]);
+        }
+      }
+
+      if (crossings.length === 2) {
+        segments.push([crossings[0], crossings[1]]);
+      }
+    }
+  }
+
+  return segments;
+}
+
 /** A renderer failure stays inside this preview instead of replacing the whole Studio. */
 class TerrainBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -69,7 +172,15 @@ function TerrainLabel({ text, position, width }: { text: string; position: [numb
   return <sprite position={position} scale={[width, width * 104 / 512, 1]}><spriteMaterial depthTest={false} depthWrite={false}><canvasTexture attach="map" args={[canvas]} colorSpace={SRGBColorSpace} /></spriteMaterial></sprite>;
 }
 
-function TerrainSurface({ terrain, onPlace }: { terrain: ParcelTerrain; onPlace: (p: LocalPoint) => void }) {
+function TerrainSurface({
+  terrain,
+  showContours = true,
+  onPlace,
+}: {
+  terrain: ParcelTerrain;
+  showContours?: boolean;
+  onPlace: (p: LocalPoint) => void;
+}) {
   const { grid, elevations } = terrain;
   const base = Math.min(...elevations) * FEET_PER_METER;
   const geometry = useMemo(() => {
@@ -80,8 +191,14 @@ function TerrainSurface({ terrain, onPlace }: { terrain: ParcelTerrain; onPlace:
       if (!insideTerrainParcel(p, grid)) color.lerp(new Color(COLOR["lot-chalk"]), 0.65);
       return [color.r, color.g, color.b];
     }));
-    return { positions, colors, indices: new Uint16Array(terrainTriangles(grid)) };
+    const indices = new Uint16Array(terrainTriangles(grid));
+    const normals = computeTerrainVertexNormals(positions, indices);
+    return { positions, colors, indices, normals };
   }, [grid, elevations]);
+  const contourSegments = useMemo(
+    () => (showContours ? buildTerrainContourSegments(terrain) : []),
+    [terrain, showContours],
+  );
   const boundaryLines = useMemo(() => grid.rings.map((ring) => {
     const points: [number, number, number][] = [];
     for (let i = 0; i < ring.length - 1; i++) {
@@ -99,19 +216,26 @@ function TerrainSurface({ terrain, onPlace }: { terrain: ParcelTerrain; onPlace:
   const high = sampledParcel.reduce<typeof sampledParcel[number] | null>((best, p) => !best || p.height > best.height ? p : best, null);
   return (
     <>
-      <mesh onClick={(event: ThreeEvent<MouseEvent>) => {
-        if (event.delta > 5) return;
-        event.stopPropagation();
-        onPlace({ x: event.point.x, z: event.point.z });
-      }}>
+      <mesh
+        receiveShadow
+        onClick={(event: ThreeEvent<MouseEvent>) => {
+          if (event.delta > 5) return;
+          event.stopPropagation();
+          onPlace({ x: event.point.x, z: event.point.z });
+        }}
+      >
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[geometry.positions, 3]} />
+          <bufferAttribute attach="attributes-normal" args={[geometry.normals, 3]} />
           <bufferAttribute attach="attributes-color" args={[geometry.colors, 3]} />
           <bufferAttribute attach="index" args={[geometry.indices, 1]} />
         </bufferGeometry>
-        <meshBasicMaterial vertexColors side={DoubleSide} />
+        <meshStandardMaterial vertexColors roughness={0.88} metalness={0.04} side={DoubleSide} />
       </mesh>
       {Array.from({ length: grid.size }, (_, row) => <Line key={`grid-${row}`} points={grid.points.slice(row * grid.size, (row + 1) * grid.size).map((p, col) => [p.x, elevations[row * grid.size + col] * FEET_PER_METER - base + 0.06, p.z] as [number, number, number])} color={COLOR["lot-line"]} lineWidth={1} />)}
+      {contourSegments.map((segment, i) => (
+        <Line key={`contour-${i}`} points={segment} color={COLOR["lot-stone"]} lineWidth={1.25} />
+      ))}
       {boundaryLines.map((points, i) => <Line key={i} points={points} color={COLOR["lot-orange-ink"]} lineWidth={2} />)}
       <Line points={[[0, 1, -grid.depth / 2 - 5], [0, 1, -grid.depth / 2 - 15], [-2, 1, -grid.depth / 2 - 12], [0, 1, -grid.depth / 2 - 15], [2, 1, -grid.depth / 2 - 12]]} color={COLOR["lot-ink"]} lineWidth={2} />
       {low && high && high.height - low.height >= 0.1 && [low, high].map((point, i) => <TerrainLabel key={i} position={[point.x, point.height - base + 3, point.z]} width={Math.max(grid.width, grid.depth) * 0.22} text={i === 0 ? "Lower sample" : `+${(high.height - low.height).toFixed(1)} ft`} />)}
@@ -154,6 +278,7 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
   const [placeOnClick, setPlaceOnClick] = useState(false);
   const [notice, setNotice] = useState("");
   const [topView, setTopView] = useState(false);
+  const [showContours, setShowContours] = useState(true);
   const { grid, elevations } = terrain;
   const base = Math.min(...elevations) * FEET_PER_METER;
   const relief = (Math.max(...elevations) - Math.min(...elevations)) * FEET_PER_METER;
@@ -184,14 +309,25 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line px-3 py-2 text-xs">
         <p className="tabular-nums">{parcelRelief === null ? "Parcel height range unavailable" : `About ${parcelRelief.toFixed(1)} ft between sampled parcel points`}</p>
-        <Button size="xs" variant="secondary" onClick={() => setTopView((value) => !value)}>{topView ? "Angled view" : "Top view"}</Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="xs"
+            variant={showContours ? "selected" : "secondary"}
+            aria-pressed={showContours}
+            onClick={() => setShowContours((value) => !value)}
+          >
+            Contours
+          </Button>
+          <Button size="xs" variant="secondary" onClick={() => setTopView((value) => !value)}>{topView ? "Angled view" : "Top view"}</Button>
+        </div>
       </div>
       <div className="relative min-h-[280px] flex-1" data-testid="terrain-canvas">
-        <Canvas frameloop="demand" dpr={[1, 1.5]} camera={{ position: [span, span + sceneHeight, span], fov: 45, near: 0.1, far: span * 20 }}>
+        <Canvas shadows frameloop="demand" dpr={[1, 1.5]} camera={{ position: [span, span + sceneHeight, span], fov: 45, near: 0.1, far: span * 20 }}>
           <color attach="background" args={[COLOR["lot-chalk"]]} />
-          <ambientLight intensity={1.8} />
-          <directionalLight position={[span, span * 2, span]} intensity={2} />
-          <TerrainSurface terrain={terrain} onPlace={(p) => { if (placeOnClick) move({ ...pose, ...p }); }} />
+          <ambientLight intensity={1.3} />
+          <hemisphereLight args={[COLOR["lot-chalk"], COLOR["lot-stone-soft"], 0.65]} />
+          <directionalLight castShadow position={[span, span * 2, span]} intensity={1.8} />
+          <TerrainSurface terrain={terrain} showContours={showContours} onPlace={(p) => { if (placeOnClick) move({ ...pose, ...p }); }} />
           {footprint && (
             <>
               <group position={[pose.x, footprint.maxFeet - base + 0.25, pose.z]} rotation={[0, -pose.rotationDeg * Math.PI / 180, 0]}>

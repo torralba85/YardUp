@@ -10,8 +10,8 @@ const ESRI_ATTRIBUTION =
   "Imagery: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 const TIMEOUT_MS = 5000;
 
-/** Zoom level for the parcel view; AerialView's overlay projection assumes it. */
-const ZOOM = 19;
+/** Default zoom level for the parcel view; AerialView's overlay projection reads X-Aerial-Zoom. */
+const DEFAULT_ZOOM = 19;
 /** Retina factor; matches AerialView's SCALE and Google's scale=2. */
 const SCALE = 2;
 /** WGS84 / Web Mercator (EPSG:3857) equatorial radius in meters. */
@@ -54,12 +54,14 @@ function aerialFallbackResponse(reason: "unconfigured" | "upstream") {
 function imageResponse(
   image: AerialImage,
   provider: "google" | "esri",
+  resolvedZoom: number,
   attribution?: string,
 ) {
   const headers: Record<string, string> = {
     "Content-Type": image.contentType,
     "Cache-Control": "private, max-age=86400",
     "X-Aerial-Provider": provider,
+    "X-Aerial-Zoom": String(resolvedZoom),
   };
   if (attribution) headers["X-Aerial-Attribution"] = attribution;
   return new NextResponse(image.buffer, { status: 200, headers });
@@ -104,10 +106,11 @@ async function fetchGoogleStatic(
   w: number,
   h: number,
   mapsKey: string,
+  zoom: number = DEFAULT_ZOOM,
 ): Promise<AerialImage | null> {
   const url = new URL(MAPS_STATIC_API);
   url.searchParams.set("center", `${lat},${lng}`);
-  url.searchParams.set("zoom", String(ZOOM));
+  url.searchParams.set("zoom", String(zoom));
   url.searchParams.set("size", `${w}x${h}`);
   url.searchParams.set("maptype", "satellite");
   url.searchParams.set("scale", String(SCALE)); // retina
@@ -128,19 +131,19 @@ async function fetchGoogleStatic(
 
 /**
  * Web Mercator (EPSG:3857) bbox covering the same ground extent as a Google
- * Static Maps image centered on lat/lng at {@link ZOOM}. Both providers use
+ * Static Maps image centered on lat/lng at {@link zoom}. Both providers use
  * the standard 256px tile pyramid, so an Esri export of this bbox at
  * `w*SCALE x h*SCALE` pixels is pixel-equivalent to the Google view — which
  * keeps AerialView's latLngToPixel overlay projection accurate.
  */
-function mercatorBbox(lat: number, lng: number, w: number, h: number): string {
+function mercatorBbox(lat: number, lng: number, w: number, h: number, zoom: number = DEFAULT_ZOOM): string {
   const clampedLat = Math.min(Math.max(lat, -MAX_MERCATOR_LAT), MAX_MERCATOR_LAT);
   const x = (lng * Math.PI * EARTH_RADIUS_M) / 180;
   const y =
     Math.log(Math.tan(Math.PI / 4 + (clampedLat * Math.PI) / 360)) *
     EARTH_RADIUS_M;
   // Meters per CSS pixel at this zoom in Mercator units.
-  const resolution = (2 * Math.PI * EARTH_RADIUS_M) / 256 / 2 ** ZOOM;
+  const resolution = (2 * Math.PI * EARTH_RADIUS_M) / 256 / 2 ** zoom;
   const halfW = (w / 2) * resolution;
   const halfH = (h / 2) * resolution;
   return [x - halfW, y - halfH, x + halfW, y + halfH]
@@ -179,9 +182,10 @@ async function fetchEsriExport(
   lng: number,
   w: number,
   h: number,
+  zoom: number = DEFAULT_ZOOM,
 ): Promise<AerialImage | null> {
   const url = new URL(ESRI_EXPORT_API);
-  url.searchParams.set("bbox", mercatorBbox(lat, lng, w, h));
+  url.searchParams.set("bbox", mercatorBbox(lat, lng, w, h, zoom));
   url.searchParams.set("bboxSR", "3857");
   url.searchParams.set("imageSR", "3857");
   url.searchParams.set("size", `${w * SCALE},${h * SCALE}`);
@@ -202,19 +206,24 @@ async function fetchEsriExport(
 }
 
 /**
- * GET /api/aerial?lat={lat}&lng={lng}&w={width}&h={height}
+ * GET /api/aerial?lat={lat}&lng={lng}&w={width}&h={height}&zoom={18..20}
  *
  * Returns a satellite image centered on the parcel. Tries Google Maps Static
  * first (proxied server-side so GOOGLE_MAPS_API_KEY is never exposed to the
- * browser), then falls back to the keyless Esri World Imagery export, and
- * only serves the SVG placeholder when both providers fail. Raw image bytes
- * are returned with the correct Content-Type; X-Aerial-Provider identifies
- * the source.
+ * browser), automatically stepping down from zoom 20 to zoom 19 if high-zoom
+ * tiles are unavailable, then falls back to the keyless Esri World Imagery
+ * export, and only serves the SVG placeholder when both providers fail.
+ * Raw image bytes are returned with the correct Content-Type; X-Aerial-Provider
+ * and X-Aerial-Zoom identify the source and effective zoom level.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const wStr = searchParams.get("w") ?? "800";
   const hStr = searchParams.get("h") ?? "540";
+  const zoomParam = searchParams.get("zoom");
+  const requestedZoom = zoomParam
+    ? Math.min(Math.max(parseInt(zoomParam, 10) || DEFAULT_ZOOM, 18), 20)
+    : DEFAULT_ZOOM;
 
   const limited = checkRateLimit(request, {
     limit: 120,
@@ -232,12 +241,17 @@ export async function GET(request: NextRequest) {
 
   const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
   if (mapsKey) {
-    const googleImage = await fetchGoogleStatic(lat, lng, w, h, mapsKey);
-    if (googleImage) return imageResponse(googleImage, "google");
+    const googleImage = await fetchGoogleStatic(lat, lng, w, h, mapsKey, requestedZoom);
+    if (googleImage) return imageResponse(googleImage, "google", requestedZoom);
+
+    if (requestedZoom > DEFAULT_ZOOM) {
+      const fallbackZoomImage = await fetchGoogleStatic(lat, lng, w, h, mapsKey, DEFAULT_ZOOM);
+      if (fallbackZoomImage) return imageResponse(fallbackZoomImage, "google", DEFAULT_ZOOM);
+    }
   }
 
-  const esriImage = await fetchEsriExport(lat, lng, w, h);
-  if (esriImage) return imageResponse(esriImage, "esri", ESRI_ATTRIBUTION);
+  const esriImage = await fetchEsriExport(lat, lng, w, h, DEFAULT_ZOOM);
+  if (esriImage) return imageResponse(esriImage, "esri", DEFAULT_ZOOM, ESRI_ATTRIBUTION);
 
   return aerialFallbackResponse(mapsKey ? "upstream" : "unconfigured");
 }

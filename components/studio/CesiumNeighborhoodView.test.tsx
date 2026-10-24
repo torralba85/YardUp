@@ -1,7 +1,7 @@
 import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import CesiumNeighborhoodView from "./CesiumNeighborhoodView";
+import CesiumNeighborhoodView, { configureCesiumSceneQuality, type CesiumModule, type CesiumViewerInstance } from "./CesiumNeighborhoodView";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets } from "@/lib/feasibility";
 import { getScenePlacement } from "@/lib/site-fit";
@@ -93,6 +93,8 @@ const mockCesium = {
   LabelStyle: { FILL_AND_OUTLINE: 0 },
   VerticalOrigin: { BOTTOM: 0 },
   HeightReference: { RELATIVE_TO_GROUND: 2 },
+  ClassificationType: { BOTH: 2 },
+  Tonemapper: { ACES: 3 },
   Math: { toRadians: (deg: number) => (deg * Math.PI) / 180 },
   createOsmBuildingsAsync: vi.fn().mockResolvedValue({}),
   createGooglePhotorealistic3DTileset: vi.fn().mockResolvedValue({
@@ -255,6 +257,67 @@ describe("CesiumNeighborhoodView", () => {
     });
   });
 
+  describe("scene quality & classification", () => {
+    it("configures HDR, ACES tonemapping, FXAA, and HBAO on photogrammetry scenes", () => {
+      const stages = {
+        fxaa: { enabled: false },
+        ambientOcclusion: {
+          enabled: false,
+          uniforms: {} as Record<string, number>,
+        },
+        tonemapper: undefined as number | undefined,
+        exposure: undefined as number | undefined,
+      };
+      const viewer = {
+        scene: {
+          primitives: { add: vi.fn() },
+          isDestroyed: () => false,
+          postProcessStages: stages,
+        },
+      } as unknown as CesiumViewerInstance;
+
+      configureCesiumSceneQuality(mockCesium as unknown as CesiumModule, viewer, true);
+
+      expect(viewer.scene.highDynamicRange).toBe(true);
+      expect(stages.fxaa.enabled).toBe(true);
+      expect(stages.ambientOcclusion.enabled).toBe(true);
+      expect(stages.ambientOcclusion.uniforms.intensity).toBe(2.2);
+      expect(stages.tonemapper).toBe(mockCesium.Tonemapper.ACES);
+      expect(stages.exposure).toBe(1.05);
+    });
+
+    it("classifies the parcel boundary polygon onto BOTH terrain and 3D Tiles when boundaryGeoJson is present", async () => {
+      renderView({
+        parcel: {
+          ...sampleParcel,
+          boundaryGeoJson: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [-122.3322, 47.6061],
+                [-122.3320, 47.6061],
+                [-122.3320, 47.6063],
+                [-122.3322, 47.6061],
+              ],
+            ],
+          },
+        },
+      });
+
+      await waitFor(() => {
+        expect(mockEntitiesAdd).toHaveBeenCalled();
+      });
+
+      const boundary = mockEntitiesAdd.mock.calls
+        .map((call) => call[0])
+        .find((options) => options.name === "Parcel Boundary") as
+        | { polygon: Record<string, unknown> }
+        | undefined;
+      expect(boundary).toBeDefined();
+      expect(boundary?.polygon.classificationType).toBe(mockCesium.ClassificationType.BOTH);
+    });
+  });
+
   describe("photorealistic basemap ladder", () => {
     it("falls back to OSM imagery and says so when no credentials are configured", async () => {
       renderView();
@@ -363,9 +426,9 @@ describe("CesiumNeighborhoodView", () => {
       expect(point.heightReference).toBe(mockCesium.HeightReference.RELATIVE_TO_GROUND);
     });
 
-    it("excludes our own geometry when re-measuring, so the ADU box is never sampled", async () => {
+    it("excludes our own geometry when re-measuring and re-frames the camera on refined ground", async () => {
       // Coarse reads one height, the close-range refinement disagrees by more than
-      // the threshold, so the scene is rebuilt on the fresher evidence.
+      // the threshold, so the scene and camera altitude are updated on the fresher evidence.
       mockSampleHeight = vi
         .fn()
         .mockReturnValueOnce(MOCK_GROUND_HEIGHT_M)
@@ -384,6 +447,10 @@ describe("CesiumNeighborhoodView", () => {
       expect(screen.getByTestId("cesium-ground-elevation")).toHaveTextContent(
         "Ground 287 ft above sea level",
       );
+      const destinations = mockCameraFlyTo.mock.calls.map(
+        (call) => (call[0]?.destination as { alt?: number })?.alt,
+      );
+      expect(destinations).toContain(MOCK_GROUND_HEIGHT_M + 9 + 280);
     });
 
     it("states that the ground is unknown instead of inventing a height", async () => {

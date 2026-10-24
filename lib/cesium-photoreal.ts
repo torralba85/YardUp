@@ -42,6 +42,14 @@ export const GOOGLE_PHOTOREAL_ION_ASSET_ID = 2275207;
 export const PHOTOREAL_CACHE_BYTES = 1536 * 1024 * 1024;
 export const PHOTOREAL_CACHE_OVERFLOW_BYTES = 1024 * 1024 * 1024;
 
+/**
+ * Target screen-space error (in pixels) for photogrammetry refinement. Lowering
+ * from Cesium's default 16 to 8 selects one finer level of detail on roofs,
+ * eaves, and yard trees around the target parcel while foveated + dynamic SSE
+ * relax peripheral/horizon tiles automatically.
+ */
+export const PHOTOREAL_MAX_SCREEN_SPACE_ERROR = 8;
+
 export type PhotorealRoute = "google-direct" | "google-ion" | "osm";
 
 export interface PhotorealCredentials {
@@ -138,12 +146,8 @@ export async function createGoogleDirectTileset(
   if (typeof Cesium.createGooglePhotorealistic3DTileset !== "function") {
     throw new Error("This CesiumJS build has no createGooglePhotorealistic3DTileset helper");
   }
-  // Tileset budgets are passed explicitly rather than inherited from the
-  // helper's defaults. Verified against the CesiumJS 1.144 source
-  // (Source/Scene/createGooglePhotorealistic3DTileset.js): the helper applies
-  // cacheBytes ?? 1536 MiB, maximumCacheOverflowBytes ?? 1024 MiB, and
-  // enableCollision ?? true — the same values used here and on the ion route.
-  // Explicit values keep the two routes identical even if upstream defaults change.
+  // Tileset budgets and LOD options are passed explicitly rather than inherited
+  // from the helper's defaults so the direct and ion routes behave identically.
   return Cesium.createGooglePhotorealistic3DTileset(
     {
       key: googleKey,
@@ -152,6 +156,10 @@ export async function createGoogleDirectTileset(
     {
       cacheBytes: PHOTOREAL_CACHE_BYTES,
       maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
+      maximumScreenSpaceError: PHOTOREAL_MAX_SCREEN_SPACE_ERROR,
+      dynamicScreenSpaceError: true,
+      foveatedScreenSpaceError: true,
+      preloadFlightDestinations: true,
       enableCollision: true,
       showCreditsOnScreen: true,
     },
@@ -177,11 +185,15 @@ export async function createGoogleIonTileset(
   const resource = await Cesium.IonResource.fromAssetId(GOOGLE_PHOTOREAL_ION_ASSET_ID, {
     accessToken: token,
   });
-  // Match the rendering and cache defaults of Cesium's own Google helper, so the
-  // two routes behave the same once loaded.
+  // Match the rendering, LOD, and cache defaults of the direct Google route so
+  // the two routes behave the same once loaded.
   return Cesium.Cesium3DTileset.fromUrl(resource, {
     cacheBytes: PHOTOREAL_CACHE_BYTES,
     maximumCacheOverflowBytes: PHOTOREAL_CACHE_OVERFLOW_BYTES,
+    maximumScreenSpaceError: PHOTOREAL_MAX_SCREEN_SPACE_ERROR,
+    dynamicScreenSpaceError: true,
+    foveatedScreenSpaceError: true,
+    preloadFlightDestinations: true,
     enableCollision: true,
     showCreditsOnScreen: true,
   });
