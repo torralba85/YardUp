@@ -23,10 +23,19 @@ import {
 } from "@/lib/feasibility";
 import { bedroomClassForFootprint } from "@/lib/market/bedroom";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import { resolveStaticMarket } from "@/lib/server/market/static-market";
 
 /** County and size used for the worked example. */
 const EXAMPLE_COUNTY = "san-diego";
 const EXAMPLE_SIZE = 600;
+
+/**
+ * County-level Studio inputs for the comparison. Static resolution reads only
+ * state, county and ZIP; the coordinates (county seats) are required by the
+ * type but unused. No ZIP is given, so rent resolves at the county tier.
+ */
+const STUDIO_SAN_DIEGO = { lat: 32.7157, lng: -117.1611, state: "CA", county: "San Diego" };
+const STUDIO_LOS_ANGELES = { lat: 34.0522, lng: -118.2437, state: "CA", county: "Los Angeles" };
 
 const HUD_FMR_URL = "https://www.huduser.gov/portal/datasets/fmr.html";
 const HCD_HANDBOOK_URL =
@@ -73,8 +82,11 @@ function bedroomClassSentence(sizes: readonly number[]): string {
 
 /**
  * The "How we estimate" methodology article. Every number is read from the
- * finance engine and its exported constants at build time, so the page
- * cannot drift from what the Studio, calculator and cost guides compute.
+ * finance engine, its exported constants and the Studio's static market
+ * resolver at build time, so the page cannot drift from what the Studio,
+ * calculator and cost guides compute. The guides and calculator run the
+ * engine on the national cost base; the Studio adds the address's regional
+ * cost factor and expense ratio, and the page says so.
  */
 export function AduMethodology() {
   const assumptions = defaultFinancialAssumptions;
@@ -103,6 +115,27 @@ export function AduMethodology() {
   );
   const budgetRows = constructionBudgetRows(example.costBreakdown).filter(
     ([, amount]) => amount !== 0,
+  );
+
+  // The same unit through the Studio's county-level inputs for an address.
+  const studioSanDiego = resolveStaticMarket(STUDIO_SAN_DIEGO);
+  const studioLosAngeles = resolveStaticMarket(STUDIO_LOS_ANGELES);
+  const studioRent = studioSanDiego.rentByBedroom[exampleRow.bedroom];
+  const studioOpex =
+    studioSanDiego.operatingExpenseRatio ?? assumptions.operatingExpenseRatio;
+  const studioExample = calculateFinance(
+    EXAMPLE_SIZE,
+    { ...defaultAduConfig, footprint: EXAMPLE_SIZE },
+    assumptions,
+    {
+      conservative: studioRent,
+      market: Math.round(studioRent * RENT_SCENARIO_SPREADS.market),
+      optimistic: Math.round(studioRent * RENT_SCENARIO_SPREADS.optimistic),
+    },
+    {
+      costMultiplier: studioSanDiego.costMultiplier,
+      operatingExpenseRatio: studioOpex,
+    },
   );
 
   const articleJsonLd = {
@@ -138,10 +171,11 @@ export function AduMethodology() {
       <div className="space-y-4">
         <p className="lf-body text-lg leading-relaxed">
           Every build-cost, rent and payback figure on LotFoundry comes from
-          one planning model: the Studio, the free calculator and the city cost
-          guides all run it. This page sets out its formulas, where each input
-          comes from and what it leaves out, so you can check a number before
-          you rely on it.
+          one planning model. The free calculator and the city cost guides run
+          it with countywide inputs; the Studio runs it with inputs for your
+          address. This page sets out the formulas, where each input comes
+          from, how the Studio&apos;s inputs differ and what the model leaves
+          out, so you can check a number before you rely on it.
         </p>
         <p className="lf-body text-lg leading-relaxed">
           The figures are planning estimates for a new detached ADU. They are
@@ -193,11 +227,12 @@ export function AduMethodology() {
           </p>
           <p>
             The construction base is a national LotFoundry planning
-            assumption, not a survey of contractor bids in any one city. The
-            model has a regional cost factor, but it stays at 1.0 everywhere
-            until a regional factor can be verified, so a San Diego estimate
-            uses the same construction base as a Los Angeles one. Treat build
-            cost as the least local number on any LotFoundry page.
+            assumption, not a survey of contractor bids in any one city. On
+            the calculator and the city cost guides, the regional cost factor
+            stays at 1.0, so a San Diego guide uses the same construction base
+            as a Los Angeles one. The Studio applies a regional factor for your
+            address, described below. Either way, treat build cost as the
+            least local number on the page.
           </p>
           <p>Not included, so price them from quotes for your lot:</p>
         </div>
@@ -231,9 +266,10 @@ export function AduMethodology() {
             and {RENT_SCENARIO_SPREADS.optimistic}.
           </p>
           <p>
-            In the Studio, every result carries a provenance line naming its
-            rent source, data vintage and confidence, so you can see which
-            anchor a figure used.
+            The calculator and cost guides use the county FMR. The Studio looks
+            for a more specific source first, as described below, and every
+            Studio result carries a provenance line naming its rent source,
+            data vintage and confidence.
           </p>
         </div>
       </section>
@@ -244,9 +280,10 @@ export function AduMethodology() {
         </h2>
         <div className="lf-body mt-3 space-y-3 text-lot-stone">
           <p>
-            The model sets aside {percent(assumptions.operatingExpenseRatio)} of
-            gross rent for vacancy, management, maintenance, insurance,
-            utilities and property tax. What remains is net operating income
+            On the calculator and cost guides, the model sets aside{" "}
+            {percent(assumptions.operatingExpenseRatio)} of gross rent for
+            vacancy, management, maintenance, insurance, utilities and property
+            tax. What remains is net operating income
             (NOI). Simple payback divides the cost midpoint by one year of NOI.
           </p>
           <p>
@@ -318,6 +355,86 @@ export function AduMethodology() {
           </Link>
           .
         </p>
+      </section>
+
+      <section aria-labelledby="method-studio" className="mt-12">
+        <h2 id="method-studio" className="lf-card-heading text-lot-ink">
+          How the Studio adjusts the inputs for your address
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          The Studio uses the same formulas, but resolves three inputs for the
+          specific address:
+        </p>
+        <ul className="lf-body mt-3 list-disc space-y-2 pl-6 text-lot-stone">
+          <li>
+            A regional construction factor from LotFoundry&apos;s seed index of
+            factors by ZIP, county and state:{" "}
+            {studioSanDiego.costMultiplier.toFixed(2)} for San Diego County and{" "}
+            {studioLosAngeles.costMultiplier.toFixed(2)} for Los Angeles County.
+            These are curated planning figures, not verified bids, and the
+            Studio&apos;s provenance line marks costs and expenses as planning
+            assumptions.
+          </li>
+          <li>
+            A state-level operating-expense ratio:{" "}
+            {percent(studioOpex)} of gross rent in
+            California.
+          </li>
+          <li>
+            Rent from live comparable listings when that source is available,
+            otherwise the most specific HUD FMR on file: ZIP, then county, then
+            state, then the national figure.
+          </li>
+        </ul>
+        <p className="lf-body mt-3 text-lot-stone">
+          So a Studio result for a San Diego County address will usually show a
+          higher build cost than the guide tables. The same{" "}
+          {EXAMPLE_SIZE.toLocaleString("en-US")} sq ft unit, with county-level
+          rent and no live comparables:
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className={tableClass}>
+            <caption className="sr-only">
+              The worked example on the guides and calculator compared with the
+              Studio&apos;s county-level inputs
+            </caption>
+            <thead>
+              <tr className="border-b border-lot-line">
+                <th scope="col" className={thClass}>
+                  <span className="sr-only">Figure</span>
+                </th>
+                <th scope="col" className={`${thClass} text-right`}>Guides and calculator</th>
+                <th scope="col" className={`${thClass} text-right`}>Studio, San Diego County</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className={thClass}>Regional cost factor</th>
+                <td className={tdClass}>1.00</td>
+                <td className={tdClass}>{studioSanDiego.costMultiplier.toFixed(2)}</td>
+              </tr>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className={thClass}>Cost range</th>
+                <td className={tdClass}>
+                  {formatCurrency(example.costLow)}–{formatCurrency(example.costHigh)}
+                </td>
+                <td className={tdClass}>
+                  {formatCurrency(studioExample.costLow)}–{formatCurrency(studioExample.costHigh)}
+                </td>
+              </tr>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className={thClass}>Operating expenses</th>
+                <td className={tdClass}>{percent(example.operatingExpenseRatio)}</td>
+                <td className={tdClass}>{percent(studioExample.operatingExpenseRatio)}</td>
+              </tr>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className={thClass}>Simple payback</th>
+                <td className={tdClass}>{example.paybackYears.toFixed(1)} years</td>
+                <td className={tdClass}>{studioExample.paybackYears.toFixed(1)} years</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section aria-labelledby="method-fees" className="mt-12">
