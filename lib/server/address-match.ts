@@ -39,8 +39,8 @@ export interface StreetAddress {
 export interface SitusFieldNames {
   /** Official parcel identifier (APN/PIN). */
   id: string;
-  /** Situs street line, e.g. "1421 NE 88TH ST". */
-  line: string;
+  /** Situs street line, or ordered address-part fields joined with spaces. */
+  line: string | readonly string[];
   /** City-like attributes worth comparing (postal city, jurisdiction, ...). */
   cities: readonly string[];
   zip?: string;
@@ -320,9 +320,11 @@ export function enrichStreetAddress(requestedText: string, providerText: string)
  * the allowlisted attributes and nothing else. Never `*`.
  */
 export function situsOutFields(fields: SitusFieldNames): string {
+  const lineFields =
+    typeof fields.line === "string" ? [fields.line] : fields.line;
   const names = [
     fields.id,
-    fields.line,
+    ...lineFields,
     ...fields.cities,
     fields.zip,
     fields.state,
@@ -360,6 +362,15 @@ export function readSitusAddress(
   return address;
 }
 
+function cleanSitusCity(raw: string): string {
+  let city = raw.trim().replace(/(?:,\s*|\s+)\d{5}(?:-\d{4})?$/, "").trim();
+  const stateSuffix = /^(.*?)[,\s]+([A-Za-z]{2})$/.exec(city);
+  if (stateSuffix && STATE_CODES.has(stateSuffix[2].toUpperCase())) {
+    city = stateSuffix[1].trim();
+  }
+  return city;
+}
+
 function readSitusFields(
   attributes: Record<string, unknown> | undefined,
   fields: SitusFieldNames,
@@ -376,6 +387,14 @@ function readSitusFields(
     const value = read(name);
     return typeof value === "string" && value.trim() ? value.trim() : undefined;
   };
+  const tokenText = (name: string | undefined): string | undefined => {
+    const value = read(name);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      return String(value);
+    }
+    return undefined;
+  };
 
   const rawId = read(fields.id);
   const id =
@@ -384,16 +403,26 @@ function readSitusFields(
       : typeof rawId === "number" && Number.isFinite(rawId) && rawId !== 0
         ? String(rawId)
         : "";
-  const line = text(fields.line);
+  const line =
+    typeof fields.line === "string"
+      ? text(fields.line)
+      : fields.line
+          .map((part) => tokenText(part))
+          .filter((part): part is string => Boolean(part))
+          .join(" ") || undefined;
   if (!line) return null;
 
-  const zip = /^(\d{5})/.exec(text(fields.zip) ?? "")?.[1];
+  const zip = /^(\d{5})/.exec(tokenText(fields.zip) ?? "")?.[1];
   const stateText = text(fields.state)?.toUpperCase();
   const state = stateText && STATE_CODES.has(stateText) ? stateText : undefined;
   return {
     id,
     line,
-    cities: fields.cities.flatMap((name) => text(name) ?? []),
+    cities: fields.cities.flatMap((name) => {
+      const val = text(name);
+      const cleaned = val ? cleanSitusCity(val) : "";
+      return cleaned ? [cleaned] : [];
+    }),
     ...(zip ? { zip } : {}),
     ...(state ? { state } : {}),
   };

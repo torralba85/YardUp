@@ -49,6 +49,30 @@ describe("resolveStaticMarket", () => {
     expect(la.costMultiplier).toBeGreaterThan(austin.costMultiplier);
   });
 
+  it("resolves county-level HUD FMRs and regional cost multipliers across all 12 covered California counties", () => {
+    const caCounties = [
+      "Los Angeles",
+      "Orange",
+      "San Diego",
+      "Ventura",
+      "Riverside",
+      "San Bernardino",
+      "Santa Barbara",
+      "Santa Clara",
+      "San Mateo",
+      "Alameda",
+      "Contra Costa",
+      "Sacramento",
+    ];
+    for (const county of caCounties) {
+      const md = resolveStaticMarket({ lat: 34.0, lng: -118.0, county, state: "CA" });
+      expect(md.source, `${county} source`).toBe("hud-county");
+      expect(md.confidence, `${county} confidence`).toBe("medium");
+      expect(md.rentByBedroom["1br"], `${county} 1br rent`).toBeGreaterThan(1700);
+      expect(md.costMultiplier, `${county} costMultiplier`).toBeGreaterThan(1.1);
+    }
+  });
+
   it("localizes the operating-expense ratio and discloses its breakdown", () => {
     const ca = resolveStaticMarket({ lat: 0, lng: 0, state: "CA" });
     const tx = resolveStaticMarket({ lat: 0, lng: 0, state: "TX" });

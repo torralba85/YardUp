@@ -13,6 +13,9 @@ function geojsonResponse(geometry: unknown, properties: Record<string, unknown> 
 const KING_POINT = { lat: 47.6806478, lng: -122.3250591 };
 const MULTNOMAH_POINT = { lat: 45.5137964, lng: -122.6293264 };
 const TRAVIS_POINT = { lat: 30.2531976, lng: -97.7679659 };
+const LA_POINT = { lat: 34.0522, lng: -118.2437 };
+const VENTURA_POINT = { lat: 34.2746, lng: -119.229 };
+const SAN_BERNARDINO_POINT = { lat: 34.1083, lng: -117.2898 };
 
 function polygonAt(point: { lat: number; lng: number }) {
   return { ...SEATTLE_POLYGON, coordinates: SEATTLE_POLYGON.coordinates.map((ring) => ring.map(([lng, lat]) => [lng + point.lng - KING_POINT.lng, lat + point.lat - KING_POINT.lat])) };
@@ -86,6 +89,29 @@ describe("fetchCountyParcel — routing", () => {
     );
     expect(travis?.areaField).toBe("GIS_acres");
     expect(travis?.areaUnit).toBe("acres");
+
+    const caCounties = [
+      "Los Angeles",
+      "San Diego",
+      "Orange",
+      "Riverside",
+      "San Bernardino",
+      "Ventura",
+      "Santa Barbara",
+      "Santa Clara",
+      "San Mateo",
+      "Alameda",
+      "Contra Costa",
+      "Sacramento",
+    ];
+    const caStatewideIndex = COUNTY_GIS_SOURCES.findIndex(
+      (source) => source.county === "California (statewide)",
+    );
+    for (const countyName of caCounties) {
+      const idx = COUNTY_GIS_SOURCES.findIndex((source) => source.county === countyName);
+      expect(idx, `${countyName} registered`).toBeGreaterThanOrEqual(0);
+      expect(idx, `${countyName} ahead of California (statewide)`).toBeLessThan(caStatewideIndex);
+    }
   });
 
   it("returns null immediately for a point outside every registered county", async () => {
@@ -119,6 +145,65 @@ describe("fetchCountyParcel — routing", () => {
       "Multnomah",
     );
     expect((await fetchCountyParcel(TRAVIS_POINT.lat, TRAVIS_POINT.lng))!.county).toBe("Travis");
+  });
+
+  it("routes a Los Angeles point to Los Angeles County and sums main building square footage", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(
+      geojsonResponse(polygonAt(LA_POINT), {
+        "Shape.STArea()": 7250.4,
+        SQFTmain1: 1680,
+        SQFTmain2: 420,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+    const result = await fetchCountyParcel(LA_POINT.lat, LA_POINT.lng);
+    expect(result).not.toBeNull();
+    expect(result!.county).toBe("Los Angeles");
+    expect(result!.lotAreaSqft).toBe(7250);
+    expect(result!.areaBasis).toBe("reported");
+    expect(result!.buildingSqft).toBe(2100);
+    const outFields = new URL(String(fetchSpy.mock.calls[0][0])).searchParams.get("outFields");
+    expect(outFields).toBe("Shape.STArea(),SQFTmain1,SQFTmain2,SQFTmain3,SQFTmain4,SQFTmain5");
+  });
+
+  it("extracts county zoning and building square footage when published (Ventura, San Bernardino)", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(
+        geojsonResponse(polygonAt(VENTURA_POINT), {
+          ACREAGE: "0.15",
+          SQ_FT_I: "1840",
+          ZONE: "R1-6",
+        }),
+      )
+      .mockResolvedValueOnce(
+        geojsonResponse(polygonAt(SAN_BERNARDINO_POINT), {
+          Acreage: 0.2,
+          Zoning: "CITY OF SAN BERNARDINO",
+        }),
+      );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const ventura = await fetchCountyParcel(VENTURA_POINT.lat, VENTURA_POINT.lng);
+    expect(ventura).toMatchObject({
+      county: "Ventura",
+      lotAreaSqft: 6534,
+      areaBasis: "reported",
+      buildingSqft: 1840,
+      zoning: "R1-6",
+    });
+
+    const sanBernardino = await fetchCountyParcel(
+      SAN_BERNARDINO_POINT.lat,
+      SAN_BERNARDINO_POINT.lng,
+    );
+    expect(sanBernardino).toMatchObject({
+      county: "San Bernardino",
+      lotAreaSqft: 8712,
+      areaBasis: "reported",
+    });
+    // Municipal placeholder strings ("CITY OF ...") must not be surfaced as a zoning code.
+    expect(sanBernardino!.zoning).toBeUndefined();
   });
 
   it("reserves budget for the statewide fallback when the county service hangs", async () => {

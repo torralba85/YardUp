@@ -76,6 +76,10 @@ export interface CountyGisSource {
   areaUnit?: "sqft" | "acres";
   /** Optional attribute holding the county name, for statewide layers. */
   countyField?: string;
+  /** Optional assessor attributes holding main building square footage (summed when multiple). */
+  buildingSqftFields?: readonly string[];
+  /** Optional attribute holding the parcel's zoning designation. */
+  zoningField?: string;
   /**
    * Official address-enriched endpoint for verifying that a parcel belongs to
    * a searched street address. Registered only where a publisher provides one;
@@ -138,6 +142,104 @@ export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
       "https://taxmaps.traviscountytx.gov/arcgis/rest/services/Parcels/MapServer/0/query",
     areaField: "GIS_acres",
     areaUnit: "acres",
+  },
+  // --- California county assessor / GIS layers -----------------------------
+  {
+    county: "Los Angeles",
+    bbox: { minLat: 33.7, maxLat: 34.83, minLng: -118.95, maxLng: -117.64 },
+    queryUrl:
+      "https://public.gis.lacounty.gov/public/rest/services/LACounty_Cache/LACounty_Parcel/MapServer/0/query",
+    areaField: "Shape.STArea()",
+    areaUnit: "sqft",
+    buildingSqftFields: ["SQFTmain1", "SQFTmain2", "SQFTmain3", "SQFTmain4", "SQFTmain5"],
+  },
+  {
+    county: "San Diego",
+    bbox: { minLat: 32.53, maxLat: 33.51, minLng: -117.6, maxLng: -116.08 },
+    queryUrl:
+      "https://gis-public.sandiegocounty.gov/arcgis/rest/services/cosd_warehouse/parcels_all_for_public_use/MapServer/0/query",
+    areaField: "ACREAGE",
+    areaUnit: "acres",
+  },
+  {
+    county: "Orange",
+    bbox: { minLat: 33.38, maxLat: 33.95, minLng: -118.12, maxLng: -117.41 },
+    queryUrl:
+      "https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/MapServer/0/query",
+  },
+  {
+    county: "Riverside",
+    bbox: { minLat: 33.42, maxLat: 34.08, minLng: -117.68, maxLng: -114.43 },
+    queryUrl:
+      "https://gis.countyofriverside.us/arcgis_mapping/rest/services/OpenData/Assessor/MapServer/50/query",
+    areaField: "SHAPE.STArea()",
+    areaUnit: "sqft",
+  },
+  {
+    county: "San Bernardino",
+    bbox: { minLat: 33.87, maxLat: 35.81, minLng: -117.8, maxLng: -114.13 },
+    queryUrl:
+      "https://services.arcgis.com/aA3snZwJfFkVyDuP/arcgis/rest/services/Parcels_for_San_Bernardino_County/FeatureServer/0/query",
+    areaField: "Acreage",
+    areaUnit: "acres",
+    zoningField: "Zoning",
+  },
+  {
+    county: "Ventura",
+    bbox: { minLat: 34.03, maxLat: 34.9, minLng: -119.48, maxLng: -118.63 },
+    queryUrl:
+      "https://maps.ventura.org/arcgis/rest/services/SDs/Parcels/MapServer/0/query",
+    areaField: "ACREAGE",
+    areaUnit: "acres",
+    buildingSqftFields: ["SQ_FT_I"],
+    zoningField: "ZONE",
+  },
+  {
+    county: "Santa Barbara",
+    bbox: { minLat: 34.35, maxLat: 35.12, minLng: -120.68, maxLng: -119.44 },
+    queryUrl:
+      "https://services1.arcgis.com/Ezk9fcjSUkeadg6u/arcgis/rest/services/SBC_Situs_Parcels/FeatureServer/29/query",
+    areaField: "Acreage",
+    areaUnit: "acres",
+  },
+  {
+    county: "Santa Clara",
+    bbox: { minLat: 36.89, maxLat: 37.49, minLng: -122.21, maxLng: -121.2 },
+    queryUrl:
+      "https://services8.arcgis.com/fpjs8A5Vtkshblnd/arcgis/rest/services/Santa_Clara_County_Parcels/FeatureServer/0/query",
+    areaField: "shape_area",
+    areaUnit: "sqft",
+  },
+  {
+    county: "San Mateo",
+    bbox: { minLat: 37.1, maxLat: 37.71, minLng: -122.52, maxLng: -122.08 },
+    queryUrl:
+      "https://gis.smcgov.org/maps/rest/services/PLANNING/COUNTY_PARCELS/FeatureServer/0/query",
+    areaField: "LANDAREA",
+    areaUnit: "sqft",
+  },
+  {
+    county: "Alameda",
+    bbox: { minLat: 37.45, maxLat: 37.91, minLng: -122.35, maxLng: -121.46 },
+    queryUrl:
+      "https://services5.arcgis.com/ROBnTHSNjoZ2Wm1P/arcgis/rest/services/Parcels/FeatureServer/0/query",
+  },
+  {
+    county: "Contra Costa",
+    bbox: { minLat: 37.71, maxLat: 38.1, minLng: -122.42, maxLng: -121.53 },
+    queryUrl:
+      "https://gis.cccounty.us/arcgis/rest/services/CCMAP/Assessment_Parcels_ArcPro/MapServer/0/query",
+    areaField: "ACREAGE",
+    areaUnit: "acres",
+    buildingSqftFields: ["BLDG_SQFT"],
+  },
+  {
+    county: "Sacramento",
+    bbox: { minLat: 38.01, maxLat: 38.74, minLng: -121.86, maxLng: -121.02 },
+    queryUrl:
+      "https://services1.arcgis.com/5NARefyPVtAeuJPU/arcgis/rest/services/Parcels/FeatureServer/0/query",
+    areaField: "LOT_SIZE",
+    areaUnit: "sqft",
   },
   // --- Statewide backstops -------------------------------------------------
   {
@@ -240,6 +342,10 @@ export interface CountyParcelResult {
   lotAreaSqft: number | null;
   /** Assessor/GIS attribute versus a calculation from the selected polygon. */
   areaBasis?: "reported" | "geometry";
+  /** Assessor-reported building/improvement area in sq ft, when published by the county layer. */
+  buildingSqft?: number | null;
+  /** Zoning designation when published by the county layer. */
+  zoning?: string | null;
 }
 
 export interface CountyParcelLookup {
@@ -333,7 +439,12 @@ async function queryGisSource(
     returnGeometry: "true",
     outSR: "4326",
   });
-  const outFields = [source.areaField, source.countyField].filter(Boolean);
+  const outFields = [
+    source.areaField,
+    source.countyField,
+    ...(source.buildingSqftFields ?? []),
+    source.zoningField,
+  ].filter(Boolean);
   if (outFields.length > 0) params.set("outFields", outFields.join(","));
 
   try {
@@ -436,7 +547,21 @@ function buildParcelResult(
     readCountyField(feature.attributes, source) ??
     source.county;
 
-  return { county, polygon, lotAreaSqft, areaBasis: partCount === 1 && providerArea !== null ? "reported" : "geometry" };
+  const buildingSqft =
+    readBuildingSqftFields(feature.properties, source) ??
+    readBuildingSqftFields(feature.attributes, source);
+  const zoning =
+    readZoningField(feature.properties, source) ??
+    readZoningField(feature.attributes, source);
+
+  return {
+    county,
+    polygon,
+    lotAreaSqft,
+    areaBasis: partCount === 1 && providerArea !== null ? "reported" : "geometry",
+    ...(buildingSqft !== null ? { buildingSqft } : {}),
+    ...(zoning !== null ? { zoning } : {}),
+  };
 }
 
 function providerAttempt(
@@ -1225,24 +1350,74 @@ function partAreaSqft(part: GeoJsonPolygon): number {
   return Math.max(outerArea - holeArea, 0);
 }
 
-function readAreaField(
+function readPropertyCaseInsensitive(
   properties: Record<string, unknown> | undefined,
-  source: CountyGisSource,
-): number | null {
-  if (!source.areaField || !properties) return null;
-  const raw = properties[source.areaField];
-  // GIS attribute tables often store numerics as strings. Number() rejects
-  // ambiguous values like "1,234" so bad data falls back to computed area.
+  fieldName: string | undefined,
+): unknown {
+  if (!properties || !fieldName) return undefined;
+  if (fieldName in properties) return properties[fieldName];
+  const target = fieldName.toUpperCase();
+  for (const [key, value] of Object.entries(properties)) {
+    if (key.toUpperCase() === target) return value;
+  }
+  return undefined;
+}
+
+function parsePositiveNumber(raw: unknown): number | null {
   const value =
     typeof raw === "number"
       ? raw
       : typeof raw === "string" && raw.trim() !== ""
         ? Number(raw)
         : NaN;
-  if (!Number.isFinite(value) || value <= 0) return null;
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function readAreaField(
+  properties: Record<string, unknown> | undefined,
+  source: CountyGisSource,
+): number | null {
+  const raw = readPropertyCaseInsensitive(properties, source.areaField);
+  // GIS attribute tables often store numerics as strings. Number() rejects
+  // ambiguous values like "1,234" so bad data falls back to computed area.
+  const value = parsePositiveNumber(raw);
+  if (value === null) return null;
   return Math.round(
     source.areaUnit === "acres" ? value * SQFT_PER_ACRE : value,
   );
+}
+
+function readBuildingSqftFields(
+  properties: Record<string, unknown> | undefined,
+  source: CountyGisSource,
+): number | null {
+  if (!source.buildingSqftFields?.length || !properties) return null;
+  let total = 0;
+  let found = false;
+  for (const fieldName of source.buildingSqftFields) {
+    const value = parsePositiveNumber(
+      readPropertyCaseInsensitive(properties, fieldName),
+    );
+    if (value !== null) {
+      total += value;
+      found = true;
+    }
+  }
+  return found && total > 0 ? Math.round(total) : null;
+}
+
+function readZoningField(
+  properties: Record<string, unknown> | undefined,
+  source: CountyGisSource,
+): string | null {
+  const raw = readPropertyCaseInsensitive(properties, source.zoningField);
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  // Ignore non-zoning placeholders or municipal name strings (e.g. "CITY OF SAN BERNARDINO").
+  if (/^(?:UNKNOWN|UNZND|UNZONED|N\/?A|NONE|NULL)$/i.test(trimmed)) return null;
+  if (/^(?:CITY|TOWN)\s+OF\b/i.test(trimmed)) return null;
+  return trimmed;
 }
 
 /**
@@ -1258,8 +1433,7 @@ function readCountyField(
   properties: Record<string, unknown> | undefined,
   source: CountyGisSource,
 ): string | null {
-  if (!source.countyField || !properties) return null;
-  const raw = properties[source.countyField];
+  const raw = readPropertyCaseInsensitive(properties, source.countyField);
   if (typeof raw !== "string") return null;
   const trimmed = raw.trim();
   if (!trimmed || /^\d+$/.test(trimmed)) return null;

@@ -8,9 +8,37 @@
 export function deriveMaxCoverage(zoning?: string): number {
   if (!zoning) return 40;
   const z = zoning.toUpperCase();
-  if (z.includes("R1") || z.includes("R-1")) return 40;
-  if (z.includes("R2") || z.includes("R-2")) return 45;
+  if (
+    z.includes("R1") ||
+    z.includes("R-1") ||
+    z.includes("RS") ||
+    z.includes("RE") ||
+    z.includes("RA")
+  ) {
+    return 40;
+  }
+  if (
+    z.includes("R2") ||
+    z.includes("R-2") ||
+    z.includes("RD") ||
+    z.includes("RT") ||
+    z.includes("RX") ||
+    z.includes("MDR")
+  ) {
+    return 45;
+  }
   if (z.includes("R3") || z.includes("R-3")) return 50;
-  if (z.includes("MF") || z.includes("RM")) return 55;
+  if (
+    z.includes("R4") ||
+    z.includes("R-4") ||
+    z.includes("R5") ||
+    z.includes("R-5") ||
+    z.includes("MF") ||
+    z.includes("RM") ||
+    z.includes("RU") ||
+    z.includes("HDR")
+  ) {
+    return 55;
+  }
   return 40;
 }

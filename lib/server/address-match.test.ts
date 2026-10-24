@@ -180,6 +180,17 @@ describe("situsOutFields", () => {
       situsOutFields({ id: "APN", line: "SITUS", cities: ["CITY", "CITY"] }),
     ).toBe("APN,SITUS,CITY");
   });
+
+  it("flattens multi-column street line fields in order", () => {
+    expect(
+      situsOutFields({
+        id: "APN",
+        line: ["STREET_NBR", "STREET_DIR", "STREET_NAM", "STREET_SFX"],
+        cities: ["CITY"],
+        zip: "ZIP",
+      }),
+    ).toBe("APN,STREET_NBR,STREET_DIR,STREET_NAM,STREET_SFX,CITY,ZIP");
+  });
 });
 
 describe("readSitusRecord", () => {
@@ -202,6 +213,33 @@ describe("readSitusRecord", () => {
       cities: ["SEATTLE", "SHORELINE"],
       zip: "98115",
       state: "WA",
+    });
+  });
+
+  it("joins split street line fields, reads integer ZIPs, and strips trailing state/ZIP from city strings", () => {
+    const record = readSitusRecord(
+      {
+        APN: "002-0123-004",
+        STREET_NBR: 1809,
+        STREET_DIR: "",
+        STREET_NAM: "LOMA",
+        STREET_SFX: "ST",
+        CITY_RAW: "LOS ANGELES CA",
+        CITY_COMBINED: "SANTA BARBARA, CA 93103",
+        ZIP_INT: 93103,
+      },
+      {
+        id: "APN",
+        line: ["STREET_NBR", "STREET_DIR", "STREET_NAM", "STREET_SFX"],
+        cities: ["CITY_RAW", "CITY_COMBINED"],
+        zip: "ZIP_INT",
+      },
+    );
+    expect(record).toEqual({
+      id: "002-0123-004",
+      line: "1809 LOMA ST",
+      cities: ["LOS ANGELES", "SANTA BARBARA"],
+      zip: "93103",
     });
   });
 
