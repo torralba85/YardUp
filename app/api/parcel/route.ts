@@ -491,6 +491,46 @@ async function resolveParcel(
 // ---------------------------------------------------------------------------
 
 /**
+ * When a statewide situs layer verifies a point that a county-specific parcel
+ * layer also matched, carry forward the county's authoritative assessor area,
+ * building area, and zoning if both polygons describe the same lot.
+ */
+function mergeVerifiedPointParcel(
+  pointParcel: CountyParcelResult,
+  situsParcel: CountyParcelResult,
+): CountyParcelResult {
+  const situsIsStatewide = /\(statewide\)$/i.test(situsParcel.county);
+  const pointIsCounty = !/\(statewide\)$/i.test(pointParcel.county);
+  if (!situsIsStatewide || !pointIsCounty) return situsParcel;
+
+  const pointArea = pointParcel.lotAreaSqft ?? 0;
+  const situsArea = situsParcel.lotAreaSqft ?? 0;
+  if (pointArea <= 0 || situsArea <= 0) return situsParcel;
+  if (Math.abs(pointArea - situsArea) / Math.max(pointArea, situsArea) > 0.25) {
+    return situsParcel;
+  }
+
+  return {
+    ...situsParcel,
+    county: pointParcel.county,
+    lotAreaSqft:
+      situsParcel.areaBasis === "reported"
+        ? situsParcel.lotAreaSqft
+        : pointParcel.lotAreaSqft,
+    areaBasis:
+      situsParcel.areaBasis === "reported" || pointParcel.areaBasis === "reported"
+        ? "reported"
+        : "geometry",
+    ...(situsParcel.buildingSqft ?? pointParcel.buildingSqft
+      ? { buildingSqft: situsParcel.buildingSqft ?? pointParcel.buildingSqft }
+      : {}),
+    ...(situsParcel.zoning ?? pointParcel.zoning
+      ? { zoning: situsParcel.zoning ?? pointParcel.zoning }
+      : {}),
+  };
+}
+
+/**
  * Everything below Regrid in the chain: try the free public county/statewide
  * GIS services for real geometry, then settle for the nearest preset. Shared
  * by the no-key, no-match, and fetch-failure paths so all three degrade the
@@ -529,7 +569,8 @@ async function successWithoutRegrid(
       if (check.verdict === "verified" && check.parcel) {
         // The PIN and boundary must come from the same official feature, not
         // two independently selected overlapping/condominium tax parcels.
-        return await countyGisResponse(lat, lng, requestedAddress, check.parcel, census, providerAttempts, {
+        const verifiedParcel = mergeVerifiedPointParcel(countyParcel, check.parcel);
+        return await countyGisResponse(lat, lng, requestedAddress, verifiedParcel, census, providerAttempts, {
           identity: {
             kind: "verified", parcelId: check.parcelId,
             localityConfirmed: check.localityConfirmed,
@@ -812,6 +853,9 @@ async function countyGisResponse(
       }
     : undefined;
   const structuresSqft = positiveNumber(structures?.totalSqft);
+  const countyBuildingSqft = positiveNumber(countyParcel.buildingSqft);
+  const existingHouseSqft = structuresSqft ?? countyBuildingSqft ?? 0;
+  const countyZoning = stringValue(countyParcel.zoning);
 
   const parcel: LiveParcelData = {
     address: location.address,
@@ -819,13 +863,14 @@ async function countyGisResponse(
     lotArea,
     lotWidth,
     lotLength,
-    // County parcel layers describe land rather than structures. The free
-    // USA Structures layer fills this only when it finds a positive footprint
-    // whose published centroid lies inside the parcel; zero remains unknown.
-    existingHouseSqft: structuresSqft ?? 0,
-    maxLotCoveragePercent: deriveMaxCoverage(undefined),
+    // County parcel layers describe land rather than structures unless the
+    // county assessor roll publishes building area. USA Structures supplies
+    // mapped footprints when present; assessor roll building area is the
+    // fallback; zero remains unknown.
+    existingHouseSqft: Math.round(existingHouseSqft),
+    maxLotCoveragePercent: deriveMaxCoverage(countyZoning),
     setbacks: DEFAULT_SETBACKS,
-    zoning: "Unknown",
+    zoning: countyZoning ?? "Unknown",
     boundaryGeoJson: countyParcel.polygon,
     lat,
     lng,
@@ -877,31 +922,58 @@ async function countyGisResponse(
           retrievedAt,
           warnings: [polygonDimensions ? "Lot dimensions are an enclosing rectangle derived from the parcel polygon, not measured frontage." : "Lot dimensions are estimated from area; the polygon did not yield usable dimensions."],
         }),
-        existingHouseSqft: fieldEvidence({
-          status: structuresSqft === null ? "unavailable" : "observed",
-          confidence: structuresSqft === null ? "unknown" : "medium",
-          source: usaStructuresSource(),
-          retrievedAt,
-          warnings: structuresSqft === null
-            ? ["No building footprint was found; zero means unknown, not vacant."]
-            : [
-                "Imagery-derived building footprints can lag recent construction.",
-                ...(structures && structures.structureCount > 1
-                  ? [
-                      `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
-                    ]
-                  : []),
+        existingHouseSqft:
+          structuresSqft !== null
+            ? fieldEvidence({
+                status: "observed",
+                confidence: "medium",
+                source: usaStructuresSource(),
+                retrievedAt,
+                warnings: [
+                  "Imagery-derived building footprints can lag recent construction.",
+                  ...(structures && structures.structureCount > 1
+                    ? [
+                        `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
+                      ]
+                    : []),
+                ],
+              })
+            : countyBuildingSqft !== null
+              ? fieldEvidence({
+                  status: "observed",
+                  confidence: "medium",
+                  source: parcelSource,
+                  retrievedAt,
+                  warnings: [
+                    "Building area comes from the county assessor roll and may reflect total living area rather than ground footprint.",
+                  ],
+                })
+              : fieldEvidence({
+                  status: "unavailable",
+                  confidence: "unknown",
+                  source: usaStructuresSource(),
+                  retrievedAt,
+                  warnings: ["No building footprint was found; zero means unknown, not vacant."],
+                }),
+        maxLotCoveragePercent: countyZoning
+          ? fieldEvidence({
+              status: "derived",
+              confidence: "low",
+              source: parcelSource,
+              retrievedAt,
+              warnings: [
+                "Maximum lot coverage is inferred from a broad zoning-code heuristic, not a jurisdiction rule.",
               ],
-        }),
-        maxLotCoveragePercent: fieldEvidence({
-          status: "defaulted",
-          confidence: "low",
-          source: assumptionSource(),
-          retrievedAt,
-          warnings: [
-            "The 40% maximum lot coverage is a planning assumption, not an address-specific rule.",
-          ],
-        }),
+            })
+          : fieldEvidence({
+              status: "defaulted",
+              confidence: "low",
+              source: assumptionSource(),
+              retrievedAt,
+              warnings: [
+                "The 40% maximum lot coverage is a planning assumption, not an address-specific rule.",
+              ],
+            }),
         setbacks: fieldEvidence({
           status: "defaulted",
           confidence: "low",
@@ -909,13 +981,21 @@ async function countyGisResponse(
           retrievedAt,
           warnings: ["Setbacks are planning assumptions, not address-specific rules."],
         }),
-        zoning: fieldEvidence({
-          status: "unavailable",
-          confidence: "unknown",
-          source: parcelSource,
-          retrievedAt,
-          warnings: ["The public parcel layer did not provide zoning."],
-        }),
+        zoning: countyZoning
+          ? fieldEvidence({
+              status: "observed",
+              confidence: "medium",
+              source: parcelSource,
+              retrievedAt,
+              warnings: [],
+            })
+          : fieldEvidence({
+              status: "unavailable",
+              confidence: "unknown",
+              source: parcelSource,
+              retrievedAt,
+              warnings: ["The public parcel layer did not provide zoning."],
+            }),
         boundaryGeoJson: fieldEvidence({
           status: "observed",
           confidence: boundaryConfidence,

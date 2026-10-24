@@ -24,10 +24,19 @@ function parcelState(parcel: Parcel): string {
 
 /** Whether a raw zoning designation reads as residential, by code pattern. */
 export function residentialZoningCode(rawZoning: string): RuleCheck {
-  const zoning = rawZoning.trim().toUpperCase();
+  const zoning = rawZoning
+    .trim()
+    .toUpperCase()
+    .replace(/^(?:\[[A-Z0-9]+\]|\([A-Z0-9]+\))+\s*/, "");
   if (!zoning || zoning === "UNKNOWN") return "unknown";
   if (/RESIDENTIAL|SINGLE[- ]?FAMILY|MULTI[- ]?FAMILY/.test(zoning)) return "yes";
-  if (/^(R|RS|RM|RD|RL|RH|SF|MF|LDR|MDR|HDR)(?:[-\s\d]|$)/.test(zoning)) return "yes";
+  if (
+    /^(R\d+[A-Z]*|R|RS|RM|RD|RE|RA|RW|RU|RT|RX|RL|RH|RR|RMP|SF|MF|LDR|MDR|HDR)(?:[-\s.\d]|$)/.test(
+      zoning,
+    )
+  ) {
+    return "yes";
+  }
   return "no";
 }
 

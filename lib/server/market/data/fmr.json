@@ -15,8 +15,17 @@
     "TX/Bexar": { "studio": 1000, "1br": 1177, "2br": 1495 },
     "TX/Dallas": { "studio": 1401, "1br": 1648, "2br": 2093 },
     "CA/Los Angeles": { "studio": 1979, "1br": 2328, "2br": 2957 },
+    "CA/Orange": { "studio": 2682, "1br": 2746, "2br": 3236 },
     "CA/San Diego": { "studio": 2090, "1br": 2459, "2br": 3123 },
-    "CA/Santa Clara": { "studio": 2535, "1br": 2982, "2br": 3787 }
+    "CA/Ventura": { "studio": 1998, "1br": 2250, "2br": 2693 },
+    "CA/Riverside": { "studio": 1692, "1br": 1777, "2br": 2201 },
+    "CA/San Bernardino": { "studio": 1692, "1br": 1777, "2br": 2201 },
+    "CA/Santa Barbara": { "studio": 2459, "1br": 2746, "2br": 3124 },
+    "CA/Santa Clara": { "studio": 2535, "1br": 2982, "2br": 3787 },
+    "CA/San Mateo": { "studio": 2485, "1br": 2977, "2br": 3604 },
+    "CA/Alameda": { "studio": 2142, "1br": 2385, "2br": 2912 },
+    "CA/Contra Costa": { "studio": 2142, "1br": 2385, "2br": 2912 },
+    "CA/Sacramento": { "studio": 1748, "1br": 1832, "2br": 2255 }
   },
   "zips": {
     "98115": { "area": "NE Seattle WA (ZIP 98115)", "studio": 1820, "1br": 2000, "2br": 2430 },

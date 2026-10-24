@@ -320,9 +320,9 @@ describe("shadowClassifyZoning", () => {
       zoning: "RE40-1",
       zoningClass: "single_family",
       confident: true,
-      regexResidential: "no",
+      regexResidential: "yes",
       regexCoveragePercent: 40,
-      residentialAgreement: "regex-no-jev-yes",
+      residentialAgreement: "agree",
     });
     // Public designation and state only; nothing that could identify a parcel or person.
     expect(line).not.toContain("Los Angeles");

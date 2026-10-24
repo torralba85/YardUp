@@ -881,6 +881,57 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
     );
   });
 
+  it("surfaces county assessor building area and zoning on the county-gis path and preserves them across statewide situs verification", async () => {
+    const venturaLat = 34.2746;
+    const venturaLng = -119.229;
+    const venturaLot = rotatedRectPolygon(venturaLat, venturaLng, 60, 110, 0);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: unknown) => {
+        const url = String(input);
+        if (url.includes("regrid.com")) {
+          return { ok: true, status: 200, json: async () => ({ parcels: { features: [] } }) };
+        }
+        if (url.includes("geocoding.geo.census.gov")) {
+          return censusAddressResponse("501 POLI ST, VENTURA, CA, 93001", "CA", "Ventura");
+        }
+        if (url.includes("maps.ventura.org")) {
+          return countyGisResponse(venturaLot, {
+            ACREAGE: "0.1515",
+            SQ_FT_I: "1920",
+            ZONE: "R2-1",
+          });
+        }
+        if (url.includes("CA_Statewide_Parcels_Public_view")) {
+          return countyGisResponse(venturaLot, {
+            PARCEL_APN: "0710112050",
+            SITE_ADDR: "501 POLI ST",
+            SITE_CITY: "VENTURA",
+            SITE_STATE: "CA",
+            SITE_ZIP: "93001",
+          });
+        }
+        return EMPTY_FEATURES;
+      }),
+    );
+
+    const res = await GET(makeRequest(venturaLat, venturaLng, "501 Poli St, Ventura, CA 93001"));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.county).toBe("Ventura");
+    expect(data.lotArea).toBe(6599);
+    expect(data.existingHouseSqft).toBe(1920);
+    expect(data.zoning).toBe("R2-1");
+    expect(data.maxLotCoveragePercent).toBe(45);
+    expect(data.dataQuality?.fields.lotArea.status).toBe("observed");
+    expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("observed");
+    expect(data.dataQuality?.fields.zoning.status).toBe("observed");
+    expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
+    expect(data.marketData?.source).toBe("hud-county");
+    expect(data.marketData?.rentByBedroom["1br"]).toBe(2250);
+  });
+
   it("falls through to the preset when the GIS parcel has no usable area", async () => {
     stubProviders({
       regrid: {
