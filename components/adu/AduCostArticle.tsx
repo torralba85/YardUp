@@ -6,6 +6,7 @@ import {
   costPageUrl,
   getCity,
   hubUrl,
+  methodologyPath,
 } from "@/lib/adu/content";
 import type { AduFaq, JurisdictionCostContent } from "@/lib/adu/types";
 import {
@@ -261,7 +262,12 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
           </li>
         </ul>
         <p className="lf-body mt-4 text-sm text-lot-stone">
-          {marketProvenanceLine(aggregate.provenance)}.
+          {marketProvenanceLine(aggregate.provenance)}. The full method, with a
+          worked example, is in{" "}
+          <Link href={methodologyPath()} className={linkClass}>
+            how we estimate cost, rent and payback
+          </Link>
+          .
         </p>
       </section>
 

@@ -5,6 +5,8 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  METHODOLOGY_AS_OF,
+  methodologyUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
 
@@ -30,6 +32,7 @@ export function buildAduSitemapXml(): string {
     { loc: hubUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
     { loc: stateCostUrl(), lastmod: "2026-10-07", changefreq: "monthly", priority: "0.8" },
     { loc: calculatorUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
+    { loc: methodologyUrl(), lastmod: METHODOLOGY_AS_OF, changefreq: "monthly", priority: "0.6" },
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
       lastmod: city.asOf,

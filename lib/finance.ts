@@ -45,6 +45,15 @@ export interface MarketAdjustments {
   operatingExpenseRatio?: number;
 }
 
+/** Hard-cost premium per square foot by roof style, added to the finish base. */
+export const ROOF_PREMIUM_PER_SQFT = { shed: 0, flat: 8, gable: 18 } as const;
+
+/** Flat allowance for windows and doors when openings are included. */
+export const OPENINGS_ALLOWANCE = 9000;
+
+/** Low and high ends of the cost range as multiples of the midpoint. */
+export const COST_RANGE_FACTORS = { low: 0.92, high: 1.15 } as const;
+
 /**
  * Calculates the construction cost range, rental income, and simple payback.
  *
@@ -65,14 +74,14 @@ export function calculateFinance(
   market?: MarketAdjustments,
 ): FinanceResult {
   const baseCostPerSqft = assumptions.costPerSqft[config.finish];
-  const roofPremium = config.roof === "gable" ? 18 : config.roof === "flat" ? 8 : 0;
-  const openingPremium = config.includeOpenings ? 9000 : 0;
+  const roofPremium = ROOF_PREMIUM_PER_SQFT[config.roof];
+  const openingPremium = config.includeOpenings ? OPENINGS_ALLOWANCE : 0;
   const costMultiplier = market?.costMultiplier ?? 1;
   const hardCost =
     (aduSqft * (baseCostPerSqft + roofPremium) + openingPremium) * costMultiplier;
   const costMid = hardCost * assumptions.softCostMultiplier;
-  const costLow = Math.round((costMid * 0.92) / 1000) * 1000;
-  const costHigh = Math.round((costMid * 1.15) / 1000) * 1000;
+  const costLow = Math.round((costMid * COST_RANGE_FACTORS.low) / 1000) * 1000;
+  const costHigh = Math.round((costMid * COST_RANGE_FACTORS.high) / 1000) * 1000;
 
   const monthlyRent = rentTable[assumptions.rentScenario];
   const operatingExpenseRatio =

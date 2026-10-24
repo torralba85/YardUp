@@ -31,9 +31,17 @@ function jaccard(a: string, b: string): number {
 }
 
 describe("adu uniqueness gates", () => {
-  it("ships exactly the five largest San Diego County cities", () => {
+  it("ships the five largest San Diego County cities, Imperial Beach and the unincorporated county", () => {
     expect(ADU_CITIES.map((city) => city.slug).sort()).toEqual(
-      ["carlsbad", "chula-vista", "escondido", "oceanside", "san-diego"].sort(),
+      [
+        "carlsbad",
+        "chula-vista",
+        "escondido",
+        "imperial-beach",
+        "oceanside",
+        "san-diego",
+        "san-diego-county",
+      ].sort(),
     );
   });
 

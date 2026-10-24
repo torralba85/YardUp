@@ -104,8 +104,15 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         <div className="mt-8 space-y-6">
           <p className="lf-body text-lot-stone">
             This guide covers the City of San Diego, not every property in
-            San Diego County. Confirm your jurisdiction and overlays with the
-            permitting authority before using these rules for a specific lot.
+            San Diego County. For a lot outside city limits, read the{" "}
+            <Link
+              href="/adu/ca/san-diego-county"
+              className="font-semibold text-lot-ink underline underline-offset-2"
+            >
+              unincorporated San Diego County ADU guide
+            </Link>
+            . Confirm your jurisdiction and overlays with the permitting
+            authority before using these rules for a specific lot.
           </p>
           <nav aria-label="On this San Diego guide" className="flex flex-wrap gap-x-5 gap-y-2">
             {[["adu-glance", "Rules at a glance"], ["adu-fees", "Permit fees"], ["adu-process", "Permit steps"], ["adu-sources", "Official sources"]].map(([id, label]) => (
@@ -279,7 +286,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           ))}
         </ol>
         <p className="lf-body mt-4 text-lot-stone">
-          Start at the city&apos;s own front door:{" "}
+          Start at the official front door:{" "}
           <a
             href={content.permitPortal.url}
             rel="noopener"

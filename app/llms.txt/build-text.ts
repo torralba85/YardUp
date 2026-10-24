@@ -5,6 +5,7 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  methodologyUrl,
   stateCostUrl,
   STATE_BASELINE_AS_OF,
 } from "@/lib/adu/content";
@@ -102,6 +103,7 @@ licensed builder.
   example, Portland 18/20/6 ft and Austin 15/15/5 ft). These modeled values
   need local confirmation.
 - Build cost, rent, and payback: regional estimates, with the assumptions shown.
+  The formulas and data sources are published at ${methodologyUrl()}.
 
 ## Pricing
 

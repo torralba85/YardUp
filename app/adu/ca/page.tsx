@@ -14,12 +14,12 @@ export const metadata: Metadata = {
   // Kept under ~160 characters: past that Google truncates mid-sentence and
   // the cut lands inside the city list rather than after a complete thought.
   description:
-    "ADU rules change at the city line. Start with the California state floor, then read local setbacks, fees and permit steps for five San Diego County cities.",
+    "ADU rules change at the city line. Start with the California state floor, then read setbacks, fees and permit steps for San Diego County cities and the county.",
   alternates: { canonical: hubUrl() },
   openGraph: {
     title: "California ADU Laws and Rules by City (2026) | LotFoundry",
     description:
-      "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County's five largest cities.",
+      "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County cities and the unincorporated county.",
     url: hubUrl(),
     images: [
       {
@@ -45,6 +45,10 @@ const CITY_BLURBS: Record<string, string> = {
     "The handbook city: plain-English handout numbers and a literal submittal checklist, no coastal zone, and an Article 70 update moving through 2026.",
   carlsbad:
     "The specific-standards city: named Coaster stations for 18-foot height relief, a parking waiver that reaches bus stops, and a coastal permit for most ADUs in the Coastal Zone.",
+  "imperial-beach":
+    "The coastal-permit city: a $1,000 City coastal permit before most ADUs in the Coastal Zone, a parcel map that shows who issues it, and a pre-approved plan that cannot be used in a flood hazard area.",
+  "san-diego-county":
+    "The unincorporated county: 1,200 sq ft and 25-foot detached ADUs, fire-district and septic reviews that shape the site plan, and an ordinance the state flagged in July 2026.",
 };
 
 /**
@@ -115,7 +119,8 @@ export default function AduCaliforniaHubPage() {
           jurisdiction that reviews your property. State law sets a baseline,
           while local standards, site conditions and overlays affect the plans
           you can submit. These guides bring together source documents, permit
-          steps and a visible review date for five San Diego County cities.
+          steps and a visible review date for San Diego County cities and the
+          unincorporated county.
         </p>
         <p>
           Start from the state floor below, pick your city, then check what
@@ -145,7 +150,7 @@ export default function AduCaliforniaHubPage() {
           Before you choose a floor plan
         </h2>
         <ol className="lf-body mt-4 list-decimal space-y-3 pl-6 text-lot-stone">
-          <li>Confirm your permitting jurisdiction. A San Diego mailing address does not by itself establish that City of San Diego rules apply. For unincorporated properties, start with the <a href="https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu.html" className="underline underline-offset-2 hover:text-lot-ink">County of San Diego ADU program</a>.</li>
+          <li>Confirm your permitting jurisdiction. A San Diego mailing address does not by itself establish that City of San Diego rules apply. For unincorporated properties, read the <Link href="/adu/ca/san-diego-county" className="underline underline-offset-2 hover:text-lot-ink">unincorporated San Diego County ADU guide</Link> and the <a href="https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu.html" className="underline underline-offset-2 hover:text-lot-ink">County of San Diego ADU program</a>.</li>
           <li>Read your city guide and check the linked official sources for coastal, fire and other site restrictions. The guide is a starting point, not a parcel approval.</li>
           <li>Compare a smaller and larger ADU in the calculator, then ask a designer or builder to price site work, utilities and the fees that apply to your lot.</li>
         </ol>
@@ -180,7 +185,7 @@ export default function AduCaliforniaHubPage() {
 
       <section aria-labelledby="adu-cities" className="mt-12">
         <h2 id="adu-cities" className="lf-card-heading text-lot-ink">
-          City guides — San Diego County&apos;s five largest cities
+          City and county guides — San Diego County
         </h2>
         <ul className="mt-4 space-y-4">
           {ADU_CITIES.map((city) => (
@@ -192,7 +197,7 @@ export default function AduCaliforniaHubPage() {
                 href={`/adu/${city.state}/${city.slug}`}
                 className="font-display text-xl font-bold text-lot-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
-                ADU Rules in {city.city} (2026)
+                {city.h1 ?? `ADU Rules in ${city.city} (2026)`}
               </Link>
               <p className="lf-body mt-2 text-lot-stone">
                 {CITY_BLURBS[city.slug]}

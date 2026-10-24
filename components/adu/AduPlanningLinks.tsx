@@ -6,6 +6,7 @@ const resources = [
   { href: "/adu/ca/san-diego", label: "San Diego ADU rules and permit guide", detail: "Check city rules, overlays, fees and permit steps." },
   { href: "/adu/ca/san-diego/cost", label: "San Diego ADU cost, rent and payback", detail: "See build cost and rent by unit size for San Diego County." },
   { href: "/adu-cost-calculator", label: "Free ADU cost, rent and payback calculator", detail: "Compare sizes and assumptions before checking your lot." },
+  { href: "/adu/how-we-estimate", label: "How we estimate cost, rent and payback", detail: "The formulas, data sources and limits behind every figure." },
 ];
 
 /** Server-rendered paths between the California planning resources. */

@@ -142,7 +142,7 @@ export const chulaVista: JurisdictionContent = {
         "At most one space, and none at all within a half-mile walk of transit, in historic districts, for garage conversions, or for attached units. Replacement parking for converted garages is never required.",
     },
   ],
-  neighbors: ["san-diego"],
+  neighbors: ["san-diego", "imperial-beach", "san-diego-county"],
   sources: [
     {
       label: "CVMC 19.58.022 — Accessory dwelling units",
