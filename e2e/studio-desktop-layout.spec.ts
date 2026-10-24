@@ -76,7 +76,8 @@ test("Rules & Fit stage fills its column and the certificate CTA stays in view",
 
   // Opening Tools trades canvas height for the tools; nothing is pushed off-screen.
   await page.getByText("Tools", { exact: true }).click();
-  await expect(page.getByRole("button", { name: "Export site plan PDF" })).toBeVisible();
+  // The site plan PDF is a certificate deliverable, so this free session sees the unlock.
+  await expect(page.getByRole("button", { name: "Unlock site plan PDF" })).toBeVisible();
   const geometry = await stepGeometry(page);
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.viewportHeight);
 });

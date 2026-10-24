@@ -311,7 +311,7 @@ describe("CertificatePanel", () => {
       for (const text of ["Rear setback", "4 ranked risks to verify", "6-stage permit path", "12–18 week typical approval timeline"]) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
-      expect(screen.getByText(/local permit steps, items to verify, and a builder bid checklist/)).toBeInTheDocument();
+      expect(screen.getByText(/local permit steps, items to verify, a builder bid checklist, and a site plan PDF/)).toBeInTheDocument();
     });
 
     it("uses one transaction CTA for the blurred preview", async () => {

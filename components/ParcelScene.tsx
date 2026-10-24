@@ -63,6 +63,8 @@ class ErrorBoundary extends Component<
 
 interface ParcelSceneProps {
   analysisUnlocked?: boolean;
+  /** Opens the Certificate step from paid-only scene tools while analysis is locked. */
+  onUnlockCertificate?: () => void;
   parcel: Parcel;
   config: ADUConfig;
   isCompliant: boolean;
@@ -993,6 +995,7 @@ function clampToLot(pose: Pose2D, parcel: Parcel, config: ADUConfig): Pose2D {
  */
 export default function ParcelScene({
   analysisUnlocked = true,
+  onUnlockCertificate,
   parcel,
   config,
   isCompliant,
@@ -1571,7 +1574,8 @@ export default function ParcelScene({
         isProxy={parcelOutline.isProxy}
       />
 
-      <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}>
+      <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}
+        sitePlanUnlocked={analysisUnlocked} onUnlockSitePlan={onUnlockCertificate}>
         <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
 
       <details className="shrink-0 border-t border-lot-line bg-lot-chalk px-3">

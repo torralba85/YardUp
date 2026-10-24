@@ -1135,6 +1135,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           ) : (
             <ParcelScene
               analysisUnlocked={certificateUnlocked}
+              onUnlockCertificate={() => {
+                setActiveStep("certificate");
+                setJourneyStep("act");
+              }}
               parcel={sceneParcel}
               config={config}
               isCompliant={isCompliant}
