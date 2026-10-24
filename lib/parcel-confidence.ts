@@ -1,5 +1,4 @@
-import type { DataEvidence } from "./data-evidence";
-import type { LiveParcelData, Parcel, ParcelEvidenceField } from "./parcel-types";
+import type { LiveParcelData, Parcel } from "./parcel-types";
 
 /** Derived from existing provider fields; no saved-scenario schema change. */
 export function parcelConfidence(parcel: Parcel) {
@@ -62,92 +61,5 @@ export function parcelDataNotice(parcel: Parcel): string | undefined {
     : "The parcel's street address has not been independently confirmed. Verify county records.";
   const vintage = fields?.boundaryGeoJson.sourceAsOf;
   return `${identity} ${vintage ? `Boundary source date: ${vintage}.` : "Boundary source date unavailable; retrieval time does not establish freshness."} Setbacks and frontage need local confirmation.${suffix}`;
-}
-
-export interface ParcelFieldEvidenceRow {
-  field: string;
-  label: string;
-  status: DataEvidence["status"];
-  statusLabel: string;
-  confidence: DataEvidence["confidence"];
-  sourceLabel: string;
-  recordId?: string;
-  asOf?: string;
-  detail?: string;
-}
-
-const STATUS_LABELS: Record<DataEvidence["status"], string> = {
-  observed: "Observed",
-  derived: "Derived",
-  defaulted: "Assumed",
-  unavailable: "Unavailable",
-};
-
-const FIELD_ORDER: Array<{ key: ParcelEvidenceField; label: string }> = [
-  { key: "address", label: "Property address" },
-  { key: "boundaryGeoJson", label: "Parcel boundary" },
-  { key: "lotArea", label: "Lot area" },
-  { key: "existingHouseSqft", label: "Existing footprint" },
-  { key: "zoning", label: "Zoning district" },
-  { key: "setbacks", label: "Setbacks & coverage" },
-];
-
-/**
- * Structured field-by-field provenance rows for the active live parcel,
- * suitable for an expandable inspection drawer in the studio UI.
- */
-export function parcelDataEvidenceRows(parcel: Parcel): ParcelFieldEvidenceRow[] {
-  if (!("source" in parcel)) return [];
-  const quality = (parcel as LiveParcelData).dataQuality;
-  if (!quality) return [];
-
-  const rows: ParcelFieldEvidenceRow[] = [];
-  const geocodeMatch = quality.geocode?.match;
-  if (geocodeMatch) {
-    const precisionLabel = geocodeMatch.precision.replace(/-/g, " ");
-    rows.push({
-      field: "geocode",
-      label: "Address geocode",
-      status: geocodeMatch.evidence.status,
-      statusLabel: `Matched (${precisionLabel})`,
-      confidence: geocodeMatch.evidence.confidence,
-      sourceLabel: `${geocodeMatch.evidence.source.provider} · ${geocodeMatch.evidence.source.dataset}`,
-      ...(geocodeMatch.evidence.warnings.length ? { detail: geocodeMatch.evidence.warnings.join(" ") } : {}),
-    });
-  }
-
-  const verification = quality.addressVerification;
-  if (verification) {
-    rows.push({
-      field: "addressVerification",
-      label: "Address verification",
-      status: verification.status,
-      statusLabel: STATUS_LABELS[verification.status],
-      confidence: verification.confidence,
-      sourceLabel: `${verification.source.provider} · ${verification.source.dataset}`,
-      ...(verification.source.recordId ? { recordId: verification.source.recordId } : {}),
-      ...(verification.warnings.length ? { detail: verification.warnings.join(" ") } : {}),
-    });
-  }
-
-  for (const { key, label } of FIELD_ORDER) {
-    const evidence = quality.fields[key];
-    if (!evidence) continue;
-    rows.push({
-      field: key,
-      label,
-      status: evidence.status,
-      statusLabel: STATUS_LABELS[evidence.status],
-      confidence: evidence.confidence,
-      sourceLabel: `${evidence.source.provider} · ${evidence.source.dataset}`,
-      ...(evidence.source.recordId ? { recordId: evidence.source.recordId } : {}),
-      ...(evidence.sourceAsOf || evidence.sourceUpdatedAt
-        ? { asOf: (evidence.sourceAsOf ?? evidence.sourceUpdatedAt)?.slice(0, 10) }
-        : {}),
-      ...(evidence.warnings.length ? { detail: evidence.warnings.join(" ") } : {}),
-    });
-  }
-
-  return rows;
 }
 

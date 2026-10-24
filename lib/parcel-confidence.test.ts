@@ -3,7 +3,6 @@ import type { DataEvidence } from "./data-evidence";
 import type { LiveParcelData, ParcelDataQuality } from "./parcel-types";
 import {
   parcelConfidence,
-  parcelDataEvidenceRows,
   parcelDataNotice,
 } from "./parcel-confidence";
 import { parcelPresets } from "./feasibility";
@@ -81,27 +80,9 @@ describe("parcelConfidence", () => {
     expect(parcelConfidence(parcel(quality("observed"))).regulationsEstimated).toBe(false);
   });
 
-  it("returns empty provenance rows for demo presets and structured rows for live parcels", () => {
-    expect(parcelDataEvidenceRows(parcelPresets[0])).toEqual([]);
+  it("gives demo presets no notice and carries reconciliation warnings into live parcel notices", () => {
+    expect(parcelDataNotice(parcelPresets[0])).toBeUndefined();
     const data = parcel(quality("defaulted"));
-    data.dataQuality!.fields.address.source.recordId = "regrid-uuid-1";
-    data.dataQuality!.fields.boundaryGeoJson.sourceAsOf = "2026-02-15";
-    data.dataQuality!.geocode = {
-      requestedAddress: "123 Oak St, Seattle, WA 98105",
-      formattedAddress: "123 Oak St, Seattle, WA 98105",
-      match: {
-        precision: "range-interpolated",
-        provider: "census", matchType: "Exact", partialMatch: false,
-        components: { zip: "98105" },
-        evidence: {
-          status: "derived",
-          source: { provider: "US Census", dataset: "Geocoder" },
-          retrievedAt: "2026-09-25T00:00:00.000Z",
-          confidence: "medium",
-          warnings: ["Coordinates interpolated along the block face."],
-        },
-      },
-    };
     data.dataQuality!.warnings = [
       "The parcel provider's situs street address (125 Oak St) differs from the searched street address; verify parcel boundaries against county records.",
       "Geocoded ZIP (98105) differs from the parcel record ZIP (98107); confirm property location.",
@@ -110,34 +91,9 @@ describe("parcelConfidence", () => {
     const notice = parcelDataNotice(data);
     expect(notice).toContain("situs street address (125 Oak St) differs");
     expect(notice).toContain("Geocoded ZIP (98105) differs from the parcel record ZIP (98107)");
-
-    const rows = parcelDataEvidenceRows(data);
-    expect(rows.map((r) => r.field)).toEqual([
-      "geocode",
-      "address",
-      "boundaryGeoJson",
-      "lotArea",
-      "existingHouseSqft",
-      "zoning",
-      "setbacks",
-    ]);
-    expect(rows[0]).toMatchObject({
-      field: "geocode",
-      statusLabel: "Matched (range interpolated)",
-      sourceLabel: "US Census · Geocoder",
-    });
-    expect(rows[1]).toMatchObject({
-      field: "address",
-      statusLabel: "Observed",
-      recordId: "regrid-uuid-1",
-    });
-    expect(rows[2]).toMatchObject({
-      field: "boundaryGeoJson",
-      asOf: "2026-02-15",
-    });
   });
 
-  it.each(["regrid", "fallback"] as const)("shows ATTOM conflicts in %s notices and evidence despite earlier warnings", (source) => {
+  it.each(["regrid", "fallback"] as const)("shows ATTOM conflicts in %s notices despite earlier warnings", (source) => {
     const data = parcel(quality("observed"));
     data.source = source;
     const warning = "ATTOM's point for the searched address falls outside the returned parcel; confirm the address and boundary with county records.";
@@ -150,12 +106,6 @@ describe("parcelConfidence", () => {
       warnings: ["ATTOM confirms only the property address.", warning],
     };
     expect(parcelDataNotice(data)).toContain(warning);
-    const rows = parcelDataEvidenceRows(data);
-    expect(rows.find((row) => row.field === "address")?.detail).toContain(warning);
-    expect(rows.find((row) => row.field === "addressVerification")).toMatchObject({
-      label: "Address verification", confidence: "low", recordId: "123456",
-      detail: expect.stringContaining(warning),
-    });
   });
 });
 
