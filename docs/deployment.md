@@ -16,6 +16,32 @@ The production Firebase project is `yardup-2026`.
 All five Functions use the same prepared Next.js handler. The rewrite selects the
 least-privilege function rather than a different application bundle.
 
+### Serving revision verification
+
+After deployment, `node scripts/ci/serving-revision.mjs` checks all five Functions
+and their Cloud Run services. Each must be ACTIVE, have a ready route to its
+deployed revision, and send 100% of default traffic to that revision through
+the `latestRevision` target. Zero-traffic tagged rollback URLs are allowed.
+The check retries briefly for propagation and fails the deploy step before a
+successful GitHub deployment record can be written. It never changes traffic.
+
+Cloud Run preserves an explicit traffic pin across later deployments; a green
+Firebase update alone does not prove the new frontend is served. On October 23,
+2026, Studio was still routed to `app-recovery-20261022` after the Terrain release.
+The new revision was first verified through a zero-traffic tag, then promoted to
+latest. See [Google's traffic migration guide](https://docs.cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration).
+
+After any deliberate rollback, test the intended new revision through a temporary
+tag before restoring normal release routing. Then use:
+
+```bash
+gcloud run services update-traffic app --to-latest --region=us-central1 --project=yardup-2026
+node scripts/ci/serving-revision.mjs
+```
+
+Verify the public Studio in a fresh browser as well. A serving-revision check
+establishes routing; it does not replace checking the requested user-facing change.
+
 ## Prerequisites
 
 - Node.js 22 or newer.

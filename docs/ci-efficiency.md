@@ -32,6 +32,11 @@ immediately before any Firebase deployment. It marks the record successful only
 after the complete existing release sequence succeeds. Only that job receives
 `deployments: write`; scope uses read permission, and PRs do not query records.
 
+The release sequence includes `scripts/ci/serving-revision.mjs`: all five HTTP
+Functions must actually receive 100% traffic on their latest ready revision.
+An ACTIVE function pinned to a recovery revision fails deployment verification.
+The check is read-only; deliberate rollback routing requires explicit recovery.
+
 The latest attempt is authoritative. Missing records, an unfamiliar record,
 API failure, and pending/failed/canceled attempts require full validation and
 deployment. The next docs-only push cannot silently leave a partial release
