@@ -15,6 +15,8 @@ import { oceanside } from "@/content/adu/ca/oceanside";
 import { escondido } from "@/content/adu/ca/escondido";
 import { carlsbad } from "@/content/adu/ca/carlsbad";
 import { imperialBeach } from "@/content/adu/ca/imperial-beach";
+import { laMesa } from "@/content/adu/ca/la-mesa";
+import { sanMarcos } from "@/content/adu/ca/san-marcos";
 import { sanDiegoCounty } from "@/content/adu/ca/san-diego-county";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import {
@@ -27,7 +29,8 @@ const BASE_URL = CANONICAL_ORIGIN;
 
 /**
  * San Diego County jurisdictions: the five largest cities (batch one), then
- * Imperial Beach and the unincorporated county (batch two).
+ * Imperial Beach, La Mesa, San Marcos and the unincorporated county (batch
+ * two).
  */
 export const ADU_CITIES: JurisdictionContent[] = [
   sanDiego,
@@ -36,6 +39,8 @@ export const ADU_CITIES: JurisdictionContent[] = [
   escondido,
   carlsbad,
   imperialBeach,
+  laMesa,
+  sanMarcos,
   sanDiegoCounty,
 ];
 

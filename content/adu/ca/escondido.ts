@@ -141,7 +141,7 @@ export const escondido: JurisdictionContent = {
         "No — Escondido has no coastal zone, so no coastal development permit layer exists. That removes the most common timeline risk found in coastal North County cities.",
     },
   ],
-  neighbors: ["san-diego", "oceanside", "carlsbad", "san-diego-county"],
+  neighbors: ["san-diego", "oceanside", "carlsbad", "san-diego-county", "san-marcos"],
   sources: [
     {
       label: "Escondido Zoning Code Article 70 — ADUs and JADUs",

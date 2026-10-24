@@ -19,6 +19,8 @@ const PUBLIC_PATHS = [
   "/adu/ca/escondido",
   "/adu/ca/carlsbad",
   "/adu/ca/imperial-beach",
+  "/adu/ca/la-mesa",
+  "/adu/ca/san-marcos",
   "/adu/ca/san-diego-county",
   "/adu/how-we-estimate",
 ] as const;
