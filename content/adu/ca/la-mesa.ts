@@ -46,7 +46,7 @@ export const laMesa: JurisdictionContent = {
     { label: "Lot coverage", value: "40% maximum in single-family zones", note: "Coverage cannot block an ADU of at least 800 sq ft with 4 ft side and rear setbacks" },
     { label: "Parking required", value: "None", note: "No new, additional or replacement spaces for ADUs, including when a garage is converted or demolished" },
     { label: "Owner-occupancy and rentals", value: "No owner-occupancy for ADUs; rentals must be longer than 30 days", note: "For a JADU, the matrix requires an owner in the house or JADU only if they share sanitation facilities" },
-    { label: "Fire sprinklers", value: "Required if the house has them", note: "Also required when the rear of the ADU is 150 ft or more from the face of the curb" },
+    { label: "Fire sprinklers", value: "Required only if the main house is required to have them", note: "The City's matrix also lists a 150 ft curb-distance trigger, but state law and La Mesa's own code tie ADU sprinklers to the house" },
   ],
   cityDiffers: [
     {
@@ -54,7 +54,7 @@ export const laMesa: JurisdictionContent = {
       paragraphs: [
         "La Mesa goes further than state law on parking. The Municipal Code says new or additional parking spaces shall not be required for an ADU, and when a garage, carport or covered parking is demolished or converted for an ADU, the lost spaces do not have to be replaced. State law only waives the space in listed cases such as near transit; in La Mesa it is waived for every ADU. Any parking you choose to add must still meet the City's parking design standards.",
         "Height is measured in an unusual way. The City's matrix sets 20 feet for ADUs in the R1E, R1R, R1S, R1 and R1A zones and in R2, and 30 feet in R3 and RB, and its footnote says height is measured from finished grade to the top of the plate line, the top of the wall framing. On a sloped lot the Municipal Code's sloped-grade rule in §24.05.030(B)(3) applies, so confirm how your roof and grade will be measured before you settle on a two-story design.",
-        "Lot coverage is the other constraint. The matrix caps coverage at 40% in single-family zones, but the code adds that no coverage limit, front setback, open-space rule or minimum lot size may stop an ADU of at least 800 square feet with 4-foot side and rear setbacks. Two practical details from the matrix: every ADU needs its own address (a JADU does not), and fire sprinklers are required when the house has them or when the rear of the ADU is 150 feet or more from the face of the curb, which matters on deep and flag lots.",
+        "Lot coverage is the other constraint. The matrix caps coverage at 40% in single-family zones, but the code adds that no coverage limit, front setback, open-space rule or minimum lot size may stop an ADU of at least 800 square feet with 4-foot side and rear setbacks. Two practical details: every ADU needs its own address (a JADU does not), and sprinklers follow the house. The matrix also lists sprinklers when the rear of the ADU is 150 feet or more from the face of the curb, but state law, as the March 2026 HCD handbook explains, and La Mesa's own code allow ADU sprinklers to be required only when the main house must have them. On a deep or flag lot, ask the fire marshal which rule they apply, and how they want fire access handled, before you price sprinklers.",
       ],
     },
     {
