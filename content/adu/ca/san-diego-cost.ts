@@ -27,7 +27,7 @@ export const sanDiegoCost: JurisdictionCostContent = {
   introAnswer: [
     "These are planning estimates for a new detached backyard home, whether it is for family, for rental income or for what comes next. Rent uses San Diego County's HUD Fair Market Rent, so the rent and payback figures hold across the county. Build cost uses LotFoundry's national construction base rather than a San Diego contractor survey, so compare it with site-specific quotes before you set a budget.",
   ],
-  coveredCities: ["chula-vista", "oceanside", "escondido", "carlsbad", "imperial-beach", "san-diego-county"],
+  coveredCities: ["chula-vista", "oceanside", "escondido", "carlsbad", "imperial-beach", "la-mesa", "san-marcos", "san-diego-county"],
   fees: {
     heading: "City of San Diego permit and impact fees",
     paragraphs: [

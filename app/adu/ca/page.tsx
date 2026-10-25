@@ -47,6 +47,10 @@ const CITY_BLURBS: Record<string, string> = {
     "The specific-standards city: named Coaster stations for 18-foot height relief, a parking waiver that reaches bus stops, and a coastal permit for most ADUs in the Coastal Zone.",
   "imperial-beach":
     "The coastal-permit city: a $1,000 City coastal permit before most ADUs in the Coastal Zone, a parcel map that shows who issues it, and a pre-approved plan that cannot be used in a flood hazard area.",
+  "la-mesa":
+    "The no-parking city: no ADU parking required anywhere, up to three ADUs plus a JADU on a single-family lot, and a 20-foot height measured to the plate line.",
+  "san-marcos":
+    "The placement city: detached ADUs in the rear half of the lot, 10 feet from every structure, caps of 850 and 1,000 square feet, and a house-matching design rule.",
   "san-diego-county":
     "The unincorporated county: 1,200 sq ft and 25-foot detached ADUs, fire-district and septic reviews that shape the site plan, and an ordinance the state flagged in July 2026.",
 };
