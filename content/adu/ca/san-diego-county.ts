@@ -44,7 +44,7 @@ export const sanDiegoCounty: JurisdictionContent = {
     { label: "Max size — attached", value: "50% of the house's floor area, up to 1,200 sq ft", note: "The 50% cap does not apply up to 850 sq ft, or 1,000 sq ft with more than one bedroom" },
     { label: "Max size — JADU", value: "500 sq ft, entirely within an existing or proposed house" },
     { label: "Max height — detached", value: "25 ft", note: "18 ft for detached ADUs at a multifamily complex. The County's handout lists 18 ft for ADUs under 800 sq ft, which may also sit in the front yard setback and need no parking space" },
-    { label: "Max height — attached", value: "The height of the house or 16 ft, whichever is higher", note: "An ADU built above part of an existing house follows the zone's height limit" },
+    { label: "Max height — attached", value: "25 ft or the zone's height limit for the house, whichever is lower", note: "State law sets this floor. The County's 2024 handbook still lists the house's height or 16 ft, whichever is higher" },
     { label: "Rear and side setbacks", value: "4 ft for a new ADU, plus any required fire setbacks", note: "On a corner lot, the street side is also 4 ft from the edge of the easement, street or property line" },
     { label: "Front setback", value: "Per the underlying zone", note: "An ADU of 800 sq ft or less may encroach into the front yard setback" },
     { label: "Conversions", value: "No size, height, coverage or setback limits for an existing permitted structure, except fire safety", note: "One 150 sq ft expansion allowed for entry and exit only; the whole house cannot become the ADU" },
@@ -149,7 +149,7 @@ export const sanDiegoCounty: JurisdictionContent = {
     {
       question: "How tall can a granny flat be in San Diego County?",
       answer:
-        "Up to 25 feet for a detached ADU on a County lot, or 18 feet at a multifamily complex. The County's handout lists 18 feet for an ADU under 800 square feet that uses the front-yard and no-parking allowances. An attached ADU can match the house's height or 16 feet, whichever is higher.",
+        "Up to 25 feet for a detached ADU on a County lot, or 18 feet at a multifamily complex. The County's handout lists 18 feet for an ADU under 800 square feet that uses the front-yard and no-parking allowances. Under state law, an attached ADU can reach 25 feet or the zone's height limit for the house, whichever is lower; the County's 2024 handbook still lists the house's height or 16 feet.",
     },
     {
       question: "Can I build an ADU if my house is on septic in San Diego County?",

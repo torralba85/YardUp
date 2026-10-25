@@ -76,12 +76,12 @@ export const laMesa: JurisdictionContent = {
   fees: {
     heading: "Cost and fees in La Mesa",
     paragraphs: [
-      "La Mesa charges no impact fees for an ADU under 750 square feet, and charges larger units in proportion to the square footage of the main house. Building permit and plan check fees are separate; ask the City for an estimate once you have a plan set.",
+      "La Mesa's code exempts ADUs under 750 square feet from impact fees, and state law goes slightly further: an ADU of 750 square feet of interior livable space or less pays none. Larger units are charged in proportion to the square footage of the main house. Building permit and plan check fees are separate; ask the City for an estimate once you have a plan set.",
       "Utility charges depend on how the ADU connects. An ADU is not treated as a new residential use for water and sewer connection fees or capacity charges, unless it is built with a new house. An ADU inside the existing house or an existing accessory structure needs no new utility connection and pays no connection fee. Where the lot forces a separate connection, the fee must be proportionate to the unit's size or plumbing fixture load. A JADU pays no sewer or water connection fees. On a private septic system, the County of San Diego's environmental health department must approve the ADU first.",
       "The City's five pre-approved ADU plans can cut design cost. You still provide a site plan and Title 24 energy calculations, and the City asks for a soils report only when the unit is over 500 square feet.",
     ],
     bullets: [
-      "Impact fees: none under 750 sq ft; proportional to the main house above that",
+      "Impact fees: none at 750 sq ft of interior livable space or less; proportional to the main house above that",
       "Building permit and plan check: estimate with the City",
       "Water and sewer connection fees: none for an ADU within existing space; proportionate if a separate connection is required",
       "JADU: no sewer or water connection fees",
@@ -161,7 +161,7 @@ export const laMesa: JurisdictionContent = {
     {
       question: "Does La Mesa charge impact fees for an ADU?",
       answer:
-        "Not for an ADU under 750 square feet. Larger ADUs pay impact fees in proportion to the square footage of the main house. Water and sewer connection fees apply only when the ADU needs its own connection or is built with a new house.",
+        "Not for an ADU of 750 square feet of interior livable space or less, under state law. Larger ADUs pay impact fees in proportion to the square footage of the main house. Water and sewer connection fees apply only when the ADU needs its own connection or is built with a new house.",
     },
     {
       question: "Do I have to live on the property to rent out an ADU in La Mesa?",
