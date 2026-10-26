@@ -26,6 +26,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/Field";
 import { ParcelMark } from "@/components/ui/BrandLockup";
+import { configForFootprint } from "@/lib/feasibility";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { stashEntrySource } from "@/lib/analytics/entry-source";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
@@ -205,6 +206,20 @@ export function LotMoreLanding({
   const sampleHref = `/studio?${serializeScenarioParams({
     ...defaultScenarioState,
     parcelId: demo.parcelId,
+    pose: undefined,
+    assumptions: { ...defaultScenarioState.assumptions, rentScenario: sample.id },
+  })}`;
+  const explorerConfig =
+    explorerFootprint === 600 && explorerRoof === "shed"
+      ? defaultScenarioState.config
+      : configForFootprint(explorerFootprint, {
+          ...defaultScenarioState.config,
+          roof: explorerRoof,
+        });
+  const explorerSampleHref = `/studio?${serializeScenarioParams({
+    ...defaultScenarioState,
+    parcelId: demo.parcelId,
+    config: explorerConfig,
     pose: undefined,
     assumptions: { ...defaultScenarioState.assumptions, rentScenario: sample.id },
   })}`;
@@ -431,6 +446,7 @@ export function LotMoreLanding({
                 className={styles.sampleResult}
                 href={sampleHref}
                 prefetch={false}
+                data-ui
                 aria-label={`Open the ${demo.city} sample lot in the 3D studio`}
                 onClick={() => {
                   stashAddressQuery("");
@@ -469,7 +485,7 @@ export function LotMoreLanding({
                 </span>
               </Link>
             </div>
-            <figure className={styles.heroVisual}>
+            <figure className={styles.heroVisual} data-ui>
               <div className={styles.artHeader}>
                 <span>ILLUSTRATIVE CONCEPT · SCALE 1:100</span>
                 <span>LOT — 001 / ORTHO 3D</span>
@@ -597,20 +613,22 @@ export function LotMoreLanding({
                   N<ArrowUpRight size={24} strokeWidth={1.5} />
                 </div>
               </div>
-              <div className={styles.maquetteReadout} aria-live="polite">
-                <div className={styles.maquetteReadoutTop}>
-                  <span className={styles.maquetteReadoutIndex}>
-                    POINT {hotspots[activeHotspot].id} / 03
-                  </span>
-                  <span className={styles.maquetteReadoutMetric}>
-                    {hotspots[activeHotspot].metric}
-                  </span>
+              {scene === 2 && (
+                <div className={styles.maquetteReadout} aria-live="polite">
+                  <div className={styles.maquetteReadoutTop}>
+                    <span className={styles.maquetteReadoutIndex}>
+                      POINT {hotspots[activeHotspot].id} / 03
+                    </span>
+                    <span className={styles.maquetteReadoutMetric}>
+                      {hotspots[activeHotspot].metric}
+                    </span>
+                  </div>
+                  <p className={styles.maquetteReadoutBody}>
+                    <strong>{hotspots[activeHotspot].title}.</strong>{" "}
+                    {hotspots[activeHotspot].detail}
+                  </p>
                 </div>
-                <p className={styles.maquetteReadoutBody}>
-                  <strong>{hotspots[activeHotspot].title}.</strong>{" "}
-                  {hotspots[activeHotspot].detail}
-                </p>
-              </div>
+              )}
               <Segmented
                 className={styles.sceneControls}
                 aria-label="Property illustration view"
@@ -673,11 +691,11 @@ export function LotMoreLanding({
               </div>
               <div className={styles.demoIntro}>
                 <p>
-                  Explore the same 600 sq ft {demo.name} demo shown above, with
-                  the {money(sample.rent)}/mo market rent assumption.
+                  Explore the same {explorerFootprint} sq ft {demo.name} demo shown above, with
+                  the {money(explorerRent)}/mo market rent assumption.
                 </p>
                 <Link
-                  href={sampleHref}
+                  href={explorerSampleHref}
                   prefetch={false}
                   className={styles.darkButton}
                   onClick={() => {
@@ -691,7 +709,7 @@ export function LotMoreLanding({
               </div>
             </div>
             <div className={styles.demoLayout}>
-              <figure className={styles.studioDemo}>
+              <figure className={styles.studioDemo} data-ui>
                 <div className={styles.demoLabel}>
                   <span>Studio preview</span>
                   <span>{landingDemos.seattle.name} demo, {landingDemos.seattle.city}</span>
@@ -716,35 +734,35 @@ export function LotMoreLanding({
                   <div className={styles.sandboxControlsRow}>
                     <div className={styles.sandboxControlGroup}>
                       <span className={styles.sandboxControlLabel}>FOOTPRINT</span>
-                      <div className={styles.sandboxToggleBar}>
-                        {([450, 600, 800] as const).map((sqft) => (
-                          <button
-                            key={sqft}
-                            type="button"
-                            className={styles.sandboxToggle}
-                            aria-pressed={explorerFootprint === sqft}
-                            onClick={() => setExplorerFootprint(sqft)}
-                          >
-                            {sqft} sq ft
-                          </button>
-                        ))}
-                      </div>
+                      <Segmented
+                        aria-label="Preview footprint"
+                        className={styles.sandboxToggleBar}
+                        value={String(explorerFootprint)}
+                        onChange={(value) => setExplorerFootprint(Number(value) as 450 | 600 | 800)}
+                        options={([450, 600, 800] as const).map((sqft) => ({
+                          value: String(sqft),
+                          label: `${sqft} sq ft`,
+                        }))}
+                      />
                     </div>
                     <div className={styles.sandboxControlGroup}>
                       <span className={styles.sandboxControlLabel}>ROOF PROFILE</span>
-                      <div className={styles.sandboxToggleBar}>
-                        {(["shed", "gable", "flat"] as const).map((profile) => (
-                          <button
-                            key={profile}
-                            type="button"
-                            className={styles.sandboxToggle}
-                            aria-pressed={explorerRoof === profile}
-                            onClick={() => setExplorerRoof(profile)}
-                          >
-                            {profile}
-                          </button>
-                        ))}
-                      </div>
+                      <Segmented
+                        aria-label="Preview roof profile"
+                        className={styles.sandboxToggleBar}
+                        value={explorerRoof}
+                        onChange={(value) => setExplorerRoof(value)}
+                        options={(
+                          [
+                            ["shed", "Shed"],
+                            ["gable", "Gable"],
+                            ["flat", "Flat"],
+                          ] as const
+                        ).map(([value, label]) => ({
+                          value,
+                          label,
+                        }))}
+                      />
                     </div>
                   </div>
                   <div className={styles.sandboxReadoutGrid} aria-live="polite">
@@ -778,6 +796,8 @@ export function LotMoreLanding({
                   <li
                     className={activeStep === 0 ? styles.demoStepActive : undefined}
                     onMouseEnter={() => setActiveStep(0)}
+                    onFocusCapture={() => setActiveStep(0)}
+                    onClick={() => setActiveStep(0)}
                   >
                     <span>01</span>
                     <div>
@@ -791,6 +811,8 @@ export function LotMoreLanding({
                   <li
                     className={activeStep === 1 ? styles.demoStepActive : undefined}
                     onMouseEnter={() => setActiveStep(1)}
+                    onFocusCapture={() => setActiveStep(1)}
+                    onClick={() => setActiveStep(1)}
                   >
                     <span>02</span>
                     <div>
@@ -808,6 +830,8 @@ export function LotMoreLanding({
                   <li
                     className={activeStep === 2 ? styles.demoStepActive : undefined}
                     onMouseEnter={() => setActiveStep(2)}
+                    onFocusCapture={() => setActiveStep(2)}
+                    onClick={() => setActiveStep(2)}
                   >
                     <span>03</span>
                     <div>
@@ -1018,7 +1042,7 @@ export function LotMoreLanding({
                 <li><strong>Give builders the same brief.</strong> Bring a 12-item scope checklist and a printable PDF to your next conversation.</li>
               </ul>
             </div>
-            <div className={styles.reportPreview}>
+            <div className={styles.reportPreview} data-ui>
               <Segmented
                 className={styles.reportTabs}
                 aria-label="Sample report pages"

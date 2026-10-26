@@ -81,7 +81,7 @@ test("landing radios expose one tab stop, move focus, and update the associated 
 }) => {
   await page.goto("/");
   const groups = page.getByRole("radiogroup");
-  await expect(groups).toHaveCount(4);
+  await expect(groups).toHaveCount(6);
   for (const group of await groups.all()) {
     const checked = group.getByRole("radio", { checked: true });
     await expect(group.locator('[role="radio"][tabindex="0"]')).toHaveCount(1);
