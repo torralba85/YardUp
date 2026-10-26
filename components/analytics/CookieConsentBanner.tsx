@@ -35,9 +35,9 @@ export function CookieConsentBanner() {
     <div
       role="region"
       aria-label="Cookie consent"
-      className="fixed inset-x-0 bottom-0 z-(--z-index-toast) sm:px-4 sm:pt-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-(--z-index-toast) sm:px-4 sm:pt-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 rounded-none border-t border-lot-line bg-lot-chalk px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-none sm:flex-row sm:items-center sm:gap-6 sm:border sm:p-5">
+      <div className="pointer-events-auto mx-auto flex w-full max-w-3xl flex-col gap-2 rounded-none border-t border-lot-line bg-lot-chalk px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-none sm:flex-row sm:items-center sm:gap-6 sm:border sm:p-5">
         <p className="lf-caption flex-1 text-lot-stone">
           Allow Google Analytics and Google Ads cookies to measure how people find us? Google never gets your address or results.
         </p>

@@ -481,15 +481,28 @@ describe("landing address handoff", () => {
     );
     expect(screen.getByText(/5′ rear · 5′ side clearance/)).toBeVisible();
 
+    fireEvent.click(screen.getByRole("radio", { name: /Today/ }));
+    expect(
+      screen.queryByText(/5′ rear · 5′ side clearance/),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /The possibility/ }));
+    expect(screen.getByText(/5′ rear · 5′ side clearance/)).toBeVisible();
+
     const sandbox = screen.getByLabelText("Interactive massing preview");
     expect(within(sandbox).getByText("32% of lot")).toBeVisible();
-    fireEvent.click(within(sandbox).getByRole("button", { name: "800 sq ft" }));
+    fireEvent.click(within(sandbox).getByRole("radio", { name: "800 sq ft" }));
     expect(within(sandbox).getByText("36% of lot")).toBeVisible();
-    fireEvent.click(within(sandbox).getByRole("button", { name: "gable" }));
-    expect(within(sandbox).getByRole("button", { name: "gable" })).toHaveAttribute(
-      "aria-pressed",
+    fireEvent.click(within(sandbox).getByRole("radio", { name: "Gable" }));
+    expect(within(sandbox).getByRole("radio", { name: "Gable" })).toHaveAttribute(
+      "aria-checked",
       "true",
     );
+    const tryHref = screen
+      .getByRole("link", { name: "Try the Oak Street demo" })
+      .getAttribute("href")!;
+    const params = new URLSearchParams(tryHref.split("?")[1]);
+    expect(params.get("size")).toBe("800");
+    expect(params.get("roof")).toBe("gable");
   });
 });
 

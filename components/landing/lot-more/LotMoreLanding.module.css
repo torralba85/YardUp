@@ -56,7 +56,7 @@
   font-weight: 500;
 }
 .page h2 {
-  font-size: clamp(38px, 4.5vw, 68px);
+  font-size: clamp(38px, 4.4vw, 64px);
   line-height: 1.06;
   letter-spacing: -0.055em;
 }
@@ -116,7 +116,7 @@
   gap: 24px;
   max-width: 1680px;
   margin: 0 auto;
-  padding: 27px 4.5%;
+  padding: 18px 6%;
   border-bottom: 1px solid var(--line);
 }
 .brand {
@@ -124,9 +124,9 @@
   align-items: center;
   min-height: 44px;
   font-family: var(--font-lot-display), sans-serif;
-  font-size: 27px;
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: -1.2px;
+  letter-spacing: -0.04em;
   white-space: nowrap;
 }
 .brand > svg {
@@ -246,13 +246,14 @@
 }
 .hero {
   display: grid;
-  grid-template-columns: 43% 57%;
+  grid-template-columns: 42% 54%;
+  column-gap: 4%;
   grid-template-areas: "copy art" "app art";
   grid-template-rows: auto min-content;
   max-width: 1680px;
   margin: 0 auto;
-  padding: 42px 4.5% 35px;
-  min-height: 720px;
+  padding: 24px 6% 24px;
+  min-height: 0;
   align-items: center;
 }
 .heroCopy {
@@ -261,7 +262,7 @@
   z-index: 1;
 }
 .heroKicker {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -279,11 +280,11 @@
 }
 .hero .heroDisplay {
   font-family: var(--font-lot-display), Arial, sans-serif;
-  font-size: clamp(90px, 10vw, 164px);
+  font-size: clamp(62px, 8.5vw, 126px);
   font-weight: 600;
   letter-spacing: -0.075em;
   line-height: 0.84;
-  margin: 32px 0 26px;
+  margin: 16px 0 16px;
 }
 .orange {
   color: var(--orange);
@@ -292,27 +293,27 @@
   font-family: var(--font-lot-body), Arial, sans-serif;
 }
 .heroLead {
-  font-size: clamp(21px, 2vw, 30px);
+  font-size: 22px;
   line-height: 1.3;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.035em;
   font-weight: 500;
 }
 .heroDescription {
   max-width: 400px;
-  font-size: 15px;
-  color: var(--stone);
-  margin-top: 15px !important;
-  line-height: 1.75;
+  font-size: 16px;
+  color: var(--ink);
+  margin-top: 10px !important;
+  line-height: 1.55;
 }
 .addressForm {
-  margin-top: 28px;
+  margin-top: 16px;
   max-width: 500px;
 }
 .fieldLabel {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 7px;
+  margin-bottom: 6px;
 }
 .inputRow {
   display: flex;
@@ -353,18 +354,18 @@
 .inputRow .primaryButton {
   gap: 8px;
   padding: 10px 13px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .formNote {
   color: var(--stone);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
-  margin-top: 9px !important;
+  margin-top: 6px !important;
 }
 .formError {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 9px !important;
+  margin-top: 6px !important;
 }
 .textLink {
   display: inline-flex;
@@ -381,8 +382,8 @@
 .sampleResult {
   display: block;
   max-width: 500px;
-  margin-top: 20px;
-  padding: 14px 16px 12px;
+  margin-top: 12px;
+  padding: 10px 14px 8px;
   border: 1px solid var(--line);
   background: var(--color-lot-paper);
   box-shadow: 6px 8px 0 var(--color-lot-paper-shadow);
@@ -407,7 +408,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px 26px;
-  margin: 10px 0 0;
+  margin: 6px 0 0;
 }
 .sampleFigures dt {
   font-size: 11px;
@@ -416,7 +417,7 @@
 .sampleFigures dd {
   margin: 2px 0 0;
   font-family: var(--font-lot-display), sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.04em;
   line-height: 1.2;
@@ -434,8 +435,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 44px;
-  margin-top: 6px;
+  min-height: 40px;
+  margin-top: 4px;
   border-top: 1px solid var(--line);
   font-size: 13px;
   font-weight: 600;
@@ -446,11 +447,11 @@
 }
 .appStoreLink {
   display: flex;
-  width: 190px;
+  width: 164px;
   max-width: 100%;
-  margin-top: 12px;
+  margin-top: 4px;
   margin-bottom: 0;
-  min-height: 56px;
+  min-height: 48px;
 }
 .appStoreLink img {
   display: block;
@@ -464,22 +465,22 @@
   flex-direction: column;
   justify-content: center;
   min-width: 0;
-  margin-left: 18px !important;
+  margin-left: 0;
 }
 .artHeader {
   display: flex;
   justify-content: space-between;
-  padding: 0 15px 14px;
+  padding: 0 0 8px;
   color: var(--stone);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 .parcelCanvas {
   position: relative;
-  aspect-ratio: 3/2;
-  width: 110%;
-  margin-left: -4%;
+  aspect-ratio: 16/10;
+  width: 100%;
+  margin-left: 0;
   mix-blend-mode: multiply;
 }
 .parcelImage {
@@ -546,7 +547,8 @@
 .sceneControls,
 .intentControls,
 .scenarioControls,
-.reportTabs {
+.reportTabs,
+.sandboxToggleBar {
   display: grid;
   gap: 0;
   min-width: 0;
@@ -555,13 +557,14 @@
   padding: 4px;
 }
 .sceneControls {
-  align-self: center;
-  margin: 14px 0 18px;
+  width: 100%;
+  margin: 6px 0 8px;
 }
 .sceneControls button,
 .intentControls button,
 .scenarioControls button,
-.reportTabs button {
+.reportTabs button,
+.sandboxToggleBar button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -578,11 +581,12 @@
 }
 .sceneControls button span {
   color: var(--stone);
-  font-size: 10px;
+  font-size: 11px;
 }
 .sceneControls button[aria-checked="true"],
 .intentControls button[aria-checked="true"],
-.reportTabs button[aria-checked="true"] {
+.reportTabs button[aria-checked="true"],
+.sandboxToggleBar button[aria-checked="true"] {
   background: var(--ink);
   color: var(--chalk);
 }
@@ -591,7 +595,8 @@
 }
 .sceneControls button:hover:not([aria-checked="true"]),
 .intentControls button:hover:not([aria-checked="true"]),
-.reportTabs button:hover:not([aria-checked="true"]) {
+.reportTabs button:hover:not([aria-checked="true"]),
+.sandboxToggleBar button:hover:not([aria-checked="true"]) {
   background: var(--line);
 }
 .artCaption {
@@ -601,14 +606,14 @@
   line-height: 1.5;
   color: var(--stone);
   border-top: 1px solid var(--line);
-  padding: 13px 0 0;
-  margin: 0 15px;
+  padding: 8px 0 0;
+  margin: 0;
 }
 .eyebrow {
   display: flex;
   align-items: center;
   gap: 13px;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   font-weight: 600;
   margin-bottom: 30px !important;
@@ -621,13 +626,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0;
   flex-shrink: 0;
 }
 .howSection {
-  padding: 112px 7% 106px;
-  max-width: 1600px;
+  padding: 112px 6% 106px;
+  max-width: 1680px;
   margin: 0 auto;
 }
 .intentControls {
@@ -636,7 +641,7 @@
 .numbersSection {
   background: var(--ink);
   color: var(--chalk);
-  padding: 90px 7% 48px;
+  padding: 90px 6% 48px;
 }
 .numbersHeading {
   display: flex;
@@ -649,7 +654,7 @@
 }
 .numbersHeading > p {
   color: var(--color-lot-stone-on-dark);
-  font-size: 15px;
+  font-size: 16px;
   padding-bottom: 5px;
 }
 .numbersSection .eyebrow {
@@ -667,7 +672,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.08em;
 }
 .scenarioControls {
@@ -706,7 +711,7 @@
   display: block;
   font-family: var(--font-lot-display), sans-serif;
   font-weight: 400;
-  font-size: clamp(36px, 4.4vw, 64px);
+  font-size: clamp(38px, 4.4vw, 64px);
   letter-spacing: -0.06em;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
@@ -718,12 +723,12 @@
   padding: 0 4px;
 }
 .metrics small {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-lot-stone-on-dark);
   letter-spacing: 0;
 }
 .metrics strong small {
-  font-size: 17px;
+  font-size: 16px;
   margin-left: 7px;
 }
 .numberNotes {
@@ -741,7 +746,7 @@
   gap: 20px;
   align-items: center;
   min-height: 44px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .numberNotes details p {
   color: var(--color-lot-stone-on-dark);
@@ -763,17 +768,17 @@
 }
 .estimateNote {
   color: var(--color-lot-stone-on-dark);
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 32px !important;
 }
 .reportSection {
-  padding: 112px 9%;
+  padding: 112px 6%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 12%;
+  column-gap: 10%;
   grid-template-areas: ". preview" "copy preview" "actions preview" ". preview";
   grid-template-rows: 1fr auto auto 1fr;
-  max-width: 1600px;
+  max-width: 1680px;
   margin: 0 auto;
   align-items: center;
 }
@@ -784,10 +789,10 @@
   grid-area: actions;
 }
 .reportCopy > p:not(.eyebrow):not(.reportPrice) {
-  color: var(--stone);
+  color: var(--ink);
   margin-top: 26px;
-  font-size: 15px;
-  max-width: 380px;
+  font-size: 16px;
+  max-width: 420px;
 }
 .reportCopy ul {
   list-style: none;
@@ -804,7 +809,7 @@
   font-size: 13px;
 }
 .reportPrice {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--stone);
   margin-top: 12px !important;
 }
@@ -842,7 +847,7 @@
   height: 25px;
 }
 .paperTop > span:last-child {
-  font-size: 9px;
+  font-size: 11px;
   text-align: right;
   letter-spacing: 0.08em;
 }
@@ -851,13 +856,13 @@
   padding-top: 25px;
 }
 .paperKicker {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--stone);
 }
 .paper h3 {
-  font-size: 35px;
-  line-height: 1.07;
+  font-size: 22px;
+  line-height: 1.15;
   margin-top: 12px;
 }
 .reportDiagram {
@@ -875,11 +880,11 @@
 }
 .paperFacts span {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--stone);
 }
 .paperFacts strong {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
 }
 .paperBottom {
@@ -891,7 +896,7 @@
   padding-top: 12px;
 }
 .paperBottom span {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
@@ -916,7 +921,7 @@
   margin: 0;
 }
 .paperDetail {
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 17px !important;
   color: var(--stone);
 }
@@ -929,7 +934,7 @@
   padding: 8px 0;
 }
 .previewNote {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--stone);
   text-align: center;
   margin-top: 28px !important;
@@ -939,10 +944,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 10%;
   border-top: 1px solid var(--line);
-  padding: 88px 7% 100px;
+  padding: 88px 6% 100px;
 }
 .faqSection h2 {
-  font-size: clamp(34px, 3.6vw, 54px);
+  font-size: clamp(38px, 4.4vw, 64px);
 }
 .faqSection .textLink {
   margin-top: 25px;
@@ -959,20 +964,20 @@
   justify-content: space-between;
   gap: 15px;
   padding: 20px 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
 }
 .faqList summary:hover {
   color: var(--ink);
 }
 .faqList details p {
-  font-size: 14px;
-  color: var(--stone);
+  font-size: 16px;
+  color: var(--ink);
   padding-bottom: 22px;
 }
 .closing {
   background: var(--orange);
-  padding: 85px 7%;
+  padding: 85px 6%;
   position: relative;
 }
 .closing h2 {
@@ -982,12 +987,12 @@
   margin: 30px 0 23px;
 }
 .closingKicker {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 .closing > div > p:not(.closingKicker) {
-  font-size: 17px;
+  font-size: 16px;
 }
 .closing .addressForm {
   max-width: 510px;
@@ -1014,7 +1019,7 @@
   position: absolute;
   width: 250px;
   height: 250px;
-  right: 9%;
+  right: 6%;
   top: 24%;
 }
 .closingMark circle {
@@ -1026,12 +1031,12 @@
 .closingSerial {
   position: absolute;
   bottom: 40px;
-  right: 7%;
-  font-size: 10px;
+  right: 6%;
+  font-size: 13px;
   letter-spacing: 0.08em;
 }
 .footer {
-  padding: 50px 4.5% 24px;
+  padding: 50px 6% 96px;
 }
 .footerTop {
   display: grid;
@@ -1041,7 +1046,7 @@
 }
 .footerTagline {
   font-family: var(--font-lot-display), sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.35;
   font-weight: 500;
   letter-spacing: -0.035em;
@@ -1056,7 +1061,7 @@
 .footerGroup h3 {
   margin-bottom: 14px;
   font-family: var(--font-lot-body), sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1.5;
@@ -1117,7 +1122,7 @@
   padding-top: 16px;
   border-top: 1px solid var(--line);
   color: var(--stone);
-  font-size: 12px;
+  font-size: 13px;
 }
 .socialRail {
   display: flex;
@@ -1150,9 +1155,9 @@
 }
 .offerBenefits {
   padding-left: 20px;
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--stone);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
 }
 .offerBenefits strong { color: var(--ink); }
 .offerBenefits li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; column-gap: 20px; }
@@ -1179,8 +1184,8 @@
 .sampleDialog::backdrop { background: color-mix(in srgb, var(--color-lot-ink) 70%, transparent); }
 .sampleDialog[open] { display: flex; flex-direction: column; gap: 8px; }
 .sampleToolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.sampleDialog .sampleToolbar h2 { margin: 0; font-size: 18px; line-height: 1.25; font-weight: 500; }
-.sampleDialog .sampleToolbar p { margin: 8px 0; font-size: 12px; line-height: 1.6; }
+.sampleDialog .sampleToolbar h2 { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 500; }
+.sampleDialog .sampleToolbar p { margin: 8px 0; font-size: 13px; line-height: 1.6; }
 .sampleToolbar button { display: grid; place-items: center; flex-shrink: 0; min-width: 44px; min-height: 44px; background: transparent; border: 1px solid var(--ink); cursor: pointer; }
 .sampleDialog a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-size: 13px; }
 .sampleDialog :is(a, button):focus-visible { outline: 2px solid var(--orange-ink); outline-offset: 3px; }
@@ -1258,12 +1263,16 @@
   .footerWordmark {
     font-size: 278px;
   }
-  .footer,
+  .header,
+  .hero,
+  .howSection,
   .numbersSection,
+  .reportSection,
   .faqSection,
-  .closing {
-    padding-left: max(7%, calc((100vw - 1450px) / 2));
-    padding-right: max(7%, calc((100vw - 1450px) / 2));
+  .closing,
+  .footer {
+    padding-left: max(6%, calc((100vw - 1480px) / 2));
+    padding-right: max(6%, calc((100vw - 1480px) / 2));
   }
 }
 @media (max-width: 1150px) {
@@ -1281,7 +1290,7 @@
   }
   .desktopNav {
     gap: 18px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .headerActions {
     gap: 15px;
@@ -1290,15 +1299,16 @@
     display: none;
   }
   .hero {
-    grid-template-columns: 45% 55%;
-    padding-top: 48px;
-    min-height: 660px;
+    grid-template-columns: 44% 52%;
+    column-gap: 4%;
+    padding-top: 28px;
+    min-height: 0;
   }
   .hero .heroDisplay {
-    font-size: 11vw;
+    font-size: 9vw;
   }
   .heroVisual {
-    margin-left: 10px !important;
+    margin-left: 0;
   }
   .inputRow {
     flex-wrap: wrap;
@@ -1333,8 +1343,8 @@
   }
   .reportSection {
     column-gap: 8%;
-    padding-left: 7%;
-    padding-right: 7%;
+    padding-left: 6%;
+    padding-right: 6%;
   }
   .closingMark {
     width: 190px;
@@ -1347,7 +1357,7 @@
     padding: 16px 6%;
   }
   .brand {
-    font-size: 25px;
+    font-size: 22px;
   }
   .desktopNav {
     display: none;
@@ -1387,30 +1397,30 @@
   .hero {
     display: flex;
     flex-direction: column;
-    padding: 38px 6% 26px;
+    padding: 28px 6% 24px;
     min-height: 0;
     align-items: stretch;
   }
   .hero .heroDisplay {
-    font-size: clamp(90px, 17vw, 130px);
-    margin: 28px 0 24px;
+    font-size: clamp(72px, 16vw, 120px);
+    margin: 16px 0 16px;
   }
   .heroLead {
-    font-size: 25px;
+    font-size: 22px;
   }
   .heroDescription {
     max-width: 430px;
   }
   .heroVisual {
-    margin: 40px 0 0 !important;
+    margin: 28px 0 0 !important;
   }
   .parcelCanvas {
-    width: 110%;
-    margin-left: -5%;
+    width: 100%;
+    margin-left: 0;
   }
   .sceneTag {
     right: 5%;
-    font-size: 10px;
+    font-size: 11px;
   }
   .sceneControls {
     margin-top: 6px;
@@ -1470,17 +1480,17 @@
   }
   .metrics p,
   .metrics small {
-    font-size: 11px;
+    font-size: 13px;
   }
   .metrics strong small {
-    font-size: 12px;
+    font-size: 13px;
   }
   .numberNotes {
     flex-direction: column;
     gap: 15px;
   }
   .reportSection {
-    padding: 70px 8%;
+    padding: 70px 6%;
     grid-template-columns: 1fr;
     grid-template-areas: "copy" "preview" "actions";
     grid-template-rows: auto;
@@ -1512,7 +1522,7 @@
     font-size: 10vw;
   }
   .closingMark {
-    right: 7%;
+    right: 6%;
     width: 105px;
     height: 105px;
     top: 65px;
@@ -1523,7 +1533,7 @@
     right: auto;
   }
   .footer {
-    padding: 38px 6% 75px;
+    padding: 38px 6% 140px;
   }
   .footerTop {
     gap: 30px 20px;
@@ -1540,7 +1550,7 @@
     margin: 30px 0 20px;
   }
   .footerWordmark > span {
-    font-size: 12px;
+    font-size: 13px;
   }
   .footerBottom {
     gap: 12px;
@@ -1571,10 +1581,10 @@
 
 @media (max-width: 480px) {
   .footerTagline {
-    font-size: 20px;
+    font-size: 22px;
   }
   .hero {
-    padding-top: 28px;
+    padding-top: 20px;
   }
   .heroCopy {
     display: contents;
@@ -1590,14 +1600,14 @@
   }
   .hero .addressForm {
     order: 4;
-    margin-top: 20px;
+    margin-top: 14px;
   }
   .sampleResult {
     order: 5;
     align-self: stretch;
   }
   .sampleFigures dd {
-    font-size: 21px;
+    font-size: 22px;
   }
   .heroVisual {
     order: 6;
@@ -1620,24 +1630,24 @@
     gap: 12px;
   }
   .signIn {
-    font-size: 12px;
+    font-size: 13px;
   }
   .signIn > svg {
     display: none;
   }
   .hero .heroDisplay {
-    font-size: 21vw;
-    margin: 20px 0 18px;
+    font-size: 18vw;
+    margin: 12px 0 12px;
   }
   .heroKicker {
     font-size: 11px;
   }
   .heroLead {
-    font-size: 24px;
+    font-size: 22px;
   }
   .heroDescription {
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.5;
   }
   .inputRow {
     gap: 8px;
@@ -1653,14 +1663,14 @@
     padding: 12px 15px;
   }
   .formNote {
-    font-size: 14px;
+    font-size: 13px;
   }
   .heroVisual {
     margin-top: 18px !important;
   }
   .sceneTag {
     top: 8%;
-    font-size: 10px;
+    font-size: 11px;
     padding: 6px 8px;
   }
   .tagLine {
@@ -1703,25 +1713,25 @@
     border-bottom: 0;
   }
   .metrics strong {
-    font-size: 51px;
+    font-size: 38px;
     padding: 5px 0;
   }
   .metrics strong small {
-    font-size: 17px;
+    font-size: 16px;
   }
   .metrics p,
   .metrics small {
-    font-size: 12px;
+    font-size: 13px;
   }
   .scenarioBar > span {
-    font-size: 9px;
+    font-size: 11px;
   }
   .scenarioControls button {
     padding: 8px;
   }
   .reportSection {
     padding-left: 6%;
-    padding-right: 8%;
+    padding-right: 6%;
   }
   .paper {
     padding: 22px;
@@ -1730,23 +1740,23 @@
     min-height: 340px;
   }
   .paper h3 {
-    font-size: 31px;
+    font-size: 22px;
   }
   .paperTop > span:first-child {
-    font-size: 14px;
+    font-size: 16px;
   }
   .paperTop > span:last-child,
   .paperKicker {
-    font-size: 9px;
+    font-size: 11px;
   }
   .paperBottom span {
-    font-size: 9px;
+    font-size: 11px;
   }
   .reportEstimates dd {
-    font-size: 15px;
+    font-size: 16px;
   }
   .reportQuestions {
-    font-size: 12px;
+    font-size: 13px;
   }
   .closing h2 {
     font-size: 13vw;
@@ -1769,7 +1779,7 @@
     width: 100%;
   }
   .closing > div > p:not(.closingKicker) {
-    font-size: 14px;
+    font-size: 16px;
   }
 }
 
@@ -1780,17 +1790,17 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 5px;
-  padding-top: 15px;
+  gap: 3px;
+  padding-top: 10px;
 }
 .appDownload > span {
   color: var(--stone);
-  font-size: 11px;
+  font-size: 13px;
 }
 .appStoreLink {
   display: inline-flex;
   align-items: center;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 .howSection {
   border-top: 1px solid var(--line);
@@ -1807,8 +1817,8 @@
   max-width: 350px;
 }
 .demoIntro > p {
-  color: var(--stone);
-  font-size: 15px;
+  color: var(--ink);
+  font-size: 16px;
 }
 .demoIntro .darkButton {
   margin-top: 18px;
@@ -1830,7 +1840,7 @@
   gap: 15px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--line);
-  font-size: 12px;
+  font-size: 13px;
 }
 .demoLabel span:last-child {
   color: var(--stone);
@@ -1842,7 +1852,7 @@
 }
 .studioDemo figcaption {
   padding: 15px 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--stone);
   border-top: 1px solid var(--line);
 }
@@ -1859,19 +1869,19 @@
 }
 .demoSteps li > span {
   color: var(--orange-ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 .demoSteps h3 {
   font-size: 22px;
 }
 .demoSteps p {
   margin-top: 9px;
-  font-size: 14px;
-  color: var(--stone);
+  font-size: 16px;
+  color: var(--ink);
 }
 .demoSteps .textLink {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .intentBand {
   display: grid;
@@ -1887,8 +1897,8 @@
 }
 .intentBand > p {
   max-width: 430px;
-  color: var(--stone);
-  font-size: 15px;
+  color: var(--ink);
+  font-size: 16px;
 }
 .intentControls {
   margin-top: 15px;
@@ -1899,7 +1909,7 @@
 .intentBand > p > strong {
   display: block;
   color: var(--ink);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 500;
 }
 .offerComparison {
@@ -1923,20 +1933,20 @@
 }
 .offerComparison strong {
   font-family: var(--font-lot-display);
-  font-size: 23px;
+  font-size: 22px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .offerComparison small {
   font-family: var(--font-lot-body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--stone);
 }
 .offerComparison dd {
   margin: 9px 0 0;
-  font-size: 14px;
-  color: var(--stone);
+  font-size: 16px;
+  color: var(--ink);
 }
 /* Shared Segmented supplies semantics; the landing owns its ground and focus. */
 .page [role="radio"]:focus-visible {
@@ -2023,7 +2033,8 @@
   .sceneControls button,
   .intentControls button,
   .scenarioControls button,
-  .reportTabs button {
+  .reportTabs button,
+  .sandboxToggleBar button {
     padding-inline: 4px;
   }
 }
@@ -2031,7 +2042,8 @@
   .sceneControls button,
   .intentControls button,
   .scenarioControls button,
-  .reportTabs button {
+  .reportTabs button,
+  .sandboxToggleBar button {
     font-size: 13px;
     padding-inline: 4px;
   }
@@ -2084,8 +2096,8 @@
   border-color: var(--ink);
 }
 .maquetteReadout {
-  margin: 4px 15px 10px;
-  padding: 12px 15px;
+  margin: 6px 0 8px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   background: var(--color-lot-paper);
   box-shadow: 6px 8px 0 var(--color-lot-paper-shadow);
@@ -2095,7 +2107,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--stone);
@@ -2108,9 +2120,9 @@
   color: var(--ink);
 }
 .maquetteReadoutBody {
-  margin-top: 6px !important;
+  margin-top: 4px !important;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.45;
   color: var(--stone);
 }
 .maquetteReadoutBody strong {
@@ -2135,38 +2147,13 @@
   flex: 1 1 210px;
 }
 .sandboxControlLabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--stone);
 }
 .sandboxToggleBar {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control, 3px);
-  padding: 3px;
   background: var(--chalk);
-}
-.sandboxToggle {
-  min-height: 44px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: var(--radius-control, 3px);
-  background: transparent;
-  color: var(--stone);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
-  font-variant-numeric: tabular-nums;
-}
-.sandboxToggle:hover:not([aria-pressed="true"]) {
-  background: var(--line);
-  color: var(--ink);
-}
-.sandboxToggle[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--chalk);
 }
 .sandboxReadoutGrid {
   display: grid;
@@ -2178,7 +2165,7 @@
 }
 .sandboxReadoutGrid span {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--stone);
@@ -2187,14 +2174,14 @@
   display: block;
   margin-top: 3px;
   font-family: var(--font-lot-display), sans-serif;
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
 .sandboxReadoutGrid strong small {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--stone);
   margin-left: 2px;
 }
@@ -2232,14 +2219,14 @@
   padding-right: 16px;
 }
 .telemetryItem span {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--stone-on-dark);
 }
 .telemetryItem strong {
   font-family: var(--font-lot-display), sans-serif;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums;
