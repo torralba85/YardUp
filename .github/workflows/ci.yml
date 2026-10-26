@@ -44,6 +44,21 @@ jobs:
           node-version: 22
       - name: Validate public repository hygiene
         run: node scripts/validate-public-repo.mjs
+      - name: Scan Git history for secrets
+        run: |
+          set -euo pipefail
+          scan_dir="$RUNNER_TEMP/gitleaks"
+          mkdir -p "$scan_dir"
+          curl --fail --location --retry 3 --max-time 120 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            --output "$scan_dir/gitleaks.tar.gz"
+          printf '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  %s\n' \
+            "$scan_dir/gitleaks.tar.gz" | sha256sum --check --status
+          tar --extract --gzip --file "$scan_dir/gitleaks.tar.gz" \
+            --directory "$scan_dir" gitleaks
+          "$scan_dir/gitleaks" git . --config .gitleaks.toml \
+            --gitleaks-ignore-path .gitleaksignore --log-opts="--all --full-history" \
+            --ignore-gitleaks-allow --redact=100 --no-banner --no-color --timeout 120
       - name: Test CI scope and release safeguards
         run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/google-sign-in.checks.mjs scripts/ci/serving-revision.checks.mjs
       - name: Determine verification and deployment scope

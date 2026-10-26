@@ -1,0 +1,36 @@
+# Exact historical findings reviewed on 2026-10-26. No secret values.
+# See docs/secret-scanning.md before adding an exception.
+
+# IndexNow verification value intentionally published under public/
+f6477b98b0c32ab8aed107716f68717d8c95176d:scripts/indexnow-submit.mjs:generic-api-key:7
+67785d8f4da0c71c11c8f7edf64e38d1ae6c3664:scripts/indexnow-submit.mjs:generic-api-key:7
+a05675584cee274d77ef9e45e2bda211c92b89fe:scripts/indexnow-submit.mjs:generic-api-key:7
+
+# Public Firebase client configuration (current project API restrictions verified; legacy project owner follow-up in docs/secret-scanning.md)
+f6477b98b0c32ab8aed107716f68717d8c95176d:scripts/firebase-signup-smoke.mjs:gcp-api-key:6
+f6477b98b0c32ab8aed107716f68717d8c95176d:scripts/firebase-scenario-smoke.mjs:gcp-api-key:2
+b83ef3d65995c6fc1f6e608f17c4506b365f10f8:scripts/firebase-signup-smoke.mjs:gcp-api-key:2
+05b56d8e15729f1bf037f03e530ebf48b93b8466:lib/firebase.ts:gcp-api-key:12
+05b56d8e15729f1bf037f03e530ebf48b93b8466:scripts/firebase-scenario-smoke.mjs:gcp-api-key:2
+e8b5f57665cb4bd983c1be6f8e1738b9f6c20d10:lib/firebase.ts:gcp-api-key:6
+be9876b0be29638539f95108d847748dfd25ec18:.env.example:gcp-api-key:2
+1c9b27c8b3426c7f213ce8513d649f4d2bb35081:app.config.ts:gcp-api-key:4
+9e0275558ff4d868e7edfd081cf79a842bab653b:app.config.ts:gcp-api-key:4
+9bee1d78dfdcb06fd01071af8519a100478976a5:app.json:gcp-api-key:40
+
+# Synthetic test fixtures, reviewed in context
+bf9b231f7eb3a927f2c8d0a57ef346c6c1880169:lib/cesium-photoreal-diagnostics.test.ts:generic-api-key:15
+bf9b231f7eb3a927f2c8d0a57ef346c6c1880169:lib/cesium-photoreal.test.ts:generic-api-key:173
+413502a1bcec3c9a653c3c676f4201efc754a2f2:lib/server/certificate-purchases.test.ts:generic-api-key:50
+413502a1bcec3c9a653c3c676f4201efc754a2f2:lib/server/certificate-purchases.test.ts:generic-api-key:60
+
+# Public Cloudflare Web Analytics beacon identifier
+cd9350a1cce65d5bcadc4839f1cb09e8d9b8b72d:app/layout.tsx:generic-api-key:129
+
+# Browser Maps key: website-restricted and narrowed to 3 Maps/Places APIs on 2026-10-26; log removed from current tree
+4e9726908e7bb1277a56736c5b813693061382aa:.playwright-cli/console-2026-06-30T02-37-39-740Z.log:gcp-api-key:143
+4e9726908e7bb1277a56736c5b813693061382aa:.playwright-cli/console-2026-06-30T02-37-39-740Z.log:gcp-api-key:252
+
+# Local-storage key name, not an authentication credential
+fcc2bd4c30cf824e667a631f7eda73b15b416dbd:lib/saved-scenarios.ts:generic-api-key:3
+1ba23ab3aa36e6a9984f8e5342df7f90fe5cbec5:docs/plans/2026-05-28-complete-application-rollout.md:generic-api-key:685
