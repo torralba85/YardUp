@@ -139,5 +139,12 @@ describe("adu cost pages", () => {
     expect(steps).toContain("Form B-1");
     expect(steps).toContain("Form P-6");
     expect(carlsbad?.processIntro).toContain("15 business days");
+    const chulaVista = getCity("ca", "chula-vista");
+    const escondido = getCity("ca", "escondido");
+    const oceanside = getCity("ca", "oceanside");
+    expect(chulaVista?.metaDescription).not.toMatch(/850–1,000 sq ft minimums/i);
+    expect(escondido?.metaDescription).not.toMatch(/850–1,000 sq ft minimums/i);
+    expect(JSON.stringify(carlsbad?.glance)).toContain("850 sq ft (studio/1BR) or 1,000 sq ft (2+ BR)");
+    expect(JSON.stringify(oceanside)).toContain("66314(d)(7)");
   });
 });

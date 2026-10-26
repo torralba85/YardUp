@@ -1,4 +1,5 @@
 import type { LiveParcelData, Parcel } from "./parcel-types";
+import { residentialZoningCode } from "./zoning-designation";
 
 /** Derived from existing provider fields; no saved-scenario schema change. */
 export function parcelConfidence(parcel: Parcel) {
@@ -14,7 +15,7 @@ export function parcelConfidence(parcel: Parcel) {
         evidence.setbacks,
         evidence.maxLotCoveragePercent,
       ].some((field) => field.status !== "observed")
-    : false;
+    : live;
   return {
     physicalEstimated: live && (
       borrowedParcel ||
@@ -29,7 +30,7 @@ export function parcelConfidence(parcel: Parcel) {
     ),
     regulationsEstimated: parcel.regulationsEstimated === true || live && (
       liveParcel?.source === "county-gis" || liveParcel?.source === "fallback" ||
-      regulatoryEvidenceEstimated || !zoning || zoning.toLowerCase() === "unknown"
+      regulatoryEvidenceEstimated || residentialZoningCode(zoning) !== "yes"
     ),
   };
 }

@@ -9,6 +9,19 @@ import { buildSetbackEnvelope, REVIEW_SEPARATION_FT, validatePlacement, type Pla
 import { parcelConfidence } from "./parcel-confidence";
 import { aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks";
 import type { CapacityBasis } from "./zoning";
+import { findBestFitPose } from "./placement-search";
+
+export function getSnapToFitPose(parcel: Parcel, config: ADUConfig, pose: Pose2D): Pose2D | null {
+  const height = buildAduHeightModel(config);
+  if (!height) return null;
+  return findBestFitPose({
+    aduWidth: config.width, aduLength: config.length, pose,
+    envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config)),
+    existingHouseCorners: buildExistingHouseSceneModel(parcel).corners,
+    aduRoofOverhangFt: height.roofGeometry.overhangFt,
+    existingHouseRoofOverhangFt: EXISTING_HOUSE_ROOF_OVERHANG_FT,
+  });
+}
 
 /**
  * Validates a pose against the ADU's setbacks (`lib/adu-setbacks.ts`) and the modeled house.

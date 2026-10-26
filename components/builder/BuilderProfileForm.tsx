@@ -2,10 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Field";
+import { Input, Select } from "@/components/ui/Field";
 import { validateEmail } from "@/lib/account-settings";
 import { normalizeServiceArea } from "@/lib/marketplace";
-import type { BuilderProfile } from "@/lib/marketplace-types";
+import { US_STATE_NAMES } from "@/lib/us-states";
+import type { BuilderProfile, ServiceArea } from "@/lib/marketplace-types";
 
 type BuilderProfileInput = Omit<
   BuilderProfile,
@@ -14,7 +15,7 @@ type BuilderProfileInput = Omit<
 
 /**
  * Form for creating/editing a builder's marketplace profile: company name,
- * contact email, phone, license, comma-separated service areas (normalized via
+ * contact email, phone, license, structured service areas (normalized via
  * {@link normalizeServiceArea}), and active status.
  *
  * @param props.defaults - Prefilled company name and contact email.
@@ -32,12 +33,15 @@ export default function BuilderProfileForm({
   const [phone, setPhone] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [serviceAreaText, setServiceAreaText] = useState("");
+  const [serviceState, setServiceState] = useState("");
+  const [serviceScope, setServiceScope] = useState<"city" | "county" | "state">("city");
+  const [addedAreas, setAddedAreas] = useState<ServiceArea[]>([]);
   const [active, setActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const [invalidField, setInvalidField] = useState<string | null>(null);
-  const fields = useRef<Record<string, HTMLInputElement | null>>({});
+  const fields = useRef<Record<string, HTMLInputElement | HTMLSelectElement | null>>({});
   function invalidate(id: string, message: string) {
     setInvalidField(id);
     setError(message);
@@ -54,17 +58,13 @@ export default function BuilderProfileForm({
     setError(null);
     setInvalidField(null);
 
-    const serviceAreas = serviceAreaText
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean)
-      .map((value) => {
-        const parts = value.split(/\s+/);
-        const state = parts.at(-1) ?? "";
-        const city = parts.slice(0, -1).join(" ");
-        return normalizeServiceArea(city, state);
-      })
-      .filter((area) => area.city && area.state.length === 2);
+    const pendingArea = normalizeServiceArea(serviceAreaText, serviceState, serviceScope);
+    const hasPending = Boolean(serviceAreaText.trim() || serviceState);
+    if (hasPending && (!pendingArea.state || (serviceScope !== "state" && !serviceAreaText.trim()))) {
+      invalidate(!pendingArea.state ? "builder-service-state" : "builder-service-areas", "Enter a city or county and select its state.");
+      return;
+    }
+    const serviceAreas = Array.from(new Map([...addedAreas, ...(hasPending ? [pendingArea] : [])].map(area => [area.key, area])).values());
 
     if (!companyName.trim()) {
       invalidate("builder-company-name", "Enter your company name.");
@@ -74,8 +74,8 @@ export default function BuilderProfileForm({
       invalidate("builder-contact-email", "Enter a valid contact email.");
       return;
     }
-    if (serviceAreas.length === 0) {
-      invalidate("builder-service-areas", "Add at least one service area like Seattle WA.");
+    if (serviceAreas.length === 0 || serviceAreas.length > 25) {
+      invalidate(serviceScope === "state" ? "builder-service-state" : "builder-service-areas", "Add 1 to 25 service areas, each with a selected state.");
       return;
     }
 
@@ -170,6 +170,18 @@ export default function BuilderProfileForm({
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
       </label>
+      <label className="lf-body-sm font-medium text-lot-ink">Coverage type
+        <Select value={serviceScope} onChange={event => { setServiceScope(event.target.value as typeof serviceScope); setServiceAreaText(""); }} className="mt-1 text-base sm:text-sm">
+          <option value="city">City</option><option value="county">County</option><option value="state">Entire state</option>
+        </Select>
+      </label>
+      <label className="lf-body-sm font-medium text-lot-ink">Service state
+        <Select id="builder-service-state" ref={element => { fields.current["builder-service-state"] = element; }} aria-invalid={invalidField === "builder-service-state"} aria-describedby={invalidField === "builder-service-state" ? "builder-service-state-error" : undefined} value={serviceState} onChange={event => setServiceState(event.target.value)} className="mt-1 text-base sm:text-sm">
+          <option value="">Select a state</option>
+          {Object.entries(US_STATE_NAMES).map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        </Select>
+        {fieldError("builder-service-state")}
+      </label>
       <label
         htmlFor="builder-service-areas"
         className="lf-body-sm font-medium text-lot-ink md:col-span-2"
@@ -184,12 +196,25 @@ export default function BuilderProfileForm({
           aria-describedby={invalidField === "builder-service-areas" ? "builder-service-areas-error" : undefined}
           type="text"
           className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
-          placeholder="Seattle WA, Portland OR"
+          placeholder={serviceScope === "county" ? "Los Angeles" : "Seattle"}
+          disabled={serviceScope === "state"}
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}
         />
         {fieldError("builder-service-areas")}
       </label>
+      <div className="space-y-2 md:col-span-2">
+        <p className="text-xs leading-5 text-lot-stone">Select a city, county, or entire state. County coverage includes its communities. Add each area separately.</p>
+        <Button type="button" variant="secondary" disabled={!serviceState || (serviceScope !== "state" && !serviceAreaText.trim()) || addedAreas.length >= 25} onClick={() => {
+          const area = normalizeServiceArea(serviceAreaText, serviceState, serviceScope);
+          setAddedAreas(current => [...current.filter(item => item.key !== area.key), area]);
+          setServiceAreaText(""); setServiceState("");
+        }}>Add service area</Button>
+        <ul className="space-y-1">{addedAreas.map(area => <li key={area.key} className="flex items-center justify-between gap-2 text-sm">
+          <span>{area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, {area.state}</span>
+          <Button type="button" variant="secondary" size="sm" aria-label={`Remove ${area.county || area.city || area.state}`} onClick={() => setAddedAreas(current => current.filter(item => item.key !== area.key))}>Remove</Button>
+        </li>)}</ul>
+      </div>
       <label
         htmlFor="builder-active"
         className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-lot-stone md:col-span-2"

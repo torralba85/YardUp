@@ -1,5 +1,6 @@
 "use client";
 
+import { AdvisorIntakeSummary } from "@/components/studio/AdvisorIntakeSummary";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useBuilderInboxView } from "@/lib/use-builder-inbox-view";
 import { useAuth } from "@/lib/auth-context";
@@ -350,7 +351,7 @@ export default function BuilderInbox({
           <div>
             <h2 className="lf-panel-heading">{profile.companyName}</h2>
             <p className="lf-body-sm mt-1 text-lot-stone">
-              {profile.serviceAreas.map((area) => `${area.city}, ${area.state}`).join(" | ")}
+              {profile.serviceAreas.map((area) => `${area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, ${area.state}`).join(" | ")}
             </p>
           </div>
           <span className="self-start rounded-none border border-lot-line px-2 py-1 lf-kicker-dense text-lot-stone">
@@ -737,6 +738,9 @@ export default function BuilderInbox({
                                   </div>
                                 )}
                               </div>
+
+                              {itemContact.snapshot?.advisorIntake && <AdvisorIntakeSummary intake={itemContact.snapshot.advisorIntake} />}
+                              {itemContact.snapshot?.studioScenarioJson && <a className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" href={`/studio?lead=${encodeURIComponent(selectedItem.request.id)}`}>Open shared 3D layout</a>}
 
                               {/* Visual Certificate Section — single frame (no nested rounded cards). */}
                               <div className="space-y-3">

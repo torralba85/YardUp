@@ -60,6 +60,18 @@ const builders: BuilderProfile[] = [
 ];
 
 describe("marketplace domain helpers", () => {
+  it("matches explicit county and state coverage without crossing state borders", () => {
+    const candidates = [
+      { id: "county", active: true, serviceAreas: [normalizeServiceArea("Los Angeles County", "California", "county")] },
+      { id: "state", active: true, serviceAreas: [normalizeServiceArea("", "CA", "state")] },
+      { id: "wrong-state", active: true, serviceAreas: [normalizeServiceArea("Los Angeles", "TX", "county")] },
+      { id: "city", active: true, serviceAreas: [normalizeServiceArea("Los Angeles", "CA")] },
+    ];
+    expect(getMatchedBuilders(candidates, { city: "Sherman Oaks", state: "CA", county: "Los Angeles" }).map(b => b.id)).toEqual(["county", "state"]);
+    expect(getMatchedBuilders(candidates, { city: "Sherman Oaks", state: "CA" }).map(b => b.id)).toEqual(["state"]);
+    expect(getMatchedBuilders(candidates, "Sherman Oaks, XX")).toEqual([]);
+    expect(parseParcelCityState("Las Vegas, Nevada 89101")?.state).toBe("NV");
+  });
   it("normalizes service areas to city-state keys", () => {
     expect(normalizeServiceArea(" Seattle ", "wa")).toEqual({
       city: "Seattle",

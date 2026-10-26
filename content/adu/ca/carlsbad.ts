@@ -19,7 +19,7 @@ export const carlsbad: JurisdictionContent = {
   city: "Carlsbad",
   slug: "carlsbad",
   county: "San Diego County",
-  asOf: "2026-10-10",
+  asOf: "2026-10-25",
   metaDescription:
     "Carlsbad ADU rules for 2026: up to 1,200 sq ft detached, 4 ft setbacks, 18 ft near Coaster stations, and the permit steps. See what fits your lot, free.",
   introAnswer: [
@@ -32,14 +32,14 @@ export const carlsbad: JurisdictionContent = {
   metaParkingNote: "none within a half-mile walk of transit, bus stops included",
   glance: [
     { label: "Max size — detached", value: "Up to 1,200 sq ft, subject to lot coverage", note: "An ADU of up to 800 sq ft with 4 ft side and rear setbacks gets mandatory approval" },
-    { label: "Max size — attached", value: "50% of the existing home's floor area or 1,200 sq ft, whichever is less", note: "Never limited to less than 800 sq ft" },
+    { label: "Max size — attached", value: "50% of the existing home's floor area or 1,200 sq ft, whichever is less", note: "At least 800 sq ft per IB-111; HCD state-law guidance requires percentage caps to allow at least 850 sq ft (studio/1BR) or 1,000 sq ft (2+ BR)" },
     { label: "Max size — JADU", value: "500 sq ft of livable space", note: "Within the walls of the home or its attached garage" },
     { label: "Max height — detached", value: "One story and 16 ft; 18 ft within a half-mile walk of Carlsbad Village or Poinsettia Station", note: "Up to 2 ft more to match the main house's roof pitch (20 ft max). Attached ADUs: up to 25 ft or the zone limit, two stories max" },
     { label: "Rear and side setbacks", value: "4 ft minimum, attached or detached", note: "Converted garages and accessory structures keep existing setbacks unless Coastal Zone resources are affected" },
     { label: "Front setback", value: "Per the underlying zone", note: "It cannot prevent an 800 sq ft ADU" },
     { label: "Parking required", value: "One space, waived within a half-mile walk of public transit, bus stops included", note: "Also waived in historic districts, near car share, and for units built within an existing or proposed home or accessory structure. Converted garage parking is replaced only in the Parking Replacement Areas and, for uncovered spaces, in the Coastal Zone" },
     { label: "Owner-occupancy", value: "Not required for ADUs", note: "When a JADU shares facilities with the home, the owner must live in the JADU or the home" },
-    { label: "Rentals and sale", value: "30-day minimum rental for ADUs, 31 days for JADUs; no separate sale", note: "Coastal Zone units permitted before Jan. 1, 2020 are exempt from the rental minimum" },
+    { label: "Rentals and sale", value: "Local ADU rental minimum: 30 days; JADUs and state-exempt ADUs: longer than 30 days; no separate sale", note: "Coastal Zone units permitted before Jan. 1, 2020 are exempt from the rental minimum" },
     { label: "Lot-size minimum", value: "None" },
     { label: "Approval type & timeline", value: "Administrative, no public hearing: completeness within 15 business days, decision within 60 days of a complete application", note: "Coastal Zone ADUs other than attached units and JADUs also need a Minor Coastal Development Permit" },
   ],
@@ -49,7 +49,7 @@ export const carlsbad: JurisdictionContent = {
       paragraphs: [
         "Carlsbad's ADU rules live in Municipal Code §21.10.030, and the city's working summary of them is Information Bulletin IB-111, revised in August 2026. The bulletin folds in each state ADU law from 2023 through 2025, including AB 2221, SB 897, AB 1033, SB 477, AB 2533 and SB 1211, so it is the document to design from. The city points to the state housing department's ADU Handbook as the companion for how those laws are read.",
         "The coastal program moves on its own track. Carlsbad's 2024 zoning-code cleanup, Coastal Commission item LCP-6-CAR-24-0058-2, was on the Commission's February 2026 agenda and includes changes to §21.10.030. Inside the Coastal Zone the bulletin says the Local Coastal Program wins wherever it conflicts with state ADU law, so a coastal parcel should be checked against the current certified text rather than a summary written for inland lots.",
-        "Most of what the bulletin adds beyond state law concerns appearance and use. A detached ADU cannot have a roof deck. Its roofing, trim, walls, windows and colors must match the main house. Rentals run at least 30 days, or 31 for a junior ADU, and the city does not allow an ADU to be sold separately from the home. A new detached ADU must also include solar panels unless an existing system can cover it.",
+        "Most of what the bulletin adds beyond state law concerns appearance and use. A detached ADU cannot have a roof deck. Its roofing, trim, walls, windows and colors must match the main house. The local bulletin states a 30-day minimum for ADU rentals. HCD separately requires terms longer than 30 days for state-exempt ADUs under Government Code section 66323 and for JADUs. Confirm the applicable approval path; the city does not allow an ADU to be sold separately from the home. A new detached ADU must also include solar panels unless an existing system can cover it.",
       ],
     },
     {
@@ -159,6 +159,10 @@ export const carlsbad: JurisdictionContent = {
   ],
   neighbors: ["oceanside", "escondido", "san-marcos"],
   sources: [
+    {
+      label: "California HCD ADU Handbook (March 2026): attached-unit size limits and rental terms",
+      url: "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf",
+    },
     {
       label: "City of Carlsbad Information Bulletin IB-111: Accessory Dwelling Units (Aug. 2026, PDF)",
       url: "https://www.carlsbadca.gov/home/showpublisheddocument/22370/639221532270470000",

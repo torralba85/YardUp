@@ -20,6 +20,8 @@ import {
 export interface BuildersPanelProps {
   /** The active parcel's `"City, ST"` string, used for service-area matching. */
   parcelCity: string;
+  parcelState?: string;
+  parcelCounty?: string;
   /** Open the connect-with-builders flow (the existing BuilderLeadPanel). */
   onConnect: () => void;
   /** Feasibility status of the current scenario. */
@@ -36,6 +38,8 @@ export interface BuildersPanelProps {
  */
 export default function BuildersPanel({
   parcelCity,
+  parcelState,
+  parcelCounty,
   onConnect,
   feasibilityStatus = "unknown",
 }: BuildersPanelProps) {
@@ -50,7 +54,7 @@ export default function BuildersPanel({
     if (hasTrackedParcelRef.current === parcelCity) return;
     hasTrackedParcelRef.current = parcelCity;
 
-    const matchedList = getMatchedBuilders(builders, parcelCity);
+    const matchedList = getMatchedBuilders(builders, { city: parcelCity, state: parcelState, county: parcelCounty });
     const stateCode = extractStateCode({ city: parcelCity });
 
     trackBuilderMatchesViewed({
@@ -58,7 +62,7 @@ export default function BuildersPanel({
       state_code: stateCode,
       feasibility_status: feasibilityStatus,
     });
-  }, [user, builders, parcelCity, feasibilityStatus]);
+  }, [user, builders, parcelCity, parcelState, parcelCounty, feasibilityStatus]);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +87,7 @@ export default function BuildersPanel({
   }, [user]);
 
   const loading = Boolean(user) && builders === null;
-  const matched = builders ? getMatchedBuilders(builders, parcelCity) : [];
+  const matched = builders ? getMatchedBuilders(builders, { city: parcelCity, state: parcelState, county: parcelCounty }) : [];
   const noneMatched = Boolean(user) && builders !== null && matched.length === 0;
 
   return (
@@ -147,7 +151,7 @@ export default function BuildersPanel({
                       className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-1.5 py-0.5 font-sans text-[10px] text-lot-stone"
                     >
                       <MapPin size={10} aria-hidden />
-                      {area.city}, {area.state}
+                      {area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, {area.state}
                     </span>
                   ))}
                 </div>

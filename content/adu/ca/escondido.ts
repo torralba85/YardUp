@@ -16,11 +16,11 @@ export const escondido: JurisdictionContent = {
   city: "Escondido",
   slug: "escondido",
   county: "San Diego County",
-  asOf: "2026-10-10",
+  asOf: "2026-10-25",
   metaDescription:
-    "Escondido ADU rules: 850–1,000 sq ft minimums, an 800 sq ft unit exempt from FAR and lot coverage, and 4 ft setbacks. Run the numbers on your lot, free.",
+    "Escondido ADU rules: 850–1,000 sq ft size allowances, an 800 sq ft unit exempt from FAR and lot coverage, and 4 ft setbacks. Run the numbers on your lot, free.",
   introAnswer: [
-    "Yes — Escondido allows at least one ADU plus one junior ADU on virtually every single-family lot, with state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
+    "Yes — Escondido allows at least one ADU plus one junior ADU on virtually every single-family lot, and state law requires the city to allow at least 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Escondido is the most handbook-driven city in this batch: the Planning Division publishes an ADU handout that states the key numbers plainly — 16-foot detached height, 18 feet near transit, 25 feet attached — plus a dedicated submittal checklist that tells you exactly what a complete application contains.",
     "One timing note matters here more than elsewhere: in May 2026 the Planning Commission voted to recommend City Council amendments to Article 70, including height language. Read the current code text for your application rather than relying on older summaries.",
   ],
@@ -29,7 +29,7 @@ export const escondido: JurisdictionContent = {
   metaParkingNote: "max 1 space, waived near transit and for conversions",
   glance: [
     { label: "Max size — detached", value: "850 sq ft (studio/1BR), 1,000 sq ft (2+ BR) minimum must be allowed", note: "An 800 sq ft interior-space unit is permitted regardless of FAR and lot coverage" },
-    { label: "Max size — attached", value: "Up to 25 ft height; within state minimum sizes", note: "Attached units may go taller than detached ones" },
+    { label: "Max size — attached", value: "Up to 25 ft height; at least 850–1,000 sq ft must be allowed", note: "Attached units may go taller than detached ones" },
     { label: "Max size — JADU", value: "500 sq ft, subject to zoning standards", note: "Must comply with setback, height, FAR, and coverage rules except where state law overrides" },
     { label: "Max height — detached", value: "16 ft; 18 ft within ½ mile of transit", note: "Per the city ADU handout; Article 70 amendments on height were recommended May 2026" },
     { label: "Rear and side setbacks", value: "4 ft side and rear", note: "Front setbacks per existing zoning" },
@@ -44,7 +44,7 @@ export const escondido: JurisdictionContent = {
       heading: "The rulebook: Article 70, the handout, and the 2026 update",
       paragraphs: [
         "Escondido's ADU law is Article 70 of the zoning code, covering both accessory and junior accessory dwelling units in one place, with related definitions in Article 1. For a homeowner, the more useful document is the city's ADU handout: a single handout page that states the headline numbers — 16-foot detached height regardless of underlying height limits, 18 feet within a half-mile of transit, 25 feet for attached units, four-foot side and rear setbacks, no minimum lot size — without requiring you to parse ordinance text.",
-        "The handout's numbers track state minimums closely, which makes Escondido a city where the state floor does most of the work. The local value-add is procedural rather than substantive: a dedicated ADU submittal checklist that itemizes everything from wall and fence locations to water and sewer connection points to the project-information table (lot coverage, unit size proposed). Applications that follow the checklist fail the completeness trap that delays most ADU permits — the 60-day clock only runs on a complete application, and this checklist is how you file a complete one.",
+        "The handout's numbers track the state's protected size allowances closely, which makes Escondido a city where the state floor does most of the work. The local value-add is procedural rather than substantive: a dedicated ADU submittal checklist that itemizes everything from wall and fence locations to water and sewer connection points to the project-information table (lot coverage, unit size proposed). Applications that follow the checklist fail the completeness trap that delays most ADU permits — the 60-day clock only runs on a complete application, and this checklist is how you file a complete one.",
         "Watch the amendment cycle. On May 26, 2026 the Planning Commission unanimously recommended that the City Council adopt amendments to Article 70 and related definitions, approving resolution 2026-06 after a wording change to the proposed height language. That means height provisions in particular may read differently in the current code than in guides written against the older text. When this page's as-of date and a secondary guide disagree, the current Article 70 text wins.",
       ],
     },

@@ -10,6 +10,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition, LIGHTING_PRESETS, type LightingPresetId } from "@/lib/scene-lighting";
 import { getDefaultAduPose, getScenePlacement } from "@/lib/site-fit";
+import { SnapToFitControl } from "@/components/studio/SnapToFitControl";
 import { aduSetbacks } from "@/lib/adu-setbacks";
 import type { CapacityBasis } from "@/lib/zoning";
 import { describePlacement } from "@/lib/placement-validation";
@@ -1339,6 +1340,7 @@ export default function ParcelScene({
         remainingCapacity={remainingCapacity}
         capacityBasis={capacityBasis}
         pose={activePose}
+        onPoseCommit={commitPose}
         flowLayout={flowLayout}
       />
     );
@@ -1601,6 +1603,8 @@ export default function ParcelScene({
         isProxy={parcelOutline.isProxy}
       />
 
+      <SnapToFitControl parcel={parcel} config={config} pose={activePose} onCommit={commitPose} />
+
       <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}
         sitePlanUnlocked={analysisUnlocked} onUnlockSitePlan={onUnlockCertificate}>
         <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
@@ -1689,8 +1693,8 @@ export default function ParcelScene({
  * drawing its own house dimensions and pinning the ADU to a fixed position that
  * ignored placement entirely (D3).
  *
- * It is a read-only view: without WebGL there is no drag surface, and the
- * numeric placement controls stay with the 3D scene.
+ * Snap to fit can update the committed pose without a WebGL drag surface.
+ * Numeric placement controls stay with the 3D scene.
  */
 function Parcel2DScene({
   analysisUnlocked = true,
@@ -1699,6 +1703,7 @@ function Parcel2DScene({
   remainingCapacity,
   capacityBasis,
   pose,
+  onPoseCommit,
   flowLayout = false,
 }: ParcelSceneProps) {
   const planPose = pose ?? getDefaultAduPose(parcel, config);
@@ -1732,6 +1737,7 @@ function Parcel2DScene({
         capacityBasis={capacityBasis}
         isProxy={outline.isProxy}
       />
+      {onPoseCommit && <SnapToFitControl parcel={parcel} config={config} pose={planPose} onCommit={onPoseCommit} />}
     </div>
   );
 }

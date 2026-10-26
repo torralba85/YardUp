@@ -135,6 +135,8 @@ describe("createConnectionRequest paywall split", () => {
     expect(serialized).not.toContain(contact.email);
     expect(serialized).not.toContain(contact.name);
     expect(serialized).not.toContain(snapshot.parcelAddress);
+    expect(serialized).not.toContain("advisorIntake");
+    expect(serialized).not.toContain("studioScenarioJson");
   });
 
   it("isolates all PII in the gated private/contact subdoc", async () => {
@@ -144,6 +146,7 @@ describe("createConnectionRequest paywall split", () => {
     expect(contactDoc!.data.ownerContact).toEqual(contact);
     expect(contactDoc!.data.streetAddress).toBe(snapshot.parcelAddress);
     expect(contactDoc!.data.snapshot).toBeDefined();
+    expect(contactDoc!.data.snapshot).toMatchObject({ advisorIntake: snapshot.advisorIntake, studioScenarioJson: snapshot.studioScenarioJson });
   });
 
   it("strips provider-only GeoJSON before writing a live parcel snapshot", async () => {

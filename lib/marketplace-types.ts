@@ -18,6 +18,9 @@ import type { Parcel } from "./parcel-types";
 
 /** A normalized builder service area (city + state) with a lookup key. */
 export interface ServiceArea {
+  /** Missing on legacy city entries. County/state coverage must be explicit. */
+  scope?: "city" | "county" | "state";
+  county?: string;
   /** Title-cased city name. */
   city: string;
   /** Two-letter uppercase state code. */
@@ -94,6 +97,9 @@ export interface OwnerContact {
  * the gated `private/contact` subcollection, never on the redacted root doc.
  */
 export interface ConnectionSnapshot {
+  /** Consent-gated summary and saved layout; never copied to LeadPreview. */
+  advisorIntake?: AdvisorIntake;
+  studioScenarioJson?: string;
   /** The full parcel record (includes the exact street address). */
   parcel: Parcel;
   /** Stable key identifying the parcel. */
@@ -112,6 +118,19 @@ export interface ConnectionSnapshot {
   result: FeasibilityResult;
   /** Rendered certificate text (embeds the exact address). */
   reportText: string;
+}
+
+export interface AdvisorIntake {
+  lotSqft: number;
+  existingFootprintSqft: number | null;
+  zoning: string | null;
+  fireHazard: string;
+  slope: "Not measured";
+  dimensions: string;
+  roof: string;
+  bedroomClass: string;
+  buildBandLow: number;
+  buildBandHigh: number;
 }
 
 /**

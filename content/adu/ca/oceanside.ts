@@ -16,23 +16,23 @@ export const oceanside: JurisdictionContent = {
   city: "Oceanside",
   slug: "oceanside",
   county: "San Diego County",
-  asOf: "2026-10-10",
+  asOf: "2026-10-25",
   metaDescription:
     "Oceanside ADU rules: ordinance impact-fee relief, 850–1,000 sq ft at 4 ft setbacks, coastal review near the beach. See what fits your lot, free.",
   introAnswer: [
-    "Yes — Oceanside allows at least one detached ADU plus one junior ADU on virtually every single-family lot, with state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
+    "Yes — Oceanside allows at least one detached ADU plus one junior ADU on virtually every single-family lot, and state law requires the city to allow at least 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Oceanside’s fee rules have an important dual layer: the city's zoning ordinance states that the city shall not impose impact fees on ADU development, while state law independently guarantees an impact-fee exemption at 750 square feet or less of interior livable space and authorizes proportional impact fees for larger units. Confirm with Planning how larger units are currently assessed before budgeting.",
     "The defining local question is the coast. A large share of Oceanside sits in the coastal zone, the city's coastal ADU rules have awaited Coastal Commission certification, and coastal parcels can need a coastal development permit on top of the standard approval — confirm your parcel's status before designing.",
   ],
   metaSizeNote: "850–1,000+ sq ft by bedroom count; larger detached units allowed",
-  metaSetbackNote: "4 ft side and rear up to 1,000 sq ft",
+  metaSetbackNote: "4 ft side and rear under state law; confirm Coastal Zone requirements",
   metaParkingNote: "max 1 space, waived near transit and for conversions",
   glance: [
     { label: "Max size — detached", value: "850 sq ft (studio/1BR), 1,000 sq ft (2+ BR) minimum must be allowed", note: "City standards allow larger detached units; confirm current maximums with Planning" },
     { label: "Max size — attached", value: "Within state minimums and 50% of primary dwelling living area" },
     { label: "Max size — JADU", value: "500 sq ft, within existing or proposed space" },
     { label: "Max height — detached", value: "16 ft; 18 ft within ½-mile walk of major transit", note: "+2 ft to match primary dwelling roof pitch" },
-    { label: "Rear and side setbacks", value: "4 ft side and rear up to 1,000 sq ft", note: "Larger units meet the underlying district's setbacks; additional setbacks can apply in the coastal zone" },
+    { label: "Rear and side setbacks", value: "4 ft side and rear (Gov. Code § 66314(d)(7))", note: "City ordinance text references district setbacks above 1,000 sq ft; state law caps ADU side and rear setbacks at 4 ft outside Coastal Zone conflicts" },
     { label: "Front setback", value: "Follows the primary residence's requirement" },
     { label: "Parking required", value: "Max 1 space per ADU", note: "Waived within ½-mile walk of transit, in historic districts, for conversions, and for attached units" },
     { label: "Owner-occupancy", value: "Never required for standard ADUs", note: "JADU occupancy only where sanitation is shared with the main home" },
@@ -51,8 +51,8 @@ export const oceanside: JurisdictionContent = {
     {
       heading: "Size bands, setbacks, and where the big units go",
       paragraphs: [
-        "Oceanside draws a visible line at 1,000 square feet: ADUs up to that size build with four-foot side and rear setbacks, while larger units step up to the underlying zoning district's setback rules, which vary by neighborhood. That makes 1,000 square feet the natural design target for most lots — it captures the two-bedroom state minimum while keeping the friendliest placement rules.",
-        "Front-yard treatment follows whatever the primary residence already requires, which keeps streetscapes consistent but means corner lots and shallow front yards deserve an early site-plan sketch. Detached units above the standard sizes are allowed under city standards, but because the setback rules change at the threshold, price both options: a 1,000-square-foot unit with simple setbacks often pencils better than a slightly larger one fighting district rules.",
+        "Oceanside's older ordinance text draws a line at 1,000 square feet — stating four-foot side and rear setbacks up to that size and underlying district setbacks above it — whereas California state law (Gov. Code § 66314(d)(7)) caps side and rear setbacks at four feet for any qualifying ADU outside certified Local Coastal Program conflicts. Even so, 1,000 square feet remains a natural design target on many lots because it pairs the two-bedroom statutory size allowance with straightforward site fit.",
+        "Front-yard treatment follows whatever the primary residence already requires, which keeps streetscapes consistent but means corner lots and shallow front yards deserve an early site-plan sketch. For larger detached units, confirm the permitted size and any applicable coastal-program restrictions with Planning; crossing 1,000 square feet does not by itself remove the state side and rear setback cap.",
         "As with every California city, conversions of existing garages and accessory structures keep their existing setbacks with no new side or rear requirement. Oceanside's older beach-area housing stock — small lots near the coast with existing garages — is well suited to this path, with the caveat that those same parcels are the likeliest to sit in the coastal zone and need the extra permit layer.",
       ],
     },
@@ -82,7 +82,7 @@ export const oceanside: JurisdictionContent = {
     {
       title: "Size to the setback bands",
       detail:
-        "Sketch the unit at or under 1,000 square feet first to hold four-foot side and rear setbacks. Only grow past the threshold deliberately, knowing district setbacks take over.",
+        "Sketch the unit at or under 1,000 square feet first for the simplest fit, and if you grow past 1,000 square feet, confirm with Planning that the state 4-foot side and rear setback cap (Gov. Code § 66314(d)(7)) applies to your parcel outside Coastal Zone rules.",
     },
     {
       title: "Prepare the submittal",
@@ -118,12 +118,12 @@ export const oceanside: JurisdictionContent = {
     {
       question: "What are the setback rules for a casita in Oceanside?",
       answer:
-        "Four-foot side and rear setbacks for ADUs up to 1,000 square feet; larger units follow the underlying district's setbacks. Front setbacks follow the primary residence, and garage conversions keep existing setbacks.",
+        "State law caps ADU side and rear setbacks at 4 feet (Gov. Code § 66314(d)(7)); while older Oceanside ordinance text references underlying district setbacks above 1,000 square feet, the 4-foot state cap controls outside certified Coastal Zone conflicts. Front setbacks follow the primary residence, and garage conversions keep existing setbacks.",
     },
     {
       question: "How big can a back house be in Oceanside?",
       answer:
-        "At least 850 square feet for a studio or one-bedroom and 1,000 for two or more bedrooms, with an 800-square-foot interior-space unit exempt from coverage and lot-size limits. The city allows larger detached units, with district setbacks applying above 1,000 square feet.",
+        "The city must allow at least 850 square feet for a studio or one-bedroom and 1,000 for two or more bedrooms, with an 800-square-foot interior-space unit exempt from coverage and lot-size limits. Larger detached units are permitted under city standards; confirm setback treatment above 1,000 square feet with Planning if your parcel is in the coastal zone.",
     },
     {
       question: "Do I need a coastal permit for an in-law unit in Oceanside?",
@@ -143,6 +143,10 @@ export const oceanside: JurisdictionContent = {
   ],
   neighbors: ["carlsbad", "escondido", "san-diego-county"],
   sources: [
+    {
+      label: "California HCD ADU Handbook (March 2026): setbacks and impact fees",
+      url: "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf",
+    },
     {
       label: "Oceanside Comprehensive Zoning Ordinance, Part IV",
       url: "https://www.ci.oceanside.ca.us/home/showpublisheddocument/2768/637951337634830000",

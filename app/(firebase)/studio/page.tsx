@@ -13,6 +13,7 @@ import { parseScenarioParams } from "@/lib/scenario-url";
 import { peekAddressQuery } from "@/lib/address-handoff";
 import { peekInitialParcel } from "@/lib/parcel-handoff";
 import { trackStudioOpened } from "@/lib/analytics/events";
+import LeadScenarioEntry from "@/components/studio/LeadScenarioEntry";
 import EmailedScenarioEntry from "@/components/studio/EmailedScenarioEntry";
 import { validLayoutToken } from "@/lib/scenario-share-url";
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
@@ -34,6 +35,7 @@ export default function StudioPage() {
   const inNativeApp = useSyncExternalStore(subscribeToNothing, () => isNativeAppShell(), () => false);
   const [demoEntry, setDemoEntry] = useState<boolean | null>(null);
   const [studioEntryRecorded, setStudioEntryRecorded] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
   const [layoutToken, setLayoutToken] = useState<string | null>(null);
   const initialDemoEntry = useRef<boolean | null>(null);
   const studioOpenedSent = useRef(false);
@@ -45,9 +47,11 @@ export default function StudioPage() {
     if (initialDemoEntry.current === null) {
       const search = new URLSearchParams(window.location.search);
       const isCert = search.has("cert");
+      const lead = search.get("lead");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (lead && /^[A-Za-z0-9_-]{1,128}$/.test(lead)) setLeadId(lead);
       const token = search.get("layout");
       const hasLayout = Boolean(token && validLayoutToken(token));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (hasLayout && token) setLayoutToken(token);
       const scenario = parseScenarioParams(search);
       initialDemoEntry.current = Boolean(
@@ -78,7 +82,7 @@ export default function StudioPage() {
     const search = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
     const token = search?.get("layout");
     const hasLayout = Boolean(token && validLayoutToken(token));
-    if (buildersAllowed && !loading && profile?.role === "builder" && !layoutToken && !hasLayout) {
+    if (buildersAllowed && !loading && profile?.role === "builder" && !layoutToken && !hasLayout && !/^[A-Za-z0-9_-]{1,128}$/.test(search?.get("lead") ?? "")) {
       router.replace("/builder");
     }
   }, [buildersAllowed, loading, profile, router, layoutToken]);
@@ -90,6 +94,7 @@ export default function StudioPage() {
   const [authSettled, setAuthSettled] = useState(false);
   if (!loading && !authSettled) setAuthSettled(true);
   // Keep the restored study mounted during auth/token updates, including any edits made since opening it.
+  if (leadId && authSettled && studioEntryRecorded) return <LeadScenarioEntry requestId={leadId} />;
   if (layoutToken && authSettled && studioEntryRecorded) {
     return <EmailedScenarioEntry token={layoutToken} />;
   }

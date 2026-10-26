@@ -37,7 +37,11 @@ export async function POST(req: NextRequest) {
       serviceAreas: (d.data().serviceAreas as ServiceArea[]) || [],
     }));
 
-    const matched = getMatchedBuilders(candidates, parcelCity);
+    const matched = getMatchedBuilders(candidates, {
+      city: parcelCity,
+      state: typeof body?.parcelState === "string" ? body.parcelState : undefined,
+      county: typeof body?.parcelCounty === "string" ? body.parcelCounty : undefined,
+    });
 
     return NextResponse.json({
       matchedBuilderIds: matched.map((b) => b.id),

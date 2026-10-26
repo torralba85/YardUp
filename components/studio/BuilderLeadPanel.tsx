@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { X } from "lucide-react";
+import { AdvisorIntakeSummary } from "./AdvisorIntakeSummary";
 import { buildConnectionSnapshot, validateOwnerContact } from "@/lib/marketplace";
 import type {
   ADUConfig,
@@ -61,6 +62,7 @@ export default function BuilderLeadPanel({
   const [isPending, startTransition] = useTransition();
 
   if (!open) return null;
+  const snapshot = buildConnectionSnapshot({ parcelKey, parcel, config, assumptions, result });
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -72,15 +74,6 @@ export default function BuilderLeadPanel({
       setError(validation.error);
       return;
     }
-
-    const snapshot = buildConnectionSnapshot({
-      parcelKey,
-      parcel,
-      config,
-      assumptions,
-      result,
-    });
-
     startTransition(async () => {
       try {
         const submitted = await onSubmit({ contact: validation.contact, snapshot });
@@ -121,6 +114,8 @@ export default function BuilderLeadPanel({
           <X size={18} aria-hidden="true" />
         </button>
       </div>
+
+      {snapshot.advisorIntake && <div className="mt-4"><AdvisorIntakeSummary intake={snapshot.advisorIntake} /></div>}
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
         {error && (

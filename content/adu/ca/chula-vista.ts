@@ -16,12 +16,12 @@ export const chulaVista: JurisdictionContent = {
   city: "Chula Vista",
   slug: "chula-vista",
   county: "San Diego County",
-  asOf: "2026-10-10",
+  asOf: "2026-10-25",
   metaTitle: "Chula Vista ADU Rules (2026): Size, Setbacks & Permits",
   metaDescription:
-    "Chula Vista ADU rules: 850–1,000 sq ft minimums, 4 ft side and rear setbacks, and preapproved plans that cut review to a flat fee. Check your lot, free.",
+    "Chula Vista ADU rules: 850–1,000 sq ft size allowances, 4 ft side and rear setbacks, and preapproved plans that cut review to a flat fee. Check your lot, free.",
   introAnswer: [
-    "Yes — Chula Vista allows at least one detached ADU plus one junior ADU on virtually every single-family lot, with the state minimums of 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
+    "Yes — Chula Vista allows at least one detached ADU plus one junior ADU on virtually every single-family lot, and state law requires the city to allow at least 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Chula Vista's standout feature is its homeowner toolkit: the city used a regional housing-acceleration grant to develop preapproved ADU standard plans, and council authorized a flat building-permit review fee for those standard plans — making Chula Vista one of the cheapest and most predictable permitting paths in the county.",
     "Two local rules to know up front: new ADUs cannot be rented for terms under 30 days, and eastern hillside lots can trigger geotechnical review that adds meaningful cost before design even starts.",
   ],
@@ -44,7 +44,7 @@ export const chulaVista: JurisdictionContent = {
     {
       heading: "The rulebook: CVMC 19.58.022 and the standard-plan program",
       paragraphs: [
-        "Chula Vista's ADU rules are codified at Municipal Code §19.58.022, and the section reads like a city that wants these built: ministerial review, state-minimum sizes, four-foot side and rear setbacks for detached units, and an explicit exemption from the dedication requirements of CVMC 12.24.030. If you are comparing cities in the South Bay, this is a relatively permissive code section to work under.",
+        "Chula Vista's ADU rules are codified at Municipal Code §19.58.022, and the section reads like a city that wants these built: ministerial review, state-protected 850–1,000 square foot size allowances, four-foot side and rear setbacks for detached units, and an explicit exemption from the dedication requirements of CVMC 12.24.030. If you are comparing cities in the South Bay, this is a relatively permissive code section to work under.",
         "The program worth understanding is the preapproved standard-plan set. In 2023 the council directed staff to use a San Diego Association of Governments housing-acceleration grant to build homeowner tools for ADU construction, and the resulting standard plans are the centerpiece: pick a city-reviewed design and the building-permit review collapses toward a flat-fee verification instead of a full custom plan check. Council separately authorized amending the Master Fee Schedule to establish that flat review fee for standard-plan ADUs. The exact dollar figure moves with the fee schedule, so confirm it with Development Services — but the structure itself, flat and predictable, is the point.",
         "One code-level restriction is unusually explicit here: ADUs permitted under the current ordinance cannot be rented for less than 30 days. Chula Vista does not allow new ADUs to operate as short-term rentals, full stop. Underwrite the unit as a long-term rental or family housing, because the nightly-rental math is off the table by ordinance.",
       ],
