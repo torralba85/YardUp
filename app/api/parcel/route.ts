@@ -407,7 +407,8 @@ async function resolveParcel(
       lotWidth,
       lotLength,
       existingHouseSqft: Math.round(existingHouseSqft),
-      maxLotCoveragePercent: deriveMaxCoverage(fields.zoning),
+      maxLotCoveragePercent: deriveMaxCoverage(fields.zoning) ?? 40,
+      regulationsEstimated: true,
       setbacks,
       zoning: fields.zoning ?? "Unknown",
       boundaryGeoJson,
@@ -434,7 +435,7 @@ async function resolveParcel(
               : "Lot dimensions are estimated from parcel area because no polygon was available.",
           ]),
           existingHouseSqft: footprintEvidence,
-          maxLotCoveragePercent: zoningObserved
+          maxLotCoveragePercent: deriveMaxCoverage(fields.zoning) !== null
             ? evidence("derived", "low", [
                 "Maximum lot coverage is inferred from a broad zoning-code heuristic, not a jurisdiction rule.",
               ])
@@ -868,7 +869,8 @@ async function countyGisResponse(
     // mapped footprints when present; assessor roll building area is the
     // fallback; zero remains unknown.
     existingHouseSqft: Math.round(existingHouseSqft),
-    maxLotCoveragePercent: deriveMaxCoverage(countyZoning),
+    maxLotCoveragePercent: deriveMaxCoverage(countyZoning) ?? 40,
+    regulationsEstimated: true,
     setbacks: DEFAULT_SETBACKS,
     zoning: countyZoning ?? "Unknown",
     boundaryGeoJson: countyParcel.polygon,
@@ -955,7 +957,7 @@ async function countyGisResponse(
                   retrievedAt,
                   warnings: ["No building footprint was found; zero means unknown, not vacant."],
                 }),
-        maxLotCoveragePercent: countyZoning
+        maxLotCoveragePercent: deriveMaxCoverage(countyZoning) !== null
           ? fieldEvidence({
               status: "derived",
               confidence: "low",

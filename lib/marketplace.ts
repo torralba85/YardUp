@@ -1,3 +1,5 @@
+import { buildAdvisorIntake, buildIntakeScenarioJson } from "./advisor-intake";
+import { normalizeStateCode } from "./us-states";
 import { buildReportText } from "./report";
 import type {
   ADUConfig,
@@ -37,12 +39,17 @@ export type OwnerContactValidation =
  * lookup key (title-cased city, two-letter uppercase state).
  *
  * @param city - The city name.
- * @param state - The state (first two letters are used).
+ * @param state - A recognized state code or full name.
  * @returns The normalized service area.
  */
-export function normalizeServiceArea(city: string, state: string): ServiceArea {
+export function normalizeServiceArea(city: string, state: string, scope: "city" | "county" | "state" = "city"): ServiceArea {
   const normalizedCity = city.trim().replace(/\s+/g, " ");
-  const normalizedState = state.trim().slice(0, 2).toUpperCase();
+  const normalizedState = normalizeStateCode(state);
+  if (scope === "state") return { city: "", state: normalizedState, scope, key: `state-${normalizedState.toLowerCase()}` };
+  if (scope === "county") {
+    const county = toTitleCase(normalizedCity.replace(/\s+county$/i, ""));
+    return { city: "", county, state: normalizedState, scope, key: `county-${county.toLowerCase()}-${normalizedState.toLowerCase()}` };
+  }
 
   return {
     city: toTitleCase(normalizedCity),
@@ -62,7 +69,7 @@ export function parseParcelCityState(value: string): ServiceArea | null {
   const [cityPart, statePart] = value.split(",");
   if (!cityPart || !statePart) return null;
 
-  const state = statePart.trim().split(/\s+/)[0];
+  const state = normalizeStateCode(statePart.trim().replace(/\s+\d{5}(?:-\d{4})?$/, ""));
   if (!state) return null;
 
   return normalizeServiceArea(cityPart, state);
@@ -79,15 +86,25 @@ type BuilderMatchCandidate = Pick<BuilderDirectoryProfile, "active" | "serviceAr
 
 export function getMatchedBuilders<T extends BuilderMatchCandidate>(
   builders: T[],
-  parcelCity: string,
+  location: string | { city: string; state?: string; county?: string },
 ): T[] {
-  const area = parseParcelCityState(parcelCity);
-  if (!area) return [];
+  const parcelCity = typeof location === "string" ? location : location.city;
+  const parsed = parseParcelCityState(parcelCity);
+  const area = typeof location !== "string" && location.state
+    ? normalizeServiceArea(parcelCity.split(",")[0], location.state) : parsed;
+  const county = typeof location !== "string" ? location.county?.trim().replace(/\s+county$/i, "").toLowerCase() : undefined;
+  if (!area?.state) return [];
 
   return builders.filter(
     (builder) =>
       builder.active &&
-      builder.serviceAreas.some((serviceArea) => serviceArea.key === area.key),
+      builder.serviceAreas.some((serviceArea) => {
+        if (normalizeStateCode(serviceArea.state) !== area.state) return false;
+        if (serviceArea.scope === "state") return true;
+        if (serviceArea.scope === "county") return Boolean(county && serviceArea.county?.trim().replace(/\s+county$/i, "").toLowerCase() === county);
+        if (serviceArea.scope && serviceArea.scope !== "city") return false;
+        return normalizeServiceArea(serviceArea.city, serviceArea.state).key === area.key;
+      }),
   );
 }
 
@@ -141,9 +158,11 @@ export function buildConnectionSnapshot(input: {
   assumptions: FinancialAssumptions;
   result: FeasibilityResult;
 }): ConnectionSnapshot {
-  const area = parseParcelCityState(input.parcel.city);
+  const area = "state" in input.parcel && typeof input.parcel.state === "string" && input.parcel.state
+    ? normalizeServiceArea(input.parcel.city.split(",")[0], input.parcel.state)
+    : parseParcelCityState(input.parcel.city);
 
-  return {
+  const snapshot: ConnectionSnapshot = {
     parcel: input.parcel,
     parcelKey: input.parcelKey,
     parcelAddress: input.parcel.address,
@@ -158,6 +177,10 @@ export function buildConnectionSnapshot(input: {
       result: input.result,
     }),
   };
+  snapshot.advisorIntake = buildAdvisorIntake(snapshot);
+  const scenarioJson = buildIntakeScenarioJson(snapshot);
+  if (scenarioJson) snapshot.studioScenarioJson = scenarioJson;
+  return snapshot;
 }
 
 /** Bucket an exact build range into $25k bands so the free preview never

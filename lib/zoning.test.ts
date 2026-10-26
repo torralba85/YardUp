@@ -11,6 +11,11 @@ import { getSiteFitCapacityStatus } from "./site-fit";
 import { summarizeFeasibility } from "./feasibility-verdict";
 
 describe("calculateZoning", () => {
+  it.each(["C-2", "M-1", "I-1", "PD"])("requires review for a legacy live parcel zoned %s", (zoning) => {
+    const parcel = { ...getParcelById("oak-street"), source: "regrid" as const, zoning };
+    expect(calculateZoning(parcel, defaultAduConfig).zoningStatus).toBe("Review needed");
+  });
+
   it("does not calculate an overage warning from a borrowed house footprint", () => {
     const parcel = { ...getParcelById("oak-street"), source: "fallback" as const, existingHouseSqft: 5000 };
     const result = calculateZoning(parcel, defaultAduConfig);

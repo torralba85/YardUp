@@ -80,6 +80,12 @@ describe("parcelConfidence", () => {
     expect(parcelConfidence(parcel(quality("observed"))).regulationsEstimated).toBe(false);
   });
 
+  it("keeps legacy live zoning unverified when field evidence is missing", () => {
+    const legacy = parcel(quality("observed"));
+    delete legacy.dataQuality;
+    expect(parcelConfidence(legacy).regulationsEstimated).toBe(true);
+  });
+
   it("gives demo presets no notice and carries reconciliation warnings into live parcel notices", () => {
     expect(parcelDataNotice(parcelPresets[0])).toBeUndefined();
     const data = parcel(quality("defaulted"));

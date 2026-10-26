@@ -273,6 +273,7 @@ describe("GET /api/parcel — Regrid field mapping", () => {
     expect(data.dataQuality?.fields.lotArea.sourceAsOf).toBe("2026-08-14");
     expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("observed");
     expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
+    expect(data.regulationsEstimated).toBe(true);
     expect(data.dataQuality?.fields.setbacks.status).toBe("defaulted");
   });
 
@@ -928,6 +929,7 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
     expect(data.dataQuality?.fields.existingHouseSqft.status).toBe("observed");
     expect(data.dataQuality?.fields.zoning.status).toBe("observed");
     expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
+    expect(data.regulationsEstimated).toBe(true);
     expect(data.marketData?.source).toBe("hud-county");
     expect(data.marketData?.rentByBedroom["1br"]).toBe(2250);
   });
@@ -1126,9 +1128,10 @@ describe("GET /api/parcel — zoning shadow classification", () => {
     expect(res.status).toBe(200);
     expect(data.source).toBe("regrid");
     expect(data.zoning).toBe("NR3");
-    // The existing heuristic still decides coverage, and is still labeled a guess.
-    expect(data.maxLotCoveragePercent).toBe(50);
-    expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
+    // Unrecognized districts use an explicit planning default, never Jev output.
+    expect(data.maxLotCoveragePercent).toBe(40);
+    expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("defaulted");
+    expect(data.regulationsEstimated).toBe(true);
     expect(typeSafeCalls(fetchMock)).toHaveLength(1);
     const events = shadowEvents(info);
     expect(events).toHaveLength(1);
@@ -1137,7 +1140,7 @@ describe("GET /api/parcel — zoning shadow classification", () => {
       state: "WA",
       zoning: "NR3",
       zoningClass: "single_family",
-      regexCoveragePercent: 50,
+      regexCoveragePercent: null,
     });
   });
 
@@ -1200,7 +1203,7 @@ describe("GET /api/parcel — zoning shadow classification", () => {
 
     expect(res.status).toBe(200);
     expect(data.source).toBe("regrid");
-    expect(data.maxLotCoveragePercent).toBe(50);
+    expect(data.maxLotCoveragePercent).toBe(40);
     expect(shadowEvents(warn)[0]).toMatchObject({
       severity: "WARNING",
       outcome: "fallback-provider-error",

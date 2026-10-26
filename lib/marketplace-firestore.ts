@@ -11,6 +11,7 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
+import { parcelConfidence } from "./parcel-confidence";
 import { db } from "./firebase";
 import { buildLeadPreview } from "./marketplace";
 import type {
@@ -175,6 +176,7 @@ export async function createConnectionRequest(input: {
       lotLength: input.snapshot.parcel.lotLength,
       existingHouseSqft: input.snapshot.parcel.existingHouseSqft,
       maxLotCoveragePercent: input.snapshot.parcel.maxLotCoveragePercent,
+      regulationsEstimated: parcelConfidence(input.snapshot.parcel).regulationsEstimated,
       setbacks: { ...input.snapshot.parcel.setbacks },
     },
   };

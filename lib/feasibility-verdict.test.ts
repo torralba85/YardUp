@@ -10,6 +10,8 @@ import {
   buildableArea,
   summarizeFeasibility,
 } from "@/lib/feasibility-verdict";
+import type { DataEvidence } from "@/lib/data-evidence";
+import type { ParcelDataQuality } from "@/lib/parcel-types";
 import type { PlacementResult } from "@/lib/placement-validation";
 
 const preset = parcelPresets[0]; // oak-street: 5000 sf, 40×125, setbacks 20/25/5
@@ -107,7 +109,21 @@ describe("summarizeFeasibility", () => {
     (boundaryGeoJson) => {
       const { expectedRent, ...liveParcel } = preset;
       expect(expectedRent).toBeDefined();
-      const parcel = { ...liveParcel, source: "regrid", zoning: "R-1", boundaryGeoJson };
+      const observed = (dataset: string): DataEvidence => ({
+        status: "observed", source: { provider: "test", dataset },
+        retrievedAt: "2026-09-25T00:00:00.000Z", confidence: "high", warnings: [],
+      });
+      const dataQuality: ParcelDataQuality = {
+        version: 1,
+        fields: {
+          address: observed("address"), lotArea: observed("area"), lotDimensions: observed("dimensions"),
+          existingHouseSqft: observed("footprint"), boundaryGeoJson: observed("boundary"),
+          zoning: observed("zoning"), setbacks: observed("setbacks"), maxLotCoveragePercent: observed("coverage"),
+        },
+        providerAttempts: [],
+        warnings: [],
+      };
+      const parcel = { ...liveParcel, source: "regrid", zoning: "R-1", boundaryGeoJson, dataQuality };
       const summary = summarizeFeasibility(parcel, baseResult(), defaultAduConfig, fittedPlacement);
       expect(summary.constraints.find((c) => c.id === "placement")?.status).toBe("review");
       expect(summary.verdict).toBe("Needs Review");

@@ -638,10 +638,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     const certParam = currentParams.get("cert");
     const layoutParam = initialScenario?.liveParcel && certificateKey(initialScenario.liveParcel) === certificateKey(activeParcel)
       ? currentParams.get("layout") : null;
+    const sameInitialParcel = initialScenario?.liveParcel
+      ? certificateKey(initialScenario.liveParcel) === certificateKey(activeParcel)
+      : initialScenario?.parcelId === parcelId;
     // Certificate Recovery consumes the one-shot return markers after capture.
     const checkoutCancelled = currentParams.get(CHECKOUT_RETURN_PARAM) === CHECKOUT_CANCELLED;
     const nextQuery = [
       serialized,
+      ...(sameInitialParcel && initialScenario?.id === "builder-intake" && /^[A-Za-z0-9_-]{1,128}$/.test(currentParams.get("lead") ?? "") ? [`lead=${encodeURIComponent(currentParams.get("lead")!)}`] : []),
       ...(layoutParam ? [`layout=${encodeURIComponent(layoutParam)}`] : []),
       ...["utm_source", "utm_medium", "utm_campaign"].flatMap((name) => {
         const value = currentParams.get(name);
@@ -961,7 +965,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     const builders = await fetchActiveBuilders();
     const matchedBuilders = getMatchedBuilders(
       builders,
-      `${input.snapshot.parcelCity}, ${input.snapshot.parcelState}`,
+      input.snapshot.parcel,
     );
 
     if (matchedBuilders.length === 0) {
@@ -1556,6 +1560,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           <div className="flex-1 overflow-y-auto">
             <BuildersPanel
               parcelCity={activeParcel.city}
+              parcelState={"state" in activeParcel ? String(activeParcel.state) : undefined}
+              parcelCounty={"county" in activeParcel ? String(activeParcel.county) : undefined}
               feasibilityStatus={feasibilityStatus}
               onConnect={() => setBuilderLeadOpen(true)}
             />

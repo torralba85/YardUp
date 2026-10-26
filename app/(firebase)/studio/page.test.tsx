@@ -45,6 +45,10 @@ vi.mock("@/components/studio/EmailedScenarioEntry", () => ({
   },
 }));
 
+vi.mock("@/components/studio/LeadScenarioEntry", () => ({
+  default: ({ requestId }: { requestId: string }) => <div>Private builder layout {requestId}</div>,
+}));
+
 vi.mock("@/components/studio/AppStudioOnboarding", () => ({
   default: function MockAppStudioOnboarding({ user }: { user: { uid: string } | null }) {
     const [mountId] = useState(() => Math.random().toString(36));
@@ -75,6 +79,14 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 describe("StudioPage", () => {
+  it("lets builders open an authorized-layout entry instead of redirecting away", async () => {
+    window.history.replaceState({}, "", "/studio?lead=request-123");
+    mocks.authState.user = { uid: "builder" };
+    mocks.authState.profile = { role: "builder" };
+    render(<StudioPage />);
+    expect(await screen.findByText("Private builder layout request-123")).toBeInTheDocument();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     mocks.replace.mockClear();
     mocks.authState.loading = false;

@@ -338,8 +338,8 @@ describe("shadowClassifyZoning", () => {
     const event = loggedEvent(info);
     expect(event.regexResidential).toBeUndefined();
     expect(event.residentialAgreement).toBe("not-compared");
-    // The substring heuristic reads Seattle's single-family NR3 as R-3.
-    expect(event.regexCoveragePercent).toBe(50);
+    // NR3 has no inferred percentage without a jurisdiction-specific rule.
+    expect(event.regexCoveragePercent).toBeNull();
   });
 
   it("warns, without throwing, when the provider fails", async () => {
