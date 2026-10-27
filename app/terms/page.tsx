@@ -20,7 +20,7 @@ export const metadata: Metadata = {
  */
 export default function TermsPage() {
   return (
-    <LegalPageShell title="Terms & Conditions" kicker="Last updated: October 12, 2026">
+    <LegalPageShell title="Terms & Conditions" kicker="Last updated: October 27, 2026">
       <LegalSection title="1. Acceptance &amp; Contracting Entity">
         <p>
           These Terms &amp; Conditions (“Terms”) constitute a legally binding agreement between you
@@ -121,6 +121,19 @@ export default function TermsPage() {
           workers’ compensation insurance. Homeowners are solely responsible for conducting due
           diligence, verifying active state contractor licenses, checking references, and executing
           appropriate construction contracts.
+        </p>
+        <p>
+          <strong>Partner Referral Networks:</strong> For eligible properties, the Service may let you
+          send your project to an independent partner network, currently GreatBuildz (serving Los
+          Angeles and Ventura counties, California), instead of the LotFoundry builder marketplace.
+          When you choose a partner network and submit a request, you direct LotFoundry to send that
+          partner the details described in our Privacy Policy. The partner is an independent company,
+          not LotFoundry&rsquo;s agent, and its own terms and privacy policy govern its service and any
+          contractor it introduces. LotFoundry may receive a referral fee from the partner; this does
+          not change any amount you pay. LotFoundry does not control, endorse, or guarantee the partner
+          or any contractor it introduces, and the Release of Claims below applies equally to the
+          partner&rsquo;s service and those contractors. Referrals are optional; you can always use the
+          LotFoundry marketplace or neither.
         </p>
         <p>
           <strong>Release of Claims:</strong> To the fullest extent permitted by law, you hereby

@@ -17,11 +17,12 @@ export const metadata: Metadata = {
 
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
- * infrastructure (Firebase, Regrid, ATTOM, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4).
+ * infrastructure (Firebase, Regrid, ATTOM, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4)
+ * and the homeowner-directed GreatBuildz referral (Section 5).
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 22, 2026">
+    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 27, 2026">
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -55,6 +56,13 @@ export default function PrivacyPage() {
             homeowners to connect with matched builders.
           </li>
           <li>
+            <strong>Partner Referral Records:</strong> When you ask us to send your project to a
+            partner network such as GreatBuildz, we keep a record of what we sent (your name, email,
+            optional phone and message, property address, and project summary), the consent wording
+            you accepted and when, a referral number, whether delivery succeeded, and the referral&rsquo;s
+            later status as reported by the partner.
+          </li>
+          <li>
             <strong>User Photos &amp; Visual Content:</strong> Optional photographs of your parcel or
             existing structures uploaded for AI architectural style matching.
           </li>
@@ -76,14 +84,16 @@ export default function PrivacyPage() {
           We process personal information to: (a) provide the 3D Feasibility Studio and calculate zoning
           and financial estimates; (b) authenticate your identity and safeguard your account; (c)
           generate and deliver Certificates of Feasibility and AI Project Briefs; (d) facilitate
-          homeowner-directed lead unlocks for builders; (e) process payments and prevent fraud; (f)
+          homeowner-directed lead unlocks for builders and homeowner-directed referrals to partner
+          networks, and reconcile those referrals with the partner; (e) process payments and prevent fraud; (f)
           respond to support inquiries; and (g) comply with legal and regulatory obligations.
         </p>
         <p>
           <strong>We do not sell personal information for monetary or valuable consideration, nor do we
           share personal information for cross-context behavioral advertising.</strong> Homeowner
           contact information is disclosed to a builder only upon the homeowner’s affirmative,
-          intentional direction.
+          intentional direction. The same applies to partner referrals: we send your details to a
+          partner network only when you choose it and submit the request.
         </p>
       </LegalSection>
 
@@ -176,6 +186,30 @@ export default function PrivacyPage() {
           Civil Code § 1798.140(ad)(1)). Builders act as independent data controllers upon unlocking a
           lead.
         </p>
+        <p>
+          <strong>Partner Referrals (GreatBuildz):</strong> For eligible properties in Los Angeles and
+          Ventura counties, California, you may choose to have <em>GreatBuildz</em>, an independent
+          homeowner matchmaking service, introduce contractors instead of LotFoundry&rsquo;s own builder
+          marketplace. If you choose GreatBuildz and submit the request, we immediately send GreatBuildz
+          your name, email, optional phone number and message, exact property address, lot size, and a
+          summary of your backyard home design (size, dimensions, roof, finish, estimated build-cost
+          band, and zoning screen), together with a LotFoundry referral number. We do not send your
+          password, payment details, uploaded photos, saved scenarios, or analytics data.
+        </p>
+        <p>
+          This is a disclosure you direct, made only with the separate consent you give on the request
+          form. GreatBuildz receives your details as an independent business and handles them under its
+          own privacy policy; it may contact you and share your project with contractors it introduces.
+          LotFoundry may receive a referral fee from GreatBuildz for referrals. That fee does not change
+          what you pay. GreatBuildz may tell us how a referral progresses (for example, whether
+          contractors were introduced or a contract was signed) so we can reconcile referral fees; we
+          use that status only for this purpose. To have GreatBuildz delete the information it
+          received, contact GreatBuildz directly. We can help: email{" "}
+          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
+            privacy@lotfoundry.net
+          </a>{" "}
+          with your referral number.
+        </p>
       </LegalSection>
 
       <LegalSection title="6. Data Retention &amp; Account Deletion">
@@ -195,7 +229,10 @@ export default function PrivacyPage() {
           Upon deletion, your active profile, saved scenario studies, and contact records are permanently
           removed from active product databases. We retain transactional, accounting, tax, dispute, and
           fraud records for up to seven (7) years as required by applicable commercial and financial
-          regulations, in de-identified or pseudonymized format.
+          regulations, in de-identified or pseudonymized format. For partner referrals, deletion removes
+          your contact details and the link to your account from our referral record; we keep the
+          referral number, partner, county, project size, and status to reconcile referral fees.
+          Deleting your LotFoundry account does not delete the copy a partner already received.
         </p>
       </LegalSection>
 
