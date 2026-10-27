@@ -131,6 +131,7 @@ Strong intent actions:
 
 - certificate_checkout_started
 - builder_connection_submitted
+- partner_referral_submitted
 
 Formula:
 
@@ -558,6 +559,23 @@ Parameters:
 
 Owner:
 handleBuilderLeadSubmit in components/FeasibilityStudio.tsx.
+
+### 13b. partner_referral_submitted
+
+Business meaning:
+A homeowner sent their project to a partner network (GreatBuildz) instead of the LotFoundry marketplace.
+
+Fire:
+Only after `POST /api/partners/referral` records the referral (sent or queued). Never on a failed submit.
+
+Parameters:
+- partner_id (`greatbuildz`)
+- feasibility_status
+- adu_sqft_bucket
+- state_code when known
+
+Owner:
+handleBuilderLeadSubmit in components/FeasibilityStudio.tsx. Referral counts reconcile against the server-only `partnerReferrals` ledger, which is the source of truth for referral fees; GA4 is directional only.
 
 ### 14. builder_lead_preview_viewed
 

@@ -4,6 +4,11 @@ import { useState, useTransition } from "react";
 import { X } from "lucide-react";
 import { AdvisorIntakeSummary } from "./AdvisorIntakeSummary";
 import { buildConnectionSnapshot, validateOwnerContact } from "@/lib/marketplace";
+import {
+  availablePartnerNetwork,
+  partnerConsentText,
+  type BuilderNetworkChoice,
+} from "@/lib/partner-referrals";
 import type {
   ADUConfig,
   FeasibilityResult,
@@ -12,7 +17,7 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 import { Button } from "@/components/ui/Button";
-import { FieldLabel, Input, Textarea } from "@/components/ui/Field";
+import { FieldLabel, Input, Segmented, Textarea } from "@/components/ui/Field";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -20,7 +25,17 @@ export interface BuilderLeadSubmitInput {
   contact: OwnerContact;
   /** The full feasibility snapshot to attach to the lead. */
   snapshot: ConnectionSnapshot;
+  /**
+   * Where the homeowner asked us to send it: the LotFoundry marketplace, or a
+   * partner network offered for this lot (see `lib/partner-referrals.ts`).
+   */
+  network: BuilderNetworkChoice;
 }
+
+/** What the submit handler reports back, per network. */
+export type BuilderLeadSubmitResult =
+  | { matchedCount: number }
+  | { partnerName: string; referralId: string };
 
 /**
  * Slide-over form that lets a homeowner share their feasibility study with
@@ -50,19 +65,30 @@ export default function BuilderLeadPanel({
   assumptions: FinancialAssumptions;
   result: FeasibilityResult;
   onClose: () => void;
-  onSubmit: (input: BuilderLeadSubmitInput) => Promise<{ matchedCount: number }>;
+  onSubmit: (input: BuilderLeadSubmitInput) => Promise<BuilderLeadSubmitResult>;
 }) {
   const [name, setName] = useState(userDefaults.name);
   const [email, setEmail] = useState(userDefaults.email);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
+  const [network, setNetwork] = useState<BuilderNetworkChoice>("lotfoundry");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   if (!open) return null;
   const snapshot = buildConnectionSnapshot({ parcelKey, parcel, config, assumptions, result });
+  const partner = availablePartnerNetwork(snapshot);
+  // Coverage can change when the address does; never submit to a hidden option.
+  const activeNetwork: BuilderNetworkChoice = partner && network === partner.id ? partner.id : "lotfoundry";
+
+  function chooseNetwork(next: BuilderNetworkChoice) {
+    setNetwork(next);
+    // Consent is specific to who receives the details, so it never carries over.
+    setConsent(false);
+    setSuccess(null);
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -76,12 +102,22 @@ export default function BuilderLeadPanel({
     }
     startTransition(async () => {
       try {
-        const submitted = await onSubmit({ contact: validation.contact, snapshot });
-        setSuccess(
-          submitted.matchedCount === 1
-            ? "Sent to 1 local builder."
-            : `Sent to ${submitted.matchedCount} local builders.`,
-        );
+        const submitted = await onSubmit({
+          contact: validation.contact,
+          snapshot,
+          network: activeNetwork,
+        });
+        if ("referralId" in submitted) {
+          setSuccess(
+            `Sent to ${submitted.partnerName}. Your referral number is ${submitted.referralId}. ${submitted.partnerName} will contact you directly.`,
+          );
+        } else {
+          setSuccess(
+            submitted.matchedCount === 1
+              ? "Sent to 1 local builder."
+              : `Sent to ${submitted.matchedCount} local builders.`,
+          );
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not submit this snapshot.");
       }
@@ -102,7 +138,9 @@ export default function BuilderLeadPanel({
             Connect with local builders
           </h2>
           <p className="mt-1 text-sm leading-6 text-lot-stone">
-            Share this address and feasibility snapshot with registered builders that serve this area. Builders may contact you about your project.
+            {partner
+              ? "Choose who receives this address and feasibility snapshot. Whoever you choose may contact you about your project."
+              : "Share this address and feasibility snapshot with registered builders that serve this area. Builders may contact you about your project."}
           </p>
         </div>
         <button
@@ -116,6 +154,28 @@ export default function BuilderLeadPanel({
       </div>
 
       {snapshot.advisorIntake && <div className="mt-4"><AdvisorIntakeSummary intake={snapshot.advisorIntake} /></div>}
+
+      {partner && (
+        <div className="mt-4 space-y-2">
+          <p id="builder-lead-network-label" className="text-sm font-semibold text-lot-ink">
+            Builder network
+          </p>
+          <Segmented
+            aria-labelledby="builder-lead-network-label"
+            value={activeNetwork}
+            onChange={chooseNetwork}
+            options={[
+              { value: "lotfoundry", label: "LotFoundry builders" },
+              { value: partner.id, label: partner.name },
+            ]}
+          />
+          <p className="text-sm leading-6 text-lot-stone">
+            {activeNetwork === "lotfoundry"
+              ? "Registered builders that serve this area see a preview without your contact details. A builder sees your details only after paying LotFoundry to unlock this snapshot."
+              : `${partner.name} is a free homeowner matchmaking service in ${partner.serviceAreaLabel}. LotFoundry sends your details to ${partner.name} as soon as you submit, and ${partner.name} introduces contractors it has screened. ${partner.name} is an independent company.`}
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
         {error && (
@@ -182,9 +242,21 @@ export default function BuilderLeadPanel({
             className="mt-1 h-4 w-4 shrink-0 rounded-none accent-lot-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           />
           <span>
-            I agree to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project.
+            {partner && activeNetwork === partner.id
+              ? partnerConsentText(partner)
+              : "I agree to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project."}
           </span>
         </label>
+        {partner && activeNetwork === partner.id && (
+          <a
+            href={partner.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center rounded-control text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink md:col-span-2"
+          >
+            Read about {partner.name} and its privacy policy
+          </a>
+        )}
         <Button type="submit" variant="primary" size="md" loading={isPending}>
           {isPending ? "Submitting…" : "Submit snapshot"}
         </Button>

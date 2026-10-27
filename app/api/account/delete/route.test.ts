@@ -18,6 +18,7 @@ const ops = {
   feedbackIds: [] as string[],
   checkoutReservationIds: [] as string[],
   connectionRequests: [] as { id: string; ownerUid: string }[],
+  partnerReferrals: [] as { id: string; ownerUid: string }[],
   failCommit: false,
 };
 
@@ -56,6 +57,17 @@ function makeDb() {
                     }),
                   },
                 })),
+            }),
+          }),
+        };
+      }
+      if (name === "partnerReferrals") {
+        return {
+          where: (_field: string, _op: string, uid: string) => ({
+            get: async () => ({
+              docs: ops.partnerReferrals
+                .filter((referral) => referral.ownerUid === uid)
+                .map((referral) => ({ ref: { kind: "referral", id: referral.id } })),
             }),
           }),
         };
@@ -146,6 +158,7 @@ describe("POST /api/account/delete", () => {
     ops.feedbackIds = [];
     ops.checkoutReservationIds = [];
     ops.connectionRequests = [];
+    ops.partnerReferrals = [];
     ops.failCommit = false;
     throwOnDb = false;
     deleteUser.mockClear();
@@ -192,6 +205,27 @@ describe("POST /api/account/delete", () => {
         id: "lead-1",
         data: expect.objectContaining({ status: "withdrawn", ownerUid: "DELETE_FIELD" }),
       }),
+    ]);
+  });
+
+  it("strips contact and owner from partner referrals but keeps the fee record", async () => {
+    ops.partnerReferrals = [
+      { id: "ref-1", ownerUid: "local-dev" },
+      { id: "ref-2", ownerUid: "someone-else" },
+    ];
+
+    const res = await POST(postRequest());
+    expect(res.status).toBe(200);
+    expect(ops.updatedLeads).toEqual([
+      {
+        id: "ref-1",
+        data: {
+          ownerUid: "DELETE_FIELD",
+          handoff: "DELETE_FIELD",
+          ownerDeleted: true,
+          updatedAt: "SERVER_TIMESTAMP",
+        },
+      },
     ]);
   });
 

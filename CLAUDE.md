@@ -67,6 +67,7 @@ Key entry points:
 - `lib/market/*` - localized feasibility numbers (market basis, bedroom mix)
 - `lib/ai-api.ts`, `lib/ai-types.ts`, `lib/style-match-photo.ts`, `lib/server/openai.ts` - AI panels (project brief, style-matched ADU concepts)
 - `lib/stripe.ts`, `lib/lead-unlock-*.ts`, `lib/marketplace*.ts`, `lib/server/lead-unlocks.ts` - payments + builder lead-unlock marketplace
+- `lib/partner-referrals.ts`, `lib/server/partner-referrals.ts`, `app/api/partners/referral/route.ts` - flag-gated GreatBuildz referral handoff + server-only `partnerReferrals` ledger (`docs/partners/greatbuildz-referral.md`)
 - `lib/saved-scenarios.ts`, `lib/scenarios-firestore.ts`, `lib/scenario-url.ts` - scenario persistence and sharing
 - `lib/analytics/*`, `components/analytics/*` - consent-gated GA4; the tag loads only after opt-in and only when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set
 - `app/api/{parcel,aerial,geocode,suggest}/route.ts` - parcel/data server routes
@@ -149,6 +150,8 @@ OPENAI_IMAGE_MODEL=<image-capable model, defaults to gpt-5.6-sol>
 TYPESAFE_API_KEY=<server-side TypeSafe key; only read when a TypeSafe flag (TYPESAFE_GEOCODE_PICKER, TYPESAFE_ZONING_SHADOW) is on>
 TYPESAFE_GEOCODE_PICKER=<"true" lets TypeSafe choose among Nominatim candidates in /api/geocode; off by default because it spends metered quota on guest lookups>
 TYPESAFE_ZONING_SHADOW=<"true" logs Jev's zoning-district class beside the regex verdicts for signed-in Regrid lookups in /api/parcel; shadow only, never changes a response; off by default because it spends metered quota per new designation; see docs/jev-zoning-shadow.md>
+NEXT_PUBLIC_GREATBUILDZ_REFERRAL=<"true" offers the GreatBuildz referral network in the connect-with-builders panel for Los Angeles and Ventura county lots and enables /api/partners/referral; leave unset until the partnership is approved; see docs/partners/greatbuildz-referral.md>
+GREATBUILDZ_REFERRAL_EMAIL=<server-only GreatBuildz intake inbox for referral emails (sent via Resend); unset leaves referrals queued in the partnerReferrals ledger for manual handoff>
 STRIPE_SECRET_KEY=<server-side Stripe secret key>
 STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
 NEXT_PUBLIC_APP_URL=<canonical app URL for Stripe redirect callbacks>

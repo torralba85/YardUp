@@ -17,6 +17,7 @@ import {
   trackAddressSearchSubmitted,
   trackAduDesignCommitted,
   trackBuilderConnectionSubmitted,
+  trackPartnerReferralSubmitted,
   trackBuilderLeadPreviewViewed,
   trackBuilderLeadUnlocked,
   trackBuilderMatchesViewed,
@@ -391,6 +392,19 @@ describe("analytics events module", () => {
         feasibility_status: "eligible",
         adu_sqft_bucket: "600_799",
         state_code: "WA",
+      });
+
+      trackPartnerReferralSubmitted({
+        partner_id: "greatbuildz",
+        feasibility_status: "eligible",
+        adu_sqft_bucket: "600_799",
+        state_code: "ca",
+      });
+      expect(trackEventSpy).toHaveBeenCalledWith("partner_referral_submitted", {
+        partner_id: "greatbuildz",
+        feasibility_status: "eligible",
+        adu_sqft_bucket: "600_799",
+        state_code: "CA",
       });
 
       trackBuilderLeadPreviewViewed({

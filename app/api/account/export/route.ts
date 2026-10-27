@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       feedbackSnap,
       purchaseGrantsSnap,
       certificateCreditsSnap,
+      partnerReferralsSnap,
     ] = await Promise.all([
       userRef.get(),
       userRef.collection("savedScenarios").get(),
@@ -74,6 +75,7 @@ export async function GET(request: NextRequest) {
       db.collection("feedback").where("uid", "==", uid).get(),
       db.collection("purchaseGrants").where("uid", "==", uid).get(),
       db.collection("certificateCredits").doc(uid).get(),
+      db.collection("partnerReferrals").where("ownerUid", "==", uid).get(),
     ]);
 
     // Read gated contact payloads with bounded concurrency so large lead histories
@@ -105,6 +107,10 @@ export async function GET(request: NextRequest) {
       })),
       builderProfile: builderSnap.exists ? toPortable(builderSnap.data()) : null,
       connectionRequests,
+      partnerReferrals: partnerReferralsSnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(toPortable(docSnap.data()) as Record<string, unknown>),
+      })),
       feedback: feedbackSnap.docs.map((docSnap) => ({
         id: docSnap.id,
         ...(toPortable(docSnap.data()) as Record<string, unknown>),

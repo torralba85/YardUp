@@ -5,6 +5,12 @@ service cloud.firestore {
     match /studioScenarioLeads/{leadId} {
       allow read, write: if false;
     }
+    // Partner referral ledger (GreatBuildz). Holds the homeowner contact sent to
+    // the partner plus consent and delivery receipts. Admin SDK only, via
+    // /api/partners/referral; no client may read or write it.
+    match /partnerReferrals/{referralDocId} {
+      allow read, write: if false;
+    }
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
