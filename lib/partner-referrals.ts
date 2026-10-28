@@ -36,10 +36,21 @@ export const GREATBUILDZ: PartnerNetwork = {
   id: "greatbuildz",
   name: "GreatBuildz",
   website: "https://www.greatbuildz.com",
-  serviceAreaLabel: "Los Angeles and Ventura counties",
+  serviceAreaLabel:
+    "Los Angeles, Orange, Ventura, San Bernardino, Riverside, San Diego, Alameda, Contra Costa, Santa Clara and San Mateo counties",
+  // Coverage GreatBuildz listed on 2026-10-22. Sacramento (expanding) and
+  // statewide architecture-only work stay out until GreatBuildz confirms them.
   counties: [
     { state: "CA", county: "Los Angeles" },
+    { state: "CA", county: "Orange" },
     { state: "CA", county: "Ventura" },
+    { state: "CA", county: "San Bernardino" },
+    { state: "CA", county: "Riverside" },
+    { state: "CA", county: "San Diego" },
+    { state: "CA", county: "Alameda" },
+    { state: "CA", county: "Contra Costa" },
+    { state: "CA", county: "Santa Clara" },
+    { state: "CA", county: "San Mateo" },
   ],
 };
 

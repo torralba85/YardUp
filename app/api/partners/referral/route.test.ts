@@ -51,7 +51,7 @@ describe("POST /api/partners/referral", () => {
 
   it("rejects an out-of-area or stale-consent request without recording it", async () => {
     const outside = structuredClone(body);
-    outside.handoff.property.county = "San Diego";
+    outside.handoff.property.county = "Sacramento";
     expect((await POST(post(outside))).status).toBe(400);
     expect((await POST(post({ ...body, consentVersion: "old" }))).status).toBe(400);
     expect(createPartnerReferral).not.toHaveBeenCalled();

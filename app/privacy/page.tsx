@@ -187,8 +187,9 @@ export default function PrivacyPage() {
           lead.
         </p>
         <p>
-          <strong>Partner Referrals (GreatBuildz):</strong> For eligible properties in Los Angeles and
-          Ventura counties, California, you may choose to have <em>GreatBuildz</em>, an independent
+          <strong>Partner Referrals (GreatBuildz):</strong> For eligible properties in Los Angeles, Orange,
+          Ventura, San Bernardino, Riverside, San Diego, Alameda, Contra Costa, Santa Clara and San
+          Mateo counties, California, you may choose to have <em>GreatBuildz</em>, an independent
           homeowner matchmaking service, introduce contractors instead of LotFoundry&rsquo;s own builder
           marketplace. If you choose GreatBuildz and submit the request, we immediately send GreatBuildz
           your name, email, optional phone number and message, exact property address, lot size, and a

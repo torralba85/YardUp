@@ -40,13 +40,20 @@ afterEach(() => {
 });
 
 describe("partnerServesLocation", () => {
-  it("matches Los Angeles and Ventura counties in California, with or without the County suffix", () => {
-    expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county: "Los Angeles" })).toBe(true);
+  it("matches the Southern California and Bay Area counties GreatBuildz serves, with or without the County suffix", () => {
+    for (const county of [
+      "Los Angeles", "Orange", "Ventura", "San Bernardino", "Riverside", "San Diego",
+      "Alameda", "Contra Costa", "Santa Clara", "San Mateo",
+    ]) {
+      expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county })).toBe(true);
+    }
     expect(partnerServesLocation(GREATBUILDZ, { state: "ca", county: "Ventura County" })).toBe(true);
+    expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county: "contra costa county" })).toBe(true);
   });
 
   it("rejects other counties, other states, and unknown counties", () => {
-    expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county: "San Diego" })).toBe(false);
+    expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county: "Sacramento" })).toBe(false);
+    expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county: "San Francisco" })).toBe(false);
     expect(partnerServesLocation(GREATBUILDZ, { state: "WA", county: "Los Angeles" })).toBe(false);
     expect(partnerServesLocation(GREATBUILDZ, { state: "CA", county: null })).toBe(false);
   });
@@ -63,7 +70,7 @@ describe("availablePartnerNetwork", () => {
   it("offers GreatBuildz only for covered lots once enabled", () => {
     vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
     expect(availablePartnerNetwork(laSnapshot())).toBe(GREATBUILDZ);
-    expect(availablePartnerNetwork(laSnapshot("San Diego"))).toBeNull();
+    expect(availablePartnerNetwork(laSnapshot("Sacramento"))).toBeNull();
     expect(availablePartnerNetwork({ parcel: parcelPresets[0], parcelState: "WA" })).toBeNull();
   });
 });
@@ -113,7 +120,7 @@ describe("validatePartnerReferralRequest", () => {
     badEmail.handoff.homeowner.email = "nope";
     expect(validatePartnerReferralRequest(badEmail)).toMatchObject({ ok: false, error: /valid email/ });
     const outside = valid();
-    outside.handoff.property.county = "San Diego";
+    outside.handoff.property.county = "Sacramento";
     expect(validatePartnerReferralRequest(outside)).toMatchObject({ ok: false, error: /does not serve/ });
     expect(validatePartnerReferralRequest(null)).toMatchObject({ ok: false });
   });

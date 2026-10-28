@@ -13,8 +13,10 @@ The Studio's "Connect with local builders" panel (desktop and mobile share
 `BuilderLeadPanel`) shows a **Builder network** choice when all of these hold:
 
 1. `NEXT_PUBLIC_GREATBUILDZ_REFERRAL=true` was set at build time.
-2. The parcel resolved to a county in GreatBuildz coverage: Los Angeles or
-   Ventura, CA (`GREATBUILDZ.counties`). Preset and estimated lots never qualify.
+2. The parcel resolved to a county in GreatBuildz coverage: Los Angeles,
+   Orange, Ventura, San Bernardino, Riverside, San Diego, Alameda, Contra Costa,
+   Santa Clara or San Mateo, CA (`GREATBUILDZ.counties`, from GreatBuildz's
+   2026-10-22 email; Sacramento is pending). Preset and estimated lots never qualify.
 
 Choices are **LotFoundry builders** (the default, the existing paid-unlock
 marketplace) and **GreatBuildz**. Each choice has its own explanation and its
@@ -97,8 +99,8 @@ GreatBuildz's to delete; the privacy policy says so.
 - [ ] Counsel reviews `/privacy` Section 5 (Partner Referrals) and `/terms`
       Section 6 (Partner Referral Networks), especially the referral-fee
       disclosure and the consumer-directed-disclosure basis under CCPA.
-- [ ] GreatBuildz confirms: intake address, coverage (Los Angeles and Ventura
-      counties), that the homeowner service is free, "screened contractors"
+- [ ] GreatBuildz confirms: intake address, coverage (the ten counties above;
+      ZIP or project-type exclusions; whether Sacramento joins), that the homeowner service is free, "screened contractors"
       wording, its privacy policy URL, and the report format with `LFR-` ids.
 - [ ] Decide whether the referral-fee basis (per referral, per introduction,
       per contract) changes the status that triggers an invoice.

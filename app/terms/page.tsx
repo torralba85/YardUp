@@ -125,7 +125,8 @@ export default function TermsPage() {
         <p>
           <strong>Partner Referral Networks:</strong> For eligible properties, the Service may let you
           send your project to an independent partner network, currently GreatBuildz (serving Los
-          Angeles and Ventura counties, California), instead of the LotFoundry builder marketplace.
+          Angeles, Orange, Ventura, San Bernardino, Riverside, San Diego, Alameda, Contra Costa, Santa
+          Clara and San Mateo counties, California), instead of the LotFoundry builder marketplace.
           When you choose a partner network and submit a request, you direct LotFoundry to send that
           partner the details described in our Privacy Policy. The partner is an independent company,
           not LotFoundry&rsquo;s agent, and its own terms and privacy policy govern its service and any
