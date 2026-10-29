@@ -18,6 +18,7 @@ import { Input, Select } from "@/components/ui/Field";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { aduCtaEvent } from "@/lib/adu/types";
+import { AduFinancingCalculator } from "./AduFinancingCalculator";
 
 /** Unit sizes offered by the calculator, in square feet. */
 const SIZES = [400, 600, 800, 1000, 1200];
@@ -461,6 +462,10 @@ export function AduCostCalculator({
             </div>
           </div>
         </div>
+
+        {estimate ? (
+          <AduFinancingCalculator projectCost={totalBudgetMid} annualNoi={estimate.annualNoi} />
+        ) : null}
 
         {/* Free address check below the breakdown */}
         {showAddressCheck ? (

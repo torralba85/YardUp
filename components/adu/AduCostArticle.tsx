@@ -209,6 +209,10 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         </div>
       </section>
 
+      <p className="lf-body mt-8 text-lot-stone">
+        Have a lender offer? Compare the monthly payment with modeled rent after operating expenses
+        in the <Link href="/adu-cost-calculator#financing" className={linkClass}>ADU loan and cash-flow calculator</Link>.
+      </p>
       <div className="mt-12">
         <AduStudioCta
           city={city.city}

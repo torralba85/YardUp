@@ -29,6 +29,17 @@ describe("AduCostCalculator", () => {
     expect(screen.getByText("12.9 years")).toBeInTheDocument();
   });
 
+  it("keeps loan changes out of the budget and updates the comparison when quotes change", () => {
+    render(<AduCostCalculator />);
+    fireEvent.change(screen.getByLabelText("Loan amount ($)"), { target: { value: "100000" } });
+    expect(screen.getByText("$251,340")).toBeInTheDocument();
+    expect(screen.getByText("12.9 years")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Replace allowance with a real quote"));
+    fireEvent.change(screen.getByLabelText("Construction quote ($)"), { target: { value: "200000" } });
+    expect(screen.getByText("$236,000")).toBeInTheDocument();
+    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue(100000);
+  });
+
   it("can start on another county, e.g. on a county cost page", () => {
     render(<AduCostCalculator initialCounty="san-diego" />);
     expect(screen.getByLabelText("County")).toHaveValue("san-diego");

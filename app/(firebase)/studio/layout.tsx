@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StudioOfferSummary } from "@/components/studio/StudioOfferSummary";
 
 const title = "LotFoundry Studio — feasibility and design";
 const description =
@@ -70,33 +71,51 @@ export default function StudioLayout({
             </span>
           </summary>
           <div className="border-t border-lot-line px-[4.5%] py-8 lg:absolute lg:inset-x-0 lg:bottom-full lg:max-h-[min(70dvh,560px)] lg:overflow-y-auto lg:bg-lot-chalk">
-            <div className="grid max-w-[1200px] gap-6 text-pretty text-sm leading-6 text-lot-stone xl:grid-cols-3">
-              <p>
-                LotFoundry helps homeowners evaluate an accessory dwelling unit before spending money
-                on plans. Search an address or open a sample parcel, place an ADU on the lot, and compare
-                estimated rent, build cost, payback, setbacks, lot coverage, and zoning signals in one
-                workspace. Change the unit dimensions and assumptions to see how the scenario responds,
-                then save or share the feasibility snapshot when you have a direction worth exploring.
-              </p>
-              <p>
-                The studio is designed for early planning, not permit approval. Parcel boundaries,
-                zoning data, setbacks, construction costs, rents, and timelines can be incomplete or
-                change over time. Treat the results as estimates that help you ask better questions,
-                then verify critical dimensions and local requirements with the city, a surveyor,
-                designer, contractor, lender, or other licensed professional before making a building
-                or financial commitment.
-              </p>
-              <p>
-                If you are still learning the basics, start with our city-by-city ADU rule guides,
-                learn more about how LotFoundry works, or visit Help for product guidance. These public
-                resources explain the assumptions behind the studio and give you a path to the source
-                material before you move from feasibility into design and permitting.
-              </p>
+            <div className="grid max-w-[1200px] gap-6 text-pretty text-sm leading-6 text-lot-stone xl:grid-cols-2">
+              <div>
+                <h2 className="font-display text-lg font-medium text-lot-ink">What the address check covers</h2>
+                <p className="mt-2">
+                  Search an address or open the sample parcel, place a modeled ADU, and compare
+                  estimated build cost, rent, payback, setbacks and lot coverage. Change the unit
+                  dimensions and assumptions to compare a smaller or larger project before ordering plans.
+                  Parcel and zoning coverage varies by location; finding an address does not mean every
+                  local rule or property record is available.
+                </p>
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-medium text-lot-ink">When a result needs verification</h2>
+                <p className="mt-2">
+                  A mapped parcel is not a boundary survey. Missing zoning fields may use planning
+                  assumptions, and a modeled fit does not establish legal placement. Check the source
+                  and confidence notes in your result. Easements, utilities, overlays and site conditions
+                  still need review with the city and relevant professionals. Rent and construction
+                  figures are estimates, not contractor quotes, appraisals or permit approval.
+                </p>
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-medium text-lot-ink">Free exploration and the paid certificate</h2>
+                <StudioOfferSummary />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-medium text-lot-ink">See the sample and the assumptions</h2>
+                <p className="mt-2">
+                  Read the public sample certificate to see the report format before paying.
+                  The methodology explains how cost, rent and payback are modeled; city guides
+                  point to local requirements. Verify critical dimensions and rules before committing
+                  to design, construction or financing.
+                </p>
+              </div>
             </div>
             <nav
               aria-label="Studio resources"
               className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm font-semibold"
             >
+              <Link href="/sample-certificate/san-diego" prefetch={false} className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+                Sample certificate
+              </Link>
+              <Link href="/adu/how-we-estimate" prefetch={false} className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+                Cost and rent methodology
+              </Link>
               <Link href="/adu/ca" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
                 California ADU rules
               </Link>
