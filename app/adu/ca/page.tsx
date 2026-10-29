@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
 import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { ADU_CITIES, cityUrl, hubUrl } from "@/lib/adu/content";
+import { ADU_CITIES, aduCounties, cityUrl, hubUrl, jaduPath } from "@/lib/adu/content";
 import {
   STATE_BASELINE_SOURCES,
   STATE_FLOOR_FACTS,
@@ -14,12 +14,12 @@ export const metadata: Metadata = {
   // Kept under ~160 characters: past that Google truncates mid-sentence and
   // the cut lands inside the city list rather than after a complete thought.
   description:
-    "ADU rules change at the city line. Start with the California state floor, then read setbacks, fees and permit steps for San Diego County cities and the county.",
+    "Building an ADU in California starts with the state floor. Then read setbacks, fees and permit steps for San Diego County cities, the county and Sacramento.",
   alternates: { canonical: hubUrl() },
   openGraph: {
     title: "California ADU Laws and Rules by City (2026) | LotFoundry",
     description:
-      "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County cities and the unincorporated county.",
+      "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County cities, the unincorporated county and Sacramento.",
     url: hubUrl(),
     images: [
       {
@@ -53,6 +53,8 @@ const CITY_BLURBS: Record<string, string> = {
     "The placement city: detached ADUs in the rear half of the lot, 10 feet from every structure, caps of 850 and 1,000 square feet, and a house-matching design rule.",
   "san-diego-county":
     "The unincorporated county: 1,200 sq ft and 25-foot detached ADUs, fire-district and septic reviews that shape the site plan, and an ordinance the state flagged in July 2026.",
+  sacramento:
+    "The two-rulebook city: pick the City's local option (1,200 sq ft detached, 3-foot setbacks) or the state option (three units) for the whole lot, with no parking minimums anywhere.",
 };
 
 /**
@@ -69,7 +71,7 @@ const itemListJsonLd = {
   "@type": "ItemList",
   name: "California ADU rules by city",
   description:
-    "City-by-city ADU guides for San Diego County, each with an as-of date.",
+    "City-by-city ADU guides for San Diego and Sacramento counties, each with an as-of date.",
   numberOfItems: ADU_CITIES.length,
   itemListElement: ADU_CITIES.map((content, index) => ({
     "@type": "ListItem",
@@ -105,8 +107,8 @@ const breadcrumbJsonLd = {
 export default function AduCaliforniaHubPage() {
   return (
     <LegalPageShell
-      title="California ADU Laws and Rules (2026)"
-      kicker="San Diego County · City-by-city guides"
+      title="Building an ADU in California: Laws and Rules (2026)"
+      kicker="San Diego and Sacramento counties · City-by-city guides"
     >
       <script
         type="application/ld+json"
@@ -119,16 +121,24 @@ export default function AduCaliforniaHubPage() {
 
       <div className="lf-body space-y-4 text-lg leading-relaxed">
         <p>
-          Planning an accessory dwelling unit in California? Start with the
-          jurisdiction that reviews your property. State law sets a baseline,
-          while local standards, site conditions and overlays affect the plans
-          you can submit. These guides bring together source documents, permit
-          steps and a visible review date for San Diego County cities and the
-          unincorporated county.
+          Planning an ADU in California? Start with the jurisdiction that
+          reviews your property. State law sets a baseline, while local
+          standards, site conditions and overlays affect the plans you can
+          submit. These guides bring together source documents, permit steps
+          and a visible review date for San Diego County cities, the
+          unincorporated county and the City of Sacramento.
         </p>
         <p>
           Start from the state floor below, pick your city, then check what
-          the rules mean for your specific lot in the Studio. Build a budget
+          the rules mean for your specific lot in the Studio. Adding a unit
+          inside the house instead? Read the{" "}
+          <Link
+            href={jaduPath()}
+            className="underline underline-offset-2 hover:text-lot-ink"
+          >
+            junior ADU (JADU) guide
+          </Link>
+          . Build a budget
           with the{" "}
           <Link
             href="/adu/ca/cost"
@@ -187,32 +197,37 @@ export default function AduCaliforniaHubPage() {
         </p>
       </section>
 
-      <section aria-labelledby="adu-cities" className="mt-12">
-        <h2 id="adu-cities" className="lf-card-heading text-lot-ink">
-          City and county guides — San Diego County
-        </h2>
-        <ul className="mt-4 space-y-4">
-          {ADU_CITIES.map((city) => (
-            <li
-              key={city.slug}
-              className="border border-lot-line p-5"
-            >
-              <Link
-                href={`/adu/${city.state}/${city.slug}`}
-                className="font-display text-xl font-bold text-lot-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-              >
-                {city.h1 ?? `ADU Rules in ${city.city} (2026)`}
-              </Link>
-              <p className="lf-body mt-2 text-lot-stone">
-                {CITY_BLURBS[city.slug]}
-              </p>
-              <p className="mt-2 text-xs uppercase tracking-[0.08em] text-lot-stone">
-                Updated {city.asOf} · {city.faqs.length} answered questions
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {aduCounties().map((county) => {
+        const id = `adu-cities-${county.toLowerCase().replace(/[^a-z]+/g, "-")}`;
+        return (
+          <section key={county} aria-labelledby={id} className="mt-12">
+            <h2 id={id} className="lf-card-heading text-lot-ink">
+              City and county guides — {county}
+            </h2>
+            <ul className="mt-4 space-y-4">
+              {ADU_CITIES.filter((city) => city.county === county).map((city) => (
+                <li
+                  key={city.slug}
+                  className="border border-lot-line p-5"
+                >
+                  <Link
+                    href={`/adu/${city.state}/${city.slug}`}
+                    className="font-display text-xl font-bold text-lot-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                  >
+                    {city.h1 ?? `ADU Rules in ${city.city} (2026)`}
+                  </Link>
+                  <p className="lf-body mt-2 text-lot-stone">
+                    {CITY_BLURBS[city.slug]}
+                  </p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.08em] text-lot-stone">
+                    Updated {city.asOf} · {city.faqs.length} answered questions
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
 
       <div className="mt-12">
         <AduStudioCta city="California" slug="california" placement="end" />

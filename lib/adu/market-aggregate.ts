@@ -81,26 +81,25 @@ export const HUD_FMR_AS_OF = `HUD ${HUD_FMR_YEAR} FMR (effective ${HUD_FMR_EFFEC
 const ANCHOR_COUNTY_SLUGS = ["los-angeles", "san-diego", "santa-clara"];
 
 /**
- * California county anchors, keyed by county slug, built from the verified
- * HUD table. The regional cost factors in `cost-multipliers.json` are
- * unverified seeds, so every anchor stays on the national cost base (1.0) —
- * the same rule the city pages follow.
+ * One county's anchor from the verified HUD table. The regional cost factors
+ * in `cost-multipliers.json` are unverified seeds, so every anchor stays on
+ * the national cost base (1.0) — the same rule the city pages follow.
  */
+function countyAnchor(slug: string): CityMarketAnchor {
+  const row = CA_COUNTY_RENTS.find((county) => county.slug === slug);
+  if (!row) throw new Error(`No verified HUD rent row for ${slug}`);
+  return {
+    area: `${row.county} County, CA`,
+    rentByBedroom: { ...row.fy2027 },
+    costMultiplier: 1,
+    asOf: HUD_FMR_AS_OF,
+    sourceUrl: HUD_FMR_FY2027_URL,
+  };
+}
+
+/** California county anchors for the calculator, keyed by county slug. */
 const COUNTY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = Object.fromEntries(
-  ANCHOR_COUNTY_SLUGS.map((slug) => {
-    const row = CA_COUNTY_RENTS.find((county) => county.slug === slug);
-    if (!row) throw new Error(`No verified HUD rent row for ${slug}`);
-    return [
-      slug,
-      {
-        area: `${row.county} County, CA`,
-        rentByBedroom: { ...row.fy2027 },
-        costMultiplier: 1,
-        asOf: HUD_FMR_AS_OF,
-        sourceUrl: HUD_FMR_FY2027_URL,
-      },
-    ];
-  }),
+  ANCHOR_COUNTY_SLUGS.map((slug) => [slug, countyAnchor(slug)]),
 );
 
 /**
@@ -109,6 +108,7 @@ const COUNTY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = Object.fromEntri
  */
 const CITY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = {
   "san-diego": COUNTY_MARKET_ANCHORS["san-diego"],
+  sacramento: countyAnchor("sacramento"),
 };
 
 /** A California county the cost calculator quotes, in display order. */

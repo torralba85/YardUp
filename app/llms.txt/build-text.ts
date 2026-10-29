@@ -5,6 +5,7 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  jaduUrl,
   methodologyUrl,
   permitStudyCsvUrl,
   permitStudyUrl,
@@ -13,6 +14,7 @@ import {
   stateCostUrl,
   STATE_BASELINE_AS_OF,
 } from "@/lib/adu/content";
+import { JADU_AS_OF } from "@/content/adu/ca/jadu";
 import { CA_RENT_VERIFIED, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
 import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
@@ -125,7 +127,8 @@ licensed builder.
 
 State law baseline verified ${STATE_BASELINE_AS_OF}.
 
-- [California ADU rules](${hubUrl()}): the state floor every California city builds on, and how the five largest San Diego County cities differ from it.
+- [California ADU rules](${hubUrl()}): the state floor every California city builds on, and how San Diego County cities, the unincorporated county and Sacramento differ from it.
+- [California junior ADU (JADU) rules](${jaduUrl()}): what a JADU is under state law (up to 500 sq ft inside a single-family home or attached garage), how it differs from an ADU, owner-occupancy and rental rules (checked ${JADU_AS_OF}).
 - [California ADU cost guide](${stateCostUrl()}): modeled build cost by unit size, cost-per-square-foot context, permit-fee rules, scope exclusions, and contractor quote guidance.
 - [California ADU rent by county](${rentUrl()}): HUD ${HUD_FMR_YEAR} Fair Market Rents for 12 counties by bedroom count, the change from FY2026, and a planning rent range (figures verified ${CA_RENT_VERIFIED}; CSV at ${rentCsvUrl()}, free to reuse under CC BY 4.0 with a link).
 - [San Diego ADU permits by neighborhood](${permitStudyUrl()}): City of San Diego building permits that add ADUs and junior ADUs, ${SAN_DIEGO_PERMIT_STUDY.coverage.from} to ${SAN_DIEGO_PERMIT_STUDY.coverage.to}, by year and community planning area (CSV at ${permitStudyCsvUrl()}, free to reuse under CC BY 4.0 with a link).

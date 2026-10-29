@@ -6,6 +6,7 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  jaduUrl,
   methodologyUrl,
   permitStudyUrl,
   rentUrl,
@@ -32,7 +33,8 @@ describe("sitemap-adu.xml", () => {
     // Well-formed entries only: one <url> block per page, XML-escaped.
     expect(xml).toContain(`<loc>${rentUrl()}</loc>`);
     expect(xml).toContain(`<loc>${permitStudyUrl()}</loc>`);
-    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 6);
+    expect(xml).toContain(`<loc>${jaduUrl()}</loc>`);
+    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 7);
     expect(xml).not.toContain("& ");
   });
 });

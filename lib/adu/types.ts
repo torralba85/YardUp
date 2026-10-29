@@ -162,7 +162,11 @@ export interface JurisdictionContent {
   };
   /** 6–9 searcher-worded questions, including terminology aliases. */
   faqs: AduFaq[];
-  /** Neighboring jurisdiction slugs (bidirectional, geographic, 1–6). */
+  /**
+   * Neighboring jurisdiction slugs (bidirectional, geographic, 0–6). At least
+   * one whenever another guide shares the county; a metro's first guide has
+   * none until a nearby city ships.
+   */
   neighbors: string[];
   /** Municipal code and program sources cited on the page. */
   sources: AduSource[];

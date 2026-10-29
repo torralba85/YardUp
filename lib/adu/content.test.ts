@@ -83,9 +83,15 @@ describe("adu cost pages", () => {
   });
 
   it("points each San Diego County guide at the cost page that covers it", () => {
-    for (const city of ADU_CITIES) {
+    for (const city of ADU_CITIES.filter((entry) => entry.county === "San Diego County")) {
       expect(getCoveringCostPage(city)?.slug, city.slug).toBe("san-diego");
     }
+  });
+
+  it("shows Sacramento's cost, rent and payback figures on its own guide", () => {
+    const sacramento = getCity("ca", "sacramento");
+    expect(sacramento && getCoveringCostPage(sacramento)).toBeUndefined();
+    expect(cityMarketAggregate("sacramento")?.provenance.area).toBe("Sacramento County, CA");
   });
 
   it("keeps cost metadata within search-result limits with a self canonical", () => {
@@ -122,6 +128,20 @@ describe("adu cost pages", () => {
     const answer = sanDiego?.faqs.find((faq) => faq.question.includes("property line"))?.answer;
     expect(answer).toContain("no taller than 16 feet");
     expect(answer).toContain("Over 16 feet");
+  });
+
+  it("states Sacramento's two rulebooks as City Code §17.228.105 does", () => {
+    const sacramento = getCity("ca", "sacramento");
+    const text = JSON.stringify(sacramento);
+    expect(text).toContain("§17.228.105(B)");
+    expect(text).toContain("§17.228.105(C)");
+    expect(text).toContain("may not be combined");
+    // Local option: 1,200 sq ft detached, 3 ft setbacks; state option: 800 sq ft, 18/20 ft, 4 ft.
+    expect(JSON.stringify(sacramento?.glance)).toContain("Local option: 1,200 sq ft. State option: 800 sq ft");
+    expect(JSON.stringify(sacramento?.glance)).toContain("State option: 18 ft, or 20 ft to match the house's roof pitch");
+    // The City's code still requires an owner on site for every JADU; state law no longer does.
+    expect(text).toContain("Gov. Code §66333(b)");
+    expect(String(sacramento?.metaDescription).length).toBeLessThanOrEqual(160);
   });
 
   it("states Carlsbad's rules and permit steps from the City's IB-111 bulletin", () => {

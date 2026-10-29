@@ -85,6 +85,7 @@ export const CA_COUNTY_RENTS: CountyRent[] = [
     fmrArea: "Sacramento--Roseville--Arden-Arcade, CA HUD Metro FMR Area",
     fy2027: { studio: 1742, "1br": 1793, "2br": 2201 },
     fy2026: { studio: 1748, "1br": 1832, "2br": 2255 },
+    guidePath: "/adu/ca/sacramento",
   },
   {
     slug: "san-bernardino",

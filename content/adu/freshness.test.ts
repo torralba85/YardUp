@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { JADU_AS_OF } from "@/content/adu/ca/jadu";
 import { ADU_CITIES, ADU_COST_PAGES } from "@/lib/adu/content";
 
 /**
@@ -22,6 +23,16 @@ describe("adu re-verification cadence", () => {
         `${city.slug} last verified ${city.asOf} — re-verify against the municipal code`,
       ).toBeLessThanOrEqual(REVIEW_CADENCE_DAYS);
     }
+  });
+
+  it("keeps the junior ADU guide within the same 90-day cadence", () => {
+    const ageDays =
+      (Date.now() - new Date(`${JADU_AS_OF}T00:00:00Z`).getTime()) /
+      (1000 * 60 * 60 * 24);
+    expect(
+      ageDays,
+      `JADU guide last checked ${JADU_AS_OF} — re-verify against the HCD handbook and Gov. Code §66333`,
+    ).toBeLessThanOrEqual(REVIEW_CADENCE_DAYS);
   });
 
   it("keeps every cost page's fee copy within the same 90-day cadence", () => {
