@@ -56,6 +56,14 @@ describe("CaliforniaAduRentGuide", () => {
       "https://lotfoundry.net/adu/ca/rent/adu-rent-by-county.csv",
     );
     expect(dataset.temporalCoverage).toBe("2026-10-01/2027-09-30");
+    expect(dataset.license).toBe("https://creativecommons.org/licenses/by/4.0/");
+    expect(screen.getByRole("link", { name: "CC BY 4.0" })).toHaveAttribute(
+      "href",
+      "https://creativecommons.org/licenses/by/4.0/",
+    );
+    expect(screen.getByText(/Free to reuse under/).textContent).toMatch(
+      /Free to reuse under\s+CC BY 4\.0\s+with a link to this page\./,
+    );
     expect(jsonLd(container, "Article").dateModified).toBe("2026-10-28");
     expect(jsonLd(container, "FAQPage").mainEntity.length).toBeGreaterThan(3);
     expect(jsonLd(container, "BreadcrumbList").itemListElement[2].item).toBe(
