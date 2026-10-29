@@ -70,10 +70,10 @@ describe("landing address handoff", () => {
     expect(sanDiegoMetadata.alternates?.canonical).toBe("https://lotfoundry.net/san-diego");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Explore an ADU on your lot in 3D.");
     expect(screen.getByText("San Diego ADU feasibility · see what fits your lot")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("$2,754");
+    expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("$2,615");
     expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("Coyote Brush Court");
     fireEvent.click(screen.getByText("What’s behind these numbers?"));
-    const note = "Rent bands start from HUD's FY2026 Fair Market Rent for a one-bedroom in San Diego County ($2,459/mo), plus the studio's standard 12% and 25% spreads. The lot follows San Diego's RS-1-7 minimums; the address is fictional, and coverage is modeled at 60% because the city limits floor area (0.60 FAR), not flat-lot coverage.";
+    const note = "Rent bands start from HUD's FY2027 Fair Market Rent for a one-bedroom in San Diego County ($2,335/mo), plus the studio's standard 12% and 25% spreads. The lot follows San Diego's RS-1-7 minimums; the address is fictional, and coverage is modeled at 60% because the city limits floor area (0.60 FAR), not flat-lot coverage.";
     expect(landingDemos["san-diego"].note).toBe(note);
     expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent?.includes(note) === true)).toBeVisible();
     for (const city of ["seattle", "portland", "austin"] as const) {

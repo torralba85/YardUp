@@ -25,15 +25,15 @@ describe("AduCostCalculator", () => {
   it("renders the Los Angeles 600 sq ft estimate by default", () => {
     render(<AduCostCalculator />);
     expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
-    expect(screen.getByText("$2,328")).toBeInTheDocument();
-    expect(screen.getByText("13.3 years")).toBeInTheDocument();
+    expect(screen.getByText("$2,402")).toBeInTheDocument();
+    expect(screen.getByText("12.9 years")).toBeInTheDocument();
   });
 
   it("can start on another county, e.g. on a county cost page", () => {
     render(<AduCostCalculator initialCounty="san-diego" />);
     expect(screen.getByLabelText("County")).toHaveValue("san-diego");
-    expect(screen.getByText("$2,459")).toBeInTheDocument();
-    expect(screen.getByText("12.6 years")).toBeInTheDocument();
+    expect(screen.getByText("$2,335")).toBeInTheDocument();
+    expect(screen.getByText("13.3 years")).toBeInTheDocument();
   });
 
   it("recomputes when the county changes", () => {
@@ -41,8 +41,8 @@ describe("AduCostCalculator", () => {
     fireEvent.change(screen.getByLabelText("County"), {
       target: { value: "santa-clara" },
     });
-    expect(screen.getByText("$2,982")).toBeInTheDocument();
-    expect(screen.getByText("10.4 years")).toBeInTheDocument();
+    expect(screen.getByText("$2,778")).toBeInTheDocument();
+    expect(screen.getByText("11.2 years")).toBeInTheDocument();
   });
 
   it("recomputes when the size changes", () => {
@@ -51,7 +51,7 @@ describe("AduCostCalculator", () => {
       target: { value: "400" },
     });
     expect(screen.getByText("$157K–$197K")).toBeInTheDocument();
-    expect(screen.getByText("$1,979")).toBeInTheDocument();
+    expect(screen.getByText("$2,151")).toBeInTheDocument();
   });
 
   it("itemizes construction and soft costs without double counting, and labels site work and financing as unpriced", () => {

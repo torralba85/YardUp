@@ -88,8 +88,8 @@ export const sanDiegoCost: JurisdictionCostContent = {
   ],
   sources: [
     {
-      label: "HUD Fair Market Rents (FY2026)",
-      url: "https://www.huduser.gov/portal/datasets/fmr.html",
+      label: "HUD Fair Market Rents (FY2027)",
+      url: "https://www.huduser.gov/datasets/fmr/fmr2027",
     },
     {
       label: "San Diego Information Bulletin 501 (Fee Schedule for Construction Permits)",

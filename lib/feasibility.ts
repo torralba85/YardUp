@@ -210,14 +210,14 @@ export const parcelPresets: ParcelPreset[] = [
     maxLotCoveragePercent: 60, // Modeling proxy from 0.60 FAR (Table 131-04J), not a flat-lot coverage cap.
     regulationsEstimated: true,
     setbacks: { front: 15, rear: 13, side: 4 }, // RS-1-7 base zone (Table 131-04D); ADU side/rear: lib/adu-setbacks.ts.
-    expectedRent: { conservative: 2459, market: 2754, optimistic: 3074 }, // HUD FY2026 San Diego County 1BR FMR; standard 1.0/1.12/1.25 spreads.
+    expectedRent: { conservative: 2335, market: 2615, optimistic: 2919 }, // HUD FY2027 San Diego County 1BR FMR; standard 1.0/1.12/1.25 spreads.
     marketData: {
-      rentByBedroom: { studio: 2090, "1br": 2459, "2br": 3123 }, // Mirrors lib/adu/market-aggregate.ts.
+      rentByBedroom: { studio: 2192, "1br": 2335, "2br": 2823 }, // Mirrors content/adu/ca/rent.ts (HUD FY2027, verified 2026-10-28).
       costMultiplier: 1,
       source: "hud-county",
       area: "San Diego County, CA",
-      asOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
-      sourceUrl: "https://www.huduser.gov/portal/datasets/fmr.html",
+      asOf: "HUD FY2027 FMR (effective 2026-10-01)",
+      sourceUrl: "https://www.huduser.gov/datasets/fmr/fmr2027",
       confidence: "medium",
     },
   },

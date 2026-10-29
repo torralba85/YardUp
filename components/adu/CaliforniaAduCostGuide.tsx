@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
+import { HUD_FMR_FY2027_URL, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
 import { hubUrl, stateCostUrl } from "@/lib/adu/content";
 import { countyMarketAggregate } from "@/lib/adu/market-aggregate";
 import {
@@ -14,8 +15,7 @@ export const CALIFORNIA_COST_GUIDE_AS_OF = "2026-10-07";
 
 const HCD_HANDBOOK_URL =
   "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf";
-const HUD_FMR_URL =
-  "https://www.huduser.gov/portal/datasets/fmr/fmr2026/FY2026_FMR_Schedule.pdf";
+const HUD_FMR_URL = HUD_FMR_FY2027_URL;
 const CSLB_CONTRACTOR_URL =
   "https://cslb.ca.gov/consumers/hire_a_contractor/finding_the_right_contractor.aspx";
 
@@ -373,9 +373,13 @@ export function CaliforniaAduCostGuide() {
           </li>
           <li>
             <a href={HUD_FMR_URL} rel="noopener" className={linkClass}>
-              HUD FY2026 Fair Market Rent schedule
+              HUD {HUD_FMR_YEAR} Fair Market Rents
             </a>{" "}
-            - county rent anchors used by the calculator
+            - county rent anchors used by the calculator (
+            <Link href="/adu/ca/rent" className={linkClass}>
+              all 12 counties
+            </Link>
+            )
           </li>
           <li>
             <a href={CSLB_CONTRACTOR_URL} rel="noopener" className={linkClass}>

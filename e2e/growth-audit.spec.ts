@@ -41,7 +41,7 @@ test("city pages have static local numbers, a self canonical, and the matching d
     ["seattle", "Seattle", "oak-street", "$2,350", "Oak Street"],
     ["portland", "Portland", "corner-lot", "$2,600", "Linden Avenue"],
     ["austin", "Austin", "compact-lot", "$2,150", "Mesa Court"],
-    ["san-diego", "San Diego", "coyote-brush", "$2,754", "Coyote Brush Court"],
+    ["san-diego", "San Diego", "coyote-brush", "$2,615", "Coyote Brush Court"],
   ]) {
     const sample = await request.get(`/sample-certificate/${city}`);
     expect(sample.headers()["x-frame-options"]).toBe("SAMEORIGIN");

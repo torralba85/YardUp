@@ -12,6 +12,13 @@ import type {
   BedroomClass,
   MarketProvenance,
 } from "@/lib/market/market-types";
+import { RENT_SCENARIO_SPREADS } from "@/lib/market/rent-spreads";
+import {
+  CA_COUNTY_RENTS,
+  HUD_FMR_EFFECTIVE,
+  HUD_FMR_FY2027_URL,
+  HUD_FMR_YEAR,
+} from "@/content/adu/ca/rent";
 
 /**
  * Citywide cost/rent/payback aggregates for ADU jurisdiction pages.
@@ -43,23 +50,16 @@ import type {
 /** Unit sizes quoted on city pages, in square feet. */
 export const CITY_MARKET_SIZES = [400, 600, 800, 1200] as const;
 
-/**
- * Rent scenario multipliers applied to a HUD FMR anchor. Conservative is the
- * FMR itself; the Studio applies the same spreads to a live parcel's anchor.
- */
-export const RENT_SCENARIO_SPREADS = {
-  conservative: 1,
-  market: 1.12,
-  optimistic: 1.25,
-} as const;
+export { RENT_SCENARIO_SPREADS };
 
 /** One city's rent anchor plus the vintage behind it. */
 interface CityMarketAnchor {
   /** Human citation, e.g. "San Diego County, CA". */
   area: string;
   /**
-   * Monthly HUD Fair Market Rent by bedroom class. Mirrors the matching row
-   * of `lib/server/market/data/fmr.json` — update both together.
+   * Monthly HUD Fair Market Rent by bedroom class, taken from the verified
+   * table in `content/adu/ca/rent.ts`. `lib/server/market/data/fmr.json`
+   * mirrors the same rows; a test keeps the two equal.
    */
   rentByBedroom: Record<BedroomClass, number>;
   /**
@@ -68,46 +68,40 @@ interface CityMarketAnchor {
    * applies and the figures stay labeled estimates.
    */
   costMultiplier: number;
-  /** Data vintage, e.g. "HUD FY2026 FMR (effective 2026-05-21; seed extract)". */
+  /** Data vintage, e.g. "HUD FY2027 FMR (effective 2026-10-01)". */
   asOf: string;
   /** Public URL for the underlying dataset. */
   sourceUrl: string;
 }
 
-/** Vintage and source shared by every HUD FMR county anchor below. */
-const HUD_FMR_AS_OF = "HUD FY2026 FMR (effective 2026-05-21; seed extract)";
-const HUD_FMR_URL = "https://www.huduser.gov/portal/datasets/fmr.html";
+/** Vintage shared by every HUD FMR county anchor below. */
+export const HUD_FMR_AS_OF = `HUD ${HUD_FMR_YEAR} FMR (effective ${HUD_FMR_EFFECTIVE})`;
+
+/** Counties the calculator quotes; each must exist in `content/adu/ca/rent.ts`. */
+const ANCHOR_COUNTY_SLUGS = ["los-angeles", "san-diego", "santa-clara"];
 
 /**
- * California county anchors, keyed by county slug. Each mirrors the
- * matching `CA/<County>` row of `lib/server/market/data/fmr.json`. The
- * regional cost factors in `cost-multipliers.json` are unverified seeds, so
- * every anchor stays on the national cost base (1.0) — the same rule the
- * city pages follow.
+ * California county anchors, keyed by county slug, built from the verified
+ * HUD table. The regional cost factors in `cost-multipliers.json` are
+ * unverified seeds, so every anchor stays on the national cost base (1.0) —
+ * the same rule the city pages follow.
  */
-const COUNTY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = {
-  "los-angeles": {
-    area: "Los Angeles County, CA",
-    rentByBedroom: { studio: 1979, "1br": 2328, "2br": 2957 },
-    costMultiplier: 1,
-    asOf: HUD_FMR_AS_OF,
-    sourceUrl: HUD_FMR_URL,
-  },
-  "san-diego": {
-    area: "San Diego County, CA",
-    rentByBedroom: { studio: 2090, "1br": 2459, "2br": 3123 },
-    costMultiplier: 1,
-    asOf: HUD_FMR_AS_OF,
-    sourceUrl: HUD_FMR_URL,
-  },
-  "santa-clara": {
-    area: "Santa Clara County, CA",
-    rentByBedroom: { studio: 2535, "1br": 2982, "2br": 3787 },
-    costMultiplier: 1,
-    asOf: HUD_FMR_AS_OF,
-    sourceUrl: HUD_FMR_URL,
-  },
-};
+const COUNTY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = Object.fromEntries(
+  ANCHOR_COUNTY_SLUGS.map((slug) => {
+    const row = CA_COUNTY_RENTS.find((county) => county.slug === slug);
+    if (!row) throw new Error(`No verified HUD rent row for ${slug}`);
+    return [
+      slug,
+      {
+        area: `${row.county} County, CA`,
+        rentByBedroom: { ...row.fy2027 },
+        costMultiplier: 1,
+        asOf: HUD_FMR_AS_OF,
+        sourceUrl: HUD_FMR_FY2027_URL,
+      },
+    ];
+  }),
+);
 
 /**
  * Per-city anchors. Adding a second city to the program means adding one

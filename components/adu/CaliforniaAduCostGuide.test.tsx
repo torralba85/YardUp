@@ -53,7 +53,7 @@ describe("CaliforniaAduCostGuide", () => {
       "href",
       "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf",
     );
-    expect(within(sourceSection as HTMLElement).getByRole("link", { name: /HUD FY2026/ })).toBeInTheDocument();
+    expect(within(sourceSection as HTMLElement).getByRole("link", { name: /HUD FY2027/ })).toBeInTheDocument();
     expect(within(sourceSection as HTMLElement).getByRole("link", { name: /CSLB contractor-selection/ })).toBeInTheDocument();
 
     const faq = jsonLd(container, "FAQPage");

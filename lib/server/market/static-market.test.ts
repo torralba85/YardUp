@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveStaticMarket } from "./static-market";
+import fmr from "./data/fmr.json";
+import { CA_COUNTY_RENTS } from "@/content/adu/ca/rent";
 
 describe("resolveStaticMarket", () => {
   it("prefers the ZIP tier when the ZIP is known", () => {
@@ -43,7 +45,7 @@ describe("resolveStaticMarket", () => {
   it("returns materially different rent for California vs Texas counties", () => {
     const la = resolveStaticMarket({ lat: 34.05, lng: -118.24, county: "Los Angeles", state: "CA" });
     const austin = resolveStaticMarket({ lat: 30.27, lng: -97.74, county: "Travis", state: "TX" });
-    expect(la.rentByBedroom["1br"]).toBe(2328);
+    expect(la.rentByBedroom["1br"]).toBe(2402);
     expect(austin.rentByBedroom["1br"]).toBe(1562);
     expect(la.rentByBedroom["1br"]).toBeGreaterThan(austin.rentByBedroom["1br"]);
     expect(la.costMultiplier).toBeGreaterThan(austin.costMultiplier);
@@ -81,6 +83,24 @@ describe("resolveStaticMarket", () => {
     expect(tx.opexBreakdown?.propertyTax).toBe(0.085);
     const sum = Object.values(tx.opexBreakdown ?? {}).reduce((a, b) => a + b, 0);
     expect(sum).toBeCloseTo(tx.operatingExpenseRatio ?? 0, 5);
+  });
+
+  it("keeps every California county row equal to the verified HUD table", () => {
+    const counties = fmr.counties as Record<string, unknown>;
+    const caKeys = Object.keys(counties).filter((key) => key.startsWith("CA/"));
+    expect(caKeys).toHaveLength(CA_COUNTY_RENTS.length);
+    for (const row of CA_COUNTY_RENTS) {
+      expect(counties[`CA/${row.county}`], row.county).toEqual(row.fy2027);
+    }
+  });
+
+  it("labels California county rents with the verified vintage and other tiers as seeds", () => {
+    const sd = resolveStaticMarket({ lat: 32.72, lng: -117.16, county: "San Diego", state: "CA" });
+    expect(sd.asOf).toBe("HUD FY2027 FMR (effective 2026-10-01)");
+    expect(sd.sourceUrl).toBe("https://www.huduser.gov/datasets/fmr/fmr2027");
+    expect(sd.components?.rent.sourceAsOf).toBe(sd.asOf);
+    const king = resolveStaticMarket({ lat: 47.6, lng: -122.3, county: "King", state: "WA" });
+    expect(king.asOf).toContain("seed extract");
   });
 
   it("marks the national fallback low-confidence with provenance intact", () => {

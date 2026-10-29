@@ -24,6 +24,9 @@ interface RentTier {
   rent: RentRow;
   area: string;
   source: MarketSource;
+  /** Vintage of this row: verified California counties carry their own. */
+  asOf: string;
+  sourceUrl: string;
 }
 
 function rentTier(loc: MarketLocation): RentTier {
@@ -34,11 +37,13 @@ function rentTier(loc: MarketLocation): RentTier {
   const zipRow = zip
     ? (fmr.zips as Record<string, (RentRow & { area?: string }) | undefined>)[zip]
     : undefined;
+  const seed = { asOf: fmr.asOf, sourceUrl: fmr.sourceUrl };
   if (zipRow) {
     return {
       rent: { studio: zipRow.studio, "1br": zipRow["1br"], "2br": zipRow["2br"] },
       area: zipRow.area ?? `ZIP ${zip}`,
       source: "hud-zip",
+      ...seed,
     };
   }
   const countyRow =
@@ -46,15 +51,21 @@ function rentTier(loc: MarketLocation): RentTier {
       ? (fmr.counties as Record<string, RentRow | undefined>)[`${state}/${county}`]
       : undefined;
   if (countyRow && state) {
-    return { rent: countyRow, area: `${county} County, ${state}`, source: "hud-county" };
+    // California county rows are verified against HUD's current release
+    // (content/adu/ca/rent.ts); the other states' rows are still seeds.
+    const vintage =
+      state === "CA"
+        ? { asOf: fmr.californiaCountiesAsOf, sourceUrl: fmr.californiaCountiesSourceUrl }
+        : seed;
+    return { rent: countyRow, area: `${county} County, ${state}`, source: "hud-county", ...vintage };
   }
   const stateRow = state
     ? (fmr.states as Record<string, RentRow | undefined>)[state]
     : undefined;
   if (stateRow && state) {
-    return { rent: stateRow, area: STATE_NAME[state] ?? state, source: "state" };
+    return { rent: stateRow, area: STATE_NAME[state] ?? state, source: "state", ...seed };
   }
-  return { rent: fmr.national as RentRow, area: "U.S. average", source: "national" };
+  return { rent: fmr.national as RentRow, area: "U.S. average", source: "national", ...seed };
 }
 
 function costMultiplier(loc: MarketLocation): number {
@@ -111,7 +122,7 @@ function geography(loc: MarketLocation): MarketGeography {
  * verified local source resolved.
  */
 export function resolveStaticMarket(loc: MarketLocation): MarketData {
-  const { rent, area, source } = rentTier(loc);
+  const { rent, area, source, asOf, sourceUrl } = rentTier(loc);
   const expenses = operatingExpenses(loc);
   const retrievedAt = new Date().toISOString();
   const rentConfidence = CONFIDENCE[source];
@@ -120,9 +131,9 @@ export function resolveStaticMarket(loc: MarketLocation): MarketData {
     source: {
       provider: "HUD",
       dataset: "Fair Market Rents",
-      sourceUrl: fmr.sourceUrl,
+      sourceUrl,
     },
-    sourceAsOf: fmr.asOf,
+    sourceAsOf: asOf,
     retrievedAt,
     confidence: rentConfidence,
     warnings: source === "state" || source === "national"
@@ -136,8 +147,8 @@ export function resolveStaticMarket(loc: MarketLocation): MarketData {
     opexBreakdown: expenses.breakdown,
     source,
     area,
-    asOf: fmr.asOf,
-    sourceUrl: fmr.sourceUrl,
+    asOf,
+    sourceUrl,
     retrievedAt,
     geography: geography(loc),
     confidence: rentConfidence,

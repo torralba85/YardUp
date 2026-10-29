@@ -4,13 +4,13 @@ test("free Studio offers a 3D concept and rent range without exposing paid figur
   await page.goto("/studio?parcel=coyote-brush");
   const mobile = testInfo.project.name.includes("mobile");
   if (mobile) {
-    await expect(page.getByText("$2,459–$3,074")).toBeVisible();
+    await expect(page.getByText("$2,335–$2,919")).toBeVisible();
     await page.getByRole("button", { name: /Shape your ADU/ }).click();
     await expect(page.getByRole("radiogroup", { name: "ADU size", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Check feasibility" }).click();
   }
   const preview = page.getByRole("region", { name: "Free property preview" });
-  await expect(preview.getByText("$2,459–$3,074")).toBeVisible();
+  await expect(preview.getByText("$2,335–$2,919")).toBeVisible();
   await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
   await expect(page.getByRole("button", { name: "Numbers & readiness" })).toHaveCount(0);
   for (const figure of ["$19,918", "$231K–$289K", "12.6 yrs"]) {

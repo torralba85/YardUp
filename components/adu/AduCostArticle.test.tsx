@@ -21,7 +21,7 @@ describe("AduCostArticle", () => {
     expect(
       screen.getByText(/estimates \$231,000 to \$289,000\s+to build/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/simple payback is about\s+12\.6\s+years/)).toBeInTheDocument();
+    expect(screen.getByText(/simple payback is about\s+13\.3\s+years/)).toBeInTheDocument();
     // Beside the rent table and again under "What the estimate includes".
     expect(screen.getAllByText(/HUD FMR · San Diego County, CA/)).toHaveLength(2);
   });
@@ -44,8 +44,8 @@ describe("AduCostArticle", () => {
     const faq = faqJsonLd(container);
     const answers = faq.mainEntity.map((entry: { acceptedAnswer: { text: string } }) => entry.acceptedAnswer.text);
     expect(faq.mainEntity).toHaveLength(8);
-    expect(answers.join(" ")).toContain("$2,459 for one bedroom");
-    expect(answers.join(" ")).toContain("about 10.1 years for 400 sq ft to 19.5 years for 1,200 sq ft");
+    expect(answers.join(" ")).toContain("$2,335 for one bedroom");
+    expect(answers.join(" ")).toContain("about 9.6 years for 400 sq ft to 21.5 years for 1,200 sq ft");
   });
 
   it("links back to the San Diego rules guide and the county guides it covers", () => {
