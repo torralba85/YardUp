@@ -19,6 +19,7 @@ import { metadata as aduCaMetadata } from "./adu/ca/page";
 import { metadata as aduCaCostMetadata } from "./adu/ca/cost/page";
 import { metadata as aduCostCalculatorMetadata } from "./adu-cost-calculator/page";
 import { metadata as aduCaRentMetadata } from "./adu/ca/rent/page";
+import { metadata as aduCaJaduMetadata } from "./adu/ca/jadu/page";
 import { metadata as sanDiegoPermitsMetadata } from "./adu/ca/san-diego/permits/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { buildCityMetadata } from "@/lib/adu/content";
@@ -55,6 +56,11 @@ describe("canonical metadata", () => {
       name: "/adu/ca/rent",
       metadata: aduCaRentMetadata,
       expectedCanonical: "https://lotfoundry.net/adu/ca/rent",
+    },
+    {
+      name: "/adu/ca/jadu",
+      metadata: aduCaJaduMetadata,
+      expectedCanonical: "https://lotfoundry.net/adu/ca/jadu",
     },
     {
       name: "/adu/ca/san-diego/permits",

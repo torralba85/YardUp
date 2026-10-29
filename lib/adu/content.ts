@@ -18,6 +18,8 @@ import { imperialBeach } from "@/content/adu/ca/imperial-beach";
 import { laMesa } from "@/content/adu/ca/la-mesa";
 import { sanMarcos } from "@/content/adu/ca/san-marcos";
 import { sanDiegoCounty } from "@/content/adu/ca/san-diego-county";
+import { sacramento } from "@/content/adu/ca/sacramento";
+import { sanJose } from "@/content/adu/ca/san-jose";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import {
   STATE_BASELINE_PARAGRAPHS,
@@ -28,9 +30,10 @@ import type { JurisdictionContent, JurisdictionCostContent } from "./types";
 const BASE_URL = CANONICAL_ORIGIN;
 
 /**
- * San Diego County jurisdictions: the five largest cities (batch one), then
- * Imperial Beach, La Mesa, San Marcos and the unincorporated county (batch
- * two).
+ * California jurisdictions. San Diego County: the five largest cities (batch
+ * one), then Imperial Beach, La Mesa, San Marcos and the unincorporated
+ * county (batch two). Then the first metros outside it: Sacramento and
+ * San José.
  */
 export const ADU_CITIES: JurisdictionContent[] = [
   sanDiego,
@@ -42,7 +45,14 @@ export const ADU_CITIES: JurisdictionContent[] = [
   laMesa,
   sanMarcos,
   sanDiegoCounty,
+  sacramento,
+  sanJose,
 ];
+
+/** Counties with at least one guide, in the order their first guide appears. */
+export function aduCounties(): string[] {
+  return Array.from(new Set(ADU_CITIES.map((city) => city.county)));
+}
 
 /**
  * Cost pages (`/adu/{state}/{city}/cost`). Each needs a rules guide in
@@ -116,6 +126,16 @@ export function rentCsvPath(): string {
 /** Absolute URL for the rent page's CSV download. */
 export function rentCsvUrl(): string {
   return `${BASE_URL}${rentCsvPath()}`;
+}
+
+/** Site-relative path for the California junior ADU (JADU) guide. */
+export function jaduPath(): string {
+  return "/adu/ca/jadu";
+}
+
+/** Absolute canonical URL for the California junior ADU (JADU) guide. */
+export function jaduUrl(): string {
+  return `${BASE_URL}${jaduPath()}`;
 }
 
 /** Site-relative path for the San Diego ADU permit study. */

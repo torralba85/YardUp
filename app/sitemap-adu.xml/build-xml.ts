@@ -5,12 +5,14 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  jaduUrl,
   METHODOLOGY_AS_OF,
   methodologyUrl,
   permitStudyUrl,
   rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
+import { JADU_AS_OF } from "@/content/adu/ca/jadu";
 import { CA_RENT_VERIFIED } from "@/content/adu/ca/rent";
 import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 
@@ -32,12 +34,13 @@ function escapeXml(value: string): string {
  */
 export function buildAduSitemapXml(): string {
   const urls = [
-    // Significant fee-guidance and calculator-budget updates shipped in #275.
-    { loc: hubUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
+    // Hub copy and city list last changed with the Sacramento guide.
+    { loc: hubUrl(), lastmod: "2026-10-28", changefreq: "monthly", priority: "0.8" },
     { loc: stateCostUrl(), lastmod: "2026-10-07", changefreq: "monthly", priority: "0.8" },
     { loc: calculatorUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
     { loc: methodologyUrl(), lastmod: METHODOLOGY_AS_OF, changefreq: "monthly", priority: "0.6" },
     { loc: rentUrl(), lastmod: CA_RENT_VERIFIED, changefreq: "monthly", priority: "0.8" },
+    { loc: jaduUrl(), lastmod: JADU_AS_OF, changefreq: "monthly", priority: "0.8" },
     {
       loc: permitStudyUrl(),
       lastmod: SAN_DIEGO_PERMIT_STUDY.generatedAt,

@@ -31,7 +31,7 @@ function jaccard(a: string, b: string): number {
 }
 
 describe("adu uniqueness gates", () => {
-  it("ships the five largest San Diego County cities, Imperial Beach, La Mesa, San Marcos and the unincorporated county", () => {
+  it("ships the San Diego County guides, Sacramento and San José", () => {
     expect(ADU_CITIES.map((city) => city.slug).sort()).toEqual(
       [
         "carlsbad",
@@ -43,6 +43,8 @@ describe("adu uniqueness gates", () => {
         "san-diego",
         "san-diego-county",
         "san-marcos",
+        "sacramento",
+        "san-jose",
       ].sort(),
     );
   });
@@ -105,7 +107,14 @@ describe("adu uniqueness gates", () => {
   it("links neighbors bidirectionally to real in-batch pages", () => {
     const slugs = new Set(ADU_CITIES.map((city) => city.slug));
     for (const city of ADU_CITIES) {
-      expect(city.neighbors.length).toBeGreaterThanOrEqual(1);
+      // A metro's first guide has no in-batch neighbor yet; any guide that
+      // shares its county with another must link to at least one.
+      const countyPeers = ADU_CITIES.filter(
+        (entry) => entry.county === city.county && entry.slug !== city.slug,
+      );
+      expect(city.neighbors.length, `${city.slug} neighbors`).toBeGreaterThanOrEqual(
+        countyPeers.length > 0 ? 1 : 0,
+      );
       for (const neighbor of city.neighbors) {
         expect(slugs.has(neighbor), `${city.slug} neighbor ${neighbor}`).toBe(true);
         const back = ADU_CITIES.find((entry) => entry.slug === neighbor);
