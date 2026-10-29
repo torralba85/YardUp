@@ -5,6 +5,8 @@ const resources = [
   { href: "/adu/ca/cost", label: "California ADU cost guide", detail: "Budget by unit size, understand fees, and compare complete quotes." },
   { href: "/adu/ca/san-diego", label: "San Diego ADU rules and permit guide", detail: "Check city rules, overlays, fees and permit steps." },
   { href: "/adu/ca/san-diego/cost", label: "San Diego ADU cost, rent and payback", detail: "See build cost and rent by unit size for San Diego County." },
+  { href: "/adu/ca/rent", label: "California ADU rent by county", detail: "HUD's latest rent benchmarks for 12 counties, by bedroom count." },
+  { href: "/adu/ca/san-diego/permits", label: "San Diego ADU permits by neighborhood", detail: "How many backyard homes the City has permitted, and where." },
   { href: "/adu-cost-calculator", label: "Free ADU cost, rent and payback calculator", detail: "Compare sizes and assumptions before checking your lot." },
   { href: "/adu/how-we-estimate", label: "How we estimate cost, rent and payback", detail: "The formulas, data sources and limits behind every figure." },
 ];

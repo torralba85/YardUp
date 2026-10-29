@@ -7,6 +7,10 @@ import {
   cityUrl,
   costPageUrl,
   hubUrl,
+  permitStudyCsvUrl,
+  permitStudyUrl,
+  rentCsvUrl,
+  rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
@@ -33,6 +37,16 @@ describe("buildLlmsTxt", () => {
       expect(text).toContain(costPageUrl(cost));
       expect(text).toContain(`(fees as of ${cost.asOf})`);
     }
+  });
+
+  it("lists the rent and permit data pages with their CSV downloads", () => {
+    const text = buildLlmsTxt();
+
+    expect(text).toContain(rentUrl());
+    expect(text).toContain(rentCsvUrl());
+    expect(text).toContain("(figures verified 2026-10-28;");
+    expect(text).toContain(permitStudyUrl());
+    expect(text).toContain(permitStudyCsvUrl());
   });
 
   it("dates every jurisdiction so a model quoting it can say how current the rules are", () => {

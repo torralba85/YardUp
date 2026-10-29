@@ -1,0 +1,1147 @@
+{
+  "generatedAt": "2026-10-28",
+  "coverage": {
+    "from": "2023-01-01",
+    "to": "2026-10-27"
+  },
+  "source": "https://seshat.datasd.org/development_permits/approvals_issued_datasd.csv",
+  "boundaries": "https://seshat.datasd.org/gis_community_planning_districts/cmty_plan_datasd.geojson",
+  "minGroup": 10,
+  "excluded": {
+    "beforeFirstYear": 2806,
+    "withdrawn": 406,
+    "companionWithoutUnitCount": 308
+  },
+  "unmatched": 0,
+  "largestApprovalUnits": 36,
+  "approvalsByUnitCount": {
+    "1": 4057,
+    "2": 1128,
+    "3-4": 107,
+    "5-9": 82,
+    "10+": 21
+  },
+  "totals": {
+    "approvals": 5395,
+    "units": 7510,
+    "aduUnits": 6966,
+    "jaduUnits": 544,
+    "bonusAduUnits": 944,
+    "affordableAduUnits": 957,
+    "affordableByTier": {
+      "extremelyLow": 0,
+      "veryLow": 17,
+      "low": 94,
+      "moderate": 846
+    },
+    "multiUnitApprovals": 1338,
+    "multiUnitShare": 0.248
+  },
+  "byYear": [
+    {
+      "year": 2023,
+      "approvals": 1229,
+      "units": 1540,
+      "aduUnits": 1391,
+      "jaduUnits": 149,
+      "bonusAduUnits": 42,
+      "affordableAduUnits": 59,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 4,
+        "moderate": 55
+      },
+      "multiUnitApprovals": 219,
+      "multiUnitShare": 0.178
+    },
+    {
+      "year": 2024,
+      "approvals": 1478,
+      "units": 2078,
+      "aduUnits": 1896,
+      "jaduUnits": 182,
+      "bonusAduUnits": 222,
+      "affordableAduUnits": 240,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 24,
+        "moderate": 216
+      },
+      "multiUnitApprovals": 371,
+      "multiUnitShare": 0.251
+    },
+    {
+      "year": 2025,
+      "approvals": 1426,
+      "units": 2022,
+      "aduUnits": 1919,
+      "jaduUnits": 103,
+      "bonusAduUnits": 337,
+      "affordableAduUnits": 330,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 8,
+        "low": 35,
+        "moderate": 287
+      },
+      "multiUnitApprovals": 374,
+      "multiUnitShare": 0.262
+    },
+    {
+      "year": 2026,
+      "approvals": 1262,
+      "units": 1870,
+      "aduUnits": 1760,
+      "jaduUnits": 110,
+      "bonusAduUnits": 343,
+      "affordableAduUnits": 328,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 9,
+        "low": 31,
+        "moderate": 288
+      },
+      "multiUnitApprovals": 374,
+      "multiUnitShare": 0.296
+    }
+  ],
+  "byArea": [
+    {
+      "name": "Clairemont Mesa",
+      "approvals": 638,
+      "units": 843,
+      "aduUnits": 774,
+      "jaduUnits": 69,
+      "bonusAduUnits": 154,
+      "affordableAduUnits": 137,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 4,
+        "moderate": 133
+      },
+      "multiUnitApprovals": 156,
+      "multiUnitShare": 0.245,
+      "unitsByYear": {
+        "2023": 159,
+        "2024": 225,
+        "2025": 222,
+        "2026": 237
+      }
+    },
+    {
+      "name": "Southeastern San Diego",
+      "approvals": 350,
+      "units": 613,
+      "aduUnits": 603,
+      "jaduUnits": 10,
+      "bonusAduUnits": 131,
+      "affordableAduUnits": 115,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 6,
+        "low": 12,
+        "moderate": 97
+      },
+      "multiUnitApprovals": 163,
+      "multiUnitShare": 0.466,
+      "unitsByYear": {
+        "2023": 93,
+        "2024": 173,
+        "2025": 162,
+        "2026": 185
+      }
+    },
+    {
+      "name": "Mid-City: City Heights",
+      "approvals": 366,
+      "units": 542,
+      "aduUnits": 519,
+      "jaduUnits": 23,
+      "bonusAduUnits": 71,
+      "affordableAduUnits": 68,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 2,
+        "low": 7,
+        "moderate": 59
+      },
+      "multiUnitApprovals": 124,
+      "multiUnitShare": 0.339,
+      "unitsByYear": {
+        "2023": 101,
+        "2024": 115,
+        "2025": 204,
+        "2026": 122
+      }
+    },
+    {
+      "name": "North Park",
+      "approvals": 316,
+      "units": 532,
+      "aduUnits": 508,
+      "jaduUnits": 24,
+      "bonusAduUnits": 58,
+      "affordableAduUnits": 46,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 1,
+        "low": 2,
+        "moderate": 43
+      },
+      "multiUnitApprovals": 110,
+      "multiUnitShare": 0.348,
+      "unitsByYear": {
+        "2023": 130,
+        "2024": 186,
+        "2025": 119,
+        "2026": 97
+      }
+    },
+    {
+      "name": "Linda Vista",
+      "approvals": 242,
+      "units": 424,
+      "aduUnits": 415,
+      "jaduUnits": 9,
+      "bonusAduUnits": 98,
+      "affordableAduUnits": 114,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 10,
+        "moderate": 104
+      },
+      "multiUnitApprovals": 128,
+      "multiUnitShare": 0.529,
+      "unitsByYear": {
+        "2023": 58,
+        "2024": 138,
+        "2025": 128,
+        "2026": 100
+      }
+    },
+    {
+      "name": "College Area",
+      "approvals": 309,
+      "units": 391,
+      "aduUnits": 365,
+      "jaduUnits": 26,
+      "bonusAduUnits": 61,
+      "affordableAduUnits": 64,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 5,
+        "moderate": 59
+      },
+      "multiUnitApprovals": 67,
+      "multiUnitShare": 0.217,
+      "unitsByYear": {
+        "2023": 104,
+        "2024": 103,
+        "2025": 83,
+        "2026": 101
+      }
+    },
+    {
+      "name": "Mid-City: Eastern Area",
+      "approvals": 302,
+      "units": 372,
+      "aduUnits": 333,
+      "jaduUnits": 39,
+      "bonusAduUnits": 31,
+      "affordableAduUnits": 46,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 3,
+        "moderate": 43
+      },
+      "multiUnitApprovals": 64,
+      "multiUnitShare": 0.212,
+      "unitsByYear": {
+        "2023": 94,
+        "2024": 90,
+        "2025": 115,
+        "2026": 73
+      }
+    },
+    {
+      "name": "Pacific Beach",
+      "approvals": 267,
+      "units": 367,
+      "aduUnits": 357,
+      "jaduUnits": 10,
+      "bonusAduUnits": 25,
+      "affordableAduUnits": 21,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 5,
+        "moderate": 16
+      },
+      "multiUnitApprovals": 56,
+      "multiUnitShare": 0.21,
+      "unitsByYear": {
+        "2023": 68,
+        "2024": 113,
+        "2025": 116,
+        "2026": 70
+      }
+    },
+    {
+      "name": "Encanto Neighborhoods",
+      "approvals": 259,
+      "units": 363,
+      "aduUnits": 328,
+      "jaduUnits": 35,
+      "bonusAduUnits": 58,
+      "affordableAduUnits": 66,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 5,
+        "low": 16,
+        "moderate": 45
+      },
+      "multiUnitApprovals": 76,
+      "multiUnitShare": 0.293,
+      "unitsByYear": {
+        "2023": 68,
+        "2024": 85,
+        "2025": 86,
+        "2026": 124
+      }
+    },
+    {
+      "name": "Mira Mesa",
+      "approvals": 289,
+      "units": 329,
+      "aduUnits": 260,
+      "jaduUnits": 69,
+      "bonusAduUnits": 26,
+      "affordableAduUnits": 33,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 2,
+        "moderate": 31
+      },
+      "multiUnitApprovals": 32,
+      "multiUnitShare": 0.111,
+      "unitsByYear": {
+        "2023": 66,
+        "2024": 101,
+        "2025": 83,
+        "2026": 79
+      }
+    },
+    {
+      "name": "Uptown",
+      "approvals": 195,
+      "units": 323,
+      "aduUnits": 313,
+      "jaduUnits": 10,
+      "bonusAduUnits": 31,
+      "affordableAduUnits": 34,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 1,
+        "low": 1,
+        "moderate": 32
+      },
+      "multiUnitApprovals": 50,
+      "multiUnitShare": 0.256,
+      "unitsByYear": {
+        "2023": 87,
+        "2024": 76,
+        "2025": 78,
+        "2026": 82
+      }
+    },
+    {
+      "name": "Peninsula",
+      "approvals": 249,
+      "units": 298,
+      "aduUnits": 277,
+      "jaduUnits": 21,
+      "bonusAduUnits": 10,
+      "affordableAduUnits": 15,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 15
+      },
+      "multiUnitApprovals": 36,
+      "multiUnitShare": 0.145,
+      "unitsByYear": {
+        "2023": 83,
+        "2024": 76,
+        "2025": 76,
+        "2026": 63
+      }
+    },
+    {
+      "name": "Skyline-Paradise Hills",
+      "approvals": 213,
+      "units": 292,
+      "aduUnits": 259,
+      "jaduUnits": 33,
+      "bonusAduUnits": 57,
+      "affordableAduUnits": 50,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 2,
+        "low": 5,
+        "moderate": 43
+      },
+      "multiUnitApprovals": 33,
+      "multiUnitShare": 0.155,
+      "unitsByYear": {
+        "2023": 40,
+        "2024": 109,
+        "2025": 46,
+        "2026": 97
+      }
+    },
+    {
+      "name": "Mid-City: Normal Heights",
+      "approvals": 115,
+      "units": 192,
+      "aduUnits": 186,
+      "jaduUnits": 6,
+      "bonusAduUnits": 39,
+      "affordableAduUnits": 36,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 8,
+        "moderate": 28
+      },
+      "multiUnitApprovals": 34,
+      "multiUnitShare": 0.296,
+      "unitsByYear": {
+        "2023": 23,
+        "2024": 54,
+        "2025": 65,
+        "2026": 50
+      }
+    },
+    {
+      "name": "Otay Mesa-Nestor",
+      "approvals": 148,
+      "units": 185,
+      "aduUnits": 152,
+      "jaduUnits": 33,
+      "bonusAduUnits": 7,
+      "affordableAduUnits": 16,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 16
+      },
+      "multiUnitApprovals": 29,
+      "multiUnitShare": 0.196,
+      "unitsByYear": {
+        "2023": 49,
+        "2024": 48,
+        "2025": 62,
+        "2026": 26
+      }
+    },
+    {
+      "name": "La Jolla",
+      "approvals": 169,
+      "units": 178,
+      "aduUnits": 163,
+      "jaduUnits": 15,
+      "bonusAduUnits": 1,
+      "affordableAduUnits": 1,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 1
+      },
+      "multiUnitApprovals": 9,
+      "multiUnitShare": 0.053,
+      "unitsByYear": {
+        "2023": 41,
+        "2024": 38,
+        "2025": 53,
+        "2026": 46
+      }
+    },
+    {
+      "name": "Greater Golden Hill",
+      "approvals": 102,
+      "units": 176,
+      "aduUnits": 174,
+      "jaduUnits": 2,
+      "bonusAduUnits": 27,
+      "affordableAduUnits": 24,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 8,
+        "moderate": 16
+      },
+      "multiUnitApprovals": 37,
+      "multiUnitShare": 0.363,
+      "unitsByYear": {
+        "2023": 39,
+        "2024": 51,
+        "2025": 37,
+        "2026": 49
+      }
+    },
+    {
+      "name": "Navajo",
+      "approvals": 141,
+      "units": 155,
+      "aduUnits": 134,
+      "jaduUnits": 21,
+      "bonusAduUnits": 2,
+      "affordableAduUnits": 3,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 3
+      },
+      "multiUnitApprovals": 8,
+      "multiUnitShare": 0.057,
+      "unitsByYear": {
+        "2023": 38,
+        "2024": 27,
+        "2025": 48,
+        "2026": 42
+      }
+    },
+    {
+      "name": "Mid-City: Kensington-Talmadge",
+      "approvals": 97,
+      "units": 144,
+      "aduUnits": 136,
+      "jaduUnits": 8,
+      "bonusAduUnits": 14,
+      "affordableAduUnits": 12,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 4,
+        "moderate": 8
+      },
+      "multiUnitApprovals": 19,
+      "multiUnitShare": 0.196,
+      "unitsByYear": {
+        "2023": 31,
+        "2024": 48,
+        "2025": 36,
+        "2026": 29
+      }
+    },
+    {
+      "name": "Serra Mesa",
+      "approvals": 109,
+      "units": 130,
+      "aduUnits": 105,
+      "jaduUnits": 25,
+      "bonusAduUnits": 8,
+      "affordableAduUnits": 9,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 9
+      },
+      "multiUnitApprovals": 19,
+      "multiUnitShare": 0.174,
+      "unitsByYear": {
+        "2023": 34,
+        "2024": 41,
+        "2025": 24,
+        "2026": 31
+      }
+    },
+    {
+      "name": "Ocean Beach",
+      "approvals": 86,
+      "units": 124,
+      "aduUnits": 124,
+      "jaduUnits": 0,
+      "bonusAduUnits": 9,
+      "affordableAduUnits": 6,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 6
+      },
+      "multiUnitApprovals": 26,
+      "multiUnitShare": 0.302,
+      "unitsByYear": {
+        "2023": 15,
+        "2024": 32,
+        "2025": 33,
+        "2026": 44
+      }
+    },
+    {
+      "name": "University",
+      "approvals": 76,
+      "units": 89,
+      "aduUnits": 76,
+      "jaduUnits": 13,
+      "bonusAduUnits": 7,
+      "affordableAduUnits": 13,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 13
+      },
+      "multiUnitApprovals": 13,
+      "multiUnitShare": 0.171,
+      "unitsByYear": {
+        "2023": 21,
+        "2024": 24,
+        "2025": 25,
+        "2026": 19
+      }
+    },
+    {
+      "name": "San Ysidro",
+      "approvals": 49,
+      "units": 83,
+      "aduUnits": 75,
+      "jaduUnits": 8,
+      "bonusAduUnits": 14,
+      "affordableAduUnits": 19,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 1,
+        "moderate": 18
+      },
+      "multiUnitApprovals": 11,
+      "multiUnitShare": 0.224,
+      "unitsByYear": {
+        "2023": 13,
+        "2024": 23,
+        "2025": 14,
+        "2026": 33
+      }
+    },
+    {
+      "name": "Rancho Penasquitos",
+      "approvals": 68,
+      "units": 76,
+      "aduUnits": 69,
+      "jaduUnits": 7,
+      "bonusAduUnits": 2,
+      "affordableAduUnits": 5,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 5
+      },
+      "multiUnitApprovals": 8,
+      "multiUnitShare": 0.118,
+      "unitsByYear": {
+        "2023": 18,
+        "2024": 19,
+        "2025": 15,
+        "2026": 24
+      }
+    },
+    {
+      "name": "Rancho Bernardo",
+      "approvals": 39,
+      "units": 49,
+      "aduUnits": 46,
+      "jaduUnits": 3,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 10,
+      "multiUnitShare": 0.256,
+      "unitsByYear": {
+        "2023": 5,
+        "2024": 15,
+        "2025": 20,
+        "2026": 9
+      }
+    },
+    {
+      "name": "Carmel Valley",
+      "approvals": 25,
+      "units": 32,
+      "aduUnits": 24,
+      "jaduUnits": 8,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 4,
+      "multiUnitShare": 0.16,
+      "unitsByYear": {
+        "2023": 11,
+        "2024": 9,
+        "2025": 10,
+        "2026": 2
+      }
+    },
+    {
+      "name": "Torrey Pines",
+      "approvals": 32,
+      "units": 32,
+      "aduUnits": 29,
+      "jaduUnits": 3,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": 0,
+      "unitsByYear": {
+        "2023": 10,
+        "2024": 7,
+        "2025": 10,
+        "2026": 5
+      }
+    },
+    {
+      "name": "Scripps Miramar Ranch",
+      "approvals": 28,
+      "units": 30,
+      "aduUnits": 25,
+      "jaduUnits": 5,
+      "bonusAduUnits": 1,
+      "affordableAduUnits": 1,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 1
+      },
+      "multiUnitApprovals": 2,
+      "multiUnitShare": 0.071,
+      "unitsByYear": {
+        "2023": 7,
+        "2024": 10,
+        "2025": 10,
+        "2026": 3
+      }
+    },
+    {
+      "name": "Barrio Logan",
+      "approvals": 10,
+      "units": 19,
+      "aduUnits": 18,
+      "jaduUnits": 1,
+      "bonusAduUnits": 1,
+      "affordableAduUnits": 2,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 1,
+        "moderate": 1
+      },
+      "multiUnitApprovals": 3,
+      "multiUnitShare": 0.3,
+      "unitsByYear": {
+        "2023": 9,
+        "2024": 6,
+        "2025": 1,
+        "2026": 3
+      }
+    },
+    {
+      "name": "Tierrasanta",
+      "approvals": 17,
+      "units": 17,
+      "aduUnits": 16,
+      "jaduUnits": 1,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": 0,
+      "unitsByYear": {
+        "2023": 4,
+        "2024": 2,
+        "2025": 3,
+        "2026": 8
+      }
+    },
+    {
+      "name": "Black Mountain Ranch",
+      "approvals": 14,
+      "units": 14,
+      "aduUnits": 12,
+      "jaduUnits": 2,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": 0,
+      "unitsByYear": {
+        "2023": 5,
+        "2024": 2,
+        "2025": 7,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Otay Mesa",
+      "approvals": 14,
+      "units": 14,
+      "aduUnits": 12,
+      "jaduUnits": 2,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": 0,
+      "unitsByYear": {
+        "2023": 1,
+        "2024": 4,
+        "2025": 6,
+        "2026": 3
+      }
+    },
+    {
+      "name": "Rancho Encantada",
+      "approvals": 11,
+      "units": 12,
+      "aduUnits": 11,
+      "jaduUnits": 1,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 1,
+      "multiUnitShare": 0.091,
+      "unitsByYear": {
+        "2023": 5,
+        "2024": 6,
+        "2025": 1,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Carmel Mountain Ranch",
+      "approvals": 10,
+      "units": 11,
+      "aduUnits": 11,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 1,
+      "multiUnitShare": 0.1,
+      "unitsByYear": {
+        "2023": 1,
+        "2024": 3,
+        "2025": 6,
+        "2026": 1
+      }
+    },
+    {
+      "name": "Torrey Hills",
+      "approvals": 4,
+      "units": 10,
+      "aduUnits": 10,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 2,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 9,
+        "2025": 1,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Kearny Mesa",
+      "approvals": 1,
+      "units": 8,
+      "aduUnits": 8,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 1,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 0,
+        "2025": 8,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Old Town San Diego",
+      "approvals": 4,
+      "units": 8,
+      "aduUnits": 7,
+      "jaduUnits": 1,
+      "bonusAduUnits": 1,
+      "affordableAduUnits": 1,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 1
+      },
+      "multiUnitApprovals": 4,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 2,
+        "2024": 2,
+        "2025": 0,
+        "2026": 4
+      }
+    },
+    {
+      "name": "Del Mar Mesa",
+      "approvals": 7,
+      "units": 7,
+      "aduUnits": 7,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 3,
+        "2024": 3,
+        "2025": 1,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Mission Beach",
+      "approvals": 6,
+      "units": 7,
+      "aduUnits": 7,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 1,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 2,
+        "2025": 0,
+        "2026": 5
+      }
+    },
+    {
+      "name": "Pacific Highlands Ranch",
+      "approvals": 6,
+      "units": 6,
+      "aduUnits": 5,
+      "jaduUnits": 1,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 3,
+        "2024": 0,
+        "2025": 3,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Torrey Highlands",
+      "approvals": 5,
+      "units": 5,
+      "aduUnits": 5,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 2,
+        "2025": 1,
+        "2026": 2
+      }
+    },
+    {
+      "name": "Sabre Springs",
+      "approvals": 4,
+      "units": 4,
+      "aduUnits": 4,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 1,
+        "2024": 1,
+        "2025": 1,
+        "2026": 1
+      }
+    },
+    {
+      "name": "Downtown",
+      "approvals": 1,
+      "units": 2,
+      "aduUnits": 2,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 1,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 0,
+        "2025": 2,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Midway-Pacific Highway",
+      "approvals": 1,
+      "units": 1,
+      "aduUnits": 1,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 0,
+        "2025": 1,
+        "2026": 0
+      }
+    },
+    {
+      "name": "Miramar Ranch North",
+      "approvals": 1,
+      "units": 1,
+      "aduUnits": 1,
+      "jaduUnits": 0,
+      "bonusAduUnits": 0,
+      "affordableAduUnits": 0,
+      "affordableByTier": {
+        "extremelyLow": 0,
+        "veryLow": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "multiUnitApprovals": 0,
+      "multiUnitShare": null,
+      "unitsByYear": {
+        "2023": 0,
+        "2024": 0,
+        "2025": 0,
+        "2026": 1
+      }
+    }
+  ]
+}
