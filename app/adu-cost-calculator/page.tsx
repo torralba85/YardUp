@@ -20,7 +20,7 @@ import { marketProvenanceLine } from "@/lib/market/market-basis";
 // Kept to 60 characters or fewer so Google shows the whole title.
 const TITLE = "California ADU Cost Calculator (2026) | LotFoundry";
 const DESCRIPTION =
-  "Free California ADU cost calculator: build cost, monthly rent and payback for a 400–1,200 sq ft ADU in Los Angeles, San Diego or Santa Clara County.";
+  "Free California ADU cost calculator: compare build cost, rent, payback, loan payments and monthly cash flow in Los Angeles, San Diego or Santa Clara County.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -132,7 +132,8 @@ export default function AduCostCalculatorPage() {
           Use the calculator free, without an account. Change the county, size,
           finish and rent assumption to compare scenarios. Los Angeles, San Diego
           and Santa Clara have separate rent anchors; construction uses the same
-          national cost base. Financing and unusual site work are excluded.
+          national cost base. The build range excludes financing and unusual site work.
+          Use the optional loan calculator below to compare monthly payments and rental cash flow.
         </p>
       </div>
 
@@ -152,7 +153,8 @@ export default function AduCostCalculatorPage() {
         <p className="lf-body mt-3 text-lot-stone">
           Simple payback divides the modeled construction midpoint by annual
           rent after operating expenses. It is not a mortgage cash-flow forecast:
-          loan payments, taxes on income and future rent changes need a separate review.
+          use the <Link href="#financing" className="underline underline-offset-2 hover:text-lot-ink">loan and cash-flow calculator</Link>{" "}
+          to subtract loan payments. Taxes on income and future rent changes need a separate review.
           The formulas and data sources are set out in{" "}
           <Link href="/adu/how-we-estimate" className="underline underline-offset-2 hover:text-lot-ink">
             how we estimate cost, rent and payback

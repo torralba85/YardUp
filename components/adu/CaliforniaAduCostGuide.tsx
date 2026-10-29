@@ -219,7 +219,10 @@ export function CaliforniaAduCostGuide() {
         <Link href="/adu-cost-calculator" className={linkClass}>
           California ADU cost calculator
         </Link>
-        .
+        . To compare a lender offer with modeled rental income, use the{" "}
+        <Link href="/adu-cost-calculator#financing" className={linkClass}>
+          ADU loan and cash-flow calculator
+        </Link>.
       </p>
 
       <section aria-labelledby="adu-cost-includes" className="mt-12">
