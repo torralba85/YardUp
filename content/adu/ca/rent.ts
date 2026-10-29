@@ -122,6 +122,7 @@ export const CA_COUNTY_RENTS: CountyRent[] = [
     fmrArea: "San Jose-Sunnyvale-Santa Clara, CA HUD Metro FMR Area",
     fy2027: { studio: 2458, "1br": 2778, "2br": 3272 },
     fy2026: { studio: 2621, "1br": 2982, "2br": 3483 },
+    guidePath: "/adu/ca/san-jose",
   },
   {
     slug: "ventura",

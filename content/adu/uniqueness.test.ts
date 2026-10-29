@@ -31,7 +31,7 @@ function jaccard(a: string, b: string): number {
 }
 
 describe("adu uniqueness gates", () => {
-  it("ships the San Diego County guides and Sacramento", () => {
+  it("ships the San Diego County guides, Sacramento and San José", () => {
     expect(ADU_CITIES.map((city) => city.slug).sort()).toEqual(
       [
         "carlsbad",
@@ -44,6 +44,7 @@ describe("adu uniqueness gates", () => {
         "san-diego-county",
         "san-marcos",
         "sacramento",
+        "san-jose",
       ].sort(),
     );
   });

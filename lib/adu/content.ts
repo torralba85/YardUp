@@ -19,6 +19,7 @@ import { laMesa } from "@/content/adu/ca/la-mesa";
 import { sanMarcos } from "@/content/adu/ca/san-marcos";
 import { sanDiegoCounty } from "@/content/adu/ca/san-diego-county";
 import { sacramento } from "@/content/adu/ca/sacramento";
+import { sanJose } from "@/content/adu/ca/san-jose";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import {
   STATE_BASELINE_PARAGRAPHS,
@@ -31,7 +32,8 @@ const BASE_URL = CANONICAL_ORIGIN;
 /**
  * California jurisdictions. San Diego County: the five largest cities (batch
  * one), then Imperial Beach, La Mesa, San Marcos and the unincorporated
- * county (batch two). Then the first metro outside it, Sacramento.
+ * county (batch two). Then the first metros outside it: Sacramento and
+ * San José.
  */
 export const ADU_CITIES: JurisdictionContent[] = [
   sanDiego,
@@ -44,6 +46,7 @@ export const ADU_CITIES: JurisdictionContent[] = [
   sanMarcos,
   sanDiegoCounty,
   sacramento,
+  sanJose,
 ];
 
 /** Counties with at least one guide, in the order their first guide appears. */

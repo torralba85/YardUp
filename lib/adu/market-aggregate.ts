@@ -109,6 +109,7 @@ const COUNTY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = Object.fromEntri
 const CITY_MARKET_ANCHORS: Record<string, CityMarketAnchor> = {
   "san-diego": COUNTY_MARKET_ANCHORS["san-diego"],
   sacramento: countyAnchor("sacramento"),
+  "san-jose": COUNTY_MARKET_ANCHORS["santa-clara"],
 };
 
 /** A California county the cost calculator quotes, in display order. */

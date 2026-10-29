@@ -144,6 +144,18 @@ describe("adu cost pages", () => {
     expect(String(sacramento?.metaDescription).length).toBeLessThanOrEqual(160);
   });
 
+  it("states San José's City and State standards as Bulletin #210 does", () => {
+    const sanJose = getCity("ca", "san-jose");
+    const glance = JSON.stringify(sanJose?.glance);
+    expect(sanJose?.county).toBe("Santa Clara County");
+    expect(glance).toContain("City: 1,000 sq ft on lots of 9,000 sq ft or less; 1,200 sq ft on larger lots. State: 800 sq ft");
+    expect(glance).toContain("State: detached 16 ft; attached 25 ft");
+    expect(JSON.stringify(sanJose)).toContain("§20.80.176");
+    expect(sanJose && getCoveringCostPage(sanJose)).toBeUndefined();
+    expect(cityMarketAggregate("san-jose")?.provenance.area).toBe("Santa Clara County, CA");
+    expect(String(sanJose?.metaDescription).length).toBeLessThanOrEqual(160);
+  });
+
   it("states Carlsbad's rules and permit steps from the City's IB-111 bulletin", () => {
     const carlsbad = getCity("ca", "carlsbad");
     const text = JSON.stringify(carlsbad);

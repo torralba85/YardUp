@@ -14,12 +14,12 @@ export const metadata: Metadata = {
   // Kept under ~160 characters: past that Google truncates mid-sentence and
   // the cut lands inside the city list rather than after a complete thought.
   description:
-    "Building an ADU in California starts with the state floor. Then read setbacks, fees and permit steps for San Diego County cities, the county and Sacramento.",
+    "Building an ADU in California starts with the state floor. Then read setbacks, fees and permit steps for San Diego County, Sacramento and San José.",
   alternates: { canonical: hubUrl() },
   openGraph: {
     title: "California ADU Laws and Rules by City (2026) | LotFoundry",
     description:
-      "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County cities, the unincorporated county and Sacramento.",
+      "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County cities, the unincorporated county, Sacramento and San José.",
     url: hubUrl(),
     images: [
       {
@@ -55,6 +55,8 @@ const CITY_BLURBS: Record<string, string> = {
     "The unincorporated county: 1,200 sq ft and 25-foot detached ADUs, fire-district and septic reviews that shape the site plan, and an ordinance the state flagged in July 2026.",
   sacramento:
     "The two-rulebook city: pick the City's local option (1,200 sq ft detached, 3-foot setbacks) or the state option (three units) for the whole lot, with no parking minimums anywhere.",
+  "san-jose":
+    "The fire-access city: City or State standards for the whole project, 1,000 to 1,200 sq ft detached ADUs by lot size, and a fire-access check (150 feet from the curb, hydrant flow) before plans are approved.",
 };
 
 /**
@@ -71,7 +73,7 @@ const itemListJsonLd = {
   "@type": "ItemList",
   name: "California ADU rules by city",
   description:
-    "City-by-city ADU guides for San Diego and Sacramento counties, each with an as-of date.",
+    "City-by-city ADU guides for San Diego, Sacramento and Santa Clara counties, each with an as-of date.",
   numberOfItems: ADU_CITIES.length,
   itemListElement: ADU_CITIES.map((content, index) => ({
     "@type": "ListItem",
@@ -108,7 +110,7 @@ export default function AduCaliforniaHubPage() {
   return (
     <LegalPageShell
       title="Building an ADU in California: Laws and Rules (2026)"
-      kicker="San Diego and Sacramento counties · City-by-city guides"
+      kicker="San Diego, Sacramento and Santa Clara counties · City-by-city guides"
     >
       <script
         type="application/ld+json"
@@ -126,7 +128,7 @@ export default function AduCaliforniaHubPage() {
           standards, site conditions and overlays affect the plans you can
           submit. These guides bring together source documents, permit steps
           and a visible review date for San Diego County cities, the
-          unincorporated county and the City of Sacramento.
+          unincorporated county, Sacramento and San José.
         </p>
         <p>
           Start from the state floor below, pick your city, then check what
