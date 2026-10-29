@@ -47,6 +47,7 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain("(figures verified 2026-10-28;");
     expect(text).toContain(permitStudyUrl());
     expect(text).toContain(permitStudyCsvUrl());
+    expect(text.match(/free to reuse under CC BY 4\.0 with a link/g)).toHaveLength(2);
   });
 
   it("dates every jurisdiction so a model quoting it can say how current the rules are", () => {

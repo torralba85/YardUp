@@ -58,6 +58,8 @@ describe("SanDiegoAduPermitStudy", () => {
 
     const dataset = jsonLd(container, "Dataset");
     expect(dataset.temporalCoverage).toBe(`${study.coverage.from}/${study.coverage.to}`);
+    expect(dataset.license).toBe("https://creativecommons.org/licenses/by/4.0/");
+    expect(screen.getByRole("link", { name: "CC BY 4.0" })).toHaveAttribute("rel", "license noopener");
     expect(dataset.distribution.contentUrl).toBe(
       "https://lotfoundry.net/adu/ca/san-diego/permits/adu-permits-by-planning-area.csv",
     );

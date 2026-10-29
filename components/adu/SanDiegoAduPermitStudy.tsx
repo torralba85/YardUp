@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AduStudioCta } from "./AduStudioCta";
+import { DATA_LICENSE, DataReuseNote } from "./DataReuseNote";
 import {
   PERMIT_DATASET_URL,
   PLAN_AREAS_DATASET_URL,
@@ -113,6 +114,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
     spatialCoverage: { "@type": "Place", name: "City of San Diego, California" },
     creator: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
     isBasedOn: [PERMIT_DATASET_URL, PLAN_AREAS_DATASET_URL],
+    license: DATA_LICENSE.url,
     distribution: {
       "@type": "DataDownload",
       encodingFormat: "text/csv",
@@ -266,7 +268,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
           <a href={permitStudyCsvPath()} className={linkClass} download>
             Download all {byArea.length} areas as CSV
           </a>
-          , with units by year.
+          , with units by year. <DataReuseNote />
         </p>
       </section>
 

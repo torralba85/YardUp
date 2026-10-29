@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
+import { DATA_LICENSE, DataReuseNote } from "./DataReuseNote";
 import {
   CA_COUNTY_RENTS,
   CA_RENT_VERIFIED,
@@ -124,6 +125,7 @@ export function CaliforniaAduRentGuide() {
       "One-bedroom Fair Market Rent",
       "Two-bedroom Fair Market Rent",
     ],
+    license: DATA_LICENSE.url,
     distribution: {
       "@type": "DataDownload",
       encodingFormat: "text/csv",
@@ -218,7 +220,7 @@ export function CaliforniaAduRentGuide() {
           <a href={rentCsvPath()} className={linkClass} download>
             Download the table as CSV
           </a>
-          .
+          . <DataReuseNote />
         </p>
       </section>
 
