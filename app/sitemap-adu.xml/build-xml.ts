@@ -7,8 +7,12 @@ import {
   hubUrl,
   METHODOLOGY_AS_OF,
   methodologyUrl,
+  permitStudyUrl,
+  rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
+import { CA_RENT_VERIFIED } from "@/content/adu/ca/rent";
+import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 
 /** XML-escape a sitemap value. */
 function escapeXml(value: string): string {
@@ -33,6 +37,13 @@ export function buildAduSitemapXml(): string {
     { loc: stateCostUrl(), lastmod: "2026-10-07", changefreq: "monthly", priority: "0.8" },
     { loc: calculatorUrl(), lastmod: "2026-10-12", changefreq: "monthly", priority: "0.8" },
     { loc: methodologyUrl(), lastmod: METHODOLOGY_AS_OF, changefreq: "monthly", priority: "0.6" },
+    { loc: rentUrl(), lastmod: CA_RENT_VERIFIED, changefreq: "monthly", priority: "0.8" },
+    {
+      loc: permitStudyUrl(),
+      lastmod: SAN_DIEGO_PERMIT_STUDY.generatedAt,
+      changefreq: "monthly",
+      priority: "0.7",
+    },
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
       lastmod: city.asOf,

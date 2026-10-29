@@ -98,6 +98,46 @@ export function calculatorUrl(): string {
   return `${BASE_URL}/adu-cost-calculator`;
 }
 
+/** Site-relative path for the California ADU rent-by-county page. */
+export function rentPath(): string {
+  return "/adu/ca/rent";
+}
+
+/** Absolute canonical URL for the California ADU rent-by-county page. */
+export function rentUrl(): string {
+  return `${BASE_URL}${rentPath()}`;
+}
+
+/** Site-relative path for the rent page's CSV download. */
+export function rentCsvPath(): string {
+  return `${rentPath()}/adu-rent-by-county.csv`;
+}
+
+/** Absolute URL for the rent page's CSV download. */
+export function rentCsvUrl(): string {
+  return `${BASE_URL}${rentCsvPath()}`;
+}
+
+/** Site-relative path for the San Diego ADU permit study. */
+export function permitStudyPath(): string {
+  return "/adu/ca/san-diego/permits";
+}
+
+/** Absolute canonical URL for the San Diego ADU permit study. */
+export function permitStudyUrl(): string {
+  return `${BASE_URL}${permitStudyPath()}`;
+}
+
+/** Site-relative path for the permit study's CSV download. */
+export function permitStudyCsvPath(): string {
+  return `${permitStudyPath()}/adu-permits-by-planning-area.csv`;
+}
+
+/** Absolute URL for the permit study's CSV download. */
+export function permitStudyCsvUrl(): string {
+  return `${BASE_URL}${permitStudyCsvPath()}`;
+}
+
 /**
  * Static params for the `[state]/[city]` route (and its sibling special
  * files, e.g. `opengraph-image`). Single source so the page and its OG

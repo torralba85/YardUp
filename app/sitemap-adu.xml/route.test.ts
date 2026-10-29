@@ -7,6 +7,8 @@ import {
   costPageUrl,
   hubUrl,
   methodologyUrl,
+  permitStudyUrl,
+  rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
 import { buildAduSitemapXml } from "./build-xml";
@@ -28,7 +30,9 @@ describe("sitemap-adu.xml", () => {
     }
     expect(xml).toContain("<loc>https://lotfoundry.net/adu/ca/san-diego/cost</loc>");
     // Well-formed entries only: one <url> block per page, XML-escaped.
-    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 4);
+    expect(xml).toContain(`<loc>${rentUrl()}</loc>`);
+    expect(xml).toContain(`<loc>${permitStudyUrl()}</loc>`);
+    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 6);
     expect(xml).not.toContain("& ");
   });
 });
