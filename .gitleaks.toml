@@ -1,0 +1,4 @@
+title = "LotFoundry secret scanning"
+
+[extend]
+useDefault = true

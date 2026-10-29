@@ -5,6 +5,12 @@
 Report suspected vulnerabilities privately via GitHub Security Advisories on
 this repository.
 
+## Secret scanning
+
+CI scans Git history with Gitleaks and fails the verification job on
+new findings. See [Secret scanning](docs/secret-scanning.md) for local pre-commit
+commands, reviewed historical exceptions, and credential-remediation steps.
+
 ## Known advisories (resolved / tracked)
 
 ### September 12, 2026 dependency refresh

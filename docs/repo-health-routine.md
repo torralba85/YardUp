@@ -41,13 +41,11 @@ routine below is sized for that, not for a large open-source project.
   starts slipping, consider adopting `release-please` since PR titles
   already follow Conventional Commits.
 - **Secrets scanning:** run `npm run repo:public-check`, verify GitHub secret
-  scanning and push protection are enabled for the repository's current
-  visibility, and manually spot-check recent commits for accidentally committed keys:
-  `git log -p --since="1 month ago" -- '*.env*' '*.json' | grep -iE 'api[_-]?key|secret|token'`
-  against the tracked env var list in `CLAUDE.md`. Recommended next step:
-  add a `gitleaks`/`trufflehog` job to `.github/workflows/ci.yml` — this is
-  a CI change and should go through its own reviewed PR, not be bundled
-  silently into an unrelated change.
+  scanning/push-protection availability for the repository's current ownership
+  and visibility, and repeat the redacted Gitleaks history scan in
+  [Secret scanning](secret-scanning.md). CI runs the same pinned scanner in the
+  always-running `scope` job. Review exact historical exceptions periodically;
+  do not automatically baseline new findings or print raw credential matches.
 - **CODEOWNERS accuracy:** confirm `/CODEOWNERS` still lists the correct
   owners for deploy-sensitive paths (`firebase.json`, `firestore.rules`,
   `firestore.indexes.json`, `.github/workflows/`,
