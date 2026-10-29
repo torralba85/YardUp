@@ -144,7 +144,7 @@ describe("adu cost pages", () => {
     expect(String(sacramento?.metaDescription).length).toBeLessThanOrEqual(160);
   });
 
-  it("states San José's City and State standards as Bulletin #210 does", () => {
+  it("states San José's City and State standards as Bulletin 210 does", () => {
     const sanJose = getCity("ca", "san-jose");
     const glance = JSON.stringify(sanJose?.glance);
     expect(sanJose?.county).toBe("Santa Clara County");

@@ -2,7 +2,7 @@
  * City of San José ADU jurisdiction content.
  *
  * Primary sources, read in Chrome on 2026-10-28 (the City's site refuses
- * automated readers): Building Bulletin #210, the ADU Universal Checklist
+ * automated readers): Building Bulletin 210, the ADU Universal Checklist
  * (updated 09/16/2026), which tabulates the City and State development
  * standards of Municipal Code Chapter 20.80 Part 2.75 (§§20.80.175,
  * 20.80.176, 20.80.178) plus the fire, address, tree and impact-fee checks;
@@ -28,7 +28,7 @@ export const sanJose: JurisdictionContent = {
   metaDescription:
     "San José ADU rules: detached ADUs of 1,000–1,200 sq ft by lot size, 4 ft setbacks, no parking, and a City-or-State choice. Plus cost, rent and payback.",
   introAnswer: [
-    "Yes. San José allows an ADU in any zoning district where the lot has a legally built, permitted home, and its ADU Universal Checklist (Bulletin #210, updated September 2026) makes you design to one of two sets of standards: the City's (Municipal Code §20.80.175) or the State's (§20.80.176). You cannot mix them.",
+    "Yes. San José allows an ADU in any zoning district where the lot has a legally built, permitted home, and its ADU Universal Checklist (Bulletin 210, updated September 2026) makes you design to one of two sets of standards: the City's (Municipal Code §20.80.175) or the State's (§20.80.176). You cannot mix them.",
     "Under City standards, a single-family lot gets one ADU, attached or detached, plus a junior ADU. A detached ADU can be 1,000 square feet on a lot of 9,000 square feet or less and 1,200 square feet on a larger lot, at 18 feet for one story or 25 feet for two. Under State standards you can have a new ADU of up to 800 square feet, a conversion and a junior ADU, but a new detached unit is limited to 16 feet.",
     "Neither path requires parking, and an ADU of 750 square feet or less pays no school or parkland impact fees.",
   ],
@@ -36,7 +36,7 @@ export const sanJose: JurisdictionContent = {
   metaSetbackNote: "4 ft side and rear setbacks",
   metaParkingNote: "no parking",
   glance: [
-    { label: "Two sets of standards", value: "Design to City standards (§20.80.175) or State standards (§20.80.176), never a mix", note: "Bulletin #210, Part 3" },
+    { label: "Two sets of standards", value: "Design to City standards (§20.80.175) or State standards (§20.80.176), never a mix", note: "Bulletin 210, Part 3" },
     { label: "Units — City standards", value: "1 ADU (attached or detached) + 1 JADU on a single-family lot", note: "Duplex and multifamily lots: 1 ADU" },
     { label: "Units — State standards", value: "1 new ADU of up to 800 sq ft + 1 conversion ADU + 1 JADU", note: "A new attached ADU is not allowed alongside a conversion ADU. Multifamily lots: up to 8 detached ADUs on an existing building (not more than its units) and conversions of up to 25% of the units" },
     { label: "Max size — detached", value: "City: 1,000 sq ft on lots of 9,000 sq ft or less; 1,200 sq ft on larger lots. State: 800 sq ft", note: "Minimum 150 sq ft either way" },
@@ -95,7 +95,7 @@ export const sanJose: JurisdictionContent = {
     {
       title: "Complete the ADU Universal Checklist",
       detail:
-        "Work through Bulletin #210: confirm the lot is in San José, the main home is permitted and there is no open code case, look up flood, geohazard, historic, WUI and easement designations, and choose City or State standards.",
+        "Work through Bulletin 210: confirm the lot is in San José, the main home is permitted and there is no open code case, look up flood, geohazard, historic, WUI and easement designations, and choose City or State standards.",
     },
     {
       title: "Get planner feedback if you need it",
@@ -105,7 +105,7 @@ export const sanJose: JurisdictionContent = {
     {
       title: "Prepare plans and documents",
       detail:
-        "Draw plans to Bulletin #211, add Title 24 energy calculations, a geotechnical report if required, the water company's hydrant flow letter, the address request (Form 302) and the owner declaration (Form 312). A JADU uses the deed restriction agreement (Form 313), which needs a wet signature.",
+        "Draw plans to Bulletin 211, add Title 24 energy calculations, a geotechnical report if required, the water company's hydrant flow letter, the address request (Form 302) and the owner declaration (Form 312). A JADU uses the deed restriction agreement (Form 313), which needs a wet signature.",
     },
     {
       title: "Apply online",
@@ -120,7 +120,7 @@ export const sanJose: JurisdictionContent = {
     {
       title: "Build and pass inspections",
       detail:
-        "Show inspectors the approved plans, the permit card and the City's ADU inspection checklist (Bulletin #213), and complete the construction and demolition debris diversion sign-off before the final inspection.",
+        "Show inspectors the approved plans, the permit card and the City's ADU inspection checklist (Bulletin 213), and complete the construction and demolition debris diversion sign-off before the final inspection.",
     },
   ],
   permitPortal: {
@@ -177,7 +177,7 @@ export const sanJose: JurisdictionContent = {
   neighbors: [],
   sources: [
     {
-      label: "City of San José Bulletin #210 — ADU Universal Checklist (updated 09/16/2026, PDF)",
+      label: "City of San José Bulletin 210 — ADU Universal Checklist (updated 09/16/2026, PDF)",
       url: "https://www.sanjoseca.gov/home/showpublisheddocument/39038/638572568385100000",
     },
     {
