@@ -15,8 +15,8 @@ describe("free certificate preview", () => {
     const onUnlock = vi.fn();
     const { container } = render(<EstimateSummaryPanel parcelName="San Diego demo" result={result}
       feasibilityStatus="review_needed" onGenerateReport={onUnlock} reportCtaLabel="Unlock certificate — $29" />);
-    expect(screen.getByText("$2,459–$3,074")).toBeInTheDocument();
-    for (const value of ["19,918", "231,000", "289,000", "12.6", "32.5%"]) {
+    expect(screen.getByText("$2,335–$2,919")).toBeInTheDocument();
+    for (const value of ["18,914", "231,000", "289,000", "13.3", "32.5%"]) {
       expect(container.innerHTML).not.toContain(value);
     }
     expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(4);
@@ -35,7 +35,7 @@ describe("free certificate preview", () => {
 
   it("shows the full figures after purchase", () => {
     render(<EstimateSummaryPanel parcelName="Lot" result={result} feasibilityStatus="review_needed" onGenerateReport={vi.fn()} certificateUnlocked />);
-    expect(screen.getByText("$19,918")).toBeInTheDocument();
+    expect(screen.getByText("$18,914")).toBeInTheDocument();
     expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
     expect(screen.getByText("Payback")).toBeInTheDocument();
   });

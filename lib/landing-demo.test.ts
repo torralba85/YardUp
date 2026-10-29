@@ -20,14 +20,14 @@ describe("San Diego demo", () => {
       maxLotCoveragePercent: 60,
       regulationsEstimated: true,
       setbacks: { front: 15, rear: 13, side: 4 },
-      expectedRent: { conservative: 2459, market: 2754, optimistic: 3074 },
+      expectedRent: { conservative: 2335, market: 2615, optimistic: 2919 },
       marketData: {
-        rentByBedroom: { studio: 2090, "1br": 2459, "2br": 3123 },
+        rentByBedroom: { studio: 2192, "1br": 2335, "2br": 2823 },
         costMultiplier: 1,
         source: "hud-county",
         area: "San Diego County, CA",
-        asOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
-        sourceUrl: "https://www.huduser.gov/portal/datasets/fmr.html",
+        asOf: "HUD FY2027 FMR (effective 2026-10-01)",
+        sourceUrl: "https://www.huduser.gov/datasets/fmr/fmr2027",
         confidence: "medium",
       },
     });
@@ -36,7 +36,7 @@ describe("San Diego demo", () => {
 
   it("matches every HUD-derived one-bedroom rent band at 600 sq ft", () => {
     const anchor = cityMarketAggregate("san-diego")!;
-    expect(anchor.rows.find((row) => row.size === 600)).toMatchObject({ bedroom: "1br", monthlyRent: 2459 });
+    expect(anchor.rows.find((row) => row.size === 600)).toMatchObject({ bedroom: "1br", monthlyRent: 2335 });
     for (const rentScenario of ["conservative", "market", "optimistic"] as const) {
       const row = estimateAdu({ county: anchor.slug, size: 600, finish: "cedar", rentScenario })!;
       expect(parcelPresets[3].expectedRent[rentScenario]).toBe(row.monthlyRent);
@@ -44,7 +44,7 @@ describe("San Diego demo", () => {
   });
 
   it("uses San Diego rent while the homepage keeps Seattle", () => {
-    expect(landingScenarios("san-diego").map(({ rent }) => rent)).toEqual([2459, 2754, 3074]);
+    expect(landingScenarios("san-diego").map(({ rent }) => rent)).toEqual([2335, 2615, 2919]);
     expect(landingScenarios()).toEqual(landingScenarios("seattle"));
     expect(landingDemos["san-diego"]).toMatchObject({ city: "San Diego", region: "CA", parcelId: "coyote-brush", name: "Coyote Brush Court" });
   });

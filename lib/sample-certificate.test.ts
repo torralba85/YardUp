@@ -11,7 +11,7 @@ describe("public sample Certificate", () => {
     const html = await response.text();
     expect(html).toContain("1234 Coyote Brush Court");
     expect(html).toContain("San Diego, CA 92117");
-    expect(html).toContain("$2,754");
+    expect(html).toContain("$2,615");
   });
   it.each(Object.keys(landingDemos) as LandingCity[])("renders the actual %s report with paid planning sections and no indexing", async (city) => {
     const response = sampleCertificateResponse(city);

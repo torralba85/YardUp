@@ -1,4 +1,4 @@
-import { RENT_SCENARIO_SPREADS } from "@/lib/adu/market-aggregate";
+import { RENT_SCENARIO_SPREADS } from "@/lib/market/rent-spreads";
 import type { BedroomClass } from "@/lib/market/market-types";
 
 /**

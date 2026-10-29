@@ -931,7 +931,7 @@ describe("GET /api/parcel — free county/statewide GIS tier", () => {
     expect(data.dataQuality?.fields.maxLotCoveragePercent.status).toBe("derived");
     expect(data.regulationsEstimated).toBe(true);
     expect(data.marketData?.source).toBe("hud-county");
-    expect(data.marketData?.rentByBedroom["1br"]).toBe(2250);
+    expect(data.marketData?.rentByBedroom["1br"]).toBe(2035);
   });
 
   it("falls through to the preset when the GIS parcel has no usable area", async () => {
