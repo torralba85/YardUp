@@ -159,6 +159,34 @@ describe("LegalReacceptGate", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it.each(["/login", "/signup", "/forgot-password"])(
+    "does not cover %s, which redirects to a gated page",
+    (pathname) => {
+      navMocks.pathname = pathname;
+      authMocks.user = { uid: "user-1" };
+      authMocks.profile = { uid: "user-1", email: "user@example.com", role: "user", legalConsentCurrent: false };
+
+      render(<LegalReacceptGate />);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps Tab inside the dialog after focus lands outside it", async () => {
+    authMocks.user = { uid: "user-1" };
+    authMocks.profile = { uid: "user-1", email: "user@example.com", role: "user", legalConsentCurrent: false };
+    render(
+      <>
+        <button type="button">Background control</button>
+        <LegalReacceptGate />
+      </>,
+    );
+
+    screen.getByRole("button", { name: "Background control" }).focus();
+    await userEvent.tab();
+
+    expect(screen.getByRole("dialog")).toContainElement(document.activeElement as HTMLElement);
+  });
+
   it("calls logout when Sign out is clicked", async () => {
     authMocks.user = { uid: "user-1" };
     authMocks.profile = { uid: "user-1", email: "user@example.com", role: "user", legalConsentCurrent: false };

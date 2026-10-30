@@ -657,17 +657,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!current) throw new Error("You must be signed in.");
     const docRef = doc(db, "users", current.uid);
 
-    await setDoc(
-      docRef,
-      {
-        legalConsent: {
-          ...CURRENT_LEGAL_CONSENT,
-          acceptedAt: serverTimestamp(),
+    try {
+      await setDoc(
+        docRef,
+        {
+          legalConsent: {
+            ...CURRENT_LEGAL_CONSENT,
+            acceptedAt: serverTimestamp(),
+          },
+          updatedAt: serverTimestamp(),
         },
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
+        { merge: true },
+      );
+    } catch (error) {
+      // The rules reject rewriting a receipt that is already current, which is
+      // what a second open tab hits after the first one accepted. Re-read so
+      // that tab's gate closes instead of failing forever.
+      await ensureProfile(current);
+      throw error;
+    }
     await ensureProfile(current);
   };
 

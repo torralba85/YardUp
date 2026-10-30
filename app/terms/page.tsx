@@ -468,7 +468,7 @@ export default function TermsPage() {
         <p>
           We may suspend or terminate your account or access to the Service, with or without notice,
           for conduct that violates these Terms or harms the Service, other users, or third parties.
-          Sections 2, 5, 6, 7, 10, and 12 through 20 survive any termination of these Terms.
+          Sections 2, 5 through 8, and 10 through 20 survive any termination of these Terms.
         </p>
       </LegalSection>
 

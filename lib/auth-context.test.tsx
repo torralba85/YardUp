@@ -734,6 +734,65 @@ describe("AuthProvider profile creation", () => {
     expect(screen.getByTestId("consent-status")).toHaveTextContent("undefined");
   });
 
+  it("re-reads the profile when accepting fails, so a second tab's gate can close", async () => {
+    let authListener: ((u: unknown) => Promise<void>) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+    const user = { uid: "user-1", email: "user@example.com", displayName: "Alma Reyes" };
+    firebaseMocks.auth.currentUser = user;
+    const outdated = {
+      exists: () => true,
+      data: () => ({
+        role: "user",
+        email: "user@example.com",
+        legalConsent: { termsVersion: "2026-08-26", privacyVersion: "2026-08-26", adultConfirmed: true },
+      }),
+    };
+    firestoreMocks.getDoc.mockResolvedValue(outdated);
+
+    let acceptError: unknown;
+    function Probe() {
+      const { profile, acceptCurrentLegalTerms } = useAuth();
+      return (
+        <>
+          <span data-testid="consent-status">{String(profile?.legalConsentCurrent)}</span>
+          <button
+            type="button"
+            onClick={() => acceptCurrentLegalTerms().catch((error) => { acceptError = error; })}
+          >
+            Accept
+          </button>
+        </>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+    await act(async () => {
+      await authListener?.(user);
+    });
+    expect(screen.getByTestId("consent-status")).toHaveTextContent("false");
+
+    // Another tab already accepted: the rules reject this write, and the
+    // stored receipt is now current.
+    firestoreMocks.setDoc.mockRejectedValueOnce({ code: "permission-denied" });
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ role: "user", email: "user@example.com", legalConsent: { ...CURRENT_LEGAL_CONSENT } }),
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Accept" }));
+
+    await waitFor(() => {
+      expect(acceptError).toEqual({ code: "permission-denied" });
+      expect(screen.getByTestId("consent-status")).toHaveTextContent("true");
+    });
+  });
+
   it("updates consent and refreshes profile on acceptCurrentLegalTerms", async () => {
     let authListener: ((u: unknown) => Promise<void>) | undefined;
     authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {

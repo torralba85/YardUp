@@ -7,10 +7,16 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 
 /**
+ * Routes the gate never covers: account deletion must work without accepting,
+ * and the auth pages redirect a signed-in user to a gated page anyway, so
+ * covering them only flashes the dialog mid-redirect.
+ */
+const UNGATED_PATHS = new Set(["/delete-account", "/login", "/signup", "/forgot-password"]);
+
+/**
  * Blocking modal gating users whose stored legal consent receipt is not current.
  *
  * Prompts affirmatively for acceptance of the revised Terms and Privacy Policy.
- * Bypassed on `/delete-account` so users can delete their account without accepting.
  */
 export function LegalReacceptGate() {
   const { user, profile, loading, acceptCurrentLegalTerms, logout } = useAuth();
@@ -19,38 +25,44 @@ export function LegalReacceptGate() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const open = !loading &&
+    Boolean(user && profile) &&
+    profile?.legalConsentCurrent === false &&
+    !UNGATED_PATHS.has(pathname);
 
   useEffect(() => {
-    if (user && profile && profile.legalConsentCurrent === false && pathname !== "/delete-account") {
-      dialogRef.current?.focus();
-    }
-  }, [user, profile, pathname]);
+    if (!open) return;
+    dialogRef.current?.focus();
+    // Keep Tab inside the dialog, including after a click on the backdrop:
+    // the page behind it stays mounted and focusable.
+    const trapFocus = (event: KeyboardEvent) => {
+      const dialog = dialogRef.current;
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled])',
+        ),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (!active || !dialog.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && (active === first || active === dialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapFocus);
+    return () => document.removeEventListener("keydown", trapFocus);
+  }, [open]);
 
-  if (loading) return null;
-  if (!user || !profile) return null;
-  if (profile.legalConsentCurrent !== false) return null;
-  if (pathname === "/delete-account") return null;
-
-  // Keep Tab inside the dialog; the page behind it stays mounted.
-  const trapFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "Tab" || !dialogRef.current) return;
-    const focusable = Array.from(
-      dialogRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled])',
-      ),
-    );
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === dialogRef.current)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
+  if (!open) return null;
 
   const handleAccept = async () => {
     setError(null);
@@ -70,7 +82,6 @@ export function LegalReacceptGate() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="legal-reaccept-heading"
-      onKeyDown={trapFocus}
     >
       <div
         ref={dialogRef}
@@ -107,7 +118,7 @@ export function LegalReacceptGate() {
                 href="/terms"
                 target="_blank"
                 rel="noopener"
-                className="text-lot-orange-ink underline underline-offset-2 hover:text-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+                className="text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
               >
                 Terms &amp; Conditions
               </Link>{" "}
@@ -116,7 +127,7 @@ export function LegalReacceptGate() {
                 href="/privacy"
                 target="_blank"
                 rel="noopener"
-                className="text-lot-orange-ink underline underline-offset-2 hover:text-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+                className="text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
               >
                 Privacy Policy
               </Link>
