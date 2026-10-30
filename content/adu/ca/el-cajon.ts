@@ -70,7 +70,7 @@ export const elCajon: JurisdictionContent = {
     {
       label: "Parking required",
       value: "1 space per unit, waived near transit stops",
-      note: "Exempt within 0.5 miles of transit stops (including El Cajon Transit Center and Arnele Ave Trolley Station) or for conversions",
+      note: "Exempt within 0.5 miles of transit stops (including El Cajon Transit Center and Arnele Ave Trolley Station) or for conversions; also exempt for a new detached ADU of 800 sq ft or less built under Gov. Code §66323(a)(2)",
     },
     {
       label: "Owner-occupancy",
@@ -178,7 +178,7 @@ export const elCajon: JurisdictionContent = {
     {
       question: "Do I need to add parking for an ADU in El Cajon?",
       answer:
-        "No parking space is required if the property is located within 0.5 miles of public transit, including the El Cajon Transit Center and local bus lines. Converting an existing garage also requires no replacement parking.",
+        "No parking space is required if the property is located within 0.5 miles of public transit, including the El Cajon Transit Center and local bus lines. Converting an existing garage also requires no replacement parking. No parking can be required for a new detached ADU of 800 square feet or less built under the state's Gov. Code §66323(a)(2) pathway either.",
     },
     {
       question: "Can I build an ADU on a multi-family property in El Cajon?",
@@ -188,7 +188,7 @@ export const elCajon: JurisdictionContent = {
     {
       question: "Are fire sprinklers required for an ADU in El Cajon?",
       answer:
-        "Fire sprinklers are only required in the ADU if fire sprinklers are already present in the primary single-family home, unless required by Heartland Fire for long hose-pull distances.",
+        "Fire sprinklers can only be required in the ADU if they are required in the primary single-family home. Where fire access or water supply falls short, Heartland Fire may accept sprinklers as one optional way to comply, but they cannot be mandated on that basis.",
     },
     {
       question: "Can I rent my El Cajon ADU as an Airbnb?",

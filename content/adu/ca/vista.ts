@@ -76,7 +76,7 @@ export const vista: JurisdictionContent = {
     {
       label: "Parking required",
       value: "1 off-street space, waived within 0.5 miles of transit",
-      note: "Exempt within a half-mile walk of NCTD Sprinter rail stations or Breeze bus lines, in historic districts, or for garage conversions",
+      note: "Exempt within a half-mile walk of NCTD Sprinter rail stations or Breeze bus lines, in historic districts, or for garage conversions; also exempt for a new detached ADU of 800 sq ft or less built under Gov. Code §66323(a)(2)",
     },
     {
       label: "Owner-occupancy",
@@ -118,7 +118,7 @@ export const vista: JurisdictionContent = {
       "City permit fees: $2,400–$4,200 for building, electrical, mechanical, and plumbing plan checks",
       "Impact fees: $0 at 750 sq ft or less; fee waiver program available above 750 sq ft with a qualifying covenant",
       "School district fees: units of 500 sq ft or less are exempt; larger units pay on their full square footage to Vista Unified School District",
-      "Water capacity fees: administered by Vista Irrigation District (VID) only if a separate meter is installed",
+      "Water capacity fees: Vista Irrigation District (VID) charges them for a separate meter, or the capacity-fee difference when an existing meter is upsized (e.g., 3/4 to 1 inch)",
       "Fire review fee: assessed by the Vista Fire Department for access and defensible space review",
     ],
   },
@@ -184,7 +184,7 @@ export const vista: JurisdictionContent = {
     {
       question: "Is off-street parking required for an ADU in Vista?",
       answer:
-        "One parking space is standard, but it is completely waived if the parcel is within 0.5 miles of public transit (including NCTD Sprinter stations and bus stops) or when converting an existing garage.",
+        "One parking space is standard, but it is completely waived if the parcel is within 0.5 miles of public transit (including NCTD Sprinter stations and bus stops) or when converting an existing garage. No parking can be required for a new detached ADU of 800 square feet or less built under the state's Gov. Code §66323(a)(2) pathway either.",
     },
     {
       question: "Can I use a shipping container or RV as an ADU in Vista?",
@@ -199,7 +199,7 @@ export const vista: JurisdictionContent = {
     {
       question: "Do I need fire sprinklers in my Vista ADU?",
       answer:
-        "Fire sprinklers are only required in the ADU if fire sprinklers are already installed in the primary single-family dwelling, unless mandated by the Vista Fire Department for extreme hose-pull distances.",
+        "Fire sprinklers can only be required in the ADU if they are required in the primary single-family dwelling. Where fire access or water supply falls short, the Vista Fire Department may accept sprinklers as one optional way to comply, but they cannot be mandated on that basis.",
     },
   ],
   neighbors: ["oceanside", "carlsbad", "san-marcos"],

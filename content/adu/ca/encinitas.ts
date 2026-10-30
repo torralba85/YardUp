@@ -70,7 +70,7 @@ export const encinitas: JurisdictionContent = {
     {
       label: "Parking required",
       value: "1 off-street space, waived within a half-mile walk of transit",
-      note: "Exempt within 0.5 miles of the Encinitas Coaster Station or NCTD bus corridors, in historic districts, or for garage conversions",
+      note: "Exempt within 0.5 miles of the Encinitas Coaster Station or NCTD bus corridors, in historic districts, or for garage conversions; also exempt for a new detached ADU of 800 sq ft or less built under Gov. Code §66323(a)(2)",
     },
     {
       label: "Owner-occupancy",
@@ -94,7 +94,7 @@ export const encinitas: JurisdictionContent = {
       paragraphs: [
         "Encinitas stands out in Southern California for its Permit-Ready ADU (PRADU) initiative, created to remove the costly hurdle of custom drafting. The City partners with regional architectural firms to maintain a diverse catalog of pre-reviewed building plans, ranging from compact studio floor plans up to multi-bedroom layouts of 1,200 square feet. Each pre-approved set already complies with the California Building Code, structural wind/seismic standards, and Title 24 energy requirements.",
         "Choosing a PRADU plan set dramatically accelerates your timeline. Because the structural engineering and internal layouts have already undergone comprehensive vetting by City plan examiners, staff reviews focus primarily on your property-specific site plan, utility connections, and grading. Modifying exterior materials or window fenestrations is permitted within specified guidelines, but relocating load-bearing walls or altering external dimensions routes the project into custom plan review.",
-        "Under Encinitas Municipal Code §30.48.040(T), all ADU applications receive non-discretionary, administrative review. There are no public hearings, design review board delays, or neighbor sign-off hurdles. Building officials verify compliance against standard objective metrics within the statutory 60-day window. In addition, detached units must feature exterior colors, roof materials, and siding that harmonize with the main residence, and a roof deck is allowed on an ADU under §30.48.040(T)(16)(c) using the reduced ADU setbacks, provided the deck and its railings stay within the 16-foot height limit. Under California Title 24, all newly constructed detached ADUs must include a dedicated rooftop solar photovoltaic system unless exempt due to shading or existing capacity.",
+        "Under Encinitas Municipal Code §30.48.040(T), all ADU applications receive non-discretionary, administrative review. There are no public hearings, design review board delays, or neighbor sign-off hurdles. Building officials verify compliance against standard objective metrics within the statutory 60-day window. In addition, detached units must feature exterior colors, roof materials, and siding that harmonize with the main residence, and a roof deck is allowed on an ADU under §30.48.040(T)(16)(c) using the reduced ADU setbacks, provided the deck and its railings stay within the 16-foot height limit. Under California Title 24, newly constructed detached ADUs must add new solar photovoltaic modules unless a code exception (such as heavy shading) applies. Panels already on the main house do not count, but the new modules may expand the main house's system rather than form a separate system on the ADU.",
       ],
     },
     {
@@ -188,7 +188,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "Is off-street parking required for an ADU in Encinitas?",
       answer:
-        "One parking space is standard, but it is completely waived if your home is within 0.5 miles of public transit (including the Encinitas Coaster station), in a historic district, or if you are converting existing space.",
+        "One parking space is standard, but it is completely waived if your home is within 0.5 miles of public transit (including the Encinitas Coaster station), in a historic district, or if you are converting existing space. No parking can be required for a new detached ADU of 800 square feet or less built under the state's Gov. Code §66323(a)(2) pathway either.",
     },
     {
       question: "Can I rent my Encinitas ADU on Airbnb?",
