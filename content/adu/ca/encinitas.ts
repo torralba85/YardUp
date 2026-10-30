@@ -10,7 +10,7 @@
  *
  * Encinitas pairs state ADU law with its award-winning PRADU program, which
  * offers pre-approved architectural plan sets with expedited plan check.
- * Properties west of Interstate 5 lie within the California Coastal Zone,
+ * Much of the city, mostly west of Interstate 5 but extending east of it in places, lies within the California Coastal Zone,
  * where a Coastal Development Permit is required; notably, the City waives
  * its local development processing fees for standard ADU CDPs.
  *
@@ -31,7 +31,7 @@ export const encinitas: JurisdictionContent = {
   introAnswer: [
     "Yes. The City of Encinitas allows accessory dwelling units (ADUs) on any single-family residential lot: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). Attached and detached ADUs can each reach 1,200 square feet or the primary home's living area, whichever is less, provided lot coverage and required setbacks are satisfied.",
     "Encinitas is famous across California for its Permit-Ready ADU (PRADU) program. Property owners can choose from a curated catalog of pre-approved, code-compliant architectural plan sets designed by licensed architects. Selecting a PRADU plan bypasses custom architectural design expenses and qualifies your project for expedited departmental plan check.",
-    "For properties west of Interstate 5, parcels sit inside the California Coastal Zone. Most new detached ADUs in this boundary require a Coastal Development Permit (CDP). To encourage backyard home construction, Encinitas waives the local City application processing fees for ADU coastal permits, and decisions are handled administratively without a public hearing.",
+    "Much of Encinitas lies inside the California Coastal Zone. The boundary mostly follows the land west of Interstate 5 but reaches east of the freeway in places, so check your parcel on the City's Coastal Zone map rather than relying on the freeway. Most new detached ADUs inside the boundary require a Coastal Development Permit (CDP). To encourage backyard home construction, Encinitas waives the local City application processing fees for ADU coastal permits, and decisions are handled administratively without a public hearing.",
   ],
   metaSizeNote: "up to 1,200 sq ft attached or detached, capped at the home's living area",
   metaSetbackNote: "4 ft side and rear for new construction; 0 ft for conversions",
@@ -100,7 +100,7 @@ export const encinitas: JurisdictionContent = {
     {
       heading: "Coastal Zone permits, transit corridors, and bluff stability",
       paragraphs: [
-        "Properties located west of Interstate 5 fall squarely within the Coastal Zone boundary administered under the City's certified Local Coastal Program (LCP). State ADU statutes establish that environmental protections under the California Coastal Act take precedence in cases of direct statutory conflict. Consequently, most detached ADU projects west of I-5 require a Coastal Development Permit (CDP) in addition to standard building permits.",
+        "Properties inside the Coastal Zone boundary, which covers most land west of Interstate 5 and some parcels east of it, are governed by the City's certified Local Coastal Program (LCP). State ADU statutes establish that environmental protections under the California Coastal Act take precedence in cases of direct statutory conflict. Consequently, most detached ADU projects inside the Coastal Zone require a Coastal Development Permit (CDP) in addition to standard building permits.",
         "Encinitas has taken significant steps to reduce coastal development friction: the City administratively processes ADU coastal permits without requiring a public Planning Commission hearing, and local application fees for standard ADU CDPs are fully waived. However, lots located along coastal bluffs or steep inland canyons must satisfy geotechnical setback requirements and demonstrate 75-year bluff edge stability without the reliance on shoreline protective devices.",
         "Parking standards reflect Encinitas's transit infrastructure. If your property is situated within a half-mile walking radius of the Encinitas Coaster station on South Coast Highway 101 or along active North County Transit District (NCTD) bus lines, no dedicated parking space is required. When converting an attached or detached garage into an ADU, state and local ordinances prohibit the City from demanding replacement off-street spaces for the primary house.",
       ],
@@ -127,7 +127,7 @@ export const encinitas: JurisdictionContent = {
     {
       title: "Check zoning and Coastal Zone maps",
       detail:
-        "Determine if your property sits west of Interstate 5 in the Coastal Zone, check proximity to the Encinitas Coaster Station for transit parking exemptions, and verify any geotechnical or steep slope overlays.",
+        "Look up your parcel on the City's Coastal Zone map (the boundary extends east of Interstate 5 in places), check proximity to the Encinitas Coaster Station for transit parking exemptions, and verify any geotechnical or steep slope overlays.",
     },
     {
       title: "Select your design pathway",
@@ -142,7 +142,7 @@ export const encinitas: JurisdictionContent = {
     {
       title: "Submit building and coastal permit applications",
       detail:
-        "Submit digital plans through the Encinitas Customer Self-Service (CSS) portal. If west of I-5, include the concurrent Administrative Coastal Development Permit application.",
+        "Submit digital plans through the Encinitas Customer Self-Service (CSS) portal. If your parcel is inside the Coastal Zone, include the concurrent Administrative Coastal Development Permit application.",
     },
     {
       title: "Plan check review and corrections",
@@ -173,7 +173,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "Do I need a Coastal Development Permit for an ADU in Encinitas?",
       answer:
-        "If your property is located west of Interstate 5 in the California Coastal Zone, an Administrative Coastal Development Permit (CDP) is generally required. Encinitas waives its local application processing fee for ADU CDPs.",
+        "If your parcel is inside the California Coastal Zone (mostly west of Interstate 5, but check the City's Coastal Zone map because the boundary extends east of the freeway in places), an Administrative Coastal Development Permit (CDP) is generally required. Encinitas waives its local application processing fee for ADU CDPs.",
     },
     {
       question: "What are the setback requirements in Encinitas?",

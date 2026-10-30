@@ -10,7 +10,8 @@
  * El Cajon features a distinctive setback-to-height tier system in §17.140.180
  * that provides design flexibility: a 3-foot setback allows up to a 12-foot
  * roof height, a 4-foot setback allows up to 16 feet, and a 5-foot setback
- * unlocks heights up to 20 feet. Transit parking exemptions apply across
+ * unlocks heights up to 20 feet, with 18-foot exceptions near transit and
+ * beside two-story homes. Transit parking exemptions apply across
  * major trolley and bus corridors connected to the El Cajon Transit Center.
  *
  * @module adu/ca/el-cajon
@@ -29,7 +30,7 @@ export const elCajon: JurisdictionContent = {
     "El Cajon ADU rules: 1,200 sq ft detached units, unique 3-5 ft setback-height tiers, trolley transit waivers, and permit steps. Calculate feasibility free.",
   introAnswer: [
     "Yes. The City of El Cajon permits accessory dwelling units on any legal lot developed with a single-family home: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). A detached backyard home can be constructed up to 1,200 square feet, providing ample room for multi-bedroom family or rental living quarters.",
-    "El Cajon's zoning code features a unique setback-to-height tier system under Municipal Code §17.140.180. While standard California state law establishes a flat 4-foot side and rear setback for a 16-foot unit, El Cajon allows a 3-foot setback for single-story structures capped at 12 feet, a 4-foot setback for units up to 16 feet, and allows heights up to 20 feet when setbacks are expanded to 5 feet.",
+    "El Cajon's zoning code features a unique setback-to-height tier system under Municipal Code §17.140.180. While standard California state law establishes a flat 4-foot side and rear setback for a 16-foot unit, El Cajon allows a 3-foot setback for single-story structures capped at 12 feet, a 4-foot setback for units up to 16 feet, and allows heights up to 20 feet when setbacks are expanded to 5 feet. Two exceptions skip the 5-foot tier: within half a mile of a major transit stop or high-quality transit corridor a detached ADU may reach 18 feet (plus 2 feet to match the primary home's roof pitch), and on a lot whose primary dwelling has two or more stories it may reach 18 feet (§17.140.180(E)(2)(b)).",
     "The city is well-served by the San Diego Trolley's Orange and Green Lines at the El Cajon Transit Center and Arnele Avenue Station. Parcels within a half-mile walking radius of these transit hubs or high-frequency bus routes are exempt from all off-street parking mandates, and garage conversions never require replacement parking.",
   ],
   metaSizeNote: "up to 1,200 sq ft attached or detached",
@@ -54,7 +55,7 @@ export const elCajon: JurisdictionContent = {
     {
       label: "Max height — detached",
       value: "16 ft standard; up to 20 ft with 5 ft setbacks",
-      note: "Tiered by setback: 12 ft height with 3 ft setback, 16 ft with 4 ft setback, and up to 20 ft with 5 ft setback",
+      note: "Tiered by setback: 12 ft with 3 ft, 16 ft with 4 ft, up to 20 ft with 5 ft; 18 ft allowed near qualifying transit (plus 2 ft for matching roof pitch) or beside a two-story primary home",
     },
     {
       label: "Rear and side setbacks",
@@ -92,7 +93,7 @@ export const elCajon: JurisdictionContent = {
       heading: "The El Cajon setback and height tier system (§17.140.180)",
       paragraphs: [
         "El Cajon's zoning ordinance for accessory dwelling units is codified in Municipal Code §17.140.180. Unlike many California jurisdictions that strictly default to the state minimum 4-foot setback with a 16-foot ceiling, El Cajon introduced a graduated tier structure that connects boundary setbacks directly to building massing. This allows homeowners with tight yards to build closer to lot lines if they maintain a low roof profile.",
-        "Under this tier structure, a single-story detached ADU with a maximum roof height of 12 feet can be positioned with a side and rear setback of just 3 feet. If you require standard 8-to-9-foot interior ceilings with a traditional 16-foot exterior roofline, standard 4-foot setbacks apply. Homeowners seeking a two-story or pitched-roof ADU up to 20 feet in height can achieve approval by providing 5-foot setbacks from property lines.",
+        "Under this tier structure, a single-story detached ADU with a maximum roof height of 12 feet can be positioned with a side and rear setback of just 3 feet. If you require standard 8-to-9-foot interior ceilings with a traditional 16-foot exterior roofline, standard 4-foot setbacks apply. Homeowners seeking a two-story or pitched-roof ADU up to 20 feet in height can achieve approval by providing 5-foot setbacks from property lines. Two exceptions skip the 5-foot tier: within half a mile of a major transit stop or high-quality transit corridor a detached ADU may reach 18 feet (plus 2 feet to match the primary home's roof pitch), and on a lot whose primary dwelling has two or more stories it may reach 18 feet (§17.140.180(E)(2)(b)).",
         "Existing accessory buildings—such as detached carports, storage workshops, or garages—can be converted into conditioned living space along their existing building footprint. The City allows these conversions to maintain their nonconforming setbacks, even if built directly on a property line, provided current California fire and building safety separation codes are fulfilled.",
       ],
     },
@@ -110,12 +111,12 @@ export const elCajon: JurisdictionContent = {
     paragraphs: [
       "Permitting an ADU in El Cajon incurs plan check, building permit, and inspection fees collected by the Community Development Department. Total municipal building permit fees generally range between $2,200 and $4,200 depending on total square footage and structural valuation.",
       "In compliance with California Government Code, El Cajon levies zero Development Impact Fees (DIF) for any ADU of 750 square feet or less. For units larger than 750 square feet, impact fees (including transportation, parks, and regional drainage) are assessed proportionately to the size of the main house.",
-      "School district impact fees apply to residential construction exceeding 500 square feet, assessed by the Cajon Valley Union School District (elementary/middle) and the Grossmont Union High School District (high school). Water and sewer agency fees are determined by either Padre Dam Municipal Water District or Helix Water District.",
+      "School district impact fees apply once a project exceeds 500 square feet, and then on the whole assessable area, not just the area above 500 (a 700-square-foot ADU is assessed on 700 square feet). They are assessed by the Cajon Valley Union School District (elementary/middle) and the Grossmont Union High School District (high school). Water and sewer agency fees are determined by either Padre Dam Municipal Water District or Helix Water District.",
     ],
     bullets: [
       "City permit fees: $2,200–$4,200 covering building, plumbing, electrical, and mechanical plan review",
       "Impact fees: 100% exempt for units of 750 sq ft or less; scaled proportionately for larger units",
-      "School district fees: assessed on square footage exceeding 500 sq ft by Cajon Valley and Grossmont districts",
+      "School district fees: projects of 500 sq ft or less are exempt; larger projects pay on their full square footage to Cajon Valley and Grossmont districts",
       "Water & sewer fees: determined by Padre Dam or Helix Water District depending on parcel service area",
       "Fire review fees: assessed by Heartland Fire & Rescue for access and hydrants",
     ],
@@ -126,7 +127,7 @@ export const elCajon: JurisdictionContent = {
     {
       title: "Confirm zoning and setback tiers",
       detail:
-        "Locate your property lines and determine whether your proposed unit will utilize the 3-foot (12 ft height), 4-foot (16 ft height), or 5-foot (20 ft height) setback tier under §17.140.180.",
+        "Locate your property lines and determine whether your proposed unit will utilize the 3-foot (12 ft height), 4-foot (16 ft height), or 5-foot (20 ft height) setback tier under §17.140.180, or qualifies for an 18-foot exception near transit or beside a two-story primary home.",
     },
     {
       title: "Draft architectural blueprints and engineering",
@@ -167,7 +168,7 @@ export const elCajon: JurisdictionContent = {
     {
       question: "What are the setback requirements in El Cajon?",
       answer:
-        "El Cajon uses a tiered setback system: 3 feet from side and rear lines for units up to 12 feet high; 4 feet for units up to 16 feet high; and 5 feet for units up to 20 feet high.",
+        "El Cajon uses a tiered setback system: 3 feet from side and rear lines for units up to 12 feet high; 4 feet for units up to 16 feet high; and 5 feet for units up to 20 feet high. Near qualifying transit, or beside a primary home of two or more stories, a detached ADU may reach 18 feet without moving to the 5-foot tier.",
     },
     {
       question: "How big can an ADU be in El Cajon?",

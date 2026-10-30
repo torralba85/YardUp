@@ -112,12 +112,12 @@ export const vista: JurisdictionContent = {
     paragraphs: [
       "Building permit, plan review, and inspection fees for a typical ADU in Vista generally total between $2,400 and $4,200, collected by the Community Development Department based on project valuation and conditioned square footage.",
       "Development impact fees are $0 for all units of 750 square feet or less. For units larger than 750 square feet, owners can either pay proportional impact fees or apply for Vista's 10-year affordable fee waiver program to eliminate City impact charges entirely.",
-      "School district impact fees apply to units larger than 500 square feet, assessed by the Vista Unified School District. Water and sewer connection fees are administered by the Vista Irrigation District (VID) or the City of Vista sewer utility depending on parcel location; conversions within the home envelope trigger no new meter fees.",
+      "School district impact fees apply to units larger than 500 square feet, on the unit's full square footage rather than only the area above 500, assessed by the Vista Unified School District. Water and sewer connection fees are administered by the Vista Irrigation District (VID) or the City of Vista sewer utility depending on parcel location; conversions within the home envelope trigger no new meter fees.",
     ],
     bullets: [
       "City permit fees: $2,400–$4,200 for building, electrical, mechanical, and plumbing plan checks",
       "Impact fees: $0 at 750 sq ft or less; fee waiver program available above 750 sq ft with a qualifying covenant",
-      "School district fees: assessed on square footage over 500 sq ft by Vista Unified School District",
+      "School district fees: units of 500 sq ft or less are exempt; larger units pay on their full square footage to Vista Unified School District",
       "Water capacity fees: administered by Vista Irrigation District (VID) only if a separate meter is installed",
       "Fire review fee: assessed by the Vista Fire Department for access and defensible space review",
     ],
