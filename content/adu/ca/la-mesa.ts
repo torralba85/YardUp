@@ -169,7 +169,7 @@ export const laMesa: JurisdictionContent = {
         "No, there is no owner-occupancy requirement for an ADU, and rentals must be for more than 30 days. For a junior ADU, the City's matrix requires an owner in the house or the JADU only when they share sanitation facilities.",
     },
   ],
-  neighbors: ["san-diego", "san-diego-county"],
+  neighbors: ["san-diego", "san-diego-county", "el-cajon"],
   sources: [
     {
       label: "City of La Mesa — Accessory Dwelling Units",

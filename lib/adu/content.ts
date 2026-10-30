@@ -20,6 +20,9 @@ import { sanMarcos } from "@/content/adu/ca/san-marcos";
 import { sanDiegoCounty } from "@/content/adu/ca/san-diego-county";
 import { sacramento } from "@/content/adu/ca/sacramento";
 import { sanJose } from "@/content/adu/ca/san-jose";
+import { encinitas } from "@/content/adu/ca/encinitas";
+import { elCajon } from "@/content/adu/ca/el-cajon";
+import { vista } from "@/content/adu/ca/vista";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import {
   STATE_BASELINE_PARAGRAPHS,
@@ -47,6 +50,9 @@ export const ADU_CITIES: JurisdictionContent[] = [
   sanDiegoCounty,
   sacramento,
   sanJose,
+  encinitas,
+  elCajon,
+  vista,
 ];
 
 /** Counties with at least one guide, in the order their first guide appears. */

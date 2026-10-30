@@ -63,6 +63,9 @@ describe("AduCostArticle", () => {
       "/adu/ca/la-mesa",
       "/adu/ca/san-marcos",
       "/adu/ca/san-diego-county",
+      "/adu/ca/encinitas",
+      "/adu/ca/el-cajon",
+      "/adu/ca/vista",
     ]);
   });
 });

@@ -36,6 +36,8 @@ describe("adu uniqueness gates", () => {
       [
         "carlsbad",
         "chula-vista",
+        "el-cajon",
+        "encinitas",
         "escondido",
         "imperial-beach",
         "la-mesa",
@@ -43,6 +45,7 @@ describe("adu uniqueness gates", () => {
         "san-diego",
         "san-diego-county",
         "san-marcos",
+        "vista",
         "sacramento",
         "san-jose",
       ].sort(),
