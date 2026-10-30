@@ -10,6 +10,8 @@ export function findBestFitPose(input: PlacementInput): Pose2D | null {
       ![...envelope, ...house].every(p => Number.isFinite(p.x) && Number.isFinite(p.z))) return null;
   const current = validatePlacement(input);
   if (current.status === "fits" && (current.roofClearanceFt === null || current.roofClearanceFt > 0)) return { ...input.pose };
+  // Moving cannot repair an invalid/empty boundary or an unknown obstacle.
+  if (current.envelopeStatus === "invalid" || current.envelopeStatus === "empty" || current.houseStatus === "unknown") return null;
   const minX = Math.min(...envelope.map(p => p.x));
   const maxX = Math.max(...envelope.map(p => p.x));
   const minZ = Math.min(...envelope.map(p => p.z));
@@ -29,11 +31,14 @@ export function findBestFitPose(input: PlacementInput): Pose2D | null {
     const xs = axis(left, right, [input.pose.x, 0, ...house.flatMap(p => [p.x - gap - width / 2, p.x + gap + width / 2])]);
     const zs = axis(rear, front, [input.pose.z, 0, ...house.flatMap(p => [p.z - gap - length / 2, p.z + gap + length / 2])]);
     for (const z of zs) for (const x of xs) {
+      const distance = Math.hypot(x - input.pose.x, z - input.pose.z);
+      // Keep traversal/tie order, but skip expensive geometry when this pose
+      // cannot replace the best fit under the existing distance tolerance.
+      if (best && distance >= best.distance - 0.01) continue;
       const pose = { x, z, rotationDeg };
       const placement = validatePlacement({ ...input, pose });
       if (placement.status !== "fits" || (placement.roofClearanceFt !== null && placement.roofClearanceFt <= 0)) continue;
-      const distance = Math.hypot(x - input.pose.x, z - input.pose.z);
-      if (!best || distance < best.distance - 0.01) best = { pose, distance };
+      best = { pose, distance };
     }
   }
   return best?.pose ?? null;

@@ -73,7 +73,7 @@ export async function fetchBuildingFootprint(
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    let json: { features?: unknown } | null = null;
+    let json: { features?: unknown; error?: unknown; exceededTransferLimit?: boolean } | null = null;
     try {
       const res = await fetch(`${USA_STRUCTURES_QUERY}?${params.toString()}`, {
         signal: controller.signal,
@@ -86,7 +86,10 @@ export async function fetchBuildingFootprint(
       clearTimeout(timer);
     }
 
-    const features = Array.isArray(json?.features) ? json.features : [];
+    // A partial collection can understate lot coverage and override the
+    // assessor fallback. Only a complete successful query supplies a total.
+    if (!Array.isArray(json?.features) || json.error || json.exceededTransferLimit) return null;
+    const features = json.features;
     let totalSqft = 0;
     let largestSqft = 0;
     let structureCount = 0;

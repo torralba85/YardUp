@@ -121,10 +121,28 @@ describe("fetchBuildingFootprint", () => {
 
     await expect(fetchBuildingFootprint(PARCEL)).resolves.toBeNull();
     await expect(fetchBuildingFootprint(PARCEL)).resolves.toBeNull();
+    await expect(fetchBuildingFootprint(PARCEL)).resolves.toBeNull();
+  });
+
+  it.each([
+    ["truncated", { exceededTransferLimit: true }],
+    ["provider error", { error: { code: 500, message: "Query failed" } }],
+  ])("does not report a partial building total for a %s response", async (_label, metadata) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        features: [{ attributes: { SQFEET: 1000, LONGITUDE: -122.09, LATITUDE: 47.01 } }],
+        ...metadata,
+      }),
+    }));
+
+    await expect(fetchBuildingFootprint(PARCEL)).resolves.toBeNull();
+  });
+
+  it("retains a successful empty collection as a no-match result", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(structuresResponse([])));
     await expect(fetchBuildingFootprint(PARCEL)).resolves.toEqual({
-      totalSqft: 0,
-      largestSqft: 0,
-      structureCount: 0,
+      totalSqft: 0, largestSqft: 0, structureCount: 0,
     });
   });
 });
