@@ -32,7 +32,7 @@ export const elCajon: JurisdictionContent = {
     "El Cajon's zoning code features a unique setback-to-height tier system under Municipal Code §17.140.180. While standard California state law establishes a flat 4-foot side and rear setback for a 16-foot unit, El Cajon allows a 3-foot setback for single-story structures capped at 12 feet, a 4-foot setback for units up to 16 feet, and allows heights up to 20 feet when setbacks are expanded to 5 feet.",
     "The city is well-served by the San Diego Trolley's Orange and Green Lines at the El Cajon Transit Center and Arnele Avenue Station. Parcels within a half-mile walking radius of these transit hubs or high-frequency bus routes are exempt from all off-street parking mandates, and garage conversions never require replacement parking.",
   ],
-  metaSizeNote: "up to 1,200 sq ft detached; attached up to 50% of home",
+  metaSizeNote: "up to 1,200 sq ft attached or detached",
   metaSetbackNote: "tiered: 3 ft (12 ft high), 4 ft (16 ft high), 5 ft (20 ft high)",
   metaParkingNote: "waived within 0.5 miles of trolley stations and bus stops",
   glance: [
@@ -43,8 +43,8 @@ export const elCajon: JurisdictionContent = {
     },
     {
       label: "Max size — attached",
-      value: "50% of primary living area or 1,200 sq ft, whichever is less",
-      note: "State statutory floors guarantee at least 850 sq ft for studio/1-bedroom and 1,000 sq ft for 2-bedroom attached units",
+      value: "Up to 1,200 sq ft",
+      note: "§17.140.180 applies the same maximum size to attached and detached units, with no percentage-of-home cap",
     },
     {
       label: "Max size — JADU",
@@ -100,7 +100,7 @@ export const elCajon: JurisdictionContent = {
       heading: "Trolley transit corridors, utility connections, and multi-family rules",
       paragraphs: [
         "El Cajon serves as a major regional transit center in East San Diego County, hosting two lines of the San Diego Metropolitan Transit System (MTS) Trolley. Under California Government Code §66314 and local code, any parcel within a half-mile walking distance of a public transit station or bus stop is fully exempt from off-street parking mandates. Properties near Main Street, Broadway, and Fletcher Parkway frequently qualify for this waiver.",
-        "For multi-family residential parcels, El Cajon adheres to state allowances that make infill additions highly lucrative. Owners of duplexes, triplexes, or apartment buildings can convert non-livable common spaces—such as storage basements, laundry facilities, or carports—into ADUs for up to 25% of the total existing unit count. In addition, multi-family lots are permitted to construct up to two detached ADUs with 4-foot setbacks and 16-foot height caps.",
+        "For multi-family residential parcels, El Cajon adheres to state allowances that make infill additions highly lucrative. Owners of duplexes, triplexes, or apartment buildings can convert non-livable common spaces—such as storage basements, laundry facilities, or carports—into ADUs for up to 25% of the total existing unit count. Detached ADUs depend on whether the multifamily development already exists: a proposed multifamily development may include up to two detached ADUs, while an existing multifamily development may add up to eight detached ADUs, never more than the number of existing primary units (§17.140.180(B)(2)). Detached units follow 4-foot setbacks and 16-foot height caps.",
         "Utility connections depend on the scope of construction. While JADUs and garage conversions within the main house require no new capacity charges, new detached ADUs typically require coordinated connections with Padre Dam Municipal Water District or Helix Water District, as well as the City of El Cajon wastewater system. Fire sprinklers are required only if sprinklers are already installed in the primary dwelling, and solar panels are mandated for new detached units under California Title 24.",
       ],
     },
@@ -172,7 +172,7 @@ export const elCajon: JurisdictionContent = {
     {
       question: "How big can an ADU be in El Cajon?",
       answer:
-        "A detached ADU can be built up to 1,200 square feet. An attached ADU is limited to 50% of the primary dwelling's floor area or 1,200 square feet, whichever is less, with a guaranteed minimum of 800 to 1,000 square feet.",
+        "A detached ADU can be built up to 1,200 square feet. El Cajon applies the same 1,200-square-foot maximum to attached ADUs; its code does not cap an attached unit at a percentage of the primary home.",
     },
     {
       question: "Do I need to add parking for an ADU in El Cajon?",
@@ -182,7 +182,7 @@ export const elCajon: JurisdictionContent = {
     {
       question: "Can I build an ADU on a multi-family property in El Cajon?",
       answer:
-        "Yes. Multi-family parcels can convert existing non-livable spaces (such as storage rooms or carports) into ADUs for up to 25% of existing units, plus build up to two detached ADUs with 4-foot setbacks.",
+        "Yes. Multi-family parcels can convert existing non-livable spaces (such as storage rooms or carports) into ADUs for up to 25% of existing units, plus build detached ADUs with 4-foot setbacks: up to two on a proposed multifamily development, or up to eight on an existing one, capped at the number of existing primary units.",
     },
     {
       question: "Are fire sprinklers required for an ADU in El Cajon?",

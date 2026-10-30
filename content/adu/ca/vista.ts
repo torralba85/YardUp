@@ -11,7 +11,8 @@
  * (R-1, R-1-B, E-1, A-1, O-R). Notably, beyond state-mandated fee exemptions
  * for units under 750 sq ft, Vista runs a progressive local Fee Waiver
  * Program for units over 750 sq ft when owners commit to affordable rents
- * or family caregiving. A 5-foot building separation is enforced between
+ * or house a family member or caregiver who cares for the primary unit's
+ * owner or occupant. A 5-foot building separation is enforced between
  * detached structures, and transit parking waivers cover Sprinter rail stops.
  *
  * @module adu/ca/vista
@@ -30,7 +31,7 @@ export const vista: JurisdictionContent = {
     "Vista ADU rules: 1,200 sq ft detached units, 4 ft setbacks, 5 ft building separation, and the local fee waiver program. Check your property feasibility free.",
   introAnswer: [
     "Yes. The City of Vista allows single-family property owners to construct one accessory dwelling unit (ADU) and one junior accessory dwelling unit (JADU) on the same residential lot. A detached backyard home can be built up to 1,200 square feet, while an attached unit can measure up to 50% of the primary residence.",
-    "Beyond state law standards, Vista features a progressive ADU Impact Fee Waiver Program under Chapter 18.31. While state law automatically exempts units under 750 square feet from municipal impact fees, Vista waives development fees on larger units (over 750 sq ft) for property owners who agree to a 10-year regulatory covenant renting to lower-income households or providing housing for a family caregiver.",
+    "Beyond state law standards, Vista features a progressive ADU Impact Fee Waiver Program under Chapter 18.31. While state law automatically exempts units under 750 square feet from municipal impact fees, Vista waives development fees on larger units (over 750 sq ft) for property owners who agree to a 10-year regulatory covenant renting to lower-income households or housing a family member or caregiver who provides regular care to an owner or occupant of the primary home.",
     "Vista requires a 5-foot building separation between a new detached ADU and the primary home. Parcels located within a half-mile walking distance of public transit—including the Vista Transit Center and North County Transit District (NCTD) Sprinter light rail stops—are completely exempt from off-street parking requirements.",
   ],
   metaSizeNote: "up to 1,200 sq ft detached; attached up to 50% of home",
@@ -93,7 +94,7 @@ export const vista: JurisdictionContent = {
       heading: "The Vista rulebook: Chapter 18.31 and local fee waiver covenants",
       paragraphs: [
         "ADU regulations in Vista are established in Municipal Code Chapter 18.31. The ordinance permits backyard homes across traditional suburban single-family zones (R-1, R-1-B) as well as estate and agricultural zones (E-1, A-1, O-R) common throughout the city's rolling hills. Detached ADUs can reach up to 1,200 square feet, enabling two- and three-bedroom floor plans with full kitchen and laundry facilities.",
-        "A standout feature of Vista's local framework is the City's Affordable ADU Fee Waiver Program. Under state law (SB 13), municipal development impact fees are universally waived for any ADU under 750 square feet. For units larger than 750 square feet, which would normally pay proportional traffic and parkland fees, Vista will waive these municipal impact fees if the property owner records a 10-year deed restriction ensuring the home is rented to a certified lower-income household or used to house an immediate family member receiving regular care.",
+        "A standout feature of Vista's local framework is the City's Affordable ADU Fee Waiver Program. Under state law (SB 13), municipal development impact fees are universally waived for any ADU under 750 square feet. For units larger than 750 square feet, which would normally pay proportional traffic and parkland fees, Vista will waive these municipal impact fees if the property owner records a 10-year deed restriction ensuring the home is rented to a certified lower-income household or occupied by a family member or caregiver who provides regular care to an owner or occupant of the primary unit. Housing a relative who receives care in the ADU does not, by itself, qualify.",
         "Vista also specifies structural eligibility criteria: manufactured homes, modular units, and stick-built homes on permanent foundation systems are permitted, but recreational vehicles (RVs), converted shipping containers, and pre-fabricated tool sheds are explicitly prohibited as permanent dwelling units.",
       ],
     },
@@ -168,7 +169,7 @@ export const vista: JurisdictionContent = {
     {
       question: "What is Vista's ADU fee waiver program?",
       answer:
-        "Under Chapter 18.31, Vista waives municipal impact fees on ADUs measuring 750 square feet or larger if the homeowner agrees to record a 10-year covenant renting the unit at affordable rates to a lower-income household or family caregiver.",
+        "Under Chapter 18.31, Vista waives municipal impact fees on ADUs measuring 750 square feet or larger if the homeowner agrees to record a 10-year covenant renting the unit at affordable rates to a lower-income household, or to house a family member or caregiver who provides regular care to an owner or occupant of the primary unit.",
     },
     {
       question: "What are the setback requirements for an ADU in Vista?",

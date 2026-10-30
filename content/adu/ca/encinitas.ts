@@ -94,7 +94,7 @@ export const encinitas: JurisdictionContent = {
       paragraphs: [
         "Encinitas stands out in Southern California for its Permit-Ready ADU (PRADU) initiative, created to remove the costly hurdle of custom drafting. The City partners with regional architectural firms to maintain a diverse catalog of pre-reviewed building plans, ranging from compact studio floor plans up to multi-bedroom layouts of 1,200 square feet. Each pre-approved set already complies with the California Building Code, structural wind/seismic standards, and Title 24 energy requirements.",
         "Choosing a PRADU plan set dramatically accelerates your timeline. Because the structural engineering and internal layouts have already undergone comprehensive vetting by City plan examiners, staff reviews focus primarily on your property-specific site plan, utility connections, and grading. Modifying exterior materials or window fenestrations is permitted within specified guidelines, but relocating load-bearing walls or altering external dimensions routes the project into custom plan review.",
-        "Under Encinitas Municipal Code §30.48.040(T), all ADU applications receive non-discretionary, administrative review. There are no public hearings, design review board delays, or neighbor sign-off hurdles. Building officials verify compliance against standard objective metrics within the statutory 60-day window. In addition, detached units must feature exterior colors, roof materials, and siding that harmonize with the main residence, and rooftop decks or outdoor balconies facing neighboring side yards are prohibited to safeguard neighborhood privacy. Under California Title 24, all newly constructed detached ADUs must include a dedicated rooftop solar photovoltaic system unless exempt due to shading or existing capacity.",
+        "Under Encinitas Municipal Code §30.48.040(T), all ADU applications receive non-discretionary, administrative review. There are no public hearings, design review board delays, or neighbor sign-off hurdles. Building officials verify compliance against standard objective metrics within the statutory 60-day window. In addition, detached units must feature exterior colors, roof materials, and siding that harmonize with the main residence, and a roof deck is allowed on an ADU under §30.48.040(T)(16)(c) using the reduced ADU setbacks, provided the deck and its railings stay within the 16-foot height limit. Under California Title 24, all newly constructed detached ADUs must include a dedicated rooftop solar photovoltaic system unless exempt due to shading or existing capacity.",
       ],
     },
     {
@@ -109,12 +109,12 @@ export const encinitas: JurisdictionContent = {
   fees: {
     heading: "Permit costs and fee exemptions in Encinitas",
     paragraphs: [
-      "Permit fees for a standard ADU in Encinitas typically range between $2,500 and $4,500 for plan check, building inspection, and document archival. Using a pre-approved PRADU plan reduces plan check fees substantially compared to custom architectural submittals.",
+      "Encinitas waives its own plan-review and inspection fees for ADUs, whether you use a pre-approved PRADU plan set or a custom design. The waiver does not cover fees the City must collect for the State, postage, or the recording of the ADU covenant, so expect a small balance for those items.",
       "Development Impact Fees (DIF)—including parkland, traffic, and general municipal facilities charges—are completely exempt for all ADUs measuring less than 750 square feet of conditioned living space, as well as all junior ADUs. For units measuring 750 square feet or greater, impact fees are levied proportionally relative to the square footage of the primary dwelling.",
       "School district impact fees are assessed independently by the San Dieguito Union High School District and the Encinitas Union School District for units exceeding 500 square feet. Water and sewer connection charges vary depending on whether an independent meter is requested; conversions within existing building envelopes require no new utility capacity meters.",
     ],
     bullets: [
-      "City permit fees: $2,500–$4,500 for plan check and inspection; discounted for PRADU plan sets",
+      "City plan-review and inspection fees: waived for ADUs; state-mandated fees, postage and covenant recording still apply",
       "Coastal Development Permit: local application processing fee waived for qualifying ADUs",
       "Impact fees: $0 for units under 750 sq ft or JADUs; proportional assessment for 750+ sq ft",
       "School impact fees: assessed by local school districts on residential additions over 500 sq ft",
