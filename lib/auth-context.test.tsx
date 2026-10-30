@@ -647,6 +647,171 @@ describe("AuthProvider profile creation", () => {
       expect.arrayContaining(["email", "name"]),
     );
   });
+
+  it("marks legalConsentCurrent false for outdated receipt and true when current", async () => {
+    let authListener: ((u: unknown) => Promise<void>) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        role: "user",
+        email: "user@example.com",
+        legalConsent: {
+          termsVersion: "2026-08-26",
+          privacyVersion: "2026-08-26",
+          adultConfirmed: true,
+        },
+      }),
+    });
+
+    function Probe() {
+      const { profile } = useAuth();
+      return <span data-testid="consent-status">{String(profile?.legalConsentCurrent)}</span>;
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await authListener?.({ uid: "user-1", email: "user@example.com" });
+    });
+
+    expect(screen.getByTestId("consent-status")).toHaveTextContent("false");
+
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        role: "user",
+        email: "user@example.com",
+        legalConsent: {
+          ...CURRENT_LEGAL_CONSENT,
+        },
+      }),
+    });
+
+    await act(async () => {
+      await authListener?.({ uid: "user-1", email: "user@example.com" });
+    });
+
+    expect(screen.getByTestId("consent-status")).toHaveTextContent("true");
+  });
+
+  it("leaves legalConsentCurrent unknown when the profile read fails", async () => {
+    let authListener: ((u: unknown) => Promise<void>) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+    firestoreMocks.getDoc.mockRejectedValue(new Error("offline"));
+
+    function Probe() {
+      const { profile } = useAuth();
+      return (
+        <span data-testid="consent-status">
+          {profile ? String(profile.legalConsentCurrent) : "no-profile"}
+        </span>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await authListener?.({ uid: "user-1", email: "user@example.com" });
+    });
+
+    // A transient read failure must not gate an account that already accepted.
+    expect(screen.getByTestId("consent-status")).toHaveTextContent("undefined");
+  });
+
+  it("updates consent and refreshes profile on acceptCurrentLegalTerms", async () => {
+    let authListener: ((u: unknown) => Promise<void>) | undefined;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authListener = cb;
+      return () => {};
+    });
+
+    const user = { uid: "user-1", email: "user@example.com", displayName: "Alma Reyes" };
+    firebaseMocks.auth.currentUser = user;
+
+    firestoreMocks.getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({
+        role: "user",
+        email: "user@example.com",
+        displayName: "Alma Reyes",
+        legalConsent: {
+          termsVersion: "2026-08-26",
+          privacyVersion: "2026-08-26",
+          adultConfirmed: true,
+        },
+      }),
+    }).mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({
+        role: "user",
+        email: "user@example.com",
+        displayName: "Alma Reyes",
+        legalConsent: {
+          ...CURRENT_LEGAL_CONSENT,
+          acceptedAt: "server-time",
+        },
+      }),
+    });
+
+    function Probe() {
+      const { profile, acceptCurrentLegalTerms } = useAuth();
+      return (
+        <div>
+          <span data-testid="consent-status">{String(profile?.legalConsentCurrent)}</span>
+          <button type="button" onClick={() => void acceptCurrentLegalTerms()}>
+            Accept
+          </button>
+        </div>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await authListener?.(user);
+    });
+
+    expect(screen.getByTestId("consent-status")).toHaveTextContent("false");
+
+    await userEvent.click(screen.getByRole("button", { name: "Accept" }));
+
+    await waitFor(() => {
+      // Only the receipt and timestamp: accepting must not rewrite the
+      // profile's email, name, or role.
+      expect(firestoreMocks.setDoc).toHaveBeenCalledWith(
+        { path: "users/user-1" },
+        {
+          legalConsent: {
+            ...CURRENT_LEGAL_CONSENT,
+            acceptedAt: "server-time",
+          },
+          updatedAt: "server-time",
+        },
+        { merge: true },
+      );
+      expect(screen.getByTestId("consent-status")).toHaveTextContent("true");
+    });
+  });
 });
 
 describe("AuthProvider social sign-in inside the Android app", () => {
