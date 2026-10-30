@@ -141,7 +141,7 @@ export const oceanside: JurisdictionContent = {
         "At most one space, waived within a half-mile walk of transit, in historic districts, for conversions, and for attached units. Much of central Oceanside near the Sprinter and Coaster stations qualifies for the waiver.",
     },
   ],
-  neighbors: ["carlsbad", "escondido", "san-diego-county"],
+  neighbors: ["carlsbad", "escondido", "san-diego-county", "vista"],
   sources: [
     {
       label: "California HCD ADU Handbook (March 2026): setbacks and impact fees",

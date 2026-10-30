@@ -161,7 +161,7 @@ export const sanMarcos: JurisdictionContent = {
         "The City's code says yes: either the house or the junior ADU must be owner-occupied, recorded in a deed restriction. State law changes in 2025 and 2026 narrowed JADU owner-occupancy, so ask Planning how the City applies its rule to your project. A standard ADU has no owner-occupancy rule.",
     },
   ],
-  neighbors: ["escondido", "carlsbad", "san-diego-county"],
+  neighbors: ["escondido", "carlsbad", "san-diego-county", "encinitas", "vista"],
   sources: [
     {
       label: "San Marcos Municipal Code Chapter 20.410, Accessory Dwelling Units and Accessory Structures (Ord. No. 2024-1551)",

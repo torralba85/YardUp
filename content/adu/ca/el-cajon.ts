@@ -1,0 +1,218 @@
+/**
+ * El Cajon ADU jurisdiction content.
+ *
+ * Primary sources: El Cajon Municipal Code Title 17 (Zoning), Chapter 17.140
+ * (Residential Zones), Section 17.140.180 (Accessory Dwelling Units), as
+ * amended by Ordinance Nos. 5142 and 5148; the City of El Cajon Community
+ * Development Department ADU Submittal Guidelines; and City Building Division
+ * Plan Check Checklists.
+ *
+ * El Cajon features a distinctive setback-to-height tier system in §17.140.180
+ * that provides design flexibility: a 3-foot setback allows up to a 12-foot
+ * roof height, a 4-foot setback allows up to 16 feet, and a 5-foot setback
+ * unlocks heights up to 20 feet. Transit parking exemptions apply across
+ * major trolley and bus corridors connected to the El Cajon Transit Center.
+ *
+ * @module adu/ca/el-cajon
+ */
+import type { JurisdictionContent } from "@/lib/adu/types";
+
+export const elCajon: JurisdictionContent = {
+  state: "ca",
+  stateName: "California",
+  city: "El Cajon",
+  slug: "el-cajon",
+  county: "San Diego County",
+  asOf: "2026-10-30",
+  metaTitle: "El Cajon ADU Rules (2026): Size, Setback Tiers & Cost",
+  metaDescription:
+    "El Cajon ADU rules: 1,200 sq ft detached units, unique 3-5 ft setback-height tiers, trolley transit waivers, and permit steps. Calculate feasibility free.",
+  introAnswer: [
+    "Yes. The City of El Cajon permits both an accessory dwelling unit (ADU) and a junior accessory dwelling unit (JADU) on any legal lot developed with a single-family home. A detached backyard home can be constructed up to 1,200 square feet, providing ample room for multi-bedroom family or rental living quarters.",
+    "El Cajon's zoning code features a unique setback-to-height tier system under Municipal Code §17.140.180. While standard California state law establishes a flat 4-foot side and rear setback for a 16-foot unit, El Cajon allows a 3-foot setback for single-story structures capped at 12 feet, a 4-foot setback for units up to 16 feet, and allows heights up to 20 feet when setbacks are expanded to 5 feet.",
+    "The city is well-served by the San Diego Trolley's Orange and Green Lines at the El Cajon Transit Center and Arnele Avenue Station. Parcels within a half-mile walking radius of these transit hubs or high-frequency bus routes are exempt from all off-street parking mandates, and garage conversions never require replacement parking.",
+  ],
+  metaSizeNote: "up to 1,200 sq ft detached; attached up to 50% of home",
+  metaSetbackNote: "tiered: 3 ft (12 ft high), 4 ft (16 ft high), 5 ft (20 ft high)",
+  metaParkingNote: "waived within 0.5 miles of trolley stations and bus stops",
+  glance: [
+    {
+      label: "Max size — detached",
+      value: "Up to 1,200 sq ft",
+      note: "Subject to lot coverage and zoning standards; state law exempts an 800 sq ft unit from local coverage restrictions",
+    },
+    {
+      label: "Max size — attached",
+      value: "50% of primary living area or 1,200 sq ft, whichever is less",
+      note: "State statutory floors guarantee at least 850 sq ft for studio/1-bedroom and 1,000 sq ft for 2-bedroom attached units",
+    },
+    {
+      label: "Max size — JADU",
+      value: "500 sq ft maximum",
+      note: "Must be created within the existing or proposed walls of the main residence or an attached garage",
+    },
+    {
+      label: "Max height — detached",
+      value: "16 ft standard; up to 20 ft with 5 ft setbacks",
+      note: "Tiered by setback: 12 ft height with 3 ft setback, 16 ft with 4 ft setback, and up to 20 ft with 5 ft setback",
+    },
+    {
+      label: "Rear and side setbacks",
+      value: "3 ft to 5 ft depending on structure height",
+      note: "Existing permitted accessory buildings and garages converted to ADUs can maintain existing 0-foot setbacks",
+    },
+    {
+      label: "Front setback",
+      value: "Conforms to the underlying residential zoning district",
+      note: "Cannot be enforced if it prevents the construction of an 800 sq ft detached ADU with 4 ft setbacks",
+    },
+    {
+      label: "Parking required",
+      value: "1 space per unit, waived near transit stops",
+      note: "Exempt within 0.5 miles of transit stops (including El Cajon Transit Center and Arnele Ave Trolley Station) or for conversions",
+    },
+    {
+      label: "Owner-occupancy",
+      value: "Not required for standard ADUs",
+      note: "No owner-occupancy mandate applies to standard ADUs; JADU rules follow California Government Code standards",
+    },
+    {
+      label: "Rentals and sale",
+      value: "Minimum 30-day rental duration; no separate sale",
+      note: "ADUs must be rented for terms longer than 30 consecutive days and cannot be subdivided or sold independently",
+    },
+    {
+      label: "Approval timeline",
+      value: "Administrative review within 60 calendar days",
+      note: "Staff issues decisions ministerially without public hearings or discretionary board approvals",
+    },
+  ],
+  cityDiffers: [
+    {
+      heading: "The El Cajon setback and height tier system (§17.140.180)",
+      paragraphs: [
+        "El Cajon's zoning ordinance for accessory dwelling units is codified in Municipal Code §17.140.180. Unlike many California jurisdictions that strictly default to the state minimum 4-foot setback with a 16-foot ceiling, El Cajon introduced a graduated tier structure that connects boundary setbacks directly to building massing. This allows homeowners with tight yards to build closer to lot lines if they maintain a low roof profile.",
+        "Under this tier structure, a single-story detached ADU with a maximum roof height of 12 feet can be positioned with a side and rear setback of just 3 feet. If you require standard 8-to-9-foot interior ceilings with a traditional 16-foot exterior roofline, standard 4-foot setbacks apply. Homeowners seeking a two-story or pitched-roof ADU up to 20 feet in height can achieve approval by providing 5-foot setbacks from property lines.",
+        "Existing accessory buildings—such as detached carports, storage workshops, or garages—can be converted into conditioned living space along their existing building footprint. The City allows these conversions to maintain their nonconforming setbacks, even if built directly on a property line, provided current California fire and building safety separation codes are fulfilled.",
+      ],
+    },
+    {
+      heading: "Trolley transit corridors, utility connections, and multi-family rules",
+      paragraphs: [
+        "El Cajon serves as a major regional transit center in East San Diego County, hosting two lines of the San Diego Metropolitan Transit System (MTS) Trolley. Under California Government Code §66314 and local code, any parcel within a half-mile walking distance of a public transit station or bus stop is fully exempt from off-street parking mandates. Properties near Main Street, Broadway, and Fletcher Parkway frequently qualify for this waiver.",
+        "For multi-family residential parcels, El Cajon adheres to state allowances that make infill additions highly lucrative. Owners of duplexes, triplexes, or apartment buildings can convert non-livable common spaces—such as storage basements, laundry facilities, or carports—into ADUs for up to 25% of the total existing unit count. In addition, multi-family lots are permitted to construct up to two detached ADUs with 4-foot setbacks and 16-foot height caps.",
+        "Utility connections depend on the scope of construction. While JADUs and garage conversions within the main house require no new capacity charges, new detached ADUs typically require coordinated connections with Padre Dam Municipal Water District or Helix Water District, as well as the City of El Cajon wastewater system. Fire sprinklers are required only if sprinklers are already installed in the primary dwelling, and solar panels are mandated for new detached units under California Title 24.",
+      ],
+    },
+  ],
+  fees: {
+    heading: "Permit fees and development charges in El Cajon",
+    paragraphs: [
+      "Permitting an ADU in El Cajon incurs plan check, building permit, and inspection fees collected by the Community Development Department. Total municipal building permit fees generally range between $2,200 and $4,200 depending on total square footage and structural valuation.",
+      "In compliance with California Government Code, El Cajon levies zero Development Impact Fees (DIF) for any ADU under 750 square feet. For units measuring 750 square feet or larger, impact fees (including transportation, parks, and regional drainage) are assessed proportionately to the size of the main house.",
+      "School district impact fees apply to residential construction exceeding 500 square feet, assessed by the Cajon Valley Union School District (elementary/middle) and the Grossmont Union High School District (high school). Water and sewer agency fees are determined by either Padre Dam Municipal Water District or Helix Water District.",
+    ],
+    bullets: [
+      "City permit fees: $2,200–$4,200 covering building, plumbing, electrical, and mechanical plan review",
+      "Impact fees: 100% exempt for units under 750 sq ft; scaled proportionately for larger units",
+      "School district fees: assessed on square footage exceeding 500 sq ft by Cajon Valley and Grossmont districts",
+      "Water & sewer fees: determined by Padre Dam or Helix Water District depending on parcel service area",
+      "Fire review fees: assessed by Heartland Fire & Rescue for access and hydrants",
+    ],
+  },
+  processIntro:
+    "El Cajon processes ADU applications through a streamlined ministerial review. The Community Development Department issues decisions within 60 calendar days of submittal without public notice or hearings.",
+  processSteps: [
+    {
+      title: "Confirm zoning and setback tiers",
+      detail:
+        "Locate your property lines and determine whether your proposed unit will utilize the 3-foot (12 ft height), 4-foot (16 ft height), or 5-foot (20 ft height) setback tier under §17.140.180.",
+    },
+    {
+      title: "Draft architectural blueprints and engineering",
+      detail:
+        "Prepare complete architectural plans, structural engineering calculations, Title 24 energy calculations, and a detailed site plan illustrating building separations and utility runs.",
+    },
+    {
+      title: "Submit plans to Community Development",
+      detail:
+        "Submit plan sets and application documents to the City of El Cajon Community Development Department through the City's online permitting portal or front counter.",
+    },
+    {
+      title: "Plan check review across city departments",
+      detail:
+        "Building, planning, engineering, and Heartland Fire & Rescue staff review the submission for code compliance. Plan check cycles typically take 20 to 30 business days.",
+    },
+    {
+      title: "Respond to plan check corrections",
+      detail:
+        "Coordinate with your draftsman, architect, or engineer to update drawings based on plan check correction notices, then resubmit revised sheets.",
+    },
+    {
+      title: "Pull permit and start construction",
+      detail:
+        "Pay final building and inspection fees, receive your approved job card and stamped blueprints, and commence site grading and foundation excavation.",
+    },
+  ],
+  permitPortal: {
+    label: "City of El Cajon Community Development Online Permitting",
+    url: "https://www.elcajon.gov/your-government/departments/community-development",
+  },
+  faqs: [
+    {
+      question: "Can I build an ADU in El Cajon?",
+      answer:
+        "Yes. Any residential property in El Cajon developed with a single-family home can add one full ADU (detached or attached) plus one junior accessory dwelling unit (JADU).",
+    },
+    {
+      question: "What are the setback requirements in El Cajon?",
+      answer:
+        "El Cajon uses a tiered setback system: 3 feet from side and rear lines for units up to 12 feet high; 4 feet for units up to 16 feet high; and 5 feet for units up to 20 feet high.",
+    },
+    {
+      question: "How big can an ADU be in El Cajon?",
+      answer:
+        "A detached ADU can be built up to 1,200 square feet. An attached ADU is limited to 50% of the primary dwelling's floor area or 1,200 square feet, whichever is less, with a guaranteed minimum of 800 to 1,000 square feet.",
+    },
+    {
+      question: "Do I need to add parking for an ADU in El Cajon?",
+      answer:
+        "No parking space is required if the property is located within 0.5 miles of public transit, including the El Cajon Transit Center and local bus lines. Converting an existing garage also requires no replacement parking.",
+    },
+    {
+      question: "Can I build an ADU on a multi-family property in El Cajon?",
+      answer:
+        "Yes. Multi-family parcels can convert existing non-livable spaces (such as storage rooms or carports) into ADUs for up to 25% of existing units, plus build up to two detached ADUs with 4-foot setbacks.",
+    },
+    {
+      question: "Are fire sprinklers required for an ADU in El Cajon?",
+      answer:
+        "Fire sprinklers are only required in the ADU if fire sprinklers are already present in the primary single-family home, unless required by Heartland Fire for long hose-pull distances.",
+    },
+    {
+      question: "Can I rent my El Cajon ADU as an Airbnb?",
+      answer:
+        "No. Newly permitted ADUs in El Cajon must be leased for terms longer than 30 consecutive days. Short-term vacation rentals are prohibited.",
+    },
+    {
+      question: "How long does it take to get an ADU permit in El Cajon?",
+      answer:
+        "Permit reviews are administrative and legally required to be decided within 60 calendar days of receiving a complete application. Average initial plan check takes approximately 3 to 4 weeks.",
+    },
+  ],
+  neighbors: ["la-mesa", "san-diego-county"],
+  sources: [
+    {
+      label: "El Cajon Municipal Code Title 17, Chapter 17.140: Accessory Dwelling Units (§17.140.180)",
+      url: "https://www.ecode360.com/EL3698",
+    },
+    {
+      label: "City of El Cajon Community Development — Planning & Housing Resources",
+      url: "https://www.elcajon.gov/your-government/departments/community-development",
+    },
+    {
+      label: "Heartland Fire & Rescue — Residential Development Standards",
+      url: "https://www.heartlandfire.org/",
+    },
+  ],
+};

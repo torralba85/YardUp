@@ -177,7 +177,7 @@ export const sanDiegoCounty: JurisdictionContent = {
         "Only if the lot is outside city limits. Many unincorporated properties have a city name in their mailing address. Check the County's unincorporated-area map or your Property Summary Report; inside the City of San Diego, the City's own ADU rules apply instead.",
     },
   ],
-  neighbors: ["san-diego", "chula-vista", "escondido", "oceanside", "la-mesa", "san-marcos"],
+  neighbors: ["san-diego", "chula-vista", "escondido", "oceanside", "la-mesa", "san-marcos", "el-cajon"],
   sources: [
     {
       label: "County of San Diego PDS — Accessory Dwelling Units",

@@ -157,7 +157,7 @@ export const carlsbad: JurisdictionContent = {
         "The city says whether your application is complete within 15 business days, then approves or denies it within 60 days unless you request an extension. An ADU built with a new or remodeled main house follows that house's permit timeline instead.",
     },
   ],
-  neighbors: ["oceanside", "escondido", "san-marcos"],
+  neighbors: ["oceanside", "escondido", "san-marcos", "encinitas", "vista"],
   sources: [
     {
       label: "California HCD ADU Handbook (March 2026): attached-unit size limits and rental terms",
