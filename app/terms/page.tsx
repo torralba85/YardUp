@@ -14,164 +14,300 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph({ title, description, url: "/terms" }),
 };
 
+const linkClass = "font-medium text-lot-orange-ink underline";
+
+function SupportEmail() {
+  return (
+    <a href="mailto:support@lotfoundry.net" className={linkClass}>
+      support@lotfoundry.net
+    </a>
+  );
+}
+
 /**
  * Terms & Conditions — canonical `/terms` agreement.
- * Comprehensive software SaaS, AI, and marketplace agreement.
+ * The version in the kicker must match `CURRENT_LEGAL_CONSENT` in
+ * `lib/legal-consent.ts`; bump both (and `firestore.rules`) together so
+ * existing accounts are asked to accept material changes.
  */
 export default function TermsPage() {
   return (
-    <LegalPageShell title="Terms & Conditions" kicker="Last updated: October 12, 2026">
-      <LegalSection title="1. Acceptance &amp; Contracting Entity">
+    <LegalPageShell
+      title="Terms & Conditions"
+      kicker="Effective October 30, 2026 · Version 2026-10-30"
+    >
+      <LegalSection title="1. Who We Are &amp; Acceptance">
         <p>
-          These Terms &amp; Conditions (“Terms”) constitute a legally binding agreement between you
-          (“you” or “User”) and LotFoundry LLC (“LotFoundry”, “we”, “us”, or “our”), governing your
-          access to and use of the LotFoundry website, mobile applications, 3D Feasibility Studio,
-          Certificates of Feasibility, and builder marketplace (collectively, the “Service”).
+          These Terms &amp; Conditions (“Terms”) are a legally binding agreement between you (“you”
+          or “User”), whether you use the Service as a homeowner, researcher, builder, contractor,
+          design professional, or other professional, and VeriShare LLC, a California limited
+          liability company doing business as LotFoundry (“LotFoundry”, “VeriShare”, “we”, “us”, or
+          “our”), 1150 E St, Unit 202, San Diego, CA 92101. They govern your access to
+          and use of lotfoundry.net, the 3D Feasibility Studio, our mobile applications (including
+          the LotFoundry Android app on Google Play and any iOS app), Certificates of Feasibility,
+          the builder lead marketplace, and any partner referral option (collectively, the
+          “Service”).
         </p>
         <p>
-          By accessing, browsing, registering for, or using the Service, you represent that you have
-          read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do
-          not agree, you must immediately discontinue use of the Service.
+          <strong>
+            PLEASE READ THESE TERMS CAREFULLY. SECTION 16 CONTAINS A BINDING INDIVIDUAL ARBITRATION
+            AGREEMENT AND CLASS ACTION WAIVER, WITH A 30-DAY RIGHT TO OPT OUT. SECTIONS 13 AND 14
+            LIMIT OUR LIABILITY AND RELEASE CLAIMS ARISING FROM DISPUTES WITH BUILDERS AND OTHER
+            THIRD PARTIES.
+          </strong>
+        </p>
+        <p>
+          You accept these Terms and our{" "}
+          <Link href="/privacy" className={linkClass}>
+            Privacy Policy
+          </Link>{" "}
+          when you check an acceptance box, create an account, make a purchase, submit a builder or
+          partner connection request, or otherwise use the Service. If you do not agree, do not use
+          the Service.
         </p>
       </LegalSection>
 
-      <LegalSection title="2. Description of Service &amp; Non-Professional Disclaimers">
+      <LegalSection title="2. What LotFoundry Is, and What It Is Not">
         <p>
-          LotFoundry provides automated software tools for accessory dwelling unit (ADU) feasibility
-          planning, including parcel visualization, zoning estimations, cost and rental income
-          projections, generative AI concept imagery, AI-assisted Project Briefs, Certificates of
-          Feasibility, and a contractor lead-matching marketplace.
+          LotFoundry provides early-stage software tools for accessory dwelling unit (ADU) and junior
+          ADU feasibility planning, including parcel visualization, configurable unit footprints,
+          zoning and setback signals, cost, rent, payback, and financing estimates, optional
+          AI-generated concept imagery and AI Project Briefs, city rule guides, Certificates of
+          Feasibility, a builder lead marketplace, and optional partner referrals.
         </p>
         <p>
-          <strong>NOT PROFESSIONAL ARCHITECTURAL, ENGINEERING, OR LEGAL ADVICE:</strong> LotFoundry
-          is an informational and technology planning platform only. LotFoundry is NOT a licensed
-          architect, professional engineer, land surveyor, general contractor, real estate broker,
-          lender, or legal advisor. All feasibility scores, setback overlays, financial estimates,
-          and permit track designations are algorithmic approximations derived from third-party and
-          public data models.
+          <strong>PLANNING ESTIMATES ONLY.</strong> All feasibility, dimensional, zoning, setback,
+          permitting, cost, rent, payback, and financing outputs of the Service, including those in a
+          paid Certificate of Feasibility or a city guide, are illustrative planning estimates.
+          VeriShare LLC is a software company. Neither LotFoundry nor VeriShare is a licensed
+          architect, engineer, land surveyor, general or specialty contractor, home improvement
+          salesperson, real estate broker, appraiser, lender, attorney, accountant, financial advisor,
+          or government permitting authority. Nothing on or generated by the Service is:
         </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            <strong>A boundary survey.</strong> Mapped parcel lines, aerial imagery, building
+            footprints, slopes, and 3D envelopes are approximations. They do not establish legal
+            property lines, buildable area, or easements.
+          </li>
+          <li>
+            <strong>A permit, entitlement, or zoning determination.</strong> Lot coverage, height,
+            setback, fire, coastal, hillside, historic, septic, utility, and state or local ADU rules
+            vary by jurisdiction and change over time. Where local parcel or zoning data is
+            unavailable, the Studio uses planning assumptions. Only the responsible planning,
+            building, fire, coastal, or health agency can decide whether an ADU is buildable on your
+            property.
+          </li>
+          <li>
+            <strong>A contractor quote, bid-ready scope, or construction document.</strong> Cost
+            estimates are modeled allowances, not local bids, and may exclude land, site-specific
+            work (such as grading, trenching, utility connections, demolition, foundations, or
+            retaining walls), financing costs, and conversions. Neither the Studio nor a Certificate
+            of Feasibility is a construction scope, specification, or stamped plan set.
+          </li>
+          <li>
+            <strong>An appraisal, investment guarantee, or loan offer.</strong> Rent, operating
+            expense, payback, and loan scenarios use public benchmarks and modeled assumptions. They
+            ignore or simplify taxes, reassessment, appreciation, and local rental restrictions. We do
+            not guarantee any rent, return, payback period, or loan approval.
+          </li>
+        </ul>
         <p>
-          <strong>NO OFFICIAL STATUS OF CERTIFICATES:</strong> Any document generated by the Service,
-          including the “Certificate of Feasibility,” is an automated planning summary for preliminary
-          evaluation. It does NOT constitute an official municipal building permit, zoning variance,
-          entitlement approval, certified boundary survey, or stamped architectural/engineering plan.
-          You must independently verify all information with certified design professionals, licensed
-          surveyors, and local municipal planning officials before making financial, design, permit,
-          or construction commitments.
+          <strong>You must verify independently.</strong> Before any design, permit, contracting,
+          purchase, or financing decision, confirm parcel boundaries, easements, utilities, zoning,
+          fees, costs, and financial assumptions with your local jurisdiction and qualified, licensed
+          professionals.
         </p>
       </LegalSection>
 
       <LegalSection title="3. Eligibility &amp; Authority">
         <p>
-          You must be at least 18 years old and capable of forming a binding legal contract to use the
-          Service. If you use the Service on behalf of a company, partnership, or other legal entity
-          (such as a general contracting or architectural firm), you represent and warrant that you
-          have the legal authority to bind that entity to these Terms.
+          You must be at least 18 years old and able to form a binding contract to use the Service.
+          If you use the Service on behalf of a company or other legal entity (such as a contracting
+          or architectural firm), you represent that you have authority to bind that entity to these
+          Terms.
         </p>
       </LegalSection>
 
       <LegalSection title="4. User Accounts &amp; Security">
         <p>
-          You must provide true, accurate, and complete information when creating an account. You
-          are solely responsible for maintaining the confidentiality of your credentials and for all
-          activities occurring under your account. You agree to notify{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            support@lotfoundry.net
-          </a>{" "}
-          immediately of any unauthorized account access. You may delete your account at any time via
-          Settings or through our public{" "}
-          <Link href="/delete-account" className="font-medium text-lot-orange-ink underline">
+          Some features, including saving scenarios, further address lookups, purchases, builder
+          accounts, and connection requests, require an account. You must provide true, accurate,
+          and complete information and keep it current. You are responsible for keeping your
+          credentials confidential and for all activity under your account. Notify <SupportEmail />{" "}
+          immediately of any unauthorized access. You may export your data or delete your account at
+          any time in Settings or on our public{" "}
+          <Link href="/delete-account" className={linkClass}>
             Delete Account
           </Link>{" "}
-          surface.
+          page, which works without installing a mobile app.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Purchases, Fees &amp; Digital Goods">
+      <LegalSection title="5. Purchases, Pricing, Refunds &amp; Chargebacks">
         <p>
-          <strong>One-Time Transactions:</strong> Web purchases (including the $29 Certificate of
-          Feasibility and builder lead credits) are processed via Stripe Checkout. Mobile purchases
-          within our native applications are processed via Google Play Billing or Apple In-App
-          Purchase. All purchases are one-time transactional fees for immediately delivered digital
-          content or credits, NOT auto-renewing subscriptions.
+          <strong>One-time digital purchases.</strong> Exploring the Studio is free. Optional paid
+          items include the Certificate of Feasibility (currently $29 on the web, or the price shown
+          in the app before checkout) and builder lead credits. Web purchases are processed by Stripe
+          Checkout; purchases in our store apps use Google Play Billing or Apple In-App Purchase. All
+          purchases are one-time charges for digital content or credits, not auto-renewing
+          subscriptions. We do not store full payment card numbers.
         </p>
         <p>
-          <strong>Refunds &amp; Credits:</strong> Because digital feasibility reports and certificates are
-          generated and delivered immediately upon payment, sales are final and non-refundable, except
-          where required by applicable law or platform store policies. If you experience a technical
-          delivery defect, contact{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            support@lotfoundry.net
-          </a>
-          . Demo environments may grant scenario unlocks without payment for evaluation purposes.
-        </p>
-      </LegalSection>
-
-      <LegalSection title="6. Builder Lead Marketplace &amp; Independent Contractor Disclaimer">
-        <p>
-          <strong>Independent Third Parties:</strong> The LotFoundry marketplace allows homeowners to
-          voluntarily request connections with participating builders, who pay credits to unlock lead
-          contact details. Builders and homeowners are independent parties. LotFoundry is NOT an agent,
-          partner, employer, contractor, or joint venturer of any builder or homeowner.
+          <strong>Price shown is the total price.</strong> The price displayed before checkout
+          includes every mandatory fee LotFoundry charges. Only government-imposed taxes, where they
+          apply, may be added.
         </p>
         <p>
-          <strong>No Endorsement, Licensing, or Insurance Verification:</strong> LotFoundry does not
-          endorse, verify, warrant, bond, or insure any builder or contractor using the platform. We do
-          not verify that contractors possess active licenses, adequate general liability coverage, or
-          workers’ compensation insurance. Homeowners are solely responsible for conducting due
-          diligence, verifying active state contractor licenses, checking references, and executing
-          appropriate construction contracts.
+          <strong>Refunds and credits.</strong> Certificates are generated and delivered immediately,
+          and lead credits are usable immediately, so sales are final once delivered or redeemed,
+          except where applicable law or the Google Play or Apple App Store refund policy requires
+          otherwise. Lead credits have no cash value and cannot be transferred or exchanged for cash.
+          If you experience a delivery defect or billing issue, contact <SupportEmail />. Demo
+          environments may grant unlocks without payment; those carry no monetary value or ongoing
+          entitlement.
         </p>
         <p>
-          <strong>Release of Claims:</strong> To the fullest extent permitted by law, you hereby
-          release, waive, and forever discharge LotFoundry, its officers, directors, and employees
-          from any and all claims, disputes, damages, liabilities, losses, property damage, personal
-          injury, mechanics’ liens, cost overruns, or breaches of contract arising out of or related to
-          any transaction, interaction, or construction project between a homeowner and a builder.
+          <strong>Chargebacks and reversed payments.</strong> If a payment is refunded, reversed, or
+          charged back through Stripe, Google Play, or Apple, we may revoke access to the related
+          Certificate (including its saved link), deduct the related lead credits, and suspend or
+          close accounts involved in payment abuse.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Generative AI Features &amp; User Photos">
+      <LegalSection title="6. Builder Lead Marketplace">
         <p>
-          <strong>Illustrative &amp; Experimental:</strong> AI-generated concept images and AI Project
-          Briefs are generated using third-party artificial intelligence models (OpenAI). AI outputs
-          are speculative and illustrative only. They may contain architectural inaccuracies,
-          hallucinations, structural impossibilities, or zoning misinterpretations. You agree never to
-          use AI concept imagery as structural drawings, framing specifications, or construction
-          blueprints.
+          <strong>How it works.</strong> Homeowners decide whether to share a project with matched
+          builders. Builders see a redacted preview and pay credits to unlock a homeowner&rsquo;s
+          contact details. Builders and homeowners are independent parties. LotFoundry is not an
+          agent, partner, employer, contractor, home improvement salesperson, or joint venturer of any
+          builder or homeowner, and is never a party to any contract between them.
         </p>
         <p>
-          <strong>Photo Rights &amp; Restrictions:</strong> When uploading photos for style-match
-          processing, you represent and warrant that you own the property or have obtained express
-          written permission from the property owner to photograph and upload the parcel. You agree not
-          to upload images depicting identifiable minors, individuals without consent, or proprietary
-          designs. Photos are stripped of EXIF/GPS metadata in your browser prior to transmission.
+          <strong>No verification or endorsement.</strong> LotFoundry does not endorse, verify,
+          warrant, bond, or insure any builder, and does not run background checks. Any license
+          information shown comes from the builder. We do not verify that a builder holds an active
+          license, bond, liability insurance, or workers&rsquo; compensation coverage, and we do not
+          guarantee the quality of any builder&rsquo;s work.
+        </p>
+        <p>
+          <strong>Homeowners: check before you hire.</strong> Before signing a contract or paying
+          anyone, verify the contractor&rsquo;s license status and classifications, and the Home
+          Improvement Salesperson registration of anyone who solicits or negotiates the contract,
+          with the California Contractors State License Board at{" "}
+          <a
+            href="https://www.cslb.ca.gov"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            cslb.ca.gov
+          </a>{" "}
+          or 800-321-2752 (or your state&rsquo;s licensing board). In California, home improvement
+          contracts generally must be in writing and include the notices the Business and
+          Professions Code requires, including a three-day right to cancel and a mechanics lien
+          warning, and changes must be made by signed change order.
+        </p>
+        <p>
+          <strong>Builders: your obligations.</strong> If you use a builder account, you represent and
+          agree that: (a) you hold and will maintain every license, bond, and insurance policy the law
+          requires for the work you offer, and anyone who solicits, sells, negotiates, or executes
+          home improvement contracts for you is properly registered or exempt under California
+          Business and Professions Code §§ 7150–7168; (b) you will use unlocked homeowner details only
+          to communicate with that homeowner about the project they submitted, and you will never
+          sell, share, or transfer them; (c) you will comply with the Telephone Consumer Protection
+          Act, Do Not Call rules, state telemarketing laws, and anti-spam laws, and honor opt-out
+          requests made by any reasonable means within the time the law requires; and (d) you
+          understand that lead quality is not guaranteed and an unlocked lead may not result in a
+          contract.
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Acceptable Use &amp; Anti-Scraping">
+      <LegalSection title="7. Partner Referrals &amp; Our Role">
         <p>
-          You agree not to: (a) use the Service for any unlawful purpose or in violation of local zoning
-          ordinances; (b) decompile, reverse engineer, or disassemble any part of the Service; (c)
-          scrape, crawl, harvest, or extract bulk parcel boundaries, 3D CAD geometries, cost formulas,
-          or zoning datasets using automated tools, bots, or scripts; (d) bypass or tamper with security
-          controls, billing gateways, or lead-redaction boundaries; or (e) transmit malware, spam, or
-          infringing content.
+          We may offer homeowners the option to send a project to a third-party referral partner
+          instead of, or in addition to, our builder marketplace. If we do, the consent you give will
+          name the partner and say what is sent, and we will disclose if the partner may pay us a
+          referral fee. A referral fee is paid by the partner and does not change what you pay. The
+          partner handles your information under its own terms and privacy policy and may contact
+          you directly.
+        </p>
+        <p>
+          Any statement that a partner&rsquo;s or builder&rsquo;s contractors are screened, vetted,
+          or licensed is that party&rsquo;s own statement. LotFoundry does not screen, background
+          check, endorse, supervise, or take responsibility for any partner or any contractor or
+          professional it introduces.
+        </p>
+        <p>
+          In every case, LotFoundry acts only as a software publisher passing along an introduction
+          you direct. We do not solicit, sell, negotiate, or execute home improvement or design
+          contracts, and our role ends when your introduction is sent.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Intellectual Property &amp; User Content">
+      <LegalSection title="8. Generative AI Features &amp; User Photos">
         <p>
-          The Service, its 3D modeling code, algorithms, visual design, trademarks, and documentation
-          are the exclusive property of LotFoundry LLC and its licensors. You retain ownership of data
-          and photos you upload. You grant LotFoundry a non-exclusive, worldwide, royalty-free license
-          to host, process, reproduce, and transmit your data solely to operate, secure, and deliver the
-          Service and facilitate connections you direct. Any suggestions, ideas, or feedback you submit
-          may be used by LotFoundry without compensation or obligation to you.
+          <strong>Illustrative only.</strong> AI-generated concept images and AI Project Briefs are
+          produced by third-party AI models (currently OpenAI). AI outputs may contain inaccuracies,
+          structural impossibilities, or zoning errors. They are not architectural drawings,
+          engineering calculations, setback verification, or permit-ready designs, and you must not
+          use them as construction documents.
+        </p>
+        <p>
+          <strong>Photos.</strong> Style-match is optional; declining it does not block the rest of
+          the Studio. You must agree before a prepared photo is sent to our AI provider. Photos are
+          downscaled and stripped of EXIF and GPS metadata in your browser first, and we do not store
+          the original photo on our servers. You represent that you own the property or have the
+          owner&rsquo;s permission to photograph and upload it. Do not upload images of identifiable
+          people without their consent, minors, sensitive personal information, or plans or designs
+          you do not have rights to.
+        </p>
+        <p>
+          <strong>AI transparency.</strong> We use AI providers through their APIs; we do not
+          develop, train, or fine-tune AI models, and we do not use your photos or personal
+          information to train AI models. Generated images may carry provenance data or watermarks
+          added by the provider, and we deliver them without removing that data. You agree not to
+          remove or alter it, and not to present an AI concept as a photograph of real construction
+          or as a permit-ready plan.
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Third-Party Data &amp; GIS Accuracy">
+      <LegalSection title="9. Acceptable Use">
+        <p>
+          You agree not to: (a) use the Service unlawfully or in violation of local zoning
+          ordinances; (b) access, or attempt to access, any account, function, or data you are not
+          authorized to use; (c) decompile, reverse engineer, or disassemble any part of the Service;
+          (d) scrape, crawl, or extract parcel boundaries, 3D geometry, cost formulas, zoning
+          datasets, or builder directory data in bulk with automated tools, except search engine
+          indexing and AI assistant citation that our robots.txt and llms.txt files permit; (e)
+          bypass or tamper with security controls, app attestation, rate limits, billing, or
+          lead-redaction boundaries; (f) resell Certificates, Studio outputs, or personal data; or
+          (g) transmit malware, spam, or defamatory or infringing content.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="10. Intellectual Property, Certificates &amp; Feedback">
+        <p>
+          The Service, its 3D modeling code, algorithms, estimation models, city guides, visual
+          design, trademarks (including LotFoundry and Lot Foundry), and documentation are owned by
+          VeriShare LLC or its licensors. You keep ownership of data and photos you upload. You grant
+          us a non-exclusive, worldwide, royalty-free license to host, process, reproduce, and
+          transmit them only to operate, secure, and deliver the Service and the introductions you
+          direct.
+        </p>
+        <p>
+          When you buy a Certificate of Feasibility, you receive a personal, non-exclusive,
+          non-transferable license to view, print, save, export, and share it for the property it
+          covers. If you share a Certificate with anyone (including a builder, lender, partner, or
+          buyer), you must tell them it is an early planning estimate subject to Section 2. No third
+          party may rely on a Certificate as a survey, appraisal, permit, loan approval, or guarantee.
+        </p>
+        <p>
+          We may use any suggestions or feedback you send without compensation or obligation to you.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="11. Third-Party Data &amp; GIS Accuracy">
         <p>
           Parcel lot boundaries, zoning overlays, satellite imagery, building footprints, and rental
           benchmarks are aggregated from third parties (including Regrid, Google Maps, US Census Bureau,
@@ -182,110 +318,184 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="11. Disclaimer of Warranties">
+      <LegalSection title="12. Disclaimer of Warranties">
         <p>
-          THE SERVICE IS PROVIDED “AS IS” AND “AS AVAILABLE” WITHOUT WARRANTIES OF ANY KIND, EITHER
-          EXPRESS, IMPLIED, OR STATUTORY. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LOTFOUNDRY
-          EXPRESSLY DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF
-          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT. WE
-          DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, ACCURATE, OR ERROR-FREE.
+          THE SERVICE, INCLUDING ALL ESTIMATES, CERTIFICATES, CITY GUIDES, AI CONCEPTS, BUILDER
+          LISTINGS, AND REFERRALS, IS PROVIDED “AS IS” AND “AS AVAILABLE” WITHOUT WARRANTIES OF ANY
+          KIND, EITHER EXPRESS, IMPLIED, OR STATUTORY. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE
+          LAW, WE EXPRESSLY DISCLAIM ALL WARRANTIES, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT. WE DO NOT WARRANT
+          THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, ACCURATE, OR ERROR-FREE.
         </p>
       </LegalSection>
 
-      <LegalSection title="12. Limitation of Liability &amp; Monetary Cap">
+      <LegalSection title="13. Limitation of Liability">
         <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL LOTFOUNDRY LLC, ITS DIRECTORS,
-          EMPLOYEES, PARTNERS, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL,
-          PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, USE,
-          GOODWILL, PERMIT DELAYS, INCREASED CONSTRUCTION COSTS, OR ADVERSE FINANCIAL OUTCOMES ARISING
-          FROM YOUR USE OF THE SERVICE.
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW, VERISHARE LLC AND ITS MEMBERS, MANAGERS, OFFICERS,
+          EMPLOYEES, AND AGENTS (THE “LOTFOUNDRY PARTIES”) WILL NOT BE LIABLE FOR ANY INDIRECT,
+          INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, OR FOR LOST PROFITS,
+          LOST RENTAL INCOME, LOST DATA, PERMIT DELAYS OR DENIALS, CONSTRUCTION DELAYS, COST
+          OVERRUNS, DEFECTIVE CONSTRUCTION, MECHANICS LIENS, OR DECISIONS MADE IN RELIANCE ON
+          ESTIMATES OR CERTIFICATES, OR FOR THE ACTS OR OMISSIONS OF BUILDERS, REFERRAL PARTNERS, OR
+          OTHER THIRD PARTIES.
         </p>
         <p>
-          <strong>AGGREGATE LIABILITY CAP:</strong> IN NO EVENT SHALL LOTFOUNDRY’S TOTAL AGGREGATE
-          LIABILITY ARISING OUT OF OR RELATING TO THESE TERMS OR THE SERVICE EXCEED THE GREATER OF: (A)
-          ONE HUNDRED US DOLLARS ($100.00 USD), OR (B) THE TOTAL AMOUNTS PAID BY YOU TO LOTFOUNDRY IN
-          THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+          <strong>AGGREGATE LIABILITY CAP:</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE
+          LOTFOUNDRY PARTIES&rsquo; TOTAL LIABILITY FOR ALL CLAIMS ARISING OUT OF OR RELATING TO THESE
+          TERMS OR THE SERVICE WILL NOT EXCEED THE GREATER OF (A) ONE HUNDRED US DOLLARS ($100.00) OR
+          (B) THE TOTAL AMOUNT YOU PAID TO LOTFOUNDRY IN THE TWELVE (12) MONTHS BEFORE THE CLAIM.
         </p>
-      </LegalSection>
-
-      <LegalSection title="13. Indemnification">
         <p>
-          You agree to defend, indemnify, and hold harmless LotFoundry LLC and its officers, directors,
-          employees, and contractors from and against any claims, liabilities, damages, losses, and
-          expenses (including reasonable attorneys’ fees) arising out of or in any way connected with:
-          (a) your access to or use of the Service; (b) your violation of these Terms; (c) any content
-          or photos you upload; or (d) any dispute, contract, or construction project between you and any
-          third-party homeowner or builder introduced via the Service.
+          <strong>What these limits do not cover.</strong> Nothing in these Terms excludes or limits
+          liability for fraud, willful injury to the person or property of another, gross negligence,
+          or violation of law, or any other liability that cannot be excluded or limited under
+          applicable law, including California Civil Code § 1668.
         </p>
       </LegalSection>
 
-      <LegalSection title="14. Dispute Resolution: Binding Arbitration &amp; Class Action Waiver">
+      <LegalSection title="14. Release of Claims Involving Third Parties">
         <p>
-          <strong>PLEASE READ THIS SECTION CAREFULLY. IT AFFECTS YOUR LEGAL RIGHTS, INCLUDING YOUR RIGHT
-          TO FILE A LAWSUIT IN COURT AND HAVE A JURY HEAR YOUR CLAIMS.</strong>
+          Builders, referral partners, contractors, design professionals, lenders, other users, and
+          government agencies are not under our control. Any claim you have for their acts or
+          omissions is a claim against them. To the fullest extent permitted by law, and subject to
+          Section 13, you release the LotFoundry Parties from all claims, demands, damages, and
+          losses, known or unknown, arising out of or connected with any dispute, communication,
+          contract, construction project, defect, lien, injury, or permitting outcome between you and
+          any builder, referral partner, or contractor or professional introduced through the
+          Service.
         </p>
         <p>
-          <strong>Informal Negotiation:</strong> Before initiating arbitration, you and LotFoundry agree
-          to attempt to resolve any dispute, claim, or controversy informally by contacting{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            support@lotfoundry.net
-          </a>{" "}
-          for at least thirty (30) days.
+          <strong>California Civil Code § 1542 waiver.</strong> For the release in this Section, you
+          waive the protection of California Civil Code § 1542, which says:{" "}
+          <strong>
+            “A GENERAL RELEASE DOES NOT EXTEND TO CLAIMS THAT THE CREDITOR OR RELEASING PARTY DOES NOT
+            KNOW OR SUSPECT TO EXIST IN HIS OR HER FAVOR AT THE TIME OF EXECUTING THE RELEASE AND
+            THAT, IF KNOWN BY HIM OR HER, WOULD HAVE MATERIALLY AFFECTED HIS OR HER SETTLEMENT WITH THE
+            DEBTOR OR RELEASED PARTY.”
+          </strong>{" "}
+          You intend this release to cover unknown claims of that kind, and you waive any similar
+          law of any other state.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="15. Indemnification">
+        <p>
+          To the extent permitted by law, you agree to defend, indemnify, and hold harmless the
+          LotFoundry Parties from third-party claims, liabilities, fines, damages, losses, and
+          expenses (including reasonable attorneys&rsquo; fees) arising out of: (a) your breach of
+          these Terms; (b) your violation of any law, including, for builders, telemarketing, privacy,
+          and contractor licensing laws; (c) content or photos you submit; (d) your sharing of a
+          Certificate with any third party; or (e) any contract or dispute between you and a builder,
+          referral partner, contractor, or homeowner introduced through the Service.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="16. Dispute Resolution: Arbitration &amp; Class Action Waiver">
+        <p>
+          <strong>
+            PLEASE READ THIS SECTION CAREFULLY. IT AFFECTS YOUR LEGAL RIGHTS, INCLUDING YOUR RIGHT TO
+            FILE A LAWSUIT IN COURT AND HAVE A JURY HEAR YOUR CLAIMS.
+          </strong>
         </p>
         <p>
-          <strong>Binding Arbitration:</strong> If the dispute cannot be resolved informally, any
-          dispute, claim, or controversy arising out of or relating to these Terms or the Service shall
-          be determined by final and binding individual arbitration administered by the American
-          Arbitration Association (“AAA”) under its Consumer Arbitration Rules, before a single neutral
-          arbitrator. Judgment on the award rendered by the arbitrator may be entered in any court having
+          <strong>Informal resolution first.</strong> Before starting arbitration or a small claims
+          case, the party with a dispute must send the other a written notice describing it and the
+          relief requested (to us at <SupportEmail /> or 1150 E St, Unit 202, San Diego, CA 92101)
+          and try in good faith to resolve it for thirty
+          (30) days.
+        </p>
+        <p>
+          <strong>Binding individual arbitration.</strong> Except as provided below, any dispute,
+          claim, or controversy arising out of or relating to these Terms, our Privacy Policy, or the
+          Service will be resolved by final and binding individual arbitration administered by the
+          American Arbitration Association (“AAA”) before a single neutral arbitrator, under its
+          Consumer Arbitration Rules if you use the Service as an individual consumer, or its
+          Commercial Arbitration Rules if you use it for a business (such as a builder account). The
+          Federal Arbitration Act governs this Section. Fees are allocated as the applicable AAA
+          rules provide. Hearings may take place by video, by telephone, on written submissions, or in
+          person in the county where you live. Judgment on the award may be entered in any court with
           jurisdiction.
         </p>
         <p>
-          <strong>CLASS ACTION WAIVER:</strong> YOU AND LOTFOUNDRY AGREE THAT EACH MAY BRING CLAIMS
-          AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY, AND NOT AS A PLAINTIFF OR CLASS
-          MEMBER IN ANY PURPORTED CLASS, COLLECTIVE, CONSOLIDATED, OR REPRESENTATIVE PROCEEDING. The
-          arbitrator may not consolidate more than one person’s claims.
+          <strong>Exceptions for both of us.</strong> Either party may bring an individual claim in
+          small claims court, or ask a court for injunctive relief to stop infringement or misuse of
+          intellectual property or confidential information.
         </p>
         <p>
-          <strong>Jury Trial Waiver:</strong> YOU AND LOTFOUNDRY HEREBY KNOWINGLY AND VOLUNTARILY WAIVE
-          ANY CONSTITUTIONAL OR STATUTORY RIGHT TO A JURY TRIAL IN ANY PROCEEDING ARISING OUT OF OR
-          RELATING TO THESE TERMS OR THE SERVICE.
+          <strong>CLASS ACTION AND JURY WAIVER:</strong> YOU AND LOTFOUNDRY EACH MAY BRING CLAIMS
+          AGAINST THE OTHER ONLY IN AN INDIVIDUAL CAPACITY, AND NOT AS A PLAINTIFF OR CLASS MEMBER IN
+          ANY PURPORTED CLASS, COLLECTIVE, CONSOLIDATED, OR REPRESENTATIVE PROCEEDING, AND YOU AND
+          LOTFOUNDRY WAIVE ANY RIGHT TO A JURY TRIAL. The arbitrator may not consolidate more than one
+          person&rsquo;s claims. If this waiver is found unenforceable for a particular claim, that
+          claim will proceed in court, not in class arbitration.
+        </p>
+        <p>
+          <strong>Public injunctive relief.</strong> Nothing in these Terms waives your right to seek
+          public injunctive relief under California&rsquo;s Unfair Competition Law, False
+          Advertising Law, or Consumers Legal Remedies Act. Any such request will be severed from the
+          arbitration and decided by a state or federal court in San Diego County, California, after
+          the individual claims in arbitration are resolved, and that court proceeding will be stayed
+          until then.
+        </p>
+        <p>
+          <strong>Many similar claims.</strong> If 25 or more similar demands are filed by or with the
+          help of the same counsel, the AAA&rsquo;s mass arbitration supplementary rules may apply.
+          Even then, no ruling in another person&rsquo;s case will bind you unless you had notice and
+          an opportunity to be heard, you keep the discovery rights the applicable AAA rules provide,
+          and any right to challenge or appeal an award applies equally to you and to us.
+        </p>
+        <p>
+          <strong>30-day right to opt out.</strong> You may opt out of this arbitration agreement by
+          emailing <SupportEmail /> within thirty (30) days after you first accept these Terms (or
+          this version of them) with your name, your account email, and a clear statement that you
+          opt out of arbitration. Opting out does not affect any other part of these Terms.
         </p>
       </LegalSection>
 
-      <LegalSection title="15. Governing Law &amp; Venue">
+      <LegalSection title="17. Governing Law, Venue &amp; Severability">
         <p>
-          These Terms and any dispute arising hereunder shall be governed by and construed in
-          accordance with the laws of the State of Delaware, without giving effect to any principles of
-          conflicts of law. For any action not subject to arbitration (such as small claims court or
-          injunctive relief for intellectual property infringement), the parties consent to the
-          exclusive jurisdiction and venue of state and federal courts located in the United States.
+          These Terms are governed by the laws of the State of California, without regard to its
+          conflict-of-law rules, and by the Federal Arbitration Act. Any court proceeding permitted
+          by these Terms (other than an individual small claims case, which may be filed in your
+          county) will be brought exclusively in the state or federal courts located in San Diego
+          County, California. If any provision of these Terms is held invalid or unenforceable, it
+          will be enforced to the maximum extent permitted or severed, and the rest of these Terms
+          will remain in effect.
         </p>
       </LegalSection>
 
-      <LegalSection title="16. Termination &amp; Survival">
+      <LegalSection title="18. Termination &amp; Survival">
         <p>
-          We reserve the right to suspend or terminate your account or access to the Service at our sole
-          discretion, without notice, for conduct that violates these Terms or harms the Service, other
-          users, or third parties. Sections 2, 5, 6, 9, 11, 12, 13, 14, 15, and 17 shall survive any
-          termination of these Terms.
+          We may suspend or terminate your account or access to the Service, with or without notice,
+          for conduct that violates these Terms or harms the Service, other users, or third parties.
+          Sections 2, 5, 6, 7, 10, and 12 through 20 survive any termination of these Terms.
         </p>
       </LegalSection>
 
-      <LegalSection title="17. Contact Information">
+      <LegalSection title="19. Changes to These Terms">
         <p>
-          If you have questions regarding these Terms, contact us at:{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            support@lotfoundry.net
-          </a>
-          , or for privacy inquiries at:{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            privacy@lotfoundry.net
-          </a>
-          .
+          We may update these Terms. We will change the effective date and version above, and for
+          material changes, including changes to dispute resolution, liability limits, or data
+          sharing, we will notify you on the Service or by email and ask you to accept the updated
+          Terms before you continue using your account.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="20. California Consumer Notice &amp; Contact">
+        <p>
+          The Service is provided by VeriShare LLC, doing business as LotFoundry, 1150 E St, Unit
+          202, San Diego, CA 92101. Phone: (419) 669-6663. Email: <SupportEmail />. Prices for
+          optional paid items are shown before checkout. For questions or complaints about the
+          Service, contact us at <SupportEmail /> or at the address above.
+        </p>
+        <p>
+          Under California Civil Code § 1789.3, California residents may also contact the Complaint
+          Assistance Unit of the Division of Consumer Services of the California Department of
+          Consumer Affairs in writing at 1625 North Market Blvd., Suite N 112, Sacramento, CA 95834,
+          or by telephone at (916) 445-1254 or (800) 952-5210.
         </p>
         <p className="lf-caption text-lot-stone mt-2">
-          LotFoundry LLC · Legal &amp; Compliance
+          VeriShare LLC, dba LotFoundry · Legal &amp; Compliance
         </p>
       </LegalSection>
     </LegalPageShell>

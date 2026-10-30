@@ -15,13 +15,39 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph({ title, description, url: "/privacy" }),
 };
 
+const linkClass = "font-medium text-lot-orange-ink underline";
+
+function SupportEmail() {
+  return (
+    <a href="mailto:support@lotfoundry.net" className={linkClass}>
+      support@lotfoundry.net
+    </a>
+  );
+}
+
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
  * infrastructure (Firebase, Regrid, ATTOM, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4).
+ * The version in the kicker must match `CURRENT_LEGAL_CONSENT` in `lib/legal-consent.ts`.
  */
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" kicker="Last updated: October 22, 2026">
+    <LegalPageShell
+      title="Privacy Policy"
+      kicker="Effective October 30, 2026 · Version 2026-10-30"
+    >
+      <LegalSection title="Who We Are &amp; Scope">
+        <p>
+          This Privacy Policy explains how VeriShare LLC, a California limited liability company
+          doing business as LotFoundry (“LotFoundry”, “we”, “us”, or “our”), 1150 E St, Unit 202,
+          San Diego, CA 92101, collects, uses, shares, and protects personal
+          information through lotfoundry.net, the 3D Feasibility Studio, and our mobile apps
+          (including the LotFoundry Android app on Google Play and any iOS app). Sections 1 through 7
+          are also our notice at collection under the California Consumer Privacy Act, as amended by
+          the California Privacy Rights Act (“CCPA”).
+        </p>
+      </LegalSection>
+
       <LegalSection title="1. Information We Collect">
         <p>
           We collect personal information you provide directly and data generated through your use
@@ -40,7 +66,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Builder Profile Information:</strong> Business name, contractor license details,
-            phone numbers, service regions, and trade specializations.
+            phone numbers, service regions, trade specializations, and lead credit balances.
           </li>
           <li>
             <strong>Emailed Studio Links:</strong> When you request a 3D lot link, we save your email,
@@ -51,8 +77,10 @@ export default function PrivacyPage() {
             saved link and associated lead. The email is delivered by Resend (see Section 3).
           </li>
           <li>
-            <strong>Marketplace Connection Data:</strong> Direct contact requests submitted by
-            homeowners to connect with matched builders.
+            <strong>Marketplace &amp; Referral Requests:</strong> When you ask to connect with
+            builders (or with a referral partner, if offered), the name, email, optional phone and
+            message, exact property address, and project snapshot you choose to send, plus a record
+            of your request and its status.
           </li>
           <li>
             <strong>User Photos &amp; Visual Content:</strong> Optional photographs of your parcel or
@@ -64,26 +92,35 @@ export default function PrivacyPage() {
             Apple App Store (we never store raw payment card numbers on our servers).
           </li>
           <li>
+            <strong>Support &amp; Feedback:</strong> Messages you send us by email or through the
+            feedback form.
+          </li>
+          <li>
             <strong>Technical Telemetry &amp; Security Logs:</strong> IP address (truncated for analytics),
-            user agent, device characteristics, request timestamps, and tamper-evident legal consent
+            user agent, device characteristics, request timestamps, app attestation results (Firebase
+            App Check with reCAPTCHA Enterprise) used to block abuse, and tamper-evident legal consent
             receipts (recording accepted terms and privacy policy versions).
           </li>
         </ul>
+        <p>
+          We do not collect sensitive personal information to infer characteristics about you.
+        </p>
       </LegalSection>
 
       <LegalSection title="2. How We Use Your Information">
         <p>
           We process personal information to: (a) provide the 3D Feasibility Studio and calculate zoning
           and financial estimates; (b) authenticate your identity and safeguard your account; (c)
-          generate and deliver Certificates of Feasibility and AI Project Briefs; (d) facilitate
-          homeowner-directed lead unlocks for builders; (e) process payments and prevent fraud; (f)
-          respond to support inquiries; and (g) comply with legal and regulatory obligations.
+          generate and deliver Certificates of Feasibility and AI Project Briefs; (d) carry out
+          builder and referral connections you direct; (e) process payments, refunds, and chargebacks
+          and prevent fraud; (f) respond to support inquiries; and (g) comply with legal and
+          regulatory obligations.
         </p>
         <p>
-          <strong>We do not sell personal information for monetary or valuable consideration, nor do we
-          share personal information for cross-context behavioral advertising.</strong> Homeowner
-          contact information is disclosed to a builder only upon the homeowner’s affirmative,
-          intentional direction.
+          <strong>We do not sell personal information or share it for cross-context behavioral
+          advertising, as the CCPA defines those terms.</strong> Homeowner contact information is
+          disclosed to a builder or referral partner only at the homeowner&rsquo;s affirmative,
+          intentional direction (see Section 5).
         </p>
       </LegalSection>
 
@@ -94,8 +131,9 @@ export default function PrivacyPage() {
         </p>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Cloud Infrastructure:</strong> Hosted on <em>Google Cloud Platform / Firebase</em>{" "}
-            (Firebase Hosting, Cloud Functions, Firebase Authentication, and Cloud Firestore).
+            <strong>Cloud Infrastructure &amp; Security:</strong> Hosted on{" "}
+            <em>Google Cloud Platform / Firebase</em> (Firebase Hosting, Cloud Functions, Firebase
+            Authentication, Cloud Firestore, and Firebase App Check with Google reCAPTCHA Enterprise).
           </li>
           <li>
             <strong>Geocoding &amp; Spatial Data:</strong> Property searches use <em>Google Maps Platform</em>,{" "}
@@ -122,8 +160,8 @@ export default function PrivacyPage() {
             <strong>Artificial Intelligence (OpenAI):</strong> We use <em>OpenAI</em> API to process
             both: (1) optional user-uploaded photos to generate architectural style-match imagery, and
             (2) parcel metrics, zoning constraints, and feasibility parameters to synthesize the
-            narrative AI Project Brief and risk breakdown included with Certificates. OpenAI’s commercial
-            API terms guarantee that user inputs are not used to train AI models.
+            narrative AI Project Brief and risk breakdown included with Certificates. Under
+            OpenAI&rsquo;s API terms, inputs are not used to train its models by default.
           </li>
           <li>
             <strong>Address &amp; Zoning Interpretation (TypeSafe):</strong> We use <em>TypeSafe</em>{" "}
@@ -160,9 +198,14 @@ export default function PrivacyPage() {
           generate the Project Brief. Generating AI briefs or photos is never required to browse the
           studio.
         </p>
+        <p>
+          We do not develop, train, or fine-tune AI models, and we do not use your photos or personal
+          information to train AI models. Generated images are delivered without removing any
+          provenance data or watermark the AI provider adds.
+        </p>
       </LegalSection>
 
-      <LegalSection title="5. Marketplace Sharing: Consumer-Directed Disclosure">
+      <LegalSection title="5. Marketplace &amp; Referral Sharing: Consumer-Directed Disclosure">
         <p>
           Homeowner contact details (name, email, phone, and property address) are held in confidence
           and are never displayed publicly. Builders see only an anonymized, redacted preview (general
@@ -170,23 +213,34 @@ export default function PrivacyPage() {
           connection request.
         </p>
         <p>
-          When a homeowner submits a connection request and a builder unlocks the lead, the homeowner’s
-          contact information is disclosed solely at the consumer’s express direction, constituting an
-          exempt consumer-directed disclosure under applicable state privacy laws (including California
-          Civil Code § 1798.140(ad)(1)). Builders act as independent data controllers upon unlocking a
-          lead.
+          When a homeowner checks the consent box naming the recipients and submits a connection
+          request, and a builder pays to unlock the lead, the homeowner&rsquo;s contact information is
+          disclosed solely at the homeowner&rsquo;s intentional direction. Under the CCPA, a business
+          does not sell or share personal information when a consumer directs it to intentionally
+          disclose that information or to interact with one or more third parties (California Civil
+          Code § 1798.140(ad)(2)(A) and (ah)(2)(A); see also § 1798.140(s), defining
+          “intentionally interacts”). Builders act as independent businesses responsible for their
+          own handling of the information once they unlock a lead.
+        </p>
+        <p>
+          <strong>Referral partners.</strong> If we offer an option to send your project to a
+          third-party referral partner, the consent box will name that partner and what is sent, and
+          nothing is sent unless you check it and submit. The partner may pay us a referral fee,
+          which does not change what you pay, and it handles your information under its own privacy
+          policy. We keep a record of your consent and a referral number so the partner can report
+          the referral&rsquo;s status back to us for fee reconciliation.
         </p>
       </LegalSection>
 
       <LegalSection title="6. Data Retention &amp; Account Deletion">
         <p>
-          We retain personal information for as long as your account remains active. You may delete your
-          account at any time within your{" "}
-          <Link href="/settings" className="font-medium text-lot-orange-ink underline">
+          We retain personal information for as long as your account remains active. You may export
+          your data or delete your account at any time within your{" "}
+          <Link href="/settings" className={linkClass}>
             Account Settings
           </Link>{" "}
           or via our public{" "}
-          <Link href="/delete-account" className="font-medium text-lot-orange-ink underline">
+          <Link href="/delete-account" className={linkClass}>
             Delete Account
           </Link>{" "}
           portal (accessible without installing our mobile application).
@@ -197,23 +251,34 @@ export default function PrivacyPage() {
           fraud records for up to seven (7) years as required by applicable commercial and financial
           regulations, in de-identified or pseudonymized format.
         </p>
+        <p>
+          <strong>Information already shared at your direction.</strong> Deleting your LotFoundry
+          account does not delete information a builder already unlocked or a referral partner
+          already received. Contact that builder or partner directly to ask them to delete it, or
+          email <SupportEmail /> and we will forward your request to any referral partner that
+          received your project.
+        </p>
       </LegalSection>
 
       <LegalSection title="7. Cookies &amp; Local Storage">
         <p>
           We use strictly necessary session cookies and Firebase Authentication state to maintain your
-          login session and persist local studio preferences. We do not use behavioral retargeting.
-          Optional Google Ads conversion measurement may use advertising cookies after you opt in,
-          as described below.
+          login session, and browser local and session storage for Studio preferences, handoffs, and
+          your cookie choice. We do not use behavioral retargeting. Optional Google Ads conversion
+          measurement uses advertising cookies only after you opt in, as described below.
         </p>
         <p>
           <strong>Google Analytics 4 and Google Ads conversion measurement (Consent Gated):</strong>{" "}
-          We load these Google tags only if you affirmatively opt in. They use first-party measurement
-          cookies (including <code>_ga</code>, <code>_ga_*</code>, and <code>_gcl_*</code>) to measure
-          site usage, ad-driven visits, and purchases. Google Ads measurement receives a purchase value,
-          currency, and transaction identifier when a consented visitor completes a purchase. We do not
-          send your address, email, or feasibility results to Google. Advertising personalization stays
-          disabled. If you decline or take no action, no Google measurement scripts load or set cookies.
+          We load these Google tags only if you click Accept. They then set first-party measurement
+          cookies (including <code>_ga</code> and <code>_ga_*</code> for Analytics, and{" "}
+          <code>_gcl_au</code>, <code>_gcl_aw</code>, and <code>_gcl_dc</code> for Google Ads) to
+          measure site usage, ad-driven visits, and purchases. Google Consent Mode grants analytics
+          and ad storage but keeps ad personalization denied, so personalized advertising and
+          remarketing stay off. Google Ads receives a purchase value, currency, and transaction
+          identifier when a consented visitor completes a purchase. We do not send your address,
+          email, phone number, or feasibility results to Google. If you decline or take no action, no
+          Google measurement scripts load or set cookies. If you later withdraw consent, we disable
+          the tags and delete these cookies.
         </p>
         <p>
           <strong>Cloudflare Web Analytics (Not Consent Gated):</strong> Separately, we use Cloudflare
@@ -227,70 +292,65 @@ export default function PrivacyPage() {
         <CookiePreferences />
       </LegalSection>
 
-      <LegalSection title="8. Minor Protection &amp; Age-Assurance Governance">
+      <LegalSection title="8. Children &amp; Minors">
         <p>
-          The Service is strictly designed and intended for adults aged 18 and older. We do not
-          knowingly collect, maintain, or profile personal information from minors under the age of 18,
-          and the Service is rated 18+ in mobile application stores.
+          The Service is designed and intended for adults aged 18 and older, and it is rated for
+          adults in mobile app stores. We do not knowingly collect personal information from anyone
+          under 18, we do not sell or share personal information of consumers under 16, and we do not
+          target marketing to minors. We respect age signals provided by app stores and platforms.
         </p>
         <p>
-          In accordance with the <strong>Texas App Store Accountability Act (HB 18)</strong>,{" "}
-          <strong>California AB 1043</strong>, and the <strong>Amended COPPA Rule (2026)</strong>, we
-          respect platform age signals, prohibit targeted marketing to minors, and do not knowingly
-          collect data from children under 13. If we discover that personal data from a child under 13
-          has been inadvertently collected, it will be deleted immediately.
+          If we learn that we collected personal information from a child under 13, or from anyone
+          under 18, we will delete it. A parent or guardian who believes a minor has given us personal
+          information can contact <SupportEmail />.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. State Privacy Rights &amp; Appeals">
+      <LegalSection title="9. Your Privacy Rights">
         <p>
-          Depending on your state of residence (including California, Virginia, Colorado, Connecticut,
-          Texas, Utah, and Oregon), you may have the following statutory rights:
+          Depending on where you live (including California, Virginia, Colorado, Connecticut, Texas,
+          Utah, and Oregon), you may have the following rights. We honor them for all users:
         </p>
         <ul className="list-disc pl-6 space-y-1">
-          <li>The right to know and access personal information we hold about you.</li>
+          <li>The right to know and access the personal information we hold about you.</li>
           <li>The right to request deletion of your personal information.</li>
-          <li>The right to correct inaccurate personal data.</li>
-          <li>The right to receive a portable copy of your data.</li>
-          <li>The right to opt out of automated profiling or targeted advertising (which we do not conduct).</li>
-          <li>The right to freedom from discrimination for exercising your privacy rights.</li>
+          <li>The right to correct inaccurate personal information.</li>
+          <li>The right to receive a portable copy of your data (available in Settings).</li>
+          <li>
+            The right to opt out of the sale or sharing of personal information, targeted
+            advertising, or automated profiling. We do not do these, and you can withdraw consent to
+            Google measurement cookies at any time in Section 7.
+          </li>
+          <li>The right not to be discriminated against for exercising your privacy rights.</li>
         </ul>
         <p>
-          <strong>Submitting Requests &amp; Appeals:</strong> To exercise any privacy right, email{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            privacy@lotfoundry.net
-          </a>
-          . We will verify your identity and respond within forty-five (45) days. If your request is
-          denied, you have the right to appeal our decision by emailing{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            privacy@lotfoundry.net
-          </a>{" "}
-          with the subject line <em>“Privacy Appeal”</em>.
+          California residents may also ask, under California Civil Code § 1798.83, whether we have
+          disclosed personal information to third parties for their own direct marketing purposes.
+        </p>
+        <p>
+          <strong>Submitting requests &amp; appeals.</strong> Use the export and delete tools in
+          Settings, or email <SupportEmail />. You may use an authorized agent. We will verify your
+          identity and respond within forty-five (45) days. If we deny your request, you can appeal by
+          emailing <SupportEmail /> with the subject line <em>“Privacy Appeal”</em>.
         </p>
       </LegalSection>
 
       <LegalSection title="10. Policy Updates">
         <p>
-          We may update this Privacy Policy periodically to reflect changes in our legal obligations or
-          system architecture. We will post revised versions with an updated “Last updated” date. For
-          material changes, we will provide additional notice on our website or via email.
+          We may update this Privacy Policy to reflect changes in our legal obligations or systems.
+          We will post revised versions with a new effective date and version. For material changes,
+          we will notify you on the Service or by email and ask signed-in users to accept the update.
         </p>
       </LegalSection>
 
       <LegalSection title="11. Contact Information">
         <p>
-          For privacy inquiries or data requests, contact our Privacy Team at:{" "}
-          <a href="mailto:privacy@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            privacy@lotfoundry.net
-          </a>
-          . For general support:{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
-            support@lotfoundry.net
-          </a>
-          .
+          For privacy questions, data requests, or general support, contact <SupportEmail />, call
+          (419) 669-6663, or write to VeriShare LLC, dba LotFoundry, 1150 E St, Unit 202, San Diego,
+          CA 92101.
         </p>
         <p className="lf-caption text-lot-stone mt-2">
-          LotFoundry LLC · Legal &amp; Privacy Compliance
+          VeriShare LLC, dba LotFoundry · Legal &amp; Privacy Compliance
         </p>
       </LegalSection>
     </LegalPageShell>

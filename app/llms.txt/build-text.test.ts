@@ -128,7 +128,7 @@ describe("buildLlmsTxt", () => {
     const text = buildLlmsTxt();
 
     expect(text).toContain("support@lotfoundry.net");
-    expect(text).toContain("privacy@lotfoundry.net");
+    expect(text).toContain("Privacy requests: support@lotfoundry.net");
     expect(text).toContain('"Lot Foundry"');
   });
 
