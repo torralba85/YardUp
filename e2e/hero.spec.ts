@@ -116,21 +116,17 @@ test.describe("A lot more landing", () => {
       name: "Property illustration view",
     });
     await controls.getByRole("radio", { checked: true }).focus();
+    // Both parcel layers keep fixed alt text; the live figcaption names the scene.
+    const sceneCaption = page.locator("figcaption span[aria-live]");
     await page.keyboard.press("Home");
-    await expect(
-      page.getByRole("img", { name: /existing house and an empty yard/ }),
-    ).toBeVisible();
+    await expect(sceneCaption).toHaveText("Existing yard");
     await expect(
       controls.getByRole("radio", { name: /Today/ }),
     ).toBeChecked();
     await page.keyboard.press("ArrowRight");
-    await expect(
-      page.getByRole("img", { name: /proposed footprint outlined/ }),
-    ).toBeVisible();
+    await expect(sceneCaption).toHaveText("Illustrative footprint");
     await page.keyboard.press("ArrowRight");
-    await expect(
-      page.getByRole("img", { name: /orange backyard home/ }).first(),
-    ).toBeVisible();
+    await expect(sceneCaption).toHaveText("Backyard home concept");
     await expect(
       controls.getByRole("radio", { name: /The possibility/ }),
     ).toBeChecked();

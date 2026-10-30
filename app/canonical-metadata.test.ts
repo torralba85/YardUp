@@ -4,7 +4,7 @@ vi.mock("next/font/google", () => ({
   Space_Grotesk: () => ({ variable: "mock-space-grotesk" }),
   Manrope: () => ({ variable: "mock-manrope" }),
 }));
-import { metadata as homeMetadata } from "./page";
+import { canonicalUrl as homeCanonicalUrl, metadata as homeMetadata } from "./page";
 import { metadata as rootMetadata } from "./layout";
 import { metadata as studioMetadata } from "./(firebase)/studio/layout";
 import { metadata as aboutMetadata } from "./about/page";
@@ -75,8 +75,10 @@ describe("canonical metadata", () => {
     });
   }
 
-  it("uses the slash-form apex for the homepage canonical", () => {
-    expect(homeMetadata.alternates?.canonical).toBe("https://lotfoundry.net/");
+  it("renders the slash-form apex canonical itself instead of through metadata", () => {
+    // Metadata would print the bare origin; e2e/growth-audit.spec.ts checks the HTML.
+    expect(homeMetadata.alternates?.canonical).toBeNull();
+    expect(homeCanonicalUrl).toBe("https://lotfoundry.net/");
     expect(homeMetadata.openGraph?.url).toBe("https://lotfoundry.net/");
   });
 });

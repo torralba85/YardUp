@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import sitemap from "./sitemap";
+import { CURRENT_LEGAL_CONSENT } from "@/lib/legal-consent";
 
 describe("sitemap", () => {
-  it("uses stable LotFoundry canonical URLs without fabricated modification dates", () => {
+  it("uses stable LotFoundry canonical URLs with real content dates", () => {
     const entries = sitemap();
 
     expect(entries.map((entry) => entry.url)).toEqual([
@@ -14,6 +15,12 @@ describe("sitemap", () => {
       "https://lotfoundry.net/privacy",
       "https://lotfoundry.net/terms",
     ]);
-    expect(entries.every((entry) => entry.lastModified === undefined)).toBe(true);
+    // Fixed calendar dates, never the build time, so a deploy alone changes nothing.
+    for (const entry of entries) {
+      expect(entry.lastModified).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+    const byUrl = new Map(entries.map((entry) => [entry.url, entry.lastModified]));
+    expect(byUrl.get("https://lotfoundry.net/privacy")).toBe(CURRENT_LEGAL_CONSENT.privacyVersion);
+    expect(byUrl.get("https://lotfoundry.net/terms")).toBe(CURRENT_LEGAL_CONSENT.termsVersion);
   });
 });
