@@ -6,7 +6,7 @@ import { rentUrl } from "@/lib/adu/content";
 
 const TITLE = `ADU Rent in California by County (${HUD_FMR_YEAR} HUD Rents)`;
 const DESCRIPTION =
-  "What a California ADU can rent for: HUD's latest Fair Market Rents for 12 counties by bedroom count, the change from last year, and a planning range for a one-bedroom backyard home.";
+  "What a California ADU can rent for: HUD's latest Fair Market Rents for 12 counties by bedroom count, year-over-year changes, and one-bedroom rent ranges.";
 
 export const metadata: Metadata = {
   title: TITLE,
