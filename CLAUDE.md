@@ -224,7 +224,7 @@ Use the Obsidian MCP or the configured Obsidian vault whenever the task depends 
 raw/            immutable source documents; never modify or delete these
 wiki/           markdown knowledge base maintained by AI agents & humans
 wiki/index.md   table of contents, category index, and routing layer
-wiki/log.md     append-only chronological audit log of vault mutations
+wiki/log.md     newest-first audit log of vault mutations (new entries at the top)
 ```
 
 ### When to Update Obsidian
@@ -256,8 +256,8 @@ Update or create notes in Obsidian when:
 4. **The Dual Sync Invariant (Atomic Log & Index)**:
    Every creation, modification, or refactor of a `wiki/` page MUST be accompanied by:
    - Updating `wiki/index.md` with the new/modified link and a concise 1-sentence descriptor in the relevant section.
-   - Appending `wiki/log.md` with a timestamped entry:
-     `YYYY-MM-DD: [create|update|refactor] [[wiki/page-slug]] — brief explanation of what changed`.
+   - Adding a dated entry at the top of `wiki/log.md`, directly under the header (newest first, never at the bottom), with `node C:\Users\Andrew\.local\bin\vault-log-add.cjs wiki/log.md <entry.md>`:
+     `## YYYY-MM-DD — <agent> — <title>` followed by `- [create|update|refactor] [[page-slug]]: brief explanation of what changed`.
 5. **Bi-directional Linking**: Link related concepts using `[[wiki-links]]`. Every page must have at least one incoming link from `wiki/index.md` or a parent concept page (no orphans).
 6. **Factual Verification & Grounding**: Reference concrete files and code symbols for all technical claims. Explicitly note contradictions between legacy docs and active code. Mark speculative claims with `[Needs verification]`.
 7. **Never Modify `raw/`**: Raw inputs are permanent historical records. Process raw sources into synthesized `wiki/` articles.

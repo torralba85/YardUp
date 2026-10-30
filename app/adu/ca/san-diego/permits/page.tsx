@@ -20,7 +20,7 @@ function shortDate(iso: string): string {
 
 const TITLE = `San Diego ADU Permits by Neighborhood (${FROM_YEAR}-${TO_YEAR})`;
 const DESCRIPTION =
-  "How many ADUs the City of San Diego has permitted, by year and community planning area, from the City's own permit data: units, junior ADUs, bonus ADUs and income-restricted units.";
+  "City of San Diego ADU permit dataset: units permitted by year, neighborhood planning area, junior ADUs, bonus ADUs, and deed-restricted affordable units.";
 
 export const metadata: Metadata = {
   title: TITLE,
