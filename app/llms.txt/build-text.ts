@@ -161,7 +161,7 @@ ${demoLines()}
 ## Contact
 
 - Support: support@lotfoundry.net
-- Privacy requests: privacy@lotfoundry.net
+- Privacy requests: support@lotfoundry.net
 
 ## About
 

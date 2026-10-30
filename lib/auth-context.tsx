@@ -60,6 +60,12 @@ export interface UserProfile {
   role: UserRole;
   /** Account creation time, or `null` if unknown/pending. */
   createdAt: Date | null;
+  /**
+   * Whether the stored legal consent receipt matches the current terms and
+   * privacy policy version and confirms the user is 18+. `undefined` when the
+   * profile could not be read, so the re-acceptance gate stays closed.
+   */
+  legalConsentCurrent?: boolean;
 }
 
 /**
@@ -92,6 +98,7 @@ interface AuthContextType {
   changeAccountPassword: (currentPassword: string, nextPassword: string) => Promise<void>;
   sendVerification: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  acceptCurrentLegalTerms: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -237,6 +244,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName,
       role,
       createdAt: null,
+      // Unknown, not false: a failed profile read must not put an account
+      // that already accepted behind the re-acceptance gate.
+      legalConsentCurrent: undefined,
     };
 
     try {
@@ -278,12 +288,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, { merge: true });
         }
 
+        const recordedConsent = (shouldRecordLegalConsent && options.legalConsent)
+          ? options.legalConsent
+          : existingConsent;
+        const legalConsentCurrent = Boolean(
+          recordedConsent &&
+          recordedConsent.termsVersion === CURRENT_LEGAL_CONSENT.termsVersion &&
+          recordedConsent.privacyVersion === CURRENT_LEGAL_CONSENT.privacyVersion &&
+          recordedConsent.adultConfirmed === true,
+        );
+
         publishProfile({
           uid: u.uid,
           email: nextEmail,
           displayName: nextDisplayName,
           role: existingRole,
           createdAt: data.createdAt?.toDate?.() || null,
+          legalConsentCurrent,
         });
       } else {
         await setDoc(docRef, {
@@ -301,7 +322,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }, { merge: true });
-        publishProfile(fallbackProfile);
+        publishProfile({
+          ...fallbackProfile,
+          legalConsentCurrent: Boolean(
+            options.legalConsent &&
+            options.legalConsent.termsVersion === CURRENT_LEGAL_CONSENT.termsVersion &&
+            options.legalConsent.privacyVersion === CURRENT_LEGAL_CONSENT.privacyVersion &&
+            options.legalConsent.adultConfirmed === true,
+          ),
+        });
         return true;
       }
     } catch (error) {
@@ -617,6 +646,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.replace("/");
   };
 
+  /**
+   * Record re-acceptance of the current Terms and Privacy Policy for the
+   * signed-in user and refresh their profile state. Only the receipt and
+   * `updatedAt` are written, so accepting can never change the stored email,
+   * name, or role.
+   */
+  const acceptCurrentLegalTerms = async () => {
+    const current = auth.currentUser;
+    if (!current) throw new Error("You must be signed in.");
+    const docRef = doc(db, "users", current.uid);
+
+    try {
+      await setDoc(
+        docRef,
+        {
+          legalConsent: {
+            ...CURRENT_LEGAL_CONSENT,
+            acceptedAt: serverTimestamp(),
+          },
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+    } catch (error) {
+      // The rules reject rewriting a receipt that is already current, which is
+      // what a second open tab hits after the first one accepted. Re-read so
+      // that tab's gate closes instead of failing forever.
+      await ensureProfile(current);
+      throw error;
+    }
+    await ensureProfile(current);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -635,6 +697,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         changeAccountPassword,
         sendVerification,
         refreshProfile,
+        acceptCurrentLegalTerms,
       }}
     >
       {children}

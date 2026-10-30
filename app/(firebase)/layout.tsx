@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/lib/auth-context";
+import { LegalReacceptGate } from "@/components/auth/LegalReacceptGate";
 
 /**
  * Layout for every surface that actually reads Firebase.
@@ -22,5 +23,10 @@ export default function FirebaseLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      {children}
+      <LegalReacceptGate />
+    </AuthProvider>
+  );
 }

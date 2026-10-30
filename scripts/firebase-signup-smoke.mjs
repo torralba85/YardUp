@@ -23,6 +23,8 @@ const appId =
   DEFAULT_FIREBASE_CONFIG.appId;
 const appCheckDebugToken = process.env.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN;
 const serviceAccountRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
+// Must match CURRENT_LEGAL_CONSENT in lib/legal-consent.ts and firestore.rules.
+const legalConsentVersion = "2026-10-30";
 
 if (!appCheckDebugToken) {
   console.error(
@@ -157,8 +159,8 @@ async function createProfile({ idToken, uid }) {
                 legalConsent: {
                   mapValue: {
                     fields: {
-                      termsVersion: { stringValue: "2026-08-26" },
-                      privacyVersion: { stringValue: "2026-08-26" },
+                      termsVersion: { stringValue: legalConsentVersion },
+                      privacyVersion: { stringValue: legalConsentVersion },
                       adultConfirmed: { booleanValue: true },
                     },
                   },
@@ -194,6 +196,7 @@ async function verifyProfile({ idToken, uid }) {
     throw new Error("Signup smoke profile role was not persisted.");
   }
   if (
+    doc.fields?.legalConsent?.mapValue?.fields?.termsVersion?.stringValue !== legalConsentVersion ||
     doc.fields?.legalConsent?.mapValue?.fields?.adultConfirmed?.booleanValue !== true ||
     !doc.fields?.legalConsent?.mapValue?.fields?.acceptedAt?.timestampValue
   ) {
