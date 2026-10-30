@@ -124,7 +124,7 @@ describe("buildReportText", () => {
     expect(text).toMatch(/Estimated build cost/i);
     expect(text).toMatch(/Monthly rent estimate/i);
     expect(text).toMatch(/Annual net income estimate/i);
-    expect(text).toMatch(/Planning estimate only/i);
+    expect(text).toMatch(/Preliminary planning estimate only/i);
   });
 
   it("records the merged AI parcel interpretation and permit timeline", () => {

@@ -527,7 +527,23 @@ export default function CertificatePanel({
             </p>
           )}
           <p>
-            Planning estimate only. Not a permit, appraisal, architectural or engineering opinion, lending decision, government determination, or guarantee of income. Third-party data may be incomplete or outdated; verify with local authorities and licensed professionals before building or investing.
+            Preliminary planning estimate only. Not a survey, permit, zoning determination, appraisal, loan offer, contractor quote, or architectural, engineering, legal, tax, or financial advice. Parcel lines, setbacks, zoning signals, cost allowances, rent benchmarks, and financing scenarios are modeled approximations; site work, utilities, and local fees need site-specific verification. No one, including a builder, lender, or buyer you share this with, may rely on it as a statement of buildability, cost, or return. Verify requirements with your local jurisdiction and licensed professionals, and check any contractor&apos;s license at{" "}
+            <a
+              href="https://www.cslb.ca.gov"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-control text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            >
+              cslb.ca.gov
+            </a>
+            . Subject to the LotFoundry{" "}
+            <Link
+              href="/terms"
+              className="rounded-control text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            >
+              Terms &amp; Conditions
+            </Link>
+            .
           </p>
         </div>
       </details>}

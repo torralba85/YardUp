@@ -73,7 +73,7 @@ describe("BuilderLeadPanel", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("checkbox", { name: /I agree/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
     await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
 
     expect(await screen.findByText(/Sent to 1 local builder/i)).toBeInTheDocument();

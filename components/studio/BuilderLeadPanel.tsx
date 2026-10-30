@@ -182,7 +182,7 @@ export default function BuilderLeadPanel({
             className="mt-1 h-4 w-4 shrink-0 rounded-none accent-lot-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           />
           <span>
-            I agree to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project.
+            I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.
           </span>
         </label>
         <Button type="submit" variant="primary" size="md" loading={isPending}>
