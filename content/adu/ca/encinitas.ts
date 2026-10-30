@@ -29,11 +29,11 @@ export const encinitas: JurisdictionContent = {
   metaDescription:
     "Encinitas ADU rules: up to 1,200 sq ft detached, 4 ft setbacks, free PRADU plans, and Coastal Zone permit rules. See instant feasibility for your lot.",
   introAnswer: [
-    "Yes. The City of Encinitas allows one accessory dwelling unit (ADU) plus one junior accessory dwelling unit (JADU) on any single-family residential lot. A new detached ADU can reach up to 1,200 square feet, provided lot coverage and required setbacks are satisfied, while an attached unit can be up to 50% of the main residence.",
+    "Yes. The City of Encinitas allows accessory dwelling units (ADUs) on any single-family residential lot: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). Attached and detached ADUs can each reach 1,200 square feet or the primary home's living area, whichever is less, provided lot coverage and required setbacks are satisfied.",
     "Encinitas is famous across California for its Permit-Ready ADU (PRADU) program. Property owners can choose from a curated catalog of pre-approved, code-compliant architectural plan sets designed by licensed architects. Selecting a PRADU plan bypasses custom architectural design expenses and qualifies your project for expedited departmental plan check.",
     "For properties west of Interstate 5, parcels sit inside the California Coastal Zone. Most new detached ADUs in this boundary require a Coastal Development Permit (CDP). To encourage backyard home construction, Encinitas waives the local City application processing fees for ADU coastal permits, and decisions are handled administratively without a public hearing.",
   ],
-  metaSizeNote: "up to 1,200 sq ft detached; attached up to 50% of home",
+  metaSizeNote: "up to 1,200 sq ft attached or detached, capped at the home's living area",
   metaSetbackNote: "4 ft side and rear for new construction; 0 ft for conversions",
   metaParkingNote: "none within 0.5 miles of transit, including the Coaster station",
   glance: [
@@ -44,8 +44,8 @@ export const encinitas: JurisdictionContent = {
     },
     {
       label: "Max size — attached",
-      value: "50% of primary living area or 1,200 sq ft, whichever is less",
-      note: "State law guarantees at least 850 sq ft for a studio/1-bedroom and 1,000 sq ft for a 2-bedroom attached unit",
+      value: "1,200 sq ft or the primary living area, whichever is less",
+      note: "§30.48.040(T)(14)(b) applies the same limit to attached and detached units; there is no 50% cap",
     },
     {
       label: "Max size — JADU",
@@ -110,13 +110,13 @@ export const encinitas: JurisdictionContent = {
     heading: "Permit costs and fee exemptions in Encinitas",
     paragraphs: [
       "Encinitas waives its own plan-review and inspection fees for ADUs, whether you use a pre-approved PRADU plan set or a custom design. The waiver does not cover fees the City must collect for the State, postage, or the recording of the ADU covenant, so expect a small balance for those items.",
-      "Development Impact Fees (DIF)—including parkland, traffic, and general municipal facilities charges—are completely exempt for all ADUs measuring less than 750 square feet of conditioned living space, as well as all junior ADUs. For units measuring 750 square feet or greater, impact fees are levied proportionally relative to the square footage of the primary dwelling.",
+      "Development Impact Fees (DIF)—including parkland, traffic, and general municipal facilities charges—are completely exempt for all ADUs of 750 square feet of interior livable space or less, as well as all junior ADUs. For units larger than 750 square feet, impact fees are levied proportionally relative to the square footage of the primary dwelling.",
       "School district impact fees are assessed independently by the San Dieguito Union High School District and the Encinitas Union School District for units exceeding 500 square feet. Water and sewer connection charges vary depending on whether an independent meter is requested; conversions within existing building envelopes require no new utility capacity meters.",
     ],
     bullets: [
       "City plan-review and inspection fees: waived for ADUs; state-mandated fees, postage and covenant recording still apply",
       "Coastal Development Permit: local application processing fee waived for qualifying ADUs",
-      "Impact fees: $0 for units under 750 sq ft or JADUs; proportional assessment for 750+ sq ft",
+      "Impact fees: $0 for units of 750 sq ft or less and JADUs; proportional assessment above 750 sq ft",
       "School impact fees: assessed by local school districts on residential additions over 500 sq ft",
       "Utility capacity fees: San Dieguito Water District charges apply only if a new dedicated meter is installed",
     ],
@@ -163,7 +163,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "Can I build an ADU in Encinitas?",
       answer:
-        "Yes. Any single-family zoned parcel in Encinitas is permitted to build one detached or attached ADU plus one junior ADU (JADU), provided standard setback and height rules are respected.",
+        "Yes. Any single-family zoned parcel in Encinitas can build an ADU and a junior ADU (JADU). In fact, a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)).",
     },
     {
       question: "What is the Encinitas PRADU program?",
@@ -183,7 +183,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "How large can an ADU be in Encinitas?",
       answer:
-        "Detached ADUs in Encinitas can be built up to 1,200 square feet, subject to lot coverage constraints. Attached ADUs are capped at 50% of the primary dwelling's floor area or 1,200 square feet, whichever is less.",
+        "Detached ADUs in Encinitas can be built up to 1,200 square feet, subject to lot coverage constraints. Both attached and detached ADUs are capped at 1,200 square feet or the primary dwelling's living area, whichever is less.",
     },
     {
       question: "Is off-street parking required for an ADU in Encinitas?",
@@ -198,7 +198,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "Do I have to pay impact fees for an ADU in Encinitas?",
       answer:
-        "Development impact fees are fully waived for any ADU under 750 square feet. Units measuring 750 square feet or more pay impact fees proportional to the square footage of the primary home.",
+        "Development impact fees are fully waived for any ADU of 750 square feet or less. Units larger than 750 square feet pay impact fees proportional to the square footage of the primary home.",
     },
   ],
   neighbors: ["carlsbad", "san-marcos"],

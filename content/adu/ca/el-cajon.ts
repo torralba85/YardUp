@@ -28,7 +28,7 @@ export const elCajon: JurisdictionContent = {
   metaDescription:
     "El Cajon ADU rules: 1,200 sq ft detached units, unique 3-5 ft setback-height tiers, trolley transit waivers, and permit steps. Calculate feasibility free.",
   introAnswer: [
-    "Yes. The City of El Cajon permits both an accessory dwelling unit (ADU) and a junior accessory dwelling unit (JADU) on any legal lot developed with a single-family home. A detached backyard home can be constructed up to 1,200 square feet, providing ample room for multi-bedroom family or rental living quarters.",
+    "Yes. The City of El Cajon permits accessory dwelling units on any legal lot developed with a single-family home: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). A detached backyard home can be constructed up to 1,200 square feet, providing ample room for multi-bedroom family or rental living quarters.",
     "El Cajon's zoning code features a unique setback-to-height tier system under Municipal Code §17.140.180. While standard California state law establishes a flat 4-foot side and rear setback for a 16-foot unit, El Cajon allows a 3-foot setback for single-story structures capped at 12 feet, a 4-foot setback for units up to 16 feet, and allows heights up to 20 feet when setbacks are expanded to 5 feet.",
     "The city is well-served by the San Diego Trolley's Orange and Green Lines at the El Cajon Transit Center and Arnele Avenue Station. Parcels within a half-mile walking radius of these transit hubs or high-frequency bus routes are exempt from all off-street parking mandates, and garage conversions never require replacement parking.",
   ],
@@ -109,12 +109,12 @@ export const elCajon: JurisdictionContent = {
     heading: "Permit fees and development charges in El Cajon",
     paragraphs: [
       "Permitting an ADU in El Cajon incurs plan check, building permit, and inspection fees collected by the Community Development Department. Total municipal building permit fees generally range between $2,200 and $4,200 depending on total square footage and structural valuation.",
-      "In compliance with California Government Code, El Cajon levies zero Development Impact Fees (DIF) for any ADU under 750 square feet. For units measuring 750 square feet or larger, impact fees (including transportation, parks, and regional drainage) are assessed proportionately to the size of the main house.",
+      "In compliance with California Government Code, El Cajon levies zero Development Impact Fees (DIF) for any ADU of 750 square feet or less. For units larger than 750 square feet, impact fees (including transportation, parks, and regional drainage) are assessed proportionately to the size of the main house.",
       "School district impact fees apply to residential construction exceeding 500 square feet, assessed by the Cajon Valley Union School District (elementary/middle) and the Grossmont Union High School District (high school). Water and sewer agency fees are determined by either Padre Dam Municipal Water District or Helix Water District.",
     ],
     bullets: [
       "City permit fees: $2,200–$4,200 covering building, plumbing, electrical, and mechanical plan review",
-      "Impact fees: 100% exempt for units under 750 sq ft; scaled proportionately for larger units",
+      "Impact fees: 100% exempt for units of 750 sq ft or less; scaled proportionately for larger units",
       "School district fees: assessed on square footage exceeding 500 sq ft by Cajon Valley and Grossmont districts",
       "Water & sewer fees: determined by Padre Dam or Helix Water District depending on parcel service area",
       "Fire review fees: assessed by Heartland Fire & Rescue for access and hydrants",
@@ -162,7 +162,7 @@ export const elCajon: JurisdictionContent = {
     {
       question: "Can I build an ADU in El Cajon?",
       answer:
-        "Yes. Any residential property in El Cajon developed with a single-family home can add one full ADU (detached or attached) plus one junior accessory dwelling unit (JADU).",
+        "Yes. Any residential property in El Cajon developed with a single-family home can add a full ADU (detached or attached) plus a junior accessory dwelling unit (JADU). In fact, a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)).",
     },
     {
       question: "What are the setback requirements in El Cajon?",
