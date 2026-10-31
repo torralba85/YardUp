@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 import { getDefaultAduPose } from "@/lib/site-fit";
-import ParcelScene, { computeShadowFrustumHalfExtent, placementToneColor } from "./ParcelScene";
+import { EXISTING_HOUSE_ROOF_OVERHANG_FT } from "@/lib/scene-model";
+import ParcelScene, {
+  computeShadowFrustumHalfExtent,
+  existingHouseRidgeCapSize,
+  placementToneColor,
+} from "./ParcelScene";
 
 vi.mock("@react-three/fiber", () => ({
   Canvas: () => <div data-testid="parcel-canvas" />,
@@ -216,5 +221,13 @@ describe("computeShadowFrustumHalfExtent", () => {
     expect(standard).toBeLessThan(90);
     expect(computeShadowFrustumHalfExtent(15, 20)).toBeGreaterThanOrEqual(38);
     expect(computeShadowFrustumHalfExtent(200, 300)).toBeLessThanOrEqual(110);
+  });
+});
+
+describe("existingHouseRidgeCapSize", () => {
+  it("lays the ridge cap along the gable ridge (x), not across both slopes (z)", () => {
+    const [x, , z] = existingHouseRidgeCapSize(30);
+    expect(x).toBeCloseTo(30 + EXISTING_HOUSE_ROOF_OVERHANG_FT * 2 + 0.2);
+    expect(z).toBeLessThan(1);
   });
 });

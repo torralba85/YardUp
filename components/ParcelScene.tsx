@@ -460,6 +460,15 @@ function LabelSprite({ text, position, scale = 6 }: { text: string; position: [n
   return <primitive object={sprite} />;
 }
 
+/**
+ * Box size of the existing house's ridge cap. GableRoof's ridge runs along x,
+ * gable end to gable end at z = 0, so the cap does too. Sized along z, it
+ * crossed both slopes at ridge height and floated over the eaves as a black bar.
+ */
+export function existingHouseRidgeCapSize(width: number): [number, number, number] {
+  return [width + EXISTING_HOUSE_ROOF_OVERHANG_FT * 2 + 0.2, 0.22, 0.45];
+}
+
 function GableRoof({
   width,
   depth,
@@ -569,7 +578,6 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const wallHeight = 9;
   const ridgeHeight = 5;
   const zPos = model.pose.z;
-  const overhang = EXISTING_HOUSE_ROOF_OVERHANG_FT;
 
   return (
     <group position={[0, 0, zPos]}>
@@ -595,7 +603,7 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
       {/* Proper gable roof + ridge beam cap + eave fascia trim */}
       <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
       <mesh position={[0, wallHeight + ridgeHeight + 0.08, 0]} castShadow>
-        <boxGeometry args={[0.45, 0.22, depth + overhang * 2 + 0.2]} />
+        <boxGeometry args={existingHouseRidgeCapSize(width)} />
         <meshStandardMaterial color={SCENE.ink} roughness={0.42} metalness={0.35} />
       </mesh>
 
