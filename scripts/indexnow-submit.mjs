@@ -1,5 +1,5 @@
 // Tells Bing (and the other IndexNow engines) that every sitemap URL changed.
-// Run after a deploy that ships content: npm run seo:indexnow
+// CI runs it after every production deploy; by hand: npm run seo:indexnow
 //
 // The key is public by design: IndexNow proves site ownership by fetching
 // https://lotfoundry.net/<key>.txt, which is served from public/.
@@ -11,7 +11,8 @@ const SITEMAPS = ["/sitemap.xml", "/sitemap-adu.xml"];
 
 const urls = [];
 for (const path of SITEMAPS) {
-  const response = await fetch(`https://${HOST}${path}`);
+  // Cache-bust: right after a deploy the edge can still hold the old sitemap.
+  const response = await fetch(`https://${HOST}${path}?v=${Date.now()}`);
   if (!response.ok) throw new Error(`${path} returned ${response.status}`);
   const xml = await response.text();
   for (const match of xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)) urls.push(match[1]);

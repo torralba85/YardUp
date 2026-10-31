@@ -36,6 +36,18 @@ test("market demo, full sample, and keyboard dismissal agree", async ({ page }, 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test("homepage server HTML has one slash-form canonical and alt text on both parcel images", async ({ request }) => {
+  const html = await (await request.get("/")).text();
+  expect(html.match(/<link rel="canonical"[^>]*>/g)).toEqual([
+    '<link rel="canonical" href="https://lotfoundry.net/"/>',
+  ]);
+  for (const image of ["parcel-after", "parcel-before"]) {
+    const tag = html.match(new RegExp(`<img[^>]*src="/landing/a-lot-more/${image}\\.webp"[^>]*>`))?.[0];
+    expect(tag).toMatch(/ alt="[^"]+"/);
+    expect(tag).not.toContain("aria-hidden");
+  }
+});
+
 test("city pages have static local numbers, a self canonical, and the matching demo", async ({ page, request }) => {
   for (const [city, label, parcel, rent, demoName] of [
     ["seattle", "Seattle", "oak-street", "$2,350", "Oak Street"],

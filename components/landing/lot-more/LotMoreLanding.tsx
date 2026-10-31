@@ -501,14 +501,10 @@ export function LotMoreLanding({
                   width={1536}
                   height={1024}
                   fetchPriority="high"
-                  alt={
-                    [
-                      "Illustrative miniature lot with an existing house and an empty yard",
-                      "Illustrative miniature lot with a proposed footprint outlined in the yard",
-                      "Illustrative miniature lot with an existing house and an orange backyard home",
-                    ][scene]
-                  }
+                  alt="Illustrative miniature lot with an existing house and an orange backyard home"
                 />
+                {/* Each layer describes its own picture (Bing flags an empty alt);
+                    the live figcaption announces which scene is showing. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   className={`${styles.parcelImage} ${styles.beforeImage}`}
@@ -518,8 +514,7 @@ export function LotMoreLanding({
                   width={1536}
                   height={1024}
                   loading="lazy"
-                  alt=""
-                  aria-hidden="true"
+                  alt="Illustrative miniature lot with an existing house and an empty yard"
                 />
                 <svg
                   className={styles.cadGridOverlay}

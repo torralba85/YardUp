@@ -124,6 +124,16 @@ describe("landing address handoff", () => {
     }
   });
 
+  it("describes both the before and after parcel images", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    expect(
+      screen.getByRole("img", { name: /existing house and an empty yard/ }),
+    ).toHaveAttribute("src", "/landing/a-lot-more/parcel-before.webp");
+    expect(
+      screen.getByRole("img", { name: /existing house and an orange backyard home/ }),
+    ).toHaveAttribute("src", "/landing/a-lot-more/parcel-after.webp");
+  });
+
   it("uses an upward arrow for back to top", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     const link = screen.getByRole("link", { name: "Back to top" });

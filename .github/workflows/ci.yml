@@ -381,3 +381,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
           DEPLOYMENT_OUTCOME: ${{ steps.firebase.outcome }}
+      # Tell Bing (and the other IndexNow engines) to recrawl every sitemap URL.
+      # An IndexNow outage or rate limit must never turn a good deploy red.
+      - name: Submit sitemap URLs to IndexNow
+        if: steps.firebase.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 2
+        run: npm run seo:indexnow

@@ -25,11 +25,14 @@ export const viewport: Viewport = {
 // free; the search snippet and the shared-link card both read this line.
 const description =
   "Enter your address to see what could fit on your lot in 3D, with estimated ADU build cost, rent and payback. First address free, no account needed.";
-const canonicalUrl = "https://lotfoundry.net/";
+export const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
   description,
-  alternates: { canonical: canonicalUrl },
+  // Next prints a root canonical as the bare origin ("https://lotfoundry.net")
+  // however it is written here, so the page renders the slash form itself
+  // (below), matching the sitemap. `null` also drops the layout's "./" fallback.
+  alternates: { canonical: null },
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },
@@ -52,6 +55,8 @@ export default function LandingPage() {
   const scenarios = landingScenarios();
   return (
     <div className={`${display.variable} ${body.variable}`}>
+      {/* React hoists this into <head>. */}
+      <link rel="canonical" href={canonicalUrl} />
       <LotMoreLanding scenarios={scenarios} />
     </div>
   );
