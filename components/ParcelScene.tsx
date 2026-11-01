@@ -1284,14 +1284,34 @@ export default function ParcelScene({
       state.gl.outputColorSpace = THREE.SRGBColorSpace;
       state.gl.shadowMap.enabled = true;
       state.gl.shadowMap.type = THREE.PCFSoftShadowMap;
-      const pmrem = new THREE.PMREMGenerator(state.gl);
-      pmrem.compileEquirectangularShader();
-      const envScene = new RoomEnvironment();
-      const envRT = pmrem.fromScene(envScene, 0.04);
-      state.scene.environment = envRT.texture;
-      state.scene.environmentIntensity = 0.5;
-      envScene.dispose();
-      pmrem.dispose();
+
+      // Defer PMREM cubemap generation so the initial frame displays immediately
+      // without stalling the main thread during initial canvas bootstrap.
+      const scheduleEnv = () => {
+        try {
+          const pmrem = new THREE.PMREMGenerator(state.gl);
+          pmrem.compileEquirectangularShader();
+          const envScene = new RoomEnvironment();
+          const envRT = pmrem.fromScene(envScene, 0.04);
+          state.scene.environment = envRT.texture;
+          state.scene.environmentIntensity = 0.5;
+          envScene.dispose();
+          pmrem.dispose();
+          state.invalidate();
+        } catch {
+          // Headless or mocked WebGL environments may not support PMREM generation.
+        }
+      };
+
+      if (typeof window !== "undefined") {
+        requestAnimationFrame(() => {
+          if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(scheduleEnv, { timeout: 1000 });
+          } else {
+            setTimeout(scheduleEnv, 50);
+          }
+        });
+      }
     } catch {
       // Headless or mocked WebGL environments may not support PMREM generation.
     }

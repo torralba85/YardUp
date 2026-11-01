@@ -501,6 +501,8 @@ export function LotMoreLanding({
                   width={1536}
                   height={1024}
                   fetchPriority="high"
+                  loading="eager"
+                  decoding="async"
                   alt="Illustrative miniature lot with an existing house and an orange backyard home"
                 />
                 {/* Each layer describes its own picture (Bing flags an empty alt);

@@ -63,7 +63,10 @@ type AppCheckGlobal = typeof globalThis & {
  *
  * Never ship a debug token in production builds.
  */
-if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+export function initAppCheck(): AppCheck | undefined {
+  if (typeof window === "undefined" || process.env.NODE_ENV === "test") {
+    return undefined;
+  }
   const appCheckGlobal = globalThis as AppCheckGlobal;
 
   if (!appCheckGlobal.__lotFoundryAppCheckInitialized) {
@@ -96,11 +99,35 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
     }
     appCheckGlobal.__lotFoundryAppCheckInitialized = true;
   }
+
+  return appCheckGlobal.__lotFoundryAppCheck;
+}
+
+// Defers App Check background initialization until after window load / idle so
+// reCAPTCHA Enterprise (355 KB) never blocks critical rendering path or 3D scene mount.
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+  const scheduleInit = () => {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => {
+        initAppCheck();
+      }, { timeout: 3500 });
+    } else {
+      setTimeout(() => {
+        initAppCheck();
+      }, 1500);
+    }
+  };
+
+  if (document.readyState === "complete") {
+    scheduleInit();
+  } else {
+    window.addEventListener("load", scheduleInit, { once: true });
+  }
 }
 
 /** The browser's App Check instance; undefined on the server, in tests, or if init failed. */
 export function getClientAppCheck(): AppCheck | undefined {
-  return (globalThis as AppCheckGlobal).__lotFoundryAppCheck;
+  return initAppCheck();
 }
 
 /** The Firebase Authentication instance for the client app. */

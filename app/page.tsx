@@ -1,21 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
 import { landingScenarios } from "@/lib/landing-demo";
 import { LANDING_OG_IMAGE } from "@/lib/og-images";
 import { COLOR } from "@/lib/design-tokens";
 
 
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-lot-display",
-});
-const body = Manrope({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-lot-body",
-});
 
 export const viewport: Viewport = {
   themeColor: COLOR["lot-chalk"],
@@ -54,10 +44,10 @@ export default function LandingPage() {
   // Use one explicit demo configuration from the studio engine. Artwork is illustrative.
   const scenarios = landingScenarios();
   return (
-    <div className={`${display.variable} ${body.variable}`}>
+    <>
       {/* React hoists this into <head>. */}
       <link rel="canonical" href={canonicalUrl} />
       <LotMoreLanding scenarios={scenarios} />
-    </div>
+    </>
   );
 }
