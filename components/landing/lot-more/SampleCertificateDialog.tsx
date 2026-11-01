@@ -31,7 +31,8 @@ export function SampleCertificateDialog({ city, onClose }: { city: LandingCity; 
         <button type="button" aria-label="Close sample" onClick={onClose}><X size={22} aria-hidden="true" /></button>
       </div>
       <a className={styles.textLink} href={href} target="_blank" rel="noopener noreferrer">Open printable sample in a new tab</a>
-      <iframe title="Full sample Certificate of Feasibility" src={href} sandbox="" />
+      {/* Let a reader follow the sample's Studio link without enabling scripts or storage. */}
+      <iframe title="Full sample Certificate of Feasibility" src={href} sandbox="allow-top-navigation-by-user-activation" />
     </dialog>
   );
 }

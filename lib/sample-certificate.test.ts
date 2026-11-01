@@ -26,5 +26,12 @@ describe("public sample Certificate", () => {
     expect(html).toContain("Recommended Next Steps");
     expect(html).toContain("Print menu");
     expect(html).not.toContain("<script");
+    const document = new DOMParser().parseFromString(html, "text/html");
+    const startLinks = document.querySelectorAll('a[href="/studio"]');
+    expect(startLinks).toHaveLength(2);
+    for (const link of Array.from(startLinks)) {
+      expect(link.textContent).toBe("Start with my lot");
+      expect(link.getAttribute("target")).toBe("_top");
+    }
   });
 });
