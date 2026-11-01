@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 // free; the search snippet and the shared-link card both read this line.
 const description =
   "Enter your address to see what could fit on your lot in 3D, with estimated ADU build cost, rent and payback. First address free, no account needed.";
-export const canonicalUrl = "https://lotfoundry.net/";
+const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
   description,
