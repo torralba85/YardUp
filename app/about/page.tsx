@@ -29,7 +29,7 @@ export default function AboutPage() {
           is left out until he confirms it. */}
       <LegalSection title="Who makes LotFoundry">
         <p>
-          LotFoundry is made by VeriShare, a small software company based in San Diego,
+          LotFoundry is made by VeriShare LLC, a small software company based in San Diego,
           California. Andrew Torralba founded VeriShare and is CEO of LotFoundry.
         </p>
       </LegalSection>

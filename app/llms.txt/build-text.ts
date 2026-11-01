@@ -165,6 +165,6 @@ ${demoLines()}
 
 ## About
 
-LotFoundry is operated by VeriShare. The name is also written "Lot Foundry" (two words) on its social profiles.
+LotFoundry is operated by VeriShare LLC. The name is also written "Lot Foundry" (two words) on its social profiles.
 `;
 }

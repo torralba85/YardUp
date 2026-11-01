@@ -26,10 +26,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [{ url: "/landing/a-lot-more/mark.svg", type: "image/svg+xml" }],
   },
+  // No `url` here: Next strips the root slash from og:url as it does from the
+  // canonical, so the page renders that tag itself too (below).
   openGraph: {
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
-    url: canonicalUrl,
     images: [LANDING_OG_IMAGE],
   },
   twitter: {
@@ -47,6 +48,7 @@ export default function LandingPage() {
     <>
       {/* React hoists this into <head>. */}
       <link rel="canonical" href={canonicalUrl} />
+      <meta property="og:url" content={canonicalUrl} />
       <LotMoreLanding scenarios={scenarios} />
     </>
   );

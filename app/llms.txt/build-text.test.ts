@@ -135,7 +135,7 @@ describe("buildLlmsTxt", () => {
   it("names the operator exactly as the IRS EIN notice does", () => {
     const text = buildLlmsTxt();
 
-    expect(text).toContain("operated by VeriShare.");
+    expect(text).toContain("operated by VeriShare LLC.");
     expect(text).not.toMatch(/Veri-share/i);
   });
 });

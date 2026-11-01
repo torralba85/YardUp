@@ -6,7 +6,7 @@ vi.mock("next/font/google", () => ({
   Manrope: () => ({ variable: "mock-manrope" }),
 }));
 import LandingPage, { metadata as homeMetadata } from "./page";
-import { metadata as rootMetadata } from "./layout";
+import RootLayout, { metadata as rootMetadata } from "./layout";
 import { metadata as studioMetadata } from "./(firebase)/studio/layout";
 import { metadata as aboutMetadata } from "./about/page";
 import { metadata as helpMetadata } from "./help/page";
@@ -22,6 +22,7 @@ import { metadata as aduCostCalculatorMetadata } from "./adu-cost-calculator/pag
 import { metadata as aduCaRentMetadata } from "./adu/ca/rent/page";
 import { metadata as aduCaJaduMetadata } from "./adu/ca/jadu/page";
 import { metadata as sanDiegoPermitsMetadata } from "./adu/ca/san-diego/permits/page";
+import { metadata as methodologyMetadata } from "./adu/how-we-estimate/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { buildCityMetadata } from "@/lib/adu/content";
 import { cityLandingMetadata } from "@/components/landing/lot-more/CityLandingPage";
@@ -83,7 +84,32 @@ describe("canonical metadata", () => {
       (child) => isValidElement<{ rel?: string }>(child) && child.type === "link" && child.props.rel === "canonical",
     );
     expect(canonical).toMatchObject({ props: { href: "https://lotfoundry.net/" } });
-    expect(homeMetadata.openGraph?.url).toBe("https://lotfoundry.net/");
+  });
+
+  it("renders the slash-form og:url itself, since metadata would strip the slash there too", () => {
+    expect(homeMetadata.openGraph?.url).toBeUndefined();
+    const ogUrl = Children.toArray(LandingPage().props.children).find(
+      (child) => isValidElement<{ property?: string }>(child) && child.type === "meta" && child.props.property === "og:url",
+    );
+    expect(ogUrl).toMatchObject({ props: { content: "https://lotfoundry.net/" } });
+  });
+});
+
+describe("site JSON-LD", () => {
+  const jsonLd = () => {
+    const body = Children.toArray(RootLayout({ children: null }).props.children)[0];
+    const script = Children.toArray(isValidElement<{ children?: React.ReactNode }>(body) ? body.props.children : []).find(
+      (child) => isValidElement<{ type?: string }>(child) && child.type === "script" && child.props.type === "application/ld+json",
+    );
+    if (!isValidElement<{ dangerouslySetInnerHTML: { __html: string } }>(script)) throw new Error("no JSON-LD script");
+    return JSON.parse(script.props.dangerouslySetInnerHTML.__html);
+  };
+
+  it("names the company as the Terms do and the founder the About page names", () => {
+    const { publisher } = jsonLd();
+    expect(publisher.legalName).toBe("VeriShare LLC");
+    expect(publisher.founder).toEqual({ "@type": "Person", name: "Andrew Torralba", jobTitle: "CEO" });
+    expect(publisher.contactPoint.email).toBe("support@lotfoundry.net");
   });
 });
 
@@ -98,11 +124,11 @@ describe("SEO audit metadata constraints", () => {
   ];
 
   for (const { name, metadata } of descriptions) {
-    it(`keeps ${name} meta description between 70 and 160 characters`, () => {
+    it(`keeps ${name} meta description between 70 and 155 characters`, () => {
       expect(typeof metadata.description).toBe("string");
       const description = metadata.description as string;
       expect(description.length).toBeGreaterThanOrEqual(70);
-      expect(description.length).toBeLessThanOrEqual(160);
+      expect(description.length).toBeLessThanOrEqual(155);
     });
   }
 
@@ -128,6 +154,7 @@ describe("share previews", () => {
   for (const { name, metadata } of [
     { name: "/adu/ca", metadata: aduCaMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
+    { name: "/adu/how-we-estimate", metadata: methodologyMetadata },
     ...(Object.keys(landingDemos) as LandingCity[]).map((city) => ({ name: `/${city}`, metadata: cityLandingMetadata(city) })),
   ]) {
     it(`gives ${name} an Open Graph image, because its own openGraph block replaces the layout's`, () => {
