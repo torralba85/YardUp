@@ -72,8 +72,11 @@ const jsonLd = {
     "@type": "Organization",
     name: "LotFoundry",
     alternateName: ["Lot Foundry"],
-    // As printed on the IRS EIN notice (CP575G): one word, no hyphen.
-    legalName: "VeriShare",
+    // The name the Terms and Privacy Policy contract under: one word, no hyphen
+    // (as on the IRS EIN notice), with the LLC designator California requires.
+    legalName: "VeriShare LLC",
+    // Stated on /about; keep the two in step.
+    founder: { "@type": "Person", name: "Andrew Torralba", jobTitle: "CEO" },
     url: appRootUrl,
     logo: `${appUrl}/icon-512-transparent.png`,
     // `sameAs` is how Google resolves scattered profiles into one entity, so
@@ -84,6 +87,7 @@ const jsonLd = {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
+      email: "support@lotfoundry.net",
       url: `${appUrl}/feedback`,
     },
   },

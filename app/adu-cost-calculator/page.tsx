@@ -20,7 +20,7 @@ import { marketProvenanceLine } from "@/lib/market/market-basis";
 // Kept to 60 characters or fewer so Google shows the whole title.
 const TITLE = "California ADU Cost Calculator (2026) | LotFoundry";
 const DESCRIPTION =
-  "Free California ADU cost calculator: compare build cost, rent, payback, loan payments and monthly cash flow in Los Angeles, San Diego or Santa Clara County.";
+  "Free California ADU cost calculator: compare build cost, rent, payback, loan payments and cash flow in Los Angeles, San Diego or Santa Clara County.";
 
 export const metadata: Metadata = {
   title: TITLE,

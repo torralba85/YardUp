@@ -28,7 +28,7 @@ export const vista: JurisdictionContent = {
   asOf: "2026-10-30",
   metaTitle: "Vista ADU Rules (2026): Size, Fee Waivers & Setbacks",
   metaDescription:
-    "Vista ADU rules: 1,200 sq ft detached units, 4 ft setbacks, 5 ft building separation, and the local fee waiver program. Check your property feasibility free.",
+    "Vista ADU rules: 1,200 sq ft detached units, 4 ft setbacks, 5 ft building separation, and the local fee waiver program. Check your lot, free.",
   introAnswer: [
     "Yes. The City of Vista allows single-family property owners to build accessory dwelling units on the same residential lot: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). A detached backyard home can be built up to 1,200 square feet, while an attached unit can measure up to 50% of the primary residence.",
     "Beyond state law standards, Vista features a progressive ADU Impact Fee Waiver Program under Chapter 18.31. While state law automatically exempts units of 750 square feet or less from municipal impact fees, Vista waives development fees on larger units (over 750 sq ft) for property owners who agree to a 10-year regulatory covenant renting to lower-income households or housing a family member or caregiver who provides regular care to an owner or occupant of the primary home.",

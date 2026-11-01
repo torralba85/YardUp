@@ -28,7 +28,7 @@ export const sacramento: JurisdictionContent = {
   asOf: "2026-10-28",
   metaTitle: "Sacramento ADU Rules (2026): Size, Setbacks & Cost",
   metaDescription:
-    "Sacramento ADU rules: a 1,200 sq ft detached ADU with 3 ft setbacks, or three units under the state option. No parking minimums. See cost, rent and payback.",
+    "Sacramento ADU rules: a 1,200 sq ft detached ADU with 3 ft setbacks, or three units under the state option. No parking minimums. See cost, rent, payback.",
   introAnswer: [
     "Yes. The City of Sacramento lets you choose between two rulebooks for the ADUs on your lot. Under the City's local option (City Code §17.228.105(B)), a single-family lot can have two ADUs, or one ADU and a junior ADU, and a detached ADU can be up to 1,200 square feet. Under the state option (§17.228.105(C) and Gov. Code §66323), you can have three: a conversion, a junior ADU and a new detached ADU of up to 800 square feet.",
     "You cannot mix the two options on one lot, so the choice sets your size, height and setbacks. The local option uses the zone's height limit (35 feet in R-1) and needs side and rear setbacks of only 3 feet. The state option caps a detached ADU at 18 feet, or 20 feet to match the house's roof pitch, with 4-foot setbacks.",

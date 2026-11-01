@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AduMethodology } from "@/components/adu/AduMethodology";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { METHODOLOGY_AS_OF, methodologyUrl } from "@/lib/adu/content";
+import { SITE_OG_IMAGE } from "@/lib/og-images";
 
 const TITLE = "How We Estimate ADU Cost, Rent & Payback | LotFoundry";
 const DESCRIPTION =
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     url: methodologyUrl(),
     type: "article",
+    images: [SITE_OG_IMAGE],
   },
 };
 

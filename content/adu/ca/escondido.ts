@@ -18,7 +18,7 @@ export const escondido: JurisdictionContent = {
   county: "San Diego County",
   asOf: "2026-10-25",
   metaDescription:
-    "Escondido ADU rules: 850–1,000 sq ft size allowances, an 800 sq ft unit exempt from FAR and lot coverage, and 4 ft setbacks. Run the numbers on your lot, free.",
+    "Escondido ADU rules: 850–1,000 sq ft allowances, an 800 sq ft unit exempt from FAR and lot coverage, and 4 ft setbacks. Run the numbers on your lot, free.",
   introAnswer: [
     "Yes — Escondido allows at least one ADU plus one junior ADU on virtually every single-family lot, and state law requires the city to allow at least 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
     "Escondido is the most handbook-driven city in this batch: the Planning Division publishes an ADU handout that states the key numbers plainly — 16-foot detached height, 18 feet near transit, 25 feet attached — plus a dedicated submittal checklist that tells you exactly what a complete application contains.",

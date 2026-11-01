@@ -61,6 +61,12 @@ describe("adu content helpers", () => {
       expect(metadata.alternates?.canonical).toBe(cityUrl(city));
     }
   });
+
+  it("keeps every guide's meta description to 155 characters, where Google stops cutting it off", () => {
+    for (const city of ADU_CITIES) {
+      expect(String(buildCityMetadata(city).description).length, city.slug).toBeLessThanOrEqual(155);
+    }
+  });
 });
 
 describe("adu cost pages", () => {
